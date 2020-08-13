@@ -18,7 +18,7 @@
 <br/>
 
 # 多线程
-[GCD(II)- 时间延迟]()
+[GCD(II)- 时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)%20-%20时间延迟.md)
     
     
     
