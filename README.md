@@ -1,9 +1,11 @@
 # StudyNotes 目录
 开发中学到的、用到的小知识整理
 
+![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
+
 
 <br/>
--------
+***
 <br/>
 
 # iOS 开发
@@ -14,7 +16,7 @@
 
 
 <br/>
--------
+***
 <br/>
 
 # 多线程
@@ -23,7 +25,5 @@
     
     
 <br/>
-
--------
-
+***
 <br/>
