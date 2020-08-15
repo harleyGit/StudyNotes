@@ -1,5 +1,13 @@
 # StudyNotes 目录
 开发中学到的、用到的小知识整理
+`当前URL路径：`
+```
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
+
+//获取Future文件夹下Pictures的图片
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Pictures/future1.png
+```
+
 
 ![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
 

@@ -19,7 +19,7 @@
 
 ```
 会报错：
-![报错图片]()
+![报错图片](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Pictures/future1.png)
 
 原因：因为data是String类型，而函数getData()是一个异步操作函数，其返回值是一个await延迟执行的结果。`在Dart中，有await标记的运算，其结果值都是一个Future对象，Future不是String类型，所以就报错了。`
 
