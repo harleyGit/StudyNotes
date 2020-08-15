@@ -33,6 +33,7 @@
 ***
 
 <br/>
+
 # 读书笔记
 
 * 金融投资	
@@ -42,7 +43,18 @@
 
 
 
-[saga](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/金融理财(I).md)
+<br/>
+
+***
+
+<br/>
+
+
+
+# 参考资料
+<br/>
+
+> * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
 
 
