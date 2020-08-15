@@ -9,7 +9,7 @@
 
 
 <br/>
-***
+* * *
 <br/>
 
 ># dispatch_group
@@ -25,7 +25,7 @@
 
 
 <br/>
-***
+* * *
 <br/>
 ># dispatch_semaphore
 
@@ -34,7 +34,7 @@
 
 
 <br/>
-***
+* * *
 <br/>
 
 
