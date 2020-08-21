@@ -17,7 +17,7 @@
 					<key>kind</key>
 					<string>full-size-image</string>
 					<key>needs-shine</key>
-					<false/>
+					<true/>
 					<key>url</key>
 					<string>https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay1.1.0/one.png</string>
 				</dict>
@@ -25,7 +25,7 @@
 					<key>kind</key>
 					<string>display-image</string>
 					<key>needs-shine</key>
-					<false/>
+					<true/>
 					<key>url</key>
 					<string>https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay1.1.0/two.png</string>
 				</dict>
@@ -33,13 +33,13 @@
 			<key>metadata</key>
 			<dict>
 				<key>bundle-identifier</key>
-				<string>这里是包名</string>
+				<string>波尔世界</string>
 				<key>bundle-version</key>
-				<string>1.0.0</string>
+				<string>1.1.0</string>
 				<key>kind</key>
 				<string>software</string>
 				<key>title</key>
-				<string>测试</string>
+				<string>波尔世界</string>
 			</dict>
 		</dict>
 	</array>
