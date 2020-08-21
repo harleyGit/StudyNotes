@@ -11,7 +11,7 @@
 					<key>kind</key>
 					<string>software-package</string>
 					<key>url</key>
-					<string>https://brplay.oss-cn-beijing.aliyuncs.com/down/ios/BRplay.ipa</string>
+					<string>https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay1.1.0/Runner.ipa</string>
 				</dict>
 				<dict>
 					<key>kind</key>
@@ -19,7 +19,7 @@
 					<key>needs-shine</key>
 					<false/>
 					<key>url</key>
-					<string>下载时大图(非必填)</string>
+					<string>https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay1.1.0/one.png</string>
 				</dict>
 				<dict>
 					<key>kind</key>
@@ -27,7 +27,7 @@
 					<key>needs-shine</key>
 					<false/>
 					<key>url</key>
-					<string>下载时小图(非必填)</string>
+					<string>https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay1.1.0/two.png</string>
 				</dict>
 			</array>
 			<key>metadata</key>
