@@ -35,6 +35,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Pictures/f
 
 ># Flutter 开发
 *	[Future(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Future(I).md)
+*	[Flutter 学习参考资料](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Flutter%20学习参考资料.md)
 
 
 
