@@ -4,8 +4,14 @@
 ```
 https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
 
-//获取Future文件夹下Pictures的图片
+//获取Future文件夹下Pictures的图片路径
 https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Pictures/future1.png
+
+
+https://github.com/harleyGit/StudyNotes/blob/master/
+
+//打开某个文件的超链接
+https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参考资料.md
 ```
 
 
@@ -35,7 +41,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Pictures/f
 
 ># Flutter 开发
 *	[Future(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Future(I).md)
-*	[Flutter 学习参考资料](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Flutter%20学习参考资料.md)
+*	[Flutter 学习参考资料](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参考资料.md)
 
 
 
