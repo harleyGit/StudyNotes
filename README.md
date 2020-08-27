@@ -119,6 +119,9 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 
 # 参考资料
+
+> * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
+> * 行内HTML
 <br/>
 
 <dl>
@@ -129,21 +132,19 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
   <dd>*無法* 運作的 **非常** 好。改用 HTML<em>標籤</em>。</dd>
 </dl>
 
+> * 图片链接到影片
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=YOUTUBE影片ID放在這裡
 " target="_blank"><img src="http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg" 
-alt="圖片 ALT 文字放在這裡" width="240" height="180" border="10" /></a>
+alt="圖片 ALT 文字放在這裡" width="0" height="0" border="10" /></a>
 
 
-<a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121"><img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30"></a>
+<a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank"><img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30"></a>
 
 
 [![圖片 ALT 文字放在這裡](http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE影片ID放在這裡)
 
 [![死神 BLECH](https://pic.17qq.com/uploads/plokohonlv.jpeg)](https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121)
-
-
-> * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
 
 
