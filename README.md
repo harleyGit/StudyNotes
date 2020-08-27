@@ -52,10 +52,10 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
 
-*	<a><img src="https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/OC.png" width="50" height="52"></a>
+*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/OC.png" width="50" height="52"></a>
 	* [iPhone 尺寸和适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/OC开发/iPhone%20尺寸和适配.md)
         
-*	<a><img src="https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/swift2.png" width="50" height="50"></a>
+*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/swift2.png" width="50" height="50"></a>
 
 
 
