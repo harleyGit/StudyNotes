@@ -121,6 +121,23 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 # 参考资料
 <br/>
 
+<dl>
+  <dt>定義列表</dt>
+  <dd>有時候，人們偶爾會用到。</dd>
+
+  <dt>在 HTML 中撰寫 Markdown</dt>
+  <dd>*無法* 運作的 **非常** 好。改用 HTML<em>標籤</em>。</dd>
+</dl>
+
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=YOUTUBE影片ID放在這裡
+" target="_blank"><img src="http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg" 
+alt="圖片 ALT 文字放在這裡" width="240" height="180" border="10" /></a>
+
+
+[![圖片 ALT 文字放在這裡](http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE影片ID放在這裡)
+
+
 > * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
 
