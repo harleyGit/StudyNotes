@@ -121,7 +121,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 优秀文章
--	[iOS 优化篇 - 启动优化之Clang插桩实现二进制重排](https://juejin.im/post/6844904130406793224)
+-	[iOS 底层安全分析(李斌同学)](https://juejin.im/user/3438928103236920/posts)
 
 
 <br/>
@@ -159,6 +159,20 @@ alt="圖片 ALT 文字放在這裡" width="0" height="0" border="10" /></a>
 [![圖片 ALT 文字放在這裡](http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE影片ID放在這裡)
 
 [![死神 BLEACH](https://pic.17qq.com/uploads/plokohonlv.jpeg)](https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121)
+
+
+* 字体颜色测试
+```diff
+
+- red
+
++ green
+
+! orange
+
+# gray
+
+```
 
 
 
