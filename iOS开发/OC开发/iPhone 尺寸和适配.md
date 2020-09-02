@@ -151,29 +151,33 @@
 	-	automaticallyAdjustsScrollViewInsets
 	&emsp;	在iOS7.0以后,相对于ScrollView新增属性,默认为YES,系统会根据所在界面的astatus bar, search bar, navigation bar, toolbar, or tab bar等自动调整ScrollView的inset。
 
-	```
-		- (void)viewDidLoad {
-		   [super viewDidLoad];
-		   self.title = @"我是导航条"; 
-		   self.view.backgroundColor = [UIColor redColor];
-		   UITableView *testTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, KScreenWidth, KScreenHeight) style:UITableViewStylePlain];
-		   testTableView.backgroundColor = [UIColor blueColor];
-		   testTableView.delegate = self;
-		   testTableView.dataSource = self;
-		   [self.view addSubview:testTableView];
-		}
-		- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-		   UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
-		   if (!cell) {
-		       cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"cell"];
-		   }
-		   cell.textLabel.text = [NSString stringWithFormat:@"%ld", (long)indexPath.row];
-		   return cell;
-		}
-		- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-		   return 20;
-		}
-	```
+```
+	- (void)viewDidLoad {
+	   [super viewDidLoad];
+	   self.title = @"我是导航条"; 
+	   self.view.backgroundColor = [UIColor redColor];
+
+	   UITableView *testTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, KScreenWidth, KScreenHeight) style:UITableViewStylePlain];
+	   testTableView.backgroundColor = [UIColor blueColor];
+	   testTableView.delegate = self;
+	   testTableView.dataSource = self;
+
+	   [self.view addSubview:testTableView];
+	}
+
+	- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	   UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
+	   if (!cell) {
+	       cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"cell"];
+	   }
+	   cell.textLabel.text = [NSString stringWithFormat:@"%ld", (long)indexPath.row];
+	   return cell;
+	}
+
+	- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+	   return 20;
+	}
+```
 
 效果图：
 
@@ -185,6 +189,7 @@
 ```
 x = 0, 
 y = KStatusBarAndNavigationBarHeight, 
+
 width = KScreenWidth, 
 height = KScreenHeight - KStatusBarAndNavigationBarHeight
 
@@ -215,11 +220,8 @@ if (@available(iOS 11.0, *)) {
 
 ```
 	-	以下是适配建议：
-
 		-	对于完全自定义页面的安全区域是个碍事的东西，把ScrollView（及子类）的contentInsetAdjustmentBehavior设置成Never，自己控制每一个细节。
-
 		-	对于没有横屏需求的同学，系统默认的UIScrollViewContentInsetAdjustmentAutomatic是个好选择，就不用使用者自己修改了。
-
 		-	对于有横屏需求的同学，建议使用UIScrollViewContentInsetAdjustmentAlways，横屏的时候不会被“刘海”干扰。
 
 
@@ -248,13 +250,85 @@ if (@available(iOS 11.0, *)) {
 
 
 -	UILabel的适配
-
 &emsp;	开发过程中都遇到过字体UIFont适配问题.
 
+	-	App如果要设置全局字体，可以通过Swizzing修改。或者像以上宏一样，传进参数，修改字体大小(淘宝在Plus机型的字体都加大成1.5倍)。
+		-	宏定义适配字体大小（根据屏幕尺寸判断）
+```
+//宏定义
+#define SCREEN_WIDTH ([UIScreen mainScreen].bounds.size.width)
+#define FONT_SIZE(size) ([UIFont systemFontOfSize:FontSize(size))
 
-	-	App如果要设置全局字体，可以通过Swizzing修改。或者像以上宏一样，传进参数，修改字体大小。
-	淘宝在Plus机型的字体都加大成1.5倍。笔者买不起Plus机型，更不敢装淘宝这种剁手App，所以无法验证。
+/**
+ *  字体适配 我在PCH文件定义了一个方法
+ */
+static inline CGFloat FontSize(CGFloat fontSize){
+	Ï
+    if (SCREEN_WIDTH==320) {
+        return fontSize-2;
+    }else if (SCREEN_WIDTH==375){
+        return fontSize;
+    }else{
+        return fontSize+2;
+    }
+}
+```
+或者：
+```
+#define IsIphone6P          SCREEN_WIDTH==414
+#define SizeScale           (IsIphone6P ? 1.5 : 1)
+#define kFontSize(value)    value*SizeScale
+#define kFont(value)        [UIFont systemFontOfSize:value*SizeScale]
+```
 
+		- runTime给UIFont写分类 替换系统自带的方法
+```
+class_getInstanceMethod得到类的实例方法
+class_getClassMethod得到类的类方法
+
+1. 首先需要创建一个UIFont的分类
+2. 自己UI设计原型图的手机尺寸宽度
+#define MyUIScreen  375 // UI设计原型图的手机尺寸宽度(6), 6p的--414
+```
+```
+UIFont+runtime.m
+
+#import "UIFont+runtime.h"
+#import <objc/runtime.h>
+@implementation UIFont (runtime)
+
++ (void)load {
+    // 获取替换后的类方法
+    Method newMethod = class_getClassMethod([self class], @selector(adjustFont:));
+    // 获取替换前的类方法
+    Method method = class_getClassMethod([self class], @selector(systemFontOfSize:));
+    // 然后交换类方法，交换两个方法的IMP指针，(IMP代表了方法的具体的实现）
+    method_exchangeImplementations(newMethod, method);
+}
+
++ (UIFont *)adjustFont:(CGFloat)fontSize {
+    UIFont *newFont = nil;
+    newFont = [UIFont adjustFont:fontSize * [UIScreen mainScreen].bounds.size.width/MyUIScreen];
+    return newFont;
+}
+@end
+```
+外部调用：
+```
+//Controller类中正常调用就行了：
+
+UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 150, [UIScreen mainScreen].bounds.size.width, 60)];
+label.text = @"iOS字体大小适配";
+label.font = [UIFont systemFontOfSize:16];
+[self.view addSubview:label];
+
+```
+		-	注意：
+			-	load方法只会走一次，利用runtime的method进行方法的替换
+			-	替换的方法里面（把系统的方法替换成我们自己写的方法），这里要记住写自己的方法，不然会死循环
+			-	之后凡是用到systemFontOfSize方法的地方，都会被替换成我们自己的方法，即可改字体大小了
+			-	注意：此方法只能替换 纯代码 写的控件字号，如果你用xib创建的控件且在xib里面设置的字号，那么替换不了！你需要在xib的
+awakeFromNib方法里面手动设置下控件字体
 
 
 
