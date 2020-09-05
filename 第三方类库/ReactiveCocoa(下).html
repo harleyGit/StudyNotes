@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactiveCocoa(下)</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">ReactiveCocoa(下)</h1>
+        <div class="show-content">
+          <h1><b>ReactiveCocoa常见操作方法介绍</b></h1><p>1.1 ReactiveCocoa操作须知</p><p>所有的信号（RACSignal）都可以进行操作处理，因为所有操作方法都定义在RACStream.h中，因此只要继承RACStream就有了操作处理方法。</p><p>1.2 ReactiveCocoa操作思想</p><p>运用的是Hook（钩子）思想，Hook是一种用于改变API(应用程序编程接口：方法)执行结果的技术.</p><p>Hook用处：截获API调用的技术。</p><p>Hook原理：在每次调用一个API返回结果之前，先执行你自己的方法，改变结果的输出。</p><p>1.3 ReactiveCocoa核心方法bind</p><p>ReactiveCocoa操作的核心方法是bind（绑定）,而且RAC中核心开发方式，也是绑定，之前的开发方式是赋值，而用RAC开发，应该把重心放在绑定，也就是可以在创建一个对象的时候，就绑定好以后想要做的事情，而不是等赋值之后在去做事情。</p><p>列如：把数据展示到控件上，之前都是重写控件的setModel方法，用RAC就可以在一开始创建控件的时候，就绑定好数据。</p><p>在开发中很少使用bind方法，bind属于RAC中的底层方法，RAC已经封装了很多好用的其他方法，底层都是调用bind，用法比bind简单.</p><p><br></p><p>bind方法简单介绍和使用：</p><blockquote>
+<p>// 假设想监听文本框的内容，并且在每次输出结果的时候，都在文本框的内容拼接一段文字“输出：” </p>
+<p> // 方式一:在返回结果后，拼接。</p>
+<p> [_textField.rac_textSignal subscribeNext:^(id x) {</p>
+<p> NSLog(@"输出:%@",x);</p>
+<p> }];</p>
+<p> // 方式二:在返回结果前，拼接，使用RAC中bind方法做处理。</p>
+<p> // bind方法参数:需要传入一个返回值是RACStreamBindBlock的block参数</p>
+<p> // RACStreamBindBlock是一个block的类型，返回值是信号，参数（value,stop），因此参数的block返回值也是一个block。</p>
+<p> // RACStreamBindBlock: </p>
+<p> // 参数一(value):表示接收到信号的原始值，还没做处理 </p>
+<p> // 参数二(*stop):用来控制绑定Block，如果*stop = yes,那么就会结束绑定。 </p>
+<p> // 返回值：信号，做好处理，在通过这个信号返回出去，一般使用RACReturnSignal,需要手动导入头文件RACReturnSignal.h。 </p>
+<p>// bind方法使用步骤:</p>
+<p> // 1.传入一个返回值RACStreamBindBlock的block。 </p>
+<p> // 2.描述一个RACStreamBindBlock类型的bindBlock作为block的返回值。</p>
+<p> // 3.描述一个返回结果的信号，作为bindBlock的返回值。</p>
+<p> // 注意：在bindBlock中做信号结果的处理。</p>
+<p> // 底层实现: </p>
+<p> // 1.源信号调用bind,会重新创建一个绑定信号。</p>
+<p> // 2.当绑定信号被订阅，就会调用绑定信号中的didSubscribe，生成一个bindingBlock。</p>
+<p> // 3.当源信号有内容发出，就会把内容传递到bindingBlock处理，调用bindingBlock(value,stop)</p>
+<p> // 4.调用bindingBlock(value,stop)，会返回一个内容处理完成的信号（RACReturnSignal）。</p>
+<p> // 5.订阅RACReturnSignal，就会拿到绑定信号的订阅者，把处理完成的信号内容发送出来。 </p>
+<p> // 注意:不同订阅者，保存不同的nextBlock，看源码的时候，一定要看清楚订阅者是哪个。</p>
+<p> // 这里需要手动导入#import，才能使用RACReturnSignal。</p>
+<p>    [[_textField.rac_textSignal bind:^RACStreamBindBlock{</p>
+<p>        // 什么时候调用:</p>
+<p>        // block作用:表示绑定了一个信号.</p>
+<p>        return ^RACStream *(id value, BOOL *stop){</p>
+<p>            // 什么时候调用block:当信号有新的值发出，就会来到这个block。</p>
+<p>            // block作用:做返回值的处理</p>
+<p>            // 做好处理，通过信号返回出去.</p>
+<p>            return [RACReturnSignal return:[NSString stringWithFormat:@"输出:%@",value]];</p>
+<p>        };</p>
+<p>    }] subscribeNext:^(id x) {</p>
+<p>        NSLog(@"%@",x);</p>
+<p>    }];</p>
+</blockquote><hr><p><br></p><p>ReactiveCocoa操作方法之映射(flattenMap,Map)</p><p>flattenMap，Map用于把源信号内容映射成新的内容。</p><p>flattenMap简单使用：</p><p>// 监听文本框的内容改变，把结构重新映射成一个新值.</p><p>  // flattenMap作用:把源信号的内容映射成一个新的信号，信号可以是任意类型。</p><p>    // flattenMap使用步骤:</p><p>    // 1.传入一个block，block类型是返回值RACStream，参数value</p><p>    // 2.参数value就是源信号的内容，拿到源信号的内容做处理</p><p>    // 3.包装成RACReturnSignal信号，返回出去。</p><p>    // flattenMap底层实现:</p><p>    // 0.flattenMap内部调用bind方法实现的,flattenMap中block的返回值，会作为bind中bindBlock的返回值。</p><p>    // 1.当订阅绑定信号，就会生成bindBlock。</p><p>    // 2.当源信号发送内容，就会调用bindBlock(value, *stop)</p><p>    // 3.调用bindBlock，内部就会调用flattenMap的block，flattenMap的block作用：就是把处理好的数据包装成信号。</p><p>    // 4.返回的信号最终会作为bindBlock中的返回信号，当做bindBlock的返回信号。</p><p>    // 5.订阅bindBlock的返回信号，就会拿到绑定信号的订阅者，把处理完成的信号内容发送出来。</p><blockquote>
+<p>[[_textField.rac_textSignal flattenMap:^RACStream *(id value) {</p>
+<p>        // block什么时候 : 源信号发出的时候，就会调用这个block。</p>
+<p>        // block作用 : 改变源信号的内容。</p>
+<p>        // 返回值：绑定信号的内容.</p>
+<p>        return [RACReturnSignal return:[NSString stringWithFormat:@"输出:%@",value]];</p>
+<p>    }] subscribeNext:^(id x) {</p>
+<p>        // 订阅绑定信号，每当源信号发送内容，做完处理，就会调用这个block。</p>
+<p>        NSLog(@"%@",x)；</p>
+<p> }];</p>
+</blockquote><p>https://www.jianshu.com/p/e10e5ca413b7</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

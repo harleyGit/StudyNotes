@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactiveCocoa(中)</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">ReactiveCocoa(中)</h1>
+        <div class="show-content">
+          <p>ReactiveCocoa开发中常见用法。</p><blockquote><p>代替代理:</p></blockquote><p>    rac_signalForSelector：用于替代代理。</p><p>需求：自定义redView,监听红色view中按钮点击</p><blockquote>
+<p>    // 之前都是需要通过代理监听，给红色View添加一个代理属性，点击按钮的时候，通知代理做事情</p>
+<p>    // rac_signalForSelector:把调用某个对象的方法的信息转换成信号，就要调用这个方法，就会发送信号。</p>
+<p>    // 这里表示只要redV调用btnClick:,就会发出信号，订阅就好了。</p>
+<p>    [[redV rac_signalForSelector:@selector(btnClick:)] subscribeNext:^(id x) {</p>
+<p>        NSLog(@"点击红色按钮");</p>
+<p>    }];</p>
+</blockquote><p><br></p><hr><p><br></p><blockquote><p> 代替KVO :</p></blockquote><p>rac_valuesAndChangesForKeyPath：用于监听某个对象的属性改变。</p><blockquote>
+<p>// 把监听redV的center属性改变转换成信号，只要值改变就会发送信号</p>
+<p>    // observer:可以传入nil</p>
+<p>    [[redV rac_valuesAndChangesForKeyPath:@"center" options:NSKeyValueObservingOptionNew observer:nil] subscribeNext:^(id x) {</p>
+<p>        NSLog(@"%@",x);</p>
+<p>    }];</p>
+</blockquote><hr><p><br></p><blockquote><p>监听事件:</p></blockquote><p>rac_signalForControlEvents：用于监听某个事件。</p><blockquote><p>// 把按钮点击事件转换为信号，点击按钮，就会发送信号[[self.btn rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(idx) {NSLog(@"按钮被点击了");    }];</p></blockquote><hr><p><br></p><p><br></p><blockquote><p>代替通知:</p></blockquote><p>rac_addObserverForName:用于监听某个通知。</p><blockquote><p>// 把监听到的通知转换信号[[[NSNotificationCenterdefaultCenter] rac_addObserverForName:UIKeyboardWillShowNotificationobject:nil] subscribeNext:^(idx) {NSLog(@"键盘弹出");    }];</p></blockquote><p><br></p><hr><p><br></p><p><br></p><blockquote><p>监听文本框文字改变:</p></blockquote><p>rac_textSignal:只要文本框发出改变就会发出这个信号。</p><blockquote><p>[_textField.rac_textSignal subscribeNext:^(idx) {NSLog(@"文字改变了%@",x);   }];</p></blockquote><hr><p><br></p><p><br></p><blockquote><p>处理当界面有多次请求时，需要都获取到数据时，才能展示界面</p></blockquote><p>rac_liftSelector:withSignalsFromArray:Signals:当传入的Signals(信号数组)，每一个signal都至少sendNext过一次，就会去触发第一个selector参数的方法。</p><p>使用注意：几个信号，参数一的方法就几个参数，每个参数对应信号发出的数据。</p><blockquote>
+<p>RACSignal *request1 = [RACSignal createSignal:^RACDisposable *(idsubscriber) {</p>
+<p> // 发送请求1        [subscriber sendNext:@"发送请求1"]; </p>
+<p> return nil; </p>
+<p> }]; </p>
+<p> RACSignal *request2 = [RACSignal createSignal:^RACDisposable *(id subscriber) {</p>
+<p>        // 发送请求2</p>
+<p>        [subscriber sendNext:@"发送请求2"];</p>
+<p>        return nil;</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 使用注意：几个信号，参数一的方法就几个参数，每个参数对应信号发出的数据。</p>
+<p>    [self rac_liftSelector:@selector(updateUIWithR1:r2:) withSignalsFromArray:@[request1,request2]];</p>
+<p>}</p>
+<p>// 更新UI</p>
+<p>- (void)updateUIWithR1:(id)data r2:(id)data1</p>
+<p>{</p>
+<p>    NSLog(@"更新UI%@  %@",data,data1);</p>
+<p>}</p>
+</blockquote><hr><p><br></p><p><br></p><h1><b>ReactiveCocoa常见宏</b></h1><blockquote><p>RAC(TARGET, [KEYPATH, [NIL_VALUE]]):用于给某个对象的某个属性绑定。</p></blockquote><p>// 只要文本框文字改变，就会修改label的文字RAC(self.labelView,text) = _textField.rac_textSignal;</p><blockquote><p>RACObserve(self, name):监听某个对象的某个属性,返回的是信号。</p></blockquote><p>[RACObserve(self.view, center) subscribeNext:^(idx) {NSLog(@"%@",x);    }];</p><blockquote><p>@weakify(Obj)和@strongify(Obj),一般两个都是配套使用,在主头文件(ReactiveCocoa.h)中并没有导入，需要自己手动导入，RACEXTScope.h才可以使用。但是每次导入都非常麻烦，只需要在主头文件自己导入就好了。</p></blockquote><blockquote><p>RACTuplePack：把数据包装成RACTuple（元组类）</p></blockquote><p>// 把参数中的数据包装成元组RACTuple *tuple = RACTuplePack(@10,@20);</p><blockquote><p>RACTupleUnpack：把RACTuple（元组类）解包成对应的数据。</p></blockquote><p>// 把参数中的数据包装成元组RACTuple *tuple = RACTuplePack(@"xmg",@20);// 解包元组，会把元组的值，按顺序给参数里面的变量赋值// name = @"xmg" age = @20RACTupleUnpack(NSString*name,NSNumber*age) = tuple;</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

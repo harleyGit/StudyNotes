@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlamofireObjectMapper</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">AlamofireObjectMapper</h1>
+        <div class="show-content">
+          <p>        通常网络请求返回的是JSON数据，使用ObjectMapper可以让JSON数据直接转化为对象，而使用Alamofire进行网络请求时，使用AlamofireObjectMapper可以直接返回对象，更加简洁。</p><p>Podfile文件内容为如下：</p><blockquote>
+<p>source'https://github.com/CocoaPods/Specs.git'</p>
+<p>platform:ios,'9.0'</p>
+<p>use_frameworks!</p>
+<p>target'Web'do</p>
+<p>pod'AlamofireObjectMapper','~&gt; 3.0'</p>
+<p>end</p>
+<p>xcodeproj'Desktop/Web/Web.xcodeproj'</p>
+</blockquote><p>target后面为工程名，最后一行为工程路径(这里的Web是我的工程名)</p><p>额外操作：</p><p>Target-&gt;工程名-&gt;Build Settings-&gt;Search Paths-&gt;User Header Search Paths处添加AlamofireObjectMapper所在的目录：</p><div class="image-package">
+<img class="uploaded-img" src="http://upload-images.jianshu.io/upload_images/2959789-b4868526d0d6b834.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" width="auto" height="auto"><br><div class="image-caption"></div>
+</div><p>最后在你需要用到AlamofireObjectMapper的类中加上：</p><blockquote><p>importAlamofireObjectMapper</p></blockquote><p><br></p><hr><h4><b>创建 Mappable 对象</b></h4><blockquote>
+<p>{</p>
+<p>"args":{},</p>
+<p>"headers":{    </p>
+<p>"Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",    </p>
+<p>"Accept-Encoding":"gzip, deflate, br",</p>
+<p> "Accept-Language":"zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3", </p>
+<p> "Cache-Control":"max-age=0",    </p>
+<p> "Host":"httpbin.org",    </p>
+<p> "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:46.0) Gecko/20100101 Firefox/46.0"</p>
+<p>},</p>
+<p>"origin":"202.115.52.218",</p>
+<p>"url":"https://httpbin.org/get"</p>
+<p>}</p>
+</blockquote><p>         根据该JSON的数据格式创建以下两个Mapper类分别对应整个字典和key值为“header”的字典。将JSON中的数据与对象中的数据一一建立转化关系。  </p><blockquote>
+<p>import ObjectMapper</p>
+<p>class ResponseHeader: Mappable {</p>
+<p>var accept : String?</p>
+<p>var acceptEncoding : String?</p>
+<p>var acceptLanguage : String?</p>
+<p>var cacheControl : String?</p>
+<p>var host : String?</p>
+<p>var userAgent : String?</p>
+<p>required init?(_ map: Map) {</p>
+<p>}</p>
+<p>//映射heades字典中的所有键值</p>
+<p>func mapping(map: Map) {</p>
+<p>accept &lt;- map["Accept"]</p>
+<p>acceptEncoding &lt;- map["Accept-Encoding"]</p>
+<p>acceptLanguage &lt;- map["Accept-Language"]</p>
+<p>cacheControl &lt;- map["Cache-Control"]</p>
+<p>host &lt;- map["Host"]</p>
+<p>userAgent &lt;- map["User-Agent"]</p>
+<p>}</p>
+<p>}</p>
+</blockquote><blockquote>
+<p>import Foundation</p>
+<p>import ObjectMapper</p>
+<p>class MyResponse: Mappable {</p>
+<p>var args : NSDictionary?</p>
+<p>var headers : ResponseHeader?</p>
+<p>var origin : String?</p>
+<p>var url : String?</p>
+<p>required init?(_ map: Map) {</p>
+<p>}</p>
+<p>//映射字典中的所有键值</p>
+<p>func mapping(map: Map) {</p>
+<p>args &lt;- map["args"]</p>
+<p>headers &lt;- map["headers"]</p>
+<p>origin &lt;- map["origin"]</p>
+<p>url &lt;- map["url"]</p>
+<p>}</p>
+<p>}</p>
+</blockquote><h4>用Alamofire获取对象</h4><blockquote>
+<p>webRequst()  {        let url = "https://httpbin.org/get"        //注意返回的类型为Alamofire.request(.GET, url).responseObject { (response: Response) in</p>
+<p>let myResponse = response.result.value</p>
+<p>print(myResponse?.url)</p>
+<p>if let header = myResponse?.headers{</p>
+<p>print(header.userAgent)</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+</blockquote><p>打印内容：</p><blockquote>
+<p>Optional("https://httpbin.org/get")</p>
+<p>Optional("Web/com.applelab.Web (1; OS Version 9.3 (Build 13E230))")</p>
+</blockquote><p>Alamofire的使用：<a href="http://blog.csdn.net/sps900608/article/details/51481811" target="_blank">[快速学会Swift第三方库] Alamofire篇</a></p><p>ObjectMapper在非Alamofire请求下的使用：<a href="https://github.com/Hearst-DD/ObjectMapper" target="_blank">GitHub-ObjectMapper主页</a></p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

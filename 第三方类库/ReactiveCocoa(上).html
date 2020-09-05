@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactiveCocoa(上)</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">ReactiveCocoa(上)</h1>
+        <div class="show-content">
+          <p>在RAC中最核心的类RACSiganl,搞定这个类就能用ReactiveCocoa开发了。</p><blockquote><p>RACSiganl:信号类,一般表示将来有数据传递，只要有数据改变，信号内部接收到数据，就会马上发出数据。</p></blockquote><p>a. 信号类(RACSiganl)，只是表示当数据改变时，信号内部会发出数据，它本身不具备发送信号的能力，而是交给内部一个订阅者去发出。</p><p>b. 默认一个信号都是冷信号，也就是值改变了，也不会触发，只有订阅了这个信号，这个信号才会变为热信号，值改变了才会触发。</p><p>c. 订阅信号：调用信号RACSignal的subscribeNext就能订阅。</p><p>RACSiganl简单使用: </p><p>方法：</p><blockquote>
+<p>创建信号</p>
+<p>+ (RACSignal *)createSignal:(RACDisposable * (^)(id subscriber))didSubscribe</p>
+</blockquote><blockquote>
+<p>订阅信号,才会激活信号</p>
+<p> - (RACDisposable *)subscribeNext:(void (^)(id x))nextBlock</p>
+</blockquote><blockquote>
+<p>发送信号 </p>
+<p>- (void)sendNext:(id)value</p>
+</blockquote><p>Demo：</p><blockquote>
+<p>    //创建信号，首先把didSubscribe保存到信号中，还不会触发。</p>
+<p>RACSignal *siganl = [RACSignal createSignal:^RACDisposable *(id subscriber) {</p>
+<p>        // block调用时刻：每当有订阅者订阅信号，就会调用block。</p>
+<p>        // 2.发送信号</p>
+<p>      // siganl的didSubscribe中调用[subscriber sendNext:@1];</p>
+<p>       // sendNext底层其实就是执行subscriber的nextBlock</p>
+<p>        [subscriber sendNext:@1];</p>
+<p>        // 如果不在发送数据，最好发送信号完成，内部会自动调用[RACDisposable disposable]取消订阅信号。</p>
+<p>        [subscriber sendCompleted];</p>
+<p>        return [RACDisposable disposableWithBlock:^{</p>
+<p>            // block调用时刻：当信号发送完成或者发送错误，就会自动执行这个block,取消订阅信号。</p>
+<p>            // 执行完Block后，当前信号就不在被订阅了。</p>
+<p>            NSLog(@"信号被销毁");</p>
+<p>        }];</p>
+<p>    }];</p>
+<p>    // 3.订阅信号,才会激活信号.</p>
+<p>    //当信号被订阅，也就是调用signal的subscribeNext:nextBlock</p>
+<p>    //subscribeNext内部会创建订阅者subscriber，并且把nextBlock保存到subscriber中。</p>
+<p>   //  subscribeNext内部会调用siganl的didSubscribe</p>
+<p>    [siganl subscribeNext:^(id x) {</p>
+<p>        // block调用时刻：每当有信号发出数据，就会调用block.</p>
+<p>        NSLog(@"接收到数据:%@",x);</p>
+<p>    }];</p>
+</blockquote><p><br></p><hr><blockquote><p><b>RACDisposable:用于取消订阅或者清理资源，当信号发送完成或者发送错误的时候，就会自动触发它。</b></p></blockquote><p>使用场景:不想监听某个信号时，可以通过它主动取消订阅信号。</p><hr><blockquote><p><b>RACSubject:RACSubject:信号提供者，自己可以充当信号，又能发送信号。</b></p></blockquote><p>使用场景:通常用来代替代理，有了它，就不必要定义代理了。</p><hr><blockquote><p><b>RACReplaySubject:重复提供信号类，RACSubject的子类。</b></p></blockquote><p>RACReplaySubject与RACSubject区别:</p><p>RACReplaySubject可以先发送信号，在订阅信号，RACSubject就不可以。</p><p>使用场景一:如果一个信号每被订阅一次，就需要把之前的值重复发送一遍，使用重复提供信号类。</p><p>使用场景二:可以设置capacity数量来限制缓存的value的数量,即只缓充最新的几个值。</p><hr><p>RACSubject和RACReplaySubject简单使用:</p><blockquote>
+<p>// RACSubject使用步骤</p>
+<p>    // 1.创建信号 [RACSubject subject]，跟RACSiganl不一样，创建信号时没有block。</p>
+<p>    // 2.订阅信号 - (RACDisposable *)subscribeNext:(void (^)(id x))nextBlock</p>
+<p>    // 3.发送信号 sendNext:(id)value</p>
+<p><br></p>
+<p>    // RACSubject:底层实现和RACSignal不一样。</p>
+<p>    // 1.调用subscribeNext订阅信号，只是把订阅者保存起来，并且订阅者的nextBlock已经赋值了。</p>
+<p>    // 2.调用sendNext发送信号，遍历刚刚保存的所有订阅者，一个一个调用订阅者的nextBlock。</p>
+<p><br></p>
+<p>    // 1.创建信号</p>
+<p>    RACSubject *subject = [RACSubject subject];</p>
+<p><br></p>
+<p>    // 2.订阅信号</p>
+<p>    [subject subscribeNext:^(id x) {</p>
+<p>        // block调用时刻：当信号发出新值，就会调用.</p>
+<p>        NSLog(@"第一个订阅者%@",x);</p>
+<p>    }];</p>
+<p>    [subject subscribeNext:^(id x) {</p>
+<p>        // block调用时刻：当信号发出新值，就会调用.</p>
+<p>        NSLog(@"第二个订阅者%@",x);</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 3.发送信号</p>
+<p>    [subject sendNext:@"1"];</p>
+</blockquote><p><br></p><blockquote>
+<p>// RACReplaySubject使用步骤:</p>
+<p>    // 1.创建信号 [RACSubject subject]，跟RACSiganl不一样，创建信号时没有block。</p>
+<p>    // 2.可以先订阅信号，也可以先发送信号。</p>
+<p>    // 2.1 订阅信号 - (RACDisposable *)subscribeNext:(void (^)(id x))nextBlock</p>
+<p>    // 2.2 发送信号 sendNext:(id)value</p>
+<p><br></p>
+<p>    // RACReplaySubject:底层实现和RACSubject不一样。</p>
+<p>    // 1.调用sendNext发送信号，把值保存起来，然后遍历刚刚保存的所有订阅者，一个一个调用订阅者的nextBlock。</p>
+<p>    // 2.调用subscribeNext订阅信号，遍历保存的所有值，一个一个调用订阅者的nextBlock</p>
+<p><br></p>
+<p>    // 如果想当一个信号被订阅，就重复播放之前所有值，需要先发送信号，在订阅信号。</p>
+<p>    // 也就是先保存值，在订阅值。</p>
+<p><br></p>
+<p>    // 1.创建信号</p>
+<p>    RACReplaySubject *replaySubject = [RACReplaySubject subject];</p>
+<p><br></p>
+<p>    // 2.发送信号</p>
+<p>    [replaySubject sendNext:@1];</p>
+<p>    [replaySubject sendNext:@2];</p>
+<p><br></p>
+<p>    // 3.订阅信号</p>
+<p>    [replaySubject subscribeNext:^(id x) {</p>
+<p><br></p>
+<p>        NSLog(@"第一个订阅者接收到的数据%@",x);</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 订阅信号</p>
+<p>    [replaySubject subscribeNext:^(id x) {</p>
+<p><br></p>
+<p>        NSLog(@"第二个订阅者接收到的数据%@",x);</p>
+<p>    }];</p>
+</blockquote><p>打印结果为：</p><div class="image-package">
+<img class="uploaded-img" src="http://upload-images.jianshu.io/upload_images/2959789-ce2ee2fe4d10a3ef.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" width="auto" height="auto"><br><div class="image-caption">RACReplaySubject打印结果                                           </div>
+</div><hr><blockquote><p>RACSubject替换代理</p></blockquote><blockquote>
+<p>// 需求:</p>
+<p>    // 1.给当前控制器添加一个按钮，modal到另一个控制器界面</p>
+<p>    // 2.另一个控制器view中有个按钮，点击按钮，通知当前控制器</p>
+<p><br></p>
+<p>    步骤一：在第二个控制器.h，添加一个RACSubject代替代理。</p>
+<p>    @interface TwoViewController : UIViewController</p>
+<p><br></p>
+<p>    @property (nonatomic, strong) RACSubject *delegateSignal;</p>
+<p><br></p>
+<p>    @end</p>
+<p><br></p>
+<p>    步骤二：监听第二个控制器按钮点击</p>
+<p>    @implementation TwoViewController</p>
+<p>    - (IBAction)notice:(id)sender {</p>
+<p>        // 通知第一个控制器，告诉它，按钮被点了</p>
+<p><br></p>
+<p>        // 通知代理</p>
+<p>        // 判断代理信号是否有值</p>
+<p>        if (self.delegateSignal) {</p>
+<p>            // 有值，才需要通知</p>
+<p>            [self.delegateSignal sendNext:nil];</p>
+<p>        }</p>
+<p>    }</p>
+<p>    @end</p>
+<p><br></p>
+<p>    步骤三：在第一个控制器中，监听跳转按钮，给第二个控制器的代理信号赋值，并且监听.</p>
+<p>    @implementation OneViewController</p>
+<p>    - (IBAction)btnClick:(id)sender {</p>
+<p><br></p>
+<p>        // 创建第二个控制器</p>
+<p>        TwoViewController *twoVc = [[TwoViewController alloc] init];</p>
+<p><br></p>
+<p>        // 设置代理信号</p>
+<p>        twoVc.delegateSignal = [RACSubject subject];</p>
+<p><br></p>
+<p>        // 订阅代理信号</p>
+<p>        [twoVc.delegateSignal subscribeNext:^(id x) {</p>
+<p><br></p>
+<p>            NSLog(@"点击了通知按钮");</p>
+<p>        }];</p>
+<p><br></p>
+<p>        // 跳转到第二个控制器</p>
+<p>        [self presentViewController:twoVc animated:YES completion:nil];</p>
+<p>    }</p>
+<p>    @end</p>
+</blockquote><hr><blockquote><p><b>RACTuple:元组类,类似NSArray,用来包装值.</b></p></blockquote><p><br></p><hr><blockquote><p>RACSequence:RAC中的集合类，用于代替NSArray,NSDictionary,可以使用它来快速遍历数组和字典。</p></blockquote><p>使用场景：字典转模型</p><p>三步走：</p><p>     第一步: 把数组转换成集合RACSequence numbers.rac_sequence</p><p>    第二步: 把集合RACSequence转换RACSignal信号类,numbers.rac_sequence.signal</p><p>     第三步: 订阅信号，激活信号，会自动把集合中的所有值，遍历出来。</p><blockquote>
+<p>// 1.遍历数组</p>
+<p>    NSArray *numbers = @[@1,@2,@3,@4];</p>
+<p>    [numbers.rac_sequence.signal subscribeNext:^(id x) {</p>
+<p>        NSLog(@"%@",x);</p>
+<p>    }];</p>
+</blockquote><p><br></p><p>遍历字典,遍历出来的键值对会包装成RACTuple(元组对象)</p><blockquote>
+<p>NSDictionary *dict = @{@"name":@"xmg",@"age":@18};</p>
+<p>    [dict.rac_sequence.signal subscribeNext:^(RACTuple *x) {</p>
+<p><br></p>
+<p>        // 解包元组，会把元组的值，按顺序给参数里面的变量赋值</p>
+<p>        RACTupleUnpack(NSString *key,NSString *value) = x;</p>
+<p>        // 相当于以下写法</p>
+<p>        //        NSString *key = x[0];</p>
+<p>        //        NSString *value = x[1];</p>
+<p>        NSLog(@"%@ %@",key,value);</p>
+<p>    }];</p>
+<p><br></p>
+<p><br></p>
+</blockquote><p><br></p><p>    // 字典转模型</p><blockquote>
+<p>    // 1 OC写法</p>
+<p>    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"flags.plist" ofType:nil];</p>
+<p>    NSArray *dictArr = [NSArray arrayWithContentsOfFile:filePath];</p>
+<p>    NSMutableArray *items = [NSMutableArray array];</p>
+<p>    for (NSDictionary *dict in dictArr) {</p>
+<p>        FlagItem *item = [FlagItem flagWithDict:dict];</p>
+<p>        [items addObject:item];</p>
+<p>    }</p>
+<p><br></p>
+<p>// 2 RAC写法</p>
+<p>    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"flags.plist" ofType:nil];</p>
+<p>    NSArray *dictArr = [NSArray arrayWithContentsOfFile:filePath];</p>
+<p>    NSMutableArray *flags = [NSMutableArray array];</p>
+<p>    _flags = flags;</p>
+<p>    // rac_sequence注意点：调用subscribeNext，并不会马上执行nextBlock，而是会等一会。</p>
+<p>    [dictArr.rac_sequence.signal subscribeNext:^(id x) {</p>
+<p>        // 运用RAC遍历字典，x：字典</p>
+<p>        FlagItem *item = [FlagItem flagWithDict:x];</p>
+<p>        [flags addObject:item];</p>
+<p>    }];</p>
+<p>    NSLog(@"%@",  NSStringFromCGRect([UIScreen mainScreen].bounds));</p>
+<p><br></p>
+<p>    // 3 RAC高级写法:</p>
+<p>    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"flags.plist" ofType:nil];</p>
+<p><br></p>
+<p>    NSArray *dictArr = [NSArray arrayWithContentsOfFile:filePath];</p>
+<p>    // map:映射的意思，目的：把原始值value映射成一个新值</p>
+<p>    // array: 把集合转换成数组</p>
+<p>    // 底层实现：当信号被订阅，会遍历集合中的原始值，映射成新值，并且保存到新的数组里。</p>
+<p>    NSArray *flags = [[dictArr.rac_sequence map:^id(id value) {</p>
+<p>        return [FlagItem flagWithDict:value];</p>
+<p>    }] array];</p>
+</blockquote><p><br></p><hr><blockquote><p><b>RACCommand:RAC中用于处理事件的类，可以把事件如何处理,事件中的数据如何传递，包装到这个类中，他可以很方便的监控事件的执行过程。</b></p></blockquote><p>使用场景:监听按钮点击，网络请求</p><p>RACCommand简单使用：</p><p>步骤：</p><p>1.创建命令 initWithSignalBlock:(RACSignal * (^)(id input))signalBlock</p><p>2.在signalBlock中，创建RACSignal，并且作为signalBlock的返回值</p><p>3.执行命令 - (RACSignal *)execute:(id)input</p><p><br></p><p>注意：</p><p>    1.signalBlock必须要返回一个信号，不能传nil.</p><p>    2.如果不想要传递信号，直接创建空的信号[RACSignal empty];</p><p>    3.RACCommand中信号如果数据传递完，必须调用[subscriber sendCompleted]，这时命令才会执行完毕，否则永远处于执行中。</p><p>    4.RACCommand需要被强引用，否则接收不到RACCommand中的信号，因此RACCommand中的信号是延迟发送的。</p><p><br></p><p>RACCommand设计思想：内部signalBlock为什么要返回一个信号，这个信号有什么用。</p><p>    1.在RAC开发中，通常会把网络请求封装到RACCommand，直接执行某个RACCommand就能发送请求。</p><p>     2.当RACCommand内部请求到数据的时候，需要把请求的数据传递给外界，这时候就需要通过signalBlock返回的信号传递了。</p><p><br></p><p>如何拿到RACCommand中返回信号发出的数据。</p><p>    1.RACCommand有个执行信号源executionSignals，这个是signal of signals(信号的信号),意思是信号发出的数据是信号，不是普通的类型。</p><p>    2.订阅executionSignals就能拿到RACCommand中返回的信号，然后订阅signalBlock返回的信号，就能获取发出的值。</p><p><br></p><blockquote>
+<p>// 1.创建命令</p>
+<p> RACCommand *command = [[RACCommand alloc] initWithSignalBlock:^RACSignal *(id input) {</p>
+<p>                       NSLog(@"执行命令");</p>
+<p>                // 创建空信号,必须返回信号</p>
+<p>        //        return [RACSignal empty];</p>
+<p>               // 2.创建信号,用来传递数据        return [RACSignal createSignal:^RACDisposable *(id subscriber) {</p>
+<p>            [subscriber sendNext:@"请求数据"];</p>
+<p>            // 注意：数据传递完，最好调用sendCompleted，这时命令才执行完毕。</p>
+<p>            [subscriber sendCompleted];</p>
+<p>            return nil;</p>
+<p>        }];</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 强引用命令，不要被销毁，否则接收不到数据</p>
+<p>    _conmmand = command;</p>
+<p><br></p>
+<p><br></p>
+<p>    // 3.订阅RACCommand中的信号</p>
+<p>    [command.executionSignals subscribeNext:^(id x) {</p>
+<p>        [x subscribeNext:^(id x) {</p>
+<p>            NSLog(@"%@",x);</p>
+<p>        }];</p>
+<p>    }];</p>
+<p><br></p>
+<p><br></p>
+<p>// RAC高级用法</p>
+<p>    // switchToLatest:用于signal of signals，获取signal of signals发出的最新信号,也就是可以直接拿到RACCommand中的信号</p>
+<p>    [command.executionSignals.switchToLatest subscribeNext:^(id x) {</p>
+<p>        NSLog(@"%@",x);</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 4.监听命令是否执行完毕,默认会来一次，可以直接跳过，skip表示跳过第一次信号。</p>
+<p>    [[command.executing skip:1] subscribeNext:^(id x) {</p>
+<p>        if ([x boolValue] == YES) {</p>
+<p>            // 正在执行</p>
+<p>            NSLog(@"正在执行");</p>
+<p>        }else{</p>
+<p>            // 执行完成</p>
+<p>            NSLog(@"执行完成");</p>
+<p>        }</p>
+<p>    }];</p>
+<p>    // 5.执行命令</p>
+<p>    [self.conmmand execute:@1];</p>
+</blockquote><p><br></p><hr><blockquote><p><b>RACMulticastConnection:用于当一个信号，被多次订阅时，为了保证创建信号时，避免多次调用创建信号中的block，造成副作用，可以使用这个类处理。</b></p></blockquote><p>使用注意:RACMulticastConnection通过RACSignal的-publish或者-muticast:方法创建.</p><p>RACMulticastConnection简单使用:</p><p>RACMulticastConnection使用步骤: </p><p>     1.创建信号 + (RACSignal *)createSignal:(RACDisposable * (^)(id subscriber))didSubscribe</p><p>     2.创建连接 RACMulticastConnection *connect = [signal publish];</p><p>     3.订阅信号,注意：订阅的不在是之前的信号，而是连接的信号。 [connect.signal subscribeNext:nextBlock]</p><p>    4.连接 [connect connect]</p><p><br></p><p> RACMulticastConnection底层原理:</p><p>     1.创建connect，connect.sourceSignal -&gt; RACSignal(原始信号)  connect.signal -&gt; RACSubject</p><p>     2.订阅connect.signal，会调用RACSubject的subscribeNext，创建订阅者，而且把订阅者保存起来，不会执行block。</p><p>     3.[connect connect]内部会订阅RACSignal(原始信号)，并且订阅者是RACSubject</p><p>          3.1.订阅原始信号，就会调用原始信号中的didSubscribe</p><p>          3.2 didSubscribe，拿到订阅者调用sendNext，其实是调用RACSubject的sendNext</p><p>    4.RACSubject的sendNext,会遍历RACSubject所有订阅者发送信号。</p><p>          4.1 因为刚刚第二步，都是在订阅RACSubject，因此会拿到第二步所有的订阅者，调用他们的nextBlock</p><p><br></p><blockquote>
+<p>// 1.创建请求信号</p>
+<p> RACSignal *signal = [RACSignal createSignal:^RACDisposable *(idsubscriber) { </p>
+<p> NSLog(@"发送请求");                return nil;</p>
+<p> }]; </p>
+<p> // 2.订阅信号</p>
+<p> [signal subscribeNext:^(id x) {</p>
+<p> NSLog(@"接收数据"); </p>
+<p> }]; </p>
+<p> // 2.订阅信号</p>
+<p> [signal subscribeNext:^(id x) { </p>
+<p> NSLog(@"接收数据");</p>
+<p> }]; </p>
+<p> // 3.运行结果，会执行两遍发送请求，也就是每次订阅都会发送一次请求 </p>
+<p> // RACMulticastConnection:解决重复请求问题 </p>
+<p> // 1.创建信号 </p>
+<p> RACSignal *signal = [RACSignal createSignal:^RACDisposable *(id subscriber) {</p>
+<p>        NSLog(@"发送请求");</p>
+<p>        [subscriber sendNext:@1];</p>
+<p>        return nil;</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 2.创建连接</p>
+<p>    RACMulticastConnection *connect = [signal publish];</p>
+<p>    // 3.订阅信号，</p>
+<p>    // 注意：订阅信号，也不能激活信号，只是保存订阅者到数组，必须通过连接,当调用连接，就会一次性调用所有订阅者的sendNext:</p>
+<p>    [connect.signal subscribeNext:^(id x) {</p>
+<p>        NSLog(@"订阅者一信号");</p>
+<p>    }];</p>
+<p><br></p>
+<p>    [connect.signal subscribeNext:^(id x) {</p>
+<p>        NSLog(@"订阅者二信号");</p>
+<p>    }];</p>
+<p><br></p>
+<p>    // 4.连接,激活信号</p>
+<p>    [connect connect];</p>
+</blockquote><p><br></p><hr><blockquote><p>RACScheduler:RAC中的队列，用GCD封装的。</p></blockquote><p><br></p><hr><blockquote><p>RACUnit:表⽰stream不包含有意义的值,也就是看到这个，可以直接理解为nil.</p></blockquote><p><br></p><hr><blockquote><p>RACEvent: 把数据包装成信号事件(signal event)。它主要通过RACSignal的-materialize来使用，然并卵。</p></blockquote>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

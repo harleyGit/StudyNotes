@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactiveSwift(上)</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">ReactiveSwift(上)</h1>
+        <div class="show-content">
+          <h1><b>Observer</b></h1><p><b>Observer信息的处理逻辑封装, Observer的主要代码如下:<br></b></p><blockquote>
+<p><b>//Observer.swift<br></b></p>
+<p>public final class Observer {   </p>
+<p> public typealias Action = (Event) -&gt; Void  </p>
+<p>private let _send: Action            </p>
+<p> public init(_ action: @escaping Action) {        self._send = action        ...    }     </p>
+<p>public func send(_ event: Event) {        _send(event)    }                  </p>
+<p> public func send(value: Value) {        _send(.value(value))    }                    </p>
+<p>public func sendXXX() //其实都是send(_ event: Event)}</p>
+</blockquote><p><b>Observer内部保持了一个处理Event的闭包, 初始化Observer就是在设置这个闭包, 而调用Observer.send则是在执行这个闭包.<br></b></p><p><b><b>需要注意的点: Observer封装了Event的处理逻辑.</b><br></b></p><hr><h1><b><b>Signal</b><br></b></h1><p><b>有了信息的载体和信息的处理逻辑, 接下来需要的是: 将信息发送出去.<br></b></p><p>在ReactiveSwift中, 想要发送信息共有四种途径, 这里我们先介绍第一种: Signal.(事实上, 四种途径最终都是通过Signal来完成的, 所以, 其实只有一种.)</p><p>Signal是ReactiveSwift中热信号的实现, "热"的意思是它是一直活动着的, 会主动将产出的事件Event向外发送, 而不会等到有人订阅后才开始发送. 这意味着如果订阅的时机晚于发送的时机, 那么订阅者是不会收到订阅时机之前的事件的.</p><p>举个栗子: 春晚现场直播从晚8点一直播到12点, 这段时间产出的节目就是Value事件, 12点一到产出的就是Completed事件. 很明显, 不管有没有人看春晚,  春晚现场都不关心, 节目来了就上, 时间一到就散. 但如果你想看直播, 最好的时机当然是8点, 若是9点才打开电视, 那9点之前的节目你肯定就错过了.</p><p><b>Signal的使用:</b></p><p>note: 这里的Value和Error都是泛型, 你需要在创建的时候进行指定</p><blockquote>
+<p>//public static func pipe(disposable: Disposable? = nil) -&gt; (output: Signal, input: Observer)</p>
+<p>let signalTuple = Signal.pipe()</p>
+<p>let (signal, observer) = Signal.pipe()</p>
+</blockquote><p><b>通常, 你应该只通过Signal.pipe()函数来初始化一个热信号. 这个函数会返回一个元组, 元组的第一个值是output(类型为Signal), 第二个值是input(类型为Observer). 我们通过output来订阅信号, 通过input来向信号发生信息.<br></b></p><p><b>需要注意的点: output的作用是管理信号状态并保存由订阅者提供的Observer对象(Observer._send封装了Event的处理逻辑), 而input的作用则是在接收到Event后依次执行这些被保存的Observer._send.</b></p><p><b><br></b></p><p><b>来看一段订阅Signal的基础代码:<br></b></p><blockquote>
+<p><b>func bindSignal2_1(){<br></b></p>
+<p>
+        //1.创建signal(output)和innerObserver(input)</p>
+<p>
+        let (signal, innerObserver) = Signal.pipe()</p>
+<p>        
+        //2.创建Observer</p>
+<p>        let outerObserver1 = Signal.Observer(value: { (value) in</p>
+<p>            print("did received value: (value)")</p>
+<p>
+        })</p>
+<p>        //2.还是创建Observer</p>
+<p>let outerObserver2 = Signal.Observer { (event) in</p>
+<p>
+            switch event {</p>
+<p>
+            case let .value(value):</p>
+<p>                print("did received value: (value)")</p>
+<p>            default: break
+            }</p>
+<p>        }</p>
+<p>
+        
+        signal.observe(outerObserver1)//3.向signal中添加Observer
+        signal.observe(outerObserver2)//3.还是向signal中添加Observer</p>
+<p>
+        
+        innerObserver.send(value: 1)//4.向signal发生信息(执行signal保存的所有Observer对象的Event处理逻辑)</p>
+<p>        innerObserver.sendCompleted()//4.还是执向signal发生信息</p>
+<p>
+    }</p>
+</blockquote><p>        实际开发中我们肯定不会这样写, 太繁琐了. 它的意义在于告诉各位: 1)每订阅一次Signal实际上就是在向Signal中添加一个Observer对象. 2)即使每次订阅信号的处理逻辑都是一样的, 但它们仍然是完全不同的的两个Observer对象.        </p><p><b><br></b></p><p><b>把上面的代码改的简洁一点:</b></p><blockquote>
+<p>typealias NSignal = ReactiveSwift.Signaloverride </p>
+<p>func viewDidLoad() {</p>
+<p>        super.viewDidLoad() </p>
+<p>       //1.创建signal(output)和innerObserver(input)</p>
+<p>        let (signal, innerObserver) = NSignal.pipe()</p>
+<p>                            signal.observeValues { (value) in   //2&amp;3.创建Observer并添加到Signal中            print("did received value: (value)")        }        signal.observeValues { (value) in   //2&amp;3.还是创建Observer并添加到Signal中            print("did received value: (value)")        }                 innerObserver.send(value: 1) //4. ...        innerObserver.sendCompleted() //4. ...}</p>
+</blockquote><p>        <b>介绍下Signal.observeValues, 这是Signal.observe的一个便利函数, 作用是创建一个<b>只处理Value事件</b>的Observer并添加到Signal中, 类似的还有<b>只处理Failed事件的</b>Signal.observeFailed和<b>所有事件都能处理的**</b>Signal.observeResult.<br></b></p><p><b>热信号相关代码：</b></p><blockquote>
+<p><b>typealias NSignal = ReactiveSwift.Signal<br></b></p>
+<p>//ViewModel.swift</p>
+<p>class ViewModel {</p>
+<p>    let signal: NSignal    </p>
+<p>    let innerObserver: NSignal.Observer       </p>
+<p>    init() { (signal, innerObserver) = NSignal.pipe() }</p>
+<p>} </p>
+<p>//View1.swift</p>
+<p>class View1 {</p>
+<p>    func bind(viewModel: ViewModel) {</p>
+<p>        viewModel.signal.observeValues { (value) in </p>
+<p>           print("View1 received value: (value)")</p>
+<p>        }</p>
+<p>    }</p>
+<p>} </p>
+<p>//View2.swift</p>
+<p>class View2 {</p>
+<p>    func bind(viewModel: ViewModel) {</p>
+<p>        viewModel.signal.observeValues { (value) in</p>
+<p>            print("View2 received value: (value)")</p>
+<p>        }</p>
+<p>    }</p>
+<p>} </p>
+<p>//View3.swift</p>
+<p>class View3 {</p>
+<p>    func bind(viewModel: ViewModel) {</p>
+<p>          viewModel.signal.observeValues { (value) in</p>
+<p>            print("View3 received value: (value)")</p>
+<p>        }</p>
+<p>        viewModel.signal.observeInterrupted { </p>
+<p>           print("View3 received interrupted")</p>
+<p>        }</p>
+<p>    }}</p>
+<p> override func viewDidLoad() {</p>
+<p>       super.viewDidLoad()</p>
+<p>        let view1 = View1() </p>
+<p>       let view2 = View2()</p>
+<p>        let view3 = View3() </p>
+<p>       let viewModel = ViewModel()</p>
+<p>       view1.bind(viewModel: viewModel)//订阅时机较早        </p>
+<p>       viewModel.innerObserver.send(value: 1) </p>
+<p>        view2.bind(viewModel: viewModel)//订阅时机较晚          </p>
+<p>        viewModel.innerObserver.send(value: 2)        </p>
+<p>        viewModel.innerObserver.sendCompleted()//发送一个非Value事件 信号无效</p>
+<p>         view3.bind(viewModel: viewModel)//信号无效后才订阅        </p>
+<p>        viewModel.innerObserver.send(value: 3)//信号无效后发送事件    }</p>
+</blockquote><p>        <b>view2的订阅时间晚于value1的发送时间, 所以view2收不到value1对应的事件, 这部分对应上面我说的热信号并不关心订阅者的情况, 一旦有事件即会发送.<br></b></p><p>        第二部分则是Signal自身的特性: 收到任何非Value的事件后信号便无效了. 所以你会看到虽然view1和view2的订阅都早于value3的发送时间, 但因为value3在信号发送前先发送了completed事件, 所以view1和view2都不会收到value3事件, 同理, view3也不会收到value3事件(它只会收到一个interrupted, 如果它关心的话).</p><hr><h1><b>KVO</b></h1><blockquote>
+<p><b>public func signal(forKeyPath keyPath: String) -&gt; Signal<br></b></p>
+<p>tableView: UITableView</p>
+<p>dynamic var someValue = 0</p>
+<p> reactive.signal(forKeyPath: "someValue").observeValues { [weak self] (value) in      //code}</p>
+<p> tableView.reactive.signal(forKeyPath: "contentSize").observeValues {[weak self] (contentSize) in</p>
+<p>    if  let contentSize = contentSize as? CGSize,        let strongSelf = self {</p>
+<p>                 let isHidden = contentSize.height &lt; strongSelf.tableView.height </p>
+<p>                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now(),</p>
+<p>                execute: {            strongSelf.tableView.mj_footer.isHidden = isHidden</p>
+<p>        })    }}</p>
+</blockquote><p>        <b>KVO的Reactive版本, 对于NSObject的子类可以直接使用, 对于Swift的原生类需要加上dynamic修饰.<br></b></p><hr><h1><b>Map</b></h1><blockquote>
+<p><b>let (signal, innerObserver) = NSignal.pipe()<br></b></p>
+<p>signal.map { return "xxx" + String($0) } </p>
+<p>//map就不解释了</p>
+<p>.observeValues { (value) in</p>
+<p>            print(value)</p>
+<p>        } </p>
+<p>        innerObserver.send(value: 1)innerObserver.sendCompleted()</p>
+<p>打印：</p>
+<p>xxx1</p>
+</blockquote><p><b><br></b></p><hr><h1><b>On：</b></h1><blockquote>
+<p><b>public func on(<br></b></p>
+<p>        event: ((Event) -&gt; Void)? = nil,</p>
+<p>        failed: ((Error) -&gt; Void)? = nil, </p>
+<p>        completed: (() -&gt; Void)? = nil,</p>
+<p>        interrupted: (() -&gt; Void)? = nil,</p>
+<p>        terminated: (() -&gt; Void)? = nil,  </p>
+<p>       disposed: (() -&gt; Void)? = nil,</p>
+<p>        value: ((Value) -&gt; Void)? = nil) -&gt; Signal</p>
+</blockquote><p><b>D😈emo：</b></p><blockquote>
+<p><b>let (signal, innerObserver) = NSignal.pipe()<br></b></p>
+<p>signal.on( value: { (value) in</p>
+<p>    print("on value: (value)")</p>
+<p>}).observeValues { (value) in</p>
+<p>    print("did received value: (value)"</p>
+<p>)}</p>
+<p> innerObserver.send(value: 1)</p>
+<p>innerObserver.sendCompleted()</p>
+<p> 打印:</p>
+<p> on value: 1</p>
+<p>  did received value: 1</p>
+</blockquote><p>        <b>on: 在信号发送事件和订阅者收到事件之间插入一段事件处理逻辑, 你可以把它看做map的简洁版. (这个函数的参数很多, 但默认都有给nil, 所以你只需要关心自己需要的部分即可, 比如这里我只想在Value事件间插入逻辑)<br></b></p><p><b><br></b></p><hr><p><b>take(until:)<br></b></p><blockquote>
+<p><b>public func take(until trigger: Signal) -&gt; Signal<br></b></p>
+<p>let (signal, innerObserver) = NSignal.pipe()</p>
+<p>let (takeSignal, takeObserver) = NSignal.pipe()signal.take(until: takeSignal).observeValues { (value) in</p>
+<p>    print("received value: (value)")</p>
+<p>}</p>
+<p> innerObserver.send(value: 1)</p>
+<p>innerObserver.send(value: 2)</p>
+<p> takeObserver.send(value: ())</p>
+<p>innerObserver.send(value: 3) </p>
+<p>takeObserver.sendCompleted()</p>
+<p>innerObserver.sendCompleted()</p>
+<p> 打印: received value: 1      received value: 2</p>
+</blockquote><p>        <b>take(until:): 在takeSignal发送Event之前, signal可以正常发送Event, 一旦takeSignal开始发送Event, signal就停止发送, takeSignal相当于一个停止标志位.<br></b></p><hr><h1><b>take(first:)<br></b></h1><blockquote>
+<p>publicfunc take(first count: Int) -&gt; Signal</p>
+<p>let (signal, innerObserver) = NSignal.pipe()</p>
+<p>signal.take(first: 2).observeValues { (value) in</p>
+<p>    print("received value: (value)")</p>
+<p>}</p>
+<p>innerObserver.send(value: 1)</p>
+<p>innerObserver.send(value: 2)</p>
+<p>innerObserver.send(value: 3)</p>
+<p>innerObserver.send(value: 4)</p>
+<p>innerObserver.sendCompleted()</p>
+<p>打印: received value: 1   received value: 2</p>
+</blockquote><p>take(first:): 只取最初N次的Event.</p><p>类似的还有signal.take(last: ): 只取最后N次的Event.</p><hr><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p><b><br></b></p><p>参考资料： <a href="http://www.cocoachina.com/special/20171204/21412.html" target="_blank">ReactiveSwift(上)</a></p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
