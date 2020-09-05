@@ -52,7 +52,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
 
-*	<img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/OC.png" width="50" height="52">
+*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/OC.png" width="50" height="52"></a>
 	* [iPhone 尺寸和适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/OC开发/iPhone%20尺寸和适配.md)
 	
         
@@ -125,8 +125,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 * [Android 模拟器 For Mac](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Android-模拟器-For-Mac.md)
 * [CocoaPods(III) 之 提升Podfile档次[U]](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/CocoaPods(III)-之-提升Podfile档次%5BU%5D.md)
 * [Git-配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git-配置.md)
-* [Git--问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git--问题(I).md)
-* [Git-[提交记录查看、提交、变基](I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git-%5B提交记录查看、提交、变基%5D(I).md)
+* [Git 问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git--问题(I).md)
+* [Git [提交记录查看、提交、变基](I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git-%5B提交记录查看、提交、变基%5D(I).md)
 * [GitBook-配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/GitBook-配置.md)
 * [Visual Studio Code 配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Visual-Studio.md)
 * [Xcode 完全卸载](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Xcode-完全卸载.md)
