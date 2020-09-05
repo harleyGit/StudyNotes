@@ -59,6 +59,10 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/swift2.png" width="50" height="50"></a>
 	* [Swif 包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Swift包管理.md)
 	* [SwiftUI[简单构造一个App]](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/SwiftUI[简单构造一个App].md)
+	* [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
+	* [SwiftUI 官方教程](https://developer.apple.com/tutorials/swiftui/)
+	* [SwiftUI 官方Demo](https://github.com/Jinxiansen/SwiftUI/tree/doc)
+	* [SwiftUI 翻译官方Demo](https://gitee.com/TheAlgorithms/SwiftUI)
 
 
 

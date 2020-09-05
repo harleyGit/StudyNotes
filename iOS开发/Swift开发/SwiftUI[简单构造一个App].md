@@ -1,7 +1,8 @@
 # SwiftUI[简单构造一个App]
 
+- 默认情况下， SwiftUI view 文件声明了两个结构体。第一个结构体遵循 View 协议，描述 view 的内容和布局。第二个结构体声明该 view 的预览。
 
-- Demo的 Code
+&emsp;	`Demo的 Code`
 ```
 //
 //  ContentView.swift
@@ -36,6 +37,8 @@ let programmingBooks: [ProgrammingBook] = [
 ]
 
 
+
+//该结构体遵循 View 协议，描述 view 的内容和布局
 struct ContentView: View {
     
     var programmingBooks: [ProgrammingBook] = []
@@ -69,6 +72,9 @@ struct ContentView: View {
     }
 }
 
+
+
+//该结构体声明该 view 的预览
 //#if DEBUG
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
@@ -78,7 +84,7 @@ struct ContentView_Previews: PreviewProvider {
 //#endif
 
 ```
-效果图：
+点击Resue来进行预览效果图：
 <br/>
 ![programmingBooks 在Resume下的效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS开发/Swift开发/Pictures/swiftUI‘sDemo.png)
 <br/>
@@ -122,7 +128,9 @@ struct DetailView_Previews: PreviewProvider {
 
 ```
 效果图：
+<br/>
 ![详情图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS开发/Swift开发/Pictures/swiftUI'sDemo2.png)
+<br/>
 
 
 
