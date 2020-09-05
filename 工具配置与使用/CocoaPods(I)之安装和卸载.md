@@ -1,3 +1,6 @@
+# CocoaPosds(I)之安装和卸载
+
+
 ># 安装CocoaPosds[当前Mac OS X 10.15]
 
 **`①是否安装了RVM，若没有需安装，否则第②步`**
@@ -56,6 +59,7 @@ $ source ~/.rvm/scripts/rvm
 
 
 <br/>
+
 **`更换镜像源`**
 -  ruby 默认的原地址是国外网络地址，通过下面命令查看当前的镜像:
 `gem sources -l`
@@ -75,6 +79,7 @@ https://rubygems.org/ removed from sources
 
 -  添加国内的 ruby 镜像
 `gem sources -a https://gems.ruby-china.com`
+
 ```
 gem sources -a https://gems.ruby-china.com
 https://gems.ruby-china.com added to sources
@@ -89,6 +94,7 @@ https://gems.ruby-china.com/
 ```
 
 <br/>
+
 **`安装最新ruby`**
 -  查看Ruby已有的版本，安装最新的：
 `rvm list known`
@@ -105,11 +111,12 @@ https://gems.ruby-china.com/
 ```
 ruby 2.6.3p62 (2019-04-16 revision 67580) [universal.x86_64-darwin19]
 ```
-- 传说 CocoaPods 支持的 ruby 最低版本是2.2.2，如果自己电脑版本低于这个版本就升级 ruby ，上面显示我的电脑版本不需要升级，可以忽略下面的升级操作
+-	传说 CocoaPods 支持的 ruby 最低版本是2.2.2，如果自己电脑版本低于这个版本就升级 ruby ，上面显示我的电脑版本不需要升级，可以忽略下面的升级操作
 `sudo gem update --system`
 
 
 <br/>
+
 **`查询已经安装的ruby`**
 `rvm list`
 ```
@@ -166,6 +173,7 @@ RVM reloaded!
 `rvm install 2.7.0-preview1`
 
 <br/>
+
 > ③安装CocoaPods
 
 -  根据系统版本选择指令
@@ -251,10 +259,14 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 
 <br/>
+
 ***
 <br/>
+
 ># 错误解决方案
+
 <br/>
+
 - 错误：`/usr/local/lib/ruby/gems/2.7.0/gems/cocoapods-core-1.9.1/lib/cocoapods-core/source/metadata.rb:15:in `initialize': undefined method `with_indifferent_access' for false:FalseClass (NoMethodError)`
 
 终端输入：
@@ -265,6 +277,7 @@ $  rm -rf ~/.cocoapods/repos/trunk/
 
 
 <br/>
+
 -  repos 为 0
 ```
 pod repo list
@@ -282,12 +295,8 @@ b. `git clone --depth 1 https://github.com/CocoaPods/Specs.git master`,等待下
 
 
 
-
-
-
-
-
 <br/>
+
 ***
 <br/>
 
@@ -311,6 +320,7 @@ Successfully uninstalled cocoapods-1.8.4
 ```
 
 <br/>
+
 **②查看本地安装过的cocopods相关东西**
 ` gem list --local | grep cocoapods`
 ```
@@ -349,6 +359,7 @@ sudo rm -rf /usr/local/bin/pod ; gem list | grep cocoapods | awk '{print $1}' | 
 
 
 <br/>
+
 **`第二种卸载方法：`**
 **①查找目前版本的pod路径**
 ` which pod`
@@ -361,6 +372,7 @@ sudo rm -rf /usr/local/bin/pod ; gem list | grep cocoapods | awk '{print $1}' | 
 
 
 <br/>
+
 ***
 <br/>
 
