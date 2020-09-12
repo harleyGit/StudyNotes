@@ -39,6 +39,13 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ```
 
 
+***
+<br/>
+
+># 快捷键
+	* [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/快捷键.md)
+
+
 
 
 
@@ -54,6 +61,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 *	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/OC.png" width="50" height="52"></a>
 	* [iPhone 尺寸和适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/OC开发/iPhone%20尺寸和适配.md)
+	* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
 	
         
 *	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/swift2.png" width="50" height="50"></a>
@@ -158,6 +166,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 * [JAVA 和 Android 配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/JAVA-和-Android-配置.md)
 * [Mac 电脑配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Mac-电脑配置.md)
 * [Podfile 书写格式](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Podfile-书写格式.md)
+* [工具集](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/工具集.md)
 
 
 

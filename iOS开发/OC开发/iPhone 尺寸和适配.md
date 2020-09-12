@@ -333,6 +333,14 @@ awakeFromNib方法里面手动设置下控件字体
 
 
 
+***
+<br/>
+
+># 参考资料：
+* [iPhone X适配实战总结](https://www.dazhuanlan.com/2019/09/23/5d8885965922d/?__cf_chl_jschl_tk__=07a284263e36412b3125579256be07b9ac748989-1599791161-0-Aey9NTMS0sUtBDxemVxMkfQcbyDkuVjk3u4CgEtLieaHYGSP2TpZH0NaOBRI4qWdquNM5V963-uDKo51ZQyL3pA7VPP_l0Dm-VnBU3UVNNJYKrz4Zi8XFFu1eQs5K4N2aUFuTNYjul50ibni_qCMWwunC1jdUZne5Csg6BMgK0VacTWmNh8TyWTdJA6MReA38h_tUrHi38HHfZvSvBqeLoCnZyBAEQGI9CSu8oft_0TDlZ1YKmQuLRNWGukBP-TQxkMiO0zhauesSRoMsuRbPU3kCKfF-SGFefqr8IDYB-pNG05bSLle5FDnSdY1kzE2ZA)
+
+
+
 
 
 
