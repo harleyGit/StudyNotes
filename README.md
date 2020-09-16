@@ -137,6 +137,19 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 类库
+*	[10大必看第三方类库(待看)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/10大必看第三方类库(待看).md)
+*	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/阿里云(I).md)
+*	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送.md)
+*	[极光推送(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送(I).md)
+*	[加密CommonCrypto](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/加密CommonCrypto.md)
+*	[今日头条(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/今日头条(I).md)
+*	[类库常用关键字](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/类库常用关键字.md)
+*	[融云](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/融云.md)
+*	[图片选择器TZImagePickerController(I)-待研究](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/图片选择器TZImagePickerController(I)-待研究)
+*	[微信分享(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/微信分享(I).md)
+*	[微信支付](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/微信支付.md)
+*	[支付宝集成](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/支付宝集成.md)
+*	[支付宝支付流程(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/支付宝支付流程(I).md)
 
 
 
