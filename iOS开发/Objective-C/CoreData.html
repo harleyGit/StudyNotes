@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreData</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">CoreData</h1>
+        <div class="show-content">
+          <p>参考：https://www.jianshu.com/p/f4d0f42398df</p><p>https://yq.aliyun.com/articles/39426</p><p>https://www.cnblogs.com/mjios/archive/2013/02/26/2932999.html</p><p><br></p><p><br></p><p><br></p><p><br></p><div class="image-package">
+<img class="uploaded-img" src="http://upload-images.jianshu.io/upload_images/2959789-76d5973ed4ea586c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" width="auto" height="auto"><br><div class="image-caption">CoreData结构图</div>
+</div><blockquote><p>NSManagedObjectContext：数据库操作， 管理对象的上下文，类似于应用程序和数据存储间的一块缓冲区，你可以增删改查管理对象。也可以理解为是一个容器，从持久化存储（文件）中查询的数据在这个容器中形成对象图，对这些对象图中的对象操作都会存储在这个容器里，直到发出指令让容器中的内容同步到磁盘。</p></blockquote><p>NSManagedObjectContext发起save操作，才会通过NSPersistentStoreCoordinate与数据交互并执行数据库操作，这样避免了因数据操作而带来的I/O操作，提高了效率</p><hr><blockquote><p>NSManagedObject： 表记录，一个管理对象代表你想要保存到数据存储中的一个对象，类似于SQL中的一条记录，并且包含一些对象属性。简单点来说，NSManagedObject 就是NSManagedObjectContext对象图中的实际对象。由NSManagedObjectContext管理。NSManagedObjectContext会存储这些对象的变化来支持重做和撤销。</p></blockquote><hr><blockquote><p>NSPersistentStoreCoordinator：数据库存储方式， 持久化存储协调者 ，包含数据存储的名字和位置，简单点来说它是连接两端的纽带。所以整个流程就是：1、数据（NSManagedObject）被创建修改或删除等等，这些都被context看在眼里，然后你要保存了，context把修改的信息提交给，context根据数据信息找到正确的数据库文件，根据数据模型，正确的把数据写入到数据库文件里。2、查询时，context把查询条件提交给Coordinator，它去数据库文件里把数据查出来，给context,context再把这些数据和以在它管理内的结合。</p></blockquote><hr><blockquote><p>NSPersistentStore： 是持久化存储核心数据的抽象类，可以理解为持久化存储区，它的主要责任是把对象图中的信息map到实际的存储信息。持久化存储区支持的数据类型为SQLite、二进制、XML和内存。</p></blockquote><hr><blockquote><p>SQLite 和FileSystem就是保存到持久化存储的文件，CoreData支持SQLite的数据格式。但是注意，coreData不是DBMS，并不能管理SQLite </p></blockquote><p><br></p><p>第一步：</p><p>创建NSManagedObjectModel：</p><p>加载：Model.xcdatamodeld 文件</p><blockquote>
+<p>lazy var managedObjectModel: NSManagedObjectModel = {</p>
+<p>        if self.isTestMode {</p>
+<p>            return NSManagedObjectModel.mergedModel(from: Bundle.allBundles)! //连接项目中所有的 .xcdatamodeld 文件为一个datamodel，这是一个非常好的方法，把多个entity放在各自的xcodemodel文件中分开管理，然后用这个函数连接起来生成一个datamodel</p>
+<p>        }</p>
+<p>        let modelURL = Bundle.main.url(forResource: "Model", withExtension: "momd")!</p>
+<p>        return NSManagedObjectModel(contentsOf: modelURL)!</p>
+<p>        }()</p>
+</blockquote>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+># 成员变量和属性
+```
+
+@interface  ViewController :UIViewController
+{
+
+    UIButton *yourButton;
+    int count;
+    id data；
+}
+
+@property(nonatomic, strong) UIButton *myButton;
+
+@end
+
+```
+###成员变量:  
+&emsp; ` 作用`：用于类的内部，无需与外界接触。因此`成员变量`不会生成`set、get`方法，所以外界无法与成员变量接触。
+&emsp; `Example`：{ }中所声明的变量都是`成员变量`,`yourButton、count、data`都是成员变量;
+
+###实例变量
+&emsp; ` 作用`: ` 实例变量`本质上就是`成员变量`，只是实例是针对类而言，实例是指类的声明。
+&emsp; `Example`：`{   }`中的`yourButton`就是实例变量。`id `是OC特有的类，本质上讲`id`等同于`(void *)`,所以`id data`属于实例变量;
+
+
+###属性
+&emsp; ` 作用`:   允许让其它对象访问到该变量(因为属性创建过程中自动产生了`set` 和`get`方法)。也可以设置只读或者可写等，设置方法也可自定义。
+
+
+<br/>
+***
+<br/>
+
+
+
+<br/>
+***
+<br/>
+
+
+
+<br/>
+***
+<br/>
+
+
+
+<br/>
+***
+<br/>
+
+
+
+
+[全局变量、静态变量、自动(局部)变量](https://www.jianshu.com/p/797fb0dffc70)

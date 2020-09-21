@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIWindow 详解</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">UIWindow 详解</h1>
+        <div class="show-content">
+          <h1><b>概念：</b></h1><p>UIWindw定义了一个负责管理，协调一个App的View是如何显示在设备屏幕上的窗口类，除非一个App可以显示在一个外部的设备屏幕上，那么一个App只拥有一个窗口。UIWindow本身没有标题栏，关闭操作栏等任何的装饰物，用户不会看见，移动或者是关闭它。</p><hr><h1>两大功能：</h1><p>①. 提供了一块给View的显示区域;</p><p>②. 负责分发各种事件给View，比如传递触摸事件给各项View或者其它对象。</p><p>    改变App的显示内容，可以改变UIWindow的rootView，而不需要去创建一个新的UIWindow。同时，它还负责与ViewController协同去处理设备旋转时的情况。</p><hr><h1>UIWindow 之 UIWindowLevel:</h1><blockquote>
+<p>UIKIT_EXTERN const UIWindowLevel UIWindowLevelNormal;   // 0.0</p>
+<p>    UIKIT_EXTERN const UIWindowLevel UIWindowLevelAlert;    // 2000.0</p>
+<p>    UIKIT_EXTERN const UIWindowLevel UIWindowLevelStatusBar;    //1000.0</p>
+</blockquote><p>它分为三个等级，UIWindowLevel为2D的iOS世界引入了Z轴的概念，它相当于以屏幕为原地，以使用者为正方向的一根轴。值越小代表离使用者越远，越大代表越靠近使用者。高Level的Window会盖住低Level的window，若是两者Level一样则根据添加顺序来决定，这类似于我们添加子View(UIWindow本来也就是UIView的子类)。大部分在App上使用的都是UIWindowLevelNormal，这也是每个Window被创建出来时的默认值。</p><p>我们在创建一个新的window的时候，要让它显示出来必须要调用makeKeyAndVisible方法，让window显示出来，并让它成为一个KeyWindow。KeyWindow是UIApplication的一个开放属性，它是当前App的主window，用来接收键盘输入以及非触摸事件(触摸事件是传递给触摸事件发生的window，不一定是keyWindow)，或者是跟坐标值无关的事件都会被传递给keyWindow。并且在同一时刻，只有一个window会成为keyWindow。但是需要注意一件事情，成为keywindow与windowLevel无关，并不是windowLevel最高的window会成为keywindow。</p><hr><h1>UIWindow 扮演的角色</h1><p>在讲它扮演的角色前，先说一说 UIApplication。</p><h2><b>UIApplication</b></h2><p>UIApplication是一个App的核心，它主要的职能是负责方便系统和App的交互，管理Event Loop进行各项事件的处理，以及向自己的Delegate，即AppDelegate进行一些关键事件的传递。</p><p>一个App只有一个UIApplication单例对象，可以通过[UIApplication sharedApplication]来获得单例。它还能做一些应用级别的事，比如：</p><blockquote>
+<p>①. 设置桌面上App图标的角标；</p>
+<p>②. 设置联网指示器的可见性,这个属性 networkActivityIndicatorVisible 可以表示；</p>
+<p>③ . 管理状态栏；</p>
+<p>④.  使用openURL直接拨电话，发短信，发邮件，打开一个网络资源，本地资源(相当于一个超链接);</p>
+</blockquote><p>它的工作示意图，如：</p><p><br></p><p><br></p><div class="image-package">
+<img class="uploaded-img" src="http://upload-images.jianshu.io/upload_images/2959789-3f6f6f7e4c1900e7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" width="auto" height="auto"><br><div class="image-caption">工作流程图</div>
+</div><p><br></p><hr><h2><b>UIWindow 是第一个 UI控件</b></h2><p>UIWindow是iOS启动之后，被创建的第一个视图控件。它有可能是通过Interface Builder被创建出来的，也有可能是我们在AppDelegate中自定义创建出来的。当它被创建，添加了rootView之后，一个App的界面最终被展示在用户面前。而如果是自定义创建window时，我们通常会使用window.rootViewController来为它添加rootView，值得注意的是，这句代码仅仅是给UIWindow添加了rootViewController的view，或者说这是一种更加便利的方式来为UIWindow添加rootView,而这个rootViewController属性并不是用来让controller与UIWindow之间进行通信的。</p><p>除此之外，UIWindow还负责与UIApplication一起负责传递Event给View以及ViewController。</p><hr><p>[UIApplication sharedApplication]获得的windows列表包含了所有可见或者不可见的非系统UIWindow，系统window包括最上面的statusBar等等。而windows列表的排序是按照windowLevel升序排列。)</p><p>AlitripMonitorStatusBar: 这个东西就是那个左上角负责显示上传，下载数据的黑框.</p><p>UITextEffectsWindow: 这是iOS8引入的一个新window，是键盘所在的window。它的windowLevel是10，高于UIWindowLevelNormal。</p><p>UIRemoteKeyboardWindow: iOS9之后,新增了一个类型为 UIRemoteKeyboardWindow 的窗口用来显示键盘按钮。目前对这个研究还不是很多，以后有了新发现再与大家分享。</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
