@@ -186,8 +186,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [UIWindow(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIWindow(I).md)
 	* [UIWindow(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIWindow(II).md)
 	* [UIWindow(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIWindow(III).md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/.md)
+	* [Video(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Video(I).md)
+	* [Video(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Video(II).md)
 	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/.md)
 	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/.md)
 
@@ -335,6 +335,58 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 
 
+
+
+
+<br/>
+
+***
+<br/>
+
+># 动画/绘图
+*	[仿射动画](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/仿射动画.md)
+*	[绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/绘制(I).md)
+*	[屏幕、图片尺寸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/屏幕、图片尺寸(I).md)
+*	[图片拉伸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/图片拉伸(I).md)
+*	[位移动画](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/位移动画.md)
+*	[圆角绘制](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/圆角绘制.md)
+*	[CALayer、CoreAnimation、UIView动画](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/CALayer、CoreAnimation、UIView动画.md)
+*	[Core-Graphics(I)--线条绘制](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/Core-Graphics(I)--线条绘制.md)
+*	[Core-Graphics(II)----图片绘制](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/Core-Graphics(II)----图片绘制.md)
+*	[CoreAnimation(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/CoreAnimation(I).md)
+*	[drawRect(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/drawRect(I).md)
+*	[layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(I).md)
+*	[layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(II)](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(II).md)
+*	[OpenGL](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/OpenGL.md)
+*	[](https://github.com/harleyGit/StudyNotes/blob/master/动画/绘图/.md)
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># 加密
+*	[加密(I)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密(I).md)
+*	[加密种类[RSA]](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密种类[RSA]).md)
+*	[Https[证书生成]](https://github.com/harleyGit/StudyNotes/blob/master/加密/Https[证书生成].md)
+*	[SwiftEOS](https://github.com/harleyGit/StudyNotes/blob/master/加密/SwiftEOS.md)
+
+
+
+
+
+
+
+
+
+
+
 <br/>
 
 ***
@@ -389,6 +441,10 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ># 多线程
 *	[GCD(II)- 时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)%20-%20时间延迟.md)    
+*	[GCD(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(I).md)    
+*	[GCD(II)---时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)---时间延迟.md)    
+*	[NSOperation(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(I).md)    
+*	[NSOperation(II)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(II).md)    
 
 
 
@@ -470,8 +526,33 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 
 
-   
- 
+
+
+<br/>
+
+***
+<br/>
+
+># 程序错误集
+*	[App-Store-审核被拒](https://github.com/harleyGit/StudyNotes/blob/master/程序错误集/App-Store-审核被拒.md)
+*	[Crash-日志](https://github.com/harleyGit/StudyNotes/blob/master/程序错误集/Crash-日志.md)
+*	[Error(I)](https://github.com/harleyGit/StudyNotes/blob/master/程序错误集/Error(I).md)
+*	[Error(II)-----APP上架错误](https://github.com/harleyGit/StudyNotes/blob/master/程序错误集/Error(II)-----APP上架错误.md)
+*	[Error(III)](https://github.com/harleyGit/StudyNotes/blob/master/程序错误集/Error(III).md)
+*	[Instrumets](https://github.com/harleyGit/StudyNotes/blob/master/程序错误集/Instrumets.md)
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># 单元测试 
+*	[18个测试断言](https://github.com/harleyGit/StudyNotes/blob/master/单元测试/18个测试断言.html)
+*	[单元测试(I)](https://github.com/harleyGit/StudyNotes/blob/master/单元测试/单元测试(I).md)
 
 
 

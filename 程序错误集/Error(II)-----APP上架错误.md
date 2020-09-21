@@ -1,0 +1,128 @@
+>#没有导入文件或者类库
+![缺失文件或没有配置好](https://upload-images.jianshu.io/upload_images/2959789-c5a5b4882b2146f5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+<br/>
+****
+
+>#自动管理证书***Automatically manage signing***，Xcode 配置出错
+![配置提示错误原因](https://upload-images.jianshu.io/upload_images/2959789-825884ec5ecaf128.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+&emsp;  原因：上面的冲突实际就是说，你在选择了自动签名（Automatically manage signing）之后就不允许再去Build Setting >> Signing再对证书进行手动设置，要么你还原signing设置，要么你就把自动签名去掉，不然你同时操作这两项就产生冲突.
+
+解决方法：
+![Code Signing Identity 配置修改](https://upload-images.jianshu.io/upload_images/2959789-da46687ec8b95025.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+<br/>
+***
+
+
+>#打包上传验证出错
+![提交APP到 iTunesConnect验证出错](https://upload-images.jianshu.io/upload_images/2959789-6f6ba5301a81fef6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+原因：当你申请了APP ID之后，上传之前，到苹果开发者账号里，先要新建这个ID对应的应用。这样上传的包才会知道存哪里。
+
+解决方案：
+&emsp; ①. 提交的APP中的 bundle identifier 与你itunesConnect 中的app 不一致，比对一下，可能不一致。
+&emsp; ②. 你选择了错误的用户组：即Signing   下的team。所以根本就没有这个APP，所以报错。
+
+后来发现是我在[开发者中心](https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/ng/app/1424160248/ios/versioninfo)的套装 ID填错了，修改为Bundle Identifier就好了。
+![修改正确套装ID](https://upload-images.jianshu.io/upload_images/2959789-353e335ff4ac7c51.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+<br/>
+***
+<br/>
+
+ >#***iPV6审核被拒***
+
+
+![iPV6 错误拒绝提交](https://upload-images.jianshu.io/upload_images/2959789-6b97d0ea88612046.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+![审核拒绝效果图](https://upload-images.jianshu.io/upload_images/2959789-dfc832f9031f20ad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+<br/>
+***
+<br/>
+
+
+># 关于金融的文件不够
+```
+2018年9月2日 上午6:48
+发件人 Apple
+3. 2.1 Business: Other Business Model Issues - Acceptable
+Guideline 3.2.1 - Business - Other Business Model Issues - Acceptable
+
+
+We found that your app facilitates loan applications, but the seller and company names associated with your app do not reflect the financial institution in the app or its metadata, as required by Guideline 3.2.1(viii) of the App Store Review Guidelines.
+
+Next Steps
+
+To help us proceed with the review of your app, please provide the following information. The more information you can provide upfront, the sooner we can complete your review.
+
+1. Both a copy and the direct link to the government website of your Business License (营业执照)
+//一份复印件和一个关于你的营业执照的政府网站链接
+
+2. A copy of the Rectification Notification issued by the relevant governing authority to your company (当地金融办 (局) 下发给贵公司的「整改通知书」附件)
+//一份当地金融局下发给贵公司的整改通知书附件
+
+3. A copy of the proof that your company is connected to a bank’s depository system (银行存管证明)
+//一份关于贵公司连接到银行存管证明的副本
+
+4. Your app’s and service’s Terms & Conditions. 
+//你的app和服务条款和情况
+
+5. In the case of dispute, what resolution mechanism does your app and service offer? 
+//为了防止争论，你的app和服务可以提供什么解决争议的方案？
+
+6. What is your responsibility in such case? Is such responsibility stated clearly in the Terms & Conditions? 
+//在这种情况你的责任是什么？在这种情况下是否清楚你的条款和状况？
+
+7. How will the involved parties trace one another?
+//双方将如何相互追踪?
+
+Additionally, please ensure your app’s Support and Privacy URLs in the metadata direct users to the webpages with appropriate information.
+
+Please attach documentary evidence in the App Review Information section in App Store Connect. In accordance with section 3.2(f) of the Apple Developer Program License Agreement, you acknowledge that submitting falsified or fraudulent documentation can result in the termination of your Apple Developer Program account and the removal of your apps from the App Store. Once Legal has reviewed your documentation and confirms its validity, we will proceed with the review of your app.
+
+
+```
+
+
+<br/>
+***
+<br/>
+
+
+># 新建项目打印警告
+```
+019-04-10 15:46:55.851548+0800 Genealogy[8925:133700] libMobileGestalt MobileGestalt.c:890: MGIsDeviceOneOfType is not supported on this platform.
+2019-04-10 15:46:56.457785+0800 Genealogy[8925:133700] [AXMediaCommon] Unable to look up screen scale
+2019-04-10 15:46:56.457959+0800 Genealogy[8925:133700] [AXMediaCommon] Unexpected physical screen orientation
+2019-04-10 15:46:56.525828+0800 Genealogy[8925:133700] [AXMediaCommon] Unable to look up screen scale
+2019-04-10 15:46:56.531836+0800 Genealogy[8925:133700] [AXMediaCommon] Unable to look up screen scale
+2019-04-10 15:46:56.531998+0800 Genealogy[8925:133700] [AXMediaCommon] Unexpected physical screen orientation
+
+```
+消除这些烦人的打印，请看下图：
+![修改环境变量](https://upload-images.jianshu.io/upload_images/2959789-0c6fa8b08b470db8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+参考资料：[文件不足材料补充](https://www.jianshu.com/p/ea3183f72966)
+[Ad_Hoc方式打包iOS应用程序](https://blog.csdn.net/u013085795/article/details/51490884)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
