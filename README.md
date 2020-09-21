@@ -73,13 +73,13 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
 
-*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/OC.png" width="50" height="52"></a>
+*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/a3.png" width="50" height="52"></a>
 	* [iPhone 尺寸和适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/OC开发/iPhone%20尺寸和适配.md)
 	* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
 	* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
 	
         
-*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/swift2.png" width="50" height="50"></a>
+*	<a><img src="https://github.com/harleyGit/StudyNotes/blob/master/Pictures/a5.png" width="50" height="50"></a>
 	* [Swif 包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Swift包管理.md)
 	* [SwiftUI[简单构造一个App]](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/SwiftUI[简单构造一个App].md)
 	* [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
@@ -183,8 +183,26 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 
 
-
+***
 <br/>
+
+># 设计模式
+*	[单例类](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/单例类.md)
+*	[路由组件化](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/路由组件化.md)
+*	[KVC-和-KVO(I)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC-和-KVO(I).md)
+*	[KVC-和-KVO(II)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC-和-KVO(II).md)
+*	[MVVM设计模式(二)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/MVVM设计模式(二).md)
+*	[MVVM设计模式(一)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/MVVM设计模式(一).md)
+*	[Swift-的单例](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-的单例.md)
+*	[Swift-协议代理](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-协议代理.md)
+*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
+*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
+*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
+*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
+*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
+
+
+
 
 ***
 
