@@ -1,0 +1,106 @@
+># 服务器返回JSON字段为 null 或 nil
+
+**`字符串转化为NSNumber`**
+```
+//字符串转为NSNumber对象类型
+//思路：先将字符串转为NSInteger类型，再通过NSNumber的创建方法@（数字）即可实现
+self.personID = @(@"1234.789".doubleValue);
+NSLog(@"字符串赋值: %@", self.personID);
+
+self.personID = @(3456.89);
+NSLog(@"数字赋值： %@", self.personID);
+```
+打印：
+```
+2019-12-24 10:12:56.176685+0800 Test[2109:62203] 字符串赋值: 1234.789
+2019-12-24 10:13:02.520301+0800 Test[2109:62203] 数字赋值： 3456.89
+```
+
+<br/>
+**`NSNumber 和 null 的判断`**
+```
+NSString *pID;
+NSLog(@"pID的值：%@", pID);
+//对null进行判断
+if ([pID isEqualToString:@""]) {
+    NSLog(@"--->> 1");
+}
+
+if (pID == nil) {
+    NSLog(@"--->> 2");
+}
+
+if (!pID) {
+    NSLog(@"--->> 3");
+}
+
+if ([pID isEqualToString:@"(null)"]) {
+     NSLog(@"--->> 4");
+}
+```
+打印：
+```
+2019-12-24 10:13:12.446845+0800 Test[2109:62203] --->> 2
+2019-12-24 10:13:15.857846+0800 Test[2109:62203] --->> 3
+2019-12-24 10:13:21.996405+0800 Test[2109:62203] --->> 5
+```
+
+
+<br/>
+**`NSNumber 和 null的解析`**
+```
+NSString *pID;  //打印为：null
+self.personID = @(pID.intValue);
+NSLog(@"pID转化为NSNumer的值：%@", self.personID);
+```
+打印：
+```
+2019-12-24 10:13:27.206614+0800 Test[2109:62203] pID转化为NSNumer的值：0
+
+```
+&emsp;  服务器返回的数值可能为`字符串`、`数值类型`、`默认值为null`，为了防止崩溃可以将其设置为`NSNumber`类型，然后转化处理。
+
+<br/>
+***
+<br/>
+># 精度格式
+```
+//String 使用 as 转化为 NSString
+//NSString 转化为 Double
+//Double 转化为 NSNumber
+let number1 = NSNumber.init(value: ("18513677.8081993109" as NSString).doubleValue)
+let number = NSNumber.init(value: ("18513677.8081993109" as NSString).doubleValue / 1000)
+
+//创建一个NumberFormatter对象
+let numberFormatter = NumberFormatter()
+//设置number显示的样式
+numberFormatter.numberStyle = .none //四舍五入的整数
+
+numberFormatter.maximumIntegerDigits = 8    //设置最大整数位数（超过的直接截断）
+numberFormatter.minimumIntegerDigits = 2    //设置最小整数位数（不足的前面补0）
+
+numberFormatter.maximumFractionDigits = 2   //设置小数点后最多3位
+numberFormatter.minimumFractionDigits = 2   //设置小数点后最少2位（不足补0）
+//numberFormatter.usesGroupingSeparator = true //设置用组分隔
+//格式化
+let format = numberFormatter.string(from: number) ?? "0.00"
+
+print("原始值 = \(number1)")
+print("格式化结果 = \(format)")
+```
+打印：
+`原始值 = 18513677.80819931`
+`格式化结果 = 18513.68`
+
+若是想多位的计算精度，请看[这里](https://www.jianshu.com/p/5117b5ec095a)
+
+<br/>
+***
+<br/>
+
+参考资料：
+[NSNumber 格式化显示](https://www.hangge.com/blog/cache/detail_2086.html)
+[NSNumberFormatter 数字格式化 US](https://blog.csdn.net/yaojinhai06/article/details/89372062)
+[json解析出现的null问题  US](https://juejin.im/post/5a323c066fb9a0452405da7c)
+[关于(null)和 NULL ，你真的注意过吗？ US](https://my.oschina.net/iq19900204/blog/408034)
+[服务器返回的数据，该怎么接收（int,NSNumber）US](https://blog.csdn.net/yi_zz32/article/details/50065945)
