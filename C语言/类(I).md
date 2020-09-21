@@ -1,0 +1,248 @@
+># 类的实现
+
+`::`  作用域解析操作符，用来告诉编译器这个方法存在于何处，或者说是属于哪一个类；
+
+```
+//告诉编译器使用 std 命名空间。命名空间是 C++ 中一个相对新的概念。
+//使用 `using namespace std`进行偷懒，可以直接使用`cout` 来进行打印。
+using namespace std;
+cout <<"Address is"<<
+```
+&emsp;
+&emsp;  事实上`std::cout`所引用的是`std`里定义的`cout`，而`std::string`数据类型其实也是一个对象。我们一直在使用对象，只是自己还不知道罢了。
+
+```
+class Car {
+public:
+    std::string color;
+    std::string engine;
+    unsigned int gas_tank;
+
+    //C ++ 允许在类里面声明常量，但不允许对它进行赋值
+    const float TANKSIZE = 85;//会出错
+
+    //绕开这一限制的方法是，创建一个静态常量
+    static const float full_gas = 85;
+}
+```
+
+
+
+<br/>
+***
+<br/>
+
+
+
+># 构造器
+#`构造器的定义`
+![构造器的定义](https://upload-images.jianshu.io/upload_images/2959789-16b931e0f80db58c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+#`Car 类的构造器方法`
+```
+class Car {
+public:
+    std::string color;
+    std::string engine;
+    unsigned int gas_tank;
+    unsigned int wheel;
+    
+    //构造函数
+    Car(void);
+};
+
+
+//在结束声明之后开始定义构造器本身
+    Car::Car(void){//不用写 void Car::Car(void)
+        color = "White";
+        engine = "V8";
+        wheel = 4;
+        gas_tank = FULL_GAS;
+    }
+```
+
+&emsp;  每个类至少有一个构造器，如果你没有在类里定义一个构造器，编译器就会使用如下语法定义一个构造器：`ClassName:: ClassName(){}`
+
+<br/>
+***
+<br/>
+
+
+># 析构器
+&emsp;  从上面的内容我们了解到，在创建对象时，系统会自动调用一个特殊的方法，即构造器。
+
+&emsp;  相应的，在销毁一个对象时，系统也因该会调用另一个特殊的方法，即析构器。
+
+&emsp;  一般来说，构造器用来完成事先的初始化和准备工作(申请分配内存),析构器用来完成事后所必须清理的工作。析构器有着和构造器类一样的名字，只不过前边多了一个波浪符`~`前缀。
+
+#`析构器的定义`
+- 析构器不返回任何值；
+- 析构器不带参数的，所以析构器的声明格式如：`~ClassName();`
+-  
+```
+class Car {
+public:
+//构造函数
+    Car(void);
+    //析构器
+    ~Car();
+};
+
+//在结束声明之后开始定义构造器本身
+Car::Car(void){//不用写 void Car::Car(void)
+    color = "White";
+    engine = "V8";
+    wheel = 4;
+    gas_tank = FULL_GAS;
+}
+
+Car::~Car(){
+    std::cout<<"Car 释放了！";
+}
+
+```
+
+
+
+<br/>
+***
+<br/>
+
+
+># 访问限制符
+
+![访问关键字](https://upload-images.jianshu.io/upload_images/2959789-2e0d60916e995951.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+#`子类继承访问符修饰的父类`
+`Class subClass: public SuperClass`
+![protected、private修饰的父类](https://upload-images.jianshu.io/upload_images/2959789-ee8a72c28c41b677.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+
+
+<br/>
+***
+<br/>
+
+>#`友元关系`
+#`定义：`
+&emsp;  友元关系是类之间的一种特殊关系，这种关系不仅允许友元类访问对方的public方法和属性，还允许友元访问对方的protected和private方法属性。
+
+&emsp;  声明一个友元关系的语法很简单，只要在类声明的某个地方加上一条`friend class **`就行了。这条语句可以放在任何地方，放在`public、 protected、private`段落都可以。
+
+#`Demo`
+```
+class Lovers{
+public:
+    Lovers(std::string theName);
+    void kiss(Lovers *lovers);
+    void ask(Lovers *lover, std::string something);
+    
+protected:
+    std::string name;
+    
+    //友元关系
+    //交友不慎。。。
+    friend class Others;
+};
+Lovers::Lovers(std::string theName){
+    name = theName;
+}
+void Lovers::kiss(Lovers *lovers){
+    std::cout<<name<<"亲亲我们家的"<<lovers->name<<std::endl;
+}
+void Lovers::ask(Lovers *lover, std::string something){
+    std::cout<<name<<"宝贝儿"<<lover->name<<"帮我"<<something<<std::endl;
+}
+
+
+
+class Boyfriend: public Lovers{
+public:
+    Boyfriend(std::string theName);
+};
+Boyfriend::Boyfriend(std::string theName) : Lovers(theName){}
+
+class Girlfriend: public Lovers{
+public:
+    Girlfriend(std::string theName);
+};
+Girlfriend::Girlfriend(std::string theName): Lovers(theName){}
+
+
+class Others{
+public:
+    Others(std::string theName);
+    void kiss(Lovers *lover);
+    
+protected:
+    std::string name;
+};
+Others::Others(std::string theName){
+    name = theName;
+}
+void Others::kiss(Lovers *lover){
+    //本来这个lover->name是访问不到的，但是因为Other是Lovers的友元关系，所以可以访问protected权限的属性
+    //若不是友元关系，会报错：'name' is a protected member of 'Lovers'
+    std::cout<<name<<"亲一下"<<lover->name<<std::endl;
+}
+
+
+
+int main(int argc, const char * argv[]) {
+    
+    Boyfriend boyfriend("A君");
+    Girlfriend girlfriend("B妞");
+    
+    Others others("路人甲");
+    
+    girlfriend.kiss(&boyfriend);
+    girlfriend.ask(&boyfriend, "洗衣服啦");
+    
+    std::cout<<"\n 当当当当！传说中的路人甲登场！\n";
+    others.kiss(&girlfriend);
+    
+    return 0;
+}
+```
+输出：
+`B妞亲亲我们家的A君`
+`B妞宝贝儿A君帮我洗衣服啦`
+
+` 当当当当！传说中的路人甲登场！`
+`路人甲亲一下B妞`
+
+
+
+<br/>
+***
+<br/>
+
+># 静态方法
+#`规则：`
+- 静态成员是所有对象共享的，所以不能在静态方法里访问非静态的元素；
+-  非静态方法可以访问类的静态成员，也可以访问类的非静态成员；
+
+&emsp;  `this`指针是类的一个自动生成、自动隐藏的私有成员，它存在于类的非静态成员函数中，指向被调用函数所在的对象地址。
+
+
+
+
+
+<br/>
+***
+<br/>
+># 虚方法
+`虚方法的定义和使用`
+![虚方法的使用](https://upload-images.jianshu.io/upload_images/2959789-de5190e8687ee1a0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+`使用虚方法`
+![基类使用虚方法](https://upload-images.jianshu.io/upload_images/2959789-a579fc62204c926f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+续篇[^fn1]
+[^fn1]:[类(II)](https://www.jianshu.com/p/349ba7122f3a)

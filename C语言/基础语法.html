@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基础语法</title>
+    <style type="text/css" media="all">
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        color: #777;
+        background-color: white;
+      }
+      .container {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post {
+        font-family: Georgia, "Times New Roman", Times, "SimSun", serif;
+        position: relative;
+        padding: 70px;
+        bottom: 0;
+        overflow-y: auto;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 25px;
+        color: #515151;
+      }
+
+      .post h1{
+        font-size: 50px;
+        font-weight: 500;
+        line-height: 60px;
+        margin-bottom: 40px;
+        color: inherit;
+      }
+
+      .post p {
+        margin: 0 0 35px 0;
+      }
+
+      .post img {
+        border: 1px solid #D9D9D9;
+      }
+
+      .post a {
+        color: #28A1C5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="post">
+        <h1 class="title">基础语法</h1>
+        <div class="show-content">
+          <p>1. 命名</p><blockquote>
+<p>std: :string &amp;</p>
+<p>std：是一个命名空间，命名空间是防止名字冲突的一个策略；</p>
+<p>string: 是 std 命名空间中的一个类，即字符串类;</p>
+<p>定义引用的表示方法与定义指针相似，只是用 &amp; 代替了 *;</p>
+<p>引用的声明方法：类型标识符 &amp;引用名=目标变量名;</p>
+</blockquote><p>std::string &amp; strOut 的意思是声明一个 string 类型的引用，该引用变量名为 strOut</p><p><br></p><blockquote><p>const char *c_str();</p></blockquote><p>c_str()函数返回一个指向正规C字符串的指针常量, 内容与本string串相同.</p><p>这是为了与c语言兼容，在c语言中没有string类型，故必须通过string类对象的成员函数c_str()把string 对象转换成c中的字符串样式。</p><p>注意：一定要使用strcpy()函数 等来操作方法c_str()返回的指针</p><p>比如：最好不要这样:</p><p>char* c;</p><p>string s="1234";</p><p>c = s.c_str(); //c最后指向的内容是垃圾，因为s对象被析构，其内容被处理，同时，编译器也将报错——将一个const char *赋与一个char *。</p><p>应该这样用：</p><p>char c[20];</p><p>string s="1234";</p><p>strcpy(c,s.c_str());</p><p>这样才不会出错，c_str()返回的是一个临时指针，不能对其进行操作</p><p>再举个例子</p><p>c_str() 以 char* 形式传回 string 内含字符串</p><p>如果一个函数要求char*参数，可以使用c_str()方法：</p><p>string s = "Hello World!";</p><p>printf("%s", s.c_str()); //输出 "Hello World!"</p><p><br></p><p><br></p><p>2. 查找</p><blockquote>
+<p>std::map对应的数据结构是红黑树。红黑树是一种近似于平衡的二叉查找树，里面的数据是有序的。在红黑树上做查找、插入、删除操作的时间复杂度为O(logN)</p>
+<p>std::unordered_map对应哈希表，哈希表的特点就是查找效率高，时间复杂度为常数级别O(1)， 而额外空间复杂度则要高出许多。</p>
+</blockquote>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
