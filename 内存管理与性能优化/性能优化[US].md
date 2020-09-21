@@ -13,6 +13,7 @@ TableView优化
 
 
 <br/>
+
 ***
 <br/>
 
@@ -25,31 +26,37 @@ TableView优化
 
 
 <br/>
+
 **`栈`**
 >栈主要存放局部变量和函数参数等相关的变量，如果超出其作用域后也会自动释放。栈区：是向低字节扩展的数据结构，也是一块连续的内存区域。
 
 
 <br/>
+
 **`堆（heap）`**
 >堆区存放new，alloc等关键字创造的对象，我们在之前常说的内存管理管理的也是这部分内存。堆区：是向高地址扩展的数据结构，不连续的内存区域，会造成大量的碎片。
 
 
 <br/>
+
 **`BSS段`**
 >BSS段存放未初始化的全局变量以及静态变量，一旦初始化就会从BSS段去掉，转到数据段中。
 
 
 <br/>
+
 **`Data段`**
 Data段存储已经初始化好的静态变量和全局变量，以及常量数据，直到程序结束之后才会被立即收回
 
 
 <br/>
+
 **` text段`**
 text段是用来存放程序代码执行的一块内存区域。这一块内存区域的大小在程序运行前就已经确定，通常也是只读属性。
 
 
 <br/>
+
 **`变量区别`**
 变量分为：`全局变量、成员变量、局部变量、实例属性和静态变量以及类属性`
 
@@ -70,6 +77,7 @@ text段是用来存放程序代码执行的一块内存区域。这一块内存�
 
 
 <br/>
+
 **`retain`**
 
 &emsp;  对于retain，如果经过taggerPointer修饰过的，就直接return，如果不是的话，就调用当前的retain-rootRetain方法 。需要关注当前引用计数什么时候加1-----通过sideTable方法，加一个偏移量refcntStorage。这就是内部实现的过程。
@@ -81,14 +89,17 @@ text段是用来存放程序代码执行的一块内存区域。这一块内存�
 **retain**：retain到另外一个对象之后，地址是不会变化的，地址也为0x1111，实质上是建立一个指针，也就是指针拷贝，内容也是相同的，retain值会加1。
 
 <br/>
+
 **`weak`**
  weak[实现原理](https://www.cnblogs.com/guohai-stronger/p/10161870.html)
 
 
 
 <br/>
+
 ***
 <br/>
+
 ># RunLoop
 [循环引用](https://www.cnblogs.com/guohai-stronger/p/9011806.html)
 
@@ -135,6 +146,7 @@ NS_ASSUME_NONNULL_END
 
 @end
 ```
+[methodSignatureForSelector和forwardInvocation](https://blog.csdn.net/wtdask/article/details/80613446)的原理。
 
 使用这个类
 ```
@@ -174,11 +186,13 @@ NS_ASSUME_NONNULL_END
 ![NSProxy 循环引用解决方法](https://upload-images.jianshu.io/upload_images/2959789-67a0868a6729b9b0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 <br/>
+
 `Runloop`
 [RunLoop 底层原理](https://www.cnblogs.com/guohai-stronger/p/9190220.html)
 
 
 <br/>
+
 ***
 <br/>
 
