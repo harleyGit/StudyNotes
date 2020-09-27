@@ -215,19 +215,21 @@ int *(*p(int))[3];
  
 
 <br/>
+
 ***
 <br/>
+
 ># 指针的操作
 
 ![指针的基本使用](https://upload-images.jianshu.io/upload_images/2959789-6cf5ec4145e30650.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 打印：
-`a = 10, &a = 0x7ffeefbff4fc`
-`b = 0x7ffeefbff4fc, *b = 10, &b = 0x7ffeefbff4f0`
-上图可以看到，当打印 c 时就会Crash，报错看图。
+```
+! a = 10, &a = 0x7ffeefbff4fc
 
+! b = 0x7ffeefbff4fc, *b = 10, &b = 0x7ffeefbff4f0
 
 ```
-
+```
 void contactAddressAndPointer()
 {
     int num = 97;
@@ -268,6 +270,7 @@ p:0x7ffeefbff57c,  &p:0x7ffeefbff570,  &num:0x7ffeefbff57c`
 
 
 <br/>
+
 ![变量和指针](https://upload-images.jianshu.io/upload_images/2959789-7e844f7b0c2e5445.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ![变量和指针的存放区别](https://upload-images.jianshu.io/upload_images/2959789-c32192f7a48d9d6a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -305,12 +308,14 @@ p:0x7ffeefbff57c,  &p:0x7ffeefbff570,  &num:0x7ffeefbff57c`
 
 ```
 打印：
- `p_num: 0x7ffeefbff534, *p_num: 97, &num:0x7ffeefbff534`
- `p_scrore: 0x7ffeefbff530,  *p_scrore: 10.000000, &scrore:0x7ffeefbff530`
- ` p_arr: 0x7ffeefbff54c, *p_arr:0x7ffeefbff54c, &arr:0x7ffeefbff54c`
- ` pointerFunc 地址：0x100001360, &pointerFunc: 0x100001360, *pointerFunc:0x100001360`
- `msg: 0x100001c60,  *msg:H,&msg:0x7ffeefbff508`
- `n = 15`
+```
+ - p_num: 0x7ffeefbff534, *p_num: 97, &num:0x7ffeefbff534
+ - p_scrore: 0x7ffeefbff530,  *p_scrore: 10.000000, &scrore:0x7ffeefbff530
+ - p_arr: 0x7ffeefbff54c, *p_arr:0x7ffeefbff54c, &arr:0x7ffeefbff54c
+ - pointerFunc 地址：0x100001360, &pointerFunc: 0x100001360, *pointerFunc:0x100001360
+ - msg: 0x100001c60,  *msg:H,&msg:0x7ffeefbff508
+ - n = 15
+ ```
 
 
 特殊的情况，他们并不一定需要使用&取地址：
@@ -412,6 +417,45 @@ int main(void)
 
 ***
 <br/>
+
+># 指针与数组
+
+&emsp;  对于已定义好的数组，也可以直接使用数组名来进行指针加法运算，也就是数组名可以直接当成一种指针常数来用，并能使用指针的各种运算。例如，只要在数组名上加1，表示移动一个数组元素内存的偏移量。或者通过取址运算符“&”取得该数组元素的地址，并以指针方式直接存取数组内的元素值。 两种语法如下：
+
+![a16](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a16.png)
+
+-   数组可以直接当成指针常数来用，而数组名地址则是数组第一个元素的地址。不过由于数组的地址是只读的，因此不能改变其值，这点是和指针变量最大的不同。例如：
+
+![a17](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a17.png)
+
+
+
+<br/>
+
+***
+<br/>
+
+># 指针与字符串
+
+- 指针变量表示字符串
+
+字符数组声明字符串的方式：
+![a18](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a18.png)
+
+C++中的字符串也可以通过指针来声明与操作。例如，在C++程序中可以使用字符串指针变量来指向字符串常数，声明格式如下：
+![a19](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a19.png)
+
+
+当声明完成时，系统将分配内存来存储字符串"John"，并设置指针变量`*p_N`来指向此变量的起始位置:
+![a20](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a20.png)
+
+
+
+
+
+
+
+
 
 下一篇：[指针(II)](https://www.jianshu.com/p/95c787a634f9)
 
