@@ -616,10 +616,11 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 * 金融投资	
 	*	[金融理财(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/金融理财(I).md)
-	*	[Emotion(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/Emotion(I).md)
+	*	[Financia(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/Financia(I).md)
 
 * 生活哲理
 	*	[LifePhilosophy(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/LifePhilosophy(I).md)
+	*	[Emotion(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/Emotion(I).md)
 
 * 思维导图
 	*	[汽车史 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/汽车史.xmind)
