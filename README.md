@@ -27,7 +27,7 @@
 
 ***
 <br/>
-
+￼
 
 开发中学到的、用到的小知识整理
 `当前URL路径：`
@@ -35,7 +35,7 @@
 https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
 
 //获取Future文件夹下Pictures的图片路径
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Flutter/Pictures/future1.png
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a0.jpg
 
 
 https://github.com/harleyGit/StudyNotes/blob/master/
@@ -615,13 +615,14 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ># 读书笔记
 
 * 金融投资	
-	* [金融理财(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/金融理财(I).md)
+	*	[金融理财(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/金融理财(I).md)
+	*	[Emotion(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/Emotion(I).md)
 
 * 生活哲理
 	*	[LifePhilosophy(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/LifePhilosophy(I).md)
 
 * 思维导图
-	* [汽车史 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/汽车史.xmind)
+	*	[汽车史 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/汽车史.xmind)
 
 
 
