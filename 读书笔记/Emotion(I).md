@@ -530,7 +530,7 @@
 <br/>
 
 
-￼![a24](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/a24.jpg)
+￼![a24](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a24.jpg)
 
 
 ```
@@ -574,8 +574,7 @@
 ```
 
 
-![a26](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
-a26.png)
+![a26](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a26.png)
 ￼
 
 ```
