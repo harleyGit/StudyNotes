@@ -142,7 +142,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [自定义单元格](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/自定义单元格.md)
 	* [坐标的处理(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/坐标的处理(I).md)
 	* [App-URL跳转](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/App-URL跳转.md)
-	* [AppDelegate-生命运行过程和使用时机](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/AppDelegate-生命运行过程和使用时机.md)
+	* [App的生命周期](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/App的生命周期.md)
 	* [Block(I)-1](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Block(I)-1.md)
 	* [Block(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Block(I).md)
 	* [Block(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Block(II).md)
