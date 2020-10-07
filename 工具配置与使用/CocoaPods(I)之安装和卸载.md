@@ -285,9 +285,11 @@ pod repo list
 0 repos
 ```
 a. 先移除掉本地的master,在终端输入pod repo remove master;
+b. 再切换到：`cd ~/.cocoapods/repos`;
 b. `git clone --depth 1 https://github.com/CocoaPods/Specs.git master`,等待下载完毕；
 [解决方案参考]([https://www.cnblogs.com/shuilangyizu/p/10935728.html](https://www.cnblogs.com/shuilangyizu/p/10935728.html)
 )
+c. `rm ~/Library/Caches/CocoaPods/search_index.json`
 
 
 

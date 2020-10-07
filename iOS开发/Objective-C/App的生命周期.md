@@ -284,7 +284,8 @@ int main(int argc, char * argv[]) {
 >#	参考资料：
 
 [US AppDelegate程序生命运行过程及使用时机](https://blog.csdn.net/zhw521411/article/details/52956055)
-
+[静态库和动态库的制作和研究](https://www.jianshu.com/p/d643c1368c9d)
+[视频 静态库和动态库基础要点](https://www.bilibili.com/video/BV1of4y1Q7cy?from=search&seid=4557030534076664019)
 
 
 
