@@ -9,23 +9,27 @@
 
 
 <br/>
+
 ***
 <br/>
 
 ># Mac 清理内存
+
 #`查看文件夹内的内存占用情况`
-&emsp;  使用下面命令系统就会自动统计该目录下所有文件的占用情况，一般等待一两分钟后就能得到结果了。若是想分析其它位置，你需要首先键入cd /文件夹路径移驾，然后再次运行sudo du -sh *开始扫描。
+&emsp;  使用下面命令系统就会自动统计该目录下所有文件的占用情况，一般等待一两分钟后就能得到结果了。若是想分析其它位置，你需要首先键入cd /文件夹路径移驾，然后再次运行`sudo du -sh *`开始扫描。
 ```
 sudo du -sh *
 ```
 
 <br/>
 &emsp;   查看Mac内文件所占的Size，然后用`Command + shift + G`粘贴地址到(`/Users/用户名/Library/其他文件夹目录`)所在大文件夹。
+
 ```
 $ du -hd 5 |grep -n '\dG' |sort
 ```
 
 <br/>
+
 #`可删除的文件`
 ```
 //该目录下的内容是Xcode在编译过程中产生的中间件，并且文件还特别大，在编译完成后能够被删除
@@ -56,8 +60,9 @@ sudo rm -rf /private/var/folders/
 ```
 
 <br/>
+
 #`删除临时文件——可以节省500MB-5GB硬盘空间`
-&emsp;  /private/var/tmp/是存放系统缓存的文件夹，通常情况下会在系统重启时清楚，不过有时确不会。而且如果你长时间不关闭Mac，也不重启的话，缓存文件会越来越多。使用下面的命令清楚这些临时文件：
+&emsp;  `/private/var/tmp/`是存放系统缓存的文件夹，通常情况下会在系统重启时清楚，不过有时确不会。而且如果你长时间不关闭Mac，也不重启的话，缓存文件会越来越多。使用下面的命令清楚这些临时文件：
 ```
 cd /private/var/tmp/
 
@@ -65,8 +70,10 @@ rm -rf TM*
 ```
 
 <br/>
+
 #`清除缓存文件——可以节省1GB-10GB硬盘空间`
 &emsp;  缓存文件有很多种，比如网页浏览记录，应用meta数据等等。这些缓存文件的容量究竟多大跟用户使用的应用有关，也与Mac重启的频率有关。此外，很多在线音乐播放app也会产生大量的缓存文件，我们可以通过下面的命令删除这些缓存文件：
+
 ```
 cd ~/Library/Caches/
 
@@ -74,6 +81,45 @@ rm -rf ~/Library/Caches/*
 ```
 
 <br/>
+
 ***
 <br/>
 [Mac 清理软件集合](https://blog.csdn.net/mandagod/article/details/89339544)
+
+
+
+
+<br/>
+
+***
+<br/>
+
+# 破解软件无法安装
+
+- 【安全隐私】没有权限安装来路不明的 App
+[a27](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a27.jpg)
+
+打开权限，在终端输入：`sudo spctl --master-disable`
+
+- 文件损坏无法安装
+[a28](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a28)
+
+在终端输入：`sudo xattr -d com.apple.quarantine /Applications/[App的名字].app`， 这个可以从文件夹中将app拖入终端，然后再输入密码解决了，亲测可用。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
