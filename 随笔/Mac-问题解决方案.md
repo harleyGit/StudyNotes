@@ -1,11 +1,11 @@
-># Mac 蓝牙不可用
+>#	Mac 蓝牙不可用
 
 
-`①  拔出与Mac连接的设备线；  `
-`② 关机;  `
-`③ 同时按下shift+control+option+power,保持5秒左右；`
+`①  拔出与Mac连接的设备线；  `<br/>
+`② 关机;  `<br/>
+`③ 同时按下shift+control+option+power,保持5秒左右；`<br/>
 `④  先按下power键，紧接着同时按下option+command+p+r,等待   mac发出4声Duang~的声音后松手，系统会自动开机；`
-`⑤  蓝牙菜单恢复正常；`
+`⑤  蓝牙菜单恢复正常；`<br/>
 
 
 <br/>
@@ -13,7 +13,7 @@
 ***
 <br/>
 
-># Mac 清理内存
+>#	Mac 清理内存
 
 #`查看文件夹内的内存占用情况`
 &emsp;  使用下面命令系统就会自动统计该目录下所有文件的占用情况，一般等待一两分钟后就能得到结果了。若是想分析其它位置，你需要首先键入cd /文件夹路径移驾，然后再次运行`sudo du -sh *`开始扫描。
@@ -30,7 +30,7 @@ $ du -hd 5 |grep -n '\dG' |sort
 
 <br/>
 
-#`可删除的文件`
+>#	`可删除的文件`
 ```
 //该目录下的内容是Xcode在编译过程中产生的中间件，并且文件还特别大，在编译完成后能够被删除
 ~/Library/Developer/Xcode/DerivedData
@@ -94,14 +94,16 @@ rm -rf ~/Library/Caches/*
 ***
 <br/>
 
-# 破解软件无法安装
+>#	破解软件无法安装
 
 - 【安全隐私】没有权限安装来路不明的 App
+<br/>
 [a27](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a27.jpg)
 
 打开权限，在终端输入：`sudo spctl --master-disable`
 
 - 文件损坏无法安装
+<br/>
 [a28](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a28)
 
 在终端输入：`sudo xattr -d com.apple.quarantine /Applications/[App的名字].app`， 这个可以从文件夹中将app拖入终端，然后再输入密码解决了，亲测可用。
