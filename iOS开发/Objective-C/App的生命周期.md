@@ -1,5 +1,7 @@
 >#	APP的启动流程
 
+[类库 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/Ohters/类库.mindnode)
+
 <br/>
 
 -	从源代码到app
