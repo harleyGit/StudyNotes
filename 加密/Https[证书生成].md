@@ -1,24 +1,22 @@
 TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
+<br/>
 [SSL与TLS的区别以及介绍](https://blog.csdn.net/anningzhu/article/details/77517432)
 
 <br/>
+
 ***
 <br/>
 
 
-
-
-<br/>
-***
-<br/>
 ># CA 生成
-#**` 自动生成`**
+#   **` 自动生成`**
 -  在OpenSSL的安装目录下的misc目录下，运行脚本
 `/usr/local/etc/openssl@1.1/misc/CA.pl -newca`
 
-#**`手动生成`**
-# 无法进行下去了，因为只从中间CA生成开始而根CA没生成，需要先生成根CA，没尝试过。
+#   **`手动生成`**
+`无法进行下去了，因为只从中间CA生成开始而根CA没生成，需要先生成根CA，没尝试过。`
 [根CA的生成](https://www.cnblogs.com/Security-Darren/p/4078867.html)
+<br/>
 [中间CA生成](https://www.cnblogs.com/Security-Darren/p/4079605.html)
 
 &emsp;  创建root CA私钥和证书然后进一步创建中间CA。为了便于区分，我们将创建中间`CA（intermediate CA）`的CA称为根`CA（root CA）`。
@@ -27,6 +25,7 @@ TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
 
 
 <br/>
+
 - 生成 CA 目录
 ```
 //mkdir [-p] dirName
@@ -110,14 +109,16 @@ openssl ca -config rootCA.cnf -extensions v3_ca -notext -md sha256 -in /Users/ha
 
 
 <br/>
+
 ***
 <br/>
 
 
-
 ># 根证书生成
+
 -  新建一个SSL的文件夹
 -  终端定位到这个文件夹
+
 ` cd /Users/harleyhuang/Documents/Gitee/SSL`
 
 -  创建根证书密钥文件(自己做CA)root.key
@@ -141,6 +142,7 @@ openssl ca -config rootCA.cnf -extensions v3_ca -notext -md sha256 -in /Users/ha
 
 
 <br/>
+
 ***
 <br/>
 
@@ -293,6 +295,7 @@ AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSL
 
 
 <br/>
+
 ***
 <br/>
 
@@ -318,10 +321,12 @@ AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSL
 
 
 <br/>
+
 ***
 <br/>
+
 **`参考资料`**
-[ HTTPS 证书链的验证 US](https://www.cnblogs.com/oc-bowen/p/5896041.html)
+[HTTPS 原理解析](https://juejin.im/entry/6844903506537611271)
 [OpenSSL证书生成及Mac上Apache服务器配置HTTPS](https://www.jianshu.com/p/b2a9655fe687)
 [搭建CA服务器 US](https://www.cnblogs.com/zhaojiedi1992/p/zhaojiedi_linux_011_ca.html)
 
