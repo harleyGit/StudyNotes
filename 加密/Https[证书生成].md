@@ -15,6 +15,7 @@ TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
 
 #   **`手动生成`**
 `无法进行下去了，因为只从中间CA生成开始而根CA没生成，需要先生成根CA，没尝试过。`
+<br/>
 [根CA的生成](https://www.cnblogs.com/Security-Darren/p/4078867.html)
 <br/>
 [中间CA生成](https://www.cnblogs.com/Security-Darren/p/4079605.html)
@@ -327,7 +328,9 @@ AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSL
 
 **`参考资料`**
 [HTTPS 原理解析](https://juejin.im/entry/6844903506537611271)
+<br/>
 [OpenSSL证书生成及Mac上Apache服务器配置HTTPS](https://www.jianshu.com/p/b2a9655fe687)
+<br/>
 [搭建CA服务器 US](https://www.cnblogs.com/zhaojiedi1992/p/zhaojiedi_linux_011_ca.html)
 
 
