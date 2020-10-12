@@ -289,7 +289,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># Egret Engine
- * [EgretEngine简介](https://github.com/harleyGit/StudyNotes/blob/master/gretEngine/EgretEngine简介.md)
+ * [EgretEngine简介](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/EgretEngine简介.md)
 
 
 
