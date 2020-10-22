@@ -373,6 +373,8 @@ AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSL
 <br/>
 [https 原理解析](https://juejin.im/entry/6844903506537611271)
 
+[Https 原理和iOS的适配](https://www.jianshu.com/p/ba9ca8bec74a)
+
 
 
 
