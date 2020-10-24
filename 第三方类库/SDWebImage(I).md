@@ -1,3 +1,30 @@
+>#  图片渲染过程
+
+- 图片文件只有在确认要显示时,CPU才会对齐进行解压缩.因为解压是非常消耗性能的事情.解压过的图片就不会重复解压,会缓存起来；
+- 图片渲染到屏幕的过程:
+    -   CPU 读取文件->计算Frame->图片解码->解码后纹理图片位图数据通过数据总线交给GPU；
+    -   GPU获取图片Frame->顶点变换计算->光栅化->根据纹理坐标获取每个像素点的颜色值(如果出现透明值需要将每个像素点的`颜色*透明度值`)->渲染到帧缓存区->渲染到屏幕;
+
+- 三方库`YYImage`和 `SDWebImage`中，使用的下面的`CGBitmapContextCreate`函数对图片进行强制解压缩：
+```diff
++ //data ：如果不为 NULL ，那么它应该指向一块大小至少为 bytesPerRow * height 字节的内存；如果 为 NULL ，那么系统就会为我们自动分配和释放所需的内存，所以一般指定 NULL 即可；
+- //width 和height ：位图的宽度和高度，分别赋值为图片的像素宽度和像素高度即可；
+! //bitsPerComponent ：像素的每个颜色分量使用的 bit 数，在 RGB 颜色空间下指定 8 即可；
+bytesPerRow：位图的每一行使用的字节数，大小至少为 width * bytes per pixel 字节。当我们指定 0/NULL 时，系统不仅会为我们自动计算，而且还会进行 cache line alignment 的优化
+# //space ：就是我们前面提到的颜色空间，一般使用 RGB 即可；
++ //bitmapInfo：位图的布局信息.kCGImageAlphaPremultipliedFirst
+
+CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
+    size_t width, size_t height, size_t bitsPerComponent, size_t bytesPerRow,
+    CGColorSpaceRef cg_nullable space, uint32_t bitmapInfo)
+    CG_AVAILABLE_STARTING(__MAC_10_0, __IPHONE_2_0);
+
+```
+
+
+
+
+
 ># SDWebImage 类关系和方法调用UML图
 <br/>
 
