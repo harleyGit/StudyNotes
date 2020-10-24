@@ -440,6 +440,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[微信支付](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/微信支付.md)
 *	[支付宝集成](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/支付宝集成.md)
 *	[支付宝支付流程(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/支付宝支付流程(I).md)
+*	[SDWebImage(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/SDWebImage(I).md)
 
 
 
