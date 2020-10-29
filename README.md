@@ -62,8 +62,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># C 语言
-*	C++
- *	[C++(1)](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C++(1).md)
+> * *C++*
+ *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量与数据类型.md)
  *	[C预处理器](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C预处理器.md)
  *	[自定义数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/自定义数据类型.md)
  *	[变量的链接和作用域](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量的链接和作用域.md)
@@ -87,7 +87,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 
-*	C 语言
+> * *C 语言*
 *	[结构体](https://github.com/harleyGit/StudyNotes/blob/master/C语言/结构体.md)
 *	[输入和输出](https://github.com/harleyGit/StudyNotes/blob/master/C语言/输入和输出.md)
 *	[文件包含](https://github.com/harleyGit/StudyNotes/blob/master/C语言/文件包含.md)
