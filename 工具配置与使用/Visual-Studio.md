@@ -1,4 +1,5 @@
 ># 快捷键使用
+
 -  进入类、方法、变量
 按住` Command` 键 + 点击某个变量或者方法
 
@@ -6,10 +7,14 @@
     - 进入：Command + option + ➡️
     - 返回：Command + option + ⬅️
 
+- 命令面板打开
+        `Command + shift + P`
+
 
 
 
 <br/>
+
 ***
 <br/>
 
@@ -28,10 +33,14 @@
         终极奥义：VSCode左下角 “管理 / Manage” -> “键盘快捷方式 /     Keyboard Shortcuts” -> 搜索 “前进 / Go Forward 或 后退 / Go Back”
 
 左右括号之间跳转：
+<br/>
+`
 ctrl + shift + \
+`
 
 
 <br/>
+
 ***
 <br/>
 
