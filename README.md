@@ -51,6 +51,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ># 快捷键
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/快捷键.md)
+* [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Linux命令)
 
 
 
@@ -79,7 +80,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
  *	[修饰变量的存储类型关键字](https://github.com/harleyGit/StudyNotes/blob/master/C语言/修饰变量的存储类型关键字.md)
  *	[引用](https://github.com/harleyGit/StudyNotes/blob/master/C语言/引用.md)
  *	[C2类的高级应用](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2类的高级应用.md)
- *	[C2异常处理.md](https://github.com/harleyGit/StudyNotes/blob/master/C语言/异常处理.md)
+ *	[C2异常处理](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2异常处理.md)
 
 
 
