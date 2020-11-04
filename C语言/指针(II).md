@@ -247,18 +247,45 @@ void binaryTreeTest(void){
     statusCode = initBinaryTree(&binaryTree);
     printf("binaryTree:%p,  &binaryTree:%p", binaryTree, &binaryTree);
     setTest(&binaryTree);
-    printf("\n\n-->>data:%c, binaryTree:%p, &binaryTree:%p", binaryTree->data, binaryTree, &binaryTree);
+    printf("data:%c, binaryTree:%p, &binaryTree:%p", binaryTree->data, binaryTree, &binaryTree);
     
 }
 
 ```
 打印：
-`binaryTree:0x0,  &binaryTree:0x7ffeefbff4d8`  //binaryTree：指针变量地址，&binaryTree：指针的地址
+<br/>
+```diff
+- //binaryTree：指针变量地址，&binaryTree：指针的地址
+```
+`binaryTree:0x0,  &binaryTree:0x7ffeefbff4d8`
 
-`*node:0x1007156a0, node:0x7ffeefbff4d8`  //变量地址不同了，但是指针的地址相同
+```diff
++ //变量地址不同了，但是指针的地址相同
+```
 
-`-->>data:S, binaryTree:0x1007156a0, &binaryTree:0x7ffeefbff4d8`  //binaryTree->data中的binaryTree指向的地址都是相同的。
+`*node:0x1007156a0, node:0x7ffeefbff4d8`  
 
+```diff
+! //binaryTree->data中的binaryTree指向的地址都是相同的。
+```
+
+`data:S, binaryTree:0x1007156a0, &binaryTree:0x7ffeefbff4d8`  
+
+
+
+&emsp; `BinaryTreeNode`为结构名，这个名字主要是为了在结构体中包含自己为成员变量的时候有用(因为执行到的其内其内成员变量时的,别名还没有被编译，只能用结构名来定义指向这个结构的指针.) 
+BinaryTreeNode 为struct BinaryTreeNode的别名 
+BinaryTree 为struct BinaryTreeNode*的别名
+
+例如：
+```diff
++ BinaryTree L;//定义了一个指向ANSWER_HEADER的指针L
+
+# 相当于
+
+-   BinaryTreeNode *L;
+
+```
 
 <br/>
 <br/>
@@ -314,11 +341,13 @@ void binaryTreeTest(void){
 
 
 <br/>
+
 ***
 <br/>
 
 ># 数组和指针
-#`数组名作为右值的时候，就是第一个元素的地址`
+**`数组名作为右值的时候，就是第一个元素的地址`**
+
 ```
     int arr[3] = {1,2,3};
     
@@ -328,7 +357,7 @@ void binaryTreeTest(void){
 
 <br/>
 
-#`指向数组元素的指针支持 递增、递减运算`
+**`指向数组元素的指针支持 递增、递减运算`**
 ```
     int arr[3] = {1,2,3};
     
@@ -340,10 +369,15 @@ void binaryTreeTest(void){
     printf("sizeof(p): %lu\n",sizeof(p));
 ```
 输出：
+<br/>
 `1`
+<br/>
 `2`
+<br/>
 `3`
+<br/>
 `arr size:12`
+<br/>
 `izeof(p): 8`
 
 总结：
@@ -382,8 +416,10 @@ int main(void)
 }
 ```
 输出：
+<br/>
 `age 地址：0x7ffeefbff4fc`
-
+<br/>
+<br/>
 `change 方法中a=20， a 地址：0x7ffeefbff4dc`
 
 &emsp;  由此我们可以看到，这是一种深拷贝，age和方法change中的变量地址是两块不同的内存区域。
@@ -411,9 +447,12 @@ int main(void)
 }
 ```
 输出：
+<br/>
 `age 地址：0x7ffeefbff4fc`
+<br/>
 
 `change 方法中a=20， pa 地址：0x7ffeefbff4fc`
+<br/>
 
 `age = 20`
 
@@ -465,7 +504,9 @@ void swap_ok(int*pa,int*pb)
 
 ```
 输出：
+<br/>
 `a = 5, b = 9`
+<br/>
 `c = 40, d = 10`
 
 ![函数内部赋值详解](https://upload-images.jianshu.io/upload_images/2959789-9c6def9614376298.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -500,12 +541,15 @@ int main(int argc, const char * argv[])
 
 ```
 输出：
+<br/>
 `name:Harley , age:27 , score:750.00`
+<br/>
 `student size:40`
 
 &emsp;   从定义的结构看出，Student变量的大小至少是39个字节，那么通过函数直接传递变量，实参赋值数据给形参需要拷贝至少39个字节的数据，极不高效。而传递变量的指针却快很多，因为在同一个平台下，无论什么类型的指针大小都是固定的：X86指针4字节，X64指针8字节，远远比一个Student结构体变量小。
 
 <br/>
+
 ***
 <br/>
 
@@ -566,6 +610,7 @@ int main(int argc, const char * argv[])
 
 ```
 输出：
+<br/>
 `pp= 0x7ffeefbff4e4, *pp = 100`
 
 
@@ -574,8 +619,10 @@ int main(int argc, const char * argv[])
  
 
 <br/>
+
 ***
 <br/>
+
 回顾：
 [指针(I)](https://www.jianshu.com/p/f533ad9302dc)
 
