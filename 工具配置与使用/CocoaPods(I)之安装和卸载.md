@@ -195,14 +195,14 @@ Mac为 OS X 10.11以后系统的安装cocoapods 指令
 ```
 
 
--  对安装后的CocoaPods进行测试：
+-  **对安装后的CocoaPods进行测试：**
 `pod search RxSwift` 或者 `pod install`,会出现：
 ![pod search 失败提示](https://upload-images.jianshu.io/upload_images/2959789-7a3f49197f6a92cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 ![pod install 失败提示](https://upload-images.jianshu.io/upload_images/2959789-88b40a784489d24b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
--  查看repo
+-  **查看repo**
 `pod repo list`
 ```
 master
@@ -229,7 +229,7 @@ trunk
 &emsp;  Trunk 是用来自己写了一些类库上传到CocoaPods，但是这里我暂时用不到所以用不到，说以删除了。若是以后用到，可以自己重新添加进行配置Trunk。要重新创建请看[这里](https://www.jianshu.com/p/2572935ee006)
 
 
-- 再次检测是否成功，终端输入
+- **再次检测是否成功，终端输入**
 `pod search AFNetworking`
 报错：
 ```
@@ -285,11 +285,20 @@ pod repo list
 0 repos
 ```
 a. 先移除掉本地的master,在终端输入pod repo remove master;
+<br/>
 b. 再切换到：`cd ~/.cocoapods/repos`;
-b. `git clone --depth 1 https://github.com/CocoaPods/Specs.git master`,等待下载完毕；
+<br/>
+c. `git clone --depth 1 https://github.com/CocoaPods/Specs.git master`,等待下载完毕；
+<br/>
+d. `rm ~/Library/Caches/CocoaPods/search_index.json
+`
+<br/>
+e. `pod search afnetworking`, 检测是否可以使用了；
+
+<br/>
+<br/>
 [解决方案参考]([https://www.cnblogs.com/shuilangyizu/p/10935728.html](https://www.cnblogs.com/shuilangyizu/p/10935728.html)
 )
-c. `rm ~/Library/Caches/CocoaPods/search_index.json`
 
 
 
