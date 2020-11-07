@@ -8,7 +8,7 @@
 ***
 <br/>
 
-- **addPostFrameCallback **
+- **`addPostFrameCallback`**
 
 
 	&nbsp;用法：`addPostFrameCallback`回调方法在Widget渲染完成时触发，所以一般我们在获取页面中的Widget大小、位置时使用到。

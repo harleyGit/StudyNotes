@@ -164,7 +164,9 @@ class ShadeSquare extends StatelessWidget {
 ![行布局效果图](https://upload-images.jianshu.io/upload_images/2959789-44d63a4d4befd2ab.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 <br/>
+
 **`ShadeSquare 添加下述方法，并在 MyApp 类调用`**
+
 ```
   //列布局
   static Column testLayoutOfColumn() {

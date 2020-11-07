@@ -1,4 +1,10 @@
-`Dart` 中所有的类都继承自 `Object`类。
+`Dart` 中所有的类都继承自 `Object`类。[Flutter 中文官方文档](https://book.flutterchina.club/chapter14/flutter_app_startup.html)
+- **`类的方法`**
+- **`子类(类的继承)`**
+- **`Flutter特殊语法`**
+- **``**
+- **``**
+
 
 ># 类的方法
 
