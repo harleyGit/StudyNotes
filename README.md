@@ -60,8 +60,11 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-># C++ 语言
+
+
+>#  **C++ 语言**
  *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量与数据类型.md)
+ *	 [指针(I)](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2指针(I).md)
  *	[C预处理器](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C预处理器.md)
  *	[自定义数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/自定义数据类型.md)
  *	[变量的链接和作用域](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量的链接和作用域.md)
@@ -76,8 +79,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
  *	[文件处理](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2文件处理.md)
  *	[修饰变量的存储类型关键字](https://github.com/harleyGit/StudyNotes/blob/master/C语言/修饰变量的存储类型关键字.md)
  *	[引用](https://github.com/harleyGit/StudyNotes/blob/master/C语言/引用.md)
- *	[C2类的高级应用](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2类的高级应用.md)
- *	[C2异常处理](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2异常处理.md)
+ *	[类的高级应用](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2类的高级应用.md)
+ *	[异常处理](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2异常处理.md)
 
 
 
