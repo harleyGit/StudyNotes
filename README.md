@@ -12,13 +12,9 @@
 	- refactor: 重构代码，理论上不影响现有功能;
 	- perf: 提升性能;
 	- test: 增加修改测试用例;
-	- chore: 修改工具相关（包括但不限于文档、代码生成等;
+	- chore: 修改工具相关（包括但不限于文档、代码生成等);
 	- deps: 升级依赖;
 	- feat: 新功能;
-
-
-
-
 
 
 
@@ -30,7 +26,8 @@
 
 开发中学到的、用到的小知识整理
 <br/>
-`当前URL路径：`
+**`当前URL路径：`**
+
 ```!
 https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
 
@@ -62,8 +59,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-># C 语言
-> * *C++*
+># C++ 语言
  *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量与数据类型.md)
  *	[C预处理器](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C预处理器.md)
  *	[自定义数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/自定义数据类型.md)
@@ -88,7 +84,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 
-> * *C 语言*
+># **C 语言**
 *	[结构体](https://github.com/harleyGit/StudyNotes/blob/master/C语言/结构体.md)
 *	[输入和输出](https://github.com/harleyGit/StudyNotes/blob/master/C语言/输入和输出.md)
 *	[文件包含](https://github.com/harleyGit/StudyNotes/blob/master/C语言/文件包含.md)
@@ -105,7 +101,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-># iOS 开发
+># **iOS 开发**
 
 ![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
 
@@ -204,7 +200,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 	
         
-* Swist
+* **Swift**
 	* [Swif 包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Swift包管理.md)
 	* [SwiftUI[简单构造一个App]](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/SwiftUI[简单构造一个App].md)
 	* [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
