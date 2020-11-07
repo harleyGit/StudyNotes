@@ -1,10 +1,17 @@
-># 行、列布局
+- **行、列布局**
+
+
+<br/>
+
+***
+<br/>
 
 >**`MainAxisAlignment（主轴）`**:  就是与当前控件方向一致的轴;
 **`CrossAxisAlignment（交叉轴）`**:  就是与当前控件方向垂直的轴;
 
 
 **`MyApp 类`**
+
 ```
 import 'package:flutter/material.dart';
 
@@ -62,7 +69,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 <br/>
+
 **`渐变正方形 ShadeSquare 类`**
+
 ```
 //渐变颜色正方形
 class ShadeSquare extends StatelessWidget {
@@ -187,11 +196,17 @@ class ShadeSquare extends StatelessWidget {
     );
   }
 ```
+
+<br/>
+
 效果图：
+<br/>
+
 ![列布局](https://upload-images.jianshu.io/upload_images/2959789-941cd5295a7f40f1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 <br/>
->**`textDirection`**:  就是用来控制水平方向的起始位置和排列方向;
+
+> **`textDirection`**:  就是用来控制水平方向的起始位置和排列方向;
 **`verticalDirection`**:  就是用来控制垂直方向的起始位置和排列方向;
 
 

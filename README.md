@@ -49,6 +49,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ># 快捷键
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/快捷键.md)
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Linux命令)
+* [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Unix命令.md)
 
 
 
@@ -248,21 +249,21 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 
 ># Flutter 开发
+*	[类[I]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[I].md)
+*	[类[II]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[II].md)
+*	[组件(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/组件(I).md)
+*	[组件(II)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/组件(II).md)
+*	[布局(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/布局(I).md)
+*	[Deer项目解析(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Deer项目解析(I).md)
 *	[Future(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Future(I).md)
 *	[Flutter 学习参考资料](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参考资料.md)
 *	[Stream](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Stream.md)
-*	[Flutter的InheritedWidget](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter的InheritedWidget.md)
-*	[Flutter(IV)-布局](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter(IV)-布局.md)
-*	[Flutter(III)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter(III).md)
-*	[Flutter-Deer-项目代码解析](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-Deer-项目代码解析.md)
 *	[Flutter-状态](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-状态.md)
 *	[Flutter-之-Future](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-之-Future.md)
 *	[Flutter-系统方法调用顺序](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-系统方法调用顺序.md)
 *	[Flutter-使用-Charles进行抓包](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-使用-Charles进行抓包.md)
 *	[Flutter-路由导航](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-路由导航.md)
 *	[](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/.md)
-*	[类[I]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[I].md)
-*	[类[II]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[II].md)
 *	[Flutter-插件(II)---oktoast](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-插件(II)---oktoast.md)
 *	[Flutter-插件(I)---配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-插件(I)---配置.md)
 *	[Flutter---打包](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter---打包.md)

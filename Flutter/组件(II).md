@@ -1,6 +1,7 @@
 &emsp; 官方说的一通看了以后有点不太了解，通过把代码敲了一通，然后打断点跑了一遍终于知道是咋回事了。
 &emsp; 开发做多了，完全跟`iOS的设计模式单例`差不多在存储数据方面。但是在`单例上`又加了`通知`和`全局刷新整个app组件`，相当简单暴力。
 好了，先看第一个代码Demo：
+
 ```
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -105,10 +106,12 @@ class  _InheritedWidgetTestRouteState extends State<InheritedWidgetTestRoute> {
     );
   }
 }
+
 ```
 
 <br/>
-# `调用`
+# **`调用`**
+
 ```
 void main() {
   runApp(MyApp());
@@ -130,6 +133,7 @@ class MyApp extends StatelessWidget {
   
 }
 ```
+
 运行效果：
 ![依赖刷新](https://upload-images.jianshu.io/upload_images/2959789-2350a473d6ad7095.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 &emsp;  感觉这个可以做app的用户信息展示，感觉很棒。
