@@ -8,6 +8,7 @@
 
 
 <br/>
+
 ***
 <br/>
 
@@ -22,6 +23,7 @@
 
 
 **`CF的内存管理(Core Foundation)`**
+
 ```
 凡是带有Create、Copy、Retain等字眼的函数，创建出来的对象，都需要在最后做一次release,比如 CFRunLoopObserverCreate
 
@@ -39,7 +41,10 @@ release函数：CFRelease(对象);
 
 
 <br/>
+
+
 &emsp;  `RunLoop`只处理两种源：`输入源、时间源`。而输入源又可以分为：`NSPort、自定义源、performSelector,我们常用搭到的`performSelector`方法有：
+
 ```
 // 主线程
 performSelectorOnMainThread:withObject:waitUntilDone:
@@ -59,6 +64,7 @@ cancelPreviousPerformRequestsWithTarget:selector:object:
 
 
 <br/>
+
 ***
 <br/>
 
@@ -66,8 +72,76 @@ cancelPreviousPerformRequestsWithTarget:selector:object:
 ># NSRunLoop
 &emsp;  ` NSRunLoop` 是基于 `CFRunLoopRef` 的OC封装，提供了面向对象的 API，但`不是线程安全`的。
 
+
+- **`RunLoop 6类事件`**
+
+```
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__();
+static void __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_TIMER_CALLBACK_FUNCTION__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
+
+```
+- **`Observer事件:`**runloop中状态变化时进行通知。（微信卡顿监控就是利用这个事件通知来记录下最近一次main runloop活动时间，在另一个check线程中用定时器检测当前时间距离最后一次活动时间过久来判断在主线程中的处理逻辑耗时和卡主线程）。这里还需要特别注意，CAAnimation是由RunloopObserver触发回调来重绘，接下来会讲到。
+- **`Block事件:`**非延迟的NSObject PerformSelector立即调用，dispatch_after立即调用，block回调。
+- **`Main_Dispatch_Queue事件：`**GCD中dispatch到main queue的block会被dispatch到main loop执行。
+- **`Timer事件：`**延迟的NSObject PerformSelector，延迟的dispatch_after，timer事件。
+- **`Source0事件：`**处理如UIEvent，CFSocket这类事件。需要手动触发。触摸事件(首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 SpringBoard 接收。SpringBoard 只接收按键【锁屏/静音等】，触摸，加速，接近传感器等几种 Event，随后用 mach port 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，回调函数就是` __IOHIDEventSystemClientQueueCallback()`并调用 _UIApplicationHandleEventQueue()进行应用内部的分发。）其实是Source1接收系统事件后在回调 __IOHIDEventSystemClientQueueCallback() 内触发的 Source0，Source0 再触发的 _UIApplicationHandleEventQueue()。source0一定是要唤醒runloop及时响应并执行的，如果runloop此时在休眠等待系统的 mach_msg事件，那么就会通过source1来唤醒runloop执行。
+- **`Source1事件：`**处理系统内核的mach_msg事件。（推测CADisplayLink也是这里触发）。
+
+
 <br/>
-#`RunLoop 在主线程`
+
+&emsp; **Runloop执行顺序的伪代码：**
+
+```
+SetupThisRunLoopRunTimeoutTimer(); // by GCD timer
+//通知即将进入runloop__CFRUNLLOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__(KCFRunLoopEntry);
+do {
+     __CFRunLoopDoObservers(kCFRunLoopBeforeTimers);
+     __CFRunLoopDoObservers(kCFRunLoopBeforeSources);
+
+     __CFRunLoopDoBlocks();  //!!!:一个循环中会调用两次，确保非延迟的NSObject PerformSelector调用和非延迟的dispatch_after调用在当前runloop执行。还有回调block
+     __CFRunLoopDoSource0(); //例如UIKit处理的UIEvent事件
+
+     CheckIfExistMessagesInMainDispatchQueue(); //GCD dispatch main queue
+
+     __CFRunLoopDoObservers(kCFRunLoopBeforeWaiting); //即将进入休眠，会重绘一次界面
+     var wakeUpPort = SleepAndWaitForWakingUpPorts();
+     // mach_msg_trap，陷入内核等待匹配的内核mach_msg事件
+     // Zzz...
+     // Received mach_msg, wake up
+     __CFRunLoopDoObservers(kCFRunLoopAfterWaiting);
+     // 处理消息，从代码中也可以看出，唤醒runloop的三种方式。
+     if (wakeUpPort == timerPort) { //方式1: timer源唤醒
+          __CFRunLoopDoTimers();
+     }
+     else if (wakeUpPort == mainDispatchQueuePort) {//方式二：主线程队列任务唤醒
+          //GCD当调用dispatch_async(dispatch_get_main_queue(),block)时，
+libDispatch会向主线程的runloop发送mach_msg消息唤醒runloop，
+并在这里执行。这里仅限于执行dispatch到主线程的任务，
+dispatch到其他线程的仍然是libDispatch来处理。
+          __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()
+     }
+     else { //方式三：source1唤醒
+          __CFRunLoopDoSource1();  //CADisplayLink是source1的mach_msg触发？
+     }
+     __CFRunLoopDoBlocks(); //!!!:这里又执行一次do blocks操作
+} while (!stop && !timeout);
+
+//通知observers，即将退出runloop
+__CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBERVER_CALLBACK_FUNCTION__(CFRunLoopExit);
+
+```
+
+
+
+<br/>
+
+# `RunLoop 在主线程`
+
 ```
 NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer * _Nonnull timer) {
            static int count = 0;
@@ -76,7 +150,9 @@ NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer
            NSLog(@"%s - %d",__func__,count++);
        }];
 [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+
 ```
+
 ![RunLoop 加在主线程中](https://upload-images.jianshu.io/upload_images/2959789-9bd54428c78a928f.gif?imageMogr2/auto-orient/strip)
 
 &emsp;  当把NSTimer直接加入主线程中时，我们拖动UITextView上下滑动时会发现，有卡顿现象，当我们把RunLoop注销掉时，再次拖动没有出现卡顿现象。
@@ -84,7 +160,8 @@ NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer
 
 
 <br/>
-#`RunLoop 在子线程`
+# `RunLoop 在子线程`
+
 ```
 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer * _Nonnull timer) {
@@ -102,7 +179,9 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
 
 <br/>
-#`RunLoop 在子线程手动开启`
+
+# `RunLoop 在子线程手动开启`
+
 ```
 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer * _Nonnull timer) {
@@ -124,7 +203,8 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
 <br/>
 
-#`子线程实现常驻线程`
+# `子线程实现常驻线程`
+
 ```
 //运行runloop
 [[NSRunLoop currentRunLoop] run]; 
@@ -143,6 +223,7 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
 
 <br/>
+
 ***
 <br/>
 
@@ -152,6 +233,7 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 &emsp;  `CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API，是线程安全的。
 
 **`CFRunLoop的结构`**
+
 ```
 
 //RunLoop 的运行模式
@@ -174,11 +256,8 @@ typedef struct CF_BRIDGED_MUTABLE_TYPE(NSTimer) __CFRunLoopTimer * CFRunLoopTime
 
 
 
-
-
-
-
 <br/>
+
 ***
 <br/>
 
@@ -190,6 +269,7 @@ typedef struct CF_BRIDGED_MUTABLE_TYPE(NSTimer) __CFRunLoopTimer * CFRunLoopTime
 
 
 `RunLoop Mode`可以视为事件的管家，一个Mode管理着各种事件，它的结构如下：
+
 ```
 struct __CFRunLoopMode {
     CFRuntimeBase _base;
@@ -242,10 +322,11 @@ struct __CFRunLoopMode {
 
 
 <br/>
+
 ***
 <br/>
 
->#RunLoop Source
+># RunLoop Source
 `RunLoop Source `分为Source、Observer、Timer三种，他们统称为ModeItem。
 
 按照官方文档分类，Source 分类：
@@ -265,6 +346,7 @@ struct __CFRunLoopMode {
 **` CFRunLoopSource `**
 
 &emsp; `CFRunLoopSource` 是对input sources的抽象。CFRunLoopSource分`source0`和`source1`两个版本，它的结构如下：
+
 ```
 struct __CFRunLoopSource {
     CFRuntimeBase _base;
@@ -283,6 +365,7 @@ struct __CFRunLoopSource {
 <br/>
 `source0 的详解`
 &emsp;  `source0`是App内部事件，由App自己管理的`UIEvent、CFSocket`都是source0。当一个source0事件准备执行的时候，必须要先把它标记为signal状态，以下是source0的结构体：
+
 ```
 typedef struct {
     CFIndex	version;
@@ -302,7 +385,9 @@ typedef struct {
 
 <br/>
 `source1 的详解`
+
 &emsp;  `source1`由 `RunLoop` 和内核管理，`source1` 带有`mach_port_t`，可以接收内核消息并触发回调，以下是source1的结构体:
+
 ```
 typedef struct {
     CFIndex	version;
@@ -330,11 +415,13 @@ typedef struct {
 
 
 <br/>
+
 ***
 <br/>
 
 ># CFRunLoopObserverRef
 &emsp;  `CFRunLoopObserver`是观察者，可以观察RunLoop的各种状态，并抛出回调。其结构体如下：
+
 ```
 struct __CFRunLoopObserver {
     CFRuntimeBase _base;
@@ -350,6 +437,7 @@ struct __CFRunLoopObserver {
 
 <br/>
 `CFRunLoopObserver 可观察的6种状态如下：`
+
 ```
 /* Run Loop Observer Activities *///RunLoop 的状态的变化
 typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) {
@@ -370,12 +458,14 @@ typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) {
 
 
 <br/>
+
 ***
 <br/>
 
 ># CFRunLoopTimerRef
 
 &emsp;  `CFRunLoopTimer`是定时器，可以在设定的时间点抛出回调，它的结构体如下：
+
 ```
 struct __CFRunLoopTimer {
     CFRuntimeBase _base;
@@ -392,12 +482,14 @@ struct __CFRunLoopTimer {
     CFRunLoopTimerContext _context;	/* immutable, except invalidation */
 };
 ```
+
 &emsp;  所以CFRunLoopTimer具有以下特性：
 - CFRunLoopTimer 是定时器，可以在设定的时间点抛出回调
 - CFRunLoopTimer和NSTimer是toll-free bridged的，可以相互转换
 
 
 <br/>
+
 ***
 <br/>
 
@@ -444,6 +536,7 @@ RunLoop内部函数作用：
 
 <br/>
 **`CFRunLoop 监控卡顿流程`**
+
 ```
 int32_t __CFRunLoopRun()
 {
@@ -498,6 +591,8 @@ int32_t __CFRunLoopRun()
 ```
 
 <br/>
+
 ***
 <br/>
+
 [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
