@@ -5,6 +5,14 @@
 - **`文件名中不易察觉的部分`**
 	- 文件名包含空格、？、单引号、双引号
 - **`标准输入/输出和I/O重定向`**
+	- `>`: 输出
+	- `>>`: 向文件中追加
+	- `<`: 收入
+- **`管道`**
+- **``**
+- **``**
+- **``**
+- **``**
 - **``**
 
 
@@ -214,14 +222,81 @@ standard input device
 ```
 
 
+<br/>
+
+- **`输出重定向`**
+
+&emsp; `> file`放置在能够将输出写入到标准输出上的命令之后，那么该命令的输出就会被写入到文件file中：
+
+```
+//个人信息写入到unix.txt 中
+$ who > unix.txt
+
+//显示出 unix.txt 文件内容
+$ cat unix.txt
+huanggang console  Nov  8 12:03 
+huanggang ttys000  Nov  8 12:03 
+
+
+// line 1 会把之前的内容覆盖掉
+$ echo line 1 > unix.txt
+
+```
+
+
+- 重定向符号 `>>`
+
+&emsp; 字符>>表示的另一种类型的输出重定向。这组字符使得命令的标准输出内容被追加到指定文件的现有内容之后。
+
+```
+$ echo line 2 >> unix.txt
+$ cat unix.txt
+line 1
+line 2
+```
+
+
+
+<br/>
+
+
+- **`输入重定向`**
+&emsp； 以被重定向到命令的输入中。大于号`>`作为输出重定向符号，而小于号`<`则作为输入重定向符号。
+
+```
+//文件内容
+cat unix.txt
+line 1
+line 2
+huanggang console  Nov  8 12:03 
+huanggang ttys000  Nov  8 12:03 
+
+//输出文件内容行数
+ wc -l< unix.txt
+       4
+
+```
+
+
+
+
 
 <br/>
 
 ***
 <br/>
 
-># ****
+># **管道**
+&emsp; UNIX能够将两个命令“连接”在一起。这种连接叫做管道，它可以将一个命令的输出直接作为另一个命令的输入。管道使用字符|表示，被放置在两个命令之间。要想在who和wc -l之间创建一个管道，可以输入who | wc -l：
 
+```
+ who | wc -l
+       2
+
+
+```
+管道如下图：
+![z9](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z9.png)
 
 
 
