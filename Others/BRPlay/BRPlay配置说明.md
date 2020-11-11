@@ -2,7 +2,7 @@
 	- 通过Xcode打包企业ipa包，选择`Enterprise`
 <br/>
 	
-	![z10](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z10.png)
+![z10](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z10.png)
 <br/>
 
 - **`勾选Include manifest for over-the-air installation`**
@@ -27,6 +27,7 @@
 
 - **`获取.ipa包的链接`**
 <br/>
+
 ![z13](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z13.png)
 <br/>
 
@@ -54,7 +55,7 @@
 - **`下载注意`**
 <br/>
 &emsp; 这些做好后，需要打开 vpn代理，进行翻墙否则无法下载。
-描述文件[下载地址](https://airportal.cn/680874)
+描述文件的 [下载地址](https://airportal.cn/680874)
 
 [![GitHubBRPlay](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/GitHubBRPlay.png)](https://www.liantu.com/)
 
