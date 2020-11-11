@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//ZH">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style type="text/css">
+        .wechat-img {
+            background-image: url('static/images/wechat_help.png');
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-size: 100%;
+            text-align: center;
+        }
+
+        .wechat-font {
+            text-align: center;
+            font-size: 5rem;
+            padding-top: 5rem;
+            position: relative;
+            z-index: -1;
+        }
+    </style>
+</head>
+<script>
+
+    function isWechat() {
+        var ua = window.navigator.userAgent.toLowerCase();
+        return ua.match(/MicroMessenger/i) == 'micromessenger';
+    };
+
+    function onload() {
+        if (isWechat()) {
+            document.getElementById("wechat").className = 'wechat-img';
+        } else {
+            downloadFile();
+        }
+    };
+
+    var browser = {
+        versions: function () {
+            var u = navigator.userAgent;
+            return {
+                iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1,
+                iPad: u.indexOf('iPad') > -1
+            };
+        }()
+    };
+
+    function downloadFile() {
+        if (browser.versions.iPhone || browser.versions.iPad) {
+            window.location.href = "itms-services:///?action=download-manifest&url=https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Others/BRPlay1.1.0/info.plist";
+        } else {
+            window.location.href = "https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay1.1.0/Runner.ipa";
+        }
+    }
+</script>
+<body onLoad="onload()">
+<div id="wechat"><p class="wechat-font">如果没有10秒内自动下载APP请用系统浏览器打开</p></div>
+</body>
+</html>
