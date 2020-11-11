@@ -45,9 +45,11 @@
 
 - **`安装路径`**
 <br/>
+
 `itms-services:///?action=download-manifest&url= info.plist文件的url地址`
 <br/>
 <br/>
+
 `itms-services:///?action=download-manifest&url=https://github.com/harleyGit/StudyNotes/raw/master/Others/BRPlay/info.plist`
 
 <br/>
