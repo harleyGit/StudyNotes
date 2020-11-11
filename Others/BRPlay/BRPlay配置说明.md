@@ -1,21 +1,24 @@
 - **`打包`**
 	- 通过Xcode打包企业ipa包，选择`Enterprise`
 	<br/>
+	
 	![z10](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z10.webp)
 
 <br/>
 - **`勾选Include manifest for over-the-air installation`**
-	![z11](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z11.webp)
+<br/>
+
+	![z11](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z11.png)
 
 <br/>
 
 - **`生成一个info.plist文件`**
-<br/>
-	暂时随意输入地址，比如https://www.github.com，后面要对其进行修改，地址要https。
+
+	暂时随意输入地址，比如`https://www.github.com`，后面要对其进行修改，地址要`https`。
 	<br/>
-		![z12](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z12.webp)
+		![z12](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z12.png)
 	
-	<br/>
+<br/>
 	
 - **`github上传`**
 	- 首先在github上创建一个库，然后克隆到本地;
@@ -26,7 +29,6 @@
 - **`获取.ipa包的链接`**
 <br/>
 		![z13](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z13.webp)
-		
 		<br/>
 
 - **`修改info.plist 文件，点击Raw，然后进入新的页面，在浏览器中复制地址即可`**
@@ -38,6 +40,7 @@
 - **`info.plist修改，把获取到的地址，按位置然后填入到info.plist文件中`**
 <br/>
 ![z14](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z14.webp)
+
 <br/>
 
 - **`安装路径`**

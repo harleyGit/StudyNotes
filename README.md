@@ -699,7 +699,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-![BRPlay配置说明](https://github.com/harleyGit/StudyNotes/blob/master/BRPlay配置说明.md)
+[BRPlay配置说明](https://github.com/harleyGit/StudyNotes/blob/master/BRPlay配置说明.md)
 
 
 
