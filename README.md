@@ -357,6 +357,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 动画/绘图
+* [核心动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/核心动画.md)
 *	[仿射动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/仿射动画.md)
 *	[绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/绘制(I).md)
 *	[屏幕、图片尺寸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/屏幕、图片尺寸(I).md)
