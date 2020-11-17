@@ -13,8 +13,8 @@
 	- AppBar的渐变色
 - **`系统字体缩放`**
 - **`导航返回拦截（WillPopScope）`**
-- **`Scaffold、TabBar、底部导航`**
-- **``**
+- **`Scaffold、TabBar、SafeArea、底部导航`**
+- **[PageView](http://flutter.link/2020/05/10/PageView/)**
 - **``**
 - **``**
 
@@ -269,12 +269,108 @@ const WillPopScope({
 ># [Scaffold、TabBar、底部导航](https://book.flutterchina.club/chapter5/material_scaffold.html)
 
 
+<br/>
+- **Scaffold**
+
+```
+//脚手架
+Scaffold({
+    Key key,
+    this.appBar,//设置应用栏，显示在脚手架顶部
+    this.body,//设置脚手架内容区域控件
+    this.floatingActionButton,//设置显示在上层区域的按钮，默认位置位于右下角（悬浮按钮）
+    this.floatingActionButtonLocation,//设置floatingActionButton的位置
+    this.floatingActionButtonAnimator,//floatingActionButtonAnimator 动画 动画，但是设置了没有效果？
+    this.persistentFooterButtons,//一组显示在脚手架底部的按钮(在bottomNavigationBar底部导航栏的上面)
+    this.drawer,//设置左边侧边栏,也就是抽屉菜单
+    this.endDrawer,//设置右边侧边栏
+    this.bottomNavigationBar,//设置脚手架 底部导航栏
+    this.bottomSheet,//底部抽屉栏
+    this.backgroundColor,//设置脚手架内容区域的颜色
+    this.resizeToAvoidBottomPadding = true,// ? 控制界面内容 body 是否重新布局来避免底部被覆盖，比如当键盘显示的时候，重新布局避免被键盘盖住内容。
+    this.primary = true,//脚手架是否显示在最低部
+  })
+
+
+```
+
+<br/>
+
+- **AppBar‌**
+- 
+```
+AppBar({
+  Key key,
+  this.leading, //导航栏最左侧Widget，常见为抽屉菜单按钮或返回按钮。
+  this.automaticallyImplyLeading = true, //如果leading为null，是否自动实现默认的leading按钮
+  this.title,// 页面标题
+  this.actions, // 导航栏右侧菜单
+  this.bottom, // 导航栏底部菜单，通常为Tab按钮组
+  this.elevation = 4.0, // 导航栏阴影
+  this.centerTitle, //标题是否居中 
+  this.backgroundColor,
+  ...   //其它属性见源码注释
+})
+```
+
+
+<br/>
+
+- **SafeArea**
+可以很好的解决全面屏中的刘海屏，比如iPhone X的顶部和底部的区域，否则容易出现遮挡的问题。
+
+<br/>
+
+***
+<br/>
+
+># PageView
+
+```
+PageView({
+    Key key,
+    this.scrollDirection = Axis.horizontal,  //页面滚动的方向，从左往右，或者从上往下
+    this.reverse = false,  //是否反转方向
+    PageController controller,  //用于控制视图页面滚动到的位置
+    this.physics,  //页面视图响应用户的滚动特性
+    this.pageSnapping = true,  //使用自定义滚动时禁止页面捕捉
+    this.onPageChanged,  //视图页面发生转换的时候进行的函数操作
+    List<Widget> children = const <Widget>[],    //页面（组件）列表，页面个数等于长度
+    this.dragStartBehavior = DragStartBehavior.start,  //拖拽行为
+  })
+
+```
+
+
+[ScrollPhysics](http://laomengit.com/flutter/widgets/ScrollPhysics.html#clampingscrollphysics): this.physics: 滚动特性
+- AlwaysScrollableScrollPhysics: 总是可以滑动
+- NeverScrollableScrollPhysics: 禁止滚动
+- BouncingScrollPhysics: 内容超过一屏 上拉有回弹效果
+- ClampingScrollPhysics: 包裹内容 不会有回弹
+- FixedExtentScrollPhysics: 滚动条直接落在某一项上，而不是任何位置，类似于老虎机，只能在确定的内容上停止，而不能停在2个内容的中间，用于可滚动组件的FixedExtentScrollController
+- PageScrollPhysics:用于PageView的滚动特性，停留在页面的边界
+
+
+
+
+
 
 
 <br/>
 
 ***
 <br/>
+
+># 
+
+
+
+<br/>
+
+***
+<br/>
+
+># 
 
 >#
 
