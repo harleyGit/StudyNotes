@@ -1,3 +1,13 @@
+
+- **[从零开始打造一个iOS图片加载框架](https://juejin.im/post/6844903807667666951)**
+
+
+<br/>
+
+***
+<br/>
+
+
 >#  图片渲染过程
 
 - 图片文件只有在确认要显示时,CPU才会对齐进行解压缩.因为解压是非常消耗性能的事情.解压过的图片就不会重复解压,会缓存起来；
@@ -6,8 +16,10 @@
     -   GPU获取图片Frame->顶点变换计算->光栅化->根据纹理坐标获取每个像素点的颜色值(如果出现透明值需要将每个像素点的`颜色*透明度值`)->渲染到帧缓存区->渲染到屏幕;
 
 - 三方库`YYImage`和 `SDWebImage`中，使用的下面的`CGBitmapContextCreate`函数对图片进行强制解压缩：
+
 ```diff
-+ //data ：如果不为 NULL ，那么它应该指向一块大小至少为 bytesPerRow * height 字节的内存；如果 为 NULL ，那么系统就会为我们自动分配和释放所需的内存，所以一般指定 NULL 即可；
+
++  //data ：如果不为 NULL ，那么它应该指向一块大小至少为 bytesPerRow *  height 字节的内存；如果 为 NULL ，那么系统就会为我们自动分配和释放所需的内存，所以一般指定 NULL 即可；
 - //width 和height ：位图的宽度和高度，分别赋值为图片的像素宽度和像素高度即可；
 ! //bitsPerComponent ：像素的每个颜色分量使用的 bit 数，在 RGB 颜色空间下指定 8 即可；
 bytesPerRow：位图的每一行使用的字节数，大小至少为 width * bytes per pixel 字节。当我们指定 0/NULL 时，系统不仅会为我们自动计算，而且还会进行 cache line alignment 的优化
@@ -24,12 +36,19 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 
 
 
+<br/>
+
+***
+<br/>
+
 
 ># SDWebImage 类关系和方法调用UML图
 <br/>
 
-#`SDWebImage UML类图`
+# `SDWebImage UML类图`
+
 &emsp;  若是想看下列的清晰的结构图，最新的版本有的类是没有的，所以需要 `pod 'SDWebImage',  '~>3.8.2' `版本。
+
 ![SDWebImage 结构图](https://upload-images.jianshu.io/upload_images/2959789-86b22d19c095010a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
@@ -54,6 +73,7 @@ SDWebImageDownloaderOperation        负责单个图片下载的操作由它来�
 
 
 <br/>
+
 ***
 <br/>
 
@@ -64,12 +84,15 @@ SDWebImageDownloaderOperation        负责单个图片下载的操作由它来�
 
 
 <br/>
+
 ***
 <br/>
 
 
 ># 下载顺序枚举
+
 <br/>
+
 ```
 typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
     /**
@@ -91,6 +114,7 @@ typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
 
 
 <br/>
+
 ***
 <br/>
 
@@ -102,6 +126,7 @@ typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
 
 
 <br/>
+
 ***
 <br/>
 
@@ -182,7 +207,11 @@ typedef NS_ENUM(NSInteger, SDImageFormat) {
 
 
 
-o# `MD5获取文件名`
+<br/>
+
+***
+<br/>
+# `MD5获取文件名`
 
 ```
 
@@ -219,9 +248,15 @@ static inline NSString * _Nonnull SDDiskCacheFileNameForKey(NSString * _Nullable
 
 
 <br/>
+
 ***
 <br/>
+
 参考资料：
+<br/>
+
 [iOS 中图片的解压缩](http://www.cocoachina.com/ios/20170227/18784.html)
+
 [SDWebImage 4.x版本源码分析](https://www.jianshu.com/p/ae5c107d2b76)
-[从sd_setImageWithURL:方法谈SDWebImage （二](https://www.jianshu.com/p/2d96280aa841)
+
+[从sd_setImageWithURL:方法谈SDWebImage （二)](https://www.jianshu.com/p/2d96280aa841)
