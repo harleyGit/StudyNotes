@@ -1,4 +1,4 @@
->#以下是三种是获取当前上下文的方式，而绘图的API有两种（***Core Graphics和OpenGL ES***）。
+># 以下是三种是获取当前上下文的方式，而绘图的API有两种（***Core Graphics和OpenGL ES***）。
 <br/>
 <br/>
 
@@ -8,7 +8,8 @@
 
 `
 这两个方法是成对出现的，函数块内就是在当前上下文中进行绘制的。
-`
+
+
 ```Swift
 UIGraphicsBeginImageContextWithOptions(CGMake(100,100),NO,0);
 
@@ -29,6 +30,7 @@ CGFloat scale: 指定生成图片的缩放因子，这个缩放因子与UIImage�
 
 
 <br/>
+
 ***
 
 ># 上下文的获取：***UIGraphicsPushContext和UIGraphicsPopContext***
@@ -47,10 +49,13 @@ UIKIT_EXTERN void UIGraphicsPopContext(void);
 
 
 <br/>
+
 ***
+<br/>
 
 
-> #上下文的获取：***drawRec:***
+># 上下文的获取：***drawRect:***
+
 &emsp;  `当drawRect:方法被调用时，Cocoa就会为你创建一个图形上下文，此时你对图形上下文的所有绘图操作都是在当前View的上下文中 。`
 
 ```
@@ -64,6 +69,7 @@ UIKIT_EXTERN void UIGraphicsPopContext(void);
 
 
 <br/>
+
 ***
 
 
@@ -77,6 +83,7 @@ void CGContextSaveGState(CGContextRef cg_nullable c)
 //将当前的上下文状态恢复到传入的上下文保存时的状态
 void CGContextRestoreGState(CGContextRef cg_nullable c)
 ```
+
 🌰：假如当前上下文默认绘制是黑色的画笔宽度是2，而我们需要先绘制一个绿色且宽度为10的线，然后需要绘制一个绿色且宽度为5的线。这其中就涉及到来修改上下文绘制的画笔颜色和画笔宽度属性，以及恢复上下文属性。
 
 ```
@@ -141,11 +148,13 @@ void CGContextRestoreGState(CGContextRef cg_nullable c)
 
 
 <br/>
+
 ***
 
->#***图片绘制***
+># ***图片绘制***
 
->##***CGImageCreateWithImageInRect***
+>## ***CGImageCreateWithImageInRect***
+
 `用法：根据指定范围截图图片区域，获得一个新的图片，获得的图片是CGImageRef类型的CGImageRef newImageRef = CGImageCreateWithImageInRect(imageRef,size)`
 ```
 CGImageCreateWithImageInRect(CGImageRef cg_nullable image, CGRect rect)
@@ -159,6 +168,7 @@ CGImageRelease(newImageRef)
 */
 
 ```
+
 <br/>
 
 >##***CGContextDrawImage***
@@ -175,18 +185,21 @@ CGContextDrawImage(CGContextRef cg_nullable c, CGRect rect,
 ```
 <br/>
 
->##***drawAtPoint***
+>## ***drawAtPoint***
 
 `用法：该方法是UIImage类的对象方法，用于把当前图片按照指定的抛锚点在当前上下文中开始绘制`
+
 ```
 - (void)drawAtPoint:(CGPoint)point;
 
 //point:  图片开始绘制的起始点
 
 ```
+
 <br/>
 
 🌰：
+
 ```
 - (void) drawView {
     UIImageView *view = [[UIImageView alloc] initWithFrame:CGRectMake(40, 80, 180, 120)];
@@ -206,8 +219,10 @@ CGContextDrawImage(CGContextRef cg_nullable c, CGRect rect,
 
 <br/>
 
->##***drawInRect***
+>## ***drawInRect***
+
 `用法：该方法是UIImage类的对象方法，用于把当前图片按照指定Rect在当前上下文中绘制，可以缩放可以位移。用法与drawAtPoint一样`
+
 ```
 - (void)drawInRect:(CGRect)rect;
 
@@ -219,7 +234,10 @@ CGContextDrawImage(CGContextRef cg_nullable c, CGRect rect,
 
 
 >##***imageWithCGImage:  scale:  orientation:***
+
 `用法：该方法是UIImage的类方法，用于把CGImageRef类型的图片 按照scale与方向转换成对应的UIImage对象。`
+
+
 ```
 + (UIImage *)imageWithCGImage:(CGImageRef)cgImage scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
 

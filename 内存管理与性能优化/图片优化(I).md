@@ -5,6 +5,7 @@
 
 
 <br/>
+
 ***
 <br/>
 
@@ -16,7 +17,8 @@
 &emsp;  这意味着，GPU需要对大图进行缩放到小的区域显示，需要做像素点的sampling，这种smapling的代价很高，又需要兼顾pixel alignment。计算量会飙升。
 OpenGL ES是直接调用底层的GPU进行渲染；Core Graphics是一个基于CPU的绘制引擎；
 
-#`缩放图片Code`
+# `缩放图片Code`
+
 ```
      //重新绘制图片
     //按照imageWidth, imageHeight指定宽高开始绘制图片
@@ -33,6 +35,7 @@ OpenGL ES是直接调用底层的GPU进行渲染；Core Graphics是一个基于C
 
 
 <br/>
+
 ***
 <br/>
 
@@ -43,8 +46,10 @@ OpenGL ES是直接调用底层的GPU进行渲染；Core Graphics是一个基于C
 
 
 <br/>
+
 ***
 <br/>
+
 ># 加载大量图片优化
 
 ```

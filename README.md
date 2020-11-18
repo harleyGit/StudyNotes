@@ -363,7 +363,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[屏幕、图片尺寸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/屏幕、图片尺寸(I).md)
 *	[图片拉伸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/图片拉伸(I).md)
 *	[位移动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/位移动画.md)
-*	[圆角绘制](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/圆角绘制.md)
+*	[离屏渲染](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/离屏渲染.md)
 *	[CALayer、CoreAnimation、UIView动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/CALayer、CoreAnimation、UIView动画.md)
 *	[Core-Graphics(I)--线条绘制](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/Core-Graphics(I)--线条绘制.md)
 *	[Core-Graphics(II)----图片绘制](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/Core-Graphics(II)----图片绘制.md)

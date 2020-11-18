@@ -1,5 +1,6 @@
 
 ># 半圆边框
+
 ```
 + (UIImageView *) drawInputViewWithFrame:(CGRect)frame {
     UIImageView *inputView = [[UIImageView alloc] initWithFrame:frame];
@@ -92,6 +93,7 @@
 
 
 <br/>
+
 ***
 <br/>
 
@@ -132,10 +134,12 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
 
 ># 绘制图片
+
 ```
 override func draw(_ rect: CGRect) {
     
@@ -153,6 +157,7 @@ override func draw(_ rect: CGRect) {
 
 ```
 
+
 ![safari 图标绘制](https://upload-images.jianshu.io/upload_images/2959789-4b5fc1267365d3e7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
@@ -160,9 +165,12 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
+
 ># 边框、阴影绘制
+
 ```
 override func draw(_ rect: CGRect) {
     
@@ -202,9 +210,13 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
+
+
 >#  线条绘制 
+
 ```
 override func draw(_ rect: CGRect) {
     
@@ -236,9 +248,13 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
+
+
 ># 绘制渐变
+
 ```
 override func draw(_ rect: CGRect) {
     
@@ -276,9 +292,13 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
+
+
 ># 翻转绘制
+
 ```
 override func draw(_ rect: CGRect) {
         
@@ -321,7 +341,10 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
+
 **`参考资料：`**
+
 [Core Graphics (长篇高能)](https://www.jianshu.com/p/491b50cb19cb)
