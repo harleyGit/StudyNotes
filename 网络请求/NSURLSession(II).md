@@ -1,11 +1,22 @@
-***`简要介绍：`***
-***NSURLSessionDataTask, NSURLSessionDownloadTask,  NSURLSessionStreamTask,  NSURLSessionUploadTask这四个类继承自NSURLSessionTask这个核心类。<br/>
+- **NSURLSessionTask**
+- **NSURLSessionStreamTask**
+
+
+<br/>
+
+***
+<br/>
+
+**`简要介绍：`**
+
+**NSURLSessionDataTask, NSURLSessionDownloadTask,  NSURLSessionStreamTask,  NSURLSessionUploadTask这四个类继承自NSURLSessionTask这个核心类。<br/>
 上传类NSURLSessionUploadTask继承自NSURLSessionDataTask<br/>
-如下图：***
+如下图：**
 
 ![核心Task类 与 四大类的关系图](https://upload-images.jianshu.io/upload_images/2959789-f47c269affb2c126.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-***`NSURLSessionTask 方法和属性`***
+**`NSURLSessionTask 方法和属性`**
+
 ```
 @property (readonly)                 NSUInteger    taskIdentifier;
 @property (nullable, readonly, copy) NSURLRequest  *originalRequest; 
@@ -88,12 +99,13 @@ FOUNDATION_EXPORT const float NSURLSessionTaskPriorityHigh API_AVAILABLE(macos(1
 
 
 <br/>
+
 ***
 <br/>
 
-># ***NSURLSessionStreamTask 方法***
+># **NSURLSessionStreamTask 方法**
 
-***`@interface NSURLSessionStreamTask : NSURLSessionTask`***
+**`@interface NSURLSessionStreamTask : NSURLSessionTask`**
 
 ```
 //异步地从流中读取若干个字节，并在完成时调用处理程序。
@@ -129,13 +141,15 @@ FOUNDATION_EXPORT const float NSURLSessionTaskPriorityHigh API_AVAILABLE(macos(1
 
 
 <br/>
+
  [Demo 连接点击这里](https://github.com/geniusZhangXu/AVFoundation):(【和以前的参考资料作者写的关于AVFoundation】的Demo是在一起的，这部分的demo在NSURLSession文件夹下面)
 
 
 
 <br/>
-****
-<br>
+
+***
+<br/>
 
 [NSURLSession 所有的都在这里(一)](https://www.cnblogs.com/taoxu/p/8962778.html)
 

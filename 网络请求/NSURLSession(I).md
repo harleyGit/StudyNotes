@@ -1,5 +1,19 @@
->#***NSURLRequest*** 
-***`策略类型`***
+
+- **NSURLRequest**
+- **NSURLRequest 的分类NSHTTPURLRequest**
+- **NSURLSession API**
+
+
+<br/>
+
+***
+<br/>
+
+
+># **NSURLRequest** 
+
+**`策略类型`**
+
 ```
 typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
 {
@@ -26,7 +40,10 @@ typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
 };
 ```
 
+<br/>
+
 ***`属性`***
+
 ```
 //缓存策略
 @property (readonly) NSURLRequestCachePolicy cachePolicy;
@@ -46,13 +63,16 @@ typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
 ```
 
 <br/>
+
 ***
 <br/>
 
 ># NSURLRequest 的分类NSHTTPURLRequest
+
 `@interface NSURLRequest (NSHTTPURLRequest) `
 
-***`属性和方法`***
+**`属性和方法`**
+
 ```
 //HTTP请求方式  POST GET 等
 @property (nullable, readonly, copy) NSString *HTTPMethod;
@@ -107,20 +127,25 @@ Connection: keep-alive，该字段是从HTTP 1.1才开始有的，用来告诉�
 [文件上传](https://www.cnblogs.com/wendingding/p/3949966.html)
 
 <br/>
+
 ***
 <br/>
 
 >#NSURLSession 关系图
+
 ![Session关系图](https://upload-images.jianshu.io/upload_images/2959789-2cb824aaa2e80977.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 <br/>
+
 ***
 <br/>
 
 
 
-># NSURLSession ***API***
-***`NSURLSession 默认是挂起的状态，若需要网络请求则去开启`***
+># **NSURLSession API**
+
+**`NSURLSession 默认是挂起的状态，若需要网络请求则去开启`**
+
 ```
 //获取全局的NSURLSession对象。在iPhone的所有app共用一个全局session。
 @property (class, readonly, strong) NSURLSession *sharedSession;
@@ -171,7 +196,10 @@ Connection: keep-alive，该字段是从HTTP 1.1才开始有的，用来告诉�
 ```
 
 <br/>
-***`下面这些方法是关于Task初始化的`***
+
+**`下面这些方法是关于Task初始化的`**
+
+
 ```
 - (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request;
 
@@ -206,8 +234,52 @@ Connection: keep-alive，该字段是从HTTP 1.1才开始有的，用来告诉�
 
 <br/>
 
+**图片下载Demo**
+
+```
+- (void) seessionTasdkAciont {
+    
+    //创建一个URL请求
+    NSURLRequest *request = [NSURLRequest requestWithURL:@"self.imageURL"];
+    
+    //创建一个NSURLSessionConfiguration(会话配置器)，用于对NSSession(会话)设置工作模式
+    /**
+     *defaultSessionConfiguration: 一般模式（default）,工作模式类似于原来的NSURLConnection，可以使用缓存的Cache，Cookie，鉴权;
+     *ephemeralSessionConfiguration: 临时模式（ephemeral）,不使用缓存的Cache、Cookie、鉴权；
+     *backgroundSessionConfigurationWithIdentifier: 后台模式（background）：在后台完成上传下载，创建Configuration对象的时候需要给一个NSString的ID用于追踪完成工作的Session是哪一个（后面会讲到）
+     */
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    
+    //用指定的 "会话配置器" 创建一个会话, 并且选择运行的网络线程, 系统提供了两个创建方法：
+    //1.sessionWithConfiguration:
+    //2.sessionWithConfiguration:delegate:delegateQueue:
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration ];
+    
+    //4.调用 session 的会话方法执行 request 请求(在会话的线程上执行)
+    NSURLSessionDownloadTask *task = [session downloadTaskWithRequest:request
+                                                    completionHandler:^(NSURL *localfile, NSURLResponse *response, NSError *error) {
+        
+        if (!error) {
+            if ([request.URL isEqual:@"self.imageURL"]) {
+                
+                UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfURL:localfile]];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //self.image = image;
+                    
+                });
+            }
+        }
+    }];
+    [task resume];
+    
+}
+```
 
 
-***`参考资料：`***
+
+**`参考资料：`**
+
 &emsp;&emsp;   [NSURLSession 篇一](https://www.cnblogs.com/taoxu/p/8962778.html)
+
 &emsp;&emsp;  [NSURLSession  篇二](https://www.cnblogs.com/taoxu/p/9003457.html)
