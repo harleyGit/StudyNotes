@@ -260,6 +260,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[Deer项目解析(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Deer项目解析(I).md)
 *	[Play(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/BRPlay(I).md)
 *	[生命周期(Flutter)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/生命周期(Flutter).md)
+*	[资源](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资源.md)
 *	[Future(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Future(I).md)
 *	[常用插件](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/常用插件.md)
 *	[插件Dio](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/插件Dio.md)
@@ -274,7 +275,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[Flutter---打包](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter---打包.md)
 *	[Fluntter(I)-配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Fluntter(I)-配置.md)
 *	[异常抛出](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/异常抛出.md)
-*	[颜色](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/颜色.md)
 *	[前端环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/前端环境配置.md)
 *	[跨组件状态共享](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享.md)
 
@@ -291,7 +291,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># Egret Engine
- * [EgretEngine简介](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/EgretEngine简介.md)
+ * [位图使用](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/位图使用.md)
 
 
 
