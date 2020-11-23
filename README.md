@@ -15,6 +15,10 @@
 	- chore: 修改工具相关（包括但不限于文档、代码生成等);
 	- deps: 升级依赖;
 	- feat: 新功能;
+	
+- [codemagic](https://codemagic.io/apps)
+<br/>
+	 [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
 
 
 
@@ -266,7 +270,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[常用插件](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/常用插件.md)
 *	[插件Dio](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/插件Dio.md)
 *	[Stream](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Stream.md)
-*	[Flutter-状态](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-状态.md)
+*	[状态(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/状态(I)**.md**)
 *	[Flutter-之-Future](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-之-Future.md)
 *	[Flutter-系统方法调用顺序](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-系统方法调用顺序.md)
 *	[Flutter-使用-Charles进行抓包](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-使用-Charles进行抓包.md)
