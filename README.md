@@ -261,6 +261,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[Play(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/BRPlay(I).md)
 *	[生命周期(Flutter)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/生命周期(Flutter).md)
 *	[资源](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资源.md)
+*	[性能优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/性能优化(I).md)
 *	[Future(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Future(I).md)
 *	[常用插件](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/常用插件.md)
 *	[插件Dio](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/插件Dio.md)
@@ -273,7 +274,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[Flutter-插件(II)---oktoast](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-插件(II)---oktoast.md)
 *	[Flutter-插件(I)---配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter-插件(I)---配置.md)
 *	[Flutter---打包](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter---打包.md)
-*	[Fluntter(I)-配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Fluntter(I)-配置.md)
+*	[环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/环境配置.md)
 *	[异常抛出](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/异常抛出.md)
 *	[前端环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/前端环境配置.md)
 *	[跨组件状态共享](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享.md)
@@ -615,6 +616,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 * 生活哲理
 	*	[LifePhilosophy(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/LifePhilosophy(I).md)
+	*	[LifePhilosophy(II)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/LifePhilosophy(II).md)
 	*	[Emotion(I)](https://github.com/harleyGit/StudyNotes/blob/master/读书笔记/Emotion(I).md)
 
 * 思维导图
@@ -634,6 +636,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ># 优秀资料
 -	[矢量图 ICONS](https://icons8.cn/icons)
+-	**[Go 语言圣经](https://docs.hacknode.org/gopl-zh/ch0/ch0-01.html)**
 
 
 

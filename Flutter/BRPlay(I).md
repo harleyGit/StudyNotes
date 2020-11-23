@@ -1,6 +1,8 @@
 - **[Flutter生命周期（组件渲染）](https://juejin.im/post/6844903794879234061)**
 - **[Flutter的生命周期(交互)](https://juejin.im/post/6844903794883444743)**
 - **[Flutter开发实战详解（App的优化都有）](https://wizardforcel.gitbooks.io/gsyflutterbook/content/Flutter-1.html)**
+- **WidgetsFlutterBinding**
+- **范型限制**
 - **`WidgetsBinding.instance`**
 	- 渲染后的回调
 - **`AnnotatedRegion(不使用AppBar)`**
@@ -9,11 +11,55 @@
 - **`导航返回拦截（WillPopScope）`**
 - **`Scaffold、TabBar、SafeArea、底部导航`**
 - **[PageView](http://flutter.link/2020/05/10/PageView/)**
+- **[文件存储](https://book.flutterchina.club/chapter10/file_operation.html)**
+- **‌[CupertinoPageTransitionsBuilder](https://juejin.cn/post/6844903966346575886)**
+- **[RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)**
+- **‌[MultiProvider 状态管理](https://juejin.cn/entry/6844903864852807694)**
+- **``**
 - **``**
 - **``**
 
 
 <br/>
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># WidgetsFlutterBinding
+
+- `WidgetsFlutterBinding.ensureInitialized();`
+
+```
+要記得在void main() async {}的第一行加入：
+WidgetsFlutterBinding.ensureInitialized();
+實際程式碼內容情形如下：
+import ‘package:flutter/material.dart’;
+import ‘dart:async’;
+
+
+void main() async {
+WidgetsFlutterBinding.ensureInitialized();
+…….
+}
+```
+
+否则会出现以下翻译错误：
+
+```
+Google中文翻譯：
+未處理的異常：初始化綁定之前已訪問ServicesBinding.defaultBinaryMessenger。
+未處理的異常：初始化綁定之前已訪問ServicesBinding.defaultBinaryMessenger。
+E / flutter（3156）：如果您正在運行應用程序並且需要在調用`runApp（）`之前訪問二進制消息程序（例如，
+插件初始化），那麼您需要先明確調用`WidgetsFlutterBinding.ensureInitialized（）`。
+```
+
+
+
 
 <br/>
 
@@ -397,7 +443,10 @@ PageView({
 ***
 <br/>
 
-># 
+># 文件储存
+- `getTemporaryDirectory()`:获取临时目录,系统可随时清除的临时目录（缓存）。在iOS上，这对应于NSTemporaryDirectory() 返回的值。在Android上，这是getCacheDir())返回的值
+- `getApplicationDocumentsDirectory()`: 获取应用程序的文档目录，该目录用于存储只有自己可以访问的文件。只有当应用程序被卸载时，系统才会清除该目录。在iOS上，这对应于NSDocumentDirectory。在Android上，这是AppData目录。
+- `getExternalStorageDirectory()`: 来获取外部存储目录，如SD卡；由于iOS不支持外部目录，所以在iOS下调用该方法会抛出UnsupportedError异常，而在Android下结果是android SDK中getExternalStorageDirectory的返回值。
 
 
 
@@ -406,8 +455,72 @@ PageView({
 ***
 <br/>
 
-># 
+># CupertinoPageTransitionsBuilder
 
->#
+
+```
+        pageTransitionsTheme: PageTransitionsTheme(builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        }),
+
+```
+
+- ThemeData.pageTransitionsTheme，它定义整个主题的默认页面过渡。
+- FadeUpwardsPageTransitionsBuilder，它定义默认的页面过渡。
+- OpenUpwardsPageTransitionsBuilder，它定义了与Android P提供的页面转换类似的页面转换。
+- CupertinoPageTransitionsBuilder，它定义与本地iOS页面过渡匹配的水平页面过渡。
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+># [RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)
+
+&emsp;  全局配置RefreshConfiguration,配置子树下的所有SmartRefresher表现,一般存放于MaterialApp的根部:
+
+```
+// 全局配置子树下的SmartRefresher,下面列举几个特别重要的属性
+     RefreshConfiguration(
+         headerBuilder: () => WaterDropHeader(),        // 配置默认头部指示器,假如你每个页面的头部指示器都一样的话,你需要设置这个
+         footerBuilder:  () => ClassicFooter(),        // 配置默认底部指示器
+         headerTriggerDistance: 80.0,        // 头部触发刷新的越界距离
+         springDescription:SpringDescription(stiffness: 170, damping: 16, mass: 1.9),         // 自定义回弹动画,三个属性值意义请查询flutter api
+         maxOverScrollExtent :100, //头部最大可以拖动的范围,如果发生冲出视图范围区域,请设置这个属性
+         maxUnderScrollExtent:0, // 底部最大可以拖动的范围
+         enableScrollWhenRefreshCompleted: true, //这个属性不兼容PageView和TabBarView,如果你特别需要TabBarView左右滑动,你需要把它设置为true
+         enableLoadingWhenFailed : true, //在加载失败的状态下,用户仍然可以通过手势上拉来触发加载更多
+         hideFooterWhenNotFull: false, // Viewport不满一屏时,禁用上拉加载更多功能
+         enableBallisticLoad: true, // 可以通过惯性滑动触发加载更多
+        child: MaterialApp(
+            ........
+        )
+    );
+
+```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># ‌[MultiProvider 状态管理](https://juejin.cn/entry/6844903864852807694)
+
+状态管理：
+- Provider： 简单直接      
+- Fish redux： 代码量很大
+- BloC 19年 被Provider替代
+
+`注册 范围 使用 刷新 用后`要dispose掉，有RxSwift的风格。
+
+
 
 
