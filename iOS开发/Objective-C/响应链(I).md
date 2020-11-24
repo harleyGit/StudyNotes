@@ -1,4 +1,15 @@
+- **响应者继承链**
+- **响应者链**
+- **View 响应者查找和 Event 传递**
+
+
+<br/>
+
+***
+<br/>
+
 ># 响应者继承链
+
 ![UI继承链](https://upload-images.jianshu.io/upload_images/2959789-20f988be2250ac28.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 &emsp;  `响应者对象`：继承自`UIResponder`的对象称之为响应者对象。`UIApplication`、`UIView`、`UIViewController`和所有继承`UIView`的`UIKit`类都直接或间接的继承自`UIResponder`。
@@ -8,16 +19,21 @@
 
 
 <br/>
+
 ***
 <br/>
+
 ># 响应者链
+
+
 ![UI响应图](https://upload-images.jianshu.io/upload_images/2959789-31424b921344e825.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
 &emsp;  由多个响应者组合起来的链条，就叫做响应者链。它表示了每个响应者之间的联系，并且可以使得一个事件可选择多个对象处理
 
-#`响应步骤`
+**`响应步骤`**
+
 假设触摸了initial view：
 - 第一响应者就是initial view即initial view首先响应touchesBegan:withEvent:方法，接着传递给橘黄色的view
 
@@ -37,17 +53,30 @@
 
 
 <br/>
+
 ***
 <br/>
+
+
 ># View 响应者查找和 Event 传递
 
 &emsp;  当一个触摸事件产生的时候，我们的程序是如何找到第一响应者的呢？
+
 ![事件传递](https://upload-images.jianshu.io/upload_images/2959789-c99279047b1e79e8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+> 苹果注册了一个 Source1 (基于 mach port 的) 用来接收系统事件，其回调函数为 __IOHIDEventSystemClientQueueCallback()。
+> 当一个硬件事件(触摸/锁屏/摇晃等)发生后，首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 SpringBoard 接收。
+> SpringBoard 只接收按键(锁屏/静音等)，触摸，加速，接近传感器等几种 Event，随后用 mach port 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，并调用 _UIApplicationHandleEventQueue() 进行应用内部的分发。
+> _UIApplicationHandleEventQueue() 会把 IOHIDEvent 处理并包装成 UIEvent 进行处理或分发，其中包括识别 UIGesture/处理屏幕旋转/发送给 UIWindow 等。通常事件比如 UIButton 点击、touchesBegin/Move/End/Cancel 事件都是在这个回调中完成的
+
+
 
 &emsp;  当你点击了屏幕会产生一个触摸事件，消息循环`(runloop)`会接收到触摸事件放到消息队列里，`UIApplication`会会从消息队列里取事件分发下去，首先传给`UIWindow`，`UIWindow`会使用`hitTest:withEvent:`方法找到此次触摸事件初始点所在的视图，找到这个视图之后他就会调用视图的`touchesBegan:withEvent:`方法来处理事件。
 
-#`View 响应者查找`
+**`View 响应者查找`**
+
 在这里我们先要了解两个方法：
+
 ```
 //称为方法A
 - (nullableUIView*)hitTest:(CGPoint)point withEvent:(nullableUIEvent*)event；
@@ -69,6 +98,7 @@
 &emsp; 如果方法B返回的是YES，那就去遍历它的子视图。（就是上图我们描述的那样，找到合适的view返回，如果找不到，那就由方法A返回的view去响应这个事件。）
 
 因此总结下来：
+
 ```
 //返回一个view来响应事件 （我们如果不想影响系统的事件传递链，在这个方法内，最好调用父类的这个方法）
 - (nullableUIView*)hitTest:(CGPoint)point withEvent:(nullableUIEvent*)event；
@@ -76,17 +106,33 @@
 //返回的值可以用来判断是否继续遍历子视图（返回的根据是触摸的point是否在view的frame范围内）
 - (BOOL)pointInside:(CGPoint)point withEvent:(nullableUIEvent*)event；
 ```
+
 &emsp;  当你点击了屏幕上的某个view，这个动作由硬件层传导到操作系统，然后又从底层封装成一个事件（Event）顺着view的层级往上传导，一直要找到含有这个点击点且层级最高（文档说是最低，我理解是视图树的根节点，或者最靠近你的手指的view）的view来响应事件，这个view就是hit-test view。
 
 &emsp;  决定谁**`hit-test view`**是通过不断递归调用view中的 *`- (UIView *)hitTest: withEvent:*方法和 *-(BOOL)pointInside: withEvent:`* 方法来实现的，文段中的这段话太好理解，于是一位大神仿照官方文档中这张图做了个Demo -> [Github地址](https://link.jianshu.com?t=https%3A%2F%2Fgithub.com%2Fslemon%2FHitTestViewUsage)
 
 <br/>
+
 扔个简单🌰：
+
 ![UIView 展示](https://upload-images.jianshu.io/upload_images/2959789-5d090d5166c3eeb9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-#`Demo Code`
+**UIView中的坐标转换**
+
+```
+（1）[A convertPoint:pointB fromView:B]
+将B视图的pointB这个点转换成A视图上的点的（坐标转换）
+（2）[A convertPoint:pointA toView:B]
+将A视图中的pointA这个点转换成，视图B中的点（坐标转换）
+
+```
+
+
+**`Demo Code`**
+
 `AView.m`
+
 ```
 #import "AView.h"
 
@@ -123,6 +169,7 @@
 ```
 
 `BView.m`
+
 ```
 @implementation BView
 
@@ -159,6 +206,7 @@
 ```
 
 `CView.m`
+
 ```
 @implementation CView
 
@@ -196,6 +244,7 @@
 
 
 `DView`
+
 ```
 @implementation DView
 
@@ -231,6 +280,7 @@
 ```
 
 `EView.m`
+
 ```
 @implementation EView
 
@@ -265,13 +315,17 @@
 @end
 
 ```
+
 点击`EView`，打印：
+
 ![点击EView Debug打印](https://upload-images.jianshu.io/upload_images/2959789-37edfcc15e00aaad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
-#`hitTest: withEvent: 查找过程`
+**`hitTest: withEvent: 查找过程`**
+
 点击viewE:
+
 1.  A 是`UIWindow`的根视图，首先对A进行`hitTest:withEvent:`;
 
 2.  判断A的`userInteractionEnabled`，如果为NO，A的`hitTest: withEvent:`返回nil;
@@ -291,6 +345,7 @@
 9.  至此，点击事件的第一响应者就找到了。
 
 查找逻辑的Code，如下：
+
 ```
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
     if (!self.isUserInteractionEnabled || self.isHidden || self.alpha <= 0.01) {
@@ -313,7 +368,9 @@
 
 
 <br/>
-#`Event 传递`
+
+**`Event 传递`**
+
 &emsp;  如果hitTest:withEvent: 找到的第一响应者view没有处理该事件，那么`事件会沿着响应者链向上传递->父视图->视图控制器，如果传递到最顶级视图还没处理事件，那么就传递给UIWindow处理，若window对象也不处理->交给UIApplication处理，如果UIApplication对象还不处理，就丢弃该事件`。
 
 ![View 响应者查找 和 Event 传递](https://upload-images.jianshu.io/upload_images/2959789-77c51acb67cf9ebb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -332,6 +389,7 @@
 
 
 <br/>
+
 ***
 <br/>
 
