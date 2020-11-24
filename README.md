@@ -114,7 +114,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ![iOS 系统学习教程](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
 
 *	Objective-C
-	* [iPhone 尺寸和适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/iPhone%20尺寸和适配.md)
+	* [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/iPhone适配.md)
 	* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
 	* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
 	* [本地化语言-US](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/本地化语言-US.md)
@@ -365,7 +365,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 * [核心动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/核心动画.md)
 *	[仿射动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/仿射动画.md)
 *	[绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/绘制(I).md)
-*	[屏幕、图片尺寸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/屏幕、图片尺寸(I).md)
 *	[图片拉伸(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/图片拉伸(I).md)
 *	[位移动画](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/位移动画.md)
 *	[离屏渲染](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/离屏渲染.md)

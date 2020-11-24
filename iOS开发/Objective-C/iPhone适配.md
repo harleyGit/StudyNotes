@@ -1,9 +1,14 @@
-# iPhone 尺寸和适配
-
--	*iPhone8 物理尺寸(逻辑分辨率pt)：375 * 667， 分辨率(px): 750 * 1334*
--	*iPhone8之前的除了3GS外都是2x*
--	*iPhone(%i)P+ 全面屏(除iPhoneXR 2x) 的手机都是3x*
-
+# iPhone机型屏幕尺寸
+| 手机型号 | 屏幕尺寸 | 物理尺寸(逻辑分辨率pt) | 像素尺寸分辨率(px) | 倍图 |
+|:--|:--|:--|:--|:--|
+|iPhone 5 / 5c / 5S	  | 4英寸 |  320 * 568pt | 	640 * 1136px |  @2x|
+| iPhone 6 / 6s | 4.7英寸 | 375 * 667pt | 750 * 1334 px | @2x |
+| iPhone  6+ / 6s+ | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
+| iPhone 7 | 4.7英寸 | 375 * 667pt | 750 * 1334 px | @2x |
+| iPhone 7+ | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
+| iPhone 8 | 4.7英寸 | 375 * 667pt | 750 * 1334 px | @2x |
+| iPhone 8+ | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
+| iPhone X	 | 5.8英寸 | 375 * 812pt | 1125 * 2436px	 | @3x |
 
 
 <br/>
@@ -63,6 +68,7 @@
 
 
 全面屏版本11.0之前和之后的代码：
+
 ```
 
 // 单纯根据分辨率
@@ -179,13 +185,18 @@
 	}
 ```
 
+<br/>
+
 效果图：
+
+<br/>
 
 ![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a7.png)
 
 ![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a10.png)
 
 &emsp;	可以看到没有改变`tableView的frame`,只是显示范围变了。如果没有这个属性，我们要实现同样的效果，tableView尺寸要这样设置。当然手动修改insets也是可以的。
+
 ```
 x = 0, 
 y = KStatusBarAndNavigationBarHeight, 
@@ -194,7 +205,8 @@ width = KScreenWidth,
 height = KScreenHeight - KStatusBarAndNavigationBarHeight
 
 ```
-`注意：`这种自动调整是在ScrollView是其根视图添加的的第一个控件的时候,才会出现自动调整的效果。
+
+`注意：` 这种自动调整是在ScrollView是其根视图添加的的第一个控件的时候,才会出现自动调整的效果。
 
 
 <br/>
@@ -202,7 +214,10 @@ height = KScreenHeight - KStatusBarAndNavigationBarHeight
 
 	- contentInsetAdjustmentBehavior
 &emsp;	iOS11中废弃了automaticallyAdjustsScrollViewInsets，取而代之的是contentInsetAdjustmentBehavior属性。
+
 &emsp;	该属性原理和automaticallyAdjustsScrollViewInsets原理相似，是为了进一步适应安全区域。
+
+
 
 ![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a11.png)
 
@@ -219,8 +234,9 @@ if (@available(iOS 11.0, *)) {
 
 
 ```
-	-	以下是适配建议：
-		-	对于完全自定义页面的安全区域是个碍事的东西，把ScrollView（及子类）的contentInsetAdjustmentBehavior设置成Never，自己控制每一个细节。
+
+-	以下是适配建议：
+ -	 对于完全自定义页面的安全区域是个碍事的东西，把ScrollView（及子类）的contentInsetAdjustmentBehavior设置成Never，自己控制每一个细节。
 		-	对于没有横屏需求的同学，系统默认的UIScrollViewContentInsetAdjustmentAutomatic是个好选择，就不用使用者自己修改了。
 		-	对于有横屏需求的同学，建议使用UIScrollViewContentInsetAdjustmentAlways，横屏的时候不会被“刘海”干扰。
 
@@ -229,6 +245,7 @@ if (@available(iOS 11.0, *)) {
 <br/>
 
 ***
+<br/>
 
 
 -	UI 在不同尺寸上适配
@@ -254,14 +271,13 @@ if (@available(iOS 11.0, *)) {
 
 	-	App如果要设置全局字体，可以通过Swizzing修改。或者像以上宏一样，传进参数，修改字体大小(淘宝在Plus机型的字体都加大成1.5倍)。
 		-	宏定义适配字体大小（根据屏幕尺寸判断）
+
 ```
 //宏定义
 #define SCREEN_WIDTH ([UIScreen mainScreen].bounds.size.width)
 #define FONT_SIZE(size) ([UIFont systemFontOfSize:FontSize(size))
 
-/**
- *  字体适配 我在PCH文件定义了一个方法
- */
+//字体适配 我在PCH文件定义了一个方法
 static inline CGFloat FontSize(CGFloat fontSize){
 	Ï
     if (SCREEN_WIDTH==320) {
@@ -273,7 +289,9 @@ static inline CGFloat FontSize(CGFloat fontSize){
     }
 }
 ```
+
 或者：
+
 ```
 #define IsIphone6P          SCREEN_WIDTH==414
 #define SizeScale           (IsIphone6P ? 1.5 : 1)
@@ -281,7 +299,8 @@ static inline CGFloat FontSize(CGFloat fontSize){
 #define kFont(value)        [UIFont systemFontOfSize:value*SizeScale]
 ```
 
-		- runTime给UIFont写分类 替换系统自带的方法
+- runTime给UIFont写分类 替换系统自带的方法
+
 ```
 class_getInstanceMethod得到类的实例方法
 class_getClassMethod得到类的类方法
@@ -290,6 +309,7 @@ class_getClassMethod得到类的类方法
 2. 自己UI设计原型图的手机尺寸宽度
 #define MyUIScreen  375 // UI设计原型图的手机尺寸宽度(6), 6p的--414
 ```
+
 ```
 UIFont+runtime.m
 
@@ -313,7 +333,9 @@ UIFont+runtime.m
 }
 @end
 ```
+
 外部调用：
+
 ```
 //Controller类中正常调用就行了：
 
@@ -323,11 +345,12 @@ label.font = [UIFont systemFontOfSize:16];
 [self.view addSubview:label];
 
 ```
-		-	注意：
-			-	load方法只会走一次，利用runtime的method进行方法的替换
-			-	替换的方法里面（把系统的方法替换成我们自己写的方法），这里要记住写自己的方法，不然会死循环
-			-	之后凡是用到systemFontOfSize方法的地方，都会被替换成我们自己的方法，即可改字体大小了
-			-	注意：此方法只能替换 纯代码 写的控件字号，如果你用xib创建的控件且在xib里面设置的字号，那么替换不了！你需要在xib的
+		
+-	注意：
+	-	load方法只会走一次，利用runtime的method进行方法的替换
+	-	替换的方法里面（把系统的方法替换成我们自己写的方法），这里要记住写自己的方法，不然会死循环
+	-	之后凡是用到systemFontOfSize方法的地方，都会被替换成我们自己的方法，即可改字体大小了
+	-	注意：此方法只能替换 纯代码 写的控件字号，如果你用xib创建的控件且在xib里面设置的字号，那么替换不了！你需要在xib的
 awakeFromNib方法里面手动设置下控件字体
 
 

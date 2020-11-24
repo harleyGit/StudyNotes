@@ -1,6 +1,28 @@
+<br/>
+
+***
+<br/>
+
+># 图片加载
+图片的显示分为三步：加载、解码、渲染。
+通常，我们操作的只有加载，解码和渲染是由UIKit进行。
+
+![z21](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z21.jpg)
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
 ># 图片压缩
 &emsp;   对于大量上传的图片，我们需要对其进行优化，对一些大图片进行压缩后再进行上传
 [](https://www.jianshu.com/p/76f7eb00ef13)
+
+[iOS性能优化——图片加载和处理](https://www.jianshu.com/p/7d8a82115060)
 
 
 

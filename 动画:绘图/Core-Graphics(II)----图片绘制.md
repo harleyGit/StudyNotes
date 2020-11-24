@@ -1,12 +1,17 @@
-># 以下是三种是获取当前上下文的方式，而绘图的API有两种（***Core Graphics和OpenGL ES***）。
+># 三种获取当前上下文方式
+
+绘图的API有两种（***Core Graphics和OpenGL ES***）。
+
 <br/>
 <br/>
 
 
 
-># 上下文的获取：***UIGraphicsBeginImageContextWithOptions 和 UIGraphicsEndImageContext***
+># 上下文获取
 
-`
+**UIGraphicsBeginImageContextWithOptions 和 UIGraphicsEndImageContext**
+
+
 这两个方法是成对出现的，函数块内就是在当前上下文中进行绘制的。
 
 
@@ -33,7 +38,9 @@ CGFloat scale: 指定生成图片的缩放因子，这个缩放因子与UIImage�
 
 ***
 
-># 上下文的获取：***UIGraphicsPushContext和UIGraphicsPopContext***
+># 上下文获取：
+**UIGraphicsPushContext和UIGraphicsPopContext**
+
 &emsp;  用法：成对出现的，使用UIGraphicsPushContext来转换已有上下文为当前上下文。
 
 ```
@@ -73,7 +80,7 @@ UIKIT_EXTERN void UIGraphicsPopContext(void);
 ***
 
 
->#***CGContextSaveGState和CGContextRestoreGState***上下文状态的压栈和出栈
+># **CGContextSaveGState和CGContextRestoreGState**上下文状态的压栈和出栈
 
 ```Swift
 //将传入用于绘制的上下文状态压栈栈顶，并保存传入时的上下文所有状态。
@@ -151,11 +158,12 @@ void CGContextRestoreGState(CGContextRef cg_nullable c)
 
 ***
 
-># ***图片绘制***
+># **图片绘制**
 
->## ***CGImageCreateWithImageInRect***
+>## **CGImageCreateWithImageInRect**
 
-`用法：根据指定范围截图图片区域，获得一个新的图片，获得的图片是CGImageRef类型的CGImageRef newImageRef = CGImageCreateWithImageInRect(imageRef,size)`
+用法：根据指定范围截图图片区域，获得一个新的图片，获得的图片是CGImageRef类型的`CGImageRef newImageRef = CGImageCreateWithImageInRect(imageRef,size)`
+
 ```
 CGImageCreateWithImageInRect(CGImageRef cg_nullable image, CGRect rect)
 
@@ -171,9 +179,10 @@ CGImageRelease(newImageRef)
 
 <br/>
 
->##***CGContextDrawImage***
+>## **CGContextDrawImage**
 
 `用法：在当前的上下文中把图片内容绘制到指定区域`
+
 ```
 CGContextDrawImage(CGContextRef cg_nullable c, CGRect rect,
     CGImageRef cg_nullable image)
@@ -183,9 +192,10 @@ CGContextDrawImage(CGContextRef cg_nullable c, CGRect rect,
 // image: 需要绘制上去的图片，CGImageRef类型
 
 ```
+
 <br/>
 
->## ***drawAtPoint***
+>## **drawAtPoint**
 
 `用法：该方法是UIImage类的对象方法，用于把当前图片按照指定的抛锚点在当前上下文中开始绘制`
 
@@ -233,7 +243,7 @@ CGContextDrawImage(CGContextRef cg_nullable c, CGRect rect,
 <br/>
 
 
->##***imageWithCGImage:  scale:  orientation:***
+>## **imageWithCGImage:  scale:  orientation:**
 
 `用法：该方法是UIImage的类方法，用于把CGImageRef类型的图片 按照scale与方向转换成对应的UIImage对象。`
 
