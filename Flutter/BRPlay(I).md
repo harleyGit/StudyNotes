@@ -1,6 +1,7 @@
 - **[Flutter生命周期（组件渲染）](https://juejin.im/post/6844903794879234061)**
 - **[Flutter的生命周期(交互)](https://juejin.im/post/6844903794883444743)**
 - **[Flutter开发实战详解（App的优化都有）](https://wizardforcel.gitbooks.io/gsyflutterbook/content/Flutter-1.html)**
+- **[MaterialApp使用详解](https://juejin.cn/post/6844903656932786189)**
 - **WidgetsFlutterBinding**
 - **范型限制**
 - **`WidgetsBinding.instance`**
