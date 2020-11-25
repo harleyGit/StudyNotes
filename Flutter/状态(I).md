@@ -1,6 +1,6 @@
 - [**组件可选参数Key的见解**](https://juejin.im/post/5ca2152f6fb9a05e1a7a9a26)
 - **Provider**
-- **Widget 管理自身状态**
+- **[Widget 管理自身状态](https://juejin.cn/entry/6844903864852807694)**
 
 
 
@@ -28,6 +28,29 @@ dependencies:
 ```
 
 
+<br/>
+
+- MultiProvider
+
+使用嵌套的方式来组合多个 Provider,这时候我们就可以使用一个非常 sweet 的组件`MultiProvider`:
+
+```
+void main() {
+  final counter = CounterModel();
+  final textSize = 48;
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider.value(value: textSize),
+        ChangeNotifierProvider.value(value: counter)
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+
+```
 
 
 <br/>
