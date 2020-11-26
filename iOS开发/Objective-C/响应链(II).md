@@ -1,9 +1,41 @@
+
+
+
+- **[Mach port](https://juejin.cn/post/6844904003675881485)** 
+- **扩大UIButton的响应区**
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+># Mach port
+
+&emsp;  Mach ports 是内核提供的进程间通信机制，它被操作系统频繁的使用。一个 Mach port 是一个受内核保护的单向管道，它可以有多个发送端，但只能有一个接收端。
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
 ># 扩大UIButton的响应区
+
 &emsp;  通过重载UIButton的 `-(BOOL) pointInside: withEvent: `方法，让Point即使落在Button的Frame外围也返回YES。
 
 创建一个UIButton的分类：
 
-#`UIButton+ ExtendResponseArea.h 文件`
+**`UIButton+ ExtendResponseArea.h 文件`**
+
 ```
 #import <UIKit/UIKit.h>
 
@@ -15,7 +47,8 @@
 @end
 ```
 
-#`UIButton+ ExtendResponseArea.m 文件`
+**`UIButton+ ExtendResponseArea.m 文件`**
+
 ```
 #import "UIButton+ ExtendResponseArea.h"
 #import <objc/runtime.h>
@@ -65,6 +98,7 @@ CGRect NewBounds(CGRect bounds, CGFloat responseAreaWidth, CGFloat responseAreaH
 ```
 
 调用
+
 ```
     UIButton * button = [UIButton buttonWithType:UIButtonTypeCustom];
     button.frame = CGRectMake(100, 100, 20, 20);
@@ -90,6 +124,7 @@ CGRect NewBounds(CGRect bounds, CGFloat responseAreaWidth, CGFloat responseAreaH
 
 
 <br/>
+
 ***
 <br/>
 
@@ -100,6 +135,7 @@ CGRect NewBounds(CGRect bounds, CGFloat responseAreaWidth, CGFloat responseAreaH
 
 
 <br/>
+
 ***
 <br/>
 
