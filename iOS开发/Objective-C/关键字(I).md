@@ -1,6 +1,11 @@
 
 - **DEPRECATED_MSG_ATTRIBUTE**
-- Const
+- **Const**
+- **[pragma 处理警告](https://www.jianshu.com/p/4720fc9e991a)**
+- **NS_ENUM 和 NS_OPTIONS** 
+- **__bridge**
+- FOUNDATION_EXTERN
+- FOUNDATION_EXTERN_INLINE
 
 
 <br/>
@@ -62,9 +67,98 @@ int const * const p //p和*p都只读
 [^关键字]:[关键字](http://www.cocoachina.com/ios/20171226/21653.html)
 
 
+<br/>
+
+***
+<br/>
+
+
+># pragma
 
 
 
+ <br/>
+
+***
+<br/>
+
+
+># NS_ENUM 和 NS_OPTIONS
+
+```
+
+//整型枚举 :只能单个使用，在C++ 不可以转换
+typedef NS_ENUM(NSInteger, UIViewAnimationTransition) {
+    UIViewAnimationTransitionNone,
+    UIViewAnimationTransitionFlipFromLeft,
+    UIViewAnimationTransitionFlipFromRight,
+    UIViewAnimationTransitionCurlUp,
+    UIViewAnimationTransitionCurlDown,
+};
+
+
+// 位移枚举：使用这种可以多个连接使用 | 进行按位后连接。c++可以转换位 NSUInteger
+//[self.view setAutoresizingMask: UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin];
+typedef NS_OPTIONS(NSUInteger, UIViewAutoresizing) {
+    UIViewAutoresizingNone                 = 0,
+    UIViewAutoresizingFlexibleLeftMargin   = 1 << 0,
+    UIViewAutoresizingFlexibleWidth        = 1 << 1,
+    UIViewAutoresizingFlexibleRightMargin  = 1 << 2,
+    UIViewAutoresizingFlexibleTopMargin    = 1 << 3,
+    UIViewAutoresizingFlexibleHeight       = 1 << 4,
+    UIViewAutoresizingFlexibleBottomMargin = 1 << 5
+};
+
+```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># __bridge
+
+`(__bridge id) 是桥接，把非OC转化为OC使用的。`
+
+
+<br/>
+
+***
+<br/>
+
+># FOUNDATION_EXTERN
+
+```
+#if defined(__cplusplus)
+#define FOUNDATION_EXTERN extern "C"
+#else
+#define FOUNDATION_EXTERN extern
+#endif
+```
+
+表示 extern 全局变量，此时并没有分配内存，需要在.m文件中实现，此时为了支持C和C++混编（__cplusplus 是C++编译器内部定义的宏，在C++中，需要加
+extern"C" 或包含在 extern "C" 块中），注意，此时外界是可以修改这个值，详细 extern 用法可自行查询相关资料，本文不详谈。
+用法如下：
+
+```
+FOUNDATION_EXTERN NSString *name;// h文件
+const NSString *name = @"gitKong";// m文件
+```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># FOUNDATION_EXTERN_INLINE
+
+表示全局的内联函数
 
 
 <br/>
@@ -76,3 +170,5 @@ int const * const p //p和*p都只读
 [^断言NSAssert][断言NSAssert](https://www.jianshu.com/p/d7498657d550)
 
 [^断言(NSAssert)的使用][断言(NSAssert)的使用](https://www.jianshu.com/p/6e444981ab45)
+
+[CADisplayLink做逐帧动画](https://www.jianshu.com/p/0eeb21244caa)
