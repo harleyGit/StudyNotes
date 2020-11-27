@@ -115,6 +115,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 *	Objective-C
 	* [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/iPhone适配.md)
+	* [property(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/property(I).md)
 	* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
 	* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
 	* [本地化语言-US](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/本地化语言-US.md)
@@ -123,7 +124,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [变量和属性(Wait)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/变量和属性(Wait).md)
 	* [弹框视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/弹框视图.md)
 	* [定位(待看)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/定位(待看).md)
-	* [断言](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/断言.md)
+	* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/关键字(I).md)
 	* [分类和扩展(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/分类和扩展(US).md)
 	* [分类添加属性](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/分类添加属性.md)
 	* [富文本](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/富文本.md)
@@ -162,11 +163,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [NSTimer(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/NSTimer(I).md.md)
 	* [Objective-C的Setter、Getter(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Objective-C的Setter、Getter(I).md)
 	* [OC-知识点汇集](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC-知识点汇集.md)
-	* [OC关键字(I)----Const](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(I)----Const.md)
-	* [OC关键字(II)----属性](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(II)----属性.md)
-	* [OC关键字(II)---@property属性值区别(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(II)---@property属性值区别(I).md)
-	* [OC关键字(II)---@property属性值区别(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(II)---@property属性值区别(II).md)
-	* [OC关键字(II)---@property属性值区别(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(II)---@property属性值区别(III).md)
 	* [OC关键字(III)----#pragma-处理警告](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(III)----#pragma-处理警告.md)
 	* [OC关键字(IV)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/OC关键字(IV).md)
 	* [Passbook-与-Pass(WaitLearn)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Passbook-与-Pass(WaitLearn).md)
@@ -689,6 +685,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 -	[Flutter 基础知识](http://www.xmamiga.com/3428/)
 - 	[Cooci 老师博客(潭州课堂)](https://www.jianshu.com/u/5981a4f71db5)
 -	[第五章 运输层（UDP和TCP三次握手，四次挥手分析）](https://www.cnblogs.com/whgk/p/6118206.html)
+-	[官员同事Blog](https://zhangdinghao.cn)
 
 
 <br/>
@@ -726,10 +723,11 @@ alt="圖片 ALT 文字放在這裡" width="0" height="0" border="10" /></a>
 
 [![圖片 ALT 文字放在這裡](http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE影片ID放在這裡)
 
-[![死神 BLEACH](https://pic.17qq.com/uploads/plokohonlv.jpeg)](https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121)
+[![死神 BLEACH-w150](https://pic.17qq.com/uploads/plokohonlv.jpeg)](https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121)
 
 
 * 字体颜色测试
+
 ```diff
 
 - red
