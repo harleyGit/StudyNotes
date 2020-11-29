@@ -15,6 +15,9 @@
 
 &emsp;  C语言函数在调用编译的时候就会决定调用哪个函数，而OC是一种动态语言，它会尽可能把代码从编译链接推迟到运行时，这就是OC运行时的多态。
 
+
+![z23](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z23.jpeg)
+
 <br/>
 
 ***
@@ -51,11 +54,12 @@ objc_msgSend(objc_msgSend([NSObject class],@selector(alloc)),@selector(init));
 
 &emsp;  Xcode中的NSObject.h和objc.h，我们可以看到，NSObject就是一个包含isa指针的结构体，按照面向对象的设计原则，所有的事物都应该是对象，所以严格的说OC并不是完全面向对象的（应为含有int double 类型的变量）。在OC语言中，每一个类实际上也是一个对象。每一个类也有一个isa指针。每一个类也可以接收消息，例如代码[NSObject alloc],就是向NSObject这个类发送名为 “alloc” 的消息。
 
-&emsp;  在OC中，因为类也是一个对象，所以也必须是另外一个类的实例，这个类就是元类(metaclass)。`元类保存了类方法的列表`。当一个类方法被调用的时候，元类会首先查找他本身是否有该方法的实现，如果没有，则元类会向他的父类查找方法，这样就可以一直找到继承链的头。
+> &emsp;  在OC中，因为类也是一个对象，所以也必须是另外一个类的实例，这个类就是元类(metaclass)。`元类保存了类方法的列表`。**当一个类方法被调用的时候，元类会首先查找他本身是否有该方法的实现，如果没有，则元类会向他的父类查找方法，这样就可以一直找到继承链的头。**
 
 
 
 <br/>
+
 ***
 <br/>
 
@@ -70,12 +74,16 @@ object_getClass(id _Nullable obj)
 
 
 <br/>
+
 ***
 <br/>
 
 
 <br/>
 点击#import <objc/objc.h> ，可以发现class与object在Objective-C的定义：
+
+[调试Runtime源码](https://zhuanlan.zhihu.com/p/27786725),[ **Runtime源码**](https://github.com/RetVal/objc-runtime)
+
 ```  
 /// 代表一个被标志的类
 //Class是一个objc_class结构类型的指针
@@ -91,6 +99,7 @@ typedef struct objc_object *id;
 ```
 
 点击objc_class这个结构体，可以看到：
+
 ```
 
 struct objc_class {
