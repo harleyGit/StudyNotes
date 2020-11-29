@@ -1,11 +1,13 @@
 
 - **DEPRECATED_MSG_ATTRIBUTE**
 - **Const**
-- **[pragma 处理警告](https://www.jianshu.com/p/4720fc9e991a)**
 - **NS_ENUM 和 NS_OPTIONS** 
 - **__bridge**
-- FOUNDATION_EXTERN
-- FOUNDATION_EXTERN_INLINE
+- **FOUNDATION_EXTERN**
+- **FOUNDATION_EXTERN_INLINE**
+- **VA_ARGS**
+- **[pragma 处理警告](https://www.jianshu.com/p/4720fc9e991a)**
+- [**常见的宏**](https://www.jianshu.com/p/9f7a37989b79)
 
 
 <br/>
@@ -159,6 +161,26 @@ const NSString *name = @"gitKong";// m文件
 ># FOUNDATION_EXTERN_INLINE
 
 表示全局的内联函数
+
+
+
+<br/>
+
+***
+<br/>
+
+># __VA_ARGS__
+
+- **描述**
+
+C99 编译器标准允许定义可变参数宏(variadic macros)，这样就使用拥有可以变化的参数表的宏。
+
+```
+#define FYFLog(format, ...) NSLog(format, __VA_ARGS__)
+```
+
+缺省号代表一个可以变化的参数表。使用保留名 '__VA_ARGS__' 把参数传递给宏。当宏的调用展开时，实际的参数就传递给 NSLog() 了。
+
 
 
 <br/>

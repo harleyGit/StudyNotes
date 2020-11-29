@@ -170,7 +170,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [UIApplication-US(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIApplication-US(I).md)
 	* [UIButton](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIButton.md)
 	* [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UICollectionView(I).md)
-	* [UIImage-处理(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIImage-处理(I).md)
+	* [UIImage(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIImage(I).md)
 	* [UINavigationController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UINavigationController(I).md)
 	* [UIPickerView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIPickerView(I).md)
 	* [UIScrollView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/UIScrollView(I).md)
