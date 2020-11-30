@@ -1,6 +1,7 @@
 - **消息转发**
 - **AssociatedObject 关联对象**
 - **消息发送**
+- **[深入了解Category](https://tech.meituan.com/2015/03/03/diveintocategory.html)**
 
 
 <br/>
