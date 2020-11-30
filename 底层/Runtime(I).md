@@ -1,5 +1,7 @@
 - **简介**
 - **基本概念**
+- **基本方法**
+- **消息转发机制**
 
 
 <br/>
@@ -152,7 +154,9 @@ struct objc_class {
  
 
 <br/>
+
 **Method(方法)**
+
 ```
 struct objc_method {
     SEL _Nonnull method_name   //方法的名字
@@ -180,7 +184,7 @@ struct objc_method {
 
 -  实例对象的isa指向类对象，当调用对象方法，通过实例对象的isa 找到类对象,最终找到对对象方法进行调用;
 -  类对象的isa指向元类，调用类方法，通过类对象中的isa找到元类，最终找到元类中的类方法进行调用;
--  当子类的对象要调用父类的对象方法，先通过子类的isa找到父类的class 然后通过superClass找到,父类的class 最后找到消息进行调用。
+-  当子类的对象要调用`父类的对象方法`，先通过子类的isa找到父类的class 然后通过superClass找到,父类的class 最后找到消息进行调用。
 
 ```
 
@@ -197,6 +201,7 @@ struct objc_method {
 //类名作为消息的接受者时代表的是类对象，因此类对象获取Class得到的是其本身，同时也印证了类对象是一个单例的想法。
 Person *person = [[Person alloc] init];
 NSLog(@"person 对象：%@",person);
+//person 对象：<Person: 0x600000c4f260>
     
 Class c1 = [person class];
 Class c2 = [Person class];
@@ -206,16 +211,48 @@ NSLog(@"%d", c1 == c2);
 
 //class_isMetaClass用于判断Class对象是否为元类
 //object_getClass用于获取对象的isa指针指向的对象    
-NSLog(@"%d", [person class] == object_getClass(person));
-//输出0
-NSLog(@"%d", class_isMetaClass(object_getClass(person)));
-//输出1
-NSLog(@"%d", class_isMetaClass(object_getClass([Person class])));
-//输出0
-NSLog(@"%d", object_getClass(person) == object_getClass([Person class]));
+ NSLog(@"2.  %d", [person class] == object_getClass(person));
+//输出2.  1
+NSLog(@"3.  %d", class_isMetaClass(object_getClass(person)));
+//输出3.  0
+NSLog(@"4.  %d", class_isMetaClass(object_getClass([Person class])));
+//输出4.  1
+NSLog(@"5.  %d", object_getClass(person) == object_getClass([Person class]));
+//输出5.  0
+
+NSLog(@"6. %@",object_getClass([person class]));
+//6. Person
+NSLog(@"7. %@",[Person class]);
+//7. Person
+
+NSLog(@"8. %@", object_getClass([Person class]));
+//8. Person
+NSLog(@"9. %@", object_getClass(object_getClass([Person class])));
+//9. NSObject
+NSLog(@"10. %@", object_getClass(object_getClass(object_getClass([Person class]))));
+//10. NSObject
 
 ```
-`总结：`一个实例对象通过class方法获取的Class就是它的isa指针指向的类对象，而类对象不是元类，类对象的isa指针指向的对象是元类
+
+`总结：`
+
+- **通过`class`方法获取的Class要分两种情况：**
+	- 当obj为实例对象时, 调用[obj class]时，class 就是实例方法，返回的就是obj实例对象isa指针指向的类对象
+	- 当[Obj class]调用时，Obj 为类对象（包括元类和根类以及根元类）时，调用的是类方法：+ (Class)class，返回的结果为其本身。
+
+- **使用 object_getClass 方法分析：**
+-  当参数obj为Object实例对象
+	-  object_getClass(obj)与[obj class]输出结果一直，均获得isa指针，即指向类对象的指针。
+
+- 当参数obj为Class类对象
+	- object_getClass(obj)返回类对象中的isa指针，即指向元类对象的指针；[obj class]返回的则是其本身。
+
+- 当参数obj为Metaclass类对象
+	- object_getClass(obj)返回元类对象中的isa指针，因为元类对象的isa指针指向根类，所有返回的是根类对象的地址指针；[obj class]返回的则是其本身。
+
+- obj为Rootclass类对象
+	- object_getClass(obj)返回根类对象中的isa指针，因为根类对象的isa指针指向Rootclass‘s metaclass(根元类)，即返回的是根元类的地址指针；[obj class]返回的则是其本身。
+
 
 
 
@@ -225,7 +262,9 @@ Class class = object_getClass([NSObject class]);
 ```
 
 <br/>
+
 建立一个Person 类：
+
 ```
 #import <Foundation/Foundation.h>
 
@@ -252,8 +291,10 @@ NS_ASSUME_NONNULL_END
 
 
 <br/>
+
 ***
 <br/>
+
 ># 消息转发机制
 &emsp;   原理：Objective-C 语言 中，对象方法调用都是类似 `[receiver selector]; `的形式，其本质就是让对象在运行时发送消息的过程。
 
@@ -276,6 +317,7 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 
 <br/>
 创建一个MessageSend类
+
 ```
 #import <Foundation/Foundation.h>
 
@@ -292,20 +334,29 @@ NS_ASSUME_NONNULL_END
 ```
 
 调用：
+
+
 ```
 - (void)test {
     MessageSend *ms = [MessageSend new];
     
     [ms sendMessage:@"Hello"];
 }
+
 ```
+
 crash 错误：
+
 `2019-11-17 11:20:08.972291+0800 HGSWB[49471:2551396] -[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0`
+
 `2019-11-17 11:20:09.047606+0800 HGSWB[49471:2551396] *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '-[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0'`
 
 <br/>
+
 **`①消息动态解析`**
+
 在MessageSend.m 添加方法
+
 ```
 #import "MessageSend.h"
 
@@ -338,16 +389,24 @@ void dynamicMethodIMP11(id self, SEL _cmd, NSString *msg) {
 @end
 ```
 打印：
-`2019-11-17 11:38:18.171651+0800 HGSWB[50214:2594517] <MessageSend: 0x6000002517a0>的方法转发到Here: sendMessage: ----> Hello`
+
+```
+2019-11-17 11:38:18.171651+0800 HGSWB[50214:2594517] <MessageSend: 0x6000002517a0>的方法转发到Here: sendMessage: ----> Hello
+```
+
 查看参数类型，看[这里](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html#//apple_ref/doc/uid/TP40008048-CH100)
 
 <br/>
+
 **`②消息接受者重定向`**
+
 &emsp;  若上步中 `+resolveInstanceMethod:` 或者` +resolveClassMethod:` 没有添加其他函数实现，运行时就会进行下一步：消息接受者重定向。
+
 &emsp;  若当前对象实现了 `-forwardingTargetForSelector:`，Runtime 就会调用这个方法，允许我们将消息的接受者转发给其他对象。
 
 
 创建一个 SubMessageSend 类
+
 ```
 //.h 文件
 #import <Foundation/Foundation.h>
@@ -375,6 +434,7 @@ NS_ASSUME_NONNULL_END
 ```
 
 MessageSend.m 文件
+
 ```
 #import "MessageSend.h"
 #import "SubMessageSend.h"
@@ -399,7 +459,9 @@ MessageSend.m 文件
 
 
 <br/>
+
 **`③消息重定向`**
+
 &emsp;  如果经过消息动态解析、消息接受者重定向，Runtime 系统还是找不到相应的方法实现而无法响应消息，Runtime 系统会利用 `methodSignatureForSelector: `方法获取函数的参数和返回值类型。
 
 &emsp;  如果 `methodSignatureForSelector: `返回了一个 `NSMethodSignature` 对象（函数签名），Runtime 系统就会创建一个 `NSInvocation` 对象，并通过 `forwardInvocation: `消息通知当前对象，给予此次消息发送最后一次寻找 IMP 的机会。
@@ -445,7 +507,9 @@ MessageSend.m 文件
 
 @end
 ```
+
 &emsp; 因为 `SubMessageSend` 类中有 `sendMessage:` 可以相应，所以可以打印：
+
 `2019-11-17 12:41:04.617546+0800 HGSWB[52721:2786753] SubMessageSend 的 sendMessage 方法`
 
 当我在控制台中使用命令 `po anInvocation.methodSignature` 时，打印如下：
@@ -456,26 +520,41 @@ MessageSend.m 文件
 `
 
 <br/>
+
 消息发送以及转发机制总结：
+
 调用 [receiver selector]; 后，进行的流程：
+
 - `编译阶段：[receiver selector];` 方法被编译器转换为:
+
   ```
   objc_msgSend(receiver，selector) （不带参数）
   objc_msgSend(recevier，selector，org1，org2，…)（带参数）
   ```
+
 -  `运行时阶段：`消息接受者 recever 寻找对应的 selector。
+     
      &emsp;   通过 recevier 的 isa 指针 找到 recevier 的 class（类）；
+     
     &emsp;   在 Class（类） 的 cache（方法缓存） 的散列表中寻找对应的 IMP（方法实现）；
+    
     &emsp;   如果在 cache（方法缓存） 中没有找到对应的 IMP（方法实现） 的话，就继续在 Class（类） 的 method list（方法列表） 中找对应的 selector，如果找到，填充到 cache（方法缓存） 中，并返回 selector；
+    
     &emsp;   如果在 class（类） 中没有找到这个 selector，就继续在它的 superclass（父类）中寻找；
+    
     &emsp;   一旦找到对应的 selector，直接执行 recever 对应 selector 方法实现的 IMP（方法实现）。
+    
     &emsp;   若找不到对应的 selector，Runtime 系统进入消息转发机制。
 
 - `运行时消息转发阶段`
+
    &emsp; ` 动态解析：`通过重写 `+resolveInstanceMethod:` 或者 `+resolveClassMethod:`方法，利用 `class_addMethod` 方法添加其他函数实现；
+   
  &emsp; `消息接受者重定向：`如果上一步添加其他函数实现，可在当前对象中利用 `-forwardingTargetForSelector:` 方法将消息的接受者转发给其他对象；
  &emsp; `消息重定向：`如果上一步没有返回值为 nil，则利用 `-methodSignatureForSelector:`方法获取函数的参数和返回值类型。
+ 
  &emsp; 如果 `-methodSignatureForSelector: `返回了一个 `NSMethodSignature` 对象（函数签名），Runtime 系统就会创建一个 `NSInvocation 对象`，并通过 `-forwardInvocation:` 消息通知当前对象，给予此次消息发送最后一次寻找 IMP 的机会。
+ 
   &emsp; 如果 `-methodSignatureForSelector:` 返回 nil。则 Runtime 系统会发出 `-doesNotRecognizeSelector: `消息，程序也就崩溃了。
 
 
@@ -484,8 +563,10 @@ MessageSend.m 文件
 
 
 <br/>
+
 ***
 <br/>
+
 [Runtime(II)](https://www.jianshu.com/p/afeba351f4b1)
 [class_method 参数](https://www.jianshu.com/p/e4237de0aedb)      
 [Runtime 详解 基础知识](https://www.jianshu.com/p/633e5d8386a8)                                                    
