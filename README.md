@@ -124,7 +124,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [Block(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/Block(III).md)
 	* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
 	* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
-	* [本地化语言-US](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/本地化语言-US.md)
+	* [优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/优化(I).md)
 	* [本地推送](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/本地推送.md)
 	* [闭包](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/闭包.md)
 	* [变量和属性(Wait)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/变量和属性(Wait).md)
