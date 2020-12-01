@@ -1,7 +1,33 @@
->#本地推送
+
+- 语言本地化
+- 本地推送
 
 
-**`本地推送流程:`**
+<br/>
+
+***
+<br/>
+
+># 语言本地化
+
+```
+获取用户语言偏好设置列表
+[NSLocale preferredLanguages];
+```
+
+[本地化语言与手动语言切换 US](https://www.jianshu.com/p/73973d31dc82)
+
+
+<br/>
+
+***
+<br/>
+
+># 本地推送
+
+
+**`1. 本地推送流程:`**
+
 a.  创建一个触发器（trigger）
 b. 创建推送的内容（UNMutableNotificationContent）
 c. 创建推送请求（UNNotificationRequest）
@@ -9,15 +35,21 @@ d. 推送请求添加到推送管理中心（UNUserNotificationCenter）中
 
 
 <br/>
-**本地推送类为：`UNTimeIntervalNotificationTrigger、UNCalendarNotificationTrigger、UNLocationNotificationTrigger`**
+
+**2.本地推送类为：**
+
+```
+UNTimeIntervalNotificationTrigger;
+UNCalendarNotificationTrigger;
+UNLocationNotificationTrigger;
+```
 
 
 <br/>
-***
-<br/>
-># 本地推送分类
 
-**`UNTimeIntervalNotificationTrigger`**
+**3.本地推送分类**
+
+>**`UNTimeIntervalNotificationTrigger`**
 
 ```
   //timeInterval：单位为秒（s）  repeats：是否循环提醒
@@ -26,9 +58,11 @@ d. 推送请求添加到推送管理中心（UNUserNotificationCenter）中
 
 
 <br/>
-**`UNCalendarNotificationTrigger `**
 
->进行注册,时间点信息用 NSDateComponents.（定期推送）
+>**`UNCalendarNotificationTrigger `**
+
+进行注册,时间点信息用 NSDateComponents.（定期推送）
+
 `+ (instancetype)triggerWithDateMatchingComponents:(NSDateComponents *)dateComponents repeats:(BOOL)repeats;`
 
 ```
@@ -45,23 +79,32 @@ d. 推送请求添加到推送管理中心（UNUserNotificationCenter）中
 
 
 <br/>
-**`UNLocationNotificationTrigger`**
 
->&emsp;  进行注册，地区信息使用CLRegion的子类CLCircularRegion，可以配置region属性 notifyOnEntry和notifyOnExit，是在进入地区、从地区出来或者两者都要的时候进行通知，这个测试过程专门从公司跑到家时刻关注手机有推送嘛，果然是有的（定点推送）
-+ (instancetype)triggerWithRegion:(CLRegion *)region repeats:(BOOL)repeats
+>**`UNLocationNotificationTrigger`**
+
+&emsp;  进行注册，地区信息使用CLRegion的子类CLCircularRegion，可以配置region属性 notifyOnEntry和notifyOnExit，是在进入地区、从地区出来或者两者都要的时候进行通知，这个测试过程专门从公司跑到家时刻关注手机有推送嘛，果然是有的（定点推送）
+
+`+ (instancetype)triggerWithRegion:(CLRegion *)region repeats:(BOOL)repeats`
 
 
 <br/>
+
 **`创建推送内容`**
+
 [UNNotificationContent](https://link.jianshu.com?t=https://developer.apple.com/reference/usernotifications/unnotificationcontent)属性：readOnly;
+
 [UNMutableNotificationContent](https://link.jianshu.com?t=https://developer.apple.com/reference/usernotifications/unmutablenotificationcontent)属性：title、subtitle、body、badge、sound、lauchImageName、userInfo、attachments、categoryIdentifier、threadIdentifier;
 
 本地消息内容展示:
-`title |NSString|`: 限制在一行，多出部分省略号
-`subtitle |NSString |`:限制在一行，多出部分省略号
+
+`title |NSString|`: 限制在一行，多出部分省略号;
+
+`subtitle |NSString |`:限制在一行，多出部分省略号;
+
 `body| NSString |`:通知栏出现时，限制在两行，多出部分省略号；预览时，全部展示
 
 **`注意：`**body中printf风格的转义字符，比如说要包含%，需要写成%% 才会显示，\同样。
+
 ```
     // 创建通知内容 UNMutableNotificationContent, 注意不是 UNNotificationContent ,此对象为不可变对象。
     UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
@@ -75,7 +118,9 @@ d. 推送请求添加到推送管理中心（UNUserNotificationCenter）中
 ```
 
 <br/>
+
 `本地通知Demo`
+
 ```
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h>
@@ -154,10 +199,20 @@ d. 推送请求添加到推送管理中心（UNUserNotificationCenter）中
 [self registerLocalNotification];
 [AppDelegate localPushNotification];
 ```
+
 效果：
+
 ![本地通知](https://upload-images.jianshu.io/upload_images/2959789-2fc487881afa5c64.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
 
 
+
+
+
+
+<br/>
+
+***
+<br/>

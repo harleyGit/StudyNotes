@@ -1,4 +1,13 @@
->#清空按钮
+
+- **清空按钮**
+
+<br/>
+
+***
+<br/>
+
+># 清空按钮
+
 ```
 typedef NS_ENUM(NSInteger, UITextFieldViewMode) {
     UITextFieldViewModeNever,           //清空按钮永不出现
@@ -14,8 +23,7 @@ field.clearButtonMode=UITextFieldViewModeWhileEditing;
 
 
 <br/>
-***
-<br/>
+
 
 ```
 //申明变量
@@ -53,4 +61,16 @@ field.clearButtonMode=UITextFieldViewModeWhileEditing;
 ```
 
 效果图：
+
 ![起始输入和长度设置](https://upload-images.jianshu.io/upload_images/2959789-2130fef6c6675534.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+<br/>
+
+***
+<br/>
+
+参考资料：
+
+[UITextField的那点事](https://www.jianshu.com/p/4b9957f2afc2)
+
