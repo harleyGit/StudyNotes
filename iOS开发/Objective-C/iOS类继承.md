@@ -1,7 +1,27 @@
+
+- **iOS 原生系统架构**
+- **NSObject 继承关系图**
+- **UIResponder 继承关系图**
+- **手势继承关系图**
+
+<br/>
+
+***
+<br/>
+
+
+
+
+
 ># iOS 原生系统架构
+
 ![系统架构层级](https://upload-images.jianshu.io/upload_images/2959789-93d89cf51262be20.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-#`架构层级细分`
+
+<br/>
+
+**`架构层级细分`**
+
 ![原生架构细分](https://upload-images.jianshu.io/upload_images/2959789-08c98af35d821099.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 原生架构细分接受，请看[这里](https://www.jianshu.com/p/80a27d111605)
@@ -28,6 +48,7 @@ UIkit：iOS基础视图框架.
 
 
 <br/>
+
 ***
 <br/>
 
@@ -50,7 +71,14 @@ UIkit：iOS基础视图框架.
 
 <br/>
 
+***
+<br/>
 
->#手势继承关系图
+
+
+
+
+># 手势继承关系图
+
 ![手势继承关系图](https://upload-images.jianshu.io/upload_images/2959789-40c947129ce0518e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 

@@ -1,3 +1,14 @@
+
+- **计算文本Rect**
+- **NSCharacterSet字符串分割**
+
+<br/>
+
+***
+<br/>
+
+># 计算文本Rect
+
 ```
 //计算一段文本的尺寸大小,在iOS7被弃用
 - (CGSize)sizeWithFont:(UIFont *)font constrainedToSize:(CGSize)size lineBreakMode:(NSLineBreakMode)lineBreakMode NS_DEPRECATED_IOS(2_0, 7_0, "Use -boundingRectWithSize:options:attributes:context:") __TVOS_PROHIBITED;
@@ -39,7 +50,53 @@ typedef NS_OPTIONS(NSInteger, NSStringDrawingOptions) {
 
 
 <br/>
+
 ***
 <br/>
+
+># NSCharacterSet字符串分割
+
+`//根据一个给定的字符串获取一个NSCharacterSet对象`
+
+` +(NSCharacterSet *)characterSetWithCharactersInString:(NSString *)aString;`
+
+```
+NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@"0123456789"];
+NSString *str = @"7sjf78sf990s";
+NSLog(@"set----%@",[str componentsSeparatedByCharactersInSet:set]);  
+```
+
+打印：
+![正常过滤](https://upload-images.jianshu.io/upload_images/2959789-289fca2e6d87dac1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+<br/>
+
+`//相反字符串限制 【具体见接下的例子】`
+
+`@property (readonly, copy) NSCharacterSet *invertedSet;`
+
+```
+NSCharacterSet *invertedSet = [[NSCharacterSet characterSetWithCharactersInString:@"0123456789"] invertedSet];
+NSLog(@"invertedSet----%@",[str componentsSeparatedByCharactersInSet:invertedSet]);
+```
+
+打印：
+![invertedSet 属性反向过滤](https://upload-images.jianshu.io/upload_images/2959789-698ac3d395836325.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+**[NSCharacterSet 详解](https://www.zybuluo.com/chinese-ppmt/note/609656)**
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
 参考资料：
+
 [玩转 NSString](https://www.jianshu.com/p/d3f343b71cc2)

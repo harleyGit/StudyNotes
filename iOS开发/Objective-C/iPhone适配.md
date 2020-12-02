@@ -1,14 +1,69 @@
+- **iPhone机型屏幕尺寸**
+- **全面屏和非全面屏显示**
+- **判断横竖屏**
+- **contentOffset、contentInset**
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
+
 # iPhone机型屏幕尺寸
 | 手机型号 | 屏幕尺寸 | 物理尺寸(逻辑分辨率pt) | 像素尺寸分辨率(px) | 倍图 |
 |:--|:--|:--|:--|:--|
+|iPhone 3GS	  | 3.5英寸 |  320 * 480pt | 	320 * 480px |  @1x|
+|iPhone 4 / 4S	  | 3.5英寸 |  320 * 480pt | 	640 * 960px |  @2x|
 |iPhone 5 / 5c / 5S	  | 4英寸 |  320 * 568pt | 	640 * 1136px |  @2x|
 | iPhone 6 / 6s | 4.7英寸 | 375 * 667pt | 750 * 1334 px | @2x |
-| iPhone  6+ / 6s+ | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
+| iPhone  6Plus | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
 | iPhone 7 | 4.7英寸 | 375 * 667pt | 750 * 1334 px | @2x |
-| iPhone 7+ | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
+| iPhone 7Plus | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
 | iPhone 8 | 4.7英寸 | 375 * 667pt | 750 * 1334 px | @2x |
-| iPhone 8+ | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
+| iPhone 8Plus | 5.5英寸 | 414 * 736pt |  1242 * 2208px		| @3x |
 | iPhone X	 | 5.8英寸 | 375 * 812pt | 1125 * 2436px	 | @3x |
+| iPhone XS	 | 5.8英寸 | 375 * 812pt | 1125 * 2436px	 | @3x |
+| iPhone XS	Max | 6.5英寸 | 414 * 896pt | 1242 * 2688px	 | @3x |
+| iPhone XR	 | 6.1英寸 | 414 * 896pt | 828 * 1792px	 | @2x |
+| iPhone 11	 | 6.1英寸 | 414 * 896pt | 828 * 1792px	 | @2x |
+| iPhone 11	Pro | 5.8英寸 | 375 * 812pt | 1125 * 2536px	 | @3x |
+| iPhone 11	Pro Max | 6.5英寸 | 414 * 896pt | 1242 * 2688px	 | @3x |
+
+
+<br/>
+
+**`屏幕尺寸`**：实际手机的对角线的物理长度，可以直观的评估手机的物理大小；
+
+**`pt（point）`**：表示点，逻辑单位，虚拟的，没有实际大小。它的大小在iOS开发中通常与px挂钩，在 iPhone 3GS 中一个点代表一个像素大小，在iPhone 4/4S中一个点代表两个像素大小，主要用来iOS开发进行页面布局，我们在代码中获取的屏幕的宽高就是pt单位的；
+
+**`px（pixel）`**：表示像素。是屏幕上所显示的最小单位，在分辨率高的屏幕上，一个像素可能会达到肉眼无法识别的大小；
+
+
+**`pt和px的区别`**：pt是绝对长度，不随屏幕像素密度变化而变化，就像iPhone 4/4S比 iPhone 3GS 分辨率大一倍，但是他们的pt还是一样的，只不过在3GS中一个点代表一个像素，1:1的关系，4/4S中一个点代表两个像素，1:2的关系，在日常开发中用pt来进行布局开发，能够省去不同分辨率计算的痛苦，同时便于UI切图；
+
+**`px用于UI设计计量单位，pt用于实际iOS开发UI布局计量单位`**
+
+**`reader`**：px和pt的倍数关系，一般用来切不同倍数的图，来适配各个型号iPhone的分辨率;
+
+**`渲染后（px）`**：但是Plus版本iPhone的实际PPI是401，理论上苹果应该用401 / 326 x @2x = @2.46x的素材，但是这个比例很难切图，所以为了方便采用了@3x的素材，然后再缩放到@2.46x的屏幕上，也就是缩放到2.46 / 3 = 83%，实际上苹果选取了一个接近比例的87%。这样算下来，物理分辨率和虚拟分辨率的比率是87%，也就是1080/ 0.86 = 1242，1920 / 0.87 = 2208。好处是开发者更方便，比如准备素材时候，字号可以直接调整为3x的;
+
+**`Plus版本iPhone 官网的实际分辨率就是1080 x 1920，1242 x 2208是为了方便UI设计和开发的放大版分辨率，但是其他版本的iPhone都是正常的`**
+
+**`PPI（Pixels Per Inch）`**：也叫像素密度，所表示的是每英寸所拥有的像素数量。因此PPI数值越高，即代表显示屏能够以越高的密度显示图像。当然，显示的密度越高，拟真度就越高;
+
+
+<br/>
+
+**[屏幕尺寸和分辨率](https://www.cnblogs.com/xiaomanon/p/5712604.html)**
+
+**[屏幕尺寸、逻辑分辨率、物理分辨率之间的相互关系](https://blog.csdn.net/tongseng/article/details/52788598)**
+
+
 
 
 <br/>
@@ -355,9 +410,107 @@ awakeFromNib方法里面手动设置下控件字体
 
 
 
+<br/>
 
 ***
 <br/>
+
+># 判断横竖屏
+
+&emsp;  UIInterfaceOrientation是iOS8之后使用的设备方向属性，在之前可以使用statusBarOrientation来设置和获取设备朝向。
+
+&emsp; iPhone/iPa的Home键盘是固定位置的，判断设备朝向可根据Home键位置来判断。
+
+>Home键在正下方，正向竖屏
+
+>Home键在正上方，反向竖屏
+
+>Home键在正左方，横屏模式
+
+>Home键在正右方，横屏模式
+
+>faceUp
+
+>faceDown
+
+
+<br/>
+
+**`UIInterfaceOrientation`**
+
+```
+UIInterfaceOrientationUnknown
+设备的朝向不能确定。
+
+UIInterfaceOrientationPortrait
+该设备处于竖屏模式，设备保持直立，底部的Home键。
+
+UIInterfaceOrientationPortraitUpsideDown
+该设备处于竖屏模式，但上下颠倒，设备保持直立，顶部的Home键。
+
+UIInterfaceOrientationLandscapeLeft
+设备处于横向模式，设备保持直立，右侧Home键。
+
+UIInterfaceOrientationLandscapeRight
+该设备处于横向模式，设备保持直立，左侧Home键。
+```
+
+**[设备朝向 US](https://blog.csdn.net/morris_/article/details/80070255)**
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># 
+**`contentSize`**
+
+&emsp;  `contentSize`是 `UIScrollView` 和其继承于 `UIScrollView` 的子控件的属性，`contentSize` 是确定 `UIScrollView上contentView` 宽`(contentSize.width)` 和高 `(conteSize.height)` 的属性。
+
+&emsp;  `UIScrollView` 可以看成是一个两层的复合视图，如下图所示，上层是固定不动的 `UIScrollView`，下层是可以滑动的 `contenView`，`contenView` 的尺寸可以大于上层的 `UIScrollView`。
+
+![UIScrollView 和 contentView](https://upload-images.jianshu.io/upload_images/2959789-b52f3345d9899fbb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+<br/>
+
+***
+<br/>
+
+># contentOffset、contentInset
+
+**`contentOffset`**
+
+&emsp;  `contentOffset` 是 `UIScrollView` 和其继承于 `UIScrollView` 的子控件的属性，`contentOffset` 确定的是 `UIScrollView` 的顶点（左上角点）值相对于其父类视图的顶点值（即frame.origin）的距离。
+
+
+<br/>
+
+**`contentInset `**
+
+&emsp;  `contentInset` 是 `UIScrollView` 和继承于 `UIScrollView` 的子控件的属性，`contentInset` 确定的是 `contenView` 上下左右相对于 `UIScrollView` 扩展出来的区域大小。`contentInset` 是 `UIEdgeInsets` 类型的，默认值为 `UIEdgeInsetsZero`。
+
+![布局相关的属性](https://upload-images.jianshu.io/upload_images/2959789-74e8a62bffdd1bee.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+[iOS11* 导航控制器中的控制器适配全集，以及如何不发版自动适配全面屏系列](https://www.jianshu.com/p/280739fea162)
+
+[全面屏适配的方案及UI在不同尺寸下适配方案](http://www.cocoachina.com/cms/wap.php?action=article&id=25467)
+[US](https://www.cnblogs.com/edensyd/p/8418021.html)
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
 
 ># 参考资料：
 * [iPhone X适配实战总结](https://www.dazhuanlan.com/2019/09/23/5d8885965922d/?__cf_chl_jschl_tk__=07a284263e36412b3125579256be07b9ac748989-1599791161-0-Aey9NTMS0sUtBDxemVxMkfQcbyDkuVjk3u4CgEtLieaHYGSP2TpZH0NaOBRI4qWdquNM5V963-uDKo51ZQyL3pA7VPP_l0Dm-VnBU3UVNNJYKrz4Zi8XFFu1eQs5K4N2aUFuTNYjul50ibni_qCMWwunC1jdUZne5Csg6BMgK0VacTWmNh8TyWTdJA6MReA38h_tUrHi38HHfZvSvBqeLoCnZyBAEQGI9CSu8oft_0TDlZ1YKmQuLRNWGukBP-TQxkMiO0zhauesSRoMsuRbPU3kCKfF-SGFefqr8IDYB-pNG05bSLle5FDnSdY1kzE2ZA)

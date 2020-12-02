@@ -508,14 +508,17 @@ self.aCopyStr=nil;
 
 
 ># 野指针
+
 什么是野指针？
 `"野指针"不是nil指针，是指向"垃圾"内存（不可用内存）的指针。野指针是非常危险的。`
+
 ![野指针崩溃](https://upload-images.jianshu.io/upload_images/2959789-12eb2ba4a548efee.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 对上图的代码进行改动一下下
 
 ![指针置为 nil](https://upload-images.jianshu.io/upload_images/2959789-769dec7d9419e6ca.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+**[野指针，僵尸对象，空指针详解](https://juejin.im/entry/5c930d746fb9a070d20f1c4d)**
 
 **`说明：`**
 
@@ -531,7 +534,9 @@ self.aCopyStr=nil;
 
 
 ># 僵尸对象
+
 ***`定义:一个已经被释放的对象 就叫做僵尸对象`***
+
 &emsp;&emsp;  遇到exc_bad_access这类问题一般都是僵尸对象引起的，可以开启僵尸模式定位，我们并没有保留他，只是在程序运行到该对象的时候会产生问题，没有谁会运用他，只会定位他然后解决掉。
 
 <br/>
