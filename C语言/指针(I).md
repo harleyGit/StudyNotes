@@ -1,18 +1,31 @@
-> #  指针(I)
 
 
-## 物理内存
-&emsp;    维修电脑师傅眼中的内存：内存在物理上是由一组DRAM芯片组成的.
+-  指针
+-  指针介绍
+
 
 <br/>
 
-## 软件内存
+---
+<br/>
+
+> #  指针
+
+
+**物理内存**
+
+&emsp;    ==维修==电脑师傅眼中的内存：内存在物理上是由一组DRAM芯片组成的.
+
+<br/>
+
+**软件内存**
+
 &emsp;    操作系统将`RAM`(分为两大类：`SRAM`和`DRAM`)等硬件和软件结合起来，给程序员提供的一种对内存使用的抽象。这种抽象机制使得程序使用的是虚拟存储器,而不是直接操作和使用真实存在的物理存储器,所有的虚拟地址形成的集合就是虚拟地址空间。如下图：
+
 ![程序员眼中的内存](https://upload-images.jianshu.io/upload_images/2959789-a0a756e7c82b43e0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 系统中的实际内存排列：
 
-<br/>
 
 ![系统中的内存排列](https://upload-images.jianshu.io/upload_images/2959789-3d3b7ac1278bfa04.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -32,7 +45,8 @@
 -  1 汉字 = 2 byte = 16 bit;
 
 
-# `+ 64 位的编译器各类型字节数显示`
+==**`+ 64 位的编译器各类型字节数显示`**==
+
 ```
 //不同的编译器位数，其字节数显示是不同的。通过在程序中打印：
 printf("%lu", sizeof(int));   //在Xcode中输出：4，说明是64位的编译器
@@ -51,6 +65,7 @@ float:      4个字节
 double：    8个字节
 
 ```
+
 &emsp;   查看操作系统位数，在终端输入：`uname -a` 在末尾有` x86_64`说明是64位的操作系统。
 
 
@@ -101,10 +116,12 @@ int a = -12;
 char b = M;
 float c = 3.14
 ```
+
 ![a、b、c内存存放示意图](https://upload-images.jianshu.io/upload_images/2959789-0ca97c9c1a77e31b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-#`变量寻址`
-![3.png](https://upload-images.jianshu.io/upload_images/2959789-6060181ae8a79638.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+![`变量寻址`](https://upload-images.jianshu.io/upload_images/2959789-6060181ae8a79638.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ```diff
 + 指针的申明：
@@ -112,6 +129,7 @@ float c = 3.14
 
 - 由于指针属于系统底层的存取功能，因此通过指针可以存取内存中所指向的内存区内容。假如赋予指针错误的地址，而该地址又刚好是系统数据存储的内存区，此时若覆盖（override）该内存区的内容，很可能会造成系统不稳定或者宕机的情况。另外，如果声明指针时未指定初值，就经常会让指针指向未知的内存地址。
 ```
+
 ![指针变量声明](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a13.png)
 
 <br/>
