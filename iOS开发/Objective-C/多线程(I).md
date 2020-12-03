@@ -1,7 +1,18 @@
+- **线程组和依赖**
+	- 	**线程组处理**
+	- 	**NSOperation 依赖**
+- **多任务(任务是异步)**
 
->#  多任务(任务是同步的)执行
 
-- 线程组处理
+<br/>
+
+***
+<br/>
+
+
+>#  线程组和依赖
+
+- **线程组处理**
 
 ```
 {
@@ -30,7 +41,11 @@
     });
 }
 ```
+
+<br/>
+
 输出结果：
+
 ```
 AsyTaskTest[5963:308229] 任务1 完成，线程：<NSThread: 0x604000263380>{number = 3, name = (null)}
 
@@ -42,7 +57,8 @@ AsyTaskTest[5963:308103] 全部完成，线程：<NSThread: 0x604000070600>{numb
 
 <br/>
 
-- NSOperation 依赖处理
+- **NSOperation 依赖**
+
 ```
 {
     // 创建队列
@@ -76,6 +92,7 @@ AsyTaskTest[5963:308103] 全部完成，线程：<NSThread: 0x604000070600>{numb
 ```
 
 输出结果：
+
 ```
 AsyTaskTest[6009:309365] 任务2 完成，线程：<NSThread: 0x600000277c80>{number = 3, name = (null)}
 
@@ -95,6 +112,7 @@ AsyTaskTest[6009:309364] 全部完成，线程：<NSThread: 0x600000277d40>{numb
 ># 多任务(任务是异步)
 
 若是直接使用上述的线程组来执行，可能会出问题，如下问题的模拟：
+
 ```
 {
     NSURLSession *session = [NSURLSession sharedSession];
