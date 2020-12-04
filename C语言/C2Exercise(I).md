@@ -34,7 +34,7 @@ printf("\n🍎 🍎 🍎 🍎\n%d %s %s,  %s[%d]: " format "\n" "🍊 🍊 🍊 
 
 ```
 
-==**[printf格式化输出](https://blog.csdn.net/xiexievv/article/details/6831194)**==
+**[printf格式化输出](https://blog.csdn.net/xiexievv/article/details/6831194)**
 
 <br/>
 
@@ -46,7 +46,7 @@ printf("\n🍎 🍎 🍎 🍎\n%d %s %s,  %s[%d]: " format "\n" "🍊 🍊 🍊 
 
 <br/>
 
-- ==**翻转字符串**==
+> - **翻转字符串**
 
 Chapter6.hpp
 
@@ -75,8 +75,6 @@ Chapter6.cpp
 
 void reverseString(char *beginP, char *endP);
 
-
-void Chapter6:: chapter6Run() {
 
 void reverseString(char *beginP, char *endP) {
     if (beginP == nullptr || endP == nullptr) {
@@ -141,7 +139,7 @@ char * Chapter6:: reverseSentence(char *questionName,char *sentence) {
     
 }
 
-}
+
 
 
 ```
@@ -196,7 +194,7 @@ int main(int argc, const char * argv[]) {
 
 <br/>
 
-- ==**和为S的数字**==
+>- **和为S的数字**
 
 Chapter6.hpp
 
@@ -224,7 +222,6 @@ Chapter6.cpp
 #include "math.h"
 #include "string.h"
 
-void Chapter6:: chapter6Run() {
 
 void Chapter6:: question57_1(char* questionName, int array[], int value, int size) {
     
@@ -269,7 +266,7 @@ void Chapter6:: question57_1(char* questionName, int array[], int value, int siz
     
 }
 
-}
+
 
 ```
 
@@ -322,6 +319,10 @@ int main(int argc, const char * argv[]) {
 
 <br/>
 
+
+> - **数组中数字出现的次数**
+
+
 Chapter6.hpp
 
 ```
@@ -357,7 +358,6 @@ Chapter6.cpp
 #include "math.h"
 #include "string.h"
 
-void Chapter6:: chapter6Run() {
 
 /// 判断在num的二进制表示中从右边数起的indexBit位是不是1
 /// @param num <#num description#>
@@ -407,8 +407,6 @@ void Chapter6:: findNumsAppearOnce(const char *name, int data[], int length, int
     
 }
 
-
-}
 
 ```
 
@@ -484,6 +482,10 @@ ANSI标准: 1 时间：Dec  3 2020 23:31:01  行数: 161 函数:findNumsAppearOn
 
 <br/>
 
+> - **二叉树的深度**
+
+![z24](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z24.png)
+
 Chapter6.hpp
 
 ```
@@ -492,6 +494,21 @@ Chapter6.hpp
 #include <stdio.h>
 
 class Chapter6 {
+
+public:
+    //二叉树结构体
+    typedef struct BinaryTree {
+        char value;
+        struct BinaryTree *leftChild;
+        struct BinaryTree *rightChild;
+    }BinaryTree, *BinaryTreeNode;
+    char characters[10] = "AB#D##C##";
+    //起始变量值
+    int number = 0;
+
+	/// page272: 55 获取二叉树的深度
+    /// @param rootNode 根结点
+    int getBinaryTreeDepth(BinaryTree *rootNode);
 
 };
 
@@ -509,11 +526,45 @@ Chapter6.cpp
 #include "math.h"
 #include "string.h"
 
-void Chapter6:: chapter6Run() {
 
-
-
+//创建二叉树
+void Chapter6:: createBinaryTree(BinaryTreeNode *binaryTree, int index) {
+	char data = characters[number++];
+	
+	if (data == '#' || data == '\0') {
+	    //当其设置为NULL时，其右子树的指针容易变为野指针导致错误
+	    *binaryTree = NULL;
+	}else {
+	    //if (*binaryTree == NULL) {//不要加判断否则程序crash
+	    //malloc 函数返回的是 void * 类型，如果你写成：p = malloc (sizeof(int)); 则程序无法通过编译，报错：“不能将 void* 赋值给 int * 类型变量”。所以必须通过 (int *) 来将强制转换。
+	    *binaryTree = (BinaryTree*)malloc(sizeof(BinaryTree));
+	    //}
+	    if (!(*binaryTree)) {
+	        exit(OVERFLOW);
+	    }
+	    
+	    (*binaryTree)->value = data;
+	    createBinaryTree(&(*binaryTree)->leftChild,++index);
+	    //当 (*binaryTree)->rightChild 递归设置为NULL，返会再次打印 (*binaryTree)->rightChild 其值时，发现已经有值了，它的指针变为野指针了
+	    createBinaryTree(&(*binaryTree)->rightChild, ++index);
+	}
+	
 }
+
+//二叉树深度
+int Chapter6:: getBinaryTreeDepth(BinaryTree *rootNode) {
+	if (rootNode == nullptr) {
+	    return  0;
+	}
+	
+	int leftDep= this->getBinaryTreeDepth(rootNode->leftChild);
+	int rightDep = this->getBinaryTreeDepth(rootNode->rightChild);
+	
+	
+	return (leftDep>rightDep) ? (leftDep+1) : (rightDep+1);
+}
+
+
 
 ```
 
@@ -527,7 +578,15 @@ Main.cpp
 
 int main(int argc, const char * argv[]) {
   
-    
+    /**
+     *二叉树的深度
+     */
+     Chapter6 chapter6;
+     BinaryTree *binaryTree = nullptr;
+     chapter6.createBinaryTree(&binaryTree);
+     int depth = this->getBinaryTreeDepth(binaryTree);
+     PrintFormat2("二叉树的深度为： %d", depth);
+     
     return 0;
 }
 
@@ -538,11 +597,19 @@ int main(int argc, const char * argv[]) {
 输出：
 
 ```
-
+🍎 🍎 🍎 🍎
+1 Dec  4 2020 18:41:52,  chapter6Run[95]: 二叉树的深度为： 3
+🍊 🍊 🍊 🍊
 ```
 
 
 <br/>
+
+
+> - **二叉搜索树的第 K 大节点**
+
+![z24](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z24.png)
+
 
 Chapter6.hpp
 
@@ -553,6 +620,15 @@ Chapter6.hpp
 
 class Chapter6 {
 
+	/// 二叉树创建
+    /// @param binaryTree 根结点指针
+    void createBinaryTree(BinaryTreeNode *binaryTree, int index = 0);
+    
+	 /// P269 算法54: 二叉搜索树的第 K 大节点
+    /// @param k 第 k 节点
+    /// @param pRoot 根结点指针变量
+    BinaryTree *kthNode(BinaryTree *pRoot, unsigned int k);
+    
 };
 
 
@@ -569,11 +645,43 @@ Chapter6.cpp
 #include "math.h"
 #include "string.h"
 
-void Chapter6:: chapter6Run() {
 
 
-
+//创建二叉树
+void Chapter6:: createBinaryTree(BinaryTreeNode *binaryTree, int index) {
+    char data = characters[number++];
+    
+    if (data == '#' || data == '\0') {
+        //当其设置为NULL时，其右子树的指针容易变为野指针导致错误
+        *binaryTree = NULL;
+    }else {
+        //if (*binaryTree == NULL) {//不要加判断否则程序crash
+        //malloc 函数返回的是 void * 类型，如果你写成：p = malloc (sizeof(int)); 则程序无法通过编译，报错：“不能将 void* 赋值给 int * 类型变量”。所以必须通过 (int *) 来将强制转换。
+        *binaryTree = (BinaryTree*)malloc(sizeof(BinaryTree));
+        //}
+        if (!(*binaryTree)) {
+            exit(OVERFLOW);
+        }
+        
+        (*binaryTree)->value = data;
+        createBinaryTree(&(*binaryTree)->leftChild,++index);
+        //当 (*binaryTree)->rightChild 递归设置为NULL，返会再次打印 (*binaryTree)->rightChild 其值时，发现已经有值了，它的指针变为野指针了
+        createBinaryTree(&(*binaryTree)->rightChild, ++index);
+    }
+    
 }
+
+
+Chapter6::BinaryTree * Chapter6:: kthNode(Chapter6::BinaryTree *pRoot, unsigned int k) {
+    if (pRoot == NULL || k == 0) {
+        return nullptr;
+    }
+    
+    return KthNodeCore(pRoot, k);
+}
+
+
+
 
 ```
 
@@ -587,7 +695,17 @@ Main.cpp
 
 int main(int argc, const char * argv[]) {
   
-    
+  
+   Chapter6 chapter6;
+	 // 二叉搜索树的第 K 大节点
+	 //结构体指针需要申请内存空间才可以使用
+	 BinaryTree *binaryTree = NULL;
+	 
+	 chapter6.createBinaryTree(&binaryTree);
+	 PrintFormat2("赋值后：value: %c, leftNode:%p, rightNode: %p", binaryTree->value, binaryTree->leftChild, binaryTree->rightChild);
+	 
+	 BinaryTree *searchNode = this->kthNode(binaryTree, 4);
+	 PrintFormat2("%c", searchNode->value);
     return 0;
 }
 
@@ -628,11 +746,9 @@ Chapter6.cpp
 #include "math.h"
 #include "string.h"
 
-void Chapter6:: chapter6Run() {
 
 
 
-}
 
 ```
 
