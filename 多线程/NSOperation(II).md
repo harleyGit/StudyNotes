@@ -1,6 +1,6 @@
 - **NSOperationQueue 控制串行执行、并发执行**
-- **NSOperation 操作依赖**
-- **NSOperation 优先级**
+- **NSOperation 属性、方法**
+- **NSOperation 子类**
 
 
 
@@ -63,7 +63,25 @@ NSOperationQueue *queue = [[NSOperationQueue alloc] init];
 ***
 <br/>
 
-># NSOperation 操作依赖
+># NSOperation 属性、方法
+
+**`queuePriority`:**
+
+```
+typedef NS_ENUM(NSInteger, NSOperationQueuePriority){
+        NSOperationQueuePriorityVeryLow = -8L,
+        NSOperationQueuePriorityLow = -4L,
+        NSOperationQueuePriorityNormal = 0,
+        NSOperationQueuePriorityHigh = 4,
+        NSOperationQueuePriorityVeryHigh = 8
+}
+
+```
+
+
+<br/>
+
+**方法**
 
 `- (void) addDependency:(NSOperation *)op`  :添加依赖，使当前操作依赖于操作 op 的完成;
 
@@ -78,20 +96,10 @@ NSOperationQueue *queue = [[NSOperationQueue alloc] init];
 ***
 <br/>
 
->#  NSOperation 优先级
+>#  NSOperation 子类
 
-`queuePriority`:
 
-```
-typedef NS_ENUM(NSInteger, NSOperationQueuePriority){
-        NSOperationQueuePriorityVeryLow = -8L,
-        NSOperationQueuePriorityLow = -4L,
-        NSOperationQueuePriorityNormal = 0,
-        NSOperationQueuePriorityHigh = 4,
-        NSOperationQueuePriorityVeryHigh = 8
-}
 
-```
 
 
 <br/>

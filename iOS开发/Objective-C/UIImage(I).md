@@ -1,5 +1,6 @@
 
-创建并使用 ImageSource
+**创建并使用 ImageSource**
+**[- 图片的摆正](http://feihu.me/blog/2015/how-to-handle-image-orientation-on-iOS/)**
 
 
 
