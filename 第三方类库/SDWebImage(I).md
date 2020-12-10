@@ -52,6 +52,35 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 ![SDWebImage 结构图](https://upload-images.jianshu.io/upload_images/2959789-86b22d19c095010a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
+SDWebImage的相关类分为以下三种：
+
+- **各种分类：**
+	- UIButton+WebCache：为UIButton类添加加载图片的方法。
+	- MKAnnotationView+WebCache：为MKAnnotationView类添加各种加载图片的方法。
+	- UIImageView+WebCache：为UIImageView类添加加载图片的方法。
+	- UIImageView+HighlightedWebCache：为UIImageView类添加高亮状态下加载图片的方法。
+
+
+- **工具类：**
+
+	- NSData+ImageContentType：根据图片数据获取图片的类型，比如GIF、PNG等。
+	- UIImage+MultiFormat：根据UIImage的data生成指定格式的UIImage。
+	- UIImage+GIF：判断一张图是否为GIF。
+	- SDWebImageCompat：根据屏幕的分辨倍数成倍放大或者缩小图片的大小。
+	- SDImageCacheConfig：图片缓存策略记录。比如是否解压缩、是否允许iCloud、是否允许内存缓存、缓存时间等。
+	- SDWebImageCodersManager：编码解码管理器，处理多个图片编码解码任务，编码器是一个优先队列，这意味着后面添加的编码器将具有最高优先级。
+
+
+
+- **核心类：**
+
+	- UIView+WebCache：所有的UIView及其子类都会调用这个分类的方法来完成图片加载的处理，同时通过UIView+WebCacheOperation分类来管理请求的取消和记录工作。
+	- SDImageCache：负责SDWebImage的整个缓存工作，是一个单例对象。缓存路径处理、缓存名字处理、管理内存缓存和磁盘缓存的创建和删除、根据指定key获取图片、存入图片的处理、根据缓存的创建和修改日期来删除缓存等。
+	- SDWebImageManager：拥有一个SDImageCache和SDWebImageDownloader属性，分别用于图片的缓存和加载处理。为UIView及其子类提供了加载图片的统一接口。
+	- SDWebImageDownloader：图片下载中心，管理下载队列。
+	- SDWebImageDownloaderOperation：用于下载图片，管理NSURLRequest对象请求头的封装、缓存、cookie的设置、加载选项的处理等。
+
+
 <br/>
 ![UML 符号意义图](https://upload-images.jianshu.io/upload_images/2959789-eb3e096354a0456b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -68,8 +97,12 @@ SDWebImageDownloaderOperation        负责单个图片下载的操作由它来�
 
 <br/>
 
-#`时序图`
+**`时序图`**
+
 ![SDWebImage 调用方法序列图](https://upload-images.jianshu.io/upload_images/2959789-bf324ade01767542.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+![z27](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z27.jpg)
 
 
 <br/>
