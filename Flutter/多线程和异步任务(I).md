@@ -2,6 +2,11 @@
 
 - **[多线程和异步任务实践](https://blog.happyyun.com/2019/05/26/flutter-多线程和异步任务实践/)**
 - **Future**
+- 创建Future
+	- 打乱顺序执行
+	- then函数嵌套使用的执行
+	- then链式调用
+	- async/await组合
 - **协程**
 
 
@@ -392,6 +397,89 @@ void testThen4() {
 &emsp;  紧接着f4调用了，f4应该输出。
 &emsp;  紧接着是f5调用then函数，这个比较特殊，它是then函数的嵌套使用，首先是一个打印语句，直接输出，然后是new Future函数，它应该等then执行完毕再去执行，所以这里会去找下面的f1.then里面的逻辑，然后输出f1，到此f5.then都执行完毕，然后就是执行new Future里面的逻辑（如果没有内部嵌套 then的话，它就会直接输出。）
 
+
+
+<br/>
+- then链式调用
+
+```
+Future<String> login(String userName, String pwd) async {
+  return '88888888';
+}
+ 
+Future<String> getUserInfo(String id) async {
+  return '野猿新一是一只Android程序员';
+}
+ 
+Future saveUserInfo(String userInfo) async {
+  print(userInfo);
+}
+
+
+
+//调用
+void main() {
+  login('野猿新一', '1234556').then((id){
+    print('登录成功，用户id为${id}');
+    return getUserInfo(id);
+  }).then((userInfo){
+    print('获取用户信息成功，结果为${userInfo}');
+    return saveUserInfo(userInfo);
+  }).then((data){
+    print('保存用户信息成功');
+  });
+}
+
+```
+
+打印： 
+
+```
+登录成功，用户id为88888888
+获取用户信息成功，结果为野猿新一是一只Android程序员
+野猿新一是一只Android程序员
+保存用户信息成功
+
+```
+
+
+<br/>
+
+- async/await组合
+
+**注意：** 
+- 在调用异步方法的前面多加了一个await关键字，表示这是异步返回，等该异步任务执行成功了才会执行下一行代码
+- awsit异步调用只能在异步方法里面，否则会报"The await expression can only be used in an async function."错误，如下的task()方法后面有一个async关键字就是一个异步方法
+- 异步的任务难免会发生异常，所以建议用try/catch代码块包裹起来，在catch里面处理异常
+
+```
+void main() {
+  task();
+}
+ 
+void task() async {
+  try {
+    String id = await login('野猿新一', '1234556');
+    print('登录成功，用户id为${id}');
+    String userInfo = await getUserInfo(id);
+    print('获取用户信息成功，结果为${userInfo}');
+    saveUserInfo(userInfo);
+    print('保存用户信息成功');
+  } catch (e) {
+    print(e);
+  }
+}
+```
+
+打印：
+
+```
+登录成功，用户id为88888888
+获取用户信息成功，结果为野猿新一是一只Android程序员
+野猿新一是一只Android程序员
+保存用户信息成功
+
+```
 
 
 

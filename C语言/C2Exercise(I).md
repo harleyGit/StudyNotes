@@ -721,6 +721,8 @@ int main(int argc, const char * argv[]) {
 
 <br/>
 
+>- 数字在排序数组中出现的次数
+
 Chapter6.hpp
 
 ```
@@ -729,6 +731,13 @@ Chapter6.hpp
 #include <stdio.h>
 
 class Chapter6 {
+	/// P263  算法53： 数字在排序数组中出现的次数
+    /// @param array 传递的数组
+    /// @param num 指定的值
+    /// @param endIndex 数组终止索引
+    /// @param startIndex 数组起始索引，默认值为0，放在最后规定
+    int getSpecifyNumCount(int *array, int num, int endIndex, int startIndex = 0);
+    int getLastNumCount(int *array, int num, int endIndex, int startIndex = 0);
 
 };
 
@@ -747,6 +756,74 @@ Chapter6.cpp
 #include "string.h"
 
 
+//实现处把默认值省略
+//左边的索引
+int Chapter6:: getSpecifyNumCount(int *array, int num, int endIndex, int startIndex) {
+    
+    //数组违法，不存在
+    if (endIndex < startIndex) {
+        return  -1;
+    }
+    
+    //sizeof() 获取数组元素个数
+    int middle = (endIndex + startIndex)/2;
+    
+    if (*(array + middle) == num) {//指针获取数组的值
+        //array 表示是数组的首位地址
+        //*(array+middle - 1) 取第 middle - 1 位元素
+        //(*(array+middle - 1) < num && middle > 0) 表示当数组元素为中间时我们要取到最开始的元素，所以要进行判断
+        //middle == 0 当数组是第 0 位时，那它就是第一位
+        if ((*(array+middle - 1) < num && middle > 0) || middle == 0) {
+            return  middle;
+        }else {
+            //当索引是中间或者最后相同的元素时
+            endIndex = middle - 1;
+        }
+    }else if (*(array+middle) > num) {
+        //取上限的下一位，因为middle已经比过了
+        endIndex = middle - 1;
+    }else if(*(array+middle) < num) {
+        //取下限的上一位，因为middle已经比过了
+        startIndex = middle + 1;
+    }
+    
+    return  getSpecifyNumCount(array, num, endIndex, startIndex);
+}
+
+//右边的索引
+int Chapter6:: getLastNumCount(int *array, int num, int endIndex, int startIndex) {
+    
+    //数组违法，不存在
+    if (endIndex < startIndex) {
+        return  -1;
+    }
+    
+    //sizeof() 获取数组元素个数
+    int middle = (endIndex + startIndex)/2;
+    
+    if (*(array + middle) == num) {//指针获取数组的值
+        //array 表示是数组的首位地址
+        //*(array+middle - 1) 取第 middle - 1 位元素
+        //(*(array+middle - 1) < num && middle > 0) 表示当数组元素为中间时我们要取到最开始的元素，所以要进行判断
+        //middle == 0 当数组是第 0 位时，那它就是第一位
+        if ((*(array+middle + 1) > num && middle < (endIndex + startIndex)) || middle == (endIndex + startIndex)) {
+            return  middle;
+        }else {
+            //当索引是中间或者最后相同的元素时
+            startIndex = middle + 1;
+        }
+    }else if (*(array+middle) > num) {
+        endIndex = middle - 1;
+    }else if(*(array+middle) < num) {
+        startIndex = middle + 1;
+    }
+    
+    return  getLastNumCount(array, num, endIndex, startIndex);
+}
+
+
+
+
 
 
 
@@ -762,6 +839,16 @@ Main.cpp
 
 int main(int argc, const char * argv[]) {
   
+    Chapter6 chapter6;
+    
+    int array[8] = {1, 2, 3, 3, 3, 3, 4, 5};
+    int count = 0;
+    int leftCount = chapter6.getSpecifyNumCount( array, 3, 7);
+    int rightCount = chapter6.getLastNumCount(array, 3, 7);
+    if (leftCount > -1 && rightCount > -1) {
+        count = rightCount - leftCount + 1;
+    }
+    PrintFormat2("次数：%d", count);
     
     return 0;
 }
@@ -773,6 +860,12 @@ int main(int argc, const char * argv[]) {
 输出：
 
 ```
+
+1 Dec 14 2020 19:21:59,  main[39]: 次数：4
+🍊 🍊 🍊 🍊
+
+sh: pause: command not found
+Program ended with exit code: 0
 
 ```
 
