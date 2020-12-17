@@ -1,4 +1,4 @@
-># 分支的分类
+># [分支的分类](https://juejin.cn/post/6844903634006720526)
 
 
 ![分支合入、提交、检出关系图](https://upload-images.jianshu.io/upload_images/2959789-7993f537c48f6cd8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -111,8 +111,10 @@
 
 
 <br/>
+
 ***
 <br/>
+
 **`参考资料`**
 
 
