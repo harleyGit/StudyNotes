@@ -8,6 +8,7 @@
 - [**Flutter中文网**](https://book.flutterchina.club)
 - [**文本输入框TextField属性、方法**](https://blog.csdn.net/yuzhiqiang_1993/article/details/88204031)
 - [**Future的使用**](https://juejin.cn/post/6844903893403451405)
+- [**GridView(网格布局)**](https://segmentfault.com/a/1190000019756746)
 
 
 
