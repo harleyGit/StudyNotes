@@ -370,8 +370,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ># 设计模式
 *	[单例类](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/单例类.md)
 *	[路由组件化](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/路由组件化.md)
-*	[KVC-和-KVO(I)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC-和-KVO(I).md)
-*	[KVC-和-KVO(II)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC-和-KVO(II).md)
+*	[KVC和KVO](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC和KVO.md)
 *	[MVVM设计模式(二)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/MVVM设计模式(二).md)
 *	[MVVM设计模式(一)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/MVVM设计模式(一).md)
 *	[Swift-的单例](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-的单例.md)
