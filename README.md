@@ -16,10 +16,6 @@
 	- deps: 升级依赖;
 	- feat: 新功能;
 	
-- [codemagic](https://codemagic.io/apps)
-
-	 [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
-
 
 
 <br/>
@@ -214,15 +210,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [Objective-C-和-Swift-混编](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Objective-C-和-Swift-混编.md)
 	* [Swift 原理底层探索](https://blog.csdn.net/u013480070/article/details/103702845)
 	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
-	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
+	
 
 
 
@@ -241,6 +229,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[布局(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/布局(I).md)
 *	[Deer项目解析(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Deer项目解析(I).md)
 *	[Play(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/BRPlay(I).md)
+	*	[BRPlay配置说明](https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay/BRPlay配置说明.md)
 *	[生命周期(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/生命周期(I).md)
 *	[常用命令](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/常用命令.md)
 *	[资源](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资源.md)
@@ -373,15 +362,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[SwiftEOS](https://github.com/harleyGit/StudyNotes/blob/master/加密/SwiftEOS.md)
 
 
-
-
-
-
-
-
-
-
-
 <br/>
 
 ***
@@ -397,10 +377,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[Swift-的单例](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-的单例.md)
 *	[Swift-协议代理](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-协议代理.md)
 *	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
+
 
 
 
@@ -457,14 +434,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[CoreData(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/CoreData(I).md)
 *	[NSCache(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/NSCache(I).md)
 *	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
-
-
 
 
 <br/>
@@ -485,19 +454,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[NSURLSession(II)](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/NSURLSession(II).md)
 *	[Socket网络编程](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/Socket网络编程.md)
 *	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/.md)
-
-
-
-
-
-
-
 
 
 
@@ -515,12 +471,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[线性链表(II)](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/线性链表(II).md)
 *	[栈](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/栈.md)
 *	[](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/.md)
-
-
-
-
 
 
 
@@ -547,7 +497,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 工具配置与使用
-
+* [codemagic](https://codemagic.io/apps)
+	 * [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
  * [SourceTree使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/SourceTree使用(I).md)
  * [SourceTree使用(II)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/SourceTree使用(II).md)
  * [CocoaPods(I)之安装和卸载](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/CocoaPods(I)之安装和卸载.md)
@@ -572,15 +523,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
  *	[iOS-App发布资料(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/iOS-App发布资料(I).md)
  *	[Xcode](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Xcode.md)
  *	[Xcode10新导出包方法](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Xcode10新导出包方法.md)
- *	[](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/)
-
-
-
-
-
-
-
-
 
 
 <br/>
@@ -672,9 +614,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ***
 <br/>
-
-[BRPlay配置说明](https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay/BRPlay配置说明.md)
-
 
 
 # 参考资料
