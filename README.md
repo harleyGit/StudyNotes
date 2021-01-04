@@ -112,6 +112,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	**Objective-C**
 	*	[iOS类继承](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/iOS类继承.md)
 	* [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/iPhone适配.md)
+	* [常用类库](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/常用类库.md)
 	* [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/多线程(I).md)
 	* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/关键字(I).md)
 	* [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Objective-C/关键字(II).md)
@@ -383,7 +384,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 类库
-*	[常用类库](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/常用类库.md)
 *	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/阿里云(I).md)
 *	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送.md)
 *	[极光推送(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送(I).md)
