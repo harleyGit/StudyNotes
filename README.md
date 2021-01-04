@@ -1,11 +1,29 @@
 # StudyNotes 目录
 
+- **`当前笔记URL路径`**
+
+```!
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
+
+//获取Future文件夹下Pictures的图片路径
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a0.jpg
+
+
+https://github.com/harleyGit/StudyNotes/blob/master/
+
+//打开某个文件的超链接
+https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参考资料.md
+
+```
+
+
 <br/>
 
 ***
 <br/>
 
->## Git 提交规范：
+># **Git提交规范**
+
 	- fix: 修复问题;
 	- docs: 修改文档;
 	- style: 修改代码格式，不影响代码逻辑;
@@ -24,29 +42,9 @@
 <br/>
 ￼
 
-开发中学到的、用到的小知识整理
-<br/>
-**`当前URL路径：`**
-
-```!
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
-
-//获取Future文件夹下Pictures的图片路径
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a0.jpg
-
-
-https://github.com/harleyGit/StudyNotes/blob/master/
-
-//打开某个文件的超链接
-https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参考资料.md
-
-```
-
-
-***
-<br/>
 
 ># 快捷键
+
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/快捷键.md)
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Linux命令)
 * [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Unix命令.md)
@@ -67,8 +65,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
  *	 [指针(I)](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2指针(I).md)
  *	[C预处理器](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C预处理器.md)
  *	[自定义数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/自定义数据类型.md)
- *	[变量的链接和作用域](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量的链接和作用域.md)
- *	[构造函数](https://github.com/harleyGit/StudyNotes/blob/master/C语言/构造函数.md)
+ *	[作用域](https://github.com/harleyGit/StudyNotes/blob/master/C语言/作用域.md)
  *	[基础语法](https://github.com/harleyGit/StudyNotes/blob/master/C语言/基础语法.md)
  *	[运算符](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2运算符.md)
  *	[类](https://github.com/harleyGit/StudyNotes/blob/master/C语言/C2类.md)
@@ -386,7 +383,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 类库
-*	[10大必看第三方类库(待看)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/10大必看第三方类库(待看).md)
+*	[常用类库](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/常用类库.md)
 *	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/阿里云(I).md)
 *	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送.md)
 *	[极光推送(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送(I).md)
