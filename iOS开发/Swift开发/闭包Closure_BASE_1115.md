@@ -1,21 +1,4 @@
-
-- 闭包变量
-- 闭包参数
-- 闭包捕获
-- 闭包的柯西特性
-
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
 >#  闭包变量
-
 ```
 var mySecondClosure:(_ a: Int, _ b: Int) -> Int = {
         (a: Int, b: Int) -> Int in
@@ -32,12 +15,9 @@ print("闭包变量 mySecondClosure 的闭包值：\(c)")
 
 
 <br/>
-
 ***
 <br/>
-
 >#  闭包参数
-
 ```
 func myOperation(_ a: Int, _ b: Int, operation: (_ oa: Int, _ ob: Int) -> Int) -> Int {
         let res = operation(a, b)
@@ -89,65 +69,58 @@ print("参数闭包 operation 返回值:  \(d)")
 `参数闭包 operation 返回值：90`
 
 <br/>
-
 ***
 <br/>
-
 ># 闭包捕获
-
 ```
-var count = 2
-let incrementCount = {
-    count += 8
-}
+        var count = 2
+        let incrementCount = {
+            count += 8
+        }
 
-incrementCount()
-print("第 1 次计算: \(count)")
+        incrementCount()
+        print("第 1 次计算: \(count)")
 
-incrementCount()
-print("第 2 次计算: \(count)")
+        incrementCount()
+        print("第 2 次计算: \(count)")
 ```
 打印：
-
 `第 1 次计算: 10`
-
 `第 2 次计算: 18`
 
 &emsp;  由于闭包定义和变量count在同一作用域中，故闭包可以捕获并访问变量count。对变量counter做的任何改变，对闭包来说都是透明可见的。
 
 <br/>
-
-- **`函数捕获值`**
-
+#`函数捕获值`
 ```
-func countingClosure() -> () -> Int {
-	var counter = 0
-	let incrementCounter: () -> Int = {
-	    counter += 1
-	    return counter
-	}
-	return incrementCounter
-}
+      func countingClosure() -> () -> Int {
+        var counter = 0
+        let incrementCounter: () -> Int = {
+            counter += 1
+            return counter
+        }
+        return incrementCounter
+       }
+    
 
-
-//该例子中，闭包捕获了封闭空间（函数实体内）的内部变量counter。
-let counter1 = countingClosure()  //返回的是一个 () -> Int 闭包 
-let counter2 = countingClosure()
-
-let count_1 = counter1() // 1, 执行 () -> Int 闭包中的函数定义
-print("\(String(describing: count_1))")
-
-let count_2 = counter2() // 1
-print("\(String(describing: count_2))")
-
-let count_3 = counter1() // 2
-print("\(String(describing: count_3))")
-
-let count_4 = counter1() // 3
-print("\(String(describing: count_4))")
-
-let count_5 = counter2() // 2
-print("\(String(describing: count_5))")
+        //该例子中，闭包捕获了封闭空间（函数实体内）的内部变量counter。
+        let counter1 = countingClosure()  //返回的是一个 () -> Int 闭包 
+        let counter2 = countingClosure()
+        
+        let count_1 = counter1() // 1, 执行 () -> Int 闭包中的函数定义
+        print("\(String(describing: count_1))")
+        
+        let count_2 = counter2() // 1
+        print("\(String(describing: count_2))")
+        
+        let count_3 = counter1() // 2
+        print("\(String(describing: count_3))")
+        
+        let count_4 = counter1() // 3
+        print("\(String(describing: count_4))")
+        
+        let count_5 = counter2() // 2
+        print("\(String(describing: count_5))")
 ```
 打印：
 `1`
@@ -159,12 +132,9 @@ print("\(String(describing: count_5))")
 
 
 <br/>
-
 ***
 <br/>
-
 ># 闭包的柯西特性
-
 ```
 func add(_ num: Int) -> (_ second: Int) -> Int {
         return { val in
@@ -185,10 +155,7 @@ print("\(String(describing: addTwo))")
 
 
 <br/>
-
 ***
 <br/>
-
 [属性闭包](https://blog.csdn.net/weixin_34001430/article/details/87976286)
-
 [闭包表达式、尾随、闭包、闭包](https://blog.csdn.net/weixin_33883178/article/details/86784698)
