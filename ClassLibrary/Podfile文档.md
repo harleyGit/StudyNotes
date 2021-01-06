@@ -1,4 +1,15 @@
-># 建立一个Podfile 文件
+
+- **Podfile文件**
+- **参考资料**
+
+
+<br/>
+
+***
+<br/>
+
+># Podfile文件
+
 -  在终端定位到某个文件夹
 `$ cd /Users/harleyhuang/Documents/GitHub/我的项目`
 
@@ -7,6 +18,7 @@
 这样就自动生成了一个 `Podfile` 的文件夹，一应格式都俱全了，wonderful！！
 
 - 在 Podfile 文件夹下开始写需要的三方类库
+
 ```
 #下面一行是指明依赖库的来源地址
 source 'https://github.com/CocoaPods/Specs.git'
@@ -88,6 +100,15 @@ end
 
 ```
 
+
+
+<br/>
+
+
+***
+<br/>
+
+># 参考资料
 
 [](https://www.jianshu.com/p/b8b889610b7e)
 [](https://www.jianshu.com/p/f18d9f1a1477?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation)

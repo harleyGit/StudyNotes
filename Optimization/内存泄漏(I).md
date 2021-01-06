@@ -1,14 +1,35 @@
-># UITableViewCell 内存泄漏
-#`情况一：`
-```
-	if indexPath.section == 3, indexPath.row == 2 {
-                let items = self.applyItems[indexPath.section]
-                inputCell?.setCellContent(cellContent: items[indexPath.row], showContent: self.parameters) {[weak self] (key, value) in
-                    self?.parameters[key] = value
-                }
-            }
+
+
+
+
+- UITableViewCell内存泄漏
+- 根视图切换
+
+<br/>
+
+***
+<br/>
+
+
+
+&emsp; **使用Instrument(Leak)检测工具检测项目中的内存泄漏，针对一些泄漏点进行修复改正。**
+
+<br/>
+
+># UITableViewCell内存泄漏
+
+**`情况一：`**
 
 ```
+if indexPath.section == 3, indexPath.row == 2 {
+	let items = self.applyItems[indexPath.section]
+	inputCell?.setCellContent(cellContent: items[indexPath.row], showContent: self.parameters) {[weak self] (key, value) in
+	    self?.parameters[key] = value
+	}
+}
+
+```
+
 &emsp; 若是去掉[weak self]则会发生内存泄漏，这是因为`self->tableView->cell->self`,造成了内存泄漏。加上`[weak self]`就可避免了
 
 <br/>
@@ -19,10 +40,14 @@
 
 
 <br/>
+
 ***
 <br/>
+
 ># 根视图切换
-#`Applegate.m 文件`
+
+**`Applegate.m 文件`**
+
 ```
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 
@@ -56,7 +81,8 @@
 }
 ```
 
-#`LoginViewController.m 文件`
+**`LoginViewController.m 文件`**
+
 ```
 + (void) requestOfLoginURL:(NSString *)url parameters:(NSDictionary *)parameters {
         {
@@ -76,13 +102,7 @@
 
 
 <br/>
+
 ***
 <br/>
 
-
-
-
-
-<br/>
-***
-<br/>

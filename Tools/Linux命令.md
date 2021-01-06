@@ -1,7 +1,18 @@
 
-Linux命令简写和全称
+- **Linux命令简写和全称**
+- **Linux命令简写解释**
+
+<br/>
 
 
+***
+<br/>
+
+
+
+># Linux命令简写和全称
+
+```
 alias :Create your own name for a command
 cat: Concatenate 串联
 cd：Change directory 切换目录
@@ -21,11 +32,14 @@ su：Swith user 切换用户，切换到root用户
 sudo:Superuser do
 tar：Tape archive 解压文件
 file = file 查看文件类型，是否是二进制等
+```
 
+```
 gcc = general public licence (GNU) compiler collection 编译程序会产生二进制a.out文件
 gpg = GNU Privacy Guard
+```
 
-
+```
 uname: Unix name 系统名称
 df: Disk free 空余硬盘
 du: Disk usage 硬盘使用率
@@ -59,7 +73,9 @@ ldd：List dynamic dependencies 列出动态相依
 insmod：Install module 安装模块
 rmmod：Remove module 删除模块
 lsmod：List module 列表模块
+```
 
+```
 /bin = BINaries 
 /dev = DEVices 
 /etc = 存放配置文件的地方。配置文件的目录
@@ -72,6 +88,9 @@ pwd  =  print working Directory (打印工作目录)。
 /tmp = TeMPorary 
 /usr = Unix Shared Resources 
 /var = VARiable ? 是储存各种变化的文件，比如log等等
+```
+
+```
 FIFO = First In, First Out 
 GRUB = GRand Unified Bootloader 
 IFS = Internal Field Seperators 
@@ -217,7 +236,10 @@ xmms = X Multimedia System
 xrdb = X Resources DataBase 
 xwd = X Window Dump 
 yacc = yet another compiler compiler
+```
 
+
+```
 /var 包含系统一般运行时要改变的数据。通常这些数据所在的目录的大小是要经常变化或扩充的。原来 /var 目录中有些内容是在 /usr 中的，但为了保持 /usr 目录的相对稳定，就把那些需要经常改变的目录放到 /var 中了。每个系统是特定的，即不通过网络与其他计算机共享。下面列出一些重要的目录 ( 一些不太重要的目录省略了 ) 。 
 1. /var/catman ： 包括了格式化过的帮助 (man) 页。帮助页的源文件一般存在 /usr/man/catman 中；有些 man 页可能有预格式化的版本，存在 /usr/man/cat 中。而其他的 man 页在第一次看时都需要格式化，格式化完的版本存在 /var/man 中，这样其他人再看相同的页时就无须等待格式化了。 (/var/catman 经常被清除，就像清除临时目录一样。 ) 
 2. /var/lib ： 存放系统正常运行时要改变的文件。 
@@ -250,10 +272,17 @@ yacc = yet another compiler compiler
 台机器 ftp 服务的服务进程 ftpd 检查用户 shell 是否列在 /etc/shells 文件中，如果不是，将不允许该用户登录。 
 17. /etc/termcap ： 终端性能数据库。说明不同的终端用什么 “ 转义序列 ” 控制。写程序时不直接输出转义 
 序列 ( 这样只能工作于特定品牌的终端 ) ，而是从 /etc/termcap 中查找要做的工作的正确序列。这样，多数的程序可以在多数终端上运行。
+```
 
-Linux命令简写和全称的更多相关文章
 
-linux命令简写解释
+<br/>
+
+***
+<br/>
+
+># Linux命令简写解释
+
+```
 命令缩写: ls:list(列出目录内容) cd:Change Directory(改变目录) su:switch user 切换用户rpm:redhat package manager 红帽子打包管 ...
 
 linux命令缩写及全称
@@ -277,10 +306,10 @@ Linux命令英文全称   su = Swith user 切换用户,切换到root用户cat = 
 Linux 命令英文全称
 Linux 命令英文全称 linux 命令 英文全称 sudo superuser do su swith user df Disk free,空余硬盘 du Disk usage,硬盘使用率 noh ...
 
-Linux命令自己总结
-对于每一个Linux学习者来说,了解Linux文件系统的目录结构,是学好Linux的至关重要的一步.,深入了解linux文件目录结构的标准和每个目录的详细功能,对于我们用好linux系统只管重要,下面 ...
+```
 
-随机推荐
+
+
 
 Centos7学习之静态IP设置方法介绍
   1.编辑 ifcfg-eth0 文件,vim 最小化安装时没有被安装,需要自行安装不描述. # vim /etc/sysconfig/network-scripts/ifcfg-eth0 2.修改 ...

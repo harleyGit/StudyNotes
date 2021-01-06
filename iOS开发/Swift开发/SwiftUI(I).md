@@ -2,7 +2,8 @@
 
 - 默认情况下， SwiftUI view 文件声明了两个结构体。第一个结构体遵循 View 协议，描述 view 的内容和布局。第二个结构体声明该 view 的预览。
 
-&emsp;	`Demo的 Code`
+**`Demo的 Code`**
+
 ```
 //
 //  ContentView.swift
@@ -85,10 +86,15 @@ struct ContentView_Previews: PreviewProvider {
 
 ```
 点击Resue来进行预览效果图：
+
 <br/>
-![programmingBooks 在Resume下的效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS开发/Swift开发/Pictures/swiftUI‘sDemo.png)
+
+![programmingBooks 在Resume下的效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/swiftUI1.png)
+
 <br/>
+
 初学SwiftUI，不知道为什么在Simulator无法出现这种效果，追踪原因是因为没有加载上数据。
+
 上述的代码和效果从[这里获取(需要vpn)](https://medium.com/@mikru168/swiftui-淺玩-swiftui-用其建構一簡單的-app-2f2477bd49d7)查看。
 
 ```
@@ -127,9 +133,12 @@ struct DetailView_Previews: PreviewProvider {
 
 
 ```
+
 效果图：
-<br/>
-![详情图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS开发/Swift开发/Pictures/swiftUI'sDemo2.png)
+
+
+![详情图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/swiftUI2.png)
+
 <br/>
 
 

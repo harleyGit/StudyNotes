@@ -43,22 +43,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ￼
 
 
-># 快捷键
-
-* [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/快捷键.md)
-* [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Linux命令)
-* [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Unix命令.md)
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
 
 >#  **C++ 语言**
  *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C语言/变量与数据类型.md)
@@ -105,7 +89,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 ># iOS 开发
 
-![**iOS 系统学习教程**](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/iOS%20系统教程.png)
+![**iOS知识图谱**](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/iOSKnowledgeGraph.png)
 
 <br/>
 
@@ -182,13 +166,14 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	       
 * **Swift**
 	* [Swif 包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Swift包管理.md)
+	* [值引用类型](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/值引用类型.md)
 	* [SwiftUI[简单构造一个App]](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/SwiftUI[简单构造一个App].md)
 	* [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
 	* [SwiftUI 官方教程](https://developer.apple.com/tutorials/swiftui/)
 	* [SwiftUI 官方Demo](https://github.com/Jinxiansen/SwiftUI/tree/doc)
 	* [SwiftUI 翻译官方Demo](https://gitee.com/TheAlgorithms/SwiftUI)
 	* [闭包Closure](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/闭包Closure.md)
-	* [语言本地化实现(I-US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/语言本地化实现(I-US).md)
+	* [语言本地化](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/语言本地化.md)
 	* [枚举和结构体](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/枚举和结构体.md)
 	* [枚举值](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/枚举值.md)
 	* [构造器(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/构造器(I).md)
@@ -198,14 +183,13 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	* [函数](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/函数.md)
 	* [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/关键字(II).md)
 	* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/关键字(I).md)
-	* [值类型和引用类型用法(I)(待看)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/值类型和引用类型用法(I)(待看).md)
 	* [UIViewController](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/UIViewController.md)
 	* [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/UICollectionView(I).md)
 	* [Swift-服务端](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Swift-服务端.md)
 	* [Swift-官方资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发Swift-官方资料集.md)
 	* [String(II)-之-金额显示](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/String(II)-之-金额显示.md)
 	* [String(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/String(I).md)
-	* [Objective-C-和-Swift-混编](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/Objective-C-和-Swift-混编.md)
+	* [OC和Swift混编](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/OC和Swift混编.md)
 	* [Swift 原理底层探索](https://blog.csdn.net/u013480070/article/details/103702845)
 	* [](https://github.com/harleyGit/StudyNotes/blob/master/iOS开发/Swift开发/.md)
 	
@@ -300,18 +284,19 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-># 内存管理与性能优化
-*	[内存的栈、堆](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/内存的栈、堆.md)
-*	[内存优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/内存优化(I).md)
-*	[图片优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/图片优化(I).md)
-*	[网络优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/网络优化(I).md)
-*	[性能优化(I)---UITableView](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/性能优化(I)---UITableView.md)
-*	[性能优化(II)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/.md)
-*	[性能优化(III)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/性能优化(III).md)
-*	[性能优化](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/性能优化[US].md)
-*	[Instrument(Leak)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/Instrument(Leak).md)
-*	[NSAutoreleasePool(I)](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/NSAutoreleasePool(I).md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/内存管理与性能优化/.md)
+># 性能优化
+*	[内存的栈、堆](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/内存的栈、堆.md)
+*	[内存优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/内存优化(I).md)
+*	[图片优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/图片优化(I).md)
+*	[网络优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/网络优化(I).md)
+*	[项目优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/项目优化(I).md)
+*	[性能优化(II)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/.md)
+*	[性能优化(III)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/性能优化(III).md)
+*	[性能优化](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/性能优化[US].md)
+*	[内存泄漏(I).md](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/内存泄漏(I).md.md)
+*	[自动释放池](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/自动释放池.md)
+
+[](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/.md)
 
 
 
@@ -339,7 +324,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 *	[layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(I).md)
 *	[layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(II)](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/layoutSubviews、setNeedsLayout、layoutIfNeeded-的使用(II).md)
 *	[OpenGL](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/OpenGL.md)
-*	[](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/.md)
+
+[](https://github.com/harleyGit/StudyNotes/blob/master/动画:绘图/.md)
 
 
 
@@ -384,19 +370,20 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 类库
-*	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/阿里云(I).md)
-*	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送.md)
-*	[极光推送(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/极光推送(I).md)
-*	[加密CommonCrypto](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/加密CommonCrypto.md)
-*	[今日头条(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/今日头条(I).md)
-*	[类库常用关键字](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/类库常用关键字.md)
-*	[融云](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/融云.md)
-*	[图片选择器TZImagePickerController(I)-待研究](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/图片选择器TZImagePickerController(I)-待研究)
-*	[微信分享(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/微信分享(I).md)
-*	[微信支付](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/微信支付.md)
-*	[支付宝集成](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/支付宝集成.md)
-*	[支付宝支付流程(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/支付宝支付流程(I).md)
-*	[SDWebImage(I)](https://github.com/harleyGit/StudyNotes/blob/master/第三方类库/SDWebImage(I).md)
+* [Podfile文档](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/Podfile文档.md)
+*	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/阿里云(I).md)
+*	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/极光推送.md)
+*	[极光推送(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/极光推送(I).md)
+*	[加密CommonCrypto](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/加密CommonCrypto.md)
+*	[今日头条(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/今日头条(I).md)
+*	[类库常用关键字](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/类库常用关键字.md)
+*	[融云](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/融云.md)
+*	[图片选择器TZImagePickerController(I)-待研究](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/图片选择器TZImagePickerController(I)-待研究)
+*	[微信分享(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/微信分享(I).md)
+*	[微信支付](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/微信支付.md)
+*	[支付宝集成](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/支付宝集成.md)
+*	[支付宝支付流程(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/支付宝支付流程(I).md)
+*	[SDWebImage(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/SDWebImage(I).md)
 
 
 
@@ -491,32 +478,33 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-># 工具配置与使用
+># 工具
+* [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
+* [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令)
+* [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Unix命令.md)
 * [codemagic](https://codemagic.io/apps)
 	 * [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
- * [SourceTree使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/SourceTree使用(I).md)
- * [SourceTree使用(II)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/SourceTree使用(II).md)
- * [CocoaPods(I)之安装和卸载](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/CocoaPods(I)之安装和卸载.md)
- * [CocoaPods的使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/CocoaPods的使用(I).md)
- * [CocoaPods(II)之使用](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/CocoaPods(II)之使用.md)
- * [Android 模拟器 For Mac](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Android-模拟器-For-Mac.md)
- * [CocoaPods(III) 之 提升Podfile档次[U]](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/CocoaPods(III)-之-提升Podfile档次%5BU%5D.md)
- * [Git-配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git-配置.md)
- * [Git 问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git--问题(I).md)
- * [Git 提交记录查看、提交、变基(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Git-%5B提交记录查看、提交、变基%5D(I).md)
- * [GitBook-配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/GitBook-配置.md)
- * [Xcode 完全卸载](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Xcode-完全卸载.md)
- * [JAVA 和 Android 配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/JAVA-和-Android-配置.md)
- * [Mac 电脑配置](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Mac-电脑配置.md)
- * [Podfile 书写格式](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Podfile-书写格式.md)
- * [工具集](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/工具集.md)
- *	[代码管理](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/代码管理.md)
- *	[iOS--App开发前的配置(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/iOS--App开发前的配置(I).md)
- *	[iOS-发布资料(II)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/iOS-发布资料(II).md)
- *	[iOS-配置多个环境变量(待学习)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/iOS-配置多个环境变量(待学习).md)
- *	[iOS-App发布资料(I)](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/iOS-App发布资料(I).md)
- *	[Xcode](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Xcode.md)
- *	[Xcode10新导出包方法](https://github.com/harleyGit/StudyNotes/blob/master/工具配置与使用/Xcode10新导出包方法.md)
+* [Android配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Android配置.md)
+* [SourceTree使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree使用(I).md)
+* [SourceTree使用(II)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree使用(II).md)
+* [CocoaPods(I)之安装和卸载](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(I)之安装和卸载.md)
+* [CocoaPods的使用(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods的使用(I).md)
+* [CocoaPods(II)之使用](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(II)之使用.md)
+* [Git-配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git-配置.md)
+* [Git 问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git--问题(I).md)
+* [Git 提交记录查看、提交、变基(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git-%5B提交记录查看、提交、变基%5D(I).md)
+* [GitBook-配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/GitBook-配置.md)
+* [Xcode 完全卸载](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode-完全卸载.md)
+* [Mac 电脑配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac-电脑配置.md)
+* [Podfile 书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)
+* [工具集](https://github.com/harleyGit/StudyNotes/blob/master/Tools/工具集.md)
+*	[代码管理](https://github.com/harleyGit/StudyNotes/blob/master/Tools/代码管理.md)
+*	[iOS--App开发前的配置(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS--App开发前的配置(I).md)
+*	[iOS-发布资料(II)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS-发布资料(II).md)
+*	[iOS-配置多个环境变量(待学习)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS-配置多个环境变量(待学习).md)
+*	[iOS-App发布资料(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS-App发布资料(I).md)
+*	[Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
+*	[Xcode10新导出包方法](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode10新导出包方法.md)
 
 
 <br/>

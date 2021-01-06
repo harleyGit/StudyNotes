@@ -1,5 +1,19 @@
+- **下载JDK**
+- **Android 模拟器 for Mac**
+- **Android SDK 的下载和环境变量配置**
+- **参考资料**
+
+
+<br/>
+
+***
+<br/>
+
+
 ># 下载JDK
+
 &emsp; 要想下载方便，请在Mac上先下载 brew，然后使用这个命令下载一些东西十分方便。
+
 ```
 //默认应该会下载jdk7
  brew cask install java
@@ -12,11 +26,28 @@
 
 
 <br/>
+
+***
+<br/>
+
+># Android 模拟器 for Mac
+
+
+下载Mac版海马模拟器后，需要下载Virtual Box，否则无法安装。Virtual Box暗转地址为 [Virtual Box](https://www.virtualbox.org)
+*	安装步骤博客地址为：[Virtual Box](https://www.cnblogs.com/andong2015/p/7688120.html)
+
+
+
+
+<br/>
+
 ***
 <br/>
 
 
+
 ># Android SDK 的下载和环境变量配置
+
 ```
 //安装sdk
 brew cask install android-sdk
@@ -31,11 +62,18 @@ export PATH="${PATH}:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/platform-tool
 
 
 <br/>
+
 ***
 <br/>
+
+># 参考资料
+
 [Mac下adb以及Android studio夜神模拟器的配置](https://www.jianshu.com/p/04905a59d2a9)
+
 [Mac配置adb命令](https://www.jianshu.com/p/4b5452f54206)
- [MAC环境Android SDK环境变量配置](https://www.cnblogs.com/itgezhu/p/11086785.html)
+
+[MAC环境Android SDK环境变量配置](https://www.cnblogs.com/itgezhu/p/11086785.html)
+
 [android sdk 下载](https://blog.csdn.net/qq_37443229/article/details/87627385)
 
 
