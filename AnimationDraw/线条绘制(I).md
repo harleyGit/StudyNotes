@@ -1,27 +1,49 @@
 
->#***CGContext  图形上下文***
-##几种图形处理的基本框架介绍：
+- **CGContext图形上下文**
+	- **几种图形处理的基本框架介绍**
+	-  
+- **虚线的绘制**
+- **直线绘制**
+- **股票阴线绘制**
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
+># **CGContext图形上下文**
+
+- **几种图形处理的基本框架介绍:**
+
 &emsp;  Core Graphics/QuartZ 2D:Core Graphics是基于C的一套框架，使用了Quartz作为绘图引擎，所有基于Core Graphics的API都必须在视图的上下文中进行操作，QuartZ 2D是苹果公司开发的一套API，它是Core Graphics Framework的一部分。
 
 &emsp; OpenGL ES:OpenGL ES是跨平台的图形API，属于OpenGL的一个简化版本，OpenGL ES是应用程序编程接口，描述了方法、结构、函数应具有的一些列行为以及应该如何被使用的API。也就是说它只是定义了一套规范，具体的实现由我们自己根据它制定规范去按步骤做，纯C语言。
 
 <br/>
+
 ***
+<br/>
 
 
 ># 虚线的绘制
+
+```
 @ parameters  c                上下文；
 @ parameters  phase        表示在第一个虚线绘制的时候跳过多少个点；
 @ parameters   lengths = {10, 5, 6}     一个数组，表示先绘制10点，再跳过5点，再绘制6点，在跳过10点如此往复；
 @ parameters  count        等于lengths数组的长度。
-<br/>
-`
-CGContextSetLineDash(CGContextRef cg_nullable c, CGFloat phase,
-                     const CGFloat * __nullable lengths, size_t count)
-`
+
+CGContextSetLineDash(CGContextRef cg_nullable c, CGFloat phase, const CGFloat * __nullable lengths, size_t count);
+```
 
 Demo 代码：
+
 `YBStockChartView.m 文件`
+
 ```
 #import "YBStockChartView.h"
 
@@ -64,6 +86,7 @@ Demo 代码：
 ```
 
 ` ViewController.m 文件 `
+
 ```
 
 - (void)viewDidLoad {
@@ -84,16 +107,20 @@ Demo 代码：
 ```
 
 效果图：
+
 ![虚线绘制效果图](https://upload-images.jianshu.io/upload_images/2959789-080bd60c79121ab8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
 <br/>
+
 ***
-<br>
+<br/>
 
 ># 直线绘制
+
 &emsp; 此方法在`- (void)drawRect:(CGRect)rect`可以显示，但是在自己写的其他方法，无法绘制。若知道请留言告知，谢谢！
+
 ```
 - (void)drawRect:(CGRect)rect {
     [super drawRect:rect];
@@ -118,6 +145,7 @@ Demo 代码：
 ```
 
 效果图:
+
 ![红线效果绘制](https://upload-images.jianshu.io/upload_images/2959789-cffb2d5126aef9de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
@@ -125,10 +153,11 @@ Demo 代码：
 
 
 <br/>
+
 ***
 <br/>
 
->#股票阴线绘制
+># 股票阴线绘制
 
 `YBStockChartView.m 文件`
 
@@ -201,7 +230,9 @@ Demo 代码：
 }
 @end
 ```
+
 效果图：
+
 ![股票阴线效果图](https://upload-images.jianshu.io/upload_images/2959789-9f418f266d5a8a70.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 参考资料：[绘图API](https://www.jianshu.com/p/e20a2ffc7583)
