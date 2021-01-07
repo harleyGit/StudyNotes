@@ -1,3 +1,18 @@
+
+
+- 分类
+- isa指针的指向
+
+
+
+<br/>
+
+
+***
+<br/>
+
+
+
 ># 分类
 OC对象分为三种：
 >- 实例对象(instance对象);
@@ -5,24 +20,33 @@ OC对象分为三种：
 >- 元类对象（meta-class对象）
 
 <br/>
+
 **`实例对象`**
+
 &emsp;  实例对象（instance对象）就是通过类的alloc出来的对象，每次调用alloc都会产生新的实例对象。例如：
+
 ```
 NSObjcet *obj1 = [[NSObject alloc] init];
 NSObjcet *obj2 = [[NSObject alloc] init];
 ```
 
 &emsp;  obj1和obj2都是NSObject的实例对象，但是它们是不同的两个实例对象，分别占用两块不同的内存地址。
+
 &emsp;  实例对象在内存中存储的信息包括：
 - isa指针
 - 其他成员变量
+
 ![实例对象存储的信息](https://upload-images.jianshu.io/upload_images/2959789-96d7237f1137f373.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
+
 **`类对象(class对象)`**
+
 &emsp;  `类对象（class对象）`就是通过class方法或者runtime的object_getClass方法得到的class对象。
+
 &emsp;  `注意：`class 方法只是获取类，并不能获取真正获取其类对象。在这里因为下面的obj1的类就是NSObject所以其类对象和类是一样的。若换成其他的结果可能不一样。
+
 ```
 Class objClass1 = [obj1 class];
 Class objClass2 = [obj2 class];
@@ -35,11 +59,17 @@ Class objClass5 = object_getClass(obj2);
 NSLog(@"objClass1= %@,\n objClass2= %@,\n objClass3= %@,\n objClass4= %@,\n objClass5= %@,\n ", obj1, obj2, objClass1, objClass2, objClass3, objClass4, objClass5);
 ```
 打印：
-`objClass1= NSObject,`
+
+ `objClass1= NSObject,`
+
  `objClass2= NSObject,`
+ 
  `objClass3= NSObject,`
+ 
  `objClass4= NSObject,`
-` objClass5= NSObject,`
+ 
+ ` objClass5= NSObject,`
+
 &emsp;  objClass1-objClass5都是NSObject的类对象（class对象），且它们是同一个对象。
 
 >&emsp;  **`每个类在内存中有且只有一个class对象`**
@@ -50,10 +80,11 @@ NSLog(@"objClass1= %@,\n objClass2= %@,\n objClass3= %@,\n objClass4= %@,\n objC
 - 类的`属性`信息（`@property`），类的成员变量信息（`ivar`）
 - 类的`对象方法`信息（`instance method`），类的`协议`信息（`protocol`）
 
-![类对象存储图](//upload-images.jianshu.io/upload_images/1760191-b0a49c8c145defd9.png?imageMogr2/auto-orient/strip|imageView2/2/w/316)
+![类对象存储图](https:////upload-images.jianshu.io/upload_images/1760191-b0a49c8c145defd9.png?imageMogr2/auto-orient/strip|imageView2/2/w/316)
 
 
 <br/>
+
 **`元类对象（meta-class对象）`**
 
 **&emsp;  `元类对象（meta-class对象）`**就是通过RunTime的`object_getClass`方法得到的对象
@@ -72,12 +103,13 @@ objectMetaClass就是NSObject的元类对象
 - `superClass`指针
 - 类的`类方法`信息（`class method`）
 
-![元类对象存储信息](//upload-images.jianshu.io/upload_images/1760191-59d94b3303724f26.png?imageMogr2/auto-orient/strip|imageView2/2/w/328)
+![元类对象存储信息](https:////upload-images.jianshu.io/upload_images/1760191-59d94b3303724f26.png?imageMogr2/auto-orient/strip|imageView2/2/w/328)
 
 以上我们了解了`实例对象`、`类对象`和`元类对象`的含义以及包含的内容，那么它们当中的`isa`指针和`superClass`指针分别指向哪里呢?
 
 
 <br/>
+
 ***
 <br/>
 
@@ -85,7 +117,7 @@ objectMetaClass就是NSObject的元类对象
 
 isa指针指向用一张示意图来简单概括一下：
 
-![isa 指针指向图](//upload-images.jianshu.io/upload_images/1760191-9f0d589ac77c87b1.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
+![isa 指针指向图](https://upload-images.jianshu.io/upload_images/1760191-9f0d589ac77c87b1.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
 
 &emsp;  实例对象（instance对象）的`isa`指针指向`class`。当调用对象方法时，通过实例对象的`isa`找到`class`，最后找到对象方法的实现进行调用。
 &emsp;  类对象（class对象）的`isa`指针指向meta-class。当调用类方法时，通过类对象的`isa`找到meta-class，最后找到类方法的实现进行调用。
@@ -93,6 +125,7 @@ isa指针指向用一张示意图来简单概括一下：
 
 
 <br/>
+
 ***
 <br/>
 
@@ -100,7 +133,7 @@ isa指针指向用一张示意图来简单概括一下：
 
 类(class)的superClass指针指向用一张示意图来简单概括一下：
 
-![类的superClass指针指向图](//upload-images.jianshu.io/upload_images/1760191-0cf0a692554c9673.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
+![类的superClass指针指向图](https://upload-images.jianshu.io/upload_images/1760191-0cf0a692554c9673.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
 
 &emsp;  图中举例Student继承自Person，Person继承自NSObject。
 &emsp;  当Student的实例对象要调用父类Person的对象方法时，会先通过`isa`找到Student的`class`，然后通过`class`中的superClass找到父类Person的`class`，最后找到对象方法的实现进行调用。
@@ -112,13 +145,13 @@ isa指针指向用一张示意图来简单概括一下：
 
 ># meta-class对象的superClass指针指向
 
-![image](//upload-images.jianshu.io/upload_images/1760191-cf604bd592f17c58.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
+![image](https://upload-images.jianshu.io/upload_images/1760191-cf604bd592f17c58.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
 
 &emsp;  同上，当Student的class要调用Person的类方法时，会先通过isa找到Student的meta-class，然后通过superClass找到Person的meta-class，最后找到类方法的实现进行调用。
 
 这里当然要提一下非常经典的isa指向图，做进一步的总结：
 
-![image](//upload-images.jianshu.io/upload_images/1760191-16c6237e389628a0.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/937)
+![image](https://upload-images.jianshu.io/upload_images/1760191-16c6237e389628a0.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/937)
 
 > 1、instance的isa指向class
 > 2、class的isa指向meta-class
