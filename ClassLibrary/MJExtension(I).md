@@ -1,3 +1,16 @@
+
+
+- **MJExtension**
+- **参考资料**
+
+<br/>
+
+
+***
+<br/>
+
+># MJExtension
+
 ```
 //搜索类库
 $ pod search MJExtension
@@ -10,9 +23,13 @@ $ pod update --verbose
 
 ```
 
-># Method
 
-`- (NSMutableDictionary *)mj_keyValues    //模型 -> 字典`
+<br/>
+
+- **Method**
+
+>`- (NSMutableDictionary *)mj_keyValues    //模型 -> 字典`
+
 ```
 Model  *model = [[Model alloc] init];
 model.data1 = data[@"one"];
@@ -25,7 +42,9 @@ NSLog(@"---> %@", params);
 ```
 
 <br/>
-`- (instancetype)mj_setKeyValues:(id)keyValues      //字典 -> 模型`
+
+>`- (instancetype)mj_setKeyValues:(id)keyValues      //字典 -> 模型`
+
 ```
 NSLog(@"homeTitle JSON数据为： %@", dicArr);
 /*
@@ -52,7 +71,8 @@ HGHomeTitleModel *model = [[HGHomeTitleModel new] mj_setKeyValues:dicArr];
 
 
 <br/>
-`+ (NSDictionary *)mj_objectClassInArray;  //数组中需要转换的模型类`
+
+>`+ (NSDictionary *)mj_objectClassInArray;  //数组中需要转换的模型类`
 
 ```
 
@@ -61,6 +81,12 @@ HGHomeTitleModel *model = [[HGHomeTitleModel new] mj_setKeyValues:dicArr];
 
 
 <br/>
+
 ***
 <br/>
-参考资料：[MJExtension的基本使用指导](https://blog.csdn.net/deft_mkjing/article/details/51704898)
+
+># 参考资料
+
+[MJExtension的基本使用指导](https://blog.csdn.net/deft_mkjing/article/details/51704898)
+
+[序列化框架MJExtension详解 + iOS ORM框架](https://www.jianshu.com/p/11a8e15f7d2b)

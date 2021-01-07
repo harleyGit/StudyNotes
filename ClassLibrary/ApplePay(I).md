@@ -1,65 +1,102 @@
+
+
+- **ApplePay内购集成**
+	- 沙箱测试账号创建
+- **后记**
+	- 沙盒账号注意事项
+	- 关于证书的问题
+- **苹果内购两种模式**
+	- 服务器模式
+	- 本地模式
+- **其他支付**
+- **参考资料**
+
+
+
+
+<br/>
+
+***
+<br/>
+
 [Apple Pay 内购官方文档](https://help.apple.com/app-store-connect/#/devae49fb316)
 
-#`Apple 内购集成图`
+># **ApplePay内购集成**
+
 ![内购配置图](https://upload-images.jianshu.io/upload_images/2959789-19fe47b5f5540bdd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+<br/>
 
 &emsp;  在Apple 内购中，一个内购项目需要申请一个，比如：我申请月、年、终身VIP，就需要增加3个内购项目。如下图：
 
 ![3个内购项目申请月、年、终身](https://upload-images.jianshu.io/upload_images/2959789-3eb73663fe9f234c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 &emsp;  在每个内购项目中，其定价只能按照苹果给的来进行设值，自己不能随便进行设值的。如下图：
+
 ![内购价格设值](https://upload-images.jianshu.io/upload_images/2959789-43e4c55c7aac623f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
 
 <br/>
-***
 <br/>
 
-># 沙箱测试账号创建
+- **沙箱测试账号创建**
+
 ![选择箭头所指的选项](https://upload-images.jianshu.io/upload_images/2959789-057184762f6d01e5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ![创建沙箱账号](https://upload-images.jianshu.io/upload_images/2959789-819a980017a0e86f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
-###`沙盒账号使用流程`
+
+> `沙盒账号使用流程`
+
 ①  在iPhone上安装测试包（必须是adhoc签名证书或者develop签名证书打的包，不能是从App Store上下载的）；
+
 ②  退出自己iPhone的App Store账号（因为我们需要使用沙盒账号登录）：
-      &emsp;  a.打开App Store应用首页滑到最下方--选中AppleID--注销;
-     &emsp;   b.设置--iTunes Store与App Store--选中AppleID--注销;
+
+&emsp;  a.打开App Store应用首页滑到最下方--选中AppleID--注销;
+      
+&emsp;   b.设置--iTunes Store与App Store--选中AppleID--注销;
 
 &emsp; &emsp;   在商城退出自己的Apple 账号后，不要使用刚才在沙盒申请的账号(沙盒账号是一个假的AppleID账号，不能直接登录的。)，那样是登录不进去的。否则会出现以下错误：
 ![无法使用沙盒测试账号测试](https://upload-images.jianshu.io/upload_images/2959789-97c7ad8e09466ef6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 &emsp;  `沙盒账号`是在安装测试包内购买商品时，系统会让你进行登录，这时我们点击“使用现有的AppleID”就可以输入刚才创建好的沙盒测试账号进行登录了。
 
-###`测试使用沙盒测试账号登录使用`
+> `测试使用沙盒测试账号登录使用`
+
 &emsp;  在测试包里面购买商品VIP时，系统会让你进行登录，这里我们点击“使用现有的AppleID”就可以输入刚才创建好的沙盒测试账号进行登录了。
+
 ![使用申请的沙盒账号登录](https://upload-images.jianshu.io/upload_images/2959789-908bbae69d3f64a8.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
+
 &emsp;  输入账号之后，有可能会出现提示`" 此Apple ID 只能在iTunes Store 中国店面购买，您将被跳转至该页面"`，点击确定之后会跳转到App Store，导致这次购买失败。没关系，我们再次回到测试包，然后购买商品就好了。
 
 &emsp;  原因：出现提示的原因：因为AppleID是分地区的。之前我们创建沙盒账号的时候就看到了，需要选择地区。App Store也是分地区的，对应的AppleID只能在App Store对应的地区进行下载和购买东西。我们刚才创建的[harleyTest@123.com](这个账号的地区是中国，所以只能在中国店面登录。由于我之前的登录的账号越南的，所以此时AppStore店面是越南店面。所以我们这次登录，系统会跳转到AppStore应用将店面切换到中国。另外，App Store应用切换地区的时候，会报【Your request produced an error】。这个不需要管。
 
 <br/>
 
-###`点击购买视频VIP之后，成功的会出现如下相应提示`
+**`点击购买视频VIP之后，成功的会出现如下相应提示`**
+
 ![使用申请的沙盒账号密码进行付款](https://upload-images.jianshu.io/upload_images/2959789-21350e55f0f0c6d1.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 注意事项：在App Store Connect上创建商品了之后，除了需要填商品ID，商品名称，商品描述，价格等之外，还要上传一张图片，图片就是上面这个界面。
 
 
 <br/>
+
 ***
 <br/>
 
 ># 后记
-##`沙盒账号注意事项:`
+
+<br/>
+
+- **`沙盒账号注意事项:`**
 &emsp; a. BudleID，证书，商品ID等内容一致，才能进行接下来的储值测试;
 
 &emsp; b. 测试设备需要使用不越狱的真机（越狱机不能进行沙盒储值，模拟器也不能进行沙盒储值）
@@ -71,45 +108,64 @@
 &emsp; e. 从App Store上面下载的包不能使用沙盒账号进行储值
 
 
-###`关于证书的问题：`
+<br/>
+
+- **`关于证书的问题：`**
 &emsp; a .使用develop签名证书和adhoc签名证书打的ipa包，我把他们叫做测试包，测试包只能使用沙盒账号进行储值，不能使用真实的AppleID进行储值
 &emsp; b.从App Store应用下载的包，我把他们叫做线上包，线上包只能使用真实的AppleID进行储值，不能使用沙盒账号进行储值
 
 
-###`小窍门：`
+<br/>
+
+- **`小窍门：`**
+
 &emsp; ① 平常我们上传包的时候是打包了ipa包之后，使用Xcode里面的Application Loader应用上传ipa包的；
 &emsp; ① 虽然很多人上传包使用的是appstore的签名证书，但是，其实使用adhoc的证书打包的ipa包也是可以正常上传并且送审上线的。我平常就是用adhoc的证书打包成ipa包，给测试妹子测试，测试完直接用这个包上传送审了。😆。
 
 
 <br/>
+
 ***
 <br/>
 
 >#  苹果内购两种模式
-#`服务器模式`
+
+- **`服务器模式`**
+
 
 >a.  调用服务器接口创建一个商品的订单;
-b.  请求Apple的商品列表;
-c.  选取商品调用苹果支付;
-d.  支付成功（会返回凭证）;
-e.  把支付成功的返回凭证上传到APP服务器（带上订单的ID，有利于后台判断是哪个订单支付成功）;
-f.  APP服务器保存该凭证等数据并像苹果服务器发起凭证验证，验证成功则发送商品。
+
+>b.  请求Apple的商品列表;
+
+>c.  选取商品调用苹果支付;
+
+>d.  支付成功（会返回凭证）;
+
+>e.  把支付成功的返回凭证上传到APP服务器（带上订单的ID，有利于后台判断是哪个订单支付成功）;
+
+>f.  APP服务器保存该凭证等数据并像苹果服务器发起凭证验证，验证成功则发送商品。
+
 
 <br/>
 
-#`本地模式`
+- **`本地模式`**
 
 >a.  请求Apple的商品列表;
-b.  选取商品调用苹果支付;
-c.  支付成功（会返回凭证）;
-d.  把凭证与商品发送状态保存到一个本地的数据库;
-e.  app调用apple服务器的验证API;
-f.  验证成功发送商品并改变数据库的物品发送状态;
+
+>b.  选取商品调用苹果支付;
+
+>c.  支付成功（会返回凭证）;
+
+>d.  把凭证与商品发送状态保存到一个本地的数据库;
+
+>e.  app调用apple服务器的验证API;
+
+>f.  验证成功发送商品并改变数据库的物品发送状态;
 
 
+<br/>
 
-
-#`核心代码`
+- **`核心代码`**
 
 ```
 //导入文件：
@@ -382,14 +438,39 @@ f.  验证成功发送商品并改变数据库的物品发送状态;
 
 
 <br/>
+
 ***
 <br/>
-下一篇：[Apple Pay 集成(I)](https://www.jianshu.com/p/dd81d7ade732)
 
-参考资料：
-[App Store无法成功添加沙箱技术测试员账号](http://ju.outofmemory.cn/entry/365183)
-[苹果IAP(内购)中沙盒账号使用注意事项](https://www.jianshu.com/p/1ef61a785508)
-[申请流程](http://baijiahao.baidu.com/s?id=1586198840331975300&wfr=spider&for=pc)
-[IAP应用内购详细步骤和问题总结指南](https://www.jianshu.com/p/307a3b7cfd6c)
+># 其他支付
+
+[开发支付篇](https://www.cnblogs.com/TheYouth/p/6847014.html?utm_source=itdadao&utm_medium=referral)
+
+[iOS集成ApplePay](https://www.cnblogs.com/zhouxihi/p/6528133.html)
+
+[Apple Pay-苹果支付](https://www.cnblogs.com/feiyu-mdm/p/5802111.html)
+
+[Apple Pay开发流程](https://www.jianshu.com/p/7ea225928726)
+
+[Apple Pay 与 银联 的集成](https://www.jianshu.com/p/a3d03688fc5a)
+
+
 
 <br/>
+
+***
+<br/>
+
+
+># 参考资料
+
+[Apple Pay 集成(I)](https://www.jianshu.com/p/dd81d7ade732)
+
+[App Store无法成功添加沙箱技术测试员账号](http://ju.outofmemory.cn/entry/365183)
+
+[苹果IAP(内购)中沙盒账号使用注意事项](https://www.jianshu.com/p/1ef61a785508)
+
+[申请流程](http://baijiahao.baidu.com/s?id=1586198840331975300&wfr=spider&for=pc)
+
+[IAP应用内购详细步骤和问题总结指南](https://www.jianshu.com/p/307a3b7cfd6c)
+
