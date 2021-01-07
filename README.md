@@ -1,18 +1,14 @@
-# StudyNotes 目录
-
+# StudyNotes目录
 - **`当前笔记URL路径`**
 
 ```!
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/
-
 //获取Future文件夹下Pictures的图片路径
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a0.jpg
++ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 
 
-https://github.com/harleyGit/StudyNotes/blob/master/
 
 //打开某个文件的超链接
-https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参考资料.md
+- https://github.com/harleyGit/StudyNotes/blob/master/Flutter/.md
 
 ```
 
@@ -22,8 +18,8 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 
-># **Git提交规范**
-
+># Git提交规范
+```
 	- fix: 修复问题;
 	- docs: 修改文档;
 	- style: 修改代码格式，不影响代码逻辑;
@@ -33,7 +29,7 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 	- chore: 修改工具相关（包括但不限于文档、代码生成等);
 	- deps: 升级依赖;
 	- feat: 新功能;
-	
+```	
 
 
 <br/>
@@ -41,24 +37,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 ***
 <br/>
 ￼
-
-
-># 快捷键
-
-* [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/快捷键.md)
-* [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Linux命令)
-* [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Unix命令.md)
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
 
 >#  **C++**
  *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C/变量与数据类型.md)
@@ -109,103 +87,103 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 
 <br/>
 
-*	**Objective-C**
-	*	[iOS类继承](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
-	* [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
-	* [常用类库](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/常用类库.md)
-	* [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
-	* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(I).md)
-	* [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(II).md)
-	* [关键字(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(III).md)
-	* [Block(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(I).md)
-	* [Block(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(II).md)
-	* [Block(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(III).md)
-	* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
-	* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
-	* [本地化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/本地化(I).md)
-	* [闭包](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/闭包.md)
-	* [变量和属性](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/变量和属性.md)
-	* [弹框视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/弹框视图.md)
-	* [定位(待看)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/定位(待看).md)
-	* [分类和扩展](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/分类和扩展.md)
-	* [富文本](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/富文本.md)
-	* [键盘弹出(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/键盘弹出(I).md)
-	* [模态视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/模态视图.html)
-	* [NSArray排序(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray排序(I).md.md)
-	* [强弱引用](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/强弱引用.md)
-	* [响应链(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(I).md)
-	* [响应链(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
-	* [消息转发](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
-	* [远程推送(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
-	* [自定义单元格](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/自定义单元格.md)
-	* [坐标系(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/坐标系(I).md)
-	* [App跳转](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App跳转.md)
-	* [App的生命周期](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App的生命周期.md)
-	* [CoreData](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/CoreData.html)
-	* [JSON数据的转化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/JSON数据的转化(I).md)
-	* [KeyChain](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/KeyChain.html)
-	* [NSString(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSString(I).md)
-	* [NSTimer(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSTimer(I).md.md)
-	* [Objective-C的Setter、Getter(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Objective-C的Setter、Getter(I).md)
-	* [OC-知识点汇集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/OC-知识点汇集.md)
-	* [Passbook-与-Pass(WaitLearn)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Passbook-与-Pass(WaitLearn).md)
-	* [Runtime(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Runtime(I).md)
-	* [UIApplication-US(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIApplication-US(I).md)
-	* [UIButton](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIButton.md)
-	* [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UICollectionView(I).md)
-	* [UIImage(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIImage(I).md)
-	* [UINavigationController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UINavigationController(I).md)
-	* [UIPickerView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIPickerView(I).md)
-	* [UIScrollView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIScrollView(I).md)
-	* [UISearchBar(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UISearchBar(I).md)
-	* [UISearchBar(II)----属性](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UISearchBar(II)----属性.md)
-	* [UISearchBar(III)----方法](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UISearchBar(III)----方法.md)
-	* [UITabBarController(I)-1](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITabBarController(I)-1.md)
-	* [UITabBarController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITabBarController(I).md)
-	* [UITableView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITableView(I).md)
-	* [UITextField(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITextField(I).md)
-	* [UIViewController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIViewController(I).md)
-	* [UIWindow-详解](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow-详解.md)
-	* [UIWindow(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow(I).md)
-	* [UIWindow(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow(II).md)
-	* [UIWindow(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow(III).md)
-	* [Video(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Video(I).md)
-	* [Video(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Video(II).md)
-	* [App签名原理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App签名原理.md)
-	* [单元测试(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/单元测试(I).md)
-	* [语法精练(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/语法精练(I).md)
+>## Objective-C
+*	[iOS类继承](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
+* [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
+* [常用类库](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/常用类库.md)
+* [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
+* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(I).md)
+* [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(II).md)
+* [关键字(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(III).md)
+* [Block(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(I).md)
+* [Block(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(II).md)
+* [Block(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(III).md)
+* [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
+* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
+* [本地化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/本地化(I).md)
+* [闭包](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/闭包.md)
+* [变量和属性](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/变量和属性.md)
+* [弹框视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/弹框视图.md)
+* [定位(待看)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/定位(待看).md)
+* [分类和扩展](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/分类和扩展.md)
+* [富文本](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/富文本.md)
+* [键盘弹出(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/键盘弹出(I).md)
+* [模态视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/模态视图.html)
+* [NSArray排序(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray排序(I).md.md)
+* [强弱引用](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/强弱引用.md)
+* [响应链(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(I).md)
+* [响应链(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
+* [消息转发](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
+* [远程推送(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
+* [自定义单元格](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/自定义单元格.md)
+* [坐标系(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/坐标系(I).md)
+* [App跳转](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App跳转.md)
+* [App的生命周期](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App的生命周期.md)
+* [CoreData](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/CoreData.html)
+* [JSON数据的转化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/JSON数据的转化(I).md)
+* [KeyChain](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/KeyChain.html)
+* [NSString(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSString(I).md)
+* [NSTimer(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSTimer(I).md.md)
+* [Objective-C的Setter、Getter(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Objective-C的Setter、Getter(I).md)
+* [OC-知识点汇集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/OC-知识点汇集.md)
+* [Passbook-与-Pass(WaitLearn)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Passbook-与-Pass(WaitLearn).md)
+* [Runtime(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Runtime(I).md)
+* [UIApplication-US(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIApplication-US(I).md)
+* [UIButton](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIButton.md)
+* [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UICollectionView(I).md)
+* [UIImage(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIImage(I).md)
+* [UINavigationController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UINavigationController(I).md)
+* [UIPickerView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIPickerView(I).md)
+* [UIScrollView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIScrollView(I).md)
+* [UISearchBar(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UISearchBar(I).md)
+* [UISearchBar(II)----属性](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UISearchBar(II)----属性.md)
+* [UISearchBar(III)----方法](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UISearchBar(III)----方法.md)
+* [UITabBarController(I)-1](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITabBarController(I)-1.md)
+* [UITabBarController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITabBarController(I).md)
+* [UITableView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITableView(I).md)
+* [UITextField(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UITextField(I).md)
+* [UIViewController(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIViewController(I).md)
+* [UIWindow-详解](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow-详解.md)
+* [UIWindow(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow(I).md)
+* [UIWindow(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow(II).md)
+* [UIWindow(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/UIWindow(III).md)
+* [Video(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Video(I).md)
+* [Video(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Video(II).md)
+* [App签名原理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App签名原理.md)
+* [单元测试(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/单元测试(I).md)
+* [语法精练(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/语法精练(I).md)
 
 
 <br/>
 <br/>
 
 	       
-* **Swift**
-	* [Swif包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift包管理.md)
-	* [SwiftUI(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/SwiftUI(I).md)
-	* [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
-	* [SwiftUI 官方教程](https://developer.apple.com/tutorials/swiftui/)
-	* [SwiftUI 官方Demo](https://github.com/Jinxiansen/SwiftUI/tree/doc)
-	* [SwiftUI 翻译官方Demo](https://gitee.com/TheAlgorithms/SwiftUI)
-	* [闭包](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/闭包.md)
-	* [语言本地化](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/语言本地化.md)
-	* [枚举和结构体](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/枚举和结构体.md)
-	* [枚举值](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/枚举值.md)
-	* [构造器(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/构造器(I).md)
-	* [异常捕获](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/异常捕获.md)
-	* [富文本(I-US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/富文本(I-US).md)
-	* [基础](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/基础.md)
-	* [函数](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/函数.md)
-	* [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/关键字(II).md)
-	* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/关键字(I).md)
-	* [值引用类型](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/值引用类型.md)
-	* [UIViewController](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/UIViewController.md)
-	* [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/UICollectionView(I).md)
-	* [Swift-服务端](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift-服务端.md)
-	* [Swift-官方资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/SwiftSwift-官方资料集.md)
-	* [String(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/String(I).md)
-	* [OC和Swift混编](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/OC和Swift混编.md)
-	* [Swift 原理底层探索](https://blog.csdn.net/u013480070/article/details/103702845)
+>## Swift
+* [Swif包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift包管理.md)
+* [SwiftUI(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/SwiftUI(I).md)
+* [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
+* [SwiftUI 官方教程](https://developer.apple.com/tutorials/swiftui/)
+* [SwiftUI 官方Demo](https://github.com/Jinxiansen/SwiftUI/tree/doc)
+* [SwiftUI 翻译官方Demo](https://gitee.com/TheAlgorithms/SwiftUI)
+* [闭包](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/闭包.md)
+* [语言本地化](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/语言本地化.md)
+* [枚举和结构体](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/枚举和结构体.md)
+* [枚举值](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/枚举值.md)
+* [构造器(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/构造器(I).md)
+* [异常捕获](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/异常捕获.md)
+* [富文本(I-US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/富文本(I-US).md)
+* [基础](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/基础.md)
+* [函数](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/函数.md)
+* [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/关键字(II).md)
+* [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/关键字(I).md)
+* [值引用类型](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/值引用类型.md)
+* [UIViewController](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/UIViewController.md)
+* [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/UICollectionView(I).md)
+* [Swift-服务端](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift-服务端.md)
+* [Swift-官方资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/SwiftSwift-官方资料集.md)
+* [String(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/String(I).md)
+* [OC和Swift混编](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/OC和Swift混编.md)
+* [Swift 原理底层探索](https://blog.csdn.net/u013480070/article/details/103702845)
 [](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/.md)
 
 
@@ -213,13 +191,13 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 	       
-* **错误总结**
-	* [上架错误](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/上架错误.md)
-	* [审核被拒](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/审核被拒.md)
-	* [Crash日志](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Crash日志.md)
-	* [Error(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Error(I).md)
-	* [Error(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Error(II).md)
-	* [Instrumets](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Instrumets.md)
+>## 错误总结
+* [上架错误](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/上架错误.md)
+* [审核被拒](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/审核被拒.md)
+* [Crash日志](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Crash日志.md)
+* [Error(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Error(I).md)
+* [Error(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Error(II).md)
+* [Instrumets](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Instrumets.md)
 	
 
 
@@ -283,7 +261,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 底层
-
  *	[资料](https://github.com/harleyGit/StudyNotes/blob/master/底层/资料.md)
  *	[自动释放池](https://github.com/harleyGit/StudyNotes/blob/master/底层/自动释放池.md)
  *	[Class(I)](https://github.com/harleyGit/StudyNotes/blob/master/底层/Class(I).md)
@@ -314,7 +291,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 优化
-
 *	[内存优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/内存优化(I).md)
 *	[图片优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/图片优化(I).md)
 *	[网络优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/网络优化(I).md)
@@ -338,7 +314,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 动画/绘图
-
 * [核心动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/核心动画.md)
 *	[仿射动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/仿射动画.md)
 *	[绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/绘制(I).md)
@@ -367,7 +342,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 加密
-
 *	[加密(I)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密(I).md)
 *	[加密种类(RSA)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密种类[RSA]).md)
 *	[Https[证书生成]](https://github.com/harleyGit/StudyNotes/blob/master/加密/Https[证书生成].md)
@@ -380,7 +354,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 设计模式
-
 *	[单例类](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/单例类.md)
 *	[路由组件化](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/路由组件化.md)
 *	[KVC和KVO](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC和KVO.md)
@@ -400,7 +373,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 类库
-
 *	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/阿里云(I).md)
 *	[Podfile文档](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/Podfile文档.md)
 *	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/极光推送.md)
@@ -477,7 +449,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 多线程
-
 *	[GCD(II)- 时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)%20-%20时间延迟.md)    
 *	[GCD(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(I).md)    
 *	[GCD(II)---时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)---时间延迟.md)    
@@ -494,7 +465,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 数据存储
-
 *	[数据持久化(US)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/数据持久化(US).md)
 *	[相册和视频处理(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/相册和视频处理(I).md)
 *	[CoreData(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/CoreData(I).md)
@@ -508,7 +478,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 网络请求
-
 *	[数据解析之NSNumber(US)](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/数据解析之NSNumber(US).md)
 *	[网络安全(I)](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/网络安全(I).md)
 *	[网络安全(II)](https://github.com/harleyGit/StudyNotes/blob/master/网络请求/网络安全(II).md)
@@ -531,7 +500,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 数据结构
-
 *	[递归](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/递归.md)
 *	[队列](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/队列.md)
 *	[二叉树](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/二叉树.md)
@@ -548,7 +516,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 工具
-
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
 * [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Unix命令.md)
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令.md)
@@ -584,16 +551,13 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 <br/>
 
 ># 读书笔记
-
 * 金融投资	
 	*	[金融理财(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/金融理财(I).md)
 	*	[Financia(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/Financia(I).md)
-
 * 生活哲理
 	*	[LifePhilosophy(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/LifePhilosophy(I).md)
 	*	[LifePhilosophy(II)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/LifePhilosophy(II).md)
 	*	[Emotion(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/Emotion(I).md)
-
 * 思维导图
 	*	[汽车史 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/汽车史.xmind)
 
@@ -640,15 +604,6 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 [](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
 
 
-
-
-
-
-
-
-
-
-
 <br/>
 
 ***
@@ -672,34 +627,31 @@ https://github.com/harleyGit/StudyNotes/blob/master/Flutter/Flutter%20学习参�
 # 参考资料
 
 * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
-* 行内HTML
 
 <br/>
 
+* **HTML标签定义**
 <dl>
   <dt>定義列表</dt>
   <dd>有時候，人們偶爾會用到。</dd>
-
   <dt>在 HTML 中撰寫 Markdown</dt>
   <dd>*無法* 運作的 **非常** 好。改用 HTML<em>標籤</em>。</dd>
 </dl>
 
-* 图片链接到影片
+<br/>
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=YOUTUBE影片ID放在這裡
-" target="_blank"><img src="http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg" 
-alt="圖片 ALT 文字放在這裡" width="0" height="0" border="10" /></a>
+* **图片链接到影片**
 
-
-<a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank"><img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30"></a>
+</a><a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank"><img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30"></a>
 
 
 [![圖片 ALT 文字放在這裡](http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE影片ID放在這裡)
 
 [![死神 BLEACH-w150](https://pic.17qq.com/uploads/plokohonlv.jpeg)](https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121)
 
+<br/>
 
-* 字体颜色测试
+* **字体颜色测试**
 
 ```diff
 
