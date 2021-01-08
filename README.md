@@ -648,7 +648,7 @@
 </a>
 
 </a>
-	<img src="https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/desktop0.heic" alt="Mac桌面图片" width="960" height="540" border="30">
+	<img src="https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/desktop2.tiff" alt="Mac桌面图片" width="960" height="540" border="30">
 </a>
 
 
