@@ -642,7 +642,14 @@
 
 * **图片链接到影片**
 
-</a><a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank"><img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30"></a>
+</a>
+	<a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank">
+	<img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30">
+</a>
+
+</a>
+	<img src="https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/desktop2.tiff" alt="Mac桌面图片" width="192" height="108" border="30">
+</a>
 
 
 [![圖片 ALT 文字放在這裡](http://img.youtube.com/vi/YOUTUBE影片ID放在這裡/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE影片ID放在這裡)
