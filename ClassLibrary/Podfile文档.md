@@ -1,7 +1,31 @@
 
-- **Podfile文件**
 - [**Swift常用类库**](https://www.jianshu.com/p/6a0cee1fabc3)
+- **Podfile文件**
 - **参考资料**
+
+
+<br/>
+
+
+***
+<br/>
+
+># Swift常用类库
+
+- [**27款iOS开源库**](https://www.oschina.net/translate/27-ios-open-source-libraries-to-skyrocket-your-development?print)
+	- DZNEmptyDataSet: 用于处理空表和集合视图。默认情况下，如果你的表视图是空的，屏幕上什么也不会显示。它给予的用户体验还不算最佳。使用这个库，你只需要一些协议，iOS 就会很好地处理集合视图，然后合理美观地显示出用户信息。你不需要为每一个 iOS 项目费心。
+	- Chameleon：一个 iOS 的颜色框架。它扩展了 UIColor，加入了漂亮的、现代扁平化风格的颜色；
+	- Alamofire：AFNetwork是它的姐妹版，但 Alamofire 更新颖，更有型；
+	- FontAwesomeKit：使用这个库可以简单地添加字体到你的项目当中，另外还有很多其它方面的功能；
+	- Quick： Swift 里的单元测试，适用于 Swift（好吧，Objective-C 也能用），已与 Xcode 集成。如果你是 Objective-C 粉，我更推荐 Specta，但是对于 Swift 来说，Quick 应该是最棒的选择；
+	- IAPHelper：应用内置支付给我们带来大量的样板代码，这个库简单封装了大量常见的任务来摆脱那些样板代码。它封装功能都是关于如何将 iOS 用户的钱送到你（或者你的公司）的钱包；
+	- SwiftyJSON：在 Swift 中的 JSON 解析更加简便；
+	- Spring：使制作动画变得容易、更具表达性，并且可链接；
+	- Concorde：Concorde 是一种渐进的加载方式，它可以让图片以更好看的方式加载出来；
+	- KeychainAccess：这是一个小助手库，用于管理 Keychain 访问；
+	-  iOS-charts：最后同样重要的是—— iOS 图表库！它非常实用，也非常优雅，因此我不用过于赘述——你只要滚动下页面，就能知道使用这个项目能为你的 app 做些什么；
+- [**R.Swift**](https://www.jianshu.com/p/869464f57bf8): 资源加载。
+
 
 
 <br/>
@@ -100,6 +124,8 @@ post_install do |installer|
 end
 
 ```
+
+
 
 
 
