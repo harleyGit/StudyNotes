@@ -89,6 +89,7 @@
 
 >## Objective-C
 *	[iOS类继承](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
+*	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [常用类库](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/常用类库.md)
 * [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
