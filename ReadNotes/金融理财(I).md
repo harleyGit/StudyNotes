@@ -1,4 +1,11 @@
 
+
+![股票韭菜图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/stockChives.png)
+
+<br/>
+
+
+
 - **《证券分析》格雷厄姆著**
 - **《投资中最简单的事》**
 - **《雪球专刊》**
