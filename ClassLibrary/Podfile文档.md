@@ -1,5 +1,6 @@
 
 - [**Swift常用类库**](https://www.jianshu.com/p/6a0cee1fabc3)
+
 - **Podfile文件**
 - **参考资料**
 
@@ -25,6 +26,7 @@
 	- KeychainAccess：这是一个小助手库，用于管理 Keychain 访问；
 	-  iOS-charts：最后同样重要的是—— iOS 图表库！它非常实用，也非常优雅，因此我不用过于赘述——你只要滚动下页面，就能知道使用这个项目能为你的 app 做些什么；
 - [**R.Swift**](https://www.jianshu.com/p/869464f57bf8): 资源加载。
+- [**33个iOS开源库**](https://juejin.cn/post/6844903461553717261)
 
 
 

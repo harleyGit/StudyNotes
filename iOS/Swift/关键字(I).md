@@ -1,37 +1,42 @@
-># 关键字展示
-- #  Unmanaged
 
-- #  intout
 
-- # Mutating
+- **Unmanaged**
+- **where**
+- **intout**
 
-- # guard
+- **Mutating**
 
-- #  Lazy
+- **guard**
 
-- # internal
+- **Lazy**
 
-- # associatedtype 
+- **internal**
 
-- # Any和AnyObject
+- **associatedtype** 
 
-- # AnyClass
+- **Any和AnyObject**
 
-- # Self 和 discardableResult
+- **AnyClass**
 
-- # derf
+- **Self 和 discardableResult**
 
-- # @inline(never) 和 @inline(__always)
+- **derf**
+
+- **@inline(never) 和 @inline(__always)**
 
 
 
 <br/>
+
 ***
 <br/>
 
 ># Unmanaged
-#`不安全的代码`
+
+**`不安全的代码`**
+
 &emsp;  Swift 语言的类都是采用引用计数进行内存管理的。Swift 编译器会在每次对象被访问的时候插入增加引用计数的代码。例如，考虑一个遍历使用类实现的一个链表的例子。遍历链表是通过移动引用到链表的下一个节点来完成的：elem = elem.next，每次移动这个引用，Swift 都要增加 next 对象的引用计数并减少前一个对象的引用计数，这种引用计数代价昂贵但是只要使用 swift 类就无法避免。
+
 ```
 final class Node {
  var next: Node?
@@ -53,16 +58,84 @@ while let Next = Ref.takeUnretainedValue().next {
 ```
 
 
-参考资料[^fn1]
+参考资料
+[^fn1]
 [^fn1]: [Unmanaged](https://nshipster.cn/unmanaged/)
 
+
+
+
 <br/>
+
 ***
 <br/>
+
+
+># where
+
+-  **协议使用where**
+
+只有基类实现了当前协议才能添加扩展,也就是多个类实现了同一个协议，根据类名分别为这些类添加扩展。
+
+```
+
+protocol SomeProtocol {
+    func someMethod()
+}
+ 
+class A: SomeProtocol {
+    let a = 1
+    
+    func someMethod() {
+       print("call someMethod")
+    }
+}
+ 
+class B {
+    let a = 2
+}
+ 
+//基类A继承了SomeProtocol协议才能添加扩展
+extension SomeProtocol where Self: A {
+    func showParamA() {
+        print(self.a)
+    }
+}
+//反例，不符合where条件
+extension SomeProtocol where Self: B {
+    func showParamA() {
+        print(self.a)
+    }
+}
+
+
+let objA = A()
+let objB = B()  //类B没实现SomeProtocol， 所有没有协议方法
+objA.showParamA()  //输出1
+
+```
+
+
+<br/>
+
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
 ># intout
-#`使用intout注意事项：`
+
+**`使用intout注意事项：`**
 -  使用 inout 关键字的函数，在调用时需要在该参数前加上 & 符号;
 -  inout 参数在传入时必须为变量，不能为常量或字面量（literal）;
+
 ```
 //常量使用关键字 let 来声明
 格式：let constantName = <initial value>
@@ -93,6 +166,7 @@ print(number)  //63
 
 
 <br/>
+
 ```
 struct Point {
     var x = 0.0
@@ -140,7 +214,11 @@ print("rect.center 重置后的值：\(rect.center)")
 `center GETTER call`
 `rect.center 重置后的值：Point(x: 0.0, y: 0.0)`
 
-#`inout 参数传递过程`
+
+<br/>
+
+**`inout 参数传递过程`**
+
 -  当函数被调用时，参数值被拷贝
 -  在函数体内，被拷贝的参数修改
 -  函数返回时，被拷贝的参数值被赋值给原有的变量
@@ -153,18 +231,24 @@ print("rect.center 重置后的值：\(rect.center)")
 
 
 <br/>
+
 ***
 <br/>
-># Mutating
-#`使用场景:`
--  结构体,枚举类型中声明修饰方法 mutating func funcName()
--  extension, protocol 修饰 方法
 
-#`注意:`
+># Mutating
+
+- **`使用场景:`**
+	-  结构体,枚举类型中声明修饰方法 mutating func funcName()
+	-  extension, protocol 修饰 方法
+
+<br/>
+
+- **`注意:`**
 -  Swift 中struct,enum 均可以包含类方法和实例方法,Swift官方是不建议在struct,enum 的普通方法内修改属性变量,但是在func 前面添加 mutating 关键字之后就可以在方法内修改；     
 -  对于protocol 方法也是适用的,mutating 可以修饰的代理方法,如果struct,enum,class 实现协议之后也可以在其对应的 mutating 代理方法内修改本身的属性变量。(class 不影响,因为属性变量对于类的类方法,实例方法 是透明的,即随时都可以改变)
 
-#`Test 工程中的 CustomController.swift 文件`
+**`Test 工程中的 CustomController.swift 文件`**
+
 ```
 import UIKit
 
@@ -204,7 +288,8 @@ struct MyStruct: MyProtocol {
 
 ```
 
-#`Test 工程中的 ViewController.m 文件`
+**`Test 工程中的 ViewController.m 文件`**
+
 ```
 #import "Test-Swift.h"
 
@@ -226,25 +311,33 @@ struct MyStruct: MyProtocol {
 
 
 <br/>
+
 ***
 <br/>
+
 ># guard
+
  [guard关键字](https://www.cnblogs.com/edensyd/p/9566979.html)
 
 
 
 <br/>
+
 ***
 <br/>
+
 ># Lazy 的使用
+
 [lazy 简单的使用](https://www.jianshu.com/p/aa6707791ab6)
 
 
 
 
 <br/>
+
 ***
 <br/>
+
 ># 访问权限关键字 使用
 
 ![关键字权限图](https://upload-images.jianshu.io/upload_images/2959789-c62481c8db74300b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -256,8 +349,10 @@ struct MyStruct: MyProtocol {
 
 
 <br/>
+
 ***
 <br/>
+
 ># internal(set) 的使用
 [访问控制 US](https://www.cnblogs.com/xjf125/p/10088307.html)
 
@@ -271,9 +366,12 @@ struct MyStruct: MyProtocol {
 
 
 <br/>
+
 ***
 <br/>
-># associatedtype 协议关联类型
+
+># associatedtype协议关联类型
+
 &emsp;  定义一个协议时，有的时候声明一个或多个关联类型作为协议定义的一部分将会非常有用。关联类型为协议中的某个类型（任意类型）提供了一个占位名（或者说别名），其代表的实际类型在协议被采纳时才会被指定。你可以通过 associatedtype 关键字来指定关联类型，当然你也可以用来设计api用来构建统一的处理结构。比如使用协议声明更新cell的方法。
 
 
@@ -311,15 +409,21 @@ class MySKUTableViewCell: UITableViewCell, DTCellItemPro{
 
 
 <br/>
+
 ***
 <br/>
+
 >#  Any 和 AnyObject
+
 * AnyObject 可以代表任何 class 类型的实例*
 * Any 可以表示任意类型，甚至包括方法（func）类型*
+
 概念不多做介绍了，可以参考：[王巍 Any和AnyObject](http://swifter.tips/any-anyobject/)
 
 <br/>
+
 * 类型判断和应用
+
 ```
 class Boy {
 }
@@ -353,18 +457,24 @@ enter(Boy())
 
 
 <br/>
+
 ***
 <br/>
->#  AnyClass 
+
+>#  AnyClass
+ 
 -  AnyObject.Type
 &emsp;  `AnyObject.Type` 这种方式得到的就是一个元类型`（Meta）`，也就是 `AnyClass`。在 Swift 中被一个 typealias 定义：
+
 ```
 typealias AnyClass = AnyObject.Type
 ```
 
 <br/>
+
 `.self `用在类型后面取得类型本身，用在实例后面取得实例本身:
 `Meta.Type `代表 `Meta` 这个类型的类型，也就是一个用来存储` Meta `类型的元类型。然后用  `.self `从 `Meta` 中取出其类型
+
 ```
 class Meta {
     var title = ""
@@ -385,8 +495,11 @@ let typeMeta : Meta.Type = Meta.self
 ```
 
 <br/>
+
 - 类方法调用
+- 
 &emsp;  可以通过元类型直接调用 类方法，上面代码中 Meta 中声明了一个实例方法(method1)和一个类方法(method2)
+
 ```
 let typeMeta1 : Meta.Type = Meta.self
 typeMeta1.method2()
@@ -396,8 +509,11 @@ let typeMeta2: AnyClass = Meta.self
 ```
 
 <br/>
+
 - 实例方法调用
+
 &emsp;  实例方法的调用要先声明实例，直接通过 init 方法获取实例固然可以，但是我们这里介绍如果使用元类型获取实例，甚至调用实例方法
+
 ```
 let typeMeta : Meta.Type = Meta.self
 typeMeta.method1(Meta(name: "new meta"))()
@@ -405,6 +521,7 @@ typeMeta.method1(Meta(name: "new meta"))()
 ```
 
 &emsp;  上面代码中` typeMeta` 是 `Meta.Type `类型，通过它调用实例方法 method1需要传入一个实例变量，然后系统会返回这个实例方法本身。如果上面第二行代码不好理解，看这里 :
+
 ```
 let f = typeMeta.method1(Meta(name: "new meta"))
 f()
@@ -416,6 +533,7 @@ meta.method1()
 ```
 
 &emsp;  调用实例方法为什么不能直接创建实例再调用呢？例如：Meta().method1()。确实，对于一个独立的类型来说我们完全没有必要关心它的元类型，但是元类型或者元编程的概念的理解可以让你在设计框架时避免不断改动代码。下面这段代码便可看出元类型的优势：
+
 ```
 class vc1: UIViewController {
 }
@@ -434,15 +552,18 @@ func setupViewControllers(_ vcTypes: [AnyClass]) {
 let usingvcTypes: [AnyClass] = [vc1.self, vc2.self]
 setupViewControllers(usingvcTypes)
 ```
+
 &emsp; 类似这样的用法，就可以避免你在开发中不断修改代码，也迫使你在封装代码时不断严格要求自己。
 
 
 
 <br/>
+
 ***
 <br/>
 
 ># Self 和 discardableResult
+
 ```
 class CustomClass {
     var a: Int
@@ -478,19 +599,23 @@ print("objA a: \(obj.a)")
 
 
 <br/>
+
 ***
 <br/>
 
 ># derf
+
 [derf 的使用场景](https://www.jianshu.com/p/478cbb5cf8a1)
 
 
 
 <br/>
+
 ***
 <br/>
 
 ># @inline(never) 和 @inline(__always)
+
 - @inline(never) // 声明这个函数never编译成inline的形式
 
 - @inline(__always) // 声明这个函数总是编译成inline的形式
@@ -501,6 +626,7 @@ inline函数可以用 闭包 的形式实现
 
 
 <br/>
+
 ***
 <br/>
 
