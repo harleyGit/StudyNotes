@@ -3,6 +3,7 @@
 - **Unmanaged**
 - **where**
 - **intout**
+- [**typealias、associatedtype**](https://swifter.tips/typealias/)
 
 - **Mutating**
 

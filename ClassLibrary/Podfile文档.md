@@ -1,6 +1,9 @@
 
 - [**Swift常用类库**](https://www.jianshu.com/p/6a0cee1fabc3)
-
+	- 27款iOS开源库
+	- 33个iOS开源库
+	- R.Swift
+	- WhatsNewKit
 - **Podfile文件**
 - **参考资料**
 
@@ -27,6 +30,8 @@
 	-  iOS-charts：最后同样重要的是—— iOS 图表库！它非常实用，也非常优雅，因此我不用过于赘述——你只要滚动下页面，就能知道使用这个项目能为你的 app 做些什么；
 - [**R.Swift**](https://www.jianshu.com/p/869464f57bf8): 资源加载。
 - [**33个iOS开源库**](https://juejin.cn/post/6844903461553717261)
+- [**WhatsNewKit**](https://github.com/SvenTiigi/WhatsNewKit)
+	- 使您能够轻松展示出色的新应用程序功能。它是从头开始设计的，可以完全根据您的需求进行定制。
 
 
 
