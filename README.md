@@ -252,7 +252,11 @@
 <br/>
 
 ># Egret Engine
- * [位图使用](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/位图使用.md)
+* [位图使用](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/位图使用.md)
+* [配置](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/ee配置.md)
+* [项目伊始](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/ee项目伊始.md)
+* [engine](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/engine.md)
+
 
 
 
