@@ -10,6 +10,7 @@
 - **`egretProperties.json`项目配置文件**
 - **tsconfig 配置文件**
 - **Demo项目**
+	- 配置主题
 
 
 
@@ -288,6 +289,59 @@ $ egret run HelloEUI
 - commonjs : 将EXML合并为一个 CommonJS 风格的文件
 - 将EXML合并为一个含有解析方法和皮肤定义的文件，且皮肤抽离为一份配置
 - json : 将每个EXML文件生成一份配置
+
+
+
+<br/>
+<br/>
+
+> [配置主题](http://developer.egret.com/cn/github/egret-docs/extension/EUI/skin/theme/index.html)
+
+Main.ts 文件中定一个按钮组件
+
+```
+		/**
+     * 创建场景界面
+     * Create scene interface
+     */
+protected createGameScene(): void {
+			 var button2 = new eui.Button();
+        button2.x = 100;
+        button2.y = 400;
+        button2.skinName = 'resource/eui_skins/Button/button1.exml';
+        button2.label = "labe 按钮 🔘";
+        //对应皮肤部件Label的id： labelDisplay
+        button2.labelDisplay.text = 'asjlgajslgjalsdjglajslg';
+        this.addChild(button2);
+        button2.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick2, this);
+    }
+	}
+
+    //打印
+    private onButtonClick2(e: egret.TouchEvent) {
+        console.log('ssssssss');
+    }
+
+
+```
+
+![z42](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z42.png)
+
+<br/>
+
+**配置主题**
+
+![z43](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z43.png)
+
+
+- 主题配置文件就是一个标准的JSON文件:
+
+	- skins 指定组件的默认皮肤，其中键是组件的类名，值是需要赋值给这个组件skinName属性的值。可以是exml文件路径，也可以是EXML文件上注册的类名（根节点上的class属性）。
+
+	- exmls 表示需要主题预加载的 EXML 文件列表。Theme 文件加载之后，它会优先加载这个列表中的EXML文件，由于 EXML 可能会存在相互依赖，所以 Theme 会按照列表中的顺序编译 EXML。可以监听 egret.Event.COMPLETE 来确认该列表中的EXML已经加载完成。
+
+	- autoGenerateExmlsList 表示是否需要使用命令行工具自动生成 EXML 列表。
+
 
 
 
