@@ -1,4 +1,5 @@
 
+- [**优化项目方案**](https://philm.gitbook.io/philm-ios-wiki/)
 - [**SwiftHub**](https://gitee.com/harelyio/work/tree/master/Project/SwiftHub)
 - **[MVVM之从理论到实践](https://www.jianshu.com/p/1c1b6bc557ac)**
 	- [DemoCode](https://gitee.com/harelyio/work/tree/master/Project/MVVMReactive)
@@ -30,6 +31,11 @@
 	- JXTheme (0.0.6): 主题、换肤、暗黑模式, `pod 'JXTheme', '~> 0.0.6'`
 -  [**R.swift**](https://www.jianshu.com/p/727acc03f7b1) 
 	-  iOS资源引入框架
+-  [**CocoaLumberjackDemo**](https://www.jianshu.com/p/7b799bef0107)
+	- 将程序运行过程中产生的Log保存起来或者发送到自己服务器，为了以后方便分析。
+	- ` pod 'CocoaLumberjack-RemoteAccess', '~> 0.1.0'`
+	- [**全量日志捕获CocoaLumberjack**](https://blog.csdn.net/shengpeng3344/article/details/105148752)
+	- [**源码浅析 - CocoaLumberjack 3.6 之 DDLog**](https://juejin.cn/post/6844904147511164942#heading-25)
 
 
 
@@ -85,6 +91,45 @@ Observable.combineLatest(keyword, currentLanguage, sortRepositoryItem)
                 default: break
                 }
             }).disposed(by: rx.disposeBag)
+```
+
+
+<br/>
+
+```
+
+class TableViewCellViewModel: NSObject {
+
+}
+
+class DefaultTableViewCellViewModel: TableViewCellViewModel {
+    let title = BehaviorRelay<String?>(value: nil)
+    let detail = BehaviorRelay<String?>(value: nil)
+    let secondDetail = BehaviorRelay<String?>(value: nil)
+    let attributedDetail = BehaviorRelay<NSAttributedString?>(value: nil)
+    let image = BehaviorRelay<UIImage?>(value: nil)
+    let imageUrl = BehaviorRelay<String?>(value: nil)
+    let badge = BehaviorRelay<UIImage?>(value: nil)
+    let badgeColor = BehaviorRelay<UIColor?>(value: nil)
+    let hidesDisclosure = BehaviorRelay<Bool>(value: false)
+}
+
+
+class SettingCellViewModel: DefaultTableViewCellViewModel {
+
+    init(with title: String, detail: String?, image: UIImage?, hidesDisclosure: Bool) {
+        super.init()
+        self.title.accept(title)
+        self.secondDetail.accept(detail)
+        self.image.accept(image)
+        self.hidesDisclosure.accept(hidesDisclosure)
+    }
+}
+
+
+let logoutCellViewModel = SettingCellViewModel(with: R.string.localizable.settingsLogOutTitle.key.localized(), detail: nil,image: R.image.icon_cell_logout()?.template, hidesDisclosure: true)
+
+
 ```
 
 

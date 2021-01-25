@@ -1,3 +1,16 @@
+
+- 参考资料
+- NSTimer
+- RunLoop
+	- CFRunLoopRef线程安全原因
+- NSRunLoop
+
+
+<br/>
+
+***
+<br/>
+
 ># NSTimer
 &emsp; **`NSTimer`**是不准确的，当程序执行的时候，遇到cpu忙碌的时候，NSTimer会被放到一边不执行，就会造成该执行的事件不执行，会造成事件的叠加。
 
@@ -7,6 +20,8 @@
 [三种精准计时](https://www.cnblogs.com/XYQ-208910/p/6590829.html)
 
 
+
+
 <br/>
 
 ***
@@ -14,9 +29,70 @@
 
 
 ># RunLoop
+
 &emsp;  RunLoop在OC中有两种获取方式：`[NSRunLoop currentRunLoop] `或者C的：`CFRunLoopRef`。
 
 &emsp; ` NSRunLoop` 是基于 `CFRunLoopRef` 的OC封装，提供了面向对象的 API，但`不是线程安全`的，`CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API，是线程安全的，`CoreFoundation`是开源的([CoreFoundation 源码地址](https://link.jianshu.com?t=https://opensource.apple.com/tarballs/CF/))
+
+<br/>
+
+
+> CFRunLoopRef线程安全原因
+> 
+&emsp; `CFRunLoopRef`是线程安全的，这个需要看到`CFRunLoopRef`对象的实现。CFRunloopRef是Apple维护的CoreFoundation，没有不允许创建一个新对象，只有两个获取Runloop的对象 CFRunLoopGetMain()和CFRunLoopGetCurrent()。它们的内部实现如下：
+
+```
+static CFMutableDictionaryRefloopsDic;
+
+/// 访问 loopsDic 时的锁
+static CFSpinLock_t loopsLock;
+
+/// 获取一个 pthread 对应的 RunLoop。
+CFRunLoopRef_CFRunLoopGet(pthread_tthread){
+	//加锁
+	OSSpinLockLock(&loopsLock);
+
+	if(!loopsDic){
+		// 第一次进入时，初始化全局Dic，并先为主线程创建一个 RunLoop。
+		loopsDic=CFDictionaryCreateMutable();
+		CFRunLoopRef mainLoop=_CFRunLoopCreate();
+		CFDictionarySetValue(loopsDic,pthread_main_thread_np(),mainLoop);
+	}
+
+	/// 直接从 Dictionary 里获取。
+	CFRunLoopRef loop=CFDictionaryGetValue(loopsDic,thread));
+
+	if(!loop){
+
+		/// 取不到时，创建一个
+		loop=_CFRunLoopCreate();
+		CFDictionarySetValue(loopsDic,thread,loop);
+
+		/// 注册一个回调，当线程销毁时，顺便也销毁其对应的 RunLoop。
+		_CFSetTSD(...,thread,loop,__CFFinalizeRunLoop);
+
+	}
+
+	OSSpinLockUnLock(&loopsLock);
+
+	returnloop;
+
+}
+
+CFRunLoopRefCFRunLoopGetMain(){
+	return_CFRunLoopGet(pthread_main_thread_np());
+}
+
+CFRunLoopRefCFRunLoopGetCurrent(){
+	return_CFRunLoopGet(pthread_self());
+}
+```
+
+&emsp; 可以看到生成的对象是加锁的，这样就避免被改变了。NSRunLoop可以初始化一个对象，可以生成一个新的runloop，这就像上面讲的有可能产生临界区，所以它不是线程安全的。
+
+
+
+<br/>
 
 
 &emsp;  每一个线程都有唯一的一个与之对应的`RunLoop`对象。`RunLoop`保存现在一个全局的Dictionary里面，线程作为key，RunLoop作为value。线程创建并没有RunLoop对象，`会在第一次获取的时候，系统创建(获取的时候系统才开始创建，不需要我们自己创建)`。线程结束时销毁`RunLoop`。
@@ -47,8 +123,8 @@ release函数：CFRelease(对象);
 
 ```
 // 主线程
-performSelectorOnMainThread:withObject:waitUntilDone:
-performSelectorOnMainThread:withObject:waitUntilDone:modes:
+performSelectorOnMainThread: withObject: waitUntilDone:
+performSelectorOnMainThread: withObject:waitUntilDone: modes:
 /// 指定线程
 performSelector:onThread:withObject:waitUntilDone:
 performSelector:onThread:withObject:waitUntilDone:modes:
@@ -70,6 +146,7 @@ cancelPreviousPerformRequestsWithTarget:selector:object:
 
 
 ># NSRunLoop
+
 &emsp;  ` NSRunLoop` 是基于 `CFRunLoopRef` 的OC封装，提供了面向对象的 API，但`不是线程安全`的。
 
 
@@ -77,18 +154,24 @@ cancelPreviousPerformRequestsWithTarget:selector:object:
 
 ```
 static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
+
 static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__();
+
 static void __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__();
+
 static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_TIMER_CALLBACK_FUNCTION__();
+
 static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__();
+
 static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
 
 ```
-- **`Observer事件:`**runloop中状态变化时进行通知。（微信卡顿监控就是利用这个事件通知来记录下最近一次main runloop活动时间，在另一个check线程中用定时器检测当前时间距离最后一次活动时间过久来判断在主线程中的处理逻辑耗时和卡主线程）。这里还需要特别注意，CAAnimation是由RunloopObserver触发回调来重绘，接下来会讲到。
+
+- **`Observer事件:`** runloop中状态变化时进行通知。（微信卡顿监控就是利用这个事件通知来记录下最近一次main runloop活动时间，在另一个check线程中用定时器检测当前时间距离最后一次活动时间多久来判断在主线程中的处理逻辑耗时和卡主线程）。这里还需要特别注意，CAAnimation是由RunloopObserver触发回调来重绘，接下来会讲到。
 - **`Block事件:`**非延迟的NSObject PerformSelector立即调用，dispatch_after立即调用，block回调。
 - **`Main_Dispatch_Queue事件：`**GCD中dispatch到main queue的block会被dispatch到main loop执行。
 - **`Timer事件：`**延迟的NSObject PerformSelector，延迟的dispatch_after，timer事件。
-- **`Source0事件：`**处理如UIEvent，CFSocket这类事件。需要手动触发。触摸事件(首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 SpringBoard 接收。SpringBoard 只接收按键【锁屏/静音等】，触摸，加速，接近传感器等几种 Event，随后用 mach port 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，回调函数就是` __IOHIDEventSystemClientQueueCallback()`并调用 _UIApplicationHandleEventQueue()进行应用内部的分发。）其实是Source1接收系统事件后在回调 __IOHIDEventSystemClientQueueCallback() 内触发的 Source0，Source0 再触发的 _UIApplicationHandleEventQueue()。source0一定是要唤醒runloop及时响应并执行的，如果runloop此时在休眠等待系统的 mach_msg事件，那么就会通过source1来唤醒runloop执行。
+- **`Source0事件：`**处理如UIEvent，CFSocket这类事件。需要手动触发。触摸事件(首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 [**SpringBoard**](https://www.cnblogs.com/Mike-Fighting/p/5410900.html) 接收。SpringBoard 只接收按键【锁屏/静音等】，触摸，加速，接近传感器等几种 Event，随后用 [mach port](https://www.jianshu.com/p/284b1777586c) 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，回调函数就是` __IOHIDEventSystemClientQueueCallback()`并调用 _UIApplicationHandleEventQueue()进行应用内部的分发。）其实是Source1接收系统事件后在回调 __IOHIDEventSystemClientQueueCallback() 内触发的 Source0，Source0 再触发的 _UIApplicationHandleEventQueue()。source0一定是要唤醒runloop及时响应并执行的，如果runloop此时在休眠等待系统的 mach_msg事件，那么就会通过source1来唤醒runloop执行。
 - **`Source1事件：`**处理系统内核的mach_msg事件。（推测CADisplayLink也是这里触发）。
 
 
@@ -98,7 +181,11 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
 
 ```
 SetupThisRunLoopRunTimeoutTimer(); // by GCD timer
+
 //通知即将进入runloop__CFRUNLLOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__(KCFRunLoopEntry);
+
+
+
 do {
      __CFRunLoopDoObservers(kCFRunLoopBeforeTimers);
      __CFRunLoopDoObservers(kCFRunLoopBeforeSources);
@@ -595,4 +682,8 @@ int32_t __CFRunLoopRun()
 ***
 <br/>
 
+**参考资料：**
+
 [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
+
+[RunLoop学习](https://choujiji.github.io/2018/03/07/iOS%20RunLoop学习/)

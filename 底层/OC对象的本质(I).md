@@ -120,6 +120,7 @@ isa指针指向用一张示意图来简单概括一下：
 ![isa 指针指向图](https://upload-images.jianshu.io/upload_images/1760191-9f0d589ac77c87b1.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
 
 &emsp;  实例对象（instance对象）的`isa`指针指向`class`。当调用对象方法时，通过实例对象的`isa`找到`class`，最后找到对象方法的实现进行调用。
+
 &emsp;  类对象（class对象）的`isa`指针指向meta-class。当调用类方法时，通过类对象的`isa`找到meta-class，最后找到类方法的实现进行调用。
 
 
@@ -136,10 +137,12 @@ isa指针指向用一张示意图来简单概括一下：
 ![类的superClass指针指向图](https://upload-images.jianshu.io/upload_images/1760191-0cf0a692554c9673.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
 
 &emsp;  图中举例Student继承自Person，Person继承自NSObject。
+
 &emsp;  当Student的实例对象要调用父类Person的对象方法时，会先通过`isa`找到Student的`class`，然后通过`class`中的superClass找到父类Person的`class`，最后找到对象方法的实现进行调用。
 
 
 <br/>
+
 ***
 <br/>
 
@@ -154,14 +157,23 @@ isa指针指向用一张示意图来简单概括一下：
 ![image](https://upload-images.jianshu.io/upload_images/1760191-16c6237e389628a0.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/937)
 
 > 1、instance的isa指向class
+> 
 > 2、class的isa指向meta-class
+> 
 > 3、meta-class的isa指向基类的meta-class，基类的isa指向自己
+> 
 > 4、class的superClass指向父类的class，如果没有父类，则superClass指针为nil
+> 
 > 5、meta-class的superClass指向父类的meta-class，基类的meta-class的superClass指向基类的class
+> 
 > 6、instance调用对象方法的轨迹：通过isa找到class，方法不存在，就通过superclass逐层到父类里找，有就实现，如果找到基类仍没有找到，就会抛出`unrecognized selector sent to instance`异常
+> 
 > 7、class调用类方法的轨迹：通过isa找到meta-class，方法不存在，就通过superClass逐层父类里找。
 
+
+
 **补充：**
+
 相信很多人在查看源码或者看一些底层博客的时候，经常会看到下面一段代码，来讲述class的内部结构：
 
 ```
@@ -212,6 +224,8 @@ struct objc_class {
 ![struct class_rw_t](https://upload-images.jianshu.io/upload_images/2959789-da044d73461d618d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
+<br/>
+
 > rw代表readwrite，可读可写
 > t代表table，列表
 
@@ -220,17 +234,26 @@ struct objc_class {
 ![struct class_ro_t](https://upload-images.jianshu.io/upload_images/2959789-c019d88138c9f97e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
+<br/>
+
 > ro代表readonly，只读
 
 `struct class_ro_t`的结构体中包含了instance对象占用的内存空间、类名以及成员变量列表，当然这些都是只读的。
 
-# 总结：
+**总结：**
 
 **一个NSObject对象占用多少内存？**
+
 答：系统会为一个NSObject对象分配最少16个字节的内存空间。一个指针变量所占用的大小（64bit占8个字节，32bit占4个字节）
+
 **对象的isa指针指向哪里？**
+
 答：instance对象的`isa`指针指向class对象，class对象的`isa`指针指向meta-class对象，meta-class对象的`isa`指针指向基类的meta-class对象，基类自己的`isa`指针指向自己。
+
+
 **OC的类信息存放在哪里？**
+
+
 答：成员变量的具体值存放在实例对象（instance对象）；对象方法，协议，属性，成员变量信息存放在类对象（class对象）；类方法信息存放在元类对象（meta-class对象）。
 
 
@@ -240,9 +263,12 @@ struct objc_class {
 
 
 <br/>
+
 ***
 <br/>
+
 **`参考资料：`**
+
 [OC对象本质](https://www.jianshu.com/p/ffd742041946)
 
 
