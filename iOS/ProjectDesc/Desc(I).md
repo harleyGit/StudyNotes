@@ -16,6 +16,14 @@
 
 ># SwiftHub
 
+<br/>
+
+> 项目解析
+
+- [**SwiftHub项目解析**](https://juejin.cn/post/6844904127307186189)
+
+<br/>
+
 > 类库使用
 
 - [**ObjectMapper**](https://www.jianshu.com/p/609fbdb62274)
