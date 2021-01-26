@@ -6,6 +6,7 @@
 - **[仿SDWebImage逻辑](https://gitee.com/harelyio/work/tree/master/Project/ImageLoadSDK)**
 - **[C++数据结构算法](https://gitee.com/harelyio/work/tree/master/Project/C2)**
 - **SwiftEOS**
+- [**开源库整理**](http://blogwenbo.com/2019/09/03/iOS优秀Swift开源库整理)
 
 
 
@@ -44,6 +45,8 @@
 	- ` pod 'CocoaLumberjack-RemoteAccess', '~> 0.1.0'`
 	- [**全量日志捕获CocoaLumberjack**](https://blog.csdn.net/shengpeng3344/article/details/105148752)
 	- [**源码浅析 - CocoaLumberjack 3.6 之 DDLog**](https://juejin.cn/post/6844904147511164942#heading-25)
+- **Toast-Swift**：提示框
+	- [自定义Toast提示框](https://www.jianshu.com/p/bdfb174ddcf9) 
 
 
 
