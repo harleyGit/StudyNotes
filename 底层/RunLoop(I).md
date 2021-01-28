@@ -348,7 +348,7 @@ typedef struct CF_BRIDGED_MUTABLE_TYPE(NSTimer) __CFRunLoopTimer * CFRunLoopTime
 ***
 <br/>
 
->#RunLoop Mode
+> **RunLoop Mode**
 
 ![RunLoop的内部结构图](https://upload-images.jianshu.io/upload_images/2959789-a2691bb0e7f205fd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -399,7 +399,7 @@ struct __CFRunLoopMode {
 
 - `NSRunLoopCommonModes` 实际上是一个 Mode 的集合，默认包括 `NSDefaultRunLoopMode` 和 `NSEventTrackingRunLoopMode`（注意：并不是说Runloop会运行在kCFRunLoopCommonModes这种模式下，而是相当于分别注册了 NSDefaultRunLoopMode和 UITrackingRunLoopMode。当然你也可以通过调用CFRunLoopAddCommonMode()方法将自定义Mode放到 kCFRunLoopCommonModes组合）
 
-- `NSDefaultRunLoopMode` 默认模式，一般处理timer\网络等事件；
+- `NSDefaultRunLoopMode` 默认模式，一般处理timer或者网络等事件；
 - `UITrackingRunLoopMode` UI模式，专门处理UI事件；
 
 ![5 种RunLoop Mode](https://upload-images.jianshu.io/upload_images/2959789-9624d88d118abea5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -414,6 +414,8 @@ struct __CFRunLoopMode {
 <br/>
 
 ># RunLoop Source
+
+
 `RunLoop Source `分为Source、Observer、Timer三种，他们统称为ModeItem。
 
 按照官方文档分类，Source 分类：
