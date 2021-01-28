@@ -1,6 +1,9 @@
 
 - [**优化项目方案**](https://philm.gitbook.io/philm-ios-wiki/)
 - [**SwiftHub**](https://gitee.com/harelyio/work/tree/master/Project/SwiftHub)
+	- 项目解析
+	- 类库使用
+	- 库方法使用
 - **[MVVM之从理论到实践](https://www.jianshu.com/p/1c1b6bc557ac)**
 	- [DemoCode](https://gitee.com/harelyio/work/tree/master/Project/MVVMReactive)
 - **[仿SDWebImage逻辑](https://gitee.com/harelyio/work/tree/master/Project/ImageLoadSDK)**
@@ -54,7 +57,39 @@
 <br/>
 <br/>
 
-> 库方法使用
+> **库方法使用**
+
+<br/>
+- ReplaySubject和skip
+
+
+```
+ let disposeBag = DisposeBag()
+    
+//创建一个bufferSize为2的ReplaySubject
+let subject = ReplaySubject<String>.create(bufferSize: 1)
+
+func replaySubjectTest() {
+    
+    //连续发送3个next事件
+    subject.onNext("111")
+
+    //skip: https://www.hangge.com/blog/cache/detail_1933.html
+    //skip: 忽略1个序列，但是若是缓存序列则是对它无用
+    subject.skip(1).subscribe(onNext: { (connected) in
+        print("连接状态： \(connected)")
+        
+    }).disposed(by: disposeBag)
+}
+```
+
+打印：
+
+`连接状态： 111`
+
+<br/>
+
+
 
 ```
 
