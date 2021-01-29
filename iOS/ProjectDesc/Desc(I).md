@@ -62,7 +62,6 @@
 <br/>
 - ReplaySubject和skip
 
-
 ```
  let disposeBag = DisposeBag()
     
@@ -86,6 +85,110 @@ func replaySubjectTest() {
 打印：
 
 `连接状态： 111`
+
+<br/>
+
+
+- RxController类库
+
+BaseViewModel.swift
+
+```
+import Foundation
+import RxSwift
+import RxCocoa
+
+class BaseViewModel: NSObject {
+    
+    struct Input {
+        let modules: Observable<Void>
+    }
+    
+    struct Output {
+        //Driver：https://www.hangge.com/blog/cache/detail_1942.html
+        let titles: Driver<[String]>
+        let values: Driver<[String]>
+    }
+
+    func transform(input: Input) -> Output {
+        
+        let titles = Observable.just(true).map { (status) -> [String] in
+            if status {
+                return ["首页", "新闻", "资产", "设置"]
+            }else {
+                return ["1", "2", "3"]
+            }
+        }.asDriver(onErrorJustReturn: [])
+        
+        
+        
+        let values = input.modules.take(1).map{ _ -> [String] in
+            
+            return ["one", "two","there","four"]
+            
+        }.asDriver(onErrorJustReturn: [])
+        
+        return Output(titles: titles, values: values)
+    }
+    
+    
+}
+
+
+
+//RxSwfit Extensions
+extension ObservableType {
+    
+    func mapToVoid() -> Observable<Void> {
+        return map { _ in }
+    }
+}
+
+
+```
+
+ViewController.swift
+
+```
+
+override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    
+    
+    rxTest1()
+}
+
+//rxTest1 方法必须放在viewDidLoad方法中，否则rx.viewWillAppear.mapToVoid()无法其作用
+func rxTest1() {
+    let baseVM = BaseViewModel()
+
+    //rx: 进入RxSwift世界入口，https://iweiyun.github.io/2018/11/01/rxcocoa-code/
+    let input = BaseViewModel.Input(modules: rx.viewWillAppear.mapToVoid())
+    let output = baseVM.transform(input: input)
+    
+    output.titles.delay(.milliseconds(50)).drive(onNext: {[weak self] (titles) in
+        if let strongSelf = self {
+            print(">>>>>>>> titles: \(titles), strongSelf: \(strongSelf)")
+        }
+    }).disposed(by: disposeBag)
+    
+    
+    output.values.drive(onNext: {(values) in
+        print("========== values: \(values)")
+    }).disposed(by: disposeBag)
+    
+    
+}
+```
+
+打印：
+
+```
+========== values: ["one", "two", "there", "four"]
+>>>>>>>> titles: ["首页", "新闻", "资产", "设置"], strongSelf: <SwiftTest.ViewController: 0x7f806be09230>
+
+```
 
 <br/>
 

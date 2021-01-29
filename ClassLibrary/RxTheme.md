@@ -256,8 +256,8 @@ class ViewController: UIViewController {
 
 效果：
 
-![png](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z44.png)
+![z44](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z44.png)
 
 点击后效果
 
-![45](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z45.png)
+![z45](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z45.png)
