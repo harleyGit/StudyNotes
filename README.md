@@ -89,6 +89,7 @@
 
 >## Objective-C
 *	[iOS类继承](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
+*	[App发布](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [常用类库](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/常用类库.md)
@@ -530,6 +531,7 @@
 
 ># 工具
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
+* [Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
 * [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Unix命令.md)
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令.md)
 * [codemagic](https://codemagic.io/apps)
@@ -544,18 +546,11 @@
 * [Git 问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git--问题(I).md)
 * [Git 提交记录查看、提交、变基(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git-%5B提交记录查看、提交、变基%5D(I).md)
 * [GitBook-配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/GitBook-配置.md)
-* [Xcode 完全卸载](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode-完全卸载.md)
 * [JAVA 和 Android 配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/JAVA-和-Android-配置.md)
-* [Mac 电脑配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac-电脑配置.md)
+* [Mac配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac配置.md)
 * [Podfile书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)
 * [工具集](https://github.com/harleyGit/StudyNotes/blob/master/Tools/工具集.md)
 *	[代码管理](https://github.com/harleyGit/StudyNotes/blob/master/Tools/代码管理.md)
-*	[iOS--App开发前的配置(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS--App开发前的配置(I).md)
-*	[iOS-发布资料(II)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS-发布资料(II).md)
-*	[iOS-配置多个环境变量(待学习)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS-配置多个环境变量(待学习).md)
-*	[iOS-App发布资料(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/iOS-App发布资料(I).md)
-*	[Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
-*	[Xcode10新导出包方法](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode10新导出包方法.md)
 
 
 <br/>
