@@ -23,8 +23,8 @@
 
 ># RxSwift角色定位
 
--  观察者（Observer）
--  被观察者(可观察的)（Observable）
+-  观察者（Observer）：执行要做的事
+-  被观察者(可观察的)（Observable）：产生的事件，也就是序列
 -  订阅者（Subscriber） 事件的最终处理者
 -  管道（Sink） Observer 和 Observable 沟通的桥梁
 
