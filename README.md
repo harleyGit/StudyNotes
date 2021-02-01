@@ -427,8 +427,6 @@
 	*	[RxSwift(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(I).md)
 	*	[RxSwift(II)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(II).md)
 	*	[RxSwift(III)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(III).md)
-	*	[RxSwift(IV)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(IV).md)
-	*	[RxSwift(V)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(V).md)
 	*	[ReactiveNative(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/ReactiveNative(I).md)
 	*	[ReactiveNative(II)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/ReactiveNative(II).md)
 	*	[ReactiveObjc(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/ReactiveObjc(I).md)

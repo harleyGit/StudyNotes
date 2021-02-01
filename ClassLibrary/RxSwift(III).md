@@ -1,8 +1,66 @@
-># RxSwift 之 UITableView
+- **网络请求**
+- **UITableView**
+
+<br/>
+
+***
+<br/>
+
+># 网络请求
+
+[RxSwift 网络请求封装](http://www.manongjc.com/article/3755.html)
+
+网络安全请求合并：
+
+```
+ public func testRxZip() {
+        
+        let oneOb = Observable<Int>.create { observer -> Disposable in
+            observer.on(.next(20))
+            observer.on(.completed)
+            return Disposables.create()
+        }
+        let twoOb = Observable<Int>.create { observer -> Disposable in
+            observer.on(.next(80))
+            observer.on(.completed)
+            return Disposables.create()
+        }
+        
+        Observable.zip(oneOb, twoOb).subscribe(onNext: {(one, two) in
+            print("获取信息成功: \(one)")
+            print("获取订单成功: \(two) 条")
+
+            }).disposed(by: DisposeBag())
+    }
+
+///调用
+self.testRxZip()
+```
+打印：
+
+```
+获取信息成功: 20
+获取订单成功: 80 条
+```
+
+
+[**观察序列创建**](https://www.jianshu.com/p/2a45b502279a)
+
+
+
+<br/>
+
+***
+<br/>
+
+># UITableView
+
 &emsp; 将 data 属性变成一个可观察序列对象（Observable Squence）;
+
 &emsp; `可观察序列对象`，简单点来说就是“序列”，我们可以对这些数值进行“订阅（Subscribe）”，有点类似于“通知（NotificationCenter）”
 
-**`Model`**
+- **`Model`**
+
 ```
 //歌曲结构体
 struct Music {
@@ -24,7 +82,9 @@ extension Music: CustomStringConvertible {
 ```
 
 <br/>
-**`ShowCell`**
+
+- **`ShowCell`**
+
 ```
 class ShowCell: UITableViewCell {
     lazy var mainTitle: UILabel = {
@@ -86,7 +146,9 @@ class ShowCell: UITableViewCell {
 ```
 
 <br/>
-**`ViewModel`**
+
+- **`ViewModel`**
+
 ```
 //歌曲列表数据源
 struct MusicListViewModel {
@@ -100,7 +162,9 @@ struct MusicListViewModel {
 ```
 
 <br/>
+
 `ViewController` 中写一下响应式代码
+
 ```
 
 private lazy var contentView: UITableView = {
@@ -161,6 +225,7 @@ extension HGRegisterController: UITableViewDelegate {
 
 ```
 **`rx.items(cellIdentifier:）`**这是 Rx 基于 `cellForRowAt` 数据源方法的一个封装。传统方式中我们还要有个` numberOfRowsInSection` 方法，使用 Rx 后就不再需要了（Rx 已经帮我们完成了相关工作）。
+
 **`rx.modelSelected：`**这是 Rx 基于` UITableView `委托回调方法 `didSelectRowAt` 的一个封装
 
 效果图：

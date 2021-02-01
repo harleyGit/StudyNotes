@@ -1,10 +1,132 @@
-- Observable：可观察的
-- 
+- **RxSwift角色定位**
+	- Observable(被观察者)继承链
+	- 	Observable的核心函数
+	- 	` ObservableType` 协议扩展
+	- 	Observer继承体系
+	- 	订阅、序列流程
+- **Observable：可观察的**
+- **基本属性**
+- **操作符**
+	- **share(replay:)**
+	- **empty**
+	- **just**	
+	- **of**
+	- **from**
+	- **create**
+- **Scheduler 调度器**
+- **参考资料**
 
 <br/>
 
 ***
 <br/>
+
+># RxSwift角色定位
+
+-  观察者（Observer）
+-  被观察者(可观察的)（Observable）
+-  订阅者（Subscriber） 事件的最终处理者
+-  管道（Sink） Observer 和 Observable 沟通的桥梁
+
+```
+Observable<String>.create { observer -> Disposable in
+  observer.onNext("hello")//发送序列
+  return Disposables.create()
+}.subscribe { event in //订阅序列
+  print(event.element)
+}
+
+```
+
+
+<br/>
+<br/>
+
+- **Observable(被观察者)继承链**
+
+`Observable 继承关系图`
+
+![观察类继承链](https://upload-images.jianshu.io/upload_images/2959789-7ee3a253aeebe79a.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+<br/>
+![Observable 继承体系](https://upload-images.jianshu.io/upload_images/2959789-5dbda26f28ecbd32.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+<br/>
+<br/>
+
+- **`Observable的核心函数`**
+
+
+a. `subscribe` 订阅操作, `Observable `和 `Observer` 通过订阅建立联系,
+`Observable` 好比水源， `Observer` 好比水龙头(永远开着的水龙头)， 订阅的过程就是在`Observable` 和 `Observer` 之间建立管道， 一旦建立管道即是永久性的，只要水源有谁， 水龙头就会有水;
+
+b.  `run` 对用户不可见，隐藏了大量的实现细节， 这个函数就是建立水管的过程;
+
+c.  `asObservable`： 这个协议的存在使得`Observable` 的定义变得更加广泛，`asObservable `的函数实现：
+
+```
+public func asObservable() -> Observable<Element> {
+    return source
+}
+
+```
+
+
+<br/>
+<br/>
+
+- **` ObservableType` 协议扩展**
+
+```
+extension ObservableType {
+	public func subscribe(_ on: @escaping (Event<E>) -> Void)
+	    -> Disposable {
+	        let observer = AnonymousObserver { e in
+	            on(e)
+	        }
+	        return self.asObservable().subscribe(observer)
+	}
+}
+
+```
+&emsp;  `ObservableType: `扩展 `subscribe `方法， 确保所有的`Observable`行为一致， 都是经由`self.asObservable() `获取`Observable`;
+
+
+
+
+<br/>
+<br/>
+
+
+
+- **Observer继承体系**
+
+![Observer 继承体系](https://upload-images.jianshu.io/upload_images/2959789-71e7d22bb60e4220.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+<br/>
+
+![Observer 继承体系](https://upload-images.jianshu.io/upload_images/2959789-eefe7cebfe7b556b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+<br/>
+<br/>
+
+
+- **订阅、序列流程**
+![订阅调用方法流程图](https://upload-images.jianshu.io/upload_images/2959789-5479356a6f4e3b8c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
 
 ># Observable：可观察的
 
@@ -177,6 +299,7 @@ public func subscribe(onNext: ((Element) -> Void)? = nil, onError: ((Swift.Error
 
 一旦进行这句`self.asObservable().subscribe(observer),
                 disposable`的调用,就会来到
+                
 ```
 let observer = Observable<Any>.create { (observer) -> Disposable in
 
@@ -200,10 +323,14 @@ let observer = Observable<Any>.create { (observer) -> Disposable in
 
 
 <br/>
+
 ***
 <br/>
+
 ># 基本属性
-#`rx、orEmpty`
+
+**`rx、orEmpty`**
+
 ```
 let usernameOutlet = UITextField()
 
@@ -217,7 +344,9 @@ let usernameValid = usernameOutlet.rx.text.orEmpty
 ```
 
 <br/>
+
 **`Demo`**
+
 ```
 let disposeBag = DisposeBag()
     
@@ -289,16 +418,20 @@ func inputManager() {
 
 
 <br/>
+
 ***
 <br/>
 
 
 >#  操作符
+
 &emsp;  `Observable` 创建后，可能为了满足某些需求需要修改它，这时就需要用到操作符。RxSwift 提供了非常多的操作符，不必要一一掌握这些操作符，使用的时候查一下即可，当然常见的操作符必须要掌握，比如 map、flatMap 、create 、filter 等。
 
-#`share(replay:)`
-- 该操作符将使得观察者共享源 Observable，并且缓存最新的 n 个元素，将这些元素直接发送给新的观察者。
-- 简单来说 shareReplay 就是 replay 和 refCount 的组合。
+- **`share(replay:)`**
+	- 该操作符将使得观察者共享源 Observable，并且缓存最新的 n 个元素，将这些元素直接发送给新的观察者。
+	- 简单来说 shareReplay 就是 replay 和 refCount 的组合。
+
+
 ```
       let seq = PublishSubject<Int>()
         let a = seq.map { (i) -> Int in
@@ -328,94 +461,145 @@ func inputManager() {
         seq.onCompleted()
         
 ```
+
 不加 `.share(replay: 1, scope: .forever)`
+
 `MAP---1`
+
 `--1--2`
+
 `MAP---2`
+
 `--1--4`
+
 `MAP---3`
+
 `--1--6`
+
 `MAP---3`
+
 `--2--6`
+
 `MAP---4`
+
 `--1--8`
+
 `MAP---4`
+
 `--2--8`
 
+
+<br/>
+
+
 加了`.share(replay: 1, scope: .forever)`
+
 `MAP---1`
+
 `--1--2`
+
 `MAP---2`
+
 `--1--4`
+
 `--2--4`
+
 `MAP---3`
+
 `--1--6`
+
 `--2--6`
+
 `MAP---4`
+
 `--1--8`
+
 `--2--8`
+
 `--3--8`
 
 
 
 <br/>
 
-#`empty`
+- **`empty`**
+
 `empty`就是创建一个空的sequence,只能发出一个completed事件
+
 ```
-        let disposeBag = DisposeBag()
-        Observable<Int>.empty().subscribe { event in
-            print("--->>\(event)")
-            }.disposed(by: disposeBag)
+let disposeBag = DisposeBag()
+Observable<Int>.empty().subscribe { event in
+    print("--->>\(event)")
+}.disposed(by: disposeBag)
 ```
 打印：
-`--->>completed
+
+`--->>completed`
 `
 
 <br/>
-#`just`
+
+- **`just`**
+
 `just` 是创建一个sequence只能发出一种特定的事件，能正常结束
+
 ```
-         let disposeBag = DisposeBag()
-        Observable.just("🎈").subscribe { event in
-            print("--->>\(event)")
-            }.disposed(by: disposeBag)
+let disposeBag = DisposeBag()
+	Observable.just("🎈").subscribe { event in
+	print("--->>\(event)")
+}.disposed(by: disposeBag)
 ```
 打印：
+
 `--->>next(🎈)`
+
 `--->>completed`
 
 
 <br/>
-#`of`
+
+- **`of`**
 `of`是创建一个sequence能发出很多种事件信号
+
 ```
-        let disposeBag = DisposeBag()
-        Observable.of("🎈", "🐈", "🐩", "🐔", "🐭").subscribe { event in
-            print("--->>\(event)")
-            }.disposed(by: disposeBag)
+let disposeBag = DisposeBag()
+Observable.of("🎈", "🐈", "🐩", "🐔", "🐭").subscribe { event in
+    print("--->>\(event)")
+}.disposed(by: disposeBag)
 ```
 打印：
+
 `--->>next(🎈)`
+
 `--->>next(🐈)`
+
 `--->>next(🐩)`
+
 `--->>next(🐔)`
+
 `--->>next(🐭)`
+
 `--->>completed`
 
 改进加入`onNext`，如下：
-```
-        let disposeBag = DisposeBag()
-        Observable.of("🎈", "🐈", "🐩", "🐔", "🐭").subscribe(onNext: { (element) in
-            print("--->>: \(element)")
 
-        }).disposed(by: disposeBag)
+```
+let disposeBag = DisposeBag()
+Observable.of("🎈", "🐈", "🐩", "🐔", "🐭").subscribe(onNext: { (element) in
+    print("--->>: \(element)")
+
+}).disposed(by: disposeBag)
 ```
 打印：
+
 `--->>: 🎈`
+
 `--->>: 🐈`
+
 `--->>: 🐩`
+
 `--->>: 🐔`
+
 `--->>: 🐭`
 
 正好对应了我们subscribe中，subscribe只监听事件。
@@ -425,73 +609,91 @@ func inputManager() {
 
 <br/>
 
-#`from`
+- **`from`**
 
 `from`就是从集合中创建sequence，例如数组，字典或者Set
+
 ```
-        //`from`就是从集合中创建sequence，例如数组，字典或者Set
-        let disposeBag = DisposeBag()
-        Observable.from(["🐶", "🐱", "🐭", "🐹"]).subscribe(onNext:{
-            print("~~~~>: \($0)")
-        }).disposed(by: disposeBag)
-        
-        
+//`from`就是从集合中创建sequence，例如数组，字典或者Set
+let disposeBag = DisposeBag()
+Observable.from(["🐶", "🐱", "🐭", "🐹"]).subscribe(onNext:{
+    print("~~~~>: \($0)")
+}).disposed(by: disposeBag)
+              
 ```
+
 打印：
+
 `~~~~>: 🐶`
+
 `~~~~>: 🐱`
+
 `~~~~>: 🐭`
+
 `~~~~>: 🐹`
 
 
 
 <br/>
-#`create`
+
+- **`create`**
 
 可以自定义可观察的`sequence`，那就是使用create
 
 ```
 
-        let createO = { (element: String) -> Observable<String> in
-            return Observable.create({ (observer) -> Disposable in
-                observer.on(.next(element))
-                observer.on(.completed)
-                return Disposables.create()
-            })
-        }
-        createO("🔴").subscribe{
-            print("---->> \($0)")
-            }.disposed(by: disposeBag)
+let createO = { (element: String) -> Observable<String> in
+    return Observable.create({ (observer) -> Disposable in
+        observer.on(.next(element))
+        observer.on(.completed)
+        return Disposables.create()
+    })
+}
+createO("🔴").subscribe{
+    print("---->> \($0)")
+}.disposed(by: disposeBag)
 
 
 ```
 打印：
+
 `---->> next(🔴)`
+
 `---->> completed`
 
 
 
 
 <br/>
+
 ***
 <br/>
+
 ># Scheduler 调度器
+
 &emsp; 若你想给 Observable 操作符链添加多线程功能，你可以指定操作符（或者特定的Observable）在特定的调度器(Scheduler)上执行。对于 ReactiveX 中可观察对象操作符来说，它有时会携带一个调度器作为参数，这样可以指定可观察对象在哪一个线程中执行。而默认的情况下，某些可观察对象是在订阅者订阅时的那个线程中执行。SubscribeOn 可以改变可观察对象该在那个调度器中执行。ObserveOn 用来改变给订阅者发送通知时所在的调度器。这样就可以使可观察对象想在那个调度器中执行就在那个调度器中执行，不受约束，而这些细节是不被调用者所关心的。犹如 GCD 一样，你只管使用，底层线程是咋么创建的，你不必关心。
 
 
 
 
-
-
-
 <br/>
+
 ***
 <br/>
 
+
+># **参考资料：**
+
 [Cocoi老师 RxSwift源码](https://www.jianshu.com/u/5981a4f71db5)
+
 [RxSwift 应用](https://www.jianshu.com/p/f61a5a988590)
+
 [RxSwift  中文文档](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/)
+
 [RxSwift特征序列](http://www.cocoachina.com/articles/29100)
+
 [RxSwift--销毁者Dispose源码分析](https://blog.csdn.net/JeffersonZHabc/article/details/98962237)
+
 [RxSwift 使用详解系列](https://www.jianshu.com/p/f61a5a988590)
+
 [RxSwift 使用](https://www.hangge.com/blog/cache/detail_1917.html)
