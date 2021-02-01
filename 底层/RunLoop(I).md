@@ -590,7 +590,7 @@ struct __CFRunLoopTimer {
 RunLoop内部函数作用：
 
 - `Souces0`:  处理一些触摸事件和 perform Selectors方法等;
-- `Sources1`:  基于Port的线程间的通信;
+- `Sources1`:  基于[**Port的线程间的通信**](https://www.jianshu.com/p/284b1777586c);
 - `timer`:  处理定时器任务;
 - `observers`:   监听器，监听RunLoop的一些状态的。
 
@@ -601,7 +601,8 @@ RunLoop内部函数作用：
 
 
 &emsp;  先判断`source0`是否为空,若为空退出,然后判断`source1`是否为空,若为空退出,然后判断是否`有timer`,所以`runloop`如果要跑起来,必须有`source`或者`timer`的其中一个。Source共在2种类型：`Source0和Source1`，`Source0只包含了一个回调（函数指针）`，它并不能主动触发事件。使用时，你需要先调用 `CFRunLoopSourceSignal(rlms)`方法将这个Source标记为待处理，然后手动调用`CFRunLoopWakeUp(rl)`方法来唤醒RunLoop，让其处理这个事件。
-&emsp; `Source1`包含了一个`mach_port`和一个回调（函数指针），被用于通过内核和其他线程相互发送消息。这种类型的Source能主动唤醒RunLoop的线程。
+
+&emsp; `Source1`包含了一个[**`mach_port`**](https://www.jianshu.com/p/284b1777586c)和一个回调（函数指针），被用于通过内核和其他线程相互发送消息。这种类型的Source能主动唤醒RunLoop的线程。
 
 
 <br/>
@@ -609,12 +610,14 @@ RunLoop内部函数作用：
 ![RunLoop 工作流程](https://upload-images.jianshu.io/upload_images/2959789-68332ffa5a1717b0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 `上图显示了线程的输入源`
+
 	A：基于端口的输入源（Port Sources）
 	B：自定义输入源（Custom Sources）
 	C：Cocoa执行Selector的源（"performSelector...方法" Sources）
 	D：定时源（Timer Sources ）
 
 `线程针对上面不同的输入源，有不同的处理机制`
+
 	A：handlePort－－－处理基于端口的输入源
 	B：customSrc－－－处理用户自定义输入源
 	C：mySelector－－－处理Selector的源
@@ -624,6 +627,7 @@ RunLoop内部函数作用：
 
 
 <br/>
+
 **`CFRunLoop 监控卡顿流程`**
 
 ```

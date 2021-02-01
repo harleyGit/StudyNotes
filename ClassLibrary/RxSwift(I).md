@@ -1,12 +1,22 @@
-># Observable 
+- Observable：可观察的
+- 
+
+<br/>
+
+***
+<br/>
+
+># Observable：可观察的
 
 **`函数式`**
+
 &emsp;  `函数式编程`是种编程范式，它需要我们将函数作为参数传递，或者作为返回值返还。通过组合不同的函数来得到想要的结果。
+
 特点：**`允许把函数本身作为参数传入另一个函数，同时还允许返回一个函数！`**
 
 函数表达式如：`y = f(x) ---> x = f(x) ---> y = f(f(x))`
 
-#`优点：`
+**`优点：`**
 - 灵活
 - 高复用
 - 简洁
@@ -15,11 +25,15 @@
 
 
 <br/>
+
  **`响应式`**
+ 
 概念：**`对象对某一数据流变化做出响应的这种编码方式称为响应式。`**
 
 <br/>
-**`Observable 概念`**
+
+> **`Observable 概念`**
+
 &emsp; ` Observable` 直译为可观察的，它在 RxSwift 起到了举足轻重的作用，在整个 RxSwift 的使用过程中你会经常使用它。如果你使用过 RAC ，它如同 Signal 一样。RxSwift 中关键点就是在于如何把普通的数据或者事件变成可观察的，这样当某些数据或事件有变化的时候就会通知它的订阅者。
 
 
@@ -33,6 +47,7 @@
 <br/>
 **②. Event**
 源码
+
 ```
 public enum Event<Element> {
     /// Next element is produced.
@@ -75,26 +90,38 @@ func createObserver() {
             print("---> \(text)")
         }, onError: nil, onCompleted: {
             print("Completed 完成！！")
-            }, onDisposed: nil).disposed(by: disposeBag)
+        }, onDisposed: nil).disposed(by: disposeBag)
     }
 ```
 打印：
+
 `---> Hello! 我来了！！！`
+
 `Completed 完成！！`
 
 <br/>
+
 **方法解析**
+
 点击上述代码中的 `Observable<Any>.create {`中的`create`方法，如下图：
+
 ![源码 create 方法](https://upload-images.jianshu.io/upload_images/2959789-0405021f247539be.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+<br/>
+
 点击上图中的`create`发现无法点击，找到`create`方法的实现
 ![create 方法](https://upload-images.jianshu.io/upload_images/2959789-5e5dc47ade117583.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+<br/>
+
 点击上图中的`AnonymousObservable`跳到如下图：
+
 ![AnonymousObservable 类的初始化](https://upload-images.jianshu.io/upload_images/2959789-582fa564f7e3dd9d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
 点击`②`中的`subscribe`方法，来到其源码：
+
 ```
 public func subscribe(onNext: ((Element) -> Void)? = nil, onError: ((Swift.Error) -> Void)? = nil, onCompleted: (() -> Void)? = nil, onDisposed: (() -> Void)? = nil)
         -> Disposable {
