@@ -161,6 +161,7 @@
 
 	       
 >## Swift
+* [资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/资料集.md)
 * [Swif包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift包管理.md)
 * [SwiftUI(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/SwiftUI(I).md)
 * [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
@@ -182,7 +183,6 @@
 * [UIViewController](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/UIViewController.md)
 * [UICollectionView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/UICollectionView(I).md)
 * [Swift-服务端](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift-服务端.md)
-* [Swift-官方资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/SwiftSwift-官方资料集.md)
 * [String(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/String(I).md)
 * [OC和Swift混编](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/OC和Swift混编.md)
 * [Swift 原理底层探索](https://blog.csdn.net/u013480070/article/details/103702845)
@@ -220,6 +220,7 @@
 
 
 ># Flutter 开发
+*	[资料集](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资料集.md)
 *	[类[I]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[I].md)
 *	[类[II]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[II].md)
 *	[组件(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/组件(I).md)
@@ -230,7 +231,6 @@
 	*	[BRPlay配置说明](https://github.com/harleyGit/StudyNotes/blob/master/Others/BRPlay/BRPlay配置说明.md)
 *	[生命周期(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/生命周期(I).md)
 *	[常用命令](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/常用命令.md)
-*	[资源](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资源.md)
 *	[性能优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/性能优化(I).md)
 *	[多线程和异步任务(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/多线程和异步任务(I).md)
 *	[多线程和异步任务(II)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/多线程和异步任务(II).md)
@@ -580,8 +580,26 @@
 <br/>
 
 ># 优秀资料
--	[矢量图 ICONS](https://icons8.cn/icons)
+- **资源**
+	- [**脚本之家电子书PDF下载**](https://www.jb51.net/books/)
+	- [**Jiumo文档搜索引擎**](https://www.jiumodiary.com)
+	- [**矢量图Flaticon**](https://www.flaticon.com)
+	- [**矢量图iconfont**](https://www.iconfont.cn)
+	-	[**矢量图 ICONS**](https://icons8.cn/icons)
+	-	[**图标icons8**](https://icons8.cn/icon/set/foodstuff/ios)
+	-	[**UI设计教程**](https://www.xueui.cn/tutorials/app-tutorials/how-to-design-app-icon.html)
+	-	[**图库piabay**](https://pixabay.com)
 -	**[Go 语言圣经](https://docs.hacknode.org/gopl-zh/ch0/ch0-01.html)**
+-	[**极客学院[iOS高级开发]**](https://wiki.jikexueyuan.com/list/ios/)
+-	[**Git教程**](https://bingohuang.gitbooks.io/progit2/content/01-introduction/sections/about-version-control.html)
+-	[**极客方舟**](https://zhuanlan.zhihu.com/p/82986496)
+-	[**算法网**](http://ddrv.cn)
+-	[**看云[iBook]**](https://www.kancloud.cn/explore)
+-	[**计算机语言教程**](http://codingdict.com/tutorials)
+-	[**易百教程**](https://www.yiibai.com)
+-	[**OC代码转Swift代码**](https://swiftify.com/home)
+-	[**玩Android**](https://wanandroid.com)
+-	[**Fuchsia中文社区**](https://fuchsia-china.com)
 
 
 
