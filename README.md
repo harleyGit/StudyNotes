@@ -357,7 +357,7 @@
 
 ># 加密
 *	[加密(I)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密(I).md)
-*	[加密种类(RSA)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密种类[RSA]).md)
+*	[加密(II)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密(II).md)
 *	[Https[证书生成]](https://github.com/harleyGit/StudyNotes/blob/master/加密/Https[证书生成].md)
 *	[SwiftEOS](https://github.com/harleyGit/StudyNotes/blob/master/加密/SwiftEOS.md)
 
@@ -460,12 +460,10 @@
 ***
 <br/>
 
-># 多线程
-*	[GCD(II)- 时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)%20-%20时间延迟.md)    
+># 多线程 
 *	[GCD(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(I).md)    
-*	[GCD(II)---时间延迟](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II)---时间延迟.md)    
-*	[NSOperation(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(I).md)    
-*	[NSOperation(II)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(II).md)    
+* [NSOperation(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(I).md)    
+* [NSOperation(II)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(II).md)    
 
 
 

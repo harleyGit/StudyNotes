@@ -1,7 +1,9 @@
 
 - **操作和操作队列**
-- **NSOperation、NSOperationQueue 使用方法**
-- **NSInvocationOperation 的使用**
+- **NSOperation、NSOperationQueue使用方法**
+- **NSInvocationOperation的使用**
+	- 在主线程使用 NSInvocationOperation
+	- 在子程使用 NSInvocationOperation
 - **NSBlockOperation**
 
 
@@ -16,6 +18,7 @@
 **`操作(Operation):`**
 
 &emsp;  执行操作,换句话说就是你在线程中执行的那段代码。
+
 &emsp;  在 GCD 中是放在 block 中的。在 NSOperation 中，我们使用 NSOperation 子类 NSInvocationOperation、NSBlockOperation，或者自定义子类来封装操作。
 
 
@@ -34,11 +37,11 @@
 ***
 <br/>
 
-># NSOperation、NSOperationQueue  使用方法
+># NSOperation、NSOperationQueue使用方法
 
 &emsp;  `NSOperation` 需要配合 `NSOperationQueue` 来实现多线程。因为默认情况下，`NSOperation` 单独使用时是系统的同步执行操作，配合 NSOperationQueue 可以实现异步执行。
 
-`NSOperation 实现多线程的步骤为：`
+`NSOperation实现多线程的步骤为：`
 
 &emsp;  创建操作：先将需要执行的操作封装到一个 NSOperation 对象中。
 
@@ -70,7 +73,9 @@
 
 >#  NSInvocationOperation 的使用
 
-`在主线程使用 NSInvocationOperation `
+<br/>
+
+> `在主线程使用 NSInvocationOperation `
 
 ```
 
@@ -100,9 +105,11 @@
 
 输出：
 
-`2019-05-20 14:22:37.467721+0800 YSC-NSOperation-demo[3051:82251] 1---<NSThread: 0x600001d62680>{number = 1, name = main}`
+```
+2019-05-20 14:22:37.467721+0800 YSC-NSOperation-demo[3051:82251] 1---<NSThread: 0x600001d62680>{number = 1, name = main}
 
-`2019-05-20 14:22:39.469215+0800 YSC-NSOperation-demo[3051:82251] 1---<NSThread: 0x600001d62680>{number = 1, name = main}`
+2019-05-20 14:22:39.469215+0800 YSC-NSOperation-demo[3051:82251] 1---<NSThread: 0x600001d62680>{number = 1, name = main}
+```
 
 
 &emsp;  在没有使用 NSOperationQueue、在主线程中单独使用使用子类 NSInvocationOperation 执行一个操作的情况下，操作是在当前线程执行的，并没有开启新线程。
@@ -114,7 +121,7 @@
 
 ```
 //    在其他线程使用子类 NSInvocationOperation
-    [NSThread detachNewThreadSelector:@selector(useInvocationOperation) toTarget:self withObject:nil];
+[NSThread detachNewThreadSelector:@selector(useInvocationOperation) toTarget:self withObject:nil];
 
 
 /**
@@ -142,11 +149,13 @@
 
 输出：
 
- `019-05-20 14:34:38.696854+0800 YSC-NSOperation-demo[3197:87716] 1---<NSThread: 0x600001980600>{number = 3, name = (null)}`
+ ```
+019-05-20 14:34:38.696854+0800 YSC-NSOperation-demo[3197:87716] 1---<NSThread: 0x600001980600>{number = 3, name = (null)}
  
-`2019-05-20 14:34:40.701441+0800 YSC-NSOperation-demo[3197:87716] 1---<NSThread: 0x600001980600>{number = 3, name = (null)}`
+2019-05-20 14:34:40.701441+0800 YSC-NSOperation-demo[3197:87716] 1---<NSThread: 0x600001980600>{number = 3, name = (null)}
+```
 
-&emsp；在其他线程中单独使用子类 NSInvocationOperation，操作是在当前调用的其他线程执行的，并没有开启新线程。
+&emsp; 在其他线程中单独使用子类 NSInvocationOperation，操作是在当前调用的其他线程执行的，并没有开启新线程。
 
 <br/>
 
@@ -157,7 +166,7 @@
 
 ```
 //    在当前线程使用 NSBlockOperation
-    [self useBlockOperation];
+[self useBlockOperation];
 
 
 /**
@@ -180,9 +189,11 @@
 
 输出：
 
-`2019-05-20 17:02:04.186312+0800 YSC-NSOperation-demo[21633:174028] 1---<NSThread: 0x600001554140>{number = 1, name = main}`
+```
+2019-05-20 17:02:04.186312+0800 YSC-NSOperation-demo[21633:174028] 1---<NSThread: 0x600001554140>{number = 1, name = main}
 
-`2019-05-20 17:02:06.187878+0800 YSC-NSOperation-demo[21633:174028] 1---<NSThread: 0x600001554140>{number = 1, name = main}`
+2019-05-20 17:02:06.187878+0800 YSC-NSOperation-demo[21633:174028] 1---<NSThread: 0x600001554140>{number = 1, name = main}
+```
 
 &emsp;  在没有使用 NSOperationQueue、在主线程中单独使用 NSBlockOperation 执行一个操作的情况下，操作是在当前线程执行的，并没有开启新线程。
 
@@ -193,8 +204,8 @@
 <br/>
 
 ```
-//    使用 NSBlockOperation 的 AddExecutionBlock: 方法
-    [self useBlockOperationAddExecutionBlock];
+//使用 NSBlockOperation 的 AddExecutionBlock: 方法
+[self useBlockOperationAddExecutionBlock];
 
 
 /**
@@ -287,4 +298,4 @@
 
 参考资料：
 
-**[iOS 多线程：『NSOperation、NSOperationQueue』详尽总结](https://www.jianshu.com/p/4b1d77054b35)**
+**[NSOperation、NSOperationQueue』详尽总结](https://www.jianshu.com/p/4b1d77054b35)**
