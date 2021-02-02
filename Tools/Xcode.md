@@ -1,10 +1,11 @@
 
 
-- 配置
+- **配置**
 	- 导航显示开发页面 
-- 清理缓存文件
-- Xcode完全卸载
-- 参考资料
+	- Command+点击 跳转到定义的方法
+- **清理缓存文件**
+- **Xcode完全卸载**
+- **参考资料**
 
 
 
@@ -16,15 +17,20 @@
 
 ># 配置
 
-- 导航显示开发页面
+<br/>
+
+> 导航显示开发页面
 
 打开`Xcode->Preferebces`,选择如下图：
 
 ![z46](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z46.png)
 
-	<br/>
-	<br/>
+<br/>
+<br/>
 
+> Command+点击 跳转到定义的方法
+
+![z47](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z47.png)
 
 
 <br/>
@@ -34,8 +40,9 @@
 
 ># 清理缓存文件
 
--	删除Xcode中多余的证书provisioning profile 
+<br/>
 
+-	删除Xcode中多余的证书provisioning profile 
 
 ```
 手动删除： 
@@ -43,8 +50,9 @@ Xcode6 provisioning profile path：
 ~/Library/MobileDevice/Provisioning Profiles
 ```
 
--	清理Xcode编译项目产生的缓存垃圾 
+<br/>
 
+-	清理Xcode编译项目产生的缓存垃圾 
 
 ```
 (Xcode永久了，会产生很多项目编译缓存，占用一大堆硬盘空间，此时需要对该目录进行清理） 
@@ -53,8 +61,10 @@ Xcode编译项目缓存垃圾的目录：
 ~/Library/Developer/Xcode/DerivedData
 ```
 
-- 真机/模拟器运行项目非常慢的解决方法
 
+<br/>
+
+- 真机/模拟器运行项目非常慢的解决方法
 
 ```
 
@@ -66,6 +76,18 @@ Xcode编译项目缓存垃圾的目录：
 然后重启Xcode、重新连接设备、重新运行应用程序
 
 ```
+
+
+<br/>
+
+- 清理运行时产生的文件
+
+Command+shift+G 在Finder中，删除项目运行时产生的文件
+
+```
+/Users/harleyhuang/Library/Developer/Xcode/DerivedData
+```
+亲测，删除了3个项目文件。清了3.3G的内存
 
 <br/>
 

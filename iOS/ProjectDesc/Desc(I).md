@@ -60,7 +60,9 @@
 > **库方法使用**
 
 <br/>
-- ReplaySubject和skip
+<br/>
+
+>ReplaySubject和skip
 
 ```
  let disposeBag = DisposeBag()
@@ -87,9 +89,9 @@ func replaySubjectTest() {
 `连接状态： 111`
 
 <br/>
+<br/>
 
-
-- RxController类库
+> RxController类库
 
 BaseViewModel.swift
 
@@ -190,6 +192,88 @@ func rxTest1() {
 
 ```
 
+
+<br/>
+<br/>
+
+> Drive
+
+
+```
+class ViewModel2 {
+    struct Input {
+        let whatsNewTrigger: Observable<Bool>
+    }
+    
+    struct Output {
+        let tabBarItems: Driver<[String]>
+        let openWhatsNews: Driver<String>
+    }
+    
+    func transform(input: Input) -> Output {
+        let tabBarItems = input.whatsNewTrigger.map { (authorized) -> [String] in
+            if authorized {
+                return ["首页", "新闻", "资产", "我的"]
+            }else {
+                return ["首页", "新闻", "我的"]
+            }
+        //1. 通过返回值生成一个数组的observable的序列
+        //2. .asDriver(onErrorJustReturn: []) 方法将任何 Observable 序列都转成 Driver
+        //3. 转化为Driver数组序列
+        }.asDriver(onErrorJustReturn: [])
+        
+        //take: https://www.hangge.com/blog/cache/detail_1933.html
+        let openWhatsNews = Observable.of("头条新闻📰", "GitHub").take(1).asDriver(onErrorJustReturn: "Error")
+        
+        return Output.init(tabBarItems: tabBarItems, openWhatsNews: openWhatsNews)
+    }
+}
+```
+
+Controller.swift
+
+```
+ //driver
+func driverTest() {
+    
+    let viewModel2 = ViewModel2()
+    
+    let input = ViewModel2.Input.init(whatsNewTrigger: Observable.just(true))
+    let output = viewModel2.transform(input: input)
+    
+    output.tabBarItems.delay(.milliseconds(50)).drive(onNext: {(tabBarItems) in
+        tabBarItems.map { (value) in
+            print("<<<<<< tabBarItem: \(value)")
+        }
+    }).disposed(by: disposeBag)
+    
+    output.openWhatsNews.drive(onNext: { value in
+        print("========= openWhatsNews: \(value)")
+    }).disposed(by: disposeBag)
+    
+    
+}
+
+@objc func clickAction() {
+    
+    driverTest()
+        
+}
+```
+
+打印：
+
+```
+========= openWhatsNews: 头条新闻📰
+<<<<<< tabBarItem: 首页
+<<<<<< tabBarItem: 新闻
+<<<<<< tabBarItem: 资产
+<<<<<< tabBarItem: 我的
+```
+
+
+
+<br/>
 <br/>
 
 
