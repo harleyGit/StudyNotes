@@ -1,9 +1,21 @@
 
+- [**Objective-C 项目**](https://hellogithub.com/periodical/category/Objective-C%20项目/?page=3)
 - [**优化项目方案**](https://philm.gitbook.io/philm-ios-wiki/)
 - [**SwiftHub**](https://gitee.com/harelyio/work/tree/master/Project/SwiftHub)
 	- 项目解析
 	- 类库使用
 	- 库方法使用
+		- ReplaySubject
+			- skip
+		- 操作符
+			- just和take
+			- share(relay:)和drive(to:)
+		- Drive
+		- BehaviorRelay
+			- 参数范型String
+			- 参数范型Void 
+		- PublishSubject
+			- 状态绑定 
 - **[MVVM之从理论到实践](https://www.jianshu.com/p/1c1b6bc557ac)**
 	- [DemoCode](https://gitee.com/harelyio/work/tree/master/Project/MVVMReactive)
 - **[仿SDWebImage逻辑](https://gitee.com/harelyio/work/tree/master/Project/ImageLoadSDK)**
@@ -50,6 +62,7 @@
 	- [**源码浅析 - CocoaLumberjack 3.6 之 DDLog**](https://juejin.cn/post/6844904147511164942#heading-25)
 - **Toast-Swift**：提示框
 	- [自定义Toast提示框](https://www.jianshu.com/p/bdfb174ddcf9) 
+- [**KafkaRefresh刷新**](https://github.com/HsiaohuiHsiang/KafkaRefresh/blob/master/CREADME.md)
 
 
 
@@ -62,7 +75,9 @@
 <br/>
 <br/>
 
->ReplaySubject和skip
+> ReplaySubject
+
+- skip
 
 ```
  let disposeBag = DisposeBag()
@@ -91,7 +106,9 @@ func replaySubjectTest() {
 <br/>
 <br/>
 
-> RxController类库
+> 操作符
+
+- just和take
 
 BaseViewModel.swift
 
@@ -192,6 +209,61 @@ func rxTest1() {
 
 ```
 
+<br/>
+
+
+- **share(relay:)和drive(to:)**
+
+```
+override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    //输入框
+    self.view.addSubview(inputText)
+    //按钮
+    self.view.addSubview(btn)
+    
+    
+    let textChange = inputText.rx.text.orEmpty.map { (text) -> String in
+        print("<<<<<<<<<< \(text)")
+        return "Good \(text)"
+    }.share(replay: 1)
+    
+    //绑定到UIButton的title
+    textChange.asDriver(onErrorJustReturn: "error").map { "\($0)" }.drive(btn.rx.title())// 这里改用 `drive` 而不是 `bindTo`，和bindTo作用是一样的
+        .disposed(by: disposeBag)
+    
+    delay(10, closure: {
+        textChange.subscribe(onNext: {(value) in
+            print("============ \(value)")
+        }).disposed(by: self.disposeBag)
+    })
+    
+}
+
+/// 延迟函数
+func delay(_ delay: Double, closure: @escaping () -> Void) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        closure()
+    }
+}
+```
+打印：
+
+```
+<<<<<<<<<< 
+<<<<<<<<<< 
+<<<<<<<<<< 1
+<<<<<<<<<< 11
+<<<<<<<<<< 111
+<<<<<<<<<< 1111 
+============ Good 1111    //10秒之后打印的
+<<<<<<<<<< 11112          //开始同步，共享
+============ Good 11112
+
+```
+
+![z48](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z48.png)
 
 <br/>
 <br/>
@@ -269,6 +341,88 @@ func driverTest() {
 <<<<<< tabBarItem: 新闻
 <<<<<< tabBarItem: 资产
 <<<<<< tabBarItem: 我的
+```
+
+
+
+<br/>
+<br/>
+
+> BehaviorRelay
+
+- 参数范型String
+
+```
+let subject = BehaviorRelay<String>(value: "1111")
+subject.accept("2222")
+
+subject.asObservable().subscribe({
+    print("值为： \($0)")
+}).disposed(by: disposeBag)
+
+subject.accept("3333")
+//获取最近的属性值
+print("\(subject.value)")
+
+```
+
+打印：
+
+```
+值为： next(2222)
+值为： next(3333)
+3333
+```
+
+
+<br/>
+
+- 参数范型Void
+
+```
+let languageChanged = BehaviorRelay<Void>(value: ())
+languageChanged.subscribe(onNext: { () in
+    print("语言改变。。。。。。")
+}).disposed(by: disposeBag)
+
+languageChanged.accept(())
+
+```
+
+打印：
+
+```
+语言改变。。。。。。
+语言改变。。。。。。
+
+```
+
+
+<br/>
+<br/>
+
+> PublishSubject
+
+- 状态绑定
+
+```
+let error = PublishSubject<Bool>()
+let isLoading = BehaviorRelay(value: false)
+
+error.asObservable().bind(to: isLoading).disposed(by: disposeBag)
+
+isLoading.subscribe(onNext: { isLoading in
+    print("\(isLoading ? "加载中。。。。" : "停止加载")")
+}).disposed(by: disposeBag)
+
+error.onNext(true)
+
+```
+打印：
+
+```
+停止加载
+加载中。。。。
 ```
 
 
