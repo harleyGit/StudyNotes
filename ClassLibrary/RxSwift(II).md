@@ -8,8 +8,9 @@
 	- 	Variable
 - **Operator操作符**
 	- 	filter
-	- 	map - 转换	
-	- 	zip - 组合
+	- 	map转换	
+	- 	zip组合
+- 	**Driver**
 - **线程切换**
 	- 	切换线程
 	- 	MainScheduler
@@ -345,7 +346,7 @@ Observable.of(2, 32, 22, 5, 60, 1).filter { (number) -> Bool in
 
 <br/>
 
-- **`map - 转换`**
+- **`map转换`**
 
 &emsp;  可以用 [map](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/decision_tree/map.html) 创建一个新的序列。这个序列将原有的 **JSON** 转换成 **Model** 。这种转换实际上就是解析 **JSON** 。
 
@@ -368,7 +369,7 @@ Observable.of(1, 2, 3)
 
 <br/>
 
-- **`zip - 组合`**
+- **`zip组合`**
 
 &emps;  通过一个函数将多个 Observables 的元素(最多8个)组合起来，然后将每一个组合的结果发出来
 
@@ -402,6 +403,60 @@ first.onNext("4")
 `4D`
 
 
+
+<br/>
+
+***
+<br/>
+
+># Driver
+
+&emsp; Driver从名字上可以理解为驱动，在功能上它类似被观察者（Observable），而它本身也可以与被观察者相互转换（Observable: asDriver, Driver: asObservable）。它驱动着一个观察者，当它的事件流中有事件涌出时，被它驱动着的观察者就能进行相应的操作。一般我们会将一个Observable被观察者转换成Driver后再进行驱动操作：
+
+使用UILabel私有扩展，并修改下binding方法：
+
+```
+func binding() {
+    textField.rx_text
+        .asDriver()
+        .drive(label.rx_sayHelloObserver)
+        .addDisposableTo(disposeBag)
+}
+```
+    
+可见，Driver的drive方法与Observable的方法bindTo用法非常相似，事实上，它们的作用也是一样，说白了就是被观察者与观察者的绑定。那为什么RxSwift的作者又搞出Driver这么个东西来呢？
+其实，比较与Observable，Driver有以下的特性：
+- 它不会发射出错误(Error)事件
+- 对它的观察订阅是发生在主线程(UI线程)的
+- 自带shareReplayLatestWhileConnected
+- 当你将一个Observable转换成Driver时，用到的asDriver方法有下面几个重载：
+
+```
+asDriver(onErrorJustReturn onErrorJustReturn: Self.E)
+
+asDriver(onErrorDriveWith onErrorDriveWith: RxCocoa.Driver<Self.E>)
+
+asDriver(onErrorRecover onErrorRecover: (error: ErrorType) -> RxCocoa.Driver<Self.E>)
+```
+从这三个重载方法中可看出，当我们要将有可能会发出错误事件的Observable转换成Driver时，必须要先将所有可能发出的错误事件滤除掉，从而使得Driver不可能会发射出错误的事件。
+
+
+- 一般我们在对Observable进行map操作后，我们会在后面加上shareReplay(1)或shareReplayLatestWhileConnected，以防止以后被观察者被多次订阅观察后，map中的语句会多次调用：
+
+```
+let rx_textChange = textField.rx_text
+       .map { return "Good \($0)" }
+       .shareReplay(1)
+rx_textChange
+       .subscribeNext { print("1 -- \($0)") }
+       .addDisposableTo(disposeBag)
+rx_textChange
+       .subscribeNext { print("2 -- \($0)") }
+       .addDisposableTo(disposeBag)
+```
+在Driver中，框架已经默认帮我们加上了shareReplayLatestWhileConnected，所以我们也没必要再加上"replay"相关的语句了。
+
+&emsp; 从这些特性可以看出，Driver是一个专门针对于UI的特定可观察者类。并不是说对UI进行相应绑定操作不能使用纯粹的Observable，但是，Driver已经帮我们省去了好多的操作，让我们对UI的绑定更加的高效便捷。所以，对UI视图的绑定操作，我们首选Driver
 
 
 <br/>

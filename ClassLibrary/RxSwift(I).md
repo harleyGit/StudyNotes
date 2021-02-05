@@ -14,7 +14,14 @@
 	- **from**
 	- **create**
 - **Scheduler 调度器**
-- **参考资料**
+- [**Cocoi老师RxSwift源码**](https://www.jianshu.com/u/5981a4f71db5)
+- [**RxSwift应用**](https://www.jianshu.com/p/f61a5a988590)
+- [**RxSwift中文文档**](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/)
+- [**RxSwift特征序列**](http://www.cocoachina.com/articles/29100)
+- [**RxSwift销毁者Dispose源码分析**](https://blog.csdn.net/JeffersonZHabc/article/details/98962237)
+- [**RxSwift使用详解系列**](https://www.jianshu.com/p/f61a5a988590)
+- [**RxSwift使用**](https://www.hangge.com/blog/cache/detail_1917.html)
+
 
 <br/>
 
@@ -683,18 +690,3 @@ createO("🔴").subscribe{
 <br/>
 
 
-># **参考资料：**
-
-[Cocoi老师 RxSwift源码](https://www.jianshu.com/u/5981a4f71db5)
-
-[RxSwift 应用](https://www.jianshu.com/p/f61a5a988590)
-
-[RxSwift  中文文档](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/)
-
-[RxSwift特征序列](http://www.cocoachina.com/articles/29100)
-
-[RxSwift--销毁者Dispose源码分析](https://blog.csdn.net/JeffersonZHabc/article/details/98962237)
-
-[RxSwift 使用详解系列](https://www.jianshu.com/p/f61a5a988590)
-
-[RxSwift 使用](https://www.hangge.com/blog/cache/detail_1917.html)
