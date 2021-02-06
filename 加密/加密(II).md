@@ -64,6 +64,7 @@ openssl pkcs12 -export -out rsaPrivate.p12 -inkey privateKey.pem -in rsaPrivateC
 下面显示如何从`PKCS#12`数据中提取`identity`和`trust objects`（可信任对象），并评估其可信度。
 
 从PKCS#12数据中提取identity和trust对象
+
 ```
 //加载私钥
 - (void)loadPrivateKey:(NSString *)privateKeyPath password:(NSString *)password {
@@ -78,7 +79,7 @@ openssl pkcs12 -export -out rsaPrivate.p12 -inkey privateKey.pem -in rsaPrivateC
     CFDataRef inPkcs12Data = (__bridge CFDataRef)pkcs12Data;
     CFStringRef passwordRef = (__bridge CFStringRef)password;
     
-    //从 PKCS #12 证书中提取标示和证书
+    //从 PKCS #12 证书中提取标识和证书
     SecIdentityRef myIdentity;
     SecTrustRef myTrust;
     //以PKCS#12格式导出或以PKCS#12格式导入时使用的密码(由CFStringRef对象表示)
@@ -126,14 +127,20 @@ openssl pkcs12 -export -out rsaPrivate.p12 -inkey privateKey.pem -in rsaPrivateC
 ```
 
 完成上述的代码步骤后，你需要完成下面这些：
-   a.  释放包含新数据的CFDataRef对象;
+
+  a.  释放包含新数据的CFDataRef对象;
+  
   b.  返回的信任对象通过调用SecTrustEvaluate 或 SecTrustEvaluateAsync评估信任。
 处理信任结果;
+
   c.  如果信任结果是kSecTrustResultInvalid, kSecTrustResultDeny, kSecTrustResultFatalTrustFailure，你不能继续，以失败结束;
+  
   d.  如果信任结果是kSecTrustResultRecoverableTrustFailure，你应该从信任失败中恢复。
+  
 下面的代码显示了如何从身份中获取证书，如何展示证书的信息。
 
 **`显示证书信息`**
+
 ```
 NSString *copySummaryString(SecIdentityRef identity) {
     SecCertificateRef myReturnedCertificate = NULL;
@@ -156,10 +163,12 @@ NSString *copySummaryString(SecIdentityRef identity) {
 
 
 <br/>
+
 - 获取和使用持久化的钥匙串
 &emsp;  当在钥匙串中添加或查找一个条目时，需要有一个持久化的引用。因为持久化引用能保证在程序从启动到能写入磁盘这段时间内，始终可用。当需要反复在钥匙串中查找条目时，使用持久化引用更加容易。以下演示了如何获取一个identity 的持久化引用。
 
 **`获取钥匙串的持久化引用`**
+
 ```
 //钥匙串的持久化引用
 CFDataRef persistentRefForIdentity(SecIdentityRef identity) {
@@ -180,6 +189,7 @@ CFDataRef persistentRefForIdentity(SecIdentityRef identity) {
 ```
 
 **`从持久化引用的钥匙串中检索身份对象`**
+
 ```
 //从持久化引用的钥匙串中检索身份对象
 SecIdentityRef identityForPersistentRef(CFDataRef persistent_ref) {
@@ -200,8 +210,10 @@ SecIdentityRef identityForPersistentRef(CFDataRef persistent_ref) {
 ```
 
 <br/>
+
 - 从钥匙串中查找证书
 &emsp;  在钥匙串中查找使用名称识别的证书，找到一个持久化引用的条目。
+
 ```
 //钥匙串中查找证书
 void certificateInKeychain() {
@@ -229,7 +241,10 @@ void certificateInKeychain() {
 
 
 <br/>
+
 - 获取策略对象并评估可信度
+
+
 &emsp;  评估证书可信度之前，必需获取到一个证书对象的引用。可以从一个identity中提取一个证书对象，也可以从`der`证书数据中创建证书对象(使用SecCertificateCreateWithData函数)，或者从钥匙串中查找证书。
 &emsp;  评估信任度的标准由信任策略（trust policy）指定，在iOS中有两种策略可用：`Basic X509`和`SSL`。可以用`SecPolicyCreateBasicX509`或者`SecPolicyCreateSSL`函数获取策略对象。
 
@@ -299,6 +314,7 @@ void certificateInKeychain() {
 &emsp;  信任评估的结果有多个，这取决于证书链中所有证书是否都能找到并全都有效，以及用户对这些证书的信任设置是什么。信任结果怎么处理则由你的程序来决定。如果信任结果是`kSecTrustResultConfirm`，你可以显示一个对话框，询问用户是否允许继续。
 
 &emsp;  信任结果`kSecTrustResultRecoverableTrustFailure`的意思是：信任被否决，但可以通过改变设置获得不同结果。例如，如果证书签发过期，你可以改变评估日期以判断是否证书是有效的同时文档是已签名的。注意 `CFDateCreate`函数使用绝对时间。你可以用`CFGregorianDateGetAbsoluteTime`函数把日历时间转换为绝对时间。
+
 ```
 ///信任失败恢复
 void recoverFromTrustFailure(SecTrustRef myTrust) {
@@ -341,10 +357,14 @@ void recoverFromTrustFailure(SecTrustRef myTrust) {
 
 
 <br/>
+
 - 加密和解密数据
+
+
 &emsp;  证书，密钥和信任API包含了生产不对称密钥并用于数据加密和解密的函数。如果您想要使用此功能来对你不想在备份数据中访问的数据进行加密。或者，你可能想使用公钥/私钥在你的iOS应用和桌面应用间通过网络发送加密数据。下面的代码都使用了cocoa对象（如NSMutableDictionary），而不是像本章其他示例那样使用了Core Foundation对象（如CFMutableDictionaryRef），Cocoa对象和对应的Core Foundation完全相同，免费桥接。如果在方法中有个`NSMutableDictionary *`参数，你可以转化为`CFMutableDictionaryRef`，方法中的`CFMutableDictionaryRef`参数，你可以转换为`NSMutableDictionary`实例。
 
 **`生成密钥对`**
+
 ```
 ///生成密钥对
 - (void) generateKeyPair:(NSUInteger)keySize {
@@ -409,6 +429,7 @@ void recoverFromTrustFailure(SecTrustRef myTrust) {
 &emsp;  可以将您的公钥发送给任何人,谁可以使用它来加密数据。如果你保持你的私钥安全,那么只有你能够解密数据。以下代码示例展示了如何使用公钥加密数据。这可以在设备上生成一个公钥或者从发送给你或钥匙链中的证书中提取公钥。您可以使用`SecTrustCopyPublicKey`函数来从证书中提取公钥。在下面的代码中,假定密钥已经在设备上生成并放置在钥匙串中。
 
 **`用公钥加密数据`**
+
 ```
 - (NSData *)encryptWithPublicKey {
     OSStatus status = noErr;
@@ -486,6 +507,7 @@ void recoverFromTrustFailure(SecTrustRef myTrust) {
 &emsp;  下面的代码示例显示了如何解密数据。这个示例使用用来加密数据的公钥对应的私钥,并假设您已经在前面的示例中创建的密文。从钥匙串中获取私钥的技术跟前面的示例中获取公钥的技术相同 。
 
 **`私钥解密`**
+
 ```
 ///私钥解密
 - (void) decryptWithPrivateKey: (NSData *)dataToDecrypt {
@@ -548,5 +570,5 @@ void recoverFromTrustFailure(SecTrustRef myTrust) {
 
 **`参考资料`**
 
-[安全之RSA加密/生成公钥、秘钥 pem文件](https://www.cnblogs.com/xuan52rock/p/11023423.html)
+[**RSA加密(生成公钥、秘钥pem)**](https://www.cnblogs.com/xuan52rock/p/11023423.html)
 
