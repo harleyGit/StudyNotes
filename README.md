@@ -92,6 +92,7 @@
 *	[App发布](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
+* [路由组件化](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由组件化.md)
 * [常用类库](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/常用类库.md)
 * [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
 * [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(I).md)
@@ -208,6 +209,9 @@
 	       
 >## ProjectDesc
 * [Desc(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
+* [单例类](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)
+* [协议代理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)
+* [KVC和KVO](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)
 	
 
 
@@ -362,20 +366,6 @@
 
 
 
-<br/>
-
-***
-<br/>
-
-># 设计模式
-*	[单例类](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/单例类.md)
-*	[路由组件化](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/路由组件化.md)
-*	[KVC和KVO](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/KVC和KVO.md)
-*	[MVVM设计模式(二)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/MVVM设计模式(二).md)
-*	[MVVM设计模式(一)](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/MVVM设计模式(一).md)
-*	[Swift-的单例](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-的单例.md)
-*	[Swift-协议代理](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/Swift-协议代理.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/设计模式/.md)
 
 
 
