@@ -518,6 +518,7 @@
 ># 工具
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
 * [Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
+* [数码](https://github.com/harleyGit/StudyNotes/blob/master/Tools/数码.md)
 * [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Unix命令.md)
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令.md)
 * [codemagic](https://codemagic.io/apps)
@@ -533,7 +534,7 @@
 * [Git 提交记录查看、提交、变基(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git-%5B提交记录查看、提交、变基%5D(I).md)
 * [GitBook-配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/GitBook-配置.md)
 * [JAVA 和 Android 配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/JAVA-和-Android-配置.md)
-* [Mac配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac配置.md)
+* [Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac.md)
 * [Podfile书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)
 * [工具集](https://github.com/harleyGit/StudyNotes/blob/master/Tools/工具集.md)
 *	[代码管理](https://github.com/harleyGit/StudyNotes/blob/master/Tools/代码管理.md)
@@ -591,29 +592,6 @@
 
 
 
-
-
-
-
-<br/>
-
-***
-<br/>
-
-># 随笔
-*	[数码](https://github.com/harleyGit/StudyNotes/blob/master/随笔/数码.md)
-*	[学习技巧](https://github.com/harleyGit/StudyNotes/blob/master/随笔/学习技巧.md)
-*	[Good-Language](https://github.com/harleyGit/StudyNotes/blob/master/随笔/Good-Language.md)
-*	[Mac-问题解决方案](https://github.com/harleyGit/StudyNotes/blob/master/随笔/Mac-问题解决方案.md)
-*	[Markdown-基本语法](https://github.com/harleyGit/StudyNotes/blob/master/随笔/Markdown-基本语法.md)
-*	[UIImage](https://github.com/harleyGit/StudyNotes/blob/master/随笔/UIImage.md)
-*	[WebSite](https://github.com/harleyGit/StudyNotes/blob/master/随笔/WebSite.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/随笔/.md)
 
 
 <br/>
