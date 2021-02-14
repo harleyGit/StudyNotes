@@ -1,10 +1,25 @@
+- **循环链表**
+- **双向链表**
+	- 双向链表的插入
+	- 双向链表的删除
+
+
+
+<br/>
+
+
+***
+<br/>
+
 ># 循环链表
+
 ![循环链表示意图](https://upload-images.jianshu.io/upload_images/2959789-2eb248ee9f51dc69.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
 <br/>
-2个循环链表进行合并
+
+**2个循环链表进行合并**
 ![循环链表合并](https://upload-images.jianshu.io/upload_images/2959789-83a5326f42466165.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ```
@@ -24,22 +39,27 @@ free(p);
 
 
 <br/>
+
 ***
 <br/>
 
 ># 双向链表
+
+
 ![双向链表的非空链表和空链表](https://upload-images.jianshu.io/upload_images/2959789-e28b820baa20fcd2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
-## 双向链表的插入
+
+- **双向链表的插入**
+
 ![双向链表的插入](https://upload-images.jianshu.io/upload_images/2959789-00d156bcd57f5f58.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
 <br/>
 
-## 双向链表的删除
+- **双向链表的删除**
 ![双向链表的删除](https://upload-images.jianshu.io/upload_images/2959789-3bd2dbc044214af7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ```
@@ -53,6 +73,7 @@ free(p);
 
 
 <br/>
+
 ***
 <br/>
 
