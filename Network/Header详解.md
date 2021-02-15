@@ -1,19 +1,46 @@
->#HTTP Header 意义
-##`Request 响应头`
+
+- **HTTP Header意义**
+	- Request 响应头
+	- HTTP请求步骤
+	- HTPP传输步骤
+- **断点续传**
+- [**HTTP Header 详解**](https://blog.csdn.net/zzzzzdddddxxxxx/article/details/53261881)
+- [**HTTP 常用 Header 讲解**](https://blog.csdn.net/muzhenhua/article/details/47021173)
+- [**HTTP 头组成**](https://blog.csdn.net/zhenweicao/article/details/7911525)
+- [**HTTP响应头和请求头信息对照表**](http://tools.jb51.net/table/http_header)
+- [**HTTP的请求头和响应头 以及常见的响应状态码**](https://blog.csdn.net/love9099/article/details/77539907)
+- [**网络请求简介**](https://blog.csdn.net/Bolted_snail/article/details/79870134)
+- [**HeaderValue改变**](https://www.jianshu.com/p/a6830a9287d6)
 
 
-![屏幕快照 2019-03-02 下午12.57.21.png](https://upload-images.jianshu.io/upload_images/2959789-6fe553775e052b82.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+<br/>
+
+
+***
+<br/>
+
+
+># HTTP Header意义
+
+> **`Request 响应头`**
+
+
+![请求表](https://upload-images.jianshu.io/upload_images/2959789-6fe553775e052b82.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
-HTTP请求步骤：
+<br/>
+
+> **HTTP请求步骤：**
 -  请求行 + 请求头 + 请求体 == request(这三个组成了request请求)；
 -  建立任务task；
 -  resume；
 -  传输数据；
 
 
-HTPP传输步骤：
+<br/>
+
+> **HTPP传输步骤：**
 -  域名---> 换取解析为IP；
 -  传输层tcp  的三次握手；
 -  head数据；
@@ -30,7 +57,8 @@ server对HTTP的数据进行处理：
 
 <br/>
 
-token值加入请求头
+**token值加入请求头**
+
 ```
 
 //实例化AFHTTPSessionManagerAFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
@@ -43,12 +71,13 @@ manager.requestSerializer = [AFJSONRequestSerializer serializer];
 
 
 <br/>
+
 ***
 <br/>
 
 >#  断点续传
 
-#`duadi`
+
 ```
 @property(nonatomic, retain)NSURLSession *session;
 @property(nonatomic, retain)NSURLSessionDownloadTask *downloadTask;
@@ -86,14 +115,4 @@ manager.requestSerializer = [AFJSONRequestSerializer serializer];
 
 
 
-[HTTP Header 详解](https://blog.csdn.net/zzzzzdddddxxxxx/article/details/53261881)
 
-[HTTP 常用 Header 讲解](https://blog.csdn.net/muzhenhua/article/details/47021173)
-
-[HTTP 头组成](https://blog.csdn.net/zhenweicao/article/details/7911525)
-
-[HTTP响应头和请求头信息对照表](http://tools.jb51.net/table/http_header)
-
-[HTTP的请求头和响应头 以及常见的响应状态码](https://blog.csdn.net/love9099/article/details/77539907)
-
-[网络请求简介](https://blog.csdn.net/Bolted_snail/article/details/79870134)

@@ -1,5 +1,12 @@
 - **NSURLSessionTask**
+	- NSURLSessionTask 方法和属性
 - **NSURLSessionStreamTask**
+- [**NSURLSession 所有的都在这里(一)**](https://www.cnblogs.com/taoxu/p/8962778.html)
+- [**NSURLSession 所有的都在这里(二)**](https://www.cnblogs.com/taoxu/p/9003457.html)
+- [**深入了解NSURLSession**](https://www.jianshu.com/p/94d214129d4d)
+- [**网络请求之NSURLSession(api篇)**](https://www.jianshu.com/p/2ab336db172c)
+- [**网络请求和及时通讯**](https://www.cnblogs.com/taoxu/category/1021605.html)
+
 
 
 <br/>
@@ -7,15 +14,22 @@
 ***
 <br/>
 
+># NSURLSessionTask
+
 **`简要介绍：`**
 
-**NSURLSessionDataTask, NSURLSessionDownloadTask,  NSURLSessionStreamTask,  NSURLSessionUploadTask这四个类继承自NSURLSessionTask这个核心类。<br/>
+**NSURLSessionDataTask, NSURLSessionDownloadTask,  NSURLSessionStreamTask,  NSURLSessionUploadTask这四个类继承自NSURLSessionTask这个核心类。**
+
+<br/>
+
 上传类NSURLSessionUploadTask继承自NSURLSessionDataTask<br/>
-如下图：**
+如下图：
 
 ![核心Task类 与 四大类的关系图](https://upload-images.jianshu.io/upload_images/2959789-f47c269affb2c126.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-**`NSURLSessionTask 方法和属性`**
+<br/>
+
+- **`NSURLSessionTask 方法和属性`**
 
 ```
 @property (readonly)                 NSUInteger    taskIdentifier;
@@ -80,7 +94,6 @@ FOUNDATION_EXPORT const float NSURLSessionTaskPriorityHigh API_AVAILABLE(macos(1
 ```
 
 <br/>
-***
 <br/>
 
 &emsp; &emsp; 上面我们说了NSURLSessionTask,还有三个子类，在API中前面的两个子类没有什么还能说的了，因为都包含在了NSURLSessionTask中，唯一有一个需要说一下的，就是在NSURLSessionDownloadTask中有一个方法是父类中没有的，我们看看对这个方法的理解：
@@ -128,10 +141,12 @@ FOUNDATION_EXPORT const float NSURLSessionTaskPriorityHigh API_AVAILABLE(macos(1
 - (void)closeWrite;
 
 
-// 排队请求以关闭底层Socket的读取端。 所有未完成的IO将在读取端关闭之前完成。 你可以继续写入服务器。
+// 排队请求以关闭底层Socket的读取端。 
+//所有未完成的IO将在读取端关闭之前完成。 你可以继续写入服务器。
 - (void)closeRead;
 
-//开始加密握手。 握手在所有待处理IO完成后开始。 TLS认证回调被发送到会话-URLSession：task：didReceiveChallenge：completionHandler：
+//开始加密握手。 
+//握手在所有待处理IO完成后开始。 TLS认证回调被发送到会话-URLSession：task：didReceiveChallenge：completionHandler：
 - (void)startSecureConnection;
 
 
@@ -144,22 +159,6 @@ FOUNDATION_EXPORT const float NSURLSessionTaskPriorityHigh API_AVAILABLE(macos(1
 
  [Demo 连接点击这里](https://github.com/geniusZhangXu/AVFoundation):(【和以前的参考资料作者写的关于AVFoundation】的Demo是在一起的，这部分的demo在NSURLSession文件夹下面)
 
-
-
-<br/>
-
-***
-<br/>
-
-[NSURLSession 所有的都在这里(一)](https://www.cnblogs.com/taoxu/p/8962778.html)
-
-[NSURLSession 所有的都在这里(二)](https://www.cnblogs.com/taoxu/p/9003457.html)
-
-[深入了解NSURLSession](https://www.jianshu.com/p/94d214129d4d)
-
- [网络请求之NSURLSession(api篇)](https://www.jianshu.com/p/2ab336db172c)
-
-[网络请求和及时通讯](https://www.cnblogs.com/taoxu/category/1021605.html)
 
 
 

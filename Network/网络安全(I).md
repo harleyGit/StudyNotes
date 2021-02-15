@@ -1,12 +1,26 @@
-- 介绍
+- **介绍**
+- **验证服务器通信**
+- **HTTP 认证**
+	- 认证信息有三种持久化选项
+	- NSURLCredential支持的认证方法
+
+<br/>
+
+***
+<br/>
+
+> 介绍
+
 &emsp;  在`http`请求中某些`url`访问需要具有权限认证,否则会返回`401`错误码。这时需要你在`请求头中附带授权的用户名,密码`，或者`使用https协议第一次与服务端建立连接的时候,服务端会发送iOS客户端一个证书`，这时我们需要验证服务端证书链(certificate keychain)。
 &emsp;  当我们遇到以上情况的时候NSURLSession中的一个delegate会被调用:
+
 ```
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler
 ```
 &emsp;  上述代理就是为了处理从服务端传回的`NSURLAuthenticationChallenge(认证)`,在`NSURLAuthenticationChallenge`的`protectionSpace`中存放了服务端返回的认证信息,我们需要根据这些信息来创建对应的`NSURLCredential(证书/凭证)`,并且设置对应的`NSURLSessionAuthChallengeDisposition(处理方式)`来告诉`NSURLSession`来如何处理处服务端返回的个认证。
 
 **`NSURLSessionAuthChallengeDisposition中`**包含三种类型:
+
 ```
 NSURLSessionAuthChallengePerformDefaultHandling：默认方式处理
 NSURLSessionAuthChallengeUseCredential：使用指定的证书
@@ -15,8 +29,10 @@ NSURLSessionAuthChallengeCancelAuthenticationChallenge：取消
 
 
 <br/>
+
 ***
 <br/>
+
 ># 验证服务器通信
 
 ```
@@ -42,11 +58,11 @@ NSURLSessionAuthChallengeCancelAuthenticationChallenge：取消
 }
 
 - (void) loadNetworkAction:(UIButton *)sender {
-     NSURL *url = [NSURL URLWithString:@"https://api.weibo.com/2/common/get_city.json"];
-       NSURLRequest *request = [NSURLRequest requestWithURL:url];
-       NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
-       NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
-       [task resume];
+   NSURL *url = [NSURL URLWithString:@"https://api.weibo.com/2/common/get_city.json"];
+   NSURLRequest *request = [NSURLRequest requestWithURL:url];
+   NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+   NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
+   [task resume];
 }
 
 //验证服务器通信
@@ -173,23 +189,33 @@ NSURLSessionAuthChallengeCancelAuthenticationChallenge：取消
 
 
 <br/>
+
 ***
 <br/>
+
 ># HTTP 认证
 
-#`HTTP Basic、HTTP Digest与NTLM认证`
+**`HTTP Basic、HTTP Digest与NTLM认证`**
 
 &emsp;  `NSURLCredential` 代表的是一个身份证证书，`URL Loading`系统支持3种类型的证书：`password-based user credentials`, `certificate-base`。
+
 &emsp;  `NSURLCredential`适合大多数的认证请求，因为它可以表示由用户名/密码组合、客户端证书及服务器信任创建的认证信息。
 
--  认证信息有三种持久化选项：
+<br/>
+
+-  **认证信息有三种持久化选项：**
+
 &emsp;  a. `NSURLCredentialPersistenceNone `： 要求URL载入系统 “在用完相应的认证信息后立即丢弃”;
+
 &emsp;  b.  `NSURLCredentialPersistenceForSession` ： 要求URL载入系统“在应用终止时，丢弃相应的crediential”;
+
 &emsp;  c.  `NSURLCredentialPersistencePermanent`：要求URL载入系统“将相应的认证信息载入钥匙串(keychain)”,以便其他应用也能使用.
 
 &emsp;  为了认证， 要创建一个`NSURLCedential`对象，在提供的`authentication challenge`的`protection space` 上调用`authenticationMethod`方法，可以获取服务器的认证方法
 
--  NSURLCredential支持的认证方法
+<br/>
+
+-  **NSURLCredential支持的认证方法**
     - `HTTP basic authentication (NSURLAuthenticationMethodHTTPBasic)` 需要一个用户和密码，使用`credentialWithUser:password:persistence:`方法创建`NSURLCredential`对象;
 
     -  `HTTP digest authentication (NSURLAuthenticationMethodHTTPDigest)`, 与`basic authentication`类似， 也需要一个用户名和密码，使用`credentialWithUser:password:persistence:`方法创建NSURLCredential对象;
@@ -206,7 +232,8 @@ NSURLSessionAuthChallengeCancelAuthenticationChallenge：取消
 
 <br/>
 
-# `AFNetworking 中的具体使用`
+**`AFNetworking 中的具体使用`**
+
 ```
 
 + (void)post:(NSString *)url params:(NSDictionary *)params success:(void (^)(id json))success failure:(void (^)(NSError *error))failure
@@ -241,6 +268,7 @@ NSURLSessionAuthChallengeCancelAuthenticationChallenge：取消
 ```
 
 自己验证：
+
 ```
 - (UIButton *)loadNetBtn {
     if (!_loadNetBtn) {
@@ -341,11 +369,5 @@ NSURLSessionAuthChallengeCancelAuthenticationChallenge：取消
     }
  }
 ```
+
 ![打印结果](https://upload-images.jianshu.io/upload_images/2959789-36341eee914475a2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-
-
-
-<br/>
-***
-<br/>

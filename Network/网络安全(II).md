@@ -1,3 +1,11 @@
+- **客户端证书认证**
+- **使用哈希与加密确保消息完整性**
+
+<br/>
+
+***
+<br/>
+
 ># 客户端证书认证
 &emsp;  从服务器返回的证书被编码成了 `PKCS #12(.12)`文件格式，这是由 RSA Laboratories 发布的一种常用标准。
 
@@ -76,8 +84,11 @@
 ```
 
 <br/>
+
 `Utils.m 文件`
+
 &emsp;  使用 Security Framework 中的 SecPKCS12Import() 函数导入身份和信任，然后提取出证书的过程。
+
 ```
 + (void)identity:(SecIdentityRef*)identity 
   andCertificate:(SecCertificateRef*)certificate 
@@ -134,14 +145,18 @@
 
 
 <br/>
+
 ***
 <br/>
+
+
 ># 使用哈希与加密确保消息完整性
 
 
 ![负载结构的加密](https://upload-images.jianshu.io/upload_images/2959789-cad7054c47df4462.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 - JSON 负载结构
+- 
 ```
 {
     "mac": "Message Authentication Code",
@@ -155,23 +170,28 @@
     }
 }
 ```
+
 payload 属性是请求中唯一被加密的元素。
 
 
 <br/>
+
 - 哈希
   对于给定的数据块，密码哈希与摘要会生成固定大小的位序列(对一些字符串进行摘要，生成不规则字符串)。使用哈希值可以简化数据块的比较和排序，应用场景为：追踪文件变更、下载校验、数据混淆以及数据库存储、验证请求数据的完整性。摘要如：`MD5、 SHA-1、 SHA-256`
 
 
 <br/>
+
 - 消息认证码
   消息认证码(MAC)可以检测到负载是否被修改验证其真实性，通过对请求来的数据(或预定好的请求数据子集)生成哈希值，将哈希值与随负载一同发送的预先计算好的MAC进行对比。
 
 
 <br/>
+
 - 加密
 
 **`网络请求加密`**
+
 ```
 - (void)start {
     
@@ -269,6 +289,7 @@ payload 属性是请求中唯一被加密的元素。
 
 **`Utils.m`**
 生成随机数
+
 ```
 + (NSData*)blockInitializationVectorOfLength:(size_t)ivLength {
     // default to AES block size
@@ -293,7 +314,10 @@ payload 属性是请求中唯一被加密的元素。
 
 
 <br/>
+
 **`网络请求解密`**
+
+
 ```
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     

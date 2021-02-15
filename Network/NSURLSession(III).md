@@ -1,72 +1,117 @@
->#简括
-&emsp;&emsp;  NSURLSession是2013年iOS 7发布的用于替代NSURLConnection的，iOS 9之后NSURLConnection彻底推出历史舞台。
+
+- **请求配置**
+	- 简括
+	- Request 请求对象
+	- 创建会话对象方式
+- **Get**
+- **Post**
+- **NSURLSessionDataDelegate代理**
+	- 代理方法
+- **NSURLSessionDownloadTask文件下载**
+- **NSURLSessionUploadTask上传文件**
+	- Get方法
+	- Post方法
+- [**网络请求之NSURLSession使用**](https://blog.csdn.net/nd71pbt7/article/details/55095225)
+- [**网络之数据请求**](https://www.cnblogs.com/soley/p/5483673.html)
+
+
+
+<br/>
+
+***
+<br/>
+
+># 请求配置
+
+> **简括**
+
+&emsp;NSURLSession是2013年iOS 7发布的用于替代NSURLConnection的，iOS 9之后NSURLConnection彻底退出历史舞台。
+
+<br/>
 
 NSURLSession一般分别两部操作：
-&emsp;&emsp; 第一步:通过NSURLSession的实例创建task；
-&emsp;&emsp; 第二步:执行task；
+- 第一步:通过NSURLSession的实例创建task；
+- 第二步:执行task；
+
+
+<br/>
 
 对于NSURLSessionTask，也就是task，可以把它当作所谓的任务。
 
 &emsp;&emsp;  NSURLSessionTask是一个抽象子类，它有三个具体的子类是可以直接使用分别是：`NSURLSessionDataTask`，`NSURLSessionUploadTask`和`NSURLSessionDownloadTask`。这三个类应用的三个基本网络任务分别是：获取数据、上传文件、下载文件。与数据有关的NSURLSessionDataTask也可以胜任上传下载的任务，所以经常使用到。
 
 <br/>
-***
 <br/>
 
 
-### Request 请求对象
-***1）首先构造一个NSURL请求资源地址***
+> **Request 请求对象**
+
+**1）首先构造一个NSURL请求资源地址**
 
 ```   
 // 构造URL资源地址
-   NSURL *url = [NSURL URLWithString:@"http://api.nohttp.net/method?name=yanzhenjie&pwd=123"];
+NSURL *url = [NSURL URLWithString:@"http://api.nohttp.net/method?name=yanzhenjie&pwd=123"];
 ```
 
-***2）创建一个NSRequest请求对象***
+<br/>
+
+**2）创建一个NSRequest请求对象**
+
 ```
 // 创建Request请求
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-    // 配置Request请求
-    // 设置请求方法
-    [request setHTTPMethod:@"GET"];
-    // 设置请求超时 默认超时时间60s
-    [request setTimeoutInterval:10.0];
-    // 设置头部参数
-    [request addValue:@"gzip" forHTTPHeaderField:@"Content-Encoding"];
-    //或者下面这种方式 添加所有请求头信息
-    request.allHTTPHeaderFields=@{@"Content-Encoding":@"gzip"};
-    //设置缓存策略
-    [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
+NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+// 配置Request请求
+// 设置请求方法
+[request setHTTPMethod:@"GET"];
+// 设置请求超时 默认超时时间60s
+[request setTimeoutInterval:10.0];
+// 设置头部参数
+[request addValue:@"gzip" forHTTPHeaderField:@"Content-Encoding"];
+//或者下面这种方式 添加所有请求头信息
+request.allHTTPHeaderFields=@{@"Content-Encoding":@"gzip"};
+//设置缓存策略
+[request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
 
 ```
 
-***`根据需求添加不用的设置，比如请求方式、超时时间、请求头信息，这里重点介绍下缓存策略：`***
 
->   `NSURLRequestUseProtocolCachePolicy = 0`   //默认的缓存策略， 如果缓存不存在，直接从服务端获取。如果缓存存在，会根据response中的Cache-Control字段判断下一步操作，如: Cache-Control字段为must-revalidata, 则询问服务端该数据是否有更新，无更新的话直接返回给用户缓存数据，若已更新，则请求服务端.  <br/>
-> `NSURLRequestReloadIgnoringLocalCacheData = 1`     //忽略本地缓存数据，直接请求服务端.  <br/>
->  `NSURLRequestIgnoringLocalAndRemoteCacheData = 4`     //忽略本地缓存，代理服务器以及其他中介，直接请求源服务端.  <br/>
->  `NSURLRequestReloadIgnoringCacheData = NSURLRequestReloadIgnoringLocalCacheData`  <br/>
->  `NSURLRequestReturnCacheDataElseLoad = 2`   //有缓存就使用，不管其有效性(即忽略Cache-Control字段), 无则请求服务端.  <br/>
->` NSURLRequestReturnCacheDataDontLoad = 3`   //只加载本地缓存. 没有就失败. (确定当前无网络时使用)  <br/>
->`NSURLRequestReloadRevalidatingCacheData = 5`   //缓存数据必须得得到服务端确认有效才使用  <br/>
+**缓存策略：**`根据需求添加不用的设置，比如请求方式、超时时间、请求头信息`
+
+> `NSURLRequestUseProtocolCachePolicy = 0`   //默认的缓存策略， 如果缓存不存在，直接从服务端获取。如果缓存存在，会根据response中的Cache-Control字段判断下一步操作，如: Cache-Control字段为must-revalidata, 则询问服务端该数据是否有更新，无更新的话直接返回给用户缓存数据，若已更新，则请求服务端.  
+
+> `NSURLRequestReloadIgnoringLocalCacheData = 1`  
+
+
+> `NSURLRequestIgnoringLocalAndRemoteCacheData = 4`     //忽略本地缓存，代理服务器以及其他中介，直接请求源服务端. 
+
+> `NSURLRequestReloadIgnoringCacheData = NSURLRequestReloadIgnoringLocalCacheData` 
+
+> `NSURLRequestReturnCacheDataElseLoad = 2`   //有缓存就使用，不管其有效性(即忽略Cache-Control字段), 无则请求服务端.  
+
+> ` NSURLRequestReturnCacheDataDontLoad = 3`   //只加载本地缓存. 没有就失败. (确定当前无网络时使用)  
+
+> `NSURLRequestReloadRevalidatingCacheData = 5`   //缓存数据必须得得到服务端确认有效才使用  <br/>
 
 
 <br/>
-***
 <br/>
 
->### 创建会话对象方式
+> **创建会话对象方式**
 
-`第一种方式`
+**`第一种方式`**
+
 ```
 // 采用苹果提供的共享session
 NSURLSession *sharedSession = [NSURLSession sharedSession];
 ```
 
-`第二种方式`
-```
-#通过NSURLSessionConfiguration方式配置不同的NSURLSession
 
+<br/>
+
+**`第二种方式`**
+
+```
+//通过NSURLSessionConfiguration方式配置不同的NSURLSession
 // 构造NSURLSessionConfiguration
 NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
 // 构造NSURLSession，网络会话；
@@ -76,33 +121,36 @@ NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
 `通过NSURLSessionConfiguration提供了三种创建NSURLSession的方式`
 
 >  `defaultSessionConfiguration`   //默认配置使用的是持久化的硬盘缓存，存储证书到用户钥匙链。存储cookie到shareCookie。<br/>
-`ephemeralSessionConfiguration`   //不使用永久持存cookie、证书、缓存的配置，最佳优化数据传输。<br/>
-`backgroundSessionConfigurationWithIdentifier`   //可以上传下载HTTP和HTTPS的后台任务(程序在后台运行)。在后台时，将网络传输交给系统的单独的一个进程,即使app挂起、推出甚至崩溃照样在后台执行。
+
+>`ephemeralSessionConfiguration`   //不使用永久持存cookie、证书、缓存的配置，最佳优化数据传输。
+
+>`backgroundSessionConfigurationWithIdentifier`   //可以上传下载HTTP和HTTPS的后台任务(程序在后台运行)。在后台时，将网络传输交给系统的单独的一个进程,即使app挂起、退出甚至崩溃照样在后台执行。
 
 可以通过NSURLSessionConfiguration统一设置超时时间、请求头等信息
 
 ```
-    // 构造NSURLSessionConfiguration
-    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    //设置请求超时为10秒钟
-    configuration.timeoutIntervalForRequest = 10;
-    
-    //在蜂窝网络情况下是否继续请求（上传或下载）
-    configuration.allowsCellularAccess = NO;
+// 构造NSURLSessionConfiguration
+NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+//设置请求超时为10秒钟
+configuration.timeoutIntervalForRequest = 10;
 
-    //配置请求头
-    configuration.HTTPAdditionalHeaders =@{@"Content-Encoding":@"gzip"};
+//在蜂窝网络情况下是否继续请求（上传或下载）
+configuration.allowsCellularAccess = NO;
+
+//配置请求头
+configuration.HTTPAdditionalHeaders =@{@"Content-Encoding":@"gzip"};
 ```
 
 
 
 <br/>
+
 ***
 <br/>
 
 
 
->## Get请求
+># Get请求
 
 ```
 // 1.创建一个网络路径
@@ -157,10 +205,11 @@ NSURLSessionDataTask *sessionDataTask = [session dataTaskWithRequest:request com
 
 
 <br/>
+
 ***
 <br/>
 
->## Post 请求
+>## Post请求
 
 ```
 // 1.创建一个网络路径
@@ -207,10 +256,11 @@ NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:(NSJSO
 
 
 <br/>
+
 ***
 <br/>
 
->###NSURLSessionDataDelegate代理方法
+># NSURLSessionDataDelegate代理
 
 &emsp;&emsp;    相比NSURLConnection，NSURLSession提供了block方式处理返回数据的简便方式，但是，如果项目需要在网络请求数据的过程中，要做进一步的处理的话，需要调用NSURLSession的代理方法。
 
@@ -219,6 +269,7 @@ NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:(NSJSO
 `@property (nullable, readonly, retain) id  delegate;`
 
 在类中遵循代理方法后，主要设置代理代码如下：
+
 ```
 
 // 1.delegateQueue参数表示协议方法将会在(NSOperationQueue)队列里面执行。（session的delegate属性是只读的,所以使用如下方法设置代理。）
@@ -237,7 +288,11 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:[NSURLRequest requestW
 
 ```
 
-***`代理方法`***
+
+<br/>
+
+> **`代理方法`**
+
 ```
 #pragma mark -- NSURLSessionDataDelegate
 // 1.接收到服务器的响应
@@ -280,10 +335,11 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:[NSURLRequest requestW
 
 
 <br/>
+
 ***
 <br/>
 
->### NSURLSessionDownloadTask 文件下载
+># **NSURLSessionDownloadTask文件下载**
 
 ```
 
@@ -316,7 +372,10 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:[NSURLRequest requestW
 
 ```
 
+<br/>
+
 ***`NSURLSessionDownloadDelegate代理方法`***
+
 ***① 在所在的类中遵循代理协议；***
 
 ***② 实现代理方法；***
@@ -364,12 +423,15 @@ NSURLSessionDataTask *task = [session dataTaskWithRequest:[NSURLRequest requestW
 
 
 <br/>
+
 ***
 <br/>
 
->### NSURLSessionUploadTask 上传文件
+># NSURLSessionUploadTask上传文件
 
-***`Get 方法`***
+<br/>
+
+> **`Get方法`**
 
 ```
 
@@ -383,7 +445,7 @@ NSURLSessionUploadTask *task = [NSURLSession sharedSession] uploadTaskWithReques
 <br/>
 
 
-***`Post 方法`***
+> **`Post方法`**
 
 ```
 
@@ -394,15 +456,3 @@ NSURLSessionUploadTask *task = [NSURLSession sharedSession] uploadTaskWithReques
 ```
 
 &emsp;&emsp;  对于Get和Post的不同点在于，用post方法需要添加网络路径的请求体body，而在实际开发中，上传文件一般使用post方式，更加安全可靠。
-
-
-
-
-
-
- <br/>
-***
-<br/>
-参考资料：
-###[网络请求之NSURLSession使用](https://blog.csdn.net/nd71pbt7/article/details/55095225)
- ###[网络之数据请求](https://www.cnblogs.com/soley/p/5483673.html)

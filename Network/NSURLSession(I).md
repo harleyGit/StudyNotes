@@ -2,6 +2,9 @@
 - **NSURLRequest**
 - **NSURLRequest 的分类NSHTTPURLRequest**
 - **NSURLSession API**
+- [**NSURLSession 篇一**](https://www.cnblogs.com/taoxu/p/8962778.html)
+- [**NSURLSession 篇二**](https://www.cnblogs.com/taoxu/p/9003457.html)
+
 
 
 <br/>
@@ -12,7 +15,7 @@
 
 ># **NSURLRequest** 
 
-**`策略类型`**
+- **`策略类型`**
 
 ```
 typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
@@ -42,7 +45,7 @@ typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
 
 <br/>
 
-***`属性`***
+- ***`属性`***
 
 ```
 //缓存策略
@@ -67,7 +70,7 @@ typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
 ***
 <br/>
 
-># NSURLRequest 的分类NSHTTPURLRequest
+># NSURLRequest的分类NSHTTPURLRequest
 
 `@interface NSURLRequest (NSHTTPURLRequest) `
 
@@ -110,6 +113,8 @@ typedef NS_ENUM(NSUInteger, NSURLRequestCachePolicy)
 
 从上述的方法和属性可以看到，这个类别是关于请求体和请求头的一些设置。
 
+<br/>
+
 下面来说一说一些请求头的含义：
 > Host: 目标服务器的网络地址；<br/>
 Accept: 让服务端知道客户端所能接收的数据类型，如text/html；<br/>
@@ -120,18 +125,24 @@ Accept-Encoding: 客户端支持的数据压缩格式，如gzip<br/>
 Connection: keep-alive，该字段是从HTTP 1.1才开始有的，用来告诉服务端这是一个持久连接，“请服务端不要在发出响应后立即断开TCP连接”。关于该字段的更多解释将在后面的HTTP版本简介中展开。<br/>
  Content-Length: body的长度，如果body为空则该字段值为0。该字段一般在POST请求中才会有。<br/>
 
-***`请求体的封装图`***
+
+<br/>
+
+- ***`请求体的封装图`***
 ![上传文件时可以用到](https://upload-images.jianshu.io/upload_images/2959789-3fb21eede3fae86e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-[iOS上传文件](https://www.jianshu.com/p/db0e1843c425)
-[文件上传](https://www.cnblogs.com/wendingding/p/3949966.html)
+<br/>
+
+[**iOS上传文件**](https://www.jianshu.com/p/db0e1843c425)
+
+[**文件上传**](https://www.cnblogs.com/wendingding/p/3949966.html)
 
 <br/>
 
 ***
 <br/>
 
->#NSURLSession 关系图
+># NSURLSession 关系图
 
 ![Session关系图](https://upload-images.jianshu.io/upload_images/2959789-2cb824aaa2e80977.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -276,10 +287,3 @@ Connection: keep-alive，该字段是从HTTP 1.1才开始有的，用来告诉�
 }
 ```
 
-
-
-**`参考资料：`**
-
-&emsp;&emsp;   [NSURLSession 篇一](https://www.cnblogs.com/taoxu/p/8962778.html)
-
-&emsp;&emsp;  [NSURLSession  篇二](https://www.cnblogs.com/taoxu/p/9003457.html)
