@@ -1,17 +1,33 @@
->#存储数组、对象数据
+
+- 存储数组、对象数据
+	- 添加属性
+
+
+<br/>
+
+
+***
+<br/>
+
+># 存储数组、对象数据
+
 ![数组对象数组](https://upload-images.jianshu.io/upload_images/2959789-f108d87c1c349c16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 将其Type设置为Transformable即可，可用来设置iOS对象属性。其生成的属性为：
+
 ```
 @property (nullable, nonatomic, retain) NSObject *commentHeightArray;
 ```
 
-##添加属性
+<br/>
+
+- **添加属性**
+
 在表中添加属性后，可以按照下面的步骤来添加属性
 ![添加属性后，可以按照这个步骤来对.h文件增加属性](https://upload-images.jianshu.io/upload_images/2959789-10f47a8f6bf7018b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-## `Demo 代码`
+**`Demo 代码`**
 
 ![数据库和表(包括表的属性)](https://upload-images.jianshu.io/upload_images/2959789-3023ce6b6b5b68c5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -20,8 +36,8 @@
 
 <br/>
 `ManagerDatabase.m 文件`
-```
 
+```
 #import "ManagerDatabase.h"
 
 @implementation ManagerDatabase

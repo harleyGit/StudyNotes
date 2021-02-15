@@ -118,7 +118,7 @@
 * [响应链(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
 * [消息转发](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 * [远程推送(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
-* [自定义单元格](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/自定义单元格.md)
+* [**自定义单元格**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/自定义单元格.md)
 * [坐标系(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/坐标系(I).md)
 * [App跳转](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App跳转.md)
 * [App的生命周期](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App的生命周期.md)
@@ -208,10 +208,11 @@
 
 	       
 >## ProjectDesc
-* [Desc(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
-* [单例类](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)
-* [协议代理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)
-* [KVC和KVO](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)
+* [**Desc(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
+* 设计模式
+	* [**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)
+	* [**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)
+	* [**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)
 	
 
 
@@ -465,11 +466,11 @@
 <br/>
 
 ># 数据存储
-*	[数据持久化(US)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/数据持久化(US).md)
-*	[相册和视频处理(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/相册和视频处理(I).md)
-*	[CoreData(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/CoreData(I).md)
-*	[NSCache(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/NSCache(I).md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/数据存储/.md)
+*	[数据持久化](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/数据持久化.md)
+*	[相册和视频处理(I)](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/相册和视频处理(I).md)
+*	[CoreData(I)](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/CoreData(I).md)
+*	[NSCache(I)](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/NSCache(I).md)
+[](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/.md)
 
 
 <br/>
