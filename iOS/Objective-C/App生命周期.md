@@ -1,19 +1,42 @@
->#	APP的启动流程
 
-[类库 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/Ohters/类库.mindnode)
+- 	 APP启动流程
+	- 	 APP的生命流程
+	- 	 APP的初始化流程(main)
+	- 	 main.m文件说明
+	- 	 UIApplication代理方法说明
+	- 	 UIApplication代理方法说明
+	- 	 生命周期
+- [**AppDelegate程序生命运行过程及使用时机**](https://blog.csdn.net/zhw521411/article/details/52956055)
+- [**静态库和动态库的制作和研究**](https://www.jianshu.com/p/d643c1368c9d)
+- [**视频 静态库和动态库基础要点**](https://www.bilibili.com/video/BV1of4y1Q7cy?from=search&seid=4557030534076664019)
+
+
+
+
+
 
 <br/>
 
--	从源代码到app
-当我们点击了 build 之后，做了什么事情呢？
+***
+<br/>
+
+>#	 APP启动流程
+
+[类库](https://github.com/harleyGit/StudyNotes/blob/master/Ohters/类库.mindnode)
+
+<br/>
+
+-	从源代码到app, 当我们点击了 build 之后，做了什么事情呢？
 	-	预处理（Pre-process）：把宏替换，删除注释，展开头文件，产生 .i 文件。
 	-	编译（Compliling）：把之前的 .i 文件转换成汇编语言，产生 .s文件。
 	-	汇编（Asembly）：把汇编语言文件转换为机器码文件，产生 .o 文件。
 	-	链接（Link）：对.o文件中的对于其他的库的引用的地方进行引用，生成最后的可执行文件（同时也包括多个 .o 文件进行 link）。
 
+<br/>
 
--	APP的生命流程
+-	**APP的生命流程**
 	-	APP的启动流程(pre-main)
+
 ```
 1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
 
@@ -31,13 +54,16 @@
 	4.7 最后dyld返回main函数地址，main函数被调用
 ```
 
-*dyld说明:*
+**dyld说明:**
+
 &emsp;	dyld叫做动态链接器，主要的职责是完成各种库的连接。dyld是苹果用C++写的一个开源库，可以在苹果的[git上直接查看源代码](https://github.com/opensource-apple/dyld)。
+
 &emsp;	当系统从xnu内核态把控制权转交给dyld变成用户态后dyld首先初始化程序环境，将可执行文件以及相应的系统依赖库与我们自己加入的库加载进内存中，生成对应的ImageLoader类对应的image对象(镜像文件)，对这些image进行链接，调用各image的初始化方法等等(注:这里多数情况都是采用的递归，从底向上的方法调用)，其中runtime就是在这个过程中被初始化的，这些事情大多数在`dyld:_mian`方法中被发生。
 
 
+<br/>
 
-	-	APP的初始化流程(main)
+-	**APP的初始化流程(main)**
 
 ```
 1.main 函数
@@ -55,9 +81,12 @@
 最终显示第一个窗口
 
 ```
+
+
 <br/>
 
-\*main.m文件说明\*
+- **main.m文件说明**
+
 ```
 
 import <UIKit/UIKit.h>
@@ -85,7 +114,8 @@ int main(int argc, char * argv[]) {
 
 <br/>
 
-*UIApplication代理方法说明：*
+- ***UIApplication代理方法说明：***
+
 ```
 
 //app启动完毕后就会调用
@@ -147,9 +177,10 @@ int main(int argc, char * argv[]) {
 }
 ```
 
+
 <br/>
 
-*生命周期*
+- ***生命周期***
 
 *ViewController的生命周期方法说明:(详细说明都在代码注释中)*
 
@@ -272,7 +303,7 @@ int main(int argc, char * argv[]) {
 
 
 
-	-	APP的运行时生命周期	 
+-	APP的运行时生命周期	 
 
 
 
@@ -281,14 +312,6 @@ int main(int argc, char * argv[]) {
 
 ***
 <br/>
-
-
->#	参考资料：
-
-[US AppDelegate程序生命运行过程及使用时机](https://blog.csdn.net/zhw521411/article/details/52956055)
-[静态库和动态库的制作和研究](https://www.jianshu.com/p/d643c1368c9d)
-[视频 静态库和动态库基础要点](https://www.bilibili.com/video/BV1of4y1Q7cy?from=search&seid=4557030534076664019)
-
 
 
 

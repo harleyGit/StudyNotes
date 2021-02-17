@@ -1,6 +1,33 @@
+- **弹框视图**
+- **UIPickerView**
+
+
+<br/>
+
+***
+<br/>
+
+
+># 弹框视图
+
+
+[UIPopoverPresentationController 使用](https://www.jianshu.com/p/bcc2f6ca4708)
+
+
+<br/>
+
+***
+<br/>
+
+
+
+
+># UIPickerView
+
 ```
 - (void)selectRow:(NSInteger)row inComponent:(NSInteger)component animated:(BOOL)animated; 
 ```
+
 ![UIPickerView 组件示意图](https://upload-images.jianshu.io/upload_images/2959789-aeecd0c68546ed96.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 `[pickerView selectRow:2 inComponent:0 animated:NO];`

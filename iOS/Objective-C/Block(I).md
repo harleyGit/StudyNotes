@@ -1,10 +1,17 @@
 
 - **匿名函数Block**
 - **Block 分类**
+	- 全局block
+	- 堆block
+	- 栈block
 - **Block循环引用**
+	- 循环引用3种解决方案 
 - **Block 底层原理**
 - **Block 高级使用**
-- 
+- [**Block 本质**](https://www.jianshu.com/p/4e79e9a0dd82)
+- [**Block 用法、举例、底层**](http://www.cocoachina.com/cms/wap.php?action=article&id=23147)
+- [**Block 详解**](https://www.jianshu.com/p/00a0747740ba)
+
 
 
 
@@ -35,8 +42,12 @@ OC 函数中的局部变量在栈中存放。
 }
 
 ```
-打印结果：`welcome to block`
+打印结果：
+
+`welcome to block`
+
 `<__NSGlobalBlock__: 0x10be7c240>`
+
 分析：当前是在主线程中，当运行到定义的匿名block时，会把这段代码由栈区拷贝到堆区，保存到堆区中。一旦进行调用block(),就会来到执行区域进行NSLog打印了。
 
 
@@ -155,6 +166,7 @@ __weak typeof(self) weakSelf = self;
 ```
 
 <br/>
+
 - `解决方案三`
 
 ```
@@ -327,11 +339,3 @@ NSLog(@"%@", self.select.where(@"金科刺青网"));
 
 ***
 <br/>
-
-参考资料：
-
-[Block 本质](https://www.jianshu.com/p/4e79e9a0dd82)
-
-[Block 用法、举例、底层](http://www.cocoachina.com/cms/wap.php?action=article&id=23147)
-
-[Block 详解](https://www.jianshu.com/p/00a0747740ba)

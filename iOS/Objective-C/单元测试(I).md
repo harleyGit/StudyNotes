@@ -1,5 +1,8 @@
 - **[单元测试和 UI 测试快速入门](https://juejin.im/post/6844903744170098695)**
 - **18个测试断言**
+- [**XCTestExpectation**](https://www.jianshu.com/p/915cc8830bd2)
+[](http://www.cocoachina.com/ios/20170426/19129.html)
+[](http://www.cocoachina.com/ios/20170718/19930.html)
 
 
 <br/>
@@ -61,13 +64,12 @@ XCTAssertEqual(a1, a2, format…)的判断条件是a1 == a2是否返回一个YES
 
 
 <br/>
-
-***
 <br/>
 
 
 
 &emsp;  `OCTest 用RunTime来实现的。`
+
 &emsp;  单元测试每次测试只测试一个，属于白盒测试。
 
 ```
@@ -88,13 +90,3 @@ XCTAssertEqual(c, 2);
 
 ```
 
-
-<br/>
-
-***
-<br/>
-
-参考资料：
-[XCTestExpectation](https://www.jianshu.com/p/915cc8830bd2)
-[](http://www.cocoachina.com/ios/20170426/19129.html)
-[](http://www.cocoachina.com/ios/20170718/19930.html)

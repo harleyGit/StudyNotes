@@ -1,7 +1,8 @@
 
-**前奏**
-**注册URL Scheme**
-**App在App Store的下载链接**
+- **前奏**
+- **注册URL Scheme**
+- **App在App Store的下载链接**
+- **App在App Store的下载链接**
 
 
 
@@ -145,7 +146,9 @@
 //如果第三方程序向微信发送了sendReq的请求，那么onResp会被回调。sendReq请求调用后，会切到微信终端程序界面。`
 //具体在此两方法中所要完成的内容由你定义，具体可参考微信开发工具包中的SDK Sample Demo源码。
 ```
+
 ` 如果你的程序要发消息给微信，那么需要调用WXApi的sendReq函数`
+
 ```
 -(BOOL) sendReq:(BaseReq*)req
 //其中req参数为SendMessageToWXReq类型。
