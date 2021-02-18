@@ -1,4 +1,20 @@
+
+-  **协议方法**
+	- Item 行间距
+	- Item 列间距
+	- Item size设置
+	- 调整每个Section中的内容边距
+	- 代码Demo
+- [**UICollectionView的section设置背景颜色**](https://www.jianshu.com/p/8c9c5a125991)
+- [**UICollectionView 自定义section背景**](https://www.jianshu.com/p/26791bad530c)
+
+<br/>
+
+***
+<br/>
+
 ># 协议方法
+
 ```
 #pragma mark --  UICollectionViewDatasoure
 //显示几个section
@@ -81,46 +97,42 @@ insetForSectionAtIndex:(NSInteger)section
 ```
 
 
-#`Item 行间距`
+<br/>
+
+- **`Item 行间距`**
+
 ![item 行间距：minimumInteritemSpacing](https://upload-images.jianshu.io/upload_images/2959789-388d4762888a8b0b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-&emsp;   `UICollectionViewFlowLayout`实例对象属性`minimumInteritemSpacing`可以对其进行设置，其`UICollectionViewFlowLayoutDelegate`也可以对其进行实现，但需要遵守`UICollectionViewFlowLayoutDelegate`协议 (推荐这个`minimumInteritemSpacing`,尽量少用协议)
+&emsp;   `UICollectionViewFlowLayout`实例对象属性:`minimumInteritemSpacing`可以对其进行设置，其`UICollectionViewFlowLayoutDelegate`也可以对其进行实现，但需要遵守`UICollectionViewFlowLayoutDelegate`协议 (推荐这个`minimumInteritemSpacing`,尽量少用协议)
 
 <br/>
 
-#`Item 列间距`
+- **`Item 列间距`**
+
 ![Item 列间距:minimumLineSpacing](https://upload-images.jianshu.io/upload_images/2959789-93213e8d7b4ec9ba.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 &emsp; `UICollectionViewFlowLayout`的属性`minimumLineSpacing `可以对其进行设置(推荐这个,尽量少用协议)
 
 
 <br/>
-#`Item size设置`
+
+- **`Item size设置`**
 &emsp;  `UICollectionViewFlowLayout`的属性`itemSize`可以对其进行设置。
 
 <br/>
 
-#`调整每个Section中的内容边距`
+- **`调整每个Section中的内容边距`**
+
 ![Section 的边距](https://upload-images.jianshu.io/upload_images/2959789-aa06b1756013710a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 &emsp;  `UICollectionViewFlowLayout`的属性`sectionInset`可以对其进行设置，也可以用协议设置。
 
 
 
 
-
-
-
-
-
-
-
-
-
 <br/>
-***
 <br/>
 
-
+- **代码Demo**
 
 
 
@@ -165,12 +177,12 @@ UICollectionView *selectView = [[UICollectionView alloc] initWithFrame:CGRectMak
 //还有其他代码就不贴出来了
 ```
 效果图：
+
 ![效果图](https://upload-images.jianshu.io/upload_images/2959789-f297540429acaa9e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
+
 ***
 <br/>
-[UICollectionView的section设置背景颜色](https://www.jianshu.com/p/8c9c5a125991)
-[UICollectionView 自定义section背景](https://www.jianshu.com/p/26791bad530c)
-[]()
+

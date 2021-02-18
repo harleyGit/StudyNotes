@@ -1,6 +1,7 @@
 - KeyChain
 - KeyChain Item
 - Keychain的用法
+- [**keychain 详解及变化**](https://www.cnblogs.com/junhuawang/p/8194484.html)
 
 
 
@@ -124,7 +125,3 @@ SecItemDelete 删除一个keychain item
 
 ***
 <br/>
-	
-># 参考资料：
-
-[**keychain 详解及变化**](https://www.cnblogs.com/junhuawang/p/8194484.html)

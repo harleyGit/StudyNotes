@@ -1,12 +1,39 @@
-> #继承关系图
+- **UIWindow介绍**
+	- 添加View到UIWindow
+	- 通知
+	- 方法和属性
+	- 获取UIWindow
+	- [点击状态栏回到顶部的功能失效的解决办法](https://www.cnblogs.com/junhuawang/p/6003191.html)
+	- [**UIWindow(I)**](https://www.jianshu.com/p/5986ebe5005a)
+	- [**UIWindow与视图调整技巧**](https://www.jianshu.com/p/9373a7e0e34e)
+- **iOS13 UIWindow适配**
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># UIWindow介绍
+
 ![UIResponder 继承关系图](https://upload-images.jianshu.io/upload_images/2959789-c59555dbd67c93c5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+<br/>
 
-># UIWindow 简单介绍
+&emsp;一个iOS程序之所以能显示到屏幕上，完全是因为它有UIWindow。也就说，没有UIWindow，就看不见任何UI界面。
 
-&emsp;&emsp; 一个iOS程序之所以能显示到屏幕上，完全是因为它有UIWindow。也就说，没有UIWindow，就看不见任何UI界面。
+`系统状态栏其实就是一个window ,程序启动的时候创建的默认的window ，弹出键盘也是一个window ，alterView 弹框也是window 。`
 
-#`系统状态栏其实就是一个window ,程序启动的时候创建的默认的window ，弹出键盘也是一个window ，alterView 弹框也是window 。`
+
+&emsp;UIWindw定义了一个负责管理，协调一个App的View是如何显示在设备屏幕上的窗口类，除非一个App可以显示在一个外部的设备屏幕上，那么一个App只拥有一个窗口。UIWindow本身没有标题栏，关闭操作栏等任何的装饰物，用户不会看见，移动或者是关闭它。
+
+ &emsp;改变App的显示内容，可以改变UIWindow的rootView，而不需要去创建一个新的UIWindow。同时，它还负责与ViewController协同去处理设备旋转时的情况。
+
+
+<br/>
 
 |UIWindow 作用|
 |:---|
@@ -14,19 +41,23 @@
 |②作为UIView的最顶层容器，包含应用显示所有的UIView|
 
 
+<br/>
+
+
 官方层次图：
 ![UIScreen 层次图](https://upload-images.jianshu.io/upload_images/2959789-728c36563385ed02.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
->`UIScreen：`  代表了一个显示屏，iOS设备至少有一个自身的主显示屏，同时也有可能外接其他的显示设备。如果想将内容显示到屏幕上，需要设置UIWindow实例的screen属性为对应的UIScreen对象。<br/>
-`UIWindow：`  是一种特殊的UIView，通常在一个App中只会有一个UIWindow。
+>`UIScreen：`  代表了一个显示屏，iOS设备至少有一个自身的主显示屏，同时也有可能外接其他的显示设备。如果想将内容显示到屏幕上，需要设置UIWindow实例的screen属性为对应的UIScreen对象。
+>`UIWindow：`  是一种特殊的UIView，通常在一个App中只会有一个UIWindow。
 
 
-&emsp;&emsp;  iOS程序启动完毕后，创建的第一个视图控件就是UIWindow，接着创建视图控制器，最后将控制器的view添加到UIWindow上，于是控制器的view就显示在屏幕上了。
+&emsp;iOS程序启动完毕后，创建的第一个视图控件就是UIWindow，接着创建视图控制器，最后将控制器的view添加到UIWindow上，于是控制器的view就显示在屏幕上了。
 
 ![视图控制器附加到Window上，视图控制器自动的加入它的View作为window的子视图](https://upload-images.jianshu.io/upload_images/2959789-38559f39b4d05859.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 ***`四大对象的关系`***
+
 |对象                   |属性                                                         |
 |:---:|:---:|
 |UIApplication   |delegate属性                                           |
@@ -49,11 +80,10 @@
 
 
 <br/>
-***
 <br/>
 
 
-> #添加View到UIWindow
+- **添加View到UIWindow**
 
 ```
 
@@ -71,20 +101,21 @@
 
 `两个方法的区别：`
 
-&emsp;&emsp;  以后的开发中，建议使用②。因为方法①存在一些问题，比如说控制器上面可能由按钮，需要监听按钮的点击事件，如果是①，那么按钮的事件应该由控制器来进行管理。但控制器是一个局部变量，控制器此时已经不存在了，但是控制器的view还在，此时有可能会报错。注意：方法执行完，这个控制器就已经不存在了。
+&emsp;&emsp;  以后的开发中，建议使用②。因为方法①存在一些问题，比如说控制器上面可能有按钮，需要监听按钮的点击事件，如果是①，那么按钮的事件应该由控制器来进行管理。但控制器是一个局部变量，控制器此时已经不存在了，但是控制器的view还在，此时有可能会报错。注意：方法执行完，这个控制器就已经不存在了。
 
->`问题描述1：`当view发生一些事件的时候，通知控制器，但是控制器已经销毁了，所以可能出现未知的错误。<br/><br/>
+>`问题描述1：`当view发生一些事件的时候，通知控制器，但是控制器已经销毁了，所以可能出现未知的错误。
+
 >`问题描述2：`添加一个开关按钮，让屏幕360度旋转（两者的效果不一样）。当发生屏幕旋转事件的时候，UIapplication对象会将旋转事件传递给uiwindow,uiwindow又会将旋转事件传递给它的根控制器，由根控制器决定是否需要旋转<br/><br/>
 UIapplication->uiwindow->根控制器（第一种方式没有根控制器，所以不能跟着旋转）。<br/><br/>
 `提示：`不通过控制器的view也可以做开发，但是在实际开发中，不要这么做，不要直接把view添加到UIWindow上面去。因为，难以管理。
 
 
 <br/>
-***
 <br/>
 
 
-># 通知
+- **通知**
+
 |通知名|用法|
 |:---|:---:|
 |UIWindowDidBecomeVisibleNotification|当window激活时并展示在界面的时候触发，返回空|
@@ -94,10 +125,9 @@ UIapplication->uiwindow->根控制器（第一种方式没有根控制器，所�
 
 
 <br/>
-***
 <br/>
 
-># 方法和属性
+- **方法和属性**
 
 <br/>
 
@@ -154,19 +184,20 @@ UIapplication->uiwindow->根控制器（第一种方式没有根控制器，所�
 ```
 
 <br/>
+
 细说 windowLevel
 
->&emsp;&emsp;  ①我们生成的normalWindow虽然是在第一个默认的window之后调用makeKeyAndVisible，但是仍然没有显示出来。这说明当Level层级相同的时候，只有第一个设置为KeyWindow的显示出来，后面同级的再设置KeyWindow也不会显示。　<br/>　
-&emsp;&emsp;   ②statusLevelWindow在alertLevelWindow之后调用makeKeyAndVisible，仍然只是显示在alertLevelWindow的下方。这说明UIWindow在显示的时候是不管KeyWindow是谁，都是Level优先的，即Level最高的始终显示在最前面。
+>&emsp;①我们生成的normalWindow虽然是在第一个默认的window之后调用makeKeyAndVisible，但是仍然没有显示出来。这说明当Level层级相同的时候，只有第一个设置为KeyWindow的显示出来，后面同级的再设置KeyWindow也不会显示。　<br/>　
+&emsp;②statusLevelWindow在alertLevelWindow之后调用makeKeyAndVisible，仍然只是显示在alertLevelWindow的下方。这说明UIWindow在显示的时候是不管KeyWindow是谁，都是Level优先的，即Level最高的始终显示在最前面。
 
 
 
 
 <br/>
-***
 <br/>
 
-># 获取UIWindow
+- **获取UIWindow**
+
 ```
 
 //在应用中打开的UIWindow列表，这样就可以接触应用中的任何一个UIView对象(平时输入文字弹出的键盘，就处在一个新的UIWindow中)
@@ -183,14 +214,12 @@ UIapplication->uiwindow->根控制器（第一种方式没有根控制器，所�
 self.view.window
 
 ```
+
 `注意：keyWindow不是一成不变的，当你创建alertView或者ActionSheet的时候，它们所在的window会变成keyWindow。也就是说系统默认创建的window首先变成keywindow，而当弹框的时候，alertView所在的window变成keywindow，默认的keywindow变成非keywindow。`
 
 <br/>
-***
-<br/>
 
 
-> #Demo
 ```
 
 - (void) clickAction:(UIButton *)sender {
@@ -220,11 +249,58 @@ self.view.window
 window在创建的时候，默认是UIWindowLevelNormal(0.0),这个值越大，层次越靠上。
 
 windowLevel大于0，小于1000的时候，在statusbar之下，在默认的window之上
-windowLevel大于1000的时候，就在statusbar之上了。`
+windowLevel大于1000的时候，就在statusbar之上了。
+
+
 
 
 <br/>
+
 ***
 <br/>
-参考资料：
- [点击状态栏回到顶部的功能失效的解决办法](https://www.cnblogs.com/junhuawang/p/6003191.html)
+
+
+># iOS13 UIWindow适配
+
+**`AppDelegate.m 文件`**
+
+```
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    if (@available(iOS 13,*)) {
+            return YES;
+        } else {
+            self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+            UINavigationController *rootNavgationController = [[UINavigationController alloc] initWithRootViewController:[ViewController new]];
+            self.window.rootViewController = rootNavgationController;
+            [self.window makeKeyAndVisible];
+            return YES;
+        }
+    
+}
+
+```
+
+`SceneDelegate.m 文件`
+
+```
+- (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {    
+   
+        self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        self.window.windowScene = (UIWindowScene*)scene;
+        UINavigationController *rootNavgationController = [[UINavigationController alloc] initWithRootViewController:[ViewController new]];
+        self.window.rootViewController = rootNavgationController;
+        [self.window makeKeyAndVisible];    
+}
+
+```
+
+&emsp; 这样就可以兼容iOS13和iOS12的UIWindow显示了。
+
+
+
+
+
+
+
+ 

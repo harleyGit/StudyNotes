@@ -1,4 +1,6 @@
->#	App签名原理
+- [**App签名的原理**](http://blog.cnbang.net/tech/3386/)
+
+
 
 
 <br/>
@@ -7,6 +9,11 @@
 <br/>
 
 
+>#	App签名原理
 
->#	参考资料：
-[iOS App签名的原理](http://blog.cnbang.net/tech/3386/)
+
+<br/>
+
+***
+<br/>
+

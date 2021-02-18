@@ -1,19 +1,24 @@
 ># Foundation 对象转化为 JSON对象
 
 ```
-    NSDictionary *muDic = @{@"token": @"123456789", @"name": @"harely"};
+NSDictionary *muDic = @{@"token": @"123456789", @"name": @"harely"};
 
 NSData *data = [NSJSONSerialization dataWithJSONObject:[muDic copy] options:kNilOptions error:nil];
-    NSString *jsonS = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    
-    NSDictionary * aa = [NSDictionary dictionaryWithObject:[ViewController encrypt:jsonS] forKey:@"p"] ;
-    
-    NSLog(@"------>> aa: %@", aa);
+NSString *jsonS = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+NSDictionary * aa = [NSDictionary dictionaryWithObject:[ViewController encrypt:jsonS] forKey:@"p"] ;
+
+NSLog(@"------>> aa: %@", aa);
 ```
 
 
-##代码解析
-NSJSONSerialization提供了将JSON数据转换为Foundation对象（一般都是NSDictionary和NSArray）和Foundation对象转换为JSON数据（可以通过调用isValidJSONObject来判断Foundation对象是否可以转换为JSON数据）
+
+<br/>
+
+
+- **代码解析**
+
+&emsp; NSJSONSerialization提供了将JSON数据转换为Foundation对象（一般都是NSDictionary和NSArray）和Foundation对象转换为JSON数据（可以通过调用isValidJSONObject来判断Foundation对象是否可以转换为JSON数据）
 
 >NSJSONWritingOptions 包含2种参数：
 <br/>NSJSONWritingPrettyPrinted    将生成的json数据格式化输出，这样可读性高，不设置则输出的json字符串就是一
@@ -21,6 +26,7 @@ NSJSONSerialization提供了将JSON数据转换为Foundation对象（一般都�
 
 
 打印结果为：
+
 ```
 po muDic
 {
@@ -38,15 +44,20 @@ po muDic
     p = "bGtuenV4Y3dlRw56eymV@@ApaMqJEWD$$fQMMHR2KNZL0od7CADmKNK6h4hGg9OhzI";
 }
 ```
+
 <br/>
-***
 
 
-#JSON数据(NSData)转化为Foundation对象(Object)
+
+- **JSON数据(NSData)转化为Foundation对象(Object)**
+
 ```
 + (id)JSONObjectWithData:(NSData *)data options:(NSJSONReadingOptions)opt error:(NSError **)error;
 ```
+
 <br/>
+
+
 ```
 /*
   NSJSONReadingMutableContainers
@@ -61,5 +72,6 @@ NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:kNilOp
         
 NSLog(@"%@", dict[@"error"]);
 ```
+
 <br/>
-***
+

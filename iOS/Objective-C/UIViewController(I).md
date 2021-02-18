@@ -1,10 +1,15 @@
+
+- 控制器Add、Delete
+	- 添加ViewController
+	- 移除ViewController
+
 <br/>
 
 ***
 <br/>
 
 
-># 需求与分析介绍
+># 控制器Add、Delete
 
 &emsp;  在日常的开发中常有这样一种需求，通过切换标签来切换不同的页面，如果在一个 controller 管理这些 view 的话，代码就显得耦合度过高，也与 Apple 的 MVC 模式不符合，Apple 推荐一个 controller 管理一个 view。 
 
@@ -40,9 +45,9 @@
 
 ```
 
-**Demo**
+<br/>
 
-**`添加ViewController`**
+- **`添加ViewController`**
 
 `ViewController.m 文件中`
 
@@ -75,7 +80,7 @@
 
 <br/>
 
-**`移除ViewController`**
+- **`移除ViewController`**
 
 `NewController.m`
 
@@ -113,9 +118,11 @@
 &emsp;  当childViewController没有被加到任何父视图控制器时，如果把childViewController的view加到别的视图上，viewWillAppear和viewDidAppear会正常调用。但是当childViewController被加到一个父视图控制器上后,要注意区别：
 
 `①先调用addSubView，再调用addChildViewController`
+
  &emsp;  若先调用addSubView，viewWillAppear和viewDidAppear会各调用一次；，再调用addChildViewController时，与父视图控制器的事件同步，即当父视图控制器的viewDidAppear调用时，childViewController的viewDidAppear方法会再调用一次。`所以viewDidAppear方法被调用了两次`。
 
 `②先调用addChildViewController，再调用addSubView`
+
  &emsp;   先调用addChildViewController，childViewController的事件与父视图控制器同步，当父视图控制器的viewDidAppear调用时，childViewController的viewDidAppear方法会调用一次，再调用addSubView也不会触发viewWillAppear和viewDidAppear。
 
 
