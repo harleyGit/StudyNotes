@@ -2,23 +2,24 @@
 
 
 
-- UITableViewCell内存泄漏
-- 根视图切换
+- **Instrument检测内存泄漏**
+	- UITableViewCell内存泄漏
+	- 根视图切换
 
 <br/>
 
 ***
 <br/>
 
-
+># Instrument检测内存泄漏
 
 &emsp; **使用Instrument(Leak)检测工具检测项目中的内存泄漏，针对一些泄漏点进行修复改正。**
 
 <br/>
 
-># UITableViewCell内存泄漏
+- **UITableViewCell内存泄漏**
 
-**`情况一：`**
+
 
 ```
 if indexPath.section == 3, indexPath.row == 2 {
@@ -33,18 +34,9 @@ if indexPath.section == 3, indexPath.row == 2 {
 &emsp; 若是去掉[weak self]则会发生内存泄漏，这是因为`self->tableView->cell->self`,造成了内存泄漏。加上`[weak self]`就可避免了
 
 <br/>
-
-
-
-
-
-
 <br/>
 
-***
-<br/>
-
-># 根视图切换
+- **根视图切换**
 
 **`Applegate.m 文件`**
 

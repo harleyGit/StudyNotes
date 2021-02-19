@@ -1,3 +1,9 @@
+图片加载
+图片压缩
+
+
+
+
 <br/>
 
 ***
@@ -6,9 +12,6 @@
 ># 图片加载
 图片的显示分为三步：加载、解码、渲染。
 通常，我们操作的只有加载，解码和渲染是由UIKit进行。
-
-![z21](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z21.jpg)
-
 
 
 
@@ -20,9 +23,10 @@
 
 ># 图片压缩
 &emsp;   对于大量上传的图片，我们需要对其进行优化，对一些大图片进行压缩后再进行上传
-[](https://www.jianshu.com/p/76f7eb00ef13)
 
-[iOS性能优化——图片加载和处理](https://www.jianshu.com/p/7d8a82115060)
+[不失真的图片压缩](https://www.jianshu.com/p/76f7eb00ef13)
+
+[图片加载和处理](https://www.jianshu.com/p/7d8a82115060)
 
 
 
@@ -39,18 +43,18 @@
 &emsp;  这意味着，GPU需要对大图进行缩放到小的区域显示，需要做像素点的sampling，这种smapling的代价很高，又需要兼顾pixel alignment。计算量会飙升。
 OpenGL ES是直接调用底层的GPU进行渲染；Core Graphics是一个基于CPU的绘制引擎；
 
-# `缩放图片Code`
+**`缩放图片Code`**
 
 ```
-     //重新绘制图片
-    //按照imageWidth, imageHeight指定宽高开始绘制图片
-    UIGraphicsBeginImageContext(CGSizeMake(imageWidth, imageHeight));
-    //把image原图绘制成指定宽高
-    [image drawInRect:CGRectMake(0,0,imageWidth,  imageHeight)];
-    //从绘制中获取指定宽高的图片
-    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
-    //结束绘制
-    UIGraphicsEndImageContext();
+//重新绘制图片
+//按照imageWidth, imageHeight指定宽高开始绘制图片
+UIGraphicsBeginImageContext(CGSizeMake(imageWidth, imageHeight));
+//把image原图绘制成指定宽高
+[image drawInRect:CGRectMake(0,0,imageWidth,  imageHeight)];
+//从绘制中获取指定宽高的图片
+UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+//结束绘制
+UIGraphicsEndImageContext();
 ```
 &emsp;  RunLoop开始，RunLoop是一个60fps的回调，也就是说每16.7ms绘制一次屏幕，也就是我们需要在这个时间内完成view的缓冲区创建，view内容的绘制这些是CPU的工作；然后把缓冲区交给GPU渲染，这里包括了多个View的拼接(Compositing),纹理的渲染(Texture)等等，最后Display到屏幕上。但是如果你在16.7ms内做的事情太多，导致CPU，GPU无法在指定时间内完成指定的工作，那么就会出现卡顿现象，也就是丢帧。
 
