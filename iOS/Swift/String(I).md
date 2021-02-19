@@ -10,8 +10,14 @@
 	- 截取到指定位置
 	- upTo的 lowerBound 和 upperBound
 	- through的 lowerBound 和 upperBound
-
 - 金额显示
+- 富文本
+- [String.Index如何在Swift中工作 US](http://www.imooc.com/wenda/detail/594277)
+- [**字符串截取、替换、插入**](https://blog.csdn.net/SSY_1992/article/details/86542445)
+- [**字符串操作（替换、过滤、去掉空格、分割、拼接、字符串截取）**](https://blog.csdn.net/u014599371/article/details/80093022)
+
+
+
 
 
 <br/>
@@ -548,16 +554,10 @@ func businessAmountShow(amount: String, decimalPoinDigit: UInt = 6) -> String {
 <br/>
 
 
+># 富文本
 
-
-参考资料：
-
-[String.Index如何在Swift中工作 US](http://www.imooc.com/wenda/detail/594277)
-
-[字符串截取、替换、插入 US](https://blog.csdn.net/SSY_1992/article/details/86542445)
-
-[字符串操作（替换、过滤、去掉空格、分割、拼接、字符串截取） US](https://blog.csdn.net/u014599371/article/details/80093022)
-
+- [**US**](https://www.jianshu.com/p/cae9e9febd6f)
+- [**一个label不同颜色字体**](https://www.cnblogs.com/huangzhenwei/p/9760126.html)
 
 
 

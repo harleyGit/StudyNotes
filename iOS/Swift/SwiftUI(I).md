@@ -1,4 +1,12 @@
-# SwiftUI[简单构造一个App]
+
+- **构造简单App**
+
+<br/>
+
+***
+<br/>
+
+># 构造简单App
 
 - 默认情况下， SwiftUI view 文件声明了两个结构体。第一个结构体遵循 View 协议，描述 view 的内容和布局。第二个结构体声明该 view 的预览。
 
@@ -85,6 +93,7 @@ struct ContentView_Previews: PreviewProvider {
 //#endif
 
 ```
+
 点击Resue来进行预览效果图：
 
 <br/>

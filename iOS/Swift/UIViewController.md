@@ -1,5 +1,18 @@
+
+
+- **初始化**
+	- 自定义指定构造器方法
+	- 便利构造器方法
+
+<br/>
+
+***
+<br/>
+
 ># 初始化
-**`① 自定义指定构造器方法`**
+
+- **`自定义指定构造器方法`**
+
 ```
 var studentName : String = ""
 var age : Int  = 20
@@ -20,7 +33,9 @@ required init?(coder: NSCoder) {
 ```
 
 <br/>
-**`② 便利构造器方法`**
+
+- **`便利构造器方法`**
+
 ```
 var studentName : String = ""
 var age : Int  = 20
