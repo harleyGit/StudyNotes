@@ -1,7 +1,7 @@
 
 
-- 三种获取当前上下文方式
-- 上下文获取
+- **三种获取当前上下文方式**
+- **上下文获取**
 	- UIGraphicsPushContext和UIGraphicsPopContext
 	- 上下文的获取：drawRect:
 	- CGContextSaveGState和CGContextRestoreGState

@@ -1,4 +1,17 @@
->#简介
+
+- **简介**	
+	- 执行setNeedsLayout方法，打断点在drawRect方法中挥发现该方法执行
+	- 设置frame值，打断点在drawRect方法中挥发现该方法执行
+	- 设置backgroundColor，执行drawRect方法
+- **drawRect方法使用注意事项** 
+
+
+<br/>
+
+***
+<br/>
+
+># 简介
 
 &emsp;  iOS的绘图操作是在UIView类的drawRect方法中完成的，所以如果我们要想在一个UIView中绘图，需要写一个扩展UIView 的类，或者写一个UIVIew的子类，并重写drawRect方法，在这里进行绘图操作，程序会自动调用此方法进行绘图。
 
@@ -6,7 +19,10 @@
 
 &emsp;  如果UIView初始化时没有设置rect大小，将直接导致drawRect不被自动调用。drawRect 调用是在Controller->loadView, Controller->viewDidLoad 两方法之后调用的。
 
-调用drawRect方法的途径：
+<br/>
+
+> **调用drawRect方法的途径：**
+
 &emsp; ① 调用UIView类中的setNeedsDisplay方法，或者setNeedsDisplayInRect:触发drawRect:，但是有个前提条件是rect不能为0；
 
 &emsp; ②在改变UIView的frame值的时候，会调用此方法；
@@ -24,9 +40,8 @@ sizeToFit和sizeThatFits方法都没有递归，对subviews也不负责，只负
 &emsp; ⑤通过设置contentMode属性值为UIViewContentModeRedraw。那么将在每次设置或更改frame的时候自动调用drawRect:。
 
 代码：
-`
-Custom_OneView.m 文件中
-`
+`Custom_OneView.m 文件中`
+
 ```
 #import "Custom_OneView.h"
 
@@ -56,10 +71,13 @@ Custom_OneView.m 文件中
 
 ```
 
-##执行setNeedsLayout方法，打断点在drawRect方法中挥发现该方法执行
-`
-ViewController.m 文件
-`
+
+<br/>
+<br/>
+
+- **执行setNeedsLayout方法，打断点在drawRect方法中挥发现该方法执行**
+
+`ViewController.m 文件`
 
 ```
 @interface ViewController ()
@@ -90,17 +108,19 @@ ViewController.m 文件
 
 没点击空白处，没执行`setNeedsLayout`方法，效果图：
 
-![没执行setNeedsLayout方法效果图](https://upload-images.jianshu.io/upload_images/2959789-482b565daf97be3e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![没执行setNeedsLayout方法效果图](https://upload-images.jianshu.io/upload_images/2959789-482b565daf97be3e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240)
 
 点击空白处，执行`setNeedsLayout`方法，效果图：
-![点击空白处执行`setNeedsLayout`方法效果图](https://upload-images.jianshu.io/upload_images/2959789-36ff35f13d357175.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+![点击空白处执行`setNeedsLayout`方法效果图](https://upload-images.jianshu.io/upload_images/2959789-36ff35f13d357175.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240)
 
-##设置frame值，打断点在drawRect方法中挥发现该方法执行
+<br/>
+<br/>
 
-`
-ViewController.m 文件
-`
+- **设置frame值，打断点在drawRect方法中挥发现该方法执行**
+
+`ViewController.m 文件`
+
 ```
 @interface ViewController ()
 
@@ -126,22 +146,23 @@ ViewController.m 文件
 
 没点击空白处，没执行drawRect方法效果图：
 
-![没点击空白处，没执行drawRect方法效果图](https://upload-images.jianshu.io/upload_images/2959789-d7e3fd3ba55a2a74.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![没点击空白处，没执行drawRect方法效果图](https://upload-images.jianshu.io/upload_images/2959789-d7e3fd3ba55a2a74.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240)
 
 
 
 点击空白处，执行drawRect方法效果图：
 
-![点击空白处，执行drawRect方法效果图](https://upload-images.jianshu.io/upload_images/2959789-336d022ec02f2183.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![点击空白处，执行drawRect方法效果图](https://upload-images.jianshu.io/upload_images/2959789-336d022ec02f2183.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240)
 
 
 
+<br/>
+<br/>
 
-##设置backgroundColor，执行drawRect方法
+- **设置backgroundColor，执行drawRect方法**
 
-`
-ViewController.m 文件
-`
+`ViewController.m 文件`
+
 ```
 @interface ViewController ()
 
@@ -169,19 +190,23 @@ ViewController.m 文件
 
 没点击空白地方，没有执行`touchesBegan:  withEvent:`方法。
 效果图：
-![没有点击空白处](https://upload-images.jianshu.io/upload_images/2959789-131a8af07fd218ec.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![没有点击空白处](https://upload-images.jianshu.io/upload_images/2959789-131a8af07fd218ec.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240)
 
 点击空白后的效果图：
-![运行效果图](https://upload-images.jianshu.io/upload_images/2959789-f83f940b5055f061.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![运行效果图](https://upload-images.jianshu.io/upload_images/2959789-f83f940b5055f061.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240)
 
 <br/>
+
 ***
+<br/>
 
 
-#自定义一个TextField
-`
-Custom_TextField.m文件
-`
+># 自定义TextField
+
+`Custom_TextField.m文件`
+
 ```
 #import "Custom_TextField.h"
 
@@ -198,9 +223,8 @@ Custom_TextField.m文件
 
 ```
 
-`
-ViewController.m文件
-`
+`ViewController.m文件`
+
 ```
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -225,7 +249,12 @@ ViewController.m文件
 ![自定义TextField](https://upload-images.jianshu.io/upload_images/2959789-e190f1143626ba8d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
->#drawRect方法使用注意事项
+<br/>
+
+***
+<br/>
+
+># drawRect方法使用注意事项
 
 &emsp;  ① 若使用UIView绘图，只能在drawRect：方法中获取相应的contextRef并绘图。如果在其他方法中获取将获取到一个invalidate 的ref并且不能用于画图。drawRect：方法不能手动显示调用，必须通过调用setNeedsDisplay 或 者 setNeedsDisplayInRect，让系统自动调该方法。
 

@@ -1,4 +1,21 @@
 
+- **半圆边框**
+- **绘制背景色**
+- **绘制文本**
+- **绘制图片**
+- **边框、阴影绘制**
+- **线条绘制** 
+- **绘制渐变**
+- **翻转绘制**
+- [**Core Graphics (长篇高能)**](https://www.jianshu.com/p/491b50cb19cb)
+
+
+
+<br/>
+
+***
+<br/>
+
 ># 半圆边框
 
 ```
@@ -114,6 +131,7 @@ override func draw(_ rect: CGRect) {
 
 
 <br/>
+
 ***
 <br/>
 
@@ -345,6 +363,3 @@ override func draw(_ rect: CGRect) {
 ***
 <br/>
 
-**`参考资料：`**
-
-[Core Graphics (长篇高能)](https://www.jianshu.com/p/491b50cb19cb)

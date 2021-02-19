@@ -1,4 +1,25 @@
-># 动画框架图介绍
+- **动画框架图**
+	- 核心动画类结构
+	- 	类继承关系
+- **图层 CALayer**
+- **贝塞尔曲线**
+- **动画**
+- [关键帧动画CAKeyframeAnimation](https://blog.csdn.net/xy_26207005/article/details/51505837)
+- [CAKeyframeAnimation](https://www.jianshu.com/p/5158b0a33f48)
+- [让你的应用动起来](http://www.cnblogs.com/kenshincui/p/3972100.html#autoid-3-0-0)
+- [关键帧动画 CAKeyframeAnimation](https://blog.csdn.net/xy_26207005/article/details/51505837)
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># 动画框架图
+
 ![动画框架](https://upload-images.jianshu.io/upload_images/2959789-ab6a0ba9b3fcaa60.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 -  UIKit、AppKit:  属于应用层，处理与用户的交互，包括：CGImageRef、CGColorRef;
@@ -8,13 +29,18 @@
 -  Graphics Hardware:  最底层是图形硬件 GPU、CPU，是跨平台的.
 
 
-#`核心动画类结构`
+
+<br/>
+<br/>
+
+- **`核心动画类结构`**
+
 ![动画类结构](https://upload-images.jianshu.io/upload_images/2959789-a4ed14863205a659.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 -  CAAnimation 动画计时类；
-    -     CATransition 转场动画，界面之间跳转（切换）；
-    -     CAAnimationGroup 是个动画组，可以同时进行缩放，旋转；
-    -     CAPropertyAnimation 也是个抽象类，本身不具备动画效果，只有子类才有。
+    - CATransition 转场动画，界面之间跳转（切换）；
+    - CAAnimationGroup 是个动画组，可以同时进行缩放，旋转；
+    - CAPropertyAnimation 也是个抽象类，本身不具备动画效果，只有子类才有。
 -  CAConstraint 布局约束类；
 -  CALayer 图层类；
 - CAMediaTimingFunction: 一种函数，它将动画的节奏定义为时间曲线,如：二维码的[扫描线](https://www.cnblogs.com/YouXianMing/p/4421492.html);
@@ -23,7 +49,11 @@
 -  CARenderer:  一种允许应用渲染一个图层树到核心OpenGL的上下文中的图层。
 
 
-#`类继承关系`
+<br/>
+<br/>
+
+- **`类继承关系`**
+
 ![类继承关系图](https://upload-images.jianshu.io/upload_images/2959789-edc3c2af0cd66cd5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
@@ -38,11 +68,13 @@
 
 
 <br/>
+
 ***
 <br/>
 
 
 ># 图层 CALayer
+
 &emsp;  使用Core  Animation 有三组图层对象。每一组图层对象在使应用程序的内容出现时都有不同的作用：
 
 -  模型图层树中的对象(或者简单地说是“图层树”)是应用程序中交互最多的对象。此树中的对象存储任何动画的目标值。无论何时更改图层的属性，都使用图层树中的其中一个图层。
@@ -60,8 +92,11 @@
 
 
 <br/>
+
 ***
 <br/>
+
+
 ># 贝塞尔曲线
 
 
@@ -78,10 +113,13 @@ CAShapelayer:用来绘制各种图形的；
 
 
 <br/>
+
 ***
 <br/>
+
 ># 动画
-#`APP内部：`
+
+`APP内部：`
   -  布局：属性设置frame、color；
   -  创建：drawRect、contnets；
   -  准备：各种渲染参数，解压图片。下载下来的都是压缩图片，渲染时才开始解压；
@@ -94,19 +132,8 @@ CAShapelayer:用来绘制各种图形的；
 
 
 <br/>
+
 ***
 <br/>
 
 
-
-
-
-<br/>
-***
-<br/>
-资料：
-[[CAKeyframeAnimation](https://blog.csdn.net/xy_26207005/article/details/51505837)
-](https://www.jianshu.com/p/5158b0a33f48)
-[让你的应用动起来](http://www.cnblogs.com/kenshincui/p/3972100.html#autoid-3-0-0)
-
-[关键帧动画 CAKeyframeAnimation](https://blog.csdn.net/xy_26207005/article/details/51505837)
