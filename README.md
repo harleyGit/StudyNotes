@@ -183,6 +183,7 @@
 	* [**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)
 	* [**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)
 	* [**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)
+	* [**‌MVC和MVVM**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)
 	
 
 
