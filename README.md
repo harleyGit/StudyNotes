@@ -1,34 +1,20 @@
-# StudyNotes目录
-- **`当前笔记URL路径`**
-
-```!
-//获取Future文件夹下Pictures的图片路径
-+ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
-
-
-
-//打开某个文件的超链接
-- https://github.com/harleyGit/StudyNotes/blob/master/Flutter/.md
-
-```
-
-
-<br/>
-
-***
-<br/>
 
 ># Git提交规范
 ```
-	- fix: 修复问题;
-	- docs: 修改文档;
-	- style: 修改代码格式，不影响代码逻辑;
-	- refactor: 重构代码，理论上不影响现有功能;
-	- perf: 提升性能;
-	- test: 增加修改测试用例;
-	- chore: 修改工具相关（包括但不限于文档、代码生成等);
-	- deps: 升级依赖;
-	- feat: 新功能;
+- fix: 修复问题;
+- docs: 修改文档;
+- style: 修改代码格式，不影响代码逻辑;
+- refactor: 重构代码，理论上不影响现有功能;
+- perf: 提升性能;
+- test: 增加修改测试用例;
+- chore: 修改工具相关（包括但不限于文档、代码生成等);
+- deps: 升级依赖;
+- feat: 新功能;
+
+
+//获取Future文件夹下Pictures的图片路径
++ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
+
 ```	
 
 
@@ -81,10 +67,13 @@
 ***
 <br/>
 
+
+
 ># iOS开发
 
 ![**iOS 系统学习教程**](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/iOSKnowledgeGraph.png)
 
+<br/>
 <br/>
 
 >## Objective-C
