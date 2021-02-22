@@ -9,6 +9,7 @@
 - [**Firebase**](https://firebase.google.com/docs/projects/iam/roles-predefined-all-products?authuser=0)
 - [**Dokit调试**](http://xingyun.xiaojukeji.com/docs/dokit/#/iosGuide)
 - [**Objective-C编程艺术**](https://github.com/oa414/objc-zen-book-cn)
+- [**OC资料集**](https://www.cnblogs.com/guohai-stronger/category/1208039.html?page=1)
 
 <br/>
 
