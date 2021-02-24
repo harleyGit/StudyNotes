@@ -7,7 +7,8 @@
 - **时间延迟**
 	- dispatch_after
 	- dispatch_time_t
-	- dispatch_walltime
+	- dispatch_walltime	
+- [**多线程**](https://meniny.cn/posts/iOS_Primer_017/)
 
 
 
