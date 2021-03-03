@@ -1,5 +1,8 @@
 
 - **MVC**
+	- MVC介绍
+	- V对C的交流方式
+	- MVC实战
 - **MVVM**
 - [**MVC和MVVM设计模式的那些事**](https://www.jianshu.com/p/caaa173071f3)
 -  [**MVC、MVP和MVVM理解**](https://www.cnblogs.com/GJ-ios/p/13139565.html)
@@ -15,6 +18,8 @@
 <br/>
 
 
+
+> MVC介绍
 
 ![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z52.png)
 
@@ -85,11 +90,154 @@
 
 - C：控制器controller。Controller是app的“胶水代码”：协调模型和视图之间的所有交互。控制器负责管理他们所拥有的视图的视图层次结构，还要响应视图的loading、appearing、disappearing等等，同时往往也会充满我们不愿暴露的model的模型逻辑以及不愿暴露给视图的业务逻辑。
 
-&emsp; 
+&emsp; 网络数据的请求及后续处理，本地数据库操作，以及一些带有工具性质辅助方法都加大了Massive View Controller的产生。
 
-{{TOC}}
 
-网络数据的请求及后续处理，本地数据库操作，以及一些带有工具性质辅助方法都加大了Massive View Controller的产生。
+
+<br/>
+
+
+> MVC实战
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z54.png)
+
+- Controller ->Model:单向通信，Controller需要将Model呈现给用户，因此需要知道模型的一切，还需要有同Model完全通信的能力，并且能任意使用Model的API。
+- 2、Controller ->View:单向通信，Ccontroller通过View来布局用户界面。
+- 3、Model ->View：永远不要直接通信，Model是独立于UI的，并不需要和View直接通信，View通过Controller获取Model数据。
+
+
+<br/>
+
+创建一个名为APP的model
+
+**App.h**
+
+```
+#import <Foundation/Foundation.h>
+@interface App : NSObject
+@property (copy, nonatomic) NSString *name;
+@property (copy, nonatomic) NSString *image;
+@end
+```
+
+
+**App.m**
+
+```
+#import "App.h"
+ 
+@implementation App
+ 
+@end
+```
+
+
+**创建一个APPView.h**
+
+```
+#import <UIKit/UIKit.h>
+@class App, AppView;
+ 
+@protocol AppViewDelegate <NSObject>
+@optional
+- (void)appViewDidClick:(AppView *)appView;
+@end
+ 
+@interface AppView : UIView
+@property (strong, nonatomic) App *app;
+@property (weak, nonatomic) id<AppViewDelegate> delegate;
+@end
+```
+
+**APPView.m**
+
+```
+#import "AppView.h"
+#import "App.h"
+ 
+@interface AppView()
+@property (weak, nonatomic) UIImageView *iconView;
+@property (weak, nonatomic) UILabel *nameLabel;
+@end
+ 
+@implementation AppView
+ 
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if (self = [super initWithFrame:frame]) {
+        UIImageView *iconView = [[UIImageView alloc] init];
+        iconView.frame = CGRectMake(0, 0, 100, 100);
+        [self addSubview:iconView];
+        _iconView = iconView;
+         
+        UILabel *nameLabel = [[UILabel alloc] init];
+        nameLabel.frame = CGRectMake(0, 100, 100, 30);
+        nameLabel.textAlignment = NSTextAlignmentCenter;
+        [self addSubview:nameLabel];
+        _nameLabel = nameLabel;
+    }
+    return self;
+}
+ 
+- (void)setApp:(App *)app
+{
+    _app = app;
+    self.iconView.image = [UIImage imageNamed:app.image];
+    self.nameLabel.text = app.name;
+}
+ 
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    if ([self.delegate respondsToSelector:@selector(appViewDidClick:)]) {
+        [self.delegate appViewDidClick:self];
+    }
+}
+ 
+@end
+```
+
+**ViewController.m**
+
+```
+#import "ViewController.h"
+#import "App.h"
+#import "AppView.h"
+ 
+@interface ViewController () <AppViewDelegate>
+ 
+@end
+ 
+@implementation ViewController
+ 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+     
+    // 创建view
+    AppView *appView = [[AppView alloc] init];
+    appView.frame = CGRectMake(100, 100, 100, 150);
+    appView.delegate = self;
+    [self.view addSubview:appView];
+     
+    // 加载模型数据
+    App *app = [[App alloc] init];
+    app.name = @"QQ";
+    app.image = @"QQ";
+     
+    // 设置数据到view上
+    appView.app = app;
+}
+ 
+#pragma mark - AppViewDelegate
+- (void)appViewDidClick:(AppView *)appView
+{
+    NSLog(@"控制器监听到了appView的点击");
+}
+ 
+@end
+```
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z55.png)
+
 
 
 
@@ -104,3 +252,39 @@
 
 
 ># MVVM
+
+- **MVVM 的基本概念**
+	- 在MVVM 中，view 和 view controller正式联系在一起，我们把它们视为一个组件
+	- view 和 view controller 都不能直接引用model，而是引用视图模型（viewModel）
+	- viewModel 是一个放置用户输入验证逻辑，视图显示逻辑，发起网络请求和其他代码的地方
+	- 使用MVVM会轻微的增加代码量，但总体上减少了代码的复杂性
+
+
+<br/>
+
+- **MVVM 的注意事项**
+	- view 引用viewModel ，但反过来不行（即不要在viewModel中引入#import UIKit.h，任何视图本身的引用都不应该放在viewModel中）（PS：基本要求，必须满足）
+	- viewModel 引用model，但反过来不行
+
+<br/>
+
+- **MVVM 的使用建议**
+	- MVVM 可以兼容你当下使用的MVC架构。
+	- MVVM 增加你的应用的可测试性。
+	- MVVM 配合一个绑定机制效果最好（PS：ReactiveCocoa你值得拥有）。
+	- viewController 尽量不涉及业务逻辑，让 viewModel 去做这些事情。
+	- viewController 只是一个中间人，接收 view 的事件、调用  viewModel 的方法、响应 viewModel 的变化。
+	- viewModel 绝对不能包含视图 view（UIKit.h），不然就跟 view 产生了耦合，不方便复用和测试。
+	- viewModel之间可以有依赖。
+	- viewModel避免过于臃肿，否则重蹈Controller的覆辙，变得难以维护。
+
+
+
+
+
+
+
+
+
+
+

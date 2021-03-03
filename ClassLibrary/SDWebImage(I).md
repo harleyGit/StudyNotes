@@ -82,11 +82,13 @@ SDWebImage的相关类分为以下三种：
 
 
 <br/>
-![UML 符号意义图](https://upload-images.jianshu.io/upload_images/2959789-eb3e096354a0456b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![UML符号意义图](https://upload-images.jianshu.io/upload_images/2959789-eb3e096354a0456b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 <br/>
 
-## 关键类的作用
+**关键类的作用**
+
 ```
 SDWebImageManger:    负责下载和缓存的管理；
 SDImgeCache                  负责内存和磁盘缓存的类；
