@@ -6,6 +6,7 @@
 - **MVVM**
 - [**MVC和MVVM设计模式的那些事**](https://www.jianshu.com/p/caaa173071f3)
 -  [**MVC、MVP和MVVM理解**](https://www.cnblogs.com/GJ-ios/p/13139565.html)
+- [ **MVVM案例解读**](https://www.jianshu.com/p/db8400e1d40e)
 
 <br/>
 
@@ -278,6 +279,19 @@
 	- viewModel之间可以有依赖。
 	- viewModel避免过于臃肿，否则重蹈Controller的覆辙，变得难以维护。
 
+
+<br/>
+
+![<br/>](http://upload-images.jianshu.io/upload_images/1874977-83316d550a75ca16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+&emsp; `Controller`夹在`View`和`ViewModel`之间做的其中一个主要事情就是将`View`和`ViewModel`进行绑定。在逻辑上，`Controller`知道应当展示哪个`View`，`Controller`也知道应当使用哪个`ViewModel`来提供数据，然而`View`和`ViewModel`它们之间是互相不知道的，所以Controller仅关注于用 `view-model 的数据配置`和`管理各种各样的视图`。
+
+<br/>
+
+![MVVM模块层级图<br/>](https://upload-images.jianshu.io/upload_images/1874977-f8c57cfd22113349.png?imageMogr2/auto-orient/strip|imageView2/2/w/675)
+
+Controller可以引用ViewModel和View
+ViewModel千万不要主动对视图控制器C以任何形式直接起作用或直接通告其变化，而是等待视图控制器C来主动获取。
 
 
 
