@@ -290,8 +290,9 @@
 
 ![MVVM模块层级图<br/>](https://upload-images.jianshu.io/upload_images/1874977-f8c57cfd22113349.png?imageMogr2/auto-orient/strip|imageView2/2/w/675)
 
-Controller可以引用ViewModel和View
-ViewModel千万不要主动对视图控制器C以任何形式直接起作用或直接通告其变化，而是等待视图控制器C来主动获取。
+Controller可以引用ViewModel和View；
+
+ViewModel千万不要主动对视图控制器C以任何形式直接起作用或直接通告其变化，而是等待视图控制器C来主动获取；
 
 
 
