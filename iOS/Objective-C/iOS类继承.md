@@ -311,7 +311,11 @@ struct objc_protocol_list *protocols;
 
 图中可以看出，D3继承D2,D2继承D1,D1最终继承NSObject。下图从D3的一个对象开始，排列出D3 D2 D1 NSObject 类对象，元类对象等关系。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z60.jpg)
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z60.png)
+
+相当于 
+
+![<br/>](https://upload-images.jianshu.io/upload_images/1401554-662f4f4fc19016fa.png?imageMogr2/auto-orient/strip|imageView2/2/w/449)
 
 
 
