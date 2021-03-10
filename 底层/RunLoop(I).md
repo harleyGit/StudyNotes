@@ -1,9 +1,15 @@
 
-- 参考资料
+
 - NSTimer
 - RunLoop
+	- Runloop与线程的联系
+	- RunLoop在OC中有获取
 	- CFRunLoopRef线程安全原因
+	- 启动子线程的 RunLoop
 - NSRunLoop
+- [ **线程保活**](https://cloud.tencent.com/developer/article/1615137)
+- [**深入研究 Runloop 与线程保活**](https://juejin.cn/post/6844903439692988423)
+- [**RunLoop2-线程保活**](https://www.jianshu.com/p/a761f4a85a15)
 
 
 <br/>
@@ -12,6 +18,7 @@
 <br/>
 
 ># NSTimer
+
 &emsp; **`NSTimer`**是不准确的，当程序执行的时候，遇到cpu忙碌的时候，NSTimer会被放到一边不执行，就会造成该执行的事件不执行，会造成事件的叠加。
 
 &emsp; 所以说NSTimer通常会用来做一些有一定时间跨度的时间处理。
@@ -30,7 +37,50 @@
 
 ># RunLoop
 
-&emsp;  RunLoop在OC中有两种获取方式：`[NSRunLoop currentRunLoop] `或者C的：`CFRunLoopRef`。
+
+<br/>
+<br/>
+
+> **Runloop与线程的联系**
+
+-  RunLoop对象和线程是一一对应关系；
+-  RunLoop保存在一个全局的Dictionary里，线程作为key，RunLoop作为value；
+- 如果没有RunLoop，线程执行完任务就会退出；如果没有RunLoop，主线程执行完main()函数就会退出，程序就不能处于运行状态；
+-  RunLoop创建时机：线程刚创建时并没有RunLoop对象，RunLoop会在第一次获取它时创建；
+-  RunLoop销毁时机：RunLoop会在线程结束时销毁；
+- 主线程的RunLoop已经自动获取（创建），子线程默认没有开启RunLoop；
+- 主线程的RunLoop对象是在UIApplicationMain中通过[NSRunLoop currentRunLoop]
+
+<br/>
+<br/>
+
+> **RunLoop在OC中有获取**
+
+```
+// Foundation
+[NSRunLoop mainRunLoop];     // 获取主线程的 RunLoop 对象
+[NSRunLoop currentRunLoop];  // 获取当前线程的 RunLoop 对象
+// Core Foundation
+CFRunLoopGetMain();     // 获取主线程的 RunLoop 对象
+CFRunLoopGetCurrent();  // 获取当前线程的 RunLoop 对象
+```
+
+
+<br/>
+
+**CFRunLoopGetCurrent()**是用来获取Runloop对象的，其源代码：
+
+
+```
+CFRunLoopRef CFRunLoopGetCurrent(void) {
+    CHECK_FOR_FORK();
+    CFRunLoopRef rl = (CFRunLoopRef)_CFGetTSD(__CFTSDKeyRunLoop);
+    if (rl) return rl;
+    return _CFRunLoopGet0(pthread_self());  // 调用 _CFRunLoopGet0 函数并传入当前线程
+}
+```
+
+
 
 &emsp; ` NSRunLoop` 是基于 `CFRunLoopRef` 的OC封装，提供了面向对象的 API，但`不是线程安全`的，`CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API，是线程安全的，`CoreFoundation`是开源的([CoreFoundation 源码地址](https://link.jianshu.com?t=https://opensource.apple.com/tarballs/CF/))
 
@@ -47,51 +97,99 @@ static CFMutableDictionaryRefloopsDic;
 /// 访问 loopsDic 时的锁
 static CFSpinLock_t loopsLock;
 
-/// 获取一个 pthread 对应的 RunLoop。
-CFRunLoopRef_CFRunLoopGet(pthread_tthread){
-	//加锁
-	OSSpinLockLock(&loopsLock);
-
-	if(!loopsDic){
-		// 第一次进入时，初始化全局Dic，并先为主线程创建一个 RunLoop。
-		loopsDic=CFDictionaryCreateMutable();
-		CFRunLoopRef mainLoop=_CFRunLoopCreate();
-		CFDictionarySetValue(loopsDic,pthread_main_thread_np(),mainLoop);
-	}
-
-	/// 直接从 Dictionary 里获取。
-	CFRunLoopRef loop=CFDictionaryGetValue(loopsDic,thread));
-
-	if(!loop){
-
-		/// 取不到时，创建一个
-		loop=_CFRunLoopCreate();
-		CFDictionarySetValue(loopsDic,thread,loop);
-
-		/// 注册一个回调，当线程销毁时，顺便也销毁其对应的 RunLoop。
-		_CFSetTSD(...,thread,loop,__CFFinalizeRunLoop);
-
-	}
-
-	OSSpinLockUnLock(&loopsLock);
-
-	returnloop;
-
+// 获取线程对应的runloop最终调用的核心函数
+// should only be called by Foundation
+// t==0 is a synonym for "main thread" that always works
+CF_EXPORT CFRunLoopRef _CFRunLoopGet0(pthread_t t) {
+    // 线程t为空则默认返回主线程runloop
+    if (pthread_equal(t, kNilPthreadT)) {
+    t = pthread_main_thread_np();
+    }
+    __CFLock(&loopsLock);
+    if (!__CFRunLoops) {
+        __CFUnlock(&loopsLock);
+    // 创建一个用于映射线程和runloop关系的字典
+    CFMutableDictionaryRef dict = CFDictionaryCreateMutable(kCFAllocatorSystemDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
+    // 主线程runloop
+    CFRunLoopRef mainLoop = __CFRunLoopCreate(pthread_main_thread_np());
+    // 保存main runloop，main_thread为key，main runloop为value
+    CFDictionarySetValue(dict, pthreadPointer(pthread_main_thread_np()), mainLoop);
+    if (!OSAtomicCompareAndSwapPtrBarrier(NULL, dict, (void * volatile *)&__CFRunLoops)) {
+        CFRelease(dict);
+    }
+    CFRelease(mainLoop);
+        __CFLock(&loopsLock);
+    }
+    // 当前线程作为 Key，从 __CFRunLoops 字典中获取 RunLoop 
+    CFRunLoopRef loop = (CFRunLoopRef)CFDictionaryGetValue(__CFRunLoops, pthreadPointer(t));
+    __CFUnlock(&loopsLock);
+    // 未查找到缓存则创建一个runloop兵缓存在字典中
+    if (!loop) {//如果字典中不存在
+    CFRunLoopRef newLoop = __CFRunLoopCreate(t);// ⚠️创建当前线程的 RunLoop
+        __CFLock(&loopsLock);
+    loop = (CFRunLoopRef)CFDictionaryGetValue(__CFRunLoops, pthreadPointer(t));
+    if (!loop) {
+        CFDictionarySetValue(__CFRunLoops, pthreadPointer(t), newLoop);// ⚠️保存到字典中
+        loop = newLoop;
+    }
+        // don't release run loops inside the loopsLock, because CFRunLoopDeallocate may end up taking it
+        __CFUnlock(&loopsLock);
+    CFRelease(newLoop);
+    }
+    if (pthread_equal(t, pthread_self())) {
+        _CFSetTSD(__CFTSDKeyRunLoop, (void *)loop, NULL);
+        if (0 == _CFGetTSD(__CFTSDKeyRunLoopCntr)) {
+            // 注册一个回调，当线程销毁时，销毁对应的RunLoop
+            _CFSetTSD(__CFTSDKeyRunLoopCntr, (void *)(PTHREAD_DESTRUCTOR_ITERATIONS-1), (void (*)(void *))__CFFinalizeRunLoop);
+        }
+    }
+    return loop;
 }
 
 CFRunLoopRefCFRunLoopGetMain(){
-	return_CFRunLoopGet(pthread_main_thread_np());
+	return _CFRunLoopGet(pthread_main_thread_np());
 }
 
 CFRunLoopRefCFRunLoopGetCurrent(){
-	return_CFRunLoopGet(pthread_self());
+	return _CFRunLoopGet(pthread_self());
 }
 ```
 
 &emsp; 可以看到生成的对象是加锁的，这样就避免被改变了。NSRunLoop可以初始化一个对象，可以生成一个新的runloop，这就像上面讲的有可能产生临界区，所以它不是线程安全的。
 
 
+<br/>
+<br/>
 
+> 启动子线程的 RunLoop
+
+```
+// Foundation
+[[NSRunLoop currentRunLoop] run];
+[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+// Core Foundation
+CFRunLoopRun();
+CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0e10, false);  // 第3个参数：设置为 true，代表执行完 Source/Port 后就会退出当前 loop
+```
+
+CFRunLoopRun()/CFRunLoopRunInMode()函数是怎么启动RunLoop的：
+
+```
+void CFRunLoopRun(void) {
+    int32_t result;
+    do {
+        result = CFRunLoopRunSpecific(CFRunLoopGetCurrent(), kCFRunLoopDefaultMode, 1.0e10, false);
+        CHECK_FOR_FORK();
+    } while (kCFRunLoopRunStopped != result && kCFRunLoopRunFinished != result);
+}
+
+SInt32 CFRunLoopRunInMode(CFStringRef modeName, CFTimeInterval seconds, Boolean returnAfterSourceHandled) {   
+    CHECK_FOR_FORK();
+    return CFRunLoopRunSpecific(CFRunLoopGetCurrent(), modeName, seconds, returnAfterSourceHandled);
+}
+```
+
+可以看到它通过调用[**CFRunLoopRunSpecific(**)](https://www.jianshu.com/p/e9de4992cdf5)函数来启动RunLoop
 <br/>
 
 

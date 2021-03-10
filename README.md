@@ -1,5 +1,6 @@
 
 ># Git提交规范
+
 ```
 - fix: 修复问题;
 - docs: 修改文档;
@@ -179,6 +180,7 @@
 	       
 >## ProjectDesc
 * [**Desc(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
+* [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
 * 设计模式
 	* [**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)
 	* [**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)
@@ -401,7 +403,8 @@
 [](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/.md)
 *	[MJRefresh(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/MJRefresh(I).md)
 *	[SVProgressHUD(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/SVProgressHUD(I).md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/.md)
+*	**Bug收集**
+	*	[plcrashreporter](https://github.com/microsoft/plcrashreporter)
 [](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/.md)
 [](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/.md)
 [](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/.md)

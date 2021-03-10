@@ -2,6 +2,7 @@
 - **Chapter Six**
 	- [x] 翻转字符串
 	- [x] 和为S的数字
+- [ ] [**快速排序**](http://c.biancheng.net/view/198.html)
 
 
 <br/>
