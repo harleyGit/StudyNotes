@@ -279,6 +279,7 @@ static inline NSString * _Nonnull SDDiskCacheFileNameForKey(NSString * _Nullable
 ```
 
 
+&emsp; 强制解压缩的原理就是对图片进行重新绘制，得到一张新的解压缩后的位图。其中，用到的最核心的函数是 CGBitmapContextCreate 。
 
 
 
