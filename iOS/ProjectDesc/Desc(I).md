@@ -16,6 +16,7 @@
 			- 参数范型Void 
 		- PublishSubject
 			- 状态绑定 
+- **Crash收集**
 - **[MVVM之从理论到实践](https://www.jianshu.com/p/1c1b6bc557ac)**
 	- [DemoCode](https://gitee.com/harelyio/work/tree/master/Project/MVVMReactive)
 - **[仿SDWebImage逻辑](https://gitee.com/harelyio/work/tree/master/Project/ImageLoadSDK)**
@@ -519,6 +520,34 @@ let logoutCellViewModel = SettingCellViewModel(with: R.string.localizable.settin
 
 ```
 
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+># Crash收集
+
+<br/>
+
+>成熟开源类库Crash收集：
+- [**KSCrash**](https://github.com/kstenerud/KSCrash)
+- [**plcrashreporter**](https://github.com/microsoft/plcrashreporter)
+- [**CrashKit**](https://github.com/kaler/CrashKit)
+
+
+
+<br/>
+
+>对保密性要求不高的程序来，可以选择各种一条龙Crash统计产品:
+- [**Crashlytics**](https://firebase.google.com/products/crashlytics/)
+- [**Hockeyapp**](https://appcenter.ms)
+- [**友盟**](https://www.umeng.com)
+- [**Bugly**](https://bugly.qq.com/v2/)
 
 
 

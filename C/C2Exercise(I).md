@@ -2,7 +2,8 @@
 - **Chapter Six**
 	- [x] 翻转字符串
 	- [x] 和为S的数字
-- [ ] [**快速排序**](http://c.biancheng.net/view/198.html)
+- [x] [**快速排序**](http://c.biancheng.net/view/198.html)
+- [x] [基本算法](https://juejin.cn/post/6844903885904019470)
 
 
 <br/>
