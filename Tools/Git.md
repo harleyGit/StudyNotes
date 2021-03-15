@@ -1,3 +1,82 @@
+- **Git提交代码**
+- **Git配置**
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># Git提交代码
+
+
+<br/>
+
+> **1.拉取指定分支代码**
+
+> git clone -b dev https://github.com/xxx/xxx.git
+
+
+<br/>
+
+
+> **2.初始化版本库**
+
+> git init
+
+
+<br/>
+
+> **3.添加文件到版本库（只是添加到缓存区） .代表添加文件夹下所有文件**
+
+> git add .
+
+
+<br/>
+
+
+> **4.把添加的文件提交到版本库，并填写提交备注**
+
+> git commit -m "提交记录"
+
+<br/>
+
+> **5.把本地库与远程库关联**
+
+> git remote add origin 你的远程库地址
+
+
+<br/>
+
+> **6.推送代码到远程仓库（ 第一次推送时）**
+
+> git push -u origin master
+
+
+
+
+<br/>
+
+> **7.推送代码到远程仓库（第一次推送后，直接使用该命令即可推送修改）**
+
+> git push origin master 
+
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># Git配置
+
 查看电脑是否安装Git，终端输入：
 
 ```
@@ -11,10 +90,7 @@ git
 
 
 <br/>
-***
 <br/>
-
-># Git 配置
 
 **`创建ssh key、配置git`**
 
@@ -29,7 +105,9 @@ git config --global user.email "harley@qq.com"
 ```
 
 <br/>
+
 **`②. 终端命令创建ssh key`**
+
 ```
 
 ssh-keygen -t rsa -C "harelysoa@qq.com" 
@@ -41,6 +119,7 @@ Enter file in which to save the key (/Users/harleyhuang/.ssh/id_rsa): 
 ```
 
 创建过的，这里我选**n**，没有创建过的，会要求确认路径和输入密码，我们这使用默认的一路回车就行。成功的话会在**~/**下生成.ssh文件夹，进去，打开id_rsa.pub，复制里面的key
+
 ```
 
 Created directory '/Users/harleyhuang/.ssh'.
@@ -48,6 +127,7 @@ Created directory '/Users/harleyhuang/.ssh'.
 Enter passphrase (empty for no passphrase): 
 
 Enter same passphrase again: 
+
 ```
 
 要求输入管理员密码，然后会提示：
@@ -68,10 +148,13 @@ Enter same passphrase again: 
 
 
 完成后终端输入：
+
 ```
 ssh -T git@github.com 
 ```
+
 终端输出：
+
 ```
 
 The authenticity of host 'github.com (52.74.223.119)' can't be established.
@@ -83,6 +166,7 @@ Are you sure you want to continue connecting (yes/no)? 
 输入：yes
 
 终端输出：
+
 ```
 Warning: Permanently added 'github.com,52.74.223.119' (RSA) to the list of known hosts.
 
@@ -90,8 +174,10 @@ Enter passphrase for key '/Users/harleyhuang/.ssh/id_rsa': 
 
 ```
 输入管理员密码，然后回车,终端输出：
+
 ```
 
 Hi harleyGit! You've successfully authenticated, but GitHub does not provide shell access.
 ```
+
 Git 安装完成!

@@ -1,5 +1,15 @@
-
+- **图片渲染过程**
+- **SDWebImage的UML图**
+- **下载顺序枚举**
+- **缓存文件清除机制**
+- **图片格式**
+- **MD5获取文件名**
+- [**SDWebImage知识点精讲**](http://cloverkim.com/SDWebImage-interview-question.html)
 - **[从零开始打造一个iOS图片加载框架](https://juejin.im/post/6844903807667666951)**
+- [**iOS 中图片的解压缩**](http://www.cocoachina.com/ios/20170227/18784.html)
+- [**SDWebImage 4.x版本源码分析**](https://www.jianshu.com/p/ae5c107d2b76)
+- [**从sd_setImageWithURL:方法谈SDWebImage （二)**](https://www.jianshu.com/p/2d96280aa841)
+
 
 
 <br/>
@@ -42,10 +52,11 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 <br/>
 
 
-># SDWebImage 类关系和方法调用UML图
+># SDWebImage的UML图
+
 <br/>
 
-# `SDWebImage UML类图`
+**`SDWebImage UML类图`**
 
 &emsp;  若是想看下列的清晰的结构图，最新的版本有的类是没有的，所以需要 `pod 'SDWebImage',  '~>3.8.2' `版本。
 
@@ -167,7 +178,8 @@ typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
 
 
 
-># 不同格式图像区别
+># 图片格式
+
 -  png: 无损压缩，解压缩性能高；
 -  jpg：压缩比很高；
 -  gif：动图；
@@ -246,7 +258,8 @@ typedef NS_ENUM(NSInteger, SDImageFormat) {
 
 ***
 <br/>
-# `MD5获取文件名`
+
+># `MD5获取文件名`
 
 ```
 
@@ -288,11 +301,4 @@ static inline NSString * _Nonnull SDDiskCacheFileNameForKey(NSString * _Nullable
 ***
 <br/>
 
-参考资料：
-<br/>
 
-[iOS 中图片的解压缩](http://www.cocoachina.com/ios/20170227/18784.html)
-
-[SDWebImage 4.x版本源码分析](https://www.jianshu.com/p/ae5c107d2b76)
-
-[从sd_setImageWithURL:方法谈SDWebImage （二)](https://www.jianshu.com/p/2d96280aa841)
