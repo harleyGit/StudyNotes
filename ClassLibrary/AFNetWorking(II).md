@@ -1,3 +1,7 @@
+
+
+- **AFNetworking类结构图**
+	- 网络请求流程图 
 - **属性**
 - **多路复用**
 
@@ -19,6 +23,59 @@
 
 ***
 <br/>
+
+># 
+
+![AF类结构图 <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet1.png)
+
+<br/>
+
+> **发送请求**
+
+![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet2.png)
+
+
+<br/>
+<br/>
+
+
+
+> **接收到响应**
+
+![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet3.png)
+
+
+<br/>
+<br/>
+
+
+
+> **进度条模块**
+
+![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet4.png)
+
+
+<br/>
+<br/>
+
+
+
+> **认证模块**
+
+![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet5.png)
+
+![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet6.png)
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
 
 
 ># 多路复用
