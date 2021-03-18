@@ -1,6 +1,6 @@
 
 
-- **AFNetworking类结构图**
+- **类结构图**
 	- 网络请求流程图 
 - **属性**
 - **多路复用**
@@ -24,7 +24,7 @@
 ***
 <br/>
 
-># 
+># 类结构图
 
 ![AF类结构图 <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet1.png)
 

@@ -102,16 +102,18 @@
 
 当然这仅仅是一个单向认证，https还会有双向认证，相对于单向认证也很简单。仅仅多了服务端验证客户端这一步。感兴趣的可以看看这篇：[Https单向认证和双向认证。](https://link.jianshu.com?t=http://blog.csdn.net/duanbokan/article/details/50847612)
 
-###### 了解了https认证流程后，接下来我们来讲讲AFSecurityPolicy这个类，AF就是用这个类来满足我们各种https认证需求。
+**了解了https认证流程后，接下来我们来讲讲AFSecurityPolicy这个类，AF就是用这个类来满足我们各种https认证需求。**
 
 
 
 
 <br/>
+
 ![类结构图](https://upload-images.jianshu.io/upload_images/2959789-f764394a6ddbbe9e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
+
 ![封装架构图](https://upload-images.jianshu.io/upload_images/2959789-f40c67aa136faa86.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
