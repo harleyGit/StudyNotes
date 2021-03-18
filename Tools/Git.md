@@ -1,6 +1,6 @@
 - **Git提交代码**
+- **错误解决**
 - **Git配置**
-
 
 
 
@@ -66,8 +66,35 @@
 
 
 
+<br/>
+
+***
+<br/>
+
+># 错误解决
+
+<br/>
+
+> 1. **LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com:443** 
+
+```
+//查看git配置
+git config --global --list  
+
+// 发现其中有 http.https.XXXXXX.proxy 和 https.https.XXXXXX.proxy配置
+
+//删除代理配置， 运行后，git恢复正常。
+git config --global --unset http.https://github.com.proxy
+git config --global --unset https.https://github.com.proxy
 
 
+//
+ git config --global --unset http.proxy
+ git config --global --unset https.proxy
+ 
+ networksetup -setv6off Wi-Fi
+
+```
 
 
 <br/>
