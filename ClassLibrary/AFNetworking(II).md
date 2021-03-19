@@ -4,6 +4,7 @@
 	- Delegate接受数据
 - **AF类结构**
 	- 目录结构
+	- AFURLSessionManager
 - **类结构图**
 	- 网络请求流程图 
 - **属性**
@@ -139,14 +140,92 @@ NSURLSession的使用共分两步:
 
 <br/>
 
-> **目录结构**
+> **[目录结构](https://www.jianshu.com/p/e4ff363da7f7)**
 - **AFNetWorking** 这个文件是一个头文件。啥也没做，就是引入了其他文件方便使用。
-- **AFURLSessionManager** 这个文件是核心类，基本上通过它来实现了大部分核心功能。负责请求的建立、管理、销毁、安全、请求重定向、请求重启等各种功能。他主要实现了NSURLSession和NSRULSessionTask的封装。
-- **AFHTTPSessionManager** 这个类是AFURLSessionManager的子类。主要实现了对HTTP请求的优化。
+- **AFURLSessionManager** 是核心类，基本上通过它来实现了大部分核心功能。负责请求的建立、管理、销毁、安全、请求重定向、请求重启等各种功能。他主要实现了NSURLSession和NSRULSessionTask的封装。
+- **AFHTTPSessionManager** 是AFURLSessionManager的子类对外面做一个接口的显示, 主要实现了对HTTP请求的优化。
 - **AFURLRequestSerialization** 这个主要用于请求头的编码解码、序列化、优化处理、简化请求拼接过程等。
 - **AFURLResponseSerialization** 这个主要用于网络返回数据的序列化、编码解码、序列化、数据处理等。
 - **AFSecurityPolicy** 这个主要用于请求的认证功能。比如https的认证模式等。
 - **AFNetworkReachabilityManager** 这个主要用于监听网络请求状态变化功能。
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet10.png)
+
+
+<br/>
+<br/>
+
+> **AFURLSessionManager**
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet9.jpeg)
+
+
+**AFURLSessionManager.h头文件属性**:
+
+```
+
+interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate, NSSecureCoding, NSCopying>
+
+//指定的初始化方法、通过他来初始化一个Manager对象。
+- (instancetype)initWithSessionConfiguration:(nullable NSURLSessionConfiguration *)configuration 
+
+//AFURLSessionManager通过session来管理和创建网络请求。一个manager就实现了对这个session的管理，他们是一一对应的关系。
+@property (readonly, nonatomic, strong) NSURLSession *session;
+
+//处理网络请求回调的操作队列,就是我们初始化session的时候传入的那个OperationQueue参数。如果不传入，默认是MainOperationQueue。
+@property (readonly, nonatomic, strong) NSOperationQueue *operationQueue;
+
+//对返回数据的处理都通过这个属性来处理，比如数据的提取、转换等。默认是一个`AFJSONResponseSerializer`对象用JSON的方式解析。
+@property (nonatomic, strong) id <AFURLResponseSerialization> responseSerializer;
+
+//用于指定session的安全策略。用于处理信任主机和证书认证等。默认是`defaultPolicy`。
+@property (nonatomic, strong) AFSecurityPolicy *securityPolicy;
+
+//观测网络状态的变化，具体可以看我的Demo用法。
+@property (readwrite, nonatomic, strong) AFNetworkReachabilityManager *reachabilityManager;
+
+@end
+
+```
+
+<br/>
+
+类中使用的通知:
+
+在外面通过监听这些通知，可以获取到这些通知的信息
+
+> - AFNetworkingTaskDidResumeNotification
+- AFNetworkingTaskDidCompleteNotification
+- AFNetworkingTaskDidSuspendNotification
+- AFURLSessionDidInvalidateNotification
+- AFURLSessionDownloadTaskDidFailToMoveFileNotification
+- AFNetworkingTaskDidCompleteResponseDataKey
+- AFNetworkingTaskDidCompleteSerializedResponseKey
+- AFNetworkingTaskDidCompleteResponseSerializerKey
+- AFNetworkingTaskDidCompleteAssetPathKey
+- AFNetworkingTaskDidCompleteErrorKey
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
