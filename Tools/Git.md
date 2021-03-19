@@ -64,6 +64,16 @@
 > git push origin master 
 
 
+<br/>
+
+> **8.拉取远程代码到本地**
+
+
+
+当远程是在master分支，本地开发也是在分支，可以使用下面命令：
+> [git pull --rebase ](https://www.jianshu.com/p/b0a4d0c1e66f)
+
+
 
 
 <br/>
