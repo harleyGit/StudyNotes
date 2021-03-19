@@ -149,7 +149,9 @@ NSURLSession的使用共分两步:
 - **AFSecurityPolicy** 这个主要用于请求的认证功能。比如https的认证模式等。
 - **AFNetworkReachabilityManager** 这个主要用于监听网络请求状态变化功能。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet10.png)
+<br/>
+
+![AFNet目录结构<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet10.png)
 
 
 <br/>
