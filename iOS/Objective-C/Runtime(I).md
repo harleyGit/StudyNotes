@@ -2,6 +2,8 @@
 - **获取成员、属性变量**
 	- 获取类变量
 	- 获取类属性
+- [**消息转发机制**](https://blog.csdn.net/wtdask/article/details/80613446)
+	- [performSelector](https://www.jianshu.com/p/672c0d4f435a)
 
 
 

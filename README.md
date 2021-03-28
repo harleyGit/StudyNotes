@@ -82,6 +82,7 @@
 >## Objective-C
 * [**OC资料**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/OC资料.md)
 *	[**iOS类继承**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
+*	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 *	[App发布](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
@@ -94,7 +95,6 @@
 * [Block(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(II).md)
 * [Block(III)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(III).md)
 * [iPhone 设计规范](https://zhuanlan.zhihu.com/p/127780364)
-* [消息转发](https://blog.csdn.net/wtdask/article/details/80613446)
 * [本地化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/本地化(I).md)
 * [闭包](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/闭包.md)
 * [变量](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/变量.md)
@@ -106,7 +106,6 @@
 * [强弱引用](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/强弱引用.md)
 * [响应链(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(I).md)
 * [响应链(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
-* [消息转发](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 * [远程推送(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
 * [坐标系(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/坐标系(I).md)
 * [App跳转](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App跳转.md)
