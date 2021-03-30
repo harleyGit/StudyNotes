@@ -5,6 +5,7 @@
 - [x] [**快速排序**](http://c.biancheng.net/view/198.html)
 - [x] [基本算法](https://juejin.cn/post/6844903885904019470)
 - [x] [**LeetCode Cookbook**](https://books.halfrost.com/leetcode/)
+- [ ] [练习2](https://github.com/zhedahht/CodingInterviewChinese2)
 
 
 <br/>
