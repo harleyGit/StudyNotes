@@ -1,10 +1,10 @@
 - **[OC基础](#oc基础)** [](https://my.oschina.net/antsky/blog/1475173)
 	- [UILabel多适应](#uilabel多适应)
-	- [不同账号内购后的崩溃处理异常](#不同账号内购后的崩溃处理异常)
+	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 - [**底层**](#底层)
-	- RunLoop与自动释放池关系，RunLoop什么时侯释放
+	- [RunLoop与自动释放池关系，什么时侯释放](runloop与自动释放池关系什么时侯释放)
 - [**网络**](#网络)
-	- [NSURLSession与RunLoop的联系](#nuurlSession与runloop的联系)
+	- [NSURLSession与RunLoop的联系](#nsurlsession与runloop的联系)
 
 
 
@@ -50,8 +50,9 @@ Label自适应宽度
 <br/>
 <br/>
 
-> 不同账号内购后的崩溃处理异常
 
+> <h3 id= "不同账号内购后崩溃处理异常">不同账号内购后崩溃处理异常<h3>
+ 
 
 IAP支付的过程：
 
@@ -118,7 +119,7 @@ IAP支付的过程：
 
 <br/>
 
-> RunLoop与自动释放池关系，RunLoop什么时侯释放？
+> RunLoop与自动释放池关系，什么时侯释放？
 
 
 
@@ -195,7 +196,7 @@ CFSocket 是最底层的接口，只负责 socket 通信。
 
 <br/>
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet11.png)
+![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet11.png)
 
 
 
