@@ -1,5 +1,5 @@
 - **[OC基础](#oc基础)** [](https://my.oschina.net/antsky/blog/1475173)
-	- [UILabel多适应](#uilabel多适应)
+	- [UILabel多适应](#UILabel多适应)
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](runloop与自动释放池关系什么时侯释放)
