@@ -1,10 +1,15 @@
 - **[OC基础](#oc基础)** [](https://my.oschina.net/antsky/blog/1475173)
 	- [UILabel多适应](#UILabel多适应)
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
+	- [适配器、响应元是什么](#适配器响应元是什么)
 - [**底层**](#底层)
-	- [RunLoop与自动释放池关系，什么时侯释放](runloop与自动释放池关系什么时侯释放)
+	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
+	- [main函数之前会做什么](main函数之前会做什么)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#nsurlsession与runloop的联系)
+- [**类库** ](#类库)
+	- [FishHook](#fishhook) 
+- [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
 
 
 
@@ -18,7 +23,7 @@
 
 <br/>
 
-> UILabel多适应?
+> <h3 id="UILabel多适应">UILabel多适应?</h3>
 
 Label自适应宽度
 
@@ -110,6 +115,44 @@ IAP支付的过程：
 
 
 
+
+<br/>
+
+> <h3 id ="适配器响应元是什么">适配器、响应元是什么？</h3>
+
+- **[适配器](https://www.jianshu.com/p/61ade7936c93)**
+	- [**适配器Demo**](https://github.com/idage/iOSAdapterDemo)
+	- [**适配器模式实战**](https://www.jianshu.com/p/5a45fe49f8b6)
+
+
+
+
+**定义：** 将一个类的接口转换成客户希望的另外一个接口。Adapter模式使得原本由于接口不兼容而不能一起工作的那些类可以在一起工作。
+
+&emsp; 适配器其实就是在视图控制器和子视图之间的一个媒介，这个媒介其实用来解耦两者之间的耦合度的。
+当然这个子视图控件是被封装好的一个公有视图类，比如一个特有风格的按钮、tabelViewCell等，虽然这个控件只是一个展示类，并没有什么交互。但是在项目好几个地方都用到了这个控件了，你在给这个视图控件负值的时候是怎么做的呢？
+
+这个时候就需要建立一个适配器了。
+
+适配器使用场景：
+- 将一个类的接口转换成客户希望的另外一个接口。Adapter 模式使得原本由于接口不兼容而不能一起工作的那些类可以一起工作；
+- 对于一些第三方的统计分析、错误收集等SDK应该都不陌生。就目前而言市面上也有许多相同功能的产品，眼花缭乱，让人无法抉择选哪一款SDK才是最靠谱的；
+- 已经存在的类的接口不符合我们的需求；
+- 创建一个可以复用的类，使得该类可以与其他不相关的类或不可预见的类（即那些接口可能不一定兼容的类）协同工作；
+- 在不对每一个都进行子类化以匹配它们的接口的情况下，使用一些已经存在的子类。
+
+**优点：**解耦合，让视图类不合数据类产生耦合，使视图类更加独立。 新增加数据类的时候不需要修改视图类；
+**缺点：**会新增加很多类，使系统更凌乱，代码可读性更弱了。
+
+
+
+<br/>
+
+- **响应元**
+
+
+
+
 <br/>
 
 ***
@@ -119,7 +162,57 @@ IAP支付的过程：
 
 <br/>
 
-> RunLoop与自动释放池关系，什么时侯释放？
+> <h3 id ="runloop与自动释放池关系什么时侯释放">RunLoop与自动释放池关系，什么时侯释放?</h3>
+
+
+<br/>
+
+> <h3 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h3>
+
+main()函数调用之前，其实是做了很多准备工作，主要是dyld这个动态链接器在负责，核心流程如下:
+
+- 程序执行从_dyld_star开始
+	- 读取macho文件信息，设置虚拟地址偏移量，用于重定向;
+	- 调用dyld::_main方法进入macho文件的主程序;
+
+<br/>
+
+- 配置一些环境变量
+	- 设置的环境变量方便我们打印出更多的信息。
+	- 调用getHostInfo()来获取machO头部获取当前运行架构的信息
+
+<br/>
+
+- 实例化主程序,即macho可执行文件
+
+<br/>
+
+- 加载共享缓存库
+
+<br/>
+
+
+- 插入动态缓存库
+
+<br/>
+
+- 链接主程序
+
+<br/>
+
+- 初始化函数
+	- 经过一系列的初始化函数最终调用notifSingle函数
+	-  此回调是被运行时_objc_init初始化时赋值的一个函数load_image(后面的总结是：先类文件load,再分类文件load,然后再是C++构造函数，最后就进入了我们的main主程序)
+	-  load_images里面执行call_load_methods函数，循环调用所用类以及分类的load方法
+		-  call_load_methods方法调用,在call_load_methods中，通过doWhile循环来调用call_class_loads加载`每个类的load方法`,然后再加`载分类的loads方法`;
+	- doModInitFunctions函数，内部会调用全局C++对象的构造函数，即_ _ attribute_ _((constructor))这样的函数
+		- 在调用完notifySigin后，继续调用了doInitialization，doModInitFunctions会调用machO文件中_mod_init_func段的函数，也就是我们在文件中所定义的全局C++构造函数
+
+	
+<br/>
+
+
+- 	返回主程序的入口函数，开始进入主程序的main（）函数
 
 
 
@@ -133,7 +226,7 @@ IAP支付的过程：
 
 <br/>
 
-> NSURLSession与RunLoop的联系
+> <h3 id="NSURLSession与RunLoop的联系">NSURLSession与RunLoop的联系</h3>
 
 AFNet2.0网络请求常驻线程机制
 
@@ -246,7 +339,19 @@ RunLoop 启动前内部必须要有至少一个 Timer/Observer/Source，所以 A
 
 
 
+<br/>
 
+***
+<br/>
+
+># 类库
+
+<br/>
+<br/>
+
+> <h2 id = "fishhook">FishHook<h3>
+
+hook系统函数，一个faceBook写的三方框架
 
 
 
