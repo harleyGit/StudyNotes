@@ -527,6 +527,8 @@
 	*	[LifePhilosophy(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/LifePhilosophy(I).md)
 	*	[LifePhilosophy(II)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/LifePhilosophy(II).md)
 	*	[Emotion(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/Emotion(I).md)
+*	**其他**
+	*	[others(I)](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/others(I).md)
 * 思维导图
 	*	[汽车史 思维导图](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/汽车史.xmind)
 
