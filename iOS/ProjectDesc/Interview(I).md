@@ -6,7 +6,8 @@
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [main函数之前会做什么](main函数之前会做什么)
 - [**网络**](#网络)
-	- [NSURLSession与RunLoop的联系](#nsurlsession与runloop的联系)
+	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
+	- [网络性能优化](#网络性能优化)
 - [**类库** ](#类库)
 	- [FishHook](#fishhook) 
 - [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
@@ -224,9 +225,12 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 ># 网络
 
+[**iOS状态码解读**](https://github.com/ChenYilong/iOSDevelopmentTips/blob/master/Tips/HTTP状态码汇总.md)
+
 <br/>
 
 > <h3 id="NSURLSession与RunLoop的联系">NSURLSession与RunLoop的联系</h3>
+
 
 AFNet2.0网络请求常驻线程机制
 
@@ -336,6 +340,69 @@ RunLoop 启动前内部必须要有至少一个 Timer/Observer/Source，所以 A
 ```
 
 当需要这个后台线程执行任务时，AFNetworking 通过调用 [NSObject performSelector:onThread:..] 将这个任务扔到了后台线程的 RunLoop 中。
+
+
+<br/>
+<br/>
+
+<br/>
+
+> <h3 id="网络性能优化">网络性能优化</h3>
+
+- [**网络缓存（URL缓存）**](https://www.jianshu.com/p/fb5aaeac06ef)
+
+&emsp; 如果打算在項目中加入網絡請求緩存，你並不需要自己造一個輪子，瞭解一下NSURLCache就足夠，這是一個Apple已經為你準備好了的網絡請求緩存類。
+
+```
+public enum NSURLRequestCachePolicy : UInt {
+case UseProtocolCachePolicy // 默認值
+case ReloadIgnoringLocalCacheData // 不使用緩存數據
+case ReloadIgnoringLocalAndRemoteCacheData // Unimplemented
+public static var ReloadIgnoringCacheData: NSURLRequestCachePolicy { get } //忽略缓存直接从原始地址下载
+case ReturnCacheDataElseLoad // 無論緩存是否過期都是用緩存，沒有緩存就進行網絡請求
+case ReturnCacheDataDontLoad // 無論緩存是否過期都是用緩存，沒有緩存也不會進行網絡請求
+case ReloadRevalidatingCacheData // Unimplemented
+}
+
+
+
+//使用NSURLCache之前需要在AppDelegate中緩存空間的設置：
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+	NSURLCache *URLCache = [[NSURLCache alloc] initWithMemoryCapacity:4 * 1024 * 1024
+	diskCapacity:20 * 1024 * 1024
+	diskPath:nil];
+	[NSURLCache setSharedURLCache:URLCache];
+}
+```
+
+&emsp; 文件的缓存是否有效是通过`Last-Modified`和`ETag`来进行判断的。
+
+<br/>
+
+- **`Last-Modified`**顾名思义，是资源最后修改的时间戳，往往与缓存时间进行对比来判断缓存是否过期。
+
+&emsp; 在浏览器第一次请求某一个URL时，服务器端的返回状态会是200，内容是你请求的资源，同时有一个Last-Modified的属性标记此文件在服务期端最后被修改的时间，格式类似这样：
+
+`Last-Modified: Fri, 12 May 2006 18:53:33 GMT`
+
+&emsp; 客户端第二次请求此URL时，根据 HTTP 协议的规定，浏览器会向服务器传送 If-Modified-Since 报头，询问该时间之后文件是否有被修改过：
+
+`If-Modified-Since: Fri, 12 May 2006 18:53:33 GMT`
+
+
+<br/>
+
+- ETag 是的功能与 Last-Modified 类似：服务端不会每次都会返回文件资源。
+
+&emsp; 客户端每次向服务端发送上次服务器返回的 ETag 值，服务器会根据客户端与服务端的 ETag 值是否相等，来决定是否返回 data，同时总是返回对应的 HTTP 状态码。客户端通过 HTTP 状态码来决定是否使用缓存。比如：服务端与客户端的 ETag 值相等，则 HTTP 状态码为 304，不返回 data。服务端文件一旦修改，服务端与客户端的 ETag 值不等，并且状态值会变为200，同时返回 data。
+
+
+总结： 在官方给出的文档中提出 ETag 是首选的方式，优于 Last-Modified 方式。因为 ETag 是基于 hash ，hash 的规则可以自己设置，而且是基于一致性，是“强校验”。 Last-Modified 是基于时间，是弱校验，弱在哪里？比如说：如果服务端的资源回滚客户端的 Last-Modified 反而会比服务端还要新。
+
+
+
+
 
 
 
