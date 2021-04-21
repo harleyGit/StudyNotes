@@ -2,6 +2,10 @@
 	- [UILabel多适应](#UILabel多适应)
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 	- [适配器、响应元是什么](#适配器响应元是什么)
+- [**性能优化**](#性能优化)
+	- [NSTimer循环引用解决](#NSTimer循环引用解决)
+	- [NSTimer计时不准确怎么办](#NSTimer计时不准确怎么办)
+	- [图片的处理（解码，绘制也可以放到子线程做的）](#图片的处理（解码，绘制也可以放到子线程做的）)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [main函数之前会做什么](main函数之前会做什么)
@@ -159,7 +163,199 @@ IAP支付的过程：
 ***
 <br/>
 
-># 底层
+
+># <h1 id = "性能优化">性能优化</h1>
+
+<br/>
+
+> <h3 id = "NSTimer循环引用解决">NSTimer循环引用解决？</h1>
+
+&emsp; 解决NSTimer循环引用的更佳方案:NSProxy直接消息转发，不会像继承于NSObject的对象去父类里面搜索，降低效率
+
+
+
+<br/>
+
+> <h3 id = "NSTimer计时不准确怎么办">NSTimer计时不准确怎么办？</h1>
+
+&emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计
+
+借口定义：
+
+```
++ (NSString *)execTask:(void(^)(void))task
+           start:(NSTimeInterval)start
+        interval:(NSTimeInterval)interval
+         repeats:(BOOL)repeats
+           async:(BOOL)async;
+
++ (NSString *)execTask:(id)target
+              selector:(SEL)selector
+                 start:(NSTimeInterval)start
+              interval:(NSTimeInterval)interval
+               repeats:(BOOL)repeats
+                 async:(BOOL)async;
+
++ (void)cancelTask:(NSString *)name;
+
+```
+
+
+<br/>
+
+接口实现
+
+```
+
+static NSMutableDictionary *timers_;
+dispatch_semaphore_t semaphore_;
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        timers_ = [NSMutableDictionary dictionary];
+        semaphore_ = dispatch_semaphore_create(1);
+    });
+}
+
++ (NSString *)execTask:(void (^)(void))task start:(NSTimeInterval)start interval:(NSTimeInterval)interval repeats:(BOOL)repeats async:(BOOL)async
+{
+    if (!task || start < 0 || (interval <= 0 && repeats)) return nil;
+    
+    // 队列
+    dispatch_queue_t queue = async ? dispatch_get_global_queue(0, 0) : dispatch_get_main_queue();
+    
+    // 创建定时器
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+    
+    // 设置时间
+    dispatch_source_set_timer(timer,
+                              dispatch_time(DISPATCH_TIME_NOW, start * NSEC_PER_SEC),
+                              interval * NSEC_PER_SEC, 0);
+    
+    
+    dispatch_semaphore_wait(semaphore_, DISPATCH_TIME_FOREVER);
+    // 定时器的唯一标识
+    NSString *name = [NSString stringWithFormat:@"%zd", timers_.count];
+    // 存放到字典中
+    timers_[name] = timer;
+    dispatch_semaphore_signal(semaphore_);
+    
+    // 设置回调
+    dispatch_source_set_event_handler(timer, ^{
+        task();
+        
+        if (!repeats) { // 不重复的任务
+            [self cancelTask:name];
+        }
+    });
+    
+    // 启动定时器
+    dispatch_resume(timer);
+    
+    return name;
+}
+
++ (NSString *)execTask:(id)target selector:(SEL)selector start:(NSTimeInterval)start interval:(NSTimeInterval)interval repeats:(BOOL)repeats async:(BOOL)async
+{
+    if (!target || !selector) return nil;
+    
+    return [self execTask:^{
+        if ([target respondsToSelector:selector]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            [target performSelector:selector];
+#pragma clang diagnostic pop
+        }
+    } start:start interval:interval repeats:repeats async:async];
+}
+
++ (void)cancelTask:(NSString *)name
+{
+    if (name.length == 0) return;
+    
+    dispatch_semaphore_wait(semaphore_, DISPATCH_TIME_FOREVER);
+    
+    dispatch_source_t timer = timers_[name];
+    if (timer) {
+        dispatch_source_cancel(timer);
+        [timers_ removeObjectForKey:name];
+    }
+
+    dispatch_semaphore_signal(semaphore_);
+}
+
+```
+
+
+
+<br/>
+
+
+> <h3 id = "图片的处理（解码，绘制也可以放到子线程做的）">图片的处理（解码，绘制也可以放到子线程做的）</h3>
+
+```
+- (void)image
+{
+    UIImageView *imageView = [[UIImageView alloc] init];
+    imageView.frame = CGRectMake(100, 100, 100, 56);
+    [self.view addSubview:imageView];
+    self.imageView = imageView;
+
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        // 获取CGImage
+        CGImageRef cgImage = [UIImage imageNamed:@"timg"].CGImage;
+
+        // alphaInfo
+        CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(cgImage) & kCGBitmapAlphaInfoMask;
+        BOOL hasAlpha = NO;
+        if (alphaInfo == kCGImageAlphaPremultipliedLast ||
+            alphaInfo == kCGImageAlphaPremultipliedFirst ||
+            alphaInfo == kCGImageAlphaLast ||
+            alphaInfo == kCGImageAlphaFirst) {
+            hasAlpha = YES;
+        }
+
+        // bitmapInfo
+        CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host;
+        bitmapInfo |= hasAlpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
+
+        // size
+        size_t width = CGImageGetWidth(cgImage);
+        size_t height = CGImageGetHeight(cgImage);
+
+        // context
+        CGContextRef context = CGBitmapContextCreate(NULL, width, height, 8, 0, CGColorSpaceCreateDeviceRGB(), bitmapInfo);
+
+        // draw
+        CGContextDrawImage(context, CGRectMake(0, 0, width, height), cgImage);
+
+        // get CGImage
+        cgImage = CGBitmapContextCreateImage(context);
+
+        // into UIImage
+        UIImage *newImage = [UIImage imageWithCGImage:cgImage];
+
+        // release
+        CGContextRelease(context);
+        CGImageRelease(cgImage);
+
+        // back to the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.imageView.image = newImage;
+        });
+    });
+}
+```
+
+
+<br/>
+
+***
+<br/>
+
+
+># <h1 id = "底层">底层</h1>
 
 <br/>
 
