@@ -1,3 +1,5 @@
+- [**DNS**](#DNS)
+	- [DNS缓存清除](#DNS缓存清除)
 - **下载安装任何应用**
 - **修改管理员 UserName 和 Password**
 - **Mac问题解决**
@@ -5,6 +7,31 @@
 	- Mac清理内存
 	- 可删除的文件
 	- 破解软件无法安装
+
+<br/>
+
+***
+<br/>
+
+># <h1 id = "DNS">[DNS](https://zhuanlan.zhihu.com/p/28273783)</h1>
+
+
+- <h2 id = "DNS缓存清除">DNS缓存清除</h2>
+
+`sudo killall -HUP mDNSResponder`
+
+<br/>
+
+- 查看当前dns
+
+`nslookup domain`
+
+<br/>
+
+- Mac的DNS服务IP配置
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_mac_0.png)
+
 
 <br/>
 
