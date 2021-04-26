@@ -543,7 +543,7 @@ RunLoop 启动前内部必须要有至少一个 Timer/Observer/Source，所以 A
 
 <br/>
 
-> <h3 id="网络性能优化">网络性能优化</h3>
+> <h3 id="网络性能优化">[**网络性能优化**](https://www.jianshu.com/p/a470ab485e39)</h3>
 
 - [**网络缓存（URL缓存）**](https://www.jianshu.com/p/fb5aaeac06ef)
 
@@ -595,6 +595,24 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 
 总结： 在官方给出的文档中提出 ETag 是首选的方式，优于 Last-Modified 方式。因为 ETag 是基于 hash ，hash 的规则可以自己设置，而且是基于一致性，是“强校验”。 Last-Modified 是基于时间，是弱校验，弱在哪里？比如说：如果服务端的资源回滚客户端的 Last-Modified 反而会比服务端还要新。
+
+
+<br/>
+
+- [网络模块优化(失败、缓存请求重发)](https://www.cnblogs.com/ziyi--caolu/p/8176331.html)
+
+
+<br/>
+
+- [HTTPDNS实践](https://www.jianshu.com/p/fb54405dbdca)
+
+[HTTPDNS在App开发中实践总结](http://www.iosfly.com/2016/12/03/HTTPDNS/)
+
+为什么有些公司的网络接口使用的英文域名而不是IP地址？
+
+这是因为使用IP地址就可以防止你的域名被DNS劫持，造成网络差和其他运营商给你加各种内容。
+
+[HttpDns 在 iOS 端的接入方案](https://juejin.cn/post/6844904144705339400)
 
 
 
