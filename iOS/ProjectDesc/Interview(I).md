@@ -6,6 +6,7 @@
 	- [NSTimer循环引用解决](#NSTimer循环引用解决)
 	- [NSTimer计时不准确怎么办](#NSTimer计时不准确怎么办)
 	- [图片的处理（解码，绘制也可以放到子线程做的）](#图片的处理（解码，绘制也可以放到子线程做的）)
+	- [界面保持流畅](#界面保持流畅)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [main函数之前会做什么](main函数之前会做什么)
@@ -166,6 +167,8 @@ IAP支付的过程：
 
 ># <h1 id = "性能优化">性能优化</h1>
 
+
+<br/>
 <br/>
 
 > <h3 id = "NSTimer循环引用解决">NSTimer循环引用解决？</h1>
@@ -290,6 +293,7 @@ dispatch_semaphore_t semaphore_;
 
 
 <br/>
+<br/>
 
 
 > <h3 id = "图片的处理（解码，绘制也可以放到子线程做的）">图片的处理（解码，绘制也可以放到子线程做的）</h3>
@@ -346,6 +350,113 @@ dispatch_semaphore_t semaphore_;
         });
     });
 }
+```
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h3>
+
+<br/>
+
+文本绘制
+
+> [TextKit 最佳实践](https://juejin.cn/post/6844903621553831944)
+
+> [CoreText使用说明书](https://www.jianshu.com/p/1c3d0936bba6)
+
+
+图片
+> [图片解码](https://www.cnblogs.com/dins/p/ios-tu-pian.html)
+
+Alpha（不透明度）：
+ - 属性为浮点类型的值，取值范围从0到1.0，表示从完全透明到完全不透明，其特性有当前UIView的alpha值会被其所有subview继承。
+ - alpha值会影响到UIView跟其所有subview，alpha具有动画效果。
+ - 当alpha为0时，跟hidden为YES时效果一样，但是alpha主要用于实现隐藏的动画效果，在动画块中将hidden设置为YES没有动画效果。
+
+
+&emsp; 事实上，解压缩后的图片大小与原始文件大小之间没有任何关系，而只与图片的像素有关：
+`解压缩后的图片大小(3600) = 图片的像素宽(30) * 图片的像素高(30) * 每个像素所占的字节数(4)`
+
+
+&emsp; 当未解压缩的图片将要渲染到屏幕时，系统会在主线程对图片进行解压缩，而如果图片已经解压缩了，系统就不会再对图片进行解压缩。因此，也就有了业内的解决方案，在子线程提前对图片进行强制解压缩。
+
+&emsp; 而强制解压缩的原理就是对图片进行重新绘制，得到一张新的解压缩后的位图。其中，用到的最核心的函数是 
+
+```
+/*
+
+data ：如果不为 NULL ，那么它应该指向一块大小至少为 bytesPerRow * height 字节的内存；如果 为 NULL ，那么系统就会为我们自动分配和释放所需的内存，所以一般指定 NULL 即可；
+
+width 和 height ：位图的宽度和高度，分别赋值为图片的像素宽度和像素高度即可；
+
+bitsPerComponent ：像素的每个颜色分量使用的 bit 数，在 RGB 颜色空间下指定 8 即可；
+
+bytesPerRow ：位图的每一行使用的字节数，大小至少为 width * bytes per pixel 字节。有意思的是，当我们指定 0 时，系统不仅会为我们自动计算，而且还会进行 cache line alignment 的优化，更多信息可以查看 what is byte alignment (cache line alignment) for Core Animation? Why it matters? 和 Why is my image’s Bytes per Row more than its Bytes per Pixel times its Width?
+
+space ：就是我们前面提到的颜色空间，一般使用 RGB 即可；
+
+bitmapInfo ：就是我们前面提到的位图的布局信息。
+到这里，你已经掌握了强制解压缩图片需要用到的最核心的函数
+
+
+
+*/
+
+
+
+CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
+    size_t width, size_t height, size_t bitsPerComponent, size_t bytesPerRow,
+    CGColorSpaceRef cg_nullable space, uint32_t bitmapInfo)
+    CG_AVAILABLE_STARTING(__MAC_10_0, __IPHONE_2_0);
+```
+
+<br/>
+
+- Pixel Format（像素格式）
+
+位图其实就是一个像素数组，而像素格式则是用来描述每个像素的组成格式，它包括以下信息：
+
+	- Bits per component：一个像素中每个独立的颜色分量使用的 bit 数；
+	- Bits per pixel：一个像素使用的总 bit 数；
+	- Bytes per row：位图中的每一行使用的字节数。
+	
+
+<br/>
+
+- Color and Color Spaces（颜色空间）
+
+在 Quartz 中，一个颜色是由一组值来表示的，比如 (0, 0, 1)。而颜色空间则是用来说明如何解析这些值的，离开了颜色空间，它们将变得毫无意义。比如,下面的值都表示蓝色：
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc0.png)
+
+
+<br/>
+
+- Color Spaces and Bitmap Layout（颜色空间和位图格式）
+
+像素格式是用来描述每个像素的组成格式的，比如每个像素使用的总 bit 数。而要想确保 Quartz 能够正确地解析这些 bit 所代表的含义，我们还需要提供位图的布局信息 CGBitmapInfo：
+
+
+```
+
+typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
+    kCGBitmapAlphaInfoMask = 0x1F,
+
+    kCGBitmapFloatInfoMask = 0xF00,
+    kCGBitmapFloatComponents = (1 << 8),
+
+    kCGBitmapByteOrderMask     = kCGImageByteOrderMask,
+    kCGBitmapByteOrderDefault  = (0 << 12),
+    kCGBitmapByteOrder16Little = kCGImageByteOrder16Little,
+    kCGBitmapByteOrder32Little = kCGImageByteOrder32Little,
+    kCGBitmapByteOrder16Big    = kCGImageByteOrder16Big,
+    kCGBitmapByteOrder32Big    = kCGImageByteOrder32Big
+} CG_AVAILABLE_STARTING(__MAC_10_0, __IPHONE_2_0);
+
 ```
 
 
