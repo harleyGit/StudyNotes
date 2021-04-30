@@ -16,6 +16,8 @@
 	- [网络性能优化](#网络性能优化)
 - [**类库** ](#类库)
 	- [FishHook](#fishhook) 
+	- [静态库和动态库](#静态库和动态库)
+		- [库引用错误解析](#库引用错误解析)
 - [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
 
 
@@ -741,7 +743,11 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 这是因为使用IP地址就可以防止你的域名被DNS劫持，造成网络差和其他运营商给你加各种内容。
 
-[HttpDns 在 iOS 端的接入方案](https://juejin.cn/post/6844904144705339400)
+- [HttpDns 在 iOS 端的接入方案](https://juejin.cn/post/6844904144705339400)
+
+- [即时通讯性能调优](https://github.com/ChenYilong/iOSBlog/issues/6)
+- [网络请求优化之取消请求](https://www.jianshu.com/p/20f6172524d6)
+- [iOS网络层设计](https://www.jianshu.com/p/fe0dd50d0af1)
 
 
 
@@ -753,7 +759,7 @@ case ReloadRevalidatingCacheData // Unimplemented
 ***
 <br/>
 
-># 类库
+># <h2 id = "类库">类库<h3>
 
 <br/>
 <br/>
@@ -761,6 +767,68 @@ case ReloadRevalidatingCacheData // Unimplemented
 > <h2 id = "fishhook">FishHook<h3>
 
 hook系统函数，一个faceBook写的三方框架
+
+
+<br/>
+<br/>
+
+> <h2 id = "静态库和动态库">[静态库和动态库](https://www.jianshu.com/p/a200b593696b)<h3>
+
+介绍
+> 静态库：链接时完整地拷贝至可执行文件中，被多次使用就有多份冗余拷贝。利用静态函数库编译成的文件比较大，因为整个 函数库的所有数据都会被整合进目标代码中，他的优点就显而易见了，即编译后的执行程序不需要外部的函数库支持，因为所有使用的函数都已经被编译进去了。当然这也会成为他的缺点，因为如果静态函数库改变了，那么你的程序必须重新编译。
+
+
+
+<br/>
+
+> 动态库：链接时不复制，程序运行时由系统动态加载到内存，供程序调用，系统只加载一次，多个程序共用，节省内存。由于函数库没有被整合进你的程序，而是程序运行时动态的申请并调用，所以程序的运行环境中必须提供相应的库。动态函数库的改变并不影响你的程序，所以动态函数库的升级比较方便。
+
+&emsp; 静态库和动态库都是闭源库，只能拿来满足某个功能的使用，不会暴露内部具体的代码信息，而从github上下载的第三方库大多是开源库
+
+
+<br/>
+
+静态库优点：
+>- 模块化，分工合作
+- 避免少量改动经常导致大量的重复编译连接
+- 也可以重用，注意不是共享使用
+
+
+动态库优点：
+
+>- 可以将最终可执行文件体积缩小
+- 多个应用程序共享内存中得同一份库文件，节省资源
+- 可以不重新编译连接可执行程序的前提下，更新动态库文件达到更新应用程序的目的。
+- 将整个应用程序分模块，团队合作，进行分工，影响比较小。
+
+
+<br/>
+格式区别：
+>静态库：.a和.framework (windows:.lib , linux: .a)
+
+>动态库：.dylib和.framework（系统提供给我们的framework都是动态库！）(windows:.dll , linux: .so)
+
+注意：两者都有framework的格式，但是当你创建一个framework文件时，系统默认是动态库的格式，如果想做成静态库，需要在buildSetting中将Mach-O Type选项设置为Static Library就行了！
+
+
+<br/>
+<br/>
+
+- <h2 id = "库引用错误解析">库引用错误解析<h3>
+
+framework和[host工程](https://www.jianshu.com/p/d25f9465cfa8)(可执行的工程项目)资源共用
+
+第方三库
+
+Class XXX is implemented in both XXX and XXX. One of the two will be used. Which one is undefined.
+
+这是当 framework 工程和 host 工程链接了相同的第三方库或者类造成的。
+
+为了让打出的 framework 中不包含 host 工程中已包含的三方库（如 cocoapods 工程编译出的 .a 文件），可以这样：
+
+删除 Build Phases > Link Binary With Libraries 中的内容（如有）。此时编译会提示三方库中包含的符号找不到。
+
+在 framework 的 Build Settings > Other Linker Flags 添加 -undefined dynamic_lookup。必须保证 host 工程编译出的二进制文件中包含这些符号。
 
 
 
