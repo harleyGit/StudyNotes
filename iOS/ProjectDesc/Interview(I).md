@@ -7,6 +7,7 @@
 	- [NSTimer计时不准确怎么办](#NSTimer计时不准确怎么办)
 	- [图片的处理（解码，绘制也可以放到子线程做的）](#图片的处理（解码，绘制也可以放到子线程做的）)
 	- [界面保持流畅](#界面保持流畅)
+	- [启动优化](#启动优化)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [main函数之前会做什么](main函数之前会做什么)
@@ -460,6 +461,18 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 ```
 
 
+
+
+
+<br/>
+<br/>
+
+> <h3 id ="启动优化">[启动优化]()</h3>
+
+
+[**高德启动耗时优化**](https://cloud.tencent.com/developer/news/616444)
+
+
 <br/>
 
 ***
@@ -652,9 +665,14 @@ RunLoop 启动前内部必须要有至少一个 Timer/Observer/Source，所以 A
 <br/>
 <br/>
 
-<br/>
+
+
+
 
 > <h3 id="网络性能优化">[**网络性能优化**](https://www.jianshu.com/p/a470ab485e39)</h3>
+
+
+<br/>
 
 - [**网络缓存（URL缓存）**](https://www.jianshu.com/p/fb5aaeac06ef)
 
@@ -724,7 +742,6 @@ case ReloadRevalidatingCacheData // Unimplemented
 这是因为使用IP地址就可以防止你的域名被DNS劫持，造成网络差和其他运营商给你加各种内容。
 
 [HttpDns 在 iOS 端的接入方案](https://juejin.cn/post/6844904144705339400)
-
 
 
 
