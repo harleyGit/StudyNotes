@@ -1,6 +1,6 @@
-- **响应者继承链**
-- **响应者链**
-- **View 响应者查找和 Event 传递**
+- [**响应者继承链**](#响应者继承链)
+- [**响应者链**](#响应者链)
+- [**View 响应者查找和Event传递**](#View响应者查找)
 
 
 <br/>
@@ -8,7 +8,7 @@
 ***
 <br/>
 
-># 响应者继承链
+># <h1 id = "响应者继承链">响应者继承链</h1>
 
 ![UI继承链](https://upload-images.jianshu.io/upload_images/2959789-20f988be2250ac28.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -23,7 +23,7 @@
 ***
 <br/>
 
-># 响应者链
+># <h1 id = "响应者链">响应者链</h1>
 
 
 ![UI响应图](https://upload-images.jianshu.io/upload_images/2959789-31424b921344e825.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -58,7 +58,7 @@
 <br/>
 
 
-># View 响应者查找和 Event 传递
+># <h1 id = "View响应者查找">View响应者查找和Event传递</h1>
 
 &emsp;  当一个触摸事件产生的时候，我们的程序是如何找到第一响应者的呢？
 
@@ -316,9 +316,11 @@
 
 ```
 
+
 点击`EView`，打印：
 
-![点击EView Debug打印](https://upload-images.jianshu.io/upload_images/2959789-37edfcc15e00aaad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![点击EViewDebug打印](https://upload-images.jianshu.io/upload_images/2959789-37edfcc15e00aaad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
@@ -392,6 +394,9 @@
 
 ***
 <br/>
+
+
+[**响应链(II)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
 
 
 
