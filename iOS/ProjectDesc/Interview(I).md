@@ -12,6 +12,8 @@
 	- [UI卡顿优化](#UI卡顿优化)
 	- [内存优化](#内存优化)
 	- [包体积优化](#包体积优化)
+	- [内存暴涨解决](#内存暴涨解决)
+	- [文件存储优化](#)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [main函数之前会做什么](main函数之前会做什么)
@@ -489,8 +491,21 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 <br/>
 
 
-> <h3 id ="启动优化">[启动优化]()</h3>
+> <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
 
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc3.png)
+
+
+- **冷启动流程**
+
+&emsp; Apple 官方的《WWDC Optimizing App Startup Time》 将 iOS 应用的启动可分为 pre-main 阶段和 main 两个阶段，最佳的启动速度是400ms以内，最慢不得大于20s，否则会被系统进程杀死（最低配置设备）。
+
+&emsp; 为了更好的区分，笔者将整个启动流程分为三个阶段， **App总启动流程 = pre-main + main函数代理（didFinishLaunchingWithOptions）+ 首屏渲染（viewDidAppear），后两个阶段都属于 main函数  执行阶段**。
+
+
+
+
+<br/>
 
 [**高德启动耗时优化**](https://cloud.tencent.com/developer/news/616444)
 
@@ -609,12 +624,325 @@ Test/Resource/TabBarImage/tabBar_3@2x.png
 
 
 
+<br/>
+<br/>
+
+
+> <h2 id ="内存暴涨解决">内存暴涨解决</h2>
+
+&emsp; 在列表滑动的情况内存莫名的增长，频繁访问图片的时候内存莫名的增长，频繁的打开和关闭数据库的时候内存莫名的增长……。 这些都是拜iOS的autorelease机制所赐；具体分析如下：
+
+1.滑动列表的时候，内存出现莫名的增长，原因可能有如下可能：
+
+	a. 没有使用UITableView的reuse机制； 导致每显示一个cell都用autorelease的方式重新alloc一次；导致cell的内存不断的增加；
+
+	b. 每个cell会显示一个单独的UIView， 在UIView发生内存泄漏，导致cell的内存不断增长；
+
+
+<br/>
+
+2.频繁访问图片的时候，内存莫名的增长；
+
+&emsp; 频繁的访问网络图片，导致iOS内部API，会不断的分配autorelease方式的buffer来处理图片的解码与显示； 利用图片NSCache可以缓解一下此问题；
+
+**NSCache使用：**
+
+```
+// 创建对象
+NSCache *cache = [[NSCache alloc] init];
+// 设置缓存数量限制，默认值是 0，表示没有限制
+cache.countLimit = 10;
+// 设置缓存总成本限制，默认值是 0，表示没有限制
+cache.totalCostLimit = 1024 * 1024;
+// 设置是否自动清理缓存，默认为 YES，表示自动清理
+cache.evictsObjectsWithDiscardedContent = YES;
+// 设置代理
+cache.delegate = self;
+// 设置缓存
+/*
+	0 成本，与可变字典不同，缓存对象不会对键名做 copy 操作，只是做强引用
+*/
+[cache setObject:str forKey:@(i)];
+// 设置缓存
+/*
+	指定成本
+*/
+[cache setObject:str forKey:@(i) cost:1024];
+// 查看缓存内容
+/*
+	NSCache 没有提供遍历的方法，只支持用 key 来取值，NSCache 的 Key 只是做强引用，不需要实现 NSCopying 协议
+*/
+NSString *string = [cache objectForKey:@(i)];
+// 删除指定缓存
+[cache removeObjectForKey:@8];
+// 删除所有缓存
+/*
+	一旦调用了 removeAllObjects，就无法给 cache 添加对象，关于 NSCache 的内存管理，交给他自己就行
+*/
+[cache removeAllObjects];
+// 缓存协议方法
+/*
+	须遵守 <NSCacheDelegate> 协议，obj 就是要被清理的对象
+	当缓存中的对象被清除的时候，会自动调用，不建议平时开发时重写！仅供调试使用
+*/
+- (void)cache:(NSCache *)cache willEvictObject:(id)obj {
+}
+	
+```
+
+ 
+<br/>
+
+
+3.频繁打开和关闭SQLite，导致内存不断的增长；
+
+&emsp; 在进行SQLite频繁打开和关闭操作，而且读写的数据buffer较大，那么SQLite在每次打开与关闭的时候，都会利用autorelease的方式分配51K的内存； 如果访问次数很多，内存马上就会顶到几十兆，甚至上百兆！ 所以针对频繁的读写数据库且数据buffer较大的情况， 可以设置SQLite的长连接方式；避免频繁的打开和关闭数据库；
+
+**SQLite操作封装-长连接方式**
+
+```
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+ 
+namespace Acon.UrineAnalyzerPlatform.DataAccess
+{
+    /// <summary>
+    /// SQLite数据库操作类，长连接模式
+    /// </summary>
+    public sealed class SQLiteHelper
+    {
+        public static string ConnectionString { get; set; }
+ 
+        private static SQLiteConnection Connection;
+ 
+        static SQLiteHelper()
+        {
+            string fileName = Path.Combine(Application.StartupPath, @"Data\\UrineMachine.db");
+            ConnectionString = string.Format("Data Source={0};{1}", fileName, ";foreign keys=true;");
+        }
+ 
+        #region 静态方法
+ 
+        private static SQLiteConnection CreateConnection()
+        {
+            if (Connection == null)
+                Connection = new SQLiteConnection(ConnectionString);
+            
+            return Connection;
+        }
+ 
+        public static SQLiteTransaction GetTransaction()
+        {
+            return CreateConnection().BeginTransaction();
+        }
+ 
+        private static void PrepareCommand(SQLiteCommand command, SQLiteConnection connection, SQLiteTransaction transaction, CommandType commandType, string commandText, SQLiteParameter[] parms)
+        {
+            if (connection.State != ConnectionState.Open) connection.Open();
+ 
+            command.Connection = connection;
+            //command.CommandTimeout = CommandTimeOut;
+            // 设置命令文本(存储过程名或SQL语句)
+            command.CommandText = commandText;
+            // 分配事务
+            if (transaction != null)
+            {
+                command.Transaction = transaction;
+            }
+            // 设置命令类型.
+            command.CommandType = commandType;
+            if (parms != null && parms.Length > 0)
+            {
+                //预处理SqlParameter参数数组，将为NULL的参数赋值为DBNull.Value;
+                foreach (SQLiteParameter parameter in parms)
+                {
+                    if ((parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Input) && (parameter.Value == null))
+                    {
+                        parameter.Value = DBNull.Value;
+                    }
+                }
+                command.Parameters.AddRange(parms);
+            }
+        }
+ 
+        #region ExecuteNonQuery
+        public static int ExecuteNonQuery(string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteNonQuery(CreateConnection(), commandText, parms);
+        }
+   
+        public static int ExecuteNonQuery(SQLiteConnection connection, string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteNonQuery(connection, CommandType.Text, commandText, parms);
+        }
+ 
+        /// <summary>
+        /// 执行SQL语句,返回影响的行数
+        /// </summary>
+        /// <param name="connection">数据库连接</param>
+        /// <param name="commandType">命令类型(存储过程,命令文本, 其它.)</param>
+        /// <param name="commandText">SQL语句或存储过程名称</param>
+        /// <param name="parms">查询参数</param>
+        /// <returns>返回影响的行数</returns>
+        public static int ExecuteNonQuery(SQLiteConnection connection, CommandType commandType, string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteNonQuery(connection, null, commandType, commandText, parms);
+            //try
+            //{
+            //    return ExecuteNonQuery(connection, null, commandType, commandText, parms);
+            //}
+            //finally
+            //{
+            //    connection.Close();
+            //}
+        }
+ 
+        /// <summary>
+        /// 执行SQL语句,返回影响的行数
+        /// </summary>
+        /// <param name="transaction">事务</param>
+        /// <param name="commandType">命令类型(存储过程,命令文本, 其它.)</param>
+        /// <param name="commandText">SQL语句或存储过程名称</param>
+        /// <param name="parms">查询参数</param>
+        /// <returns>返回影响的行数</returns>
+        public static int ExecuteNonQuery(SQLiteTransaction transaction, CommandType commandType, string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteNonQuery(transaction.Connection, transaction, commandType, commandText, parms);
+ 
+        }
+ 
+        /// <summary>
+        /// 执行SQL语句,返回影响的行数
+        /// </summary>
+        /// <param name="connection">数据库连接</param>
+        /// <param name="transaction">事务</param>
+        /// <param name="commandType">命令类型(存储过程,命令文本, 其它.)</param>
+        /// <param name="commandText">SQL语句或存储过程名称</param>
+        /// <param name="parms">查询参数</param>
+        /// <returns>返回影响的行数</returns>
+        private static int ExecuteNonQuery(SQLiteConnection connection, SQLiteTransaction transaction, CommandType commandType, string commandText, params SQLiteParameter[] parms)
+        {
+            SQLiteCommand command = new SQLiteCommand();
+            PrepareCommand(command, connection, transaction, commandType, commandText, parms);
+            int retval = command.ExecuteNonQuery();
+            command.Parameters.Clear();
+            return retval;
+        }
+ 
+        #endregion ExecuteNonQuery
+ 
+        #region ExecuteScalar
+        /// <summary>
+        /// 执行SQL语句,返回结果集中的第一行第一列
+        /// </summary>
+        /// <param name="connectionString">数据库连接字符串</param>
+        /// <param name="commandText">SQL语句</param>
+        /// <param name="parms">查询参数</param>
+        /// <returns>返回结果集中的第一行第一列</returns>
+        public static object ExecuteScalar(string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteScalar(CreateConnection(), commandText, parms);
+        }
+ 
+        public static object ExecuteScalar(SQLiteConnection connection, string commandText, SQLiteParameter[] parms)
+        {
+            return ExecuteScalar(connection, CommandType.Text, commandText, parms);
+        }
+ 
+        public static object ExecuteScalar(SQLiteConnection connection, CommandType commandType, string commandText, SQLiteParameter[] parms)
+        {
+            SQLiteCommand command = new SQLiteCommand();
+            PrepareCommand(command, connection, null, commandType, commandText, parms);
+            object retval = command.ExecuteScalar();
+            command.Parameters.Clear();
+            return retval;
+        }
+ 
+ 
+        #endregion
+ 
+        #region ExecuteDataSet
+        public static DataSet ExecuteDataSet(string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteDataSet(CreateConnection(), commandText, parms);
+        }
+ 
+        public static DataSet ExecuteDataSet(SQLiteConnection connection, string commandText, SQLiteParameter[] parms)
+        {
+            return ExecuteDataSet(connection, CommandType.Text, commandText, parms);
+        }
+ 
+        public static DataSet ExecuteDataSet(SQLiteConnection connection, CommandType commandType, string commandText, SQLiteParameter[] parms)
+        {
+            return ExecuteDataSet(connection, null, commandType, commandText, parms);
+        }
+ 
+        /// <summary>
+        /// 执行SQL语句,返回结果集
+        /// </summary>
+        /// <param name="transaction">事务</param>
+        /// <param name="commandType">命令类型(存储过程,命令文本, 其它.)</param>
+        /// <param name="commandText">SQL语句或存储过程名称</param>
+        /// <param name="parms">查询参数</param>
+        /// <returns>返回结果集</returns>
+        public static DataSet ExecuteDataSet(SQLiteTransaction transaction, CommandType commandType, string commandText, params SQLiteParameter[] parms)
+        {
+            return ExecuteDataSet(transaction.Connection, transaction, commandType, commandText, parms);
+        }
+ 
+        private static DataSet ExecuteDataSet(SQLiteConnection connection, SQLiteTransaction transaction, CommandType commandType, string commandText, SQLiteParameter[] parms)
+        {
+            SQLiteCommand command = new SQLiteCommand();
+            PrepareCommand(command, connection, transaction, commandType, commandText, parms);
+            SQLiteDataAdapter adapter = new SQLiteDataAdapter(command);
+            DataSet ds = new DataSet();
+            adapter.Fill(ds);
+            command.Parameters.Clear();
+            return ds;
+        }
+        #endregion
+ 
+        #endregion 静态方法
+ 
+        public static void Close()
+        {
+            if (Connection != null && Connection.State == ConnectionState.Open)
+            {
+                Connection.Close();
+                System.Data.SQLite.SQLiteConnection.ClearPool(Connection);//清除连接池，否则数据库文件不会被释放。
+            }
+        }
+    }
+}
+
+
+```
 
 
 
+<br/>
+<br/>
+
+> <h2 id = "文件存储优化">文件存储优化</h2>
+
+<br/>
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc3.png)
 
 
+- Documents：保存应用运行时生成的需要持久化的数据,iTunes会自动备份该目录。苹果建议将在应用程序中浏览到的文件数据保存在该目录下。
 
+- tmp：临时文件目录，在程序重新运行的时候，和开机的时候，会清空tmp文件夹。
+
+- Library:
+	- Caches：一般存储的是缓存文件，例如图片视频等，此目录下的文件不会再应用程序退出时删除。在手机备份的时候，iTunes不会备份该目录。例如:音频,视频等文件存放其中
+	- Preferences：保存应用程序的所有偏好设置iOS的Settings(设置)，我们不应该直接在这里创建文件，而是需要通过NSUserDefault这个类来访问应用程序的偏好设置。iTunes会自动备份该文件目录下的内容。比如说:是否允许访问图片,是否允许访问地理位置......
 
 
 
@@ -630,12 +958,12 @@ Test/Resource/TabBarImage/tabBar_3@2x.png
 
 <br/>
 
-> <h3 id ="runloop与自动释放池关系什么时侯释放">RunLoop与自动释放池关系，什么时侯释放?</h3>
+> <h2 id ="runloop与自动释放池关系什么时侯释放">RunLoop与自动释放池关系，什么时侯释放?</h2>
 
 
 <br/>
 
-> <h3 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h3>
+> <h2 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h2>
 
 main()函数调用之前，其实是做了很多准备工作，主要是dyld这个动态链接器在负责，核心流程如下:
 
