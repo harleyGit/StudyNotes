@@ -1,4 +1,3 @@
-
 - [**Git提交规范**](#Git提交规范)
 - [**C++**](#C++)
 - [**C**](#C)
@@ -24,12 +23,16 @@
 - [**优秀文章**](#优秀文章)
 - [**参考资料**](#参考资料)
 
+
+
 <br/>
 
 ***
 <br/>
 
-># <h1 id = "Git提交规范">Git提交规范</h1>
+
+
+> <h1 id = "Git提交规范">Git提交规范</h1>
 
 ```
 - fix: 修复问题;
@@ -55,7 +58,7 @@
 <br/>
 ￼
 
->#  <h1 id = "C++">C++</h1>
+>  <h1 id = "C++">C++</h1>
  *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C/变量与数据类型.md)
  *	 [指针(I)](https://github.com/harleyGit/StudyNotes/blob/master/C/C2指针(I).md)
  *	[C预处理器](https://github.com/harleyGit/StudyNotes/blob/master/C/C预处理器.md)
@@ -81,7 +84,7 @@
 <br/>
 
 
-># <h1 id = "C">C</h1>
+> <h1 id = "C">C</h1>
 *	[结构体](https://github.com/harleyGit/StudyNotes/blob/master/C/结构体.md)
 *	[输入和输出](https://github.com/harleyGit/StudyNotes/blob/master/C/输入和输出.md)
 *	[文件包含](https://github.com/harleyGit/StudyNotes/blob/master/C/文件包含.md)
@@ -100,8 +103,9 @@
 
 
 
-># <h1 id = "iOS开发">[**iOS开发**](https://github.com/apple)
+> <h1 id = "iOS开发">[**iOS开发**](https://github.com/apple)
 </h1>
+
 <br/>
 
 ![**iOS 系统学习教程**](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/iOSKnowledgeGraph.png)
@@ -109,7 +113,7 @@
 <br/>
 <br/>
 
->## <h1 id = "Objective-C">Objective-C</h1>
+> <h2 id = "Objective-C">Objective-C</h2>
 * [**OC资料**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/OC资料.md)
 *	[**iOS类继承**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
 *	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
@@ -167,7 +171,7 @@
 <br/>
 
 	       
->## <h1 id = "Swift">Swift</h1>
+> <h2 id = "Swift">Swift</h2>
 * [资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/资料集.md)
 * [Swif包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift包管理.md)
 * [SwiftUI(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/SwiftUI(I).md)
@@ -196,7 +200,7 @@
 <br/>
 
 	       
->## <h1 id = "错误总结">错误总结</h1>
+> <h2 id = "错误总结">错误总结</h2>
 * [上架错误](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/上架错误.md)
 * [审核被拒](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/审核被拒.md)
 * [Crash日志](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Crash日志.md)
@@ -209,7 +213,7 @@
 <br/>
 
 	       
->## <h1 id = "ProjectDesc">ProjectDesc</h1>
+> <h2 id = "ProjectDesc">ProjectDesc</h2>
 * [**Desc(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
 * [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
 * [Interview(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(I).md)
@@ -229,7 +233,7 @@
 <br/>
 
 
-># <h1 id = "Flutter开发">Flutter开发</h1>
+> <h1 id = "Flutter开发">Flutter开发</h1>
 *	[资料集](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资料集.md)
 *	[类[I]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[I].md)
 *	[类[II]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[II].md)
@@ -270,7 +274,7 @@
 ***
 <br/>
 
-># <h1 id = "EgretEngine">Egret Engine</h1>
+> <h1 id = "EgretEngine">Egret Engine</h1>
 * [位图使用](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/位图使用.md)
 * [配置](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/ee配置.md)
 * [项目伊始](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/ee项目伊始.md)
@@ -284,7 +288,7 @@
 ***
 <br/>
 
-># <h1 id = "底层">底层</h1>
+> <h1 id = "底层">底层</h1>
  *	[资料](https://github.com/harleyGit/StudyNotes/blob/master/底层/资料.md)
  *	[自动释放池](https://github.com/harleyGit/StudyNotes/blob/master/底层/自动释放池.md)
  *	[Class(I)](https://github.com/harleyGit/StudyNotes/blob/master/底层/Class(I).md)
@@ -314,7 +318,7 @@
 ***
 <br/>
 
-># <h1 id = "优化">优化</h1>
+> <h1 id = "优化">优化</h1>
 *	[内存优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/内存优化(I).md)
 *	[图片优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/图片优化(I).md)
 *	[网络优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/网络优化(I).md)
@@ -334,7 +338,7 @@
 ***
 <br/>
 
-># <h1 id = "动画/绘图">动画/绘图</h1>
+> <h1 id = "动画/绘图">动画/绘图</h1>
 * [核心动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/核心动画.md)
 *	[仿射动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/仿射动画.md)
 *	[绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/绘制(I).md)
@@ -362,7 +366,9 @@
 ***
 <br/>
 
-># <h1 id = "加密">加密</h1>
+
+
+> <h1 id = "加密">加密</h1>
 *	[加密(I)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密(I).md)
 *	[加密(II)](https://github.com/harleyGit/StudyNotes/blob/master/加密/加密(II).md)
 *	[Https[证书生成]](https://github.com/harleyGit/StudyNotes/blob/master/加密/Https[证书生成].md)
@@ -379,7 +385,7 @@
 ***
 <br/>
 
-># <h1 id = "类库">类库</h1>
+> <h1 id = "类库">类库</h1>
 *	[阿里云(I)](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/阿里云(I).md)
 *	[Podfile文档](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/Podfile文档.md)
 *	[极光推送](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/极光推送.md)
@@ -454,7 +460,9 @@
 ***
 <br/>
 
-># <h1 id = "多线程">多线程 </h1>
+
+
+> <h1 id = "多线程">多线程 </h1>
 *	[GCD(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(I).md)    
 * [NSOperation(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(I).md)    
 * [NSOperation(II)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(II).md)    
@@ -468,7 +476,9 @@
 ***
 <br/>
 
-># <h1 id = "数据存储">数据存储 </h1>
+
+
+> <h1 id = "数据存储">数据存储 </h1>
 *	[数据持久化](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/数据持久化.md)
 *	[相册和视频处理(I)](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/相册和视频处理(I).md)
 *	[CoreData(I)](https://github.com/harleyGit/StudyNotes/blob/master/DataStorage/CoreData(I).md)
@@ -481,7 +491,9 @@
 ***
 <br/>
 
-># <h1 id = "Network">Network</h1>
+
+
+> <h1 id = "Network">Network</h1>
 *	[**数据解析**](https://github.com/harleyGit/StudyNotes/blob/master/Network/数据解析.md)
 *	[**网络安全(I)**](https://github.com/harleyGit/StudyNotes/blob/master/Network/网络安全(I).md)
 *	[**网络安全(II)**](https://github.com/harleyGit/StudyNotes/blob/master/Network/网络安全(II).md)
@@ -502,7 +514,7 @@
 ***
 <br/>
 
-># <h1 id = "数据结构">数据结构</h1>
+> <h1 id = "数据结构">数据结构</h1>
 *	[递归](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/递归.md)
 *	[队列](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/队列.md)
 *	[二叉树](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/二叉树.md)
@@ -518,7 +530,7 @@
 ***
 <br/>
 
-># <h1 id = "工具">工具</h1>
+> <h1 id = "工具">工具</h1>
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
 * [Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
 * [数码](https://github.com/harleyGit/StudyNotes/blob/master/Tools/数码.md)
@@ -548,7 +560,11 @@
 ***
 <br/>
 
-># <h1 id = "读书笔记">读书笔记</h1>
+
+
+
+
+> <h1 id = "读书笔记">读书笔记</h1>
 * 金融投资	
 	*	[**金融理财(I)**](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/金融理财(I).md)
 	*	[**金融理财(II)**](https://github.com/harleyGit/StudyNotes/blob/master/ReadNotes/金融理财(II).md)
@@ -574,7 +590,10 @@
 ***
 <br/>
 
-># <h1 id = "优秀资料">优秀资料</h1>
+
+
+
+> <h1 id = "优秀资料">优秀资料</h1>
 - **资源**
 	- [**脚本之家电子书PDF下载**](https://www.jb51.net/books/)
 	- [**Jiumo文档搜索引擎**](https://www.jiumodiary.com)
@@ -606,7 +625,10 @@
 
 <br/>
 
-># <h1 id = "优秀文章">优秀文章</h1>
+
+
+
+> <h1 id = "优秀文章">优秀文章</h1>
 -	[iOS 底层安全分析(李斌同学)](https://juejin.im/user/3438928103236920/posts)
 -	[Flutter 基础知识](http://www.xmamiga.com/3428/)
 - 	[Cooci 老师博客(潭州课堂)](https://www.jianshu.com/u/5981a4f71db5)
@@ -620,13 +642,13 @@
 <br/>
 
 
-# <h1 id = "参考资料">参考资料</h1>
+> <h1 id = "参考资料">参考资料</h1>
 
 * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
 <br/>
 
-* **HTML标签定义**
+- **HTML标签定义**
 <dl>
   <dt>定義列表</dt>
   <dd>有時候，人們偶爾會用到。</dd>
@@ -636,7 +658,7 @@
 
 <br/>
 
-* **图片链接到影片**
+- **图片链接到影片**
 
 </a>
 	<a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank">
