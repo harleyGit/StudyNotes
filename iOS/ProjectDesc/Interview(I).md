@@ -13,7 +13,8 @@
 	- [内存优化](#内存优化)
 	- [包体积优化](#包体积优化)
 	- [内存暴涨解决](#内存暴涨解决)
-	- [文件存储优化](#)
+	- [文件存储优化](#文件存储优化)
+- [**架构与设计模式**](#架构与设计模式)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [main函数之前会做什么](main函数之前会做什么)
@@ -943,6 +944,32 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 - Library:
 	- Caches：一般存储的是缓存文件，例如图片视频等，此目录下的文件不会再应用程序退出时删除。在手机备份的时候，iTunes不会备份该目录。例如:音频,视频等文件存放其中
 	- Preferences：保存应用程序的所有偏好设置iOS的Settings(设置)，我们不应该直接在这里创建文件，而是需要通过NSUserDefault这个类来访问应用程序的偏好设置。iTunes会自动备份该文件目录下的内容。比如说:是否允许访问图片,是否允许访问地理位置......
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
+
+># <h1 id = "架构与设计模式">架构与设计模式</h1>
+
+<br/>
+
+- [开发架构设计思考](https://www.jianshu.com/p/1e1009ba061c)
+- [组件化开发实施](https://www.jianshu.com/p/599e97b63af7)
+- [组件优化](https://casatwy.com/iOS-Modulization.html?hmsr=toutiao.io)
+
+
+
+
+
 
 
 
