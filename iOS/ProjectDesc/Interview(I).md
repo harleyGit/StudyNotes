@@ -194,6 +194,59 @@ IAP支付的过程：
 
 &emsp; 在Swift的协议中定义属性永远不要用 `let` 关键字。只读属性规定使用 `var` 关键字，并在后面单独跟上 `{ get }`。如果有一个方法改变了一个或多个属性，你需要标记它为 `mutating`。
 
+
+<br/>
+
+
+在[面向协议编程与 Cocoa 的邂逅 (上)](https://onevcat.com/2016/11/pop-cocoa-1/)的文章里POP解决了面向对象编程的**OC动态派发安全性、横切关注点、菱形缺陷**问题。
+
+协议扩展：
+对于 P，可以在 extension P 中为 myMethod 添加一个实现：
+
+
+```
+protocol P {
+    func myMethod()
+}
+
+extension P {
+    func myMethod() {
+        doWork()
+    }
+}
+```
+
+
+有了这个协议扩展后，我们只需要简单地声明 ViewController 和 AnotherViewController 遵守 P，就可以直接使用 myMethod 的实现了：
+
+```
+extension ViewController: P { }
+extension AnotherViewController: P { }
+
+viewController.myMethod()
+anotherViewController.myMethod()
+```
+不仅如此，除了已经定义过的方法，我们甚至可以在扩展中添加协议里没有定义过的方法。在这些额外的方法中，我们可以依赖协议定义过的方法进行操作。我们之后会看到更多的例子。总结下来：
+
+- **协议定义**
+	- 提供实现的入口
+	- 遵循协议的类型需要对其进行实现
+- **协议扩展**
+	- 为入口提供默认实现
+	- 根据入口提供额外实现
+
+
+这样一来，横切点关注的问题也简单安全地得到了解决。
+- ✅ 动态派发安全性
+- ✅ 横切关注点
+- 菱形缺陷
+
+
+<br/>
+
+在[**面向协议编程与 Cocoa 的邂逅 (下)**](https://onevcat.com/2016/12/pop-cocoa-2/)中我们把POP运用到实际的项目中去，比如：网络的封装。很赞的，可以把其运用到项目中去，重构项目中的网络层。
+
+
 <br/>
 
 ***
