@@ -1,4 +1,14 @@
-压缩HTTP请求体
+
+- [**压缩HTTP请求体**](#压缩HTTP请求体)
+- [**上传优化**](https://note.youdao.com/ynoteshare1/index.html?id=a6dd4f1ec0789fa563594ce7a7bfc5ac&type=note)
+<br/>
+
+***
+<br/>
+
+> <h1 id="压缩HTTP请求体">压缩HTTP请求体</h1>
+
+
 
 [使用 zlib 库实现 HTTP 请求数据压缩](https://www.jianshu.com/p/dc76bcfef553)
 如何压缩？有什么好处？服务端如何解压缩？
@@ -19,3 +29,13 @@ NSURLRequestUseProtocolCachePolicy
 NSURLRequestReloadIgnoringLocalCacheData
 
 ```
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id="">上传优化</h1>
+
+[加载高清大图](https://juejin.cn/post/6844903540578582536#heading-9)

@@ -1,4 +1,12 @@
-- **[OC基础](#oc基础)** [](https://my.oschina.net/antsky/blog/1475173)
+-  **[Interview(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(II).md)** 
+
+<br/>
+
+***
+<br/>
+
+
+- **[OC基础](#oc基础)**
 	- [UILabel多适应](#UILabel多适应)
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 	- [适配器、响应元是什么](#适配器响应元是什么)
@@ -8,7 +16,11 @@
 	- [循环引用解决](#循环引用解决)
 	- [NSTimer循环引用解决](#NSTimer循环引用解决)
 	- [NSTimer计时不准确怎么办](#NSTimer计时不准确怎么办)
-	- [图片的处理（解码，绘制也可以放到子线程做的）](#图片的处理（解码，绘制也可以放到子线程做的）)
+	- [图片优化](#图片优化)
+		 - [图片的处理](#图片的处理)
+			 - [图片异步绘制](#图片异步绘制)
+			 - [图片格式判断](#图片格式判断) 
+	- [图片上传](#图片上传)
 	- [界面保持流畅](#界面保持流畅)
 	- [启动优化](#启动优化)
 	- [UI卡顿优化](#UI卡顿优化)
@@ -20,6 +32,7 @@
 	- [面向协议编程](#面向协议编程)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
+	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
 	- [main函数之前会做什么](main函数之前会做什么)
 	- [响应者链](#响应者链)
 - [**网络**](#网络)
@@ -39,11 +52,11 @@
 ***
 <br/>
 
-># OC基础
+># <h1 id="OC基础">[OC基础](https://my.oschina.net/antsky/blog/1475173)</h1>
 
 <br/>
 
-> <h3 id="UILabel多适应">UILabel多适应?</h3>
+> <h2 id="UILabel多适应">UILabel多适应?</h2>
 
 Label自适应宽度
 
@@ -402,8 +415,36 @@ dispatch_semaphore_t semaphore_;
 <br/>
 <br/>
 
+> <h2 id="图片优化">图片优化</h2>
 
-> <h3 id = "图片的处理（解码，绘制也可以放到子线程做的）">图片的处理（解码，绘制也可以放到子线程做的）</h3>
+<br/>
+
+**图片性能瓶颈：**
+
+大部分格式的图片，都需要被首先解码为bitmap，然后才能渲染到UI上。
+
+UIImageView 显示图片，也有类似的过程。实际上，一张图片从在文件系统中，到被显示到 UIImageView，会经历以下几个步骤：
+
+- 分配内存缓冲区和其它资源。
+- 从磁盘拷贝数据到内核缓冲区
+- 从内核缓冲区复制数据到用户空间
+- 生成UIImageView，把图像数据赋值给UIImageView
+- 将压缩的图片数据，解码为位图数据（bitmap），如果数据没有字节对齐，Core Animation会再拷贝一份数据，进行字节对齐。
+- CATransaction捕获到UIImageView layer树的变化，主线程Runloop提交CATransaction，开始进行图像渲染
+- GPU处理位图数据，进行渲染。
+
+由于 UIKit 的封装性，这些细节不会直接对开发者展示。实际上，当我们调用`[UIImage imageNamed:@"xxx"]`后，UIImage 中存储的是未解码的图片，而调用 `[UIImageView setImage:image]`后，会在主线程进行图片的解码工作并且将图片显示到 UI 上，这时候，UIImage 中存储的是解码后的 bitmap 数据。
+
+而图片的解压缩是一个非常消耗 CPU 资源的工作，如果我们有大量的图片需要展示到列表中，将会大大拖慢系统的响应速度，降低运行帧率。这就是 UIImageView 的一个性能瓶颈。
+
+<br/>
+<br/>
+
+> <h2 id = "图片的处理">图片的处理</h2>
+
+<br/>
+
+- <h3 id="图片异步绘制">图片异步绘制</h3>
 
 ```
 - (void)image
@@ -412,11 +453,14 @@ dispatch_semaphore_t semaphore_;
     imageView.frame = CGRectMake(100, 100, 100, 56);
     [self.view addSubview:imageView];
     self.imageView = imageView;
-
+    
+	//在子线程中对图片原始数据进行强制解码，再将解码后的图片抛回主线程继续使用，从而提高主线程的响应速度。
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         // 获取CGImage
         CGImageRef cgImage = [UIImage imageNamed:@"timg"].CGImage;
 
+		//+colorSpaceForImageRef: 方法来获取原始图片的颜色空间参数
+		//CGColorSpaceRef colorspaceRef = [UIImage colorSpaceForImageRef:imageRef];
         // alphaInfo
         CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(cgImage) & kCGBitmapAlphaInfoMask;
         BOOL hasAlpha = NO;
@@ -436,16 +480,27 @@ dispatch_semaphore_t semaphore_;
         size_t height = CGImageGetHeight(cgImage);
 
         // context
+        //CGBitmapContextCreate() 方法，生成一个空白的图片绘制上下文，我们传入了上述的一些参数，指定了图片的大小、颜色空间、像素排列等等属性
         CGContextRef context = CGBitmapContextCreate(NULL, width, height, 8, 0, CGColorSpaceCreateDeviceRGB(), bitmapInfo);
 
         // draw
+        //CGContextDrawImage() 方法，将未解码的 imageRef 指针内容，写入到我们创建的上下文中，这个步骤，完成了隐式的解码工作。
         CGContextDrawImage(context, CGRectMake(0, 0, width, height), cgImage);
 
         // get CGImage
+        //从 context 上下文中创建一个新的 imageRef，这是解码后的图片了
         cgImage = CGBitmapContextCreateImage(context);
 
         // into UIImage
-        UIImage *newImage = [UIImage imageWithCGImage:cgImage];
+        /*
+        从 imageRef 生成供UI层使用的 UIImage 对象，同时指定图片的 scale 和orientation 两个参数。
+
+				scale 指的是图片被渲染时需要被压缩的倍数，为什么会存在这个参数呢，因为苹果为了节省安装包体积，允许开发者为同一张图片上传不同分辨率的版本，也就是我们熟悉的@2x，@3x后缀图片。不同屏幕素质的设备，会获取到对应的资源。为了绘制图片时统一，这些图片会被set自己的scale属性，比如@2x图片，scale 值就是2，虽然和1x图片的绘制宽高一样，但是实际的长是width * scale。
+
+				orientation 很好理解，就是图片的旋转属性，告诉设备，以哪个方向作为图片的默认方向来渲染。
+        */
+        //UIImage *newImage = [UIImage imageWithCGImage:newImageRef scale:image.scale orientation:image.imageOrientation];
+	     UIImage *newImage = [UIImage imageWithCGImage:cgImage];
 
         // release
         CGContextRelease(context);
@@ -460,12 +515,177 @@ dispatch_semaphore_t semaphore_;
 ```
 
 
+<br/>
+
+- <h3 id="图片格式判断">图片格式判断</h3>
+
+根据图片不同压缩格式的原始二进制数据的编码特征，就可以进行简单的分类了，如下Code：
+
+```
++ (XRImageFormat)imageFormatForImageData:(nullable NSData *)data {
+    if (!data) {
+        return XRImageFormatUndefined;
+    }
+    
+    uint8_t c;
+    [data getBytes:&c length:1];
+    switch (c) {
+        case 0xFF:
+            return XRImageFormatJPEG;
+        case 0x89:
+            return XRImageFormatPNG;
+        case 0x47:
+            return XRImageFormatGIF;
+        case 0x49:
+        case 0x4D:
+            return XRImageFormatTIFF;
+        case 0x52:
+            if (data.length < 12) {
+                return XRImageFormatUndefined;
+            }
+            
+            NSString *testString = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(0, 12)] encoding:NSASCIIStringEncoding];
+            if ([testString hasPrefix:@"RIFF"] && [testString hasSuffix:@"WEBP"]) {
+                return XRImageFormatWebP;
+            }
+    }
+    return XRImageFormatUndefined;
+}
+```
+
 
 
 <br/>
 <br/>
 
-> <h3 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h3>
+> <h2 id="图片上传">图片上传</h2>
+
+<br/>
+
+
+- 上传图片时出现的问题？需要注意的事项
+
+**事项一：**上传图片到服务器一般是将图片NSData上传到服务器，服务器返回一个图片NSString地址，之后再将NSString的路径转为url并通过url请求去更新图片（图片此时更新的便是NSString）
+
+上传的图片一般压缩方式是：
+
+```
+NSData *eachImgData = UIImageJPEGRepresentation(image, 0.5);
+```
+
+但是你可能会发现这样设置之后，上传还是比较慢，即使是把压缩比例设置为0.1 结果还是一样。你也许会看到图片大小大概为200-300KB  为何这么小了  还是上传比较慢，或者加载比较慢，这是因为你忽略了一个图片分辨率的压缩过程，所以此时你要压缩的不只是图片大小，还是图片分辨率。图片分辨率压缩代码：
+
+```
+//等比例压缩
+
++ (UIImage *) imageCompressForSize:(UIImage *)sourceImage targetSize:(CGSize)size {
+
+    UIImage *newImage = nil;
+    CGSize imageSize = sourceImage.size;
+    CGFloat width = imageSize.width;
+    CGFloat height = imageSize.height;
+
+    CGFloat targetWidth = size.width;
+    CGFloat targetHeight = size.height;
+    CGFloat scaleFactor = 0.0;
+
+    CGFloat scaledWidth = targetWidth;
+    CGFloat scaledHeight = targetHeight;
+
+    CGPoint thumbnailPoint = CGPointMake(0.0, 0.0);
+
+	//Size是否相等
+    if(CGSizeEqualToSize(imageSize, size) == NO){
+		//宽度因子
+        CGFloat widthFactor = targetWidth / width;
+        CGFloat heightFactor = targetHeight / height;
+
+        if(widthFactor > heightFactor){
+            scaleFactor = widthFactor;
+        }
+        else{
+            scaleFactor = heightFactor;
+        }
+
+		//缩放宽度
+        scaledWidth = width * scaleFactor;
+        scaledHeight = height * scaleFactor;
+
+        if(widthFactor > heightFactor){
+			//缩图坐标
+            thumbnailPoint.y = (targetHeight - scaledHeight) * 0.5;
+        }else if(widthFactor < heightFactor){
+            thumbnailPoint.x = (targetWidth - scaledWidth) * 0.5;
+        }
+
+    }
+
+   
+    UIGraphicsBeginImageContext(size);
+ 
+	  CGRect thumbnailRect = CGRectZero;
+    thumbnailRect.origin = thumbnailPoint;
+    thumbnailRect.size.width = scaledWidth;
+    thumbnailRect.size.height = scaledHeight;
+    
+	[sourceImage drawInRect:thumbnailRect];
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext();
+
+    if(newImage == nil){
+        NSLog(@"scale image fail");
+    }
+
+    UIGraphicsEndImageContext();
+
+    return newImage;
+}
+```
+这样双重压缩，完美解决图片压缩问题。
+
+
+<br/>
+
+NSData的length是bytes格式需要进行除以1024进行单位转换,格式判断Code：
+
+```
+- (BOOL)imgeData:(NSData *)data andImage:(UIImage *)image{
+    
+    double dataLength = [data length] * 1.0;
+    
+    NSArray *typeArray = @[@"bytes",@"KB",@"MB",@"GB",@"TB",@"PB", @"EB",@"ZB",@"YB"];
+        NSInteger index = 0;
+        while (dataLength > 1024) {
+            dataLength /= 1024.0;
+            index ++;
+        }
+    NSString *str = [NSString stringWithFormat:@"%.3f %@\n",dataLength,typeArray[index]];
+   
+    if(index >=2){
+        //大于1M
+        return YES;
+    }
+    
+    if(index ==1 && dataLength > 850){
+        //大于850KB
+        return YES;
+    }
+    
+    NSLog(@"str=== 无压缩====%@",str);
+    
+    return NO;
+}
+
+```
+
+对于非常大的图片和视频请看[网络优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/网络优化(I).md)中的**上传优化**。
+
+
+
+<br/>
+<br/>
+
+> <h2 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h2>
 
 <br/>
 
@@ -1070,6 +1290,112 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 > <h2 id ="runloop与自动释放池关系什么时侯释放">RunLoop与自动释放池关系，什么时侯释放?</h2>
 
 
+- **分两种情况：手动干预释放和系统自动释放**
+	- 手动干预释放就是指定autoreleasepool,当前作用域大括号结束就立即释放
+	- 系统自动去释放:不手动指定autoreleasepool,Autorelease对象会在当前的 runloop 迭代结束时释放
+	- kCFRunLoopEntry(1):第一次进入会自动创建一个autorelease
+	- kCFRunLoopBeforeWaiting(32):进入休眠状态前会自动销毁一个autorelease,然后重新创建一个新的autorelease
+	- kCFRunLoopExit(128):退出runloop时会自动销毁最后一个创建的autorelease
+
+<br/>
+
+- **系统自动释放时机：**
+
+&emsp; 每个runloop中都创建一个Autorelease Pool，并在runloop的末尾进行释放。所以，一般情况下，每个接受autorelease消息的对象，都会在下个runloop开始前被释放。也就是说，在一段同步的代码中执行过程中，生成的对象接受autorelease消息后，一般是不会在作用域结束前释放的。Autorelease对象出了作用域之后，会被添加到最近一次创建的自动释放池中，并会在当前的 runloop 迭代结束（RunLoop 在第一次获取时创建, 在线程结束时销毁）时释放,至于何时runloop结束并没有固定的duration。
+
+&emsp; Runloop是一个运行循环，但是它不可能一直运行着，所以它会有一个休眠期。Runloop维护着一个AutoreleasePool，当它进入休眠前它会把这个释放池里的对象进行释放。
+
+&emsp; UIKit通过RunLoopObserver在RunLoop两次Sleep间对AutoreleasePool进行pop和push,将这次Loop中产生的Autorelease对象释放。
+
+
+<br/>
+
+- **在UIKit中Runloop什么时候进入休眠？**
+
+先看一个简单Demo：
+
+```
+- (void)viewDidLoad{
+    [super viewDidLoad];
+    NSString *string = [NSString stringWithFormat:@"齐滇大圣"];
+}
+
+```
+
+&emsp; 这里[NSString stringWithFormat:@”齐滇大圣”];创建对象时这个对象的引用计数为 1 。当使用局部变量 string 指向这个对象时，这个对象的引用计数 +1 ，变成了 2 。而当 viewDidLoad 方法返回时，局部变量 string 被回收，指向了 nil 。因此，其所指向对象的引用计数 -1 ，变成了 1 。
+
+&emsp; 然后我们的这个对象是一个autorelease的实例，是被系统自动添加到了当前的 autoreleasepool 中的。所以会当Runloop一次迭代结束即将进入休眠的时候autoreleasepool drain对象引用计数 -1，对象释放。
+
+下面我们配合着堆栈信息看一下这个Runloop什么时候结束一次迭代。
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd0.png)
+
+
+&emsp; 这里我们加入一个weak的全局变量reference来指向我们的对象。因为weak引用不持有我们的对象，不会影响所指向对象的生命周期，所以我们用它来输出以判断我们的对象什么时候释放。
+
+&emsp; 我们能看到reference在viewDidLoad和viewWillAppear的时候有输出，而在viewDidAppear的时候为null，说明被释放了。那我们来猜测一下runloop的迭代周期。
+
+&emsp; viewWillAppear很容易理解是即将进入页面嘛，那runloop肯定是还有事要做的嘛，当viewDidAppear的时候表示已经进入页面了。那就表示没事做了，进入睡眠，等待用户动作的时候再次唤醒。你可能会觉得我口说无凭不靠谱，好那我就拿出证据来，我们来看下面两张图。
+
+断点1和断点2:
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd1.png)
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd2.png)
+
+我们能看到断点1和断点2 runloop还是在执行的，断点3表示runloop一个迭代已经结束了，即将进入睡眠。
+
+```
+//触发 Source0 (非基于port的) 回调。
+__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(source0);
+//out_to_block表示从block跳出，block执行完毕，即将进入睡眠。
+__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
+```
+
+
+<br/>
+
+- **自动释放池使用时机：**
+	- 写给予命令行的程序时，就是没有UI框架；
+	- 写循环，循环里边包含了大量临时创建的对象；
+	- 创建了新的线程；
+	- 长时间在后台运行的任务；
+	- 合理运用自动释放池，可以降低程序的内存峰值，异步的方式将文件保存在磁盘（SDWebimage里边异步保存图片到磁盘，类似的占用内存的操作）；
+
+
+<br/>
+<br/>
+
+
+ > <h2 id ="RunLoop原理和与线程的联系">RunLoop原理和与线程的联系？说一下你对他的了解</h2>
+
+1. RunLoop 的作用就是来管理线程的，当线程的 RunLoop开启后，线程就会在执行完任务后，处于休眠状态，随时等待接受新的任务，而不是退出。
+
+2. 只有主线程的RunLoop是默认开启的，所以程序在开启后，会一直运行，不会退出。其他线程的RunLoop如果需要开启，就手动开启，
+
+
+3. **runloop的mode作用:**
+
+	- model 主要是用来指定事件在运行循环中的优先级的，分为：
+
+	```
+	* NSDefaultRunLoopMode（kCFRunLoopDefaultMode）：默认，空闲状态
+	* UITrackingRunLoopMode                       ：界面跟踪 Mode，用于 ScrollView 追踪触摸滑动，保证界面滑动时不受其他 Mode 影响
+	* UIInitializationRunLoopMode                  ：在刚启动 App 时进入的第一个 Mode ，启动完成后就不再使用
+	* GSEventReceiveRunLoopMode                  ：接受系统事件的内部 Mode，通常用不到
+  	* kCFRunLoopCommonModes                      ：这是一个占位的 Mode，没有实际作用
+	```
+
+	- 苹果公开提供的 Mode有两个：
+
+	```
+	NSDefaultRunLoopMode（kCFRunLoopDefaultMode）
+	NSRunLoopCommonModes（kCFRunLoopCommonModes）
+	```
+
+
+
+<br/>
 <br/>
 
 > <h2 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h2>
@@ -1411,7 +1737,7 @@ hook系统函数，一个faceBook写的三方框架
 <br/>
 <br/>
 
-- <h2 id = "库引用错误解析">库引用错误解析<h3>
+- <h2 id = "库引用错误解析">库引用错误解析</h2>
 
 framework和[host工程](https://www.jianshu.com/p/d25f9465cfa8)(可执行的工程项目)资源共用
 
@@ -1426,6 +1752,57 @@ Class XXX is implemented in both XXX and XXX. One of the two will be used. Which
 删除 Build Phases > Link Binary With Libraries 中的内容（如有）。此时编译会提示三方库中包含的符号找不到。
 
 在 framework 的 Build Settings > Other Linker Flags 添加 -undefined dynamic_lookup。必须保证 host 工程编译出的二进制文件中包含这些符号。
+
+
+<br/>
+<br/>
+
+> <h2 id = "MJRefresh">**MJRefresh**<h3>
+
+- MJRefresh使用时有什么问题？有哪些需要注意的？
+
+&emsp;
+**事项1：**在很多情况下，如果endRefreshing 先执行  reloadData后执行 会出现indexPath.row不准确（值为4）这时候你的数组中很有可能不到四个成员，这时候就会造成数组越界。
+
+所以一定要先执行reloadData 方法 再执行endRefreshing方法
+
+```
+ [_tableView reloadData];
+
+ [_tableView.header endRefreshing];
+
+ [_tableView.footer endRefreshing];
+```
+
+
+<br/>
+
+**事项2：**使用上拉加载更多， 当数据加载完调用`[ableView.mj_footer endRefreshingWithNoMoreData]`方法显示已经全部加载完毕这个方法，一定要放在`[tableView.mj_footer endRefreshing];`停止加载方法的后面，不然`[ableView.mj_footer endRefreshingWithNoMoreData]`这个方法会失效。
+
+```
+[Request requestGET:parameter view:nil urlPre:CourseCenterURL funItem:HuFuncItem_DiscoverCourseLibraryList success:^(NSDictionary *dic) {
+    NSArray *dataListArray =  [HospitalShareRightModel mj_objectArrayWithKeyValuesArray:dic[@"data"][@"result"]];
+    //下拉刷新
+    if (weakSelf.pageNum == kPageNum) {
+        [weakSelf.rightTableView.mj_header endRefreshing];
+        [weakSelf.hospitalShareRightArray removeAllObjects];
+        if (dataListArray.count <= 0) {
+            [weakSelf.rightTableView removeFromSuperview];
+            [weakSelf defauleView];
+        }
+    }
+    [weakSelf.rightTableView.mj_footer endRefreshing];
+    [weakSelf.hospitalShareRightArray addObjectsFromArray:dataListArray];
+    if (dataListArray.count < 10) {
+        [weakSelf.rightTableView.mj_footer endRefreshingWithNoMoreData];//放到停止加载方法后面 不然会失效
+    }
+    [weakSelf.rightTableView reloadData];
+} error:^(NSDictionary *dic) {
+    [MBProgressHUD showError:dic[@"errmsg"]];
+} failure:^{
+}];
+
+```
 
 
 
