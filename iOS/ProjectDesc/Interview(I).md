@@ -33,6 +33,7 @@
 	- [文件存储优化](#文件存储优化)
 - [**架构与设计模式**](#架构与设计模式)
 	- [面向协议编程](#面向协议编程)
+	- [MVC和MVVM](#MVC和MVVM)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
@@ -300,6 +301,13 @@ anotherViewController.myMethod()
 <br/>
 
 在[**面向协议编程与 Cocoa 的邂逅 (下)**](https://onevcat.com/2016/12/pop-cocoa-2/)中我们把POP运用到实际的项目中去，比如：网络的封装。很赞的，可以把其运用到项目中去，重构项目中的网络层。
+
+
+
+<br/>
+<br/>
+
+> <>[](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)
 
 
 <br/>
@@ -1312,6 +1320,12 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 - [开发架构设计思考](https://www.jianshu.com/p/1e1009ba061c)
 - [组件化开发实施](https://www.jianshu.com/p/599e97b63af7)
 - [组件优化](https://casatwy.com/iOS-Modulization.html?hmsr=toutiao.io)
+
+
+<br/>
+<br/>
+
+> <h2 id="MVC和MVVM">[MVC和MVVM](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)</h2>
 
 
 
