@@ -217,8 +217,9 @@
 > <h2 id = "ProjectDesc">ProjectDesc</h2>
 * [**Desc(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
 * [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
-* [Interview(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(I).md)
-* 设计模式
+* [**Interview(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(I).md)
+* [**Swift知识点(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Swift知识点(I).md)
+* **设计模式**
 	* [**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)
 	* [**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)
 	* [**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)
@@ -539,7 +540,6 @@
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令.md)
 * [codemagic](https://codemagic.io/apps)
 	 * [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
-* [Git分支](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git分支.md)
 * [SourceTree(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree(I).md)
 * [SourceTree(II)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree(II).md)
 * [CocoaPods(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(I).md)
@@ -547,8 +547,9 @@
 * [CocoaPods(III)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(III).md)
 * [Android 模拟器 For Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Android-模拟器-For-Mac.md)
 * [Git](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git.md)
-* [Git 问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git--问题(I).md)
-* [GitBook-配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/GitBook-配置.md)
+* [Git分支](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git分支.md)
+* [Git问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git问题(I).md)
+* [GitBook配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/GitBook-配置.md)
 * [JAVA 和 Android 配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/JAVA-和-Android-配置.md)
 * [Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac.md)
 * [Podfile书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)

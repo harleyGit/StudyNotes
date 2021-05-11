@@ -1,4 +1,5 @@
 -  **[Interview(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(II).md)** 
+-  [**iOS面试集锦**](https://github.com/ChenYilong/iOSInterviewQuestions)
 
 <br/>
 
@@ -10,6 +11,8 @@
 	- [UILabel多适应](#UILabel多适应)
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 	- [适配器、响应元是什么](#适配器响应元是什么)
+	- [热更新](#热更新)
+	- [代码管理](#代码管理)
 - [**Swift基础**](#Swift基础)
 	- [面向协议编程](#面向协议编程)
 - [**性能优化**](#性能优化)
@@ -35,6 +38,8 @@
 	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
 	- [main函数之前会做什么](main函数之前会做什么)
 	- [响应者链](#响应者链)
+	- [OC的引用计数是存放](#OC的引用计数是存放)
+	- [类库没有导入](#类库没有导入)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
@@ -185,6 +190,43 @@ IAP支付的过程：
 
 
 
+<br/>
+<br/>
+
+> <h2 id="热更新">[热更新](https://juejin.cn/post/6844904144411574285)</h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id="代码管理">代码管理</h2>
+
+<br/>
+
+> <h3 id="pod instal和pod update区别">**pod install**和**pod update**区别
+</h3>
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd4.jpg)
+
+- **pod install:**执行该命令时，如果Podfile.lock文件存在, 则直接从此文件中读取框架信息并且它会只下载Podfile.lock文件中指定的版本安装。对于不在Podfile.lock文件中的pod库，pod install命令会搜索这个pod库在Podfile文件中指定的版本来安装；如果Podfile.lock不存在, 则会读取Podfile文件内的框架信息，然后执行下载并且根据下载好的框架信息, 生成Podfile.lock文件。
+
+- **pod update:**只有当你想要更新pod库的版本时才使用pod update；它不管Podfile.lock是否存在, 都会读取Podfile文件的的框架信息去下载安装，下载好之后, 再根据下载好的框架信息, 生成Podfile.lock文件
+
+当多人合作开发项目时，最开始把项目下载下来时最好都执行**`pod install`**，以后为了保持类库版本一致统一用**`pod update`**命令。
+
+
+
+<br/>
+
+
+
+
+
+
+
+
 
 <br/>
 
@@ -301,9 +343,12 @@ anotherViewController.myMethod()
 
 > <h3 id = "NSTimer计时不准确怎么办">NSTimer计时不准确怎么办？</h1>
 
+
+&emsp; 不准确是因为当线程切换到主线程时会阻碍它计时，当用的是NSRunloopCommentModels时，可以用GCD来计时。
+
 &emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计
 
-借口定义：
+接口定义：
 
 ```
 + (NSString *)execTask:(void(^)(void))task
@@ -1461,6 +1506,292 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 
 
+<br/>
+<br/>
+
+
+
+> <h2 id = "OC的引用计数是存放">OC的引用计数是存放在哪？</h2>
+
+在64bit操作系统中,apple对对象中的isa进行了优化使用isa_t结构来保存关于对象的更多信息.
+
+```
+# if __arm64__
+#   define ISA_MASK        0x0000000ffffffff8ULL
+#   define ISA_MAGIC_MASK  0x000003f000000001ULL
+#   define ISA_MAGIC_VALUE 0x000001a000000001ULL
+#   define ISA_BITFIELD                                                      \
+      uintptr_t nonpointer        : 1;   //指针是否优化过                                   \
+      uintptr_t has_assoc         : 1;   //是否有设置过关联对象，如果没有，释放时会更快                                   \
+      uintptr_t has_cxx_dtor      : 1; 	 //是否有C++的析构函数（.cxx_destruct），如果没有，释放时会更快                                     \
+      uintptr_t shiftcls          : 33; //存储着Class、Meta-Class对象的内存地址信息 \
+      uintptr_t magic             : 6;  //用于在调试时分辨对象是否未完成初始化                                     \
+      uintptr_t weakly_referenced : 1;  //是否有被弱引用指向过，如果没有，释放时会更快                                     \
+      uintptr_t deallocating      : 1;  //对象是否正在释放                                     \
+      uintptr_t has_sidetable_rc  : 1;  //引用计数器是否过大无法存储在isa中                                     \
+      uintptr_t extra_rc          : 19  //里面存储的值是引用计数器减1
+#   define RC_ONE   (1ULL<<45)
+#   define RC_HALF  (1ULL<<18)
+ 
+# elif __x86_64__
+#   define ISA_MASK        0x00007ffffffffff8ULL
+#   define ISA_MAGIC_MASK  0x001f800000000001ULL
+#   define ISA_MAGIC_VALUE 0x001d800000000001ULL
+#   define ISA_BITFIELD                                                        \
+      uintptr_t nonpointer        : 1;                                         \
+      uintptr_t has_assoc         : 1;                                         \
+      uintptr_t has_cxx_dtor      : 1;                                         \
+      uintptr_t shiftcls          : 44; /*MACH_VM_MAX_ADDRESS 0x7fffffe00000*/ \
+      uintptr_t magic             : 6;                                         \
+      uintptr_t weakly_referenced : 1;                                         \
+      uintptr_t deallocating      : 1;                                         \
+      uintptr_t has_sidetable_rc  : 1;                                         \
+      uintptr_t extra_rc          : 8
+#   define RC_ONE   (1ULL<<56)
+#   define RC_HALF  (1ULL<<7)
+ 
+# else
+#   error unknown architecture for packed isa
+# endif
+
+
+```
+
+其中：extra_rc和has_sidetable_rc两个标志就是用来存储对象引用计数的.
+
+
+isa中不同的位域代表不同的含义。
+
+
+- nonpointer
+	- 0，代表普通的指针，存储着Class、Meta-Class对象的内存地址
+	- 1，代表优化过，使用位域存储更多的信息
+
+
+
+- has_assoc
+	- 是否有设置过关联对象，如果没有，释放时会更快
+
+
+- has_cxx_dtor
+	- 是否有C++的析构函数（.cxx_destruct），如果没有，释放时会更快
+
+
+- shiftcls
+	- 存储着Class、Meta-Class对象的内存地址信息
+
+- magic
+	- 用于在调试时分辨对象是否未完成初始化
+
+
+- weakly_referenced
+	- 是否有被弱引用指向过，如果没有，释放时会更快
+
+
+- deallocating
+	- 对象是否正在释放
+
+
+- extra_rc
+	- 里面存储的值是引用计数器减1
+
+
+- has_sidetable_rc
+	- 引用计数器是否过大无法存储在isa中
+	- 如果为1，那么引用计数会存储在一个叫SideTable的类的属性中
+
+
+<br/>
+
+**引用计数的存储**
+
+引用计数的增加主要通过retain()函数来实现.
+
+```
+// Equivalent to calling [this retain], with shortcuts if there is no override
+inline id 
+objc_object::retain()
+{
+    assert(!isTaggedPointer());
+ 
+    if (fastpath(!ISA()->hasCustomRR())) {
+        //在ARC中直接调用
+        return rootRetain();
+    }
+ 
+    return ((id(*)(objc_object *, SEL))objc_msgSend)(this, SEL_retain);
+}
+ 
+ALWAYS_INLINE id 
+objc_object::rootRetain()
+{
+    return rootRetain(false, false);
+}
+ 
+ALWAYS_INLINE id 
+objc_object::rootRetain(bool tryRetain, bool handleOverflow)
+{
+    if (isTaggedPointer()) return (id)this;
+ 
+    bool sideTableLocked = false;
+    //是否将引用计数结果转存到sidetable中
+    bool transcribeToSideTable = false;
+ 
+    isa_t oldisa;
+    isa_t newisa;
+ 
+    do {
+        transcribeToSideTable = false;
+        oldisa = LoadExclusive(&isa.bits);
+        newisa = oldisa;
+        //不支持nonpointer：引用计数保存在sidetable中
+        if (slowpath(!newisa.nonpointer)) {
+            ClearExclusive(&isa.bits);
+            //不尝试增加引用计数且sidetable被锁，则打开sidetable锁定
+            if (!tryRetain && sideTableLocked) sidetable_unlock();
+            //尝试增加引用计数:如果尝试成功则返回当前对象;如果尝试失败则返回nil
+            if (tryRetain) return sidetable_tryRetain() ? (id)this : nil;
+            //直接进行retain操作:在sidetable中使引用计数增加1
+            else return sidetable_retain();
+        }
+        
+        //支持nonpointer
+ 
+        // 尝试增加引用计数且对象正在释放
+        if (slowpath(tryRetain && newisa.deallocating)) {
+            ClearExclusive(&isa.bits);
+            if (!tryRetain && sideTableLocked) sidetable_unlock();
+            return nil;
+        }
+        uintptr_t carry;
+        newisa.bits = addc(newisa.bits, RC_ONE, 0, &carry);  // extra_rc++
+ 
+        //extra_rc溢出
+        if (slowpath(carry)) {
+            // newisa.extra_rc++ overflowed
+            if (!handleOverflow) {
+                ClearExclusive(&isa.bits);
+                return rootRetain_overflow(tryRetain);
+            }
+            // Leave half of the retain counts inline and 
+            // prepare to copy the other half to the side table.
+            if (!tryRetain && !sideTableLocked) sidetable_lock();
+            //sidetable加锁
+            sideTableLocked = true;
+            //引用计数转存到sidetable中
+            transcribeToSideTable = true;
+            newisa.extra_rc = RC_HALF;
+            newisa.has_sidetable_rc = true;
+        }
+    } while (slowpath(!StoreExclusive(&isa.bits, oldisa.bits, newisa.bits)));
+ 
+    if (slowpath(transcribeToSideTable)) {
+        // Copy the other half of the retain counts to the side table.
+        sidetable_addExtraRC_nolock(RC_HALF);
+    }
+ 
+    if (slowpath(!tryRetain && sideTableLocked)) sidetable_unlock();
+    return (id)this;
+}
+
+
+```
+
+
+- 在不支持nonpointer的对象中,引用计数只存储在sidetable中;
+- 可以看出在支持nonpointer的情况下：
+	- 在isa的位域extra_rc足以存储的情况,引用计数会优先选择存储在isa的extra_rc位域中;
+	- 若isa位域extra_rc溢出，则会选择将将引用计数的RC_HALF(如果extra_rc占据8bit，则RC_HALF=2^7)保存在isa中，另一半RC_HALF叠加保存在sidetable中.之所以这样选择是因为isa_t的存取理论上会比sidetable的操作效率上快很多,这样做既可以使超出extra_rc存储范围的引用计数得到有效存储,又可以确保引用计数的增减足够快速(存取都以extra_rc优先).
+
+
+<br/>
+
+**引用计数的获取**
+
+因为对象的引用计数主要存储在isa位域extra_rc和散列表中,所以要获取对象的引用计数也需要从两个位置进行获取.
+
+```
+uintptr_t
+_objc_rootRetainCount(id obj)
+{
+    assert(obj);
+ 
+    return obj->rootRetainCount();
+}
+ 
+inline uintptr_t 
+objc_object::rootRetainCount()
+{
+    if (isTaggedPointer()) return (uintptr_t)this;
+ 
+    //添加sidetable操作锁
+    sidetable_lock();
+    //加载对象isa
+    isa_t bits = LoadExclusive(&isa.bits);
+    ClearExclusive(&isa.bits);
+    //如果对象开启了nonpointer
+    if (bits.nonpointer) {
+        //获取isa中存储的引用计数
+        uintptr_t rc = 1 + bits.extra_rc;
+        if (bits.has_sidetable_rc) {
+            //获取散列表中存储的引用计数
+            rc += sidetable_getExtraRC_nolock();
+        }
+        sidetable_unlock();
+        return rc;
+    }
+    //对象未开启nonpointer
+    sidetable_unlock();
+    return sidetable_retainCount();
+}
+ 
+ 
+ 
+uintptr_t
+objc_object::sidetable_retainCount()
+{
+    SideTable& table = SideTables()[this];
+ 
+    size_t refcnt_result = 1;
+    
+    table.lock();
+    RefcountMap::iterator it = table.refcnts.find(this);
+    if (it != table.refcnts.end()) {
+        // this is valid for SIDE_TABLE_RC_PINNED too
+        refcnt_result += it->second >> SIDE_TABLE_RC_SHIFT;
+    }
+    table.unlock();
+    return refcnt_result;
+}
+
+
+```
+
+- 在开启nonpointer的对象中,对象的引用计数包括两部分:
+	- 存储在isa中的引用计数;
+	- 存储在sidetable中的引用计数.
+- 在未开启nonpointer的对象中,对象的引用计数全部存储在sidetable中，只需要从sidetable中获取就可以.
+
+
+这里有一个有意思的问题：
+
+- 在开启nonpointer的对象中,引用计数retainCount=1+isa.extra_rc+sidetable_getExtraRC_nolock();
+- 在未开启nonpointer的对象中,引用计数retainCount=1+table.refcnts.find(this)->second >> SIDE_TABLE_RC_SHIFT;
+
+
+&emsp; 所以其实在创建对象的过程中(例如alloc和copy)，存储的引用计数并没有进行+1操作,而是默认对象的最小引用计数为1.在release操作时才会判断引用计数-1是否为0，如果为0则进行释放;否则进行引用计数-1.
+
+[引用计数说起](https://juejin.cn/post/6844903919127101448)
+
+
+<br/>
+<br/>
+
+
+> <h2 id="类库没有导入">类库没有导入</h2>
+
+- 当一个类库没有进行导入文件时，但是我想使用它，如何做到？
+	使用runtime
 
 
 <br/>
@@ -1474,7 +1805,7 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 <br/>
 
-> <h3 id="NSURLSession与RunLoop的联系">NSURLSession与RunLoop的联系</h3>
+> <h2 id="NSURLSession与RunLoop的联系">NSURLSession与RunLoop的联系</h2>
 
 
 AFNet2.0网络请求常驻线程机制
