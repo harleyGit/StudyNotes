@@ -30,6 +30,7 @@
 - **白色的实线**代表你可以穿越，但你必须要买票，或者交点过路费。
 
 <br/>
+
 - **C和M之间的绿色箭头**
 
 &emsp;C和M之间的绿色箭头，这箭头的方向就代表着“发起对话”的方向，也就是说，发起对话的是C，而做出回答的是M。C可以问M各种各样的问题，但M 只是回答C的问题或要求，它不可以主动的向C要求什么。还记得虚线是畅通无阻的意思吧，所以，C知道M的所有的事情,如果用代码来说明这件事情，就是 说，C可以导入M的头文件或是M的接口（API）。因为C可以通过M的API，所以它就可以肆无忌惮的向M要求这要求那了。
@@ -45,15 +46,16 @@
 
 
 <br/>
+
 - **M和V之间黄线隔开**
 
 &emsp;那M和V之间可以交流么？还记得黄线的意思么？完全不可以通过，所以我们是不允许M和V进行交流的。这是因为我们不希望这三部分之间有过多的交流，你想想，假如V在显示时出现了问题，比如有一个图形没有显示出来，我们就要去查找错误，因为C可以和V交流，M也可以和V交流的话，我们就要去检查两个部分。 相反的，只有C可以和V交流的话，在出错时，我们就只需要去C那里查找原因，这样查找错误不就很是简单了么？所以，我们不允许M和V之间有直接的联系，这 也是在它们两之间有两根黄线的原因。 总结下来也就是以下三点：
 
-（1）、Model和View永远不能相互通信，只能通过Controller传递。
+（1）Model和View永远不能相互通信，只能通过Controller传递。
 
-（2）、Controller可以直接与Model对话（读写调用Model），Model通过Notification和KVO机制与Controller间接通信。
+（2）Controller可以直接与Model对话（读写调用Model），Model通过Notification和KVO机制与Controller间接通信。
 
-（3）、Controller可以直接与View对话，通过outlet,直接操作View,outlet直接对应到View中的控件,View通过action向Controller报告事件的发生(如用户Touch我了)。Controller是View的直接数据源（数据很可能是Controller从Model中取得并经过加工了）。Controller是View的代理（delegate),以同步View与Controller。
+（3）Controller可以直接与View对话，通过outlet,直接操作View,outlet直接对应到View中的控件,View通过action向Controller报告事件的发生(如用户Touch我了)。Controller是View的直接数据源（数据很可能是Controller从Model中取得并经过加工了）。Controller是View的代理（delegate),以同步View与Controller。
 
 
 <br/>

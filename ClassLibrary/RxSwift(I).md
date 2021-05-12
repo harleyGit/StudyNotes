@@ -1,3 +1,7 @@
+- [**RxSwift(II)**](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(II).md)
+
+<br/>
+
 - **RxSwift角色定位**
 	- Observable(被观察者)继承链
 	- 	Observable的核心函数
@@ -167,6 +171,7 @@ extension ObservableType {
 
 
 <br/>
+
 **①. Observable<T>**
 
 * **`Observable<T>`**   这个类就是 Rx 框架的基础，我们可以称它为可观察序列。它的作用就是可以异步地产生一系列的 Event（事件），即一个 Observable<T> 对象会随着时间推移不定期地发出 event(element : T) 这样一个东西。
@@ -175,7 +180,9 @@ extension ObservableType {
 
 
 <br/>
+
 **②. Event**
+
 源码
 
 ```
@@ -250,6 +257,7 @@ func createObserver() {
 
 
 <br/>
+
 点击`②`中的`subscribe`方法，来到其源码：
 
 ```

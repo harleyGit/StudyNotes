@@ -1,3 +1,7 @@
+[**Runtime(II)**](https://github.com/harleyGit/StudyNotes/blob/master/底层/Runtime(II).md)
+
+<br/>
+
 - **简介**
 - **基本概念**
 - **基本方法**
@@ -134,22 +138,32 @@ struct objc_class {
 ```
 
 <br/>
+
 **Class(类)**
->&emsp;  `struct objc_classs` 结构体里存放的数据称为`元数据(metadata)`，结构体内包含了isa、super_class(指向父类的指针)、属性(name[类的名字]、version[版本]、info、instance_size[实例大小])、ivars(实例变量列表)、methodLists(方法列表)、cache(缓存)、protocols(遵守的协议列表)。
+
+> &emsp;  `struct objc_classs` 结构体里存放的数据称为`元数据(metadata)`，结构体内包含了isa、super_class(指向父类的指针)、属性(name[类的名字]、version[版本]、info、instance_size[实例大小])、ivars(实例变量列表)、methodLists(方法列表)、cache(缓存)、protocols(遵守的协议列表)。
+
 &emsp;  这些信息就足够创建一个实例了，该结构体的第一个成员变量也是isa指针，这就说明了`Class`本身其实也是一个对象，我们称之为`类对象`，`类对象`在编译期产生用于创建`实例对象`，是`单例`。
 
 
 <br/>
+
 **Object(对象)**
->&emsp;  这里的 id 被定义为一个指向 objc_object 结构体 的指针。从中可以看出 objc_object 结构体 只包含一个 Class 类型的 isa 指针。
->&emsp; 换句话说，一个 Object（对象）唯一保存的就是它所属 Class（类） 的地址。当我们对一个对象，进行方法调用时，比如 [receiver selector];，它会通过 objc_object 结构体的 isa 指针 去找对应的 objc_class 结构体，然后在 objc_class 结构体 的 methodLists（方法列表） 中找到我们调用的方法，然后执行。
+
+> &emsp;  这里的 id 被定义为一个指向 objc_object 结构体 的指针。从中可以看出 objc_object 结构体 只包含一个 Class 类型的 isa 指针。
+
+> &emsp; 换句话说，一个 Object（对象）唯一保存的就是它所属 Class（类） 的地址。当我们对一个对象，进行方法调用时，比如 [receiver selector];，它会通过 objc_object 结构体的 isa 指针 去找对应的 objc_class 结构体，然后在 objc_class 结构体 的 methodLists（方法列表） 中找到我们调用的方法，然后执行。
 
 
 <br/>
+
 **Meta Class(元类)**
->&emsp; 对象（objc_object 结构体） 的 isa 指针 指向的是对应的 类对象（objc_class 结构体）。那么 类对象（objc_class 结构体）的 isa 指针 又指向什么呢？
-&emsp; objc_class 结构体 的 isa 指针 实际上指向的的是 类对象 自身的 Meta Class（元类）。
-&emsp; Meta Class（元类） 就是一个类对象所属的 类。一个对象所属的类叫做 类对象，而一个类对象所属的类就叫做 元类。
+
+> &emsp; 对象（objc_object 结构体） 的 isa 指针 指向的是对应的 类对象（objc_class 结构体）。那么 类对象（objc_class 结构体）的 isa 指针 又指向什么呢？
+
+> &emsp; objc_class 结构体 的 isa 指针 实际上指向的的是 类对象 自身的 Meta Class（元类）。
+
+> &emsp; Meta Class（元类） 就是一个类对象所属的 类。一个对象所属的类叫做 类对象，而一个类对象所属的类就叫做 元类。
 
  
 
@@ -306,12 +320,16 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 
 **`运行时阶段：`**消息接受者 recever 寻找对应的 selector。
 
->&emsp;  通过 recevier 的 isa 指针 找到 recevier 的 Class（类）；
-&emsp;  在 Class（类） 的 cache（方法缓存） 的散列表中寻找对应的 IMP（方法实现）；
-&emsp;  如果在 cache（方法缓存） 中没有找到对应的 IMP（方法实现） 的话，就继续在 Class（类） 的 method list（方法列表） 中找对应的 selector，如果找到，填充到 cache（方法缓存） 中，并返回 selector；
-&emsp;  如果在 Class（类） 中没有找到这个 selector，就继续在它的 superClass（父类）中寻找；
+> &emsp;  通过 recevier 的 isa 指针 找到 recevier 的 Class（类）；
+
+> &emsp;  在 Class（类） 的 cache（方法缓存） 的散列表中寻找对应的 IMP（方法实现）；
+
+> &emsp;  如果在 cache（方法缓存） 中没有找到对应的 IMP（方法实现） 的话，就继续在 Class（类） 的 method list（方法列表） 中找对应的 selector，如果找到，填充到 cache（方法缓存） 中，并返回 selector；
+
+> &emsp;  如果在 Class（类） 中没有找到这个 selector，就继续在它的 superClass（父类）中寻找；
 一旦找到对应的 selector，直接执行 recever 对应 selector 方法实现的 IMP（方法实现）。
-&emsp;  若找不到对应的 selector，消息被转发或者临时向 recever 添加这个 selector 对应的实现方法，否则就会发生崩溃。
+
+> &emsp;  若找不到对应的 selector，消息被转发或者临时向 recever 添加这个 selector 对应的实现方法，否则就会发生崩溃。
 
 ![消息转发示意图](https://upload-images.jianshu.io/upload_images/2959789-ff3d7417b9979be6.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 

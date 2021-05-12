@@ -1,4 +1,6 @@
+[**RunLoop(II)**](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(II).md)
 
+<br/>
 
 - NSTimer
 - RunLoop
@@ -19,7 +21,7 @@
 
 ># NSTimer
 
-&emsp; **`NSTimer`**是不准确的，当程序执行的时候，遇到cpu忙碌的时候，NSTimer会被放到一边不执行，就会造成该执行的事件不执行，会造成事件的叠加。
+&emsp; **`NSTimer`** 是不准确的，当程序执行的时候，遇到cpu忙碌的时候，NSTimer会被放到一边不执行，就会造成该执行的事件不执行，会造成事件的叠加。
 
 &emsp; 所以说NSTimer通常会用来做一些有一定时间跨度的时间处理。
 
@@ -68,7 +70,7 @@ CFRunLoopGetCurrent();  // 获取当前线程的 RunLoop 对象
 
 <br/>
 
-**CFRunLoopGetCurrent()**是用来获取Runloop对象的，其源代码：
+**`CFRunLoopGetCurrent()`**是用来获取Runloop对象的，其源代码：
 
 
 ```
@@ -266,10 +268,15 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
 ```
 
 - **`Observer事件:`** runloop中状态变化时进行通知。（微信卡顿监控就是利用这个事件通知来记录下最近一次main runloop活动时间，在另一个check线程中用定时器检测当前时间距离最后一次活动时间多久来判断在主线程中的处理逻辑耗时和卡主线程）。这里还需要特别注意，CAAnimation是由RunloopObserver触发回调来重绘，接下来会讲到。
-- **`Block事件:`**非延迟的NSObject PerformSelector立即调用，dispatch_after立即调用，block回调。
-- **`Main_Dispatch_Queue事件：`**GCD中dispatch到main queue的block会被dispatch到main loop执行。
+
+- **`Block事件:`** 非延迟的NSObject PerformSelector立即调用，dispatch_after立即调用，block回调。
+
+- **`Main_Dispatch_Queue事件：`** GCD中dispatch到main queue的block会被dispatch到main loop执行.
+
 - **`Timer事件：`**延迟的NSObject PerformSelector，延迟的dispatch_after，timer事件。
+
 - **`Source0事件：`**处理如UIEvent，CFSocket这类事件。需要手动触发。触摸事件(首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 [**SpringBoard**](https://www.cnblogs.com/Mike-Fighting/p/5410900.html) 接收。SpringBoard 只接收按键【锁屏/静音等】，触摸，加速，接近传感器等几种 Event，随后用 [mach port](https://www.jianshu.com/p/284b1777586c) 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，回调函数就是` __IOHIDEventSystemClientQueueCallback()`并调用 _UIApplicationHandleEventQueue()进行应用内部的分发。）其实是Source1接收系统事件后在回调 __IOHIDEventSystemClientQueueCallback() 内触发的 Source0，Source0 再触发的 _UIApplicationHandleEventQueue()。source0一定是要唤醒runloop及时响应并执行的，如果runloop此时在休眠等待系统的 mach_msg事件，那么就会通过source1来唤醒runloop执行。
+
 - **`Source1事件：`**处理系统内核的mach_msg事件。（推测CADisplayLink也是这里触发）。
 
 
@@ -325,7 +332,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBERVER_CALLBACK_FUNCTION__(CFRunLoopExit);
 
 <br/>
 
-# `RunLoop 在主线程`
+**`RunLoop 在主线程`**
 
 ```
 NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer * _Nonnull timer) {
@@ -345,7 +352,8 @@ NSTimer * timer = [NSTimer timerWithTimeInterval:1.f repeats:YES block:^(NSTimer
 
 
 <br/>
-# `RunLoop 在子线程`
+
+**`RunLoop 在子线程`**
 
 ```
 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -358,14 +366,16 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
     });
 ```
+
 &emsp;   通过观察，我们在拖动UITextView控件时，我们发现子线程中的RunLoop并没有打印。
+
 &emsp;   这是因为当进入block的时候，先创建了timer，并且也把timer也把timer加入到runloop中，但是很重要的一点子线程中Runloop不会自动运行，需要手动运行，因为这里没有运行Runloop，所以timer就被释放掉了，所以导致了啥都没有。
 
 
 
 <br/>
 
-# `RunLoop 在子线程手动开启`
+**`RunLoop 在子线程手动开启`**
 
 ```
 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -382,13 +392,14 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSLog(@"当前线程: %@", [NSThread currentThread]);
     });
 ```
+
 ![子线程手动开启RunLoop](https://upload-images.jianshu.io/upload_images/2959789-1f926c39389ff696.gif?imageMogr2/auto-orient/strip)
 
 
 
 <br/>
 
-# `子线程实现常驻线程`
+**`子线程实现常驻线程`**
 
 ```
 //运行runloop
@@ -400,6 +411,7 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 //运行runloop直到一个时间
 [[NSRunLoop currentRunLoop] runUntilDate:[NSDate distantFuture]]; 
 ```
+
 &emsp;  这样子就可以实现在子线程处理耗时操作，并且常驻线程了。
 
 
@@ -523,6 +535,7 @@ struct __CFRunLoopMode {
 
 
 <br/>
+
 按照函数调用栈，Source分类：
 - `Source0`: 非基于Port的,处理内部app事件，如：UIEvent；
 - `Soruce1`： 基于Port的，通过内核和其他线程通信、接收、分发系统事件的，主动唤醒runloop线程；
@@ -550,7 +563,9 @@ struct __CFRunLoopSource {
 
 
 <br/>
+
 `source0 的详解`
+
 &emsp;  `source0`是App内部事件，由App自己管理的`UIEvent、CFSocket`都是source0。当一个source0事件准备执行的时候，必须要先把它标记为signal状态，以下是source0的结构体：
 
 ```
@@ -567,10 +582,12 @@ typedef struct {
     void	(*perform)(void *info);
 } CFRunLoopSourceContext;
 ```
+
 &emsp;  `source0`是非基于Port的。只包含了一个回调（函数指针），它并不能主动触发事件。使用时，你需要先调用 `CFRunLoopSourceSignal(source)`，将这个 Source 标记为待处理，然后手动调用 `CFRunLoopWakeUp(runloop)` 来唤醒 RunLoop，让其处理这个事件。
 
 
 <br/>
+
 `source1 的详解`
 
 &emsp;  `source1`由 `RunLoop` 和内核管理，`source1` 带有`mach_port_t`，可以接收内核消息并触发回调，以下是source1的结构体:
@@ -593,6 +610,7 @@ typedef struct {
 #endif
 } CFRunLoopSourceContext1;
 ```
+
 &emsp;  `source1`除了包含回调指针外包含一个`mach port`，`source1`可以监听系统端口和通过内核和其他线程通信，接收、分发系统事件，它能够主动唤醒RunLoop(由操作系统内核进行管理，例如CFMessagePort消息)。官方也指出可以自定义Source，因此对于CFRunLoopSourceRef来说它更像一种协议，框架已经默认定义了两种实现，如果有必要开发人员也可以自定义，详细情况可以查看[官方文档](https://link.jianshu.com?t=https%3A%2F%2Fdeveloper.apple.com%2Flibrary%2Fcontent%2Fdocumentation%2FCocoa%2FConceptual%2FMultithreading%2FRunLoopManagement%2FRunLoopManagement.html)。
 
 

@@ -28,12 +28,15 @@
 	- [启动优化](#启动优化)
 	- [UI卡顿优化](#UI卡顿优化)
 	- [内存优化](#内存优化)
-	- [包体积优化](#包体积优化)
+		- [包体积优化](#包体积优化)
 	- [内存暴涨解决](#内存暴涨解决)
 	- [文件存储优化](#文件存储优化)
 - [**架构与设计模式**](#架构与设计模式)
 	- [面向协议编程](#面向协议编程)
 	- [MVC和MVVM](#MVC和MVVM)
+	- [单例类](#单例类)
+	- [协议代理](#协议代理)
+	- [KVC和KVO](#KVC和KVO)
 - [**底层**](#底层)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
@@ -46,6 +49,7 @@
 	- [网络性能优化](#网络性能优化)
 - [**类库** ](#类库)
 	- [FishHook](#fishhook) 
+	- [SDWebImage](#SDWebImage)
 	- [静态库和动态库](#静态库和动态库)
 		- [库引用错误解析](#库引用错误解析)
 - [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
@@ -893,7 +897,7 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 
 
 
-> <h2 id = "包体积优化">[包体积优化](https://juejin.cn/post/6844904169938092045)</h2>
+> <h3 id = "包体积优化">[包体积优化](https://juejin.cn/post/6844904169938092045)</h3>
 
 <br/>
 
@@ -1229,8 +1233,7 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
             return ExecuteDataSet(CreateConnection(), commandText, parms);
         }
  
-        public static DataSet ExecuteDataSet(SQLiteConnection connection, string commandText, SQLiteParameter[] parms)
-        {
+        public static DataSet ExecuteDataSet(SQLiteConnection connection, string commandText, SQLiteParameter[] parms)        {
             return ExecuteDataSet(connection, CommandType.Text, commandText, parms);
         }
  
@@ -1328,6 +1331,23 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 > <h2 id="MVC和MVVM">[MVC和MVVM](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)</h2>
 
 
+<br/>
+<br/>
+
+> <h2 id="单例类">[**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)</h2>
+
+<br/>
+<br/>
+
+> <h2 id="协议代理">[**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)</h2>
+
+<br/>
+<br/>
+
+> <h2 id="KVC和KVO">[**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)</h2>
+
+
+
 
 
 
@@ -1346,7 +1366,7 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 <br/>
 
-> <h2 id ="runloop与自动释放池关系什么时侯释放">RunLoop与自动释放池关系，什么时侯释放?</h2>
+> <h2 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h2>
 
 
 - **分两种情况：手动干预释放和系统自动释放**
@@ -2032,9 +2052,86 @@ case ReloadRevalidatingCacheData // Unimplemented
 <br/>
 <br/>
 
-> <h2 id = "fishhook">FishHook<h3>
+> <h2 id = "fishhook">FishHook</h2>
 
 hook系统函数，一个faceBook写的三方框架
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id = "SDWebImage">[SDWebImage](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/SDWebImage(I).md)</h2>
+
+<br/>
+
+> <h3 id = "SDWebImage实现原理">SDWebImage实现原理, tableView复用错乱问题</h3>
+
+解决tableView复用错乱问题：每次都会调UIImageView+WebCache文件中的 [self sd_cancelCurrentImageLoad];
+
+**SDWebImage实现过程**
+
+- 第一步，入口 setImageWithURL:placeholderImage:options: 会先把 placeholderImage 显示，然后 SDWebImageManager 根据 URL 开始处理图片。
+
+- 第二步，进入 SDWebImageManager-downloadWithURL:delegate:options:userInfo:，交给 SDImageCache 从缓存查找图片是否已经下载 queryDiskCacheForKey:delegate:userInfo:.
+
+- 第三步，先从内存图片缓存查找是否有图片，如果内存中已经有图片缓存，SDImageCacheDelegate 回调 imageCache:didFindImage:forKey:userInfo: 到 SDWebImageManager。
+
+- 第四步，SDWebImageManagerDelegate 回调 webImageManager:didFinishWithImage: 到 UIImageView+WebCache 等前端展示图片。
+
+- 第五步，如果内存缓存中没有，生成 NSInvocationOperation 添加到队列开始从硬盘查找图片是否已经缓存。
+
+- 第六步，根据 URLKey 在硬盘缓存目录下尝试读取图片文件。这一步是在 NSOperation 进行的操作，所以回主线程进行结果回调 notifyDelegate:。
+
+- 第七步，如果上一操作从硬盘读取到了图片，将图片添加到内存缓存中（如果空闲内存过小，会先清空内存缓存）。SDImageCacheDelegate 回调 imageCache:didFindImage:forKey:userInfo:。进而回调展示图片。
+
+- 第八步，如果从硬盘缓存目录读取不到图片，说明所有缓存都不存在该图片，需要下载图片，回调 imageCache:didNotFindImageForKey:userInfo:。
+
+- 第九步，共享或重新生成一个下载器 SDWebImageDownloader 开始下载图片。
+
+- 第十步，图片下载由 NSURLConnection 来做，实现相关 delegate 来判断图片下载中、下载完成和下载失败，connection:didReceiveData: 中利用 ImageIO 做了按图片下载进度加载效果。
+
+- 第十一步，connectionDidFinishLoading: 数据下载完成后交给 SDWebImageDecoder 做图片解码处理。图片解码处理在一个 NSOperationQueue 完成，不会拖慢主线程 UI。如果有需要对下载的图片进行二次处理，最好也在这里完成，效率会好很多。
+
+- 第十二步，在主线程 notifyDelegateOnMainThreadWithInfo: 宣告解码完成，imageDecoder:didFinishDecodingImage:userInfo: 回调给 SDWebImageDownloader。
+
+- 第十三步，imageDownloader:didFinishWithImage: 回调给 SDWebImageManager 告知图片下载完成。
+
+- 第十四步，通知所有的 downloadDelegates 下载完成，回调给需要的地方展示图片。
+
+- 第十五步，将图片保存到 SDImageCache 中，内存缓存和硬盘缓存同时保存。写文件到硬盘也在以单独 NSInvocationOperation 完成，避免拖慢主线程。
+
+- 另外，SDImageCache 在初始化的时候会注册一些消息通知，在内存警告或退到后台的时候清理内存图片缓存，应用结束的时候清理过期图片。
+
+
+
+<br/>
+
+
+**原理：**
+- SDWebImageDownloader
+- 图片的下载操作放在一个NSOperationQueue并发操作队列中，队列默认最大并发数是6
+- 每个图片对应一些回调（下载进度，完成回调等），回调信息会存在downloader的URLCallbacks（一个字典，key是url地址，value是图片下载回调数组）中，URLCallbacks可能被多个线程访问，所以downloader把下载任务放在一个barrierQueue中，并设置屏障保证同一时间只有一个线程访问URLCallbacks。，在创建回调URLCallbacks的block中创建了一个NSOperation并添加到NSOperationQueue中
+- 下载的核心是利用NSURLSession加载数据，每个图片的下载都有一个operation操作来完成，并将这些操作放到一个操作队列中，这样可以实现图片的并发下载。
+- 内存缓存的处理由NSCache对象实现，NSCache类似一个集合的容器，它存储key-value对，类似于nsdictionary类，我们通常使用缓存来临时存储短时间使用但创建昂贵的对象，重用这些对象可以优化新能，同时这些对象对于程序来说不是紧要的，如果内存紧张就会自动释放。
+- 先在内存中放置一份缓存，如果需要缓存到磁盘，将磁盘缓存操作作为一个task放到串行队列中处理，会先检查图片格式是jpeg还是png，将其转换为响应的图片数据，最后吧数据写入磁盘中（文件名是对key值做MD5后的串）。
+
+
+<br/>
+
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id = "RxSwift">[RxSwift](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(I).md)<h2>
+
+
 
 
 <br/>
