@@ -1,7 +1,9 @@
 - [**基础**](#基础)
+	- [Flutter与原生平台通信](#Flutter与原生平台通信)
 	- [渲染流程](#渲染流程)
 	- [线程模型](#线程模型)
 	- [Future和isolate区别](#Future和isolate区别)
+	- [数据库概念](#数据库概念)
 
 
 <br/>
@@ -11,9 +13,27 @@
 
 > <h1 id="基础">基础</h1>
 
+
+<br/>
 <br/>
 
-> <h2 id="渲染流程">[**渲染流程**](https://juejin.cn/post/6844904122257276936)</h2>
+> <h2 id="Flutter与原生平台通信"> Flutter与原生平台通信 </h2>
+
+[**双向通信**](https://blog.csdn.net/zl18603543572/article/details/96043692)三种方式：
+- BasicMessageChannel 实现 Flutter 与 原生(Android 、iOS)双向通信
+- MethodChannel 实现 Flutter 与 原生原生(Android 、iOS)双向通信
+- EventChannel 实现 原生原生(Android 、iOS)向Flutter 发送消息
+- [**通信CodeDemo**](https://github.com/zhaolongs/Flutter-Android-iOS)
+
+
+
+<br/>
+<br/>
+
+> <h2 id="渲染流程"> 渲染流程 </h2>
+
+[**渲染流程**](https://juejin.cn/post/6844904122257276936)
+
 Widget、Element、RenderObject如何渲染的？
 
 ![Flutter 的架构<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd5.png)
@@ -53,11 +73,15 @@ Widget、Element、RenderObject如何渲染的？
 <br/>
 
 
-> <h2 id="线程模型">[线程模型](https://xiongcen.github.io/2020/09/01/flutter-thread-model/)</h2>
+> <h2 id="线程模型"> 线程模型 </h2>
+
+[**线程模型**](https://xiongcen.github.io/2020/09/01/flutter-thread-model/)
 
 **摘要:**
 
 &emsp; Flutter Engine层面，有四个Runner各司其职，这里的Runner其实就是线程，不过这四个Runner是由Engine和Native之间的那个嵌入层(Embedder)去赋值的，Engine层只会使用这四个Runner，不会创建新的线程。
+
+![线程管理结构图<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd6.jpg)
 
 四个Runner分别是：
 
@@ -104,7 +128,9 @@ Widget、Element、RenderObject如何渲染的？
 <br/>
 
 
-> <h2 id="Future和isolate区别">[Future和isolate区别](https://www.jianshu.com/p/252fb36ed13d)</h2>
+> <h2 id="Future和isolate区别">Future和isolate区别</h2>
+
+[**Future和isolate区别**](https://www.jianshu.com/p/252fb36ed13d)
 
 Flutter是用Dart实现的，在Dart中没有线程和进程的概念，我们编程使用多线程一般实现两种场景，一种是异步执行，一种是并行执行。
 
@@ -142,6 +168,18 @@ Flutter是用Dart实现的，在Dart中没有线程和进程的概念，我们�
 			- 数据加密
 			- 图像处理
 			- 网络请求：加载资源、图片
+
+
+<br/>
+<br/>
+
+
+> <h2 id="数据库概念">数据库概念</h2>
+[**数据库概念**](https://www.imangodoc.com/52359.html)
+
+Flutter提供了许多高级软件包来处理数据库,最重要的软件包是:
+- sqflite-用于访问和操作SQLite数据库;
+- firebase_database-用于从Google访问和操纵云托管的NoSQL数据库。
 
 
 
