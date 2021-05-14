@@ -519,10 +519,10 @@
 
 > <h1 id = "数据结构">数据结构</h1>
 *	[递归](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/递归.md)
-*	[队列](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/队列.md)
-*	[二叉树](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/二叉树.md)
 *	[线性表(I)](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/线性表(I).md)
 *	[线性链表(II)](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/线性链表(II).md)
+*	[队列](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/队列.md)
+*	[二叉树](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/二叉树.md)
 *	[栈](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/栈.md)
 *	[](https://github.com/harleyGit/StudyNotes/blob/master/数据结构/.md)
 

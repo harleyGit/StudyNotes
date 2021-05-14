@@ -13,8 +13,6 @@
 	- [适配器、响应元是什么](#适配器响应元是什么)
 	- [热更新](#热更新)
 	- [代码管理](#代码管理)
-- [**Swift基础**](#Swift基础)
-	- [面向协议编程](#面向协议编程)
 - [**性能优化**](#性能优化)
 	- [循环引用解决](#循环引用解决)
 	- [NSTimer循环引用解决](#NSTimer循环引用解决)
@@ -38,15 +36,23 @@
 	- [协议代理](#协议代理)
 	- [KVC和KVO](#KVC和KVO)
 - [**底层**](#底层)
+	- [Runloop底层原理](#Runloop底层原理)
+	- [Runloop有几种运行状态](#Runloop有几种运行状态)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
 	- [main函数之前会做什么](main函数之前会做什么)
+	- [Runtime的消息转发](#Runtime的消息转发)
 	- [响应者链](#响应者链)
 	- [OC的引用计数是存放](#OC的引用计数是存放)
 	- [类库没有导入](#类库没有导入)
+	- [OC的分类Category](#OC的分类Category)
+	- [Block深入探究](#Block深入探究)
+		- [blokc分类](#blokc分类)
+		- [block原理](#block原理)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
+	- [TCP和UDP区别](#TCP和UDP区别)
 - [**类库** ](#类库)
 	- [FishHook](#fishhook) 
 	- [SDWebImage](#SDWebImage)
@@ -240,98 +246,15 @@ IAP支付的过程：
 
 
 
+># <h1 id = "性能优化"> [性能优化](https://www.jianshu.com/p/3ad7880e3667) </h1>
 
-> <h1 id = "Swift基础">Swift基础</h1>
-
-
-<br/>
-
-> <h2 id = "面向协议编程">面向协议编程</h2>
-
-- **OOP**：面向对象编程（英文Object Oriented Programming）；
-- **POP**：面向协议编程（Protocol Oriented Programming），是Swift的一种编程范式；
-
-
-&emsp; 在Swift的协议中定义属性永远不要用 `let` 关键字。只读属性规定使用 `var` 关键字，并在后面单独跟上 `{ get }`。如果有一个方法改变了一个或多个属性，你需要标记它为 `mutating`。
-
-
-<br/>
-
-
-在[面向协议编程与 Cocoa 的邂逅 (上)](https://onevcat.com/2016/11/pop-cocoa-1/)的文章里POP解决了面向对象编程的**OC动态派发安全性、横切关注点、菱形缺陷**问题。
-
-协议扩展：
-对于 P，可以在 extension P 中为 myMethod 添加一个实现：
-
-
-```
-protocol P {
-    func myMethod()
-}
-
-extension P {
-    func myMethod() {
-        doWork()
-    }
-}
-```
-
-
-有了这个协议扩展后，我们只需要简单地声明 ViewController 和 AnotherViewController 遵守 P，就可以直接使用 myMethod 的实现了：
-
-```
-extension ViewController: P { }
-extension AnotherViewController: P { }
-
-viewController.myMethod()
-anotherViewController.myMethod()
-```
-不仅如此，除了已经定义过的方法，我们甚至可以在扩展中添加协议里没有定义过的方法。在这些额外的方法中，我们可以依赖协议定义过的方法进行操作。我们之后会看到更多的例子。总结下来：
-
-- **协议定义**
-	- 提供实现的入口
-	- 遵循协议的类型需要对其进行实现
-- **协议扩展**
-	- 为入口提供默认实现
-	- 根据入口提供额外实现
-
-
-这样一来，横切点关注的问题也简单安全地得到了解决。
-- ✅ 动态派发安全性
-- ✅ 横切关注点
-- 菱形缺陷
-
-
-<br/>
-
-在[**面向协议编程与 Cocoa 的邂逅 (下)**](https://onevcat.com/2016/12/pop-cocoa-2/)中我们把POP运用到实际的项目中去，比如：网络的封装。很赞的，可以把其运用到项目中去，重构项目中的网络层。
-
+- [**性能优化总结**](https://juejin.cn/post/6844903590138478600)
 
 
 <br/>
 <br/>
 
-> <>[](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)
-
-
-<br/>
-
-***
-<br/>
-
-
-
-
-
-># <h1 id = "性能优化">性能优化</h1>
-
-
-
-
-<br/>
-<br/>
-
-> <h3 id = "循环引用解决">循环引用解决</h1>
+> <h2 id = "循环引用解决">循环引用解决</h2>
 
 [♻️解决循环引用框架：FBRetainCycleDetector](https://draveness.me/retain-cycle1/)
 
@@ -347,7 +270,106 @@ anotherViewController.myMethod()
 
 > <h3 id = "NSTimer循环引用解决">NSTimer循环引用解决？</h1>
 
-&emsp; 解决NSTimer循环引用的更佳方案:NSProxy直接消息转发，不会像继承于NSObject的对象去父类里面搜索，降低效率
+NSTimer循环引用的解决方法，目前有以下几种
+- 类方法
+- GCD方法
+- [weakProxy](https://www.cnblogs.com/guohai-stronger/p/10430106.html)
+	- 解决NSTimer循环引用的更佳方案:NSProxy直接消息转发，不会像继承于NSObject的对象去父类里面搜索，降低效率
+
+
+<br/>
+
+
+**方法一：**类方法
+
+```
+@interface NSTimer (JQUsingBlock)
++ (NSTimer *)jq_scheduledTimerWithTimeInterval:(NSTimeInterval)ti
+                                     block:(void(^)())block
+                                   repeats:(BOOL)repeats;
+@end
+
+@implementation NSTimer (JQUsingBlock)
+
++ (NSTimer *)jq_scheduledTimerWithTimeInterval:(NSTimeInterval)ti
+                                     block:(void(^)())block
+                                   repeats:(BOOL)repeats{
+
+    return [self scheduledTimerWithTimeInterval:ti
+                                     target:self
+                                   selector:@selector(jq_blockInvoke:)
+                                   userInfo:[block copy]
+                                    repeats:repeats];
+}
+
++ (void)jq_blockInvoke:(NSTimer *)timer{
+
+    void(^block)() = timer.userInfo;
+    if (block) {
+        block();
+    }
+}
+
+@end
+```
+
+&emsp; 定义一个NSTimer的类别，在类别中定义一个类方法。类方法有一个类型为块的参数（定义的块位于栈上，为了防止块被释放，需要调用copy方法，将块移到堆上）。使用这个类别的方式如下：
+
+```
+__weak ViewController *weakSelf = self;
+_timer = [NSTimer jq_scheduledTimerWithTimeInterval:5.0
+                                              block:^{
+                                                  __strong ViewController *strongSelf = weakSelf;
+                                                  [strongSelf startCounting];
+                                              }
+                                            repeats:YES];
+
+```
+
+&emsp; 使用这种方案就可以防止NSTimer对类的保留，从而打破了循环引用的产生。__strong ViewController *strongSelf = weakSelf主要是为了防止执行块的代码时，类被释放了。在类的dealloc方法中，记得调用[_timer invalidate]。
+
+<br/>
+
+
+**方法二：**用GCD的dispatch_timer方法替代NSTimer来进行计时
+
+
+<br/>
+
+**方法三：**weakProxy示例
+
+![引用示意图<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd7.png)
+
+新建一个继承NSProxy类的子类WeakProxy类
+
+```
+#import <Foundation/Foundation.h>
+NS_ASSUME_NONNULL_BEGIN
+
+@interface WeakProxy : NSProxy
+@property(nonatomic , weak)id target;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
+
+#import "WeakProxy.h"
+#import <objc/runtime.h>
+
+@implementation WeakProxy
+
+- (void)forwardInvocation:(NSInvocation *)invocation{
+    [self.target forwardInvocation:invocation];
+}
+
+- (nullable NSMethodSignature *)methodSignatureForSelector:(SEL)sel{
+    return [self.target methodSignatureForSelector:sel];
+}
+
+@end
+
+```
 
 
 
@@ -380,6 +402,42 @@ anotherViewController.myMethod()
 
 ```
 
+
+然后在需要用到的类中引入WeakProxy，并声明属性
+
+```
+#import "ViewController.h"
+#import "WeakProxy.h"
+
+@interface ViewController ()
+@property (strong, nonatomic) NSTimer *timer;
+@property(nonatomic,strong)WeakProxy *weakProxy;
+
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    _weakProxy = [WeakProxy alloc];
+    _weakProxy.target = self;
+    _timer = [NSTimer scheduledTimerWithTimeInterval:1.0f target:_weakProxy selector:@selector(fire) userInfo:nil repeats:YES];
+
+}
+
+- (void)fire{
+    NSLog(@"fire");
+}
+
+- (void)dealloc{
+    [self.timer invalidate];
+    self.timer = nil;
+}
+
+@end
+
+```
 
 <br/>
 
@@ -1366,6 +1424,188 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 <br/>
 
+> <h2 id ="Runloop底层原理">Runloop底层原理</h2>
+[Runloop详解](https://imlifengfeng.github.io/article/487/)
+
+
+[**Runloop底层原理**](https://juejin.cn/post/6844903604965523464#heading-11)，[**CFRunLoop开源代码**](http://opensource.apple.com/source/CF/CF-855.17/)
+
+
+Runloop 源码：
+
+```
+void CFRunLoopRun(void) {	/* DOES CALLOUT */
+    int32_t result;
+    do {
+        result = CFRunLoopRunSpecific(CFRunLoopGetCurrent(), kCFRunLoopDefaultMode, 1.0e10, false);
+        CHECK_FOR_FORK();
+    } while (kCFRunLoopRunStopped != result && kCFRunLoopRunFinished != result);
+}
+
+```
+
+
+&emsp; 我们发现RunLoop确实是do while通过判断result的值实现的。因此，我们可以把RunLoop看成一个死循环。如果没有RunLoop，UIApplicationMain函数执行完毕之后将直接返回，也就没有程序持续运行一说了。
+执行顺序的伪代码：
+
+```
+
+int32_t __CFRunLoopRun()
+{
+    // 通知即将进入runloop
+    __CFRunLoopDoObservers(KCFRunLoopEntry);
+    
+    do
+    {
+        // 通知将要处理timer和source
+        __CFRunLoopDoObservers(kCFRunLoopBeforeTimers);
+        __CFRunLoopDoObservers(kCFRunLoopBeforeSources);
+        
+        // 处理非延迟的主线程调用
+        __CFRunLoopDoBlocks();
+        // 处理Source0事件
+        __CFRunLoopDoSource0();
+        
+        if (sourceHandledThisLoop) {
+            __CFRunLoopDoBlocks();
+         }
+        /// 如果有 Source1 (基于port) 处于 ready 状态，直接处理这个 Source1 然后跳转去处理消息。
+        if (__Source0DidDispatchPortLastTime) {
+            Boolean hasMsg = __CFRunLoopServiceMachPort();
+            if (hasMsg) goto handle_msg;
+        }
+            
+        /// 通知 Observers: RunLoop 的线程即将进入休眠(sleep)。
+        if (!sourceHandledThisLoop) {
+            __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeWaiting);
+        }
+            
+        // GCD dispatch main queue
+        CheckIfExistMessagesInMainDispatchQueue();
+        
+        // 即将进入休眠
+        __CFRunLoopDoObservers(kCFRunLoopBeforeWaiting);
+        
+        // 等待内核mach_msg事件
+        mach_port_t wakeUpPort = SleepAndWaitForWakingUpPorts();
+        
+        // 等待。。。
+        
+        // 从等待中醒来
+        __CFRunLoopDoObservers(kCFRunLoopAfterWaiting);
+        
+        // 处理因timer的唤醒
+        if (wakeUpPort == timerPort)
+            __CFRunLoopDoTimers();
+        
+        // 处理异步方法唤醒,如dispatch_async
+        else if (wakeUpPort == mainDispatchQueuePort)
+            __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()
+            
+        // 处理Source1
+        else
+            __CFRunLoopDoSource1();
+        
+        // 再次确保是否有同步的方法需要调用
+        __CFRunLoopDoBlocks();
+        
+    } while (!stop && !timeout);
+    
+    // 通知即将退出runloop
+    __CFRunLoopDoObservers(CFRunLoopExit);
+}
+
+```
+
+
+[**Runloop面试题分析**](https://www.neroxie.com/2019/07/26/RunLoop面试题分析/)
+
+
+<br/>
+<br/>
+
+
+> <h2 id="Runloop有几种运行状态">Runloop有几种运行状态</h2>
+
+Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
+
+```
+
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+     //创建监听者
+     /*
+     第一个参数 CFAllocatorRef allocator：分配存储空间 CFAllocatorGetDefault()默认分配
+     第二个参数 CFOptionFlags activities：要监听的状态 kCFRunLoopAllActivities 监听所有状态
+     第三个参数 Boolean repeats：YES:持续监听 NO:不持续
+     第四个参数 CFIndex order：优先级，一般填0即可
+     第五个参数 ：回调 两个参数observer:监听者 activity:监听的事件
+     */
+     /*
+     所有事件
+     typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) {
+     kCFRunLoopEntry = (1UL << 0),   //   即将进入RunLoop
+     kCFRunLoopBeforeTimers = (1UL << 1), // 即将处理Timer
+     kCFRunLoopBeforeSources = (1UL << 2), // 即将处理Source
+     kCFRunLoopBeforeWaiting = (1UL << 5), //即将进入休眠
+     kCFRunLoopAfterWaiting = (1UL << 6),// 刚从休眠中唤醒
+     kCFRunLoopExit = (1UL << 7),// 即将退出RunLoop
+     kCFRunLoopAllActivities = 0x0FFFFFFFU
+     };
+     */
+    CFRunLoopObserverRef observer = CFRunLoopObserverCreateWithHandler(CFAllocatorGetDefault(), kCFRunLoopAllActivities, YES, 0, ^(CFRunLoopObserverRef observer, CFRunLoopActivity activity) {
+        switch (activity) {
+            case kCFRunLoopEntry:
+                NSLog(@"RunLoop进入");
+                break;
+            case kCFRunLoopBeforeTimers:
+                NSLog(@"RunLoop要处理Timers了");
+                break;
+            case kCFRunLoopBeforeSources:
+                NSLog(@"RunLoop要处理Sources了");
+                break;
+            case kCFRunLoopBeforeWaiting:
+                NSLog(@"RunLoop要休息了");
+                break;
+            case kCFRunLoopAfterWaiting:
+                NSLog(@"RunLoop醒来了");
+                break;
+            case kCFRunLoopExit:
+                NSLog(@"RunLoop退出了");
+                break;
+
+            default:
+                break;
+        }
+    });
+
+    // 给RunLoop添加监听者
+    /*
+     第一个参数 CFRunLoopRef rl：要监听哪个RunLoop,这里监听的是主线程的RunLoop
+     第二个参数 CFRunLoopObserverRef observer 监听者
+     第三个参数 CFStringRef mode 要监听RunLoop在哪种运行模式下的状态
+     */
+    CFRunLoopAddObserver(CFRunLoopGetCurrent(), observer, kCFRunLoopDefaultMode);
+     /*
+     CF的内存管理（Core Foundation）
+     凡是带有Create、Copy、Retain等字眼的函数，创建出来的对象，都需要在最后做一次release
+     GCD本来在iOS6.0之前也是需要我们释放的，6.0之后GCD已经纳入到了ARC中，所以我们不需要管了
+     */
+    CFRelease(observer);
+}
+```
+
+
+输出结果：
+
+![输出结果 <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd8.png)
+
+
+
+
+<br/>
+<br/>
+
 > <h2 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h2>
 
 
@@ -1527,6 +1767,13 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 
 
+<br/>
+<br/>
+
+
+> <h2 id = "Runtime的消息转发">Runtime的消息转发</h2>
+
+[Runtime的消息转发](https://blog.csdn.net/zhw521411/article/details/85617353)
 
 <br/>
 <br/>
@@ -1828,6 +2075,50 @@ objc_object::sidetable_retainCount()
 	使用runtime
 
 
+
+<br/>
+<br/>
+
+
+> <h2 id="OC的分类Category">OC的分类Category</h2>
+[OC的分类Category](https://blog.csdn.net/LIN1986LIN/article/details/86009099)
+
+<br/>
+
+- 分类中能不能定义实例变量，为什么？
+
+不能。类的内存布局在编译时期就已经确定了，category是运行时才加载的早已经确定了内存布局所以无法添加实例变量，如果添加实例变量就会破坏category的内部布局。
+
+<br/>
+
+- 不能添加实例变量，那为什么能添加属性？
+
+因为在category的初始化防范中只把实例方法、协议以及属性添加到类上。
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="">Block深入探究</h2>
+
+<br/>
+
+- <h3 id="blokc分类">blokc分类</h3>
+[blokc分类](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(I).md)
+
+
+<br/>
+
+- <h3 id="block原理">block原理</h3>
+[block原理](https://www.jianshu.com/p/00a0747740ba)
+
+
+
+
+
 <br/>
 
 ***
@@ -1959,7 +2250,7 @@ RunLoop 启动前内部必须要有至少一个 Timer/Observer/Source，所以 A
 
 
 
-> <h3 id="网络性能优化">[**网络性能优化**](https://www.jianshu.com/p/a470ab485e39)</h3>
+> <h2 id="网络性能优化">[**网络性能优化**](https://www.jianshu.com/p/a470ab485e39)</h2>
 
 
 <br/>
@@ -2036,6 +2327,28 @@ case ReloadRevalidatingCacheData // Unimplemented
 - [即时通讯性能调优](https://github.com/ChenYilong/iOSBlog/issues/6)
 - [网络请求优化之取消请求](https://www.jianshu.com/p/20f6172524d6)
 - [iOS网络层设计](https://www.jianshu.com/p/fe0dd50d0af1)
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="TCP和UDP区别">TCP和UDP区别</h2>
+
+
+- **TCP：**面向连接、传输可靠(保证数据正确性,保证数据顺序)、用于传输大量数据(流模式)、速度慢，建立连接需要开销较多(时间，系统资源)。
+
+- **UDP：**面向非连接、传输不可靠、用于传输少量数据(数据包模式)、速度快。
+
+- 比较：
+	- 基于连接与无连接；
+	- 对系统资源的要求（TCP较多，UDP少）；
+	- UDP程序结构较简单；
+	- 流模式与数据报模式 ；
+	- TCP保证数据正确性，UDP可能丢包，TCP保证数据顺序，UDP不保证
+
 
 
 

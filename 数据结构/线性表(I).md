@@ -206,6 +206,7 @@ printf("删除第%d个的元素值为：%d\n",k,e);
 	-  头结点不一定是链表必须的要素。
 
 <br/>
+
 ![有、无头结点的3种展示](https://upload-images.jianshu.io/upload_images/2959789-35572aad1850a435.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
@@ -231,6 +232,7 @@ typedef  struct Node* LinkList; //Node* 等价于 LinkList
 <br/>
 
 - **单链表的插入**
+
 ![单链表的插入示意图](https://upload-images.jianshu.io/upload_images/2959789-a0188373ee1f6cf4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ```
@@ -393,7 +395,8 @@ void chainedListTest(void){
 
 
 <br/>
-# 单链表的删除
+
+**单链表的删除**
 
 ```
 
