@@ -53,6 +53,8 @@
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
 	- [TCP和UDP区别](#TCP和UDP区别)
+	- [Socket通信](#Socket通信)
+		- [Socket封包、拆包](#Socket封包拆包)
 - [**类库** ](#类库)
 	- [FishHook](#fishhook) 
 	- [SDWebImage](#SDWebImage)
@@ -2118,6 +2120,34 @@ objc_object::sidetable_retainCount()
 
 
 
+<br/>
+<br/>
+
+
+> <h2 id="APNS底层原理">APNS如何通知的，底层如何处理？</h2>
+[APNs远程推送详解](https://juejin.cn/post/6844903893592178696#heading-42)
+
+
+- **推送的实现方式：** 
+	- 手机客户端和APNS服务器之间维持一个TCP/IP长连接，APNS服务器向客户端push消息。 
+	- 苹果的推送系统是在系统级别维护一个TCP/IP长连接（所以你需要注册推送证书）
+
+- **实现消息推送的步骤** 
+	- 注册：为应用程序申请消息推送服务。此时你的app会向APNs服务器发送注册请求。 
+	- APNs服务器接受请求，并将deviceToken响应给你设备上的应用程序 
+	- 客户端应用程序将deviceToken发送给后台服务器程序，后台接收并储存。 
+	- 后台服务器向APNs服务器发送推送消息 
+	- APNs服务器将消息发给deviceToken对应的应用程序
+
+- 想要收到推送消息，就必须要有后台服务器（下面的1、2）往 苹果的APNs的服务器发请求。 
+	- 	公司自己开发后台服务器程序 
+	- 	采用第三方的后台服务程序，比如：百度云推送、极光推送、友盟推送
+
+
+
+
+[远程推送示意图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
+
 
 <br/>
 
@@ -2352,6 +2382,105 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 
 
+<br/>
+<br/>
+
+> <h2 id="Socket通信">Socket通信</h2>
+
+<br/>
+
+> <h3 id="Socket封包拆包">Socket封包、拆包</h3>
+[Socket封包、粘包、拆包处理](https://www.jianshu.com/p/9ea0f0c84990)
+
+
+&emsp; iOS客户端用第三方[CocoaAsyncSocket](https://github.com/robbiehanson/CocoaAsyncSocket)来进行长连接连接和传输数据。
+
+&emsp; 一般在使用Socket的时候，后台会对Socket传输数据有一个自定义的协议，协议可能有些差别不过基本上是大同小异。 如图
+
+![基本定制协议<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd9.png)
+
+&emsp; 也就是说我们通过Socket发送给服务器的数据，最终要转换成二进制流数据，并且按照协议约定的格式。
+
+&emsp; 下面我简单解释下这个协议，因为一开始我自己也不是很理解。这个协议是指我们在发送的数据包头部开辟一个4个字节长度的空间，用来存储服务号转换成的二进制数据。（将1转换成二进制数据存储进去占4个字节长度），然后再将数据包长度转换成二进制数据并存储到后面开辟的4个字节中（这里需要注意下如果数据要进行加密传输，这里的长度应是加密后的长度），最后将数据数据包转换成二进制数据添加到后面，组成一个完整的数据包也就是封包。这里一定要按协议规定的顺序不然服务器解析不了。
+
+
+&emsp; **字段定义：**
+- **粘包：**
+	- 指TCP协议中，发送方发送的若干包数据到接收方接收时粘成一包，从接收缓冲区看，后一包数据的头紧接着前一包数据的尾。
+	
+	- TCP是面向字节流的协议，就是没有界限的一串数据，本没有“包”的概念，“粘包”和“拆包”一说是为了有助于形象地理解这两种现象。
+
+
+<br/>
+
+- **提问：为什么UDP没有粘包？**
+	- 粘包拆包问题在数据链路层、网络层以及传输层都有可能发生。日常的网络应用开发大都在传输层进行，由于UDP有消息保护边界，不会发生粘包拆包问题，因此粘包拆包问题只发生在TCP协议中。
+
+
+<br/>
+
+- **粘包拆包发生场景**
+
+	- 因为TCP是面向流，没有边界，而操作系统在发送TCP数据时，会通过缓冲区来进行优化，例如缓冲区为1024个字节大小。
+	
+	- 如果一次请求发送的数据量比较小，没达到缓冲区大小，TCP则会将多个请求合并为同一个请求进行发送，这就形成了粘包问题。
+	
+	- 如果一次请求发送的数据量比较大，超过了缓冲区大小，TCP就会将其拆分为多次发送，这就是拆包。
+
+关于粘包和拆包可以参考下图的几种情况：
+
+![粘包和拆包几种情况<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd10.png)
+
+- 上图中演示了以下几种情况：
+	- 正常的理想情况，两个包恰好满足TCP缓冲区的大小或达到TCP等待时长，分别发送两个包；
+	- 粘包：两个包较小，间隔时间短，发生粘包，合并成一个包发送；
+	- 拆包：一个包过大，超过缓存区大小，拆分成两个或多个包发送；
+	- 拆包和粘包：Packet1过大，进行了拆包处理，而拆出去的一部分又与Packet2进行粘包处理。
+
+
+<br/>
+
+- **常见的四种解决方案**
+	- 发送端将每个包都封装成固定的长度，比如100字节大小。如果不足100字节可通过补0或空等进行填充到指定长度；
+	- 发送端在每个包的末尾使用固定的分隔符，例如\r\n。如果发生拆包需等待多个包发送过来之后再找到其中的\r\n进行合并；例如，FTP协议；
+	- 将消息分为头部和消息体，头部中保存整个消息的长度，只有读取到足够长度的消息之后才算是读到了一个完整的消息；
+	- 通过自定义协议进行粘包和拆包的处理。
+
+
+<br/>
+
+
+**Netty对粘包和拆包问题的处理**
+- Netty对解决粘包和拆包的方案做了抽象，提供了一些解码器（Decoder）来解决粘包和拆包的问题。如：
+	- LineBasedFrameDecoder：以行为单位进行数据包的解码；
+	- DelimiterBasedFrameDecoder：以特殊的符号作为分隔来进行数据包的解码；
+	- FixedLengthFrameDecoder：以固定长度进行数据包的解码；
+	- LenghtFieldBasedFrameDecode：适用于消息头包含消息长度的协议（最常用）；
+	- 基于Netty进行网络读写的程序，可以直接使用这些Decoder来完成数据包的解码。对于高并发、大流量的系统来说，每个数据包都不应该传输多余的数据（所以补齐的方式不可取），LenghtFieldBasedFrameDecode更适合这样的场景。
+
+<br/>
+
+**总结：**TCP协议粘包拆包问题是因为TCP协议数据传输是基于字节流的，它不包含消息、数据包等概念，需要应用层协议自己设计消息的边界，即消息帧（Message Framing）。如果应用层协议没有使用基于长度或者基于终结符息边界等方式进行处理，则会导致多个消息的粘包和拆包。
+
+<br/>
+
+**拓展：**
+
+&emsp; [**Netty**](https://juejin.cn/post/6844903703183360008)是一个非阻塞I/O客户端-服务器框架，主要用于开发Java网络应用程序，如协议服务器和客户端。异步事件驱动的网络应用程序框架和工具用于简化网络编程，例如TCP和UDP套接字服务器。[2]Netty包括了反应器编程模式的实现。Netty最初由JBoss开发，现在由Netty项目社区开发和维护。
+
+&emsp; 有了Netty，你可以实现自己的HTTP服务器，FTP服务器，UDP服务器，RPC服务器，WebSocket服务器，Redis的Proxy服务器，MySQL的Proxy服务器等等。 
+
+[聊天系统设计](https://m.imooc.com/wiki/nettylesson-netty28)
+
+[**Netty是什么？它能干什么？**](https://www.cnblogs.com/ivy-xu/p/12656290.html) 
+
+
+
+
+
+
+
+
 
 
 
@@ -2561,7 +2690,11 @@ Class XXX is implemented in both XXX and XXX. One of the two will be used. Which
 
 
 
+<br/>
+<br/>
 
+> 
+JSONModel 如何处理数据的？那个怎么对属性进行赋值的？
 
 
 
