@@ -59,12 +59,13 @@
 ￼
 
 >  <h1 id = "C++">C++</h1>
+- 	[C2语法练习](https://github.com/harleyGit/StudyNotes/blob/master/C/C2语法练习.md)
  *	[变量与数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C/变量与数据类型.md)
  *	 [指针(I)](https://github.com/harleyGit/StudyNotes/blob/master/C/C2指针(I).md)
  *	[C预处理器](https://github.com/harleyGit/StudyNotes/blob/master/C/C预处理器.md)
  *	[自定义数据类型](https://github.com/harleyGit/StudyNotes/blob/master/C/自定义数据类型.md)
  *	[作用域](https://github.com/harleyGit/StudyNotes/blob/master/C/作用域.md)
- *	[基础语法](https://github.com/harleyGit/StudyNotes/blob/master/C/基础语法.md)
+ *	[基础语法](https://github.com/harleyGit/StudyNotes/blob/master/C/基础语法.html)
  *	[运算符](https://github.com/harleyGit/StudyNotes/blob/master/C/C2运算符.md)
  *	[类](https://github.com/harleyGit/StudyNotes/blob/master/C/C2类.md)
  *	[继承与多态](https://github.com/harleyGit/StudyNotes/blob/master/C/C2继承与多态.md)
