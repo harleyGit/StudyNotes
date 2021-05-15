@@ -8,6 +8,8 @@
 
 	- [MD5](#MD5)
 	- [防止反编译](#防止反编译)
+- [**多线程**](#多线程)
+	- [GCD控制线程数量](#GCD控制线程数量) 
 
 
 <br/>
@@ -209,8 +211,11 @@ func get2(_ type:Int )-> some Runnable{ //some让协议的关联类型变成透�
 > <h1 id="组件化">组件化</h1>
 [iOS组件化实践](https://www.jianshu.com/p/510ee1290ab4)
 
-> <h1 id="路由导航">==路由导航==</h1>
-[路由设计思路分析](https://github.com/harleyGit/StudyNotes/blob/master/Sources/iOS组件化路由设计思路分析.pdf)[](https://www.cnblogs.com/oc-bowen/p/6489070.html)
+> <h1 id="路由导航">路由导航</h1>
+
+[路由设计思路分析](https://github.com/harleyGit/StudyNotes/blob/master/Sources/iOS组件化路由设计思路分析.pdf)
+[](https://www.cnblogs.com/oc-bowen/p/6489070.html)
+
 [路由导航](http://www.cocoachina.com/cms/wap.php?action=article&id=27025)
 [ALRouter路由导航](https://www.jianshu.com/p/61f20e23afc0)
 
@@ -492,6 +497,54 @@ refreshAction
 - **借助第三方APP加固**
 
 如：[网易易盾](https://dun.163.com/?from=baiduP_PP_PPWYY1)
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id="多线程">多线程</h1>
+
+<br/>
+
+> <h2 id="GCD控制线程数量">GCD控制线程数量</h2>
+
+
+GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通过 GCD 的 semaphore 功能一样可以达到控制线程数量的效果。
+
+- dispatch_semaphore_create(long value); 利用给定的输出时创建一个新的可计数的信号量
+
+- dispatch_semaphore_wait(dispatch_semaphore_t dsema, dispatch_time_t timeout); 如果信号量大于 0 ，信号量减 1 ，执行程序。否则等待信号量
+
+- dispatch_semaphore_signal(dispatch_semaphore_t dsema); 增加信号量
+
+```
+// 控制线程数量
+- (void)runMaxThreadCountWithGCD
+{
+    dispatch_queue_t concurrentQueue = dispatch_queue_create("concurrentRunMaxThreadCountWithGCD", DISPATCH_QUEUE_CONCURRENT);
+    dispatch_queue_t serialQueue = dispatch_queue_create("serialRunMaxThreadCountWithGCD", DISPATCH_QUEUE_SERIAL);
+    // 创建一个semaphore,并设置最大信号量，最大信号量表示最大线程数量
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(2);
+    // 使用循环往串行队列 serialQueue 增加 10 个任务
+    for (int i = 0; i < 10 ; i++) {
+        dispatch_async(serialQueue, ^{
+            // 只有当信号量大于 0 的时候，线程将信号量减 1，程序向下执行
+            // 否则线程会阻塞并且一直等待，直到信号量大于 0
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+            dispatch_async(concurrentQueue, ^{
+                NSLog(@"%@ 执行任务一次  i = %d",[NSThread currentThread],i);
+                // 当线程任务执行完成之后，发送一个信号，增加信号量。
+                dispatch_semaphore_signal(semaphore);
+            });
+        });
+    }
+    NSLog(@"%@ 执行任务结束",[NSThread currentThread]);
+}
+```
 
 
 
