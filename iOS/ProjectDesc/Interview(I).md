@@ -49,6 +49,8 @@
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
 		- [block原理](#block原理)
+	- [APNS底层原理](#APNS底层原理)
+	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
@@ -2147,6 +2149,63 @@ objc_object::sidetable_retainCount()
 
 
 [远程推送示意图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
+
+
+
+<br/>
+<br/>
+
+> <h2 id="NSDictionaryNSArray原理">NSDictionaryNSArray原理</h2>
+[NSDictionary原理](https://juejin.cn/post/6844903608954126344)
+
+- NSDictionary
+	- NSDictionary（字典）是使用 hash表来实现key和value之间的映射和存储的， hash函数设计的好坏影响着数据的查找访问效率。数据在hash表中分布的越均匀，其访问效率越高。而在Objective-C中，通常都是利用NSString 来作为键值，其内部使用的hash函数也是通过使用 NSString对象作为键值来保证数据的各个节点在hash表中均匀分布。
+
+<br/>
+
+**原理：**
+- NSDictionary是通过NSMapTable实现的，NSMapTable同样是一个key－value的容器。
+
+- NSMapTable是一个哈希＋链表的数据结构，因此在NSMapTable中插入或者删除一对对象时，
+- 寻找的时间是O（1）＋O（m），m最坏时可能为n
+	- O（1）：为对key进行hash得到bucket的位置
+	- O（m）：遍历该bucket后面冲突的value，通过链表连接起来。
+
+- 因此NSDictionary中的Key-Value遍历时是无序的，至如按照什么样的顺序，跟hash函数相关。NSMapTable使用NSObject的哈希函数。
+
+```
+- (NSUInteger)hash {
+   return (NSUInteger)self>>4;
+}
+```
+上述是NSObject的哈希值的计算方式，简单通过移位实现。右移4位，左边补0。因为对象大多存于堆中，地址相差4位应该很正常。
+
+**如果对象key的hash值相同，那在hash表里面的对应的value值是相同的(value值被更新了)**
+
+
+<br/>
+
+- NSArray实现原理：
+
+&emsp； [NSArray原理](https://blog.csdn.net/Deft_MKJing/article/details/82732833)得益于使用了环形缓冲区的方法。
+
+**ivars 的意思：**
+
+```
+_used 是计数的意思
+_list 是缓冲区指针
+_size 是缓冲区的大小
+_offset 是在缓冲区里的数组的第一个元素索引
+```
+
+<br/>
+
+**内存布局:**
+
+&emsp; 最关键的部分是决定 realOffset 应该等于 fetchOffset（减去 0）还是 fetchOffset 减 _size。看着纯代码不一定能画出完美的图画，我们设想一下两个关于如何获取对象的例子。
+
+
+
 
 
 <br/>
