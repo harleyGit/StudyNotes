@@ -40,7 +40,11 @@
 	- [Runloop有几种运行状态](#Runloop有几种运行状态)
 	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
 	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
-	- [main函数之前会做什么](main函数之前会做什么)
+	- [APP](#APP)
+		- [app启动流程](#app启动流程) 
+		- [app启动优化](#启动优化)
+		- [app生命周期](#app生命周期)
+	- [main函数之前会做什么](#main函数之前会做什么)
 	- [Runtime的消息转发](#Runtime的消息转发)
 	- [响应者链](#响应者链)
 	- [OC的引用计数是存放](#OC的引用计数是存放)
@@ -49,8 +53,10 @@
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
 		- [block原理](#block原理)
+		- [block都会发生循环引用吗](#block都会发生循环引用吗)
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
+	- [self和super实现的原理](#self和super实现的原理)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
@@ -332,6 +338,22 @@ _timer = [NSTimer jq_scheduledTimerWithTimeInterval:5.0
 
 &emsp; 使用这种方案就可以防止NSTimer对类的保留，从而打破了循环引用的产生。__strong ViewController *strongSelf = weakSelf主要是为了防止执行块的代码时，类被释放了。在类的dealloc方法中，记得调用[_timer invalidate]。
 
+
+提问1：类方法中使用**self**是调用对象方法嘛？
+
+&emsp; 不是！类方法使用self时，self代表类本身即Class，所以类方内可以直接调用类方法（别调用自己！死循环！），不能直接调用实例方法，但是可以通过创建实例对象来调用实例方法。
+
+[类方法和实例方法及self和super](#self和super实现的原理)
+
+
+<br/>
+
+提问2: 使用Block都会发生循环引用吗？
+
+[不一定，看这里](#block都会发生循环引用吗)
+
+
+
 <br/>
 
 
@@ -375,38 +397,6 @@ NS_ASSUME_NONNULL_END
 
 ```
 
-
-
-<br/>
-
-> <h3 id = "NSTimer计时不准确怎么办">NSTimer计时不准确怎么办？</h1>
-
-
-&emsp; 不准确是因为当线程切换到主线程时会阻碍它计时，当用的是NSRunloopCommentModels时，可以用GCD来计时。
-
-&emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计
-
-接口定义：
-
-```
-+ (NSString *)execTask:(void(^)(void))task
-           start:(NSTimeInterval)start
-        interval:(NSTimeInterval)interval
-         repeats:(BOOL)repeats
-           async:(BOOL)async;
-
-+ (NSString *)execTask:(id)target
-              selector:(SEL)selector
-                 start:(NSTimeInterval)start
-              interval:(NSTimeInterval)interval
-               repeats:(BOOL)repeats
-                 async:(BOOL)async;
-
-+ (void)cancelTask:(NSString *)name;
-
-```
-
-
 然后在需要用到的类中引入WeakProxy，并声明属性
 
 ```
@@ -442,6 +432,38 @@ NS_ASSUME_NONNULL_END
 @end
 
 ```
+
+
+
+<br/>
+
+> <h3 id = "NSTimer计时不准确怎么办">NSTimer计时不准确怎么办？</h1>
+
+
+&emsp; 不准确是因为当线程切换到主线程时会阻碍它计时，当用的是NSRunloopCommentModels时，可以用GCD来计时。
+
+&emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计
+
+接口定义：
+
+```
++ (NSString *)execTask:(void(^)(void))task
+           start:(NSTimeInterval)start
+        interval:(NSTimeInterval)interval
+         repeats:(BOOL)repeats
+           async:(BOOL)async;
+
++ (NSString *)execTask:(id)target
+              selector:(SEL)selector
+                 start:(NSTimeInterval)start
+              interval:(NSTimeInterval)interval
+               repeats:(BOOL)repeats
+                 async:(BOOL)async;
+
++ (void)cancelTask:(NSString *)name;
+
+```
+
 
 <br/>
 
@@ -940,7 +962,104 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 
 卡顿的优化，哪几个方面？从哪可以检测到？
 
+- **卡顿优化**
 
+<br/>
+
+**1）. CPU优化**
+
+- 尽量用轻量级的对象，比如用不到事件处理的地方使用CALayer取代UIView
+- 尽量提前计算好布局（例如cell行高）
+- 不要频繁地调用和调整UIView的相关属性，比如frame、bounds、transform等属性，尽量减少不必要的调用和修改(UIView的显示属性实际都是CALayer的映射，而CALayer本身是没有这些属性的，都是初次调用属性时通过resolveInstanceMethod添加并创建Dictionry保存的，耗费资源)
+- Autolayout会比直接设置frame消耗更多的CPU资源，当视图数量增长时会呈指数级增长
+- 图片的size最好刚好跟UIImageView的size保持一致，减少图片显示时的处理计算(项目中图片可以降低采样率使用缩略图，重新绘制所需图片大小)
+- 控制一下线程的最大并发数量（开启多个线程也会耗费cpu资源）
+- 尽量把耗时的操作放到子线程（项目比如：图片解码、大数据读取、网络异步请求）
+- 文本处理（尺寸计算、绘制、CoreText和YYText）
+
+- 计算文本宽高boundingRectWithSize:options:context: 和文本绘制drawWithRect:options:context:放在子线程操作
+- 使用CoreText自定义文本空间，在对象创建过程中可以缓存宽高等信息，避免像UILabel/UITextView需要多次计算(调整和绘制都要计算一次)，且CoreText直接使用了CoreGraphics占用内存小，效率高。（YYText）
+
+- 图片处理（解码、绘制）
+- 图片都需要先解码成bitmap才能渲染到UI上，iOS创建UIImage，不会立刻进行解码，只有等到显示前才会在主线程进行解码，固可以使用Core Graphics中的CGBitmapContextCreate相关操作提前在子线程中进行强制解压缩获得位图(YYImage/SDWebImage/kingfisher的对比)
+
+```
+SDWebImage的使用:
+ CGImageRef imageRef = image.CGImage;
+        // device color space
+        CGColorSpaceRef colorspaceRef = SDCGColorSpaceGetDeviceRGB();
+        BOOL hasAlpha = SDCGImageRefContainsAlpha(imageRef);
+        // iOS display alpha info (BRGA8888/BGRX8888)
+        CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host;
+        bitmapInfo |= hasAlpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
+        
+        size_t width = CGImageGetWidth(imageRef);
+        size_t height = CGImageGetHeight(imageRef);
+        
+        // kCGImageAlphaNone is not supported in CGBitmapContextCreate.
+        // Since the original image here has no alpha info, use kCGImageAlphaNoneSkipLast
+        // to create bitmap graphics contexts without alpha info.
+        CGContextRef context = CGBitmapContextCreate(NULL,
+                                                     width,
+                                                     height,
+                                                     kBitsPerComponent,
+                                                     0,
+                                                     colorspaceRef,
+                                                     bitmapInfo);
+        if (context == NULL) {
+            return image;
+        }
+        
+        // Draw the image into the context and retrieve the new bitmap image without alpha
+        CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
+        CGImageRef imageRefWithoutAlpha = CGBitmapContextCreateImage(context);
+        UIImage *imageWithoutAlpha = [[UIImage alloc] initWithCGImage:imageRefWithoutAlpha scale:image.scale orientation:image.imageOrientation];
+        CGContextRelease(context);
+        CGImageRelease(imageRefWithoutAlpha);
+        
+        return imageWithoutAlpha;
+
+```
+
+
+
+<br/>
+
+- **GPU优化**
+	- 尽量避免短时间内大量图片的显示，尽可能将多张图片合成一张进行显示
+	
+	- GPU能处理的最大纹理尺寸是4096x4096，一旦超过这个尺寸，就会占用CPU资源进行处理，所以纹理尽量不要超过这个尺寸
+
+	- GPU会将多个视图混合在一起再去显示，混合的过程会消耗CPU资源，尽量减少视图数量和层次
+
+	- 减少透明的视图（alpha<1），不透明的就设置opaque为YES，GPU就不会去进行alpha的通道合成
+
+	- 尽量避免出现离屏渲染
+
+		- 	这里特别说下离屏渲染，对 GPU 的资源消耗极大。
+		- 在OpenGL中，GPU有2种渲染方式，分别是屏幕渲染（On-Screen Rendering）和离屏渲染（Off-Screen Rendering），区别在于渲染操作是在当前用于显示的屏幕缓冲区进行还是新开辟一个缓冲区进行渲染，渲染完成后再在当前显示的屏幕展示。
+		- 离屏渲染消耗性能的原因，在于需要创建新的缓冲区，并且在渲染的整个过程中，需要多次切换上下文环境，先是从当前屏幕（On-Screen）切换到离屏（Off-Screen）；等到离屏渲染结束以后，将离屏缓冲区的渲染结果显示到屏幕上，又需要将上下文环境从离屏切换到当前屏幕，造成了资源的及大小消耗。
+		- 一些会触发离屏渲染的操作：
+
+			- 光栅化，layer.shouldRasterize = YES
+			
+			- 遮罩，layer.mask
+			
+			- 圆角，同时设置layer.masksToBounds = YES、layer.cornerRadius大于0
+			- 考虑通过CoreGraphics绘制裁剪圆角，或者叫美工提供圆角图片
+			
+			- 阴影，layer.shadowXXX
+			- 如果设置了layer.shadowPath就不会产生离屏渲染
+
+
+	
+<br/>
+
+
+- [**卡顿监测**](https://juejin.cn/post/6844904004053368846#heading-6)
+	- Xcode 自带 Instruments
+	- 帧率FPS（CADisplayLink）监测
+	- RunLoop 监听
 
 
 
@@ -1721,6 +1840,183 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 <br/>
 <br/>
 
+
+><h2 id = "APP">APP</h2>
+
+<br/>
+
+> <h3 id = "app启动流程">app启动流程</h3>
+
+[**APP的启动流程:**](https://www.jianshu.com/p/229dd6190b95)
+
+```
+1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
+2.创建沙盒(iOS8后，每次启动APP都会生成一个新的沙盒路径)
+3.根据Info.plist的配置检查相应权限状态
+4.加载Mach-O文件读取dyld路径并运行dyld动态连接器(内核加载了主程序，dyld只会负责动态库的加载)
+	4.1 首先dyld会寻找合适的CPU运行环境
+	4.2 然后加载程序运行所需的依赖库和我们自己写的.h.m文件编译成的.o可执行文件，并对这些库进行链接。
+	4.3 加载所有方法(runtime就是在这个时候被初始化并完成OC的内存布局)
+	4.4 加载C函数
+	4.5 加载category的扩展(此时runtime会对所有类结构进行初始化)
+	4.6 加载C++静态函数，加载OC+load
+	4.7 最后dyld返回main函数地址，main函数被调用
+```
+
+
+Mach-O文件说明:
+Mach-O文件格式是 OS X 与 iOS 系统上的可执行文件格式，类似于windows的 PE 文件。像我们编译产生的.o文件、程序可执行文件和各种库等都是Mach-O文件。
+Mach-O文件主要有3部分组成：
+
+1.Header：保存了一些基本信息，包括了该文件运行的平台、文件类型、LoadCommands的个数等等。Headers的主要作用就是帮助系统迅速的定位Mach-O文件的运行环境，文件类型。保存了一些dyld重要的加载参数
+
+2.LoadCommands：可以理解为加载命令，在加载Mach-O文件时会使用这里的数据来确定内存的分布以及相关的加载命令。比如我们的main函数的加载地址，程序所需的dyld的文件路径，以及相关依赖库的文件路径。
+
+3.Data： 每一个segment的具体数据都保存在这里，这里包含了具体的代码、数据等等。
+
+安全
+ASLR（Address Space Layout Randomization）：地址空间布局随机化，镜像会在随机的地址上加载。
+
+代码签名：为了在运行时验证 Mach-O 文件的签名，并不是每次重复的去读入整个文件，而是把文件每页内容都生成一个单独的加密散列值，并把值存储在 __LINKEDIT 中。这使得文件每页的内容都能及时被校验确并保不被篡改。而不是每个文件都做hash加密并做数字签名。
+
+
+
+<br/>
+<br/>
+
+> <h3 id = "app启动优化">app启动优化</h3>
+
+<br/>
+<br/>
+
+
+> <h3 id = "app生命周期">app生命周期</h3>
+	
+ViewController的生命周期方法说明:(详细说明都在代码注释中)
+	
+```
+#pragma mark --- sb相关的life circle
+//执行顺序1
+// 当使用storyBoard时走的第一个方法。这个方法而不走initWithNibName方法。
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+     NSLog(@"%s", __func__);
+    if (self = [super initWithCoder:aDecoder])
+     {
+          //这里仅仅是创建self，还没有创建self.view所以不要在这里设置self.view相关操作
+     }
+    return self;
+}
+#pragma mark --- life circle
+//执行顺序1
+// 当控制器不是SB时，都走这个方法。(xib或纯代码都会走这个方法)
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    NSLog(@"%s", __func__);
+    if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) 
+    {
+        //这里仅仅是创建self，还没有创建self.view所以不要在这里设置self.view相关操作
+    }
+    return self;
+}
+
+//执行顺序2
+// xib加载完成时调用，纯代码不会调用。系统自行调用
+- (void)awakeFromNib {
+    [super awakeFromNib];
+     //当awakeFromNib方法被调用时，所有视图的outlet和action已经连接，但还没有被确定。
+     NSLog(@"%s", __func__);
+}
+
+//执行顺序3
+// 加载控制器的self.view视图。(默认从nib)
+- (void)loadView {
+    //该方法一般开发者不主动调用，应该由系统自行调用。
+    //系统会在self.view为nil的时候调用。当控制器生命周期到达需要调用self.view的时候会自行调用。
+    //或者当我们设置self.view=nil后，下次需要用到self.view时，系统发现self.view为nil，则会调用该方法。
+    //该方法一般会首先根据nibName去找对应的nib文件然后加载。
+    //如果nibName为空或找不到对应的nib文件，则会创建一个空视图(这种情况一般是纯代码)
+    NSLog(@"%s", __func__);
+    //该方法比较特殊，如果重写不能调用父类的方法[super loadView];
+    self.view = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+}
+
+//执行顺序4
+//视图控制器中的视图加载完成，viewController自带的view加载完成后会第一个调用的方法
+- (void)viewDidLoad {
+    //当self.view被创建后，会立即调用该方法。一般用于完成各种初始化操作
+    NSLog(@"%s", __func__);
+    [super viewDidLoad];
+}
+
+//执行顺序5
+//视图将要出现
+- (void)viewWillAppear:(BOOL)animated {
+    NSLog(@"%s", __func__);
+    [super viewWillAppear:animated];
+}
+
+//执行顺序6
+// view 即将布局其 Subviews
+- (void)viewWillLayoutSubviews {
+    //view即将布局它的Subviews子视图。 当view的的属性发生了改变。
+    //需要要调整view的Subviews子视图的位置，在调整之前要做的工作都可以放在该方法中实现
+    NSLog(@"%s", __func__);
+    [super viewWillLayoutSubviews];
+}
+
+//执行顺序7
+// view 已经布局其 Subviews
+- (void)viewDidLayoutSubviews {
+    //view已经布局其Subviews，这里可以放置调整完成之后需要做的工作
+    NSLog(@"%s", __func__);
+    [super viewDidLayoutSubviews];
+}
+
+//执行顺序8
+//视图已经出现
+- (void)viewDidAppear:(BOOL)animated {
+    NSLog(@"%s", __func__);
+    [super viewDidAppear:animated];
+}
+
+//执行顺序9
+//视图将要消失
+- (void)viewWillDisappear:(BOOL)animated {
+    NSLog(@"%s", __func__);
+    [super viewWillDisappear:animated];
+}
+
+//执行顺序10
+//视图已经消失
+- (void)viewDidDisappear:(BOOL)animated {
+    NSLog(@"%s", __func__);
+    [super viewDidDisappear:animated];
+}
+
+//执行顺序11
+// 视图被销毁
+- (void)dealloc {
+    //系统会在此时释放掉init与viewDidLoad中创建的对象
+    NSLog(@"%s", __func__);
+}
+
+//执行顺序12
+//出现内存警告  //模拟内存警告:点击模拟器->hardware-> Simulate Memory Warning
+- (void)didReceiveMemoryWarning {
+    //在内存足够的情况下，app的视图通常会一直保存在内存中，但是如果内存不够，一些没有正在显示的viewController就会收到内存不足的警告。
+    //然后就会释放自己拥有的视图，以达到释放内存的目的。但是系统只会释放内存，并不会释放对象的所有权，所以通常我们需要在这里将不需要显示在内存中保留的对象释放它的所有权，将其指针置nil。
+    NSLog(@"%s", __func__);
+    [super didReceiveMemoryWarning];
+}
+
+```
+		
+		
+		
+		
+		
+<br/>
+<br/>
+
 > <h2 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h2>
 
 main()函数调用之前，其实是做了很多准备工作，主要是dyld这个动态链接器在负责，核心流程如下:
@@ -2106,7 +2402,7 @@ objc_object::sidetable_retainCount()
 <br/>
 
 
-> <h2 id="">Block深入探究</h2>
+> <h2 id="Block深入探究">Block深入探究</h2>
 
 <br/>
 
@@ -2120,6 +2416,43 @@ objc_object::sidetable_retainCount()
 [block原理](https://www.jianshu.com/p/00a0747740ba)
 
 
+
+<br/>
+
+- <h3 id="block都会发生循环引用吗">block都会发生循环引用吗</h3>
+
+1). 系统UIView的Block
+
+![UIView 的Blcok <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd11.png)
+
+如上图，使用系统自带的UIView 的Blcok，控制器能被销毁-->说明没有发送循环引用。
+
+原理： UIView的调用的是类方法，当前控制器不可能强引用一个类 ，所以循环无法形成 --> 动画block不会造成循环引用的原因。
+
+
+<br/>
+
+&emsp; AFN也有可能不会发生循环引用，是因为可能底层做了一些操作吧。
+
+
+<br/>
+
+2). 通知+block可能会发生循环引用
+
+实际开发中：使用通知（NSNotifation），调用系统自带的Block，在Block中使用self --> 会发生循环引用。
+
+![twoVC发送通知 --> 给oneVC <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd12.1.png)
+
+![oneVC 接收通知 使用通知-发生循环引用<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd12.2.png)
+
+![使用通知-发生循环引用 <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd12.3.png)
+
+
+**解决方法：`使用weakSelf`**
+
+<br/>
+
+2). AFN框架的Block
 
 
 <br/>
@@ -2149,7 +2482,6 @@ objc_object::sidetable_retainCount()
 
 
 [远程推送示意图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
-
 
 
 <br/>
@@ -2203,6 +2535,35 @@ _offset 是在缓冲区里的数组的第一个元素索引
 **内存布局:**
 
 &emsp; 最关键的部分是决定 realOffset 应该等于 fetchOffset（减去 0）还是 fetchOffset 减 _size。看着纯代码不一定能画出完美的图画，我们设想一下两个关于如何获取对象的例子。
+
+
+<br/>
+<br/>
+
+>  <h2 id="self和super实现的原理">self和super实现的原理</h2>
+[self和super实现的原理](https://www.jianshu.com/p/7a9912c97fdb)
+
+
+**class 方法只是获取类，并不能获取真正获取其类对象。**
+
+- **原理：**
+	- self 调用方法事实际上是通过objc_msgSend(id _Nullable self, SEL _Nonnull op, ...)函数进行消息的发送，其中第一个参数是消息接收者，第二个参数op是调用的具体类的方法的selector，后面是 selector 方法的可变参数。如上例所示[self returnSomething]实际上是id _Nullable objc_msgSend(self, @selector(returnSomething))而returnSomething方法会从[self class]类中查找。
+	
+	- super调用方法事实际上是通过id _Nullable objc_msgSendSuper(struct objc_super * _Nonnull super, SEL _Nonnull op, ...)函数进行消息的发送，但是第一个参数是一个objc_super结构体。
+
+```
+struct objc_super {
+    __unsafe_unretained _Nonnull id receiver;
+    __unsafe_unretained _Nonnull Class super_class;
+};
+```
+
+- 此时这个结构体的第一个成员变量receiver就是子类，和 objc_msgSend 中的self相同。而第二个成员变量super_class就是指父类，调用 objc_msgSendSuper 的方法时会将这个结构体和returnSomething的selector传递过去。
+
+- 在结构体函数里面做的事情类似这样：从objc_super结构体指向的super_class的方法列表开始找 returnSomething的selector，找到后再用objc_super->receiver去调用这个selector。找不到就会报错。
+
+
+
 
 
 

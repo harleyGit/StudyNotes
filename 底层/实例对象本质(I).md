@@ -80,14 +80,14 @@ NSLog(@"objClass1= %@,\n objClass2= %@,\n objClass3= %@,\n objClass4= %@,\n objC
 - 类的`属性`信息（`@property`），类的成员变量信息（`ivar`）
 - 类的`对象方法`信息（`instance method`），类的`协议`信息（`protocol`）
 
-![类对象存储图](https:////upload-images.jianshu.io/upload_images/1760191-b0a49c8c145defd9.png?imageMogr2/auto-orient/strip|imageView2/2/w/316)
+![类对象存储图 <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/principle0.png)
 
 
 <br/>
 
 **`元类对象（meta-class对象）`**
 
-**&emsp;  `元类对象（meta-class对象）`**就是通过RunTime的`object_getClass`方法得到的对象
+&emsp;  **`元类对象（meta-class对象）`**就是通过RunTime的`object_getClass`方法得到的对象
 
 ```
 //通过RunTIme的API获得元类对象
@@ -103,7 +103,7 @@ objectMetaClass就是NSObject的元类对象
 - `superClass`指针
 - 类的`类方法`信息（`class method`）
 
-![元类对象存储信息](https:////upload-images.jianshu.io/upload_images/1760191-59d94b3303724f26.png?imageMogr2/auto-orient/strip|imageView2/2/w/328)
+![元类对象存储信息 <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/principle1.png)
 
 以上我们了解了`实例对象`、`类对象`和`元类对象`的含义以及包含的内容，那么它们当中的`isa`指针和`superClass`指针分别指向哪里呢?
 
@@ -134,7 +134,7 @@ isa指针指向用一张示意图来简单概括一下：
 
 类(class)的superClass指针指向用一张示意图来简单概括一下：
 
-![类的superClass指针指向图](https://upload-images.jianshu.io/upload_images/1760191-0cf0a692554c9673.jpeg?imageMogr2/auto-orient/strip|imageView2/2/w/1200)
+![类的superClass指针指向图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/principle2.jpeg)
 
 &emsp;  图中举例Student继承自Person，Person继承自NSObject。
 
