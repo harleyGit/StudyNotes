@@ -36,10 +36,13 @@
 	- [协议代理](#协议代理)
 	- [KVC和KVO](#KVC和KVO)
 - [**底层**](#底层)
-	- [Runloop底层原理](#Runloop底层原理)
-	- [Runloop有几种运行状态](#Runloop有几种运行状态)
-	- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
-	- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
+	- [Runloop](#Runloop)
+		- [Runloop底层原理](#Runloop底层原理)
+		- [Runloop有几种运行状态](#Runloop有几种运行状态)
+		- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
+		- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
+	- [自动释放池](#自动释放池)
+		- [自动释放池的实现原理](#自动释放池的实现原理)
 	- [APP](#APP)
 		- [app启动流程](#app启动流程) 
 		- [app启动优化](#启动优化)
@@ -1547,7 +1550,12 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 <br/>
 
-> <h2 id ="Runloop底层原理">Runloop底层原理</h2>
+> <h2 id = "Runloop">Runloop</h2>
+
+<br/>
+
+
+> <h3 id ="Runloop底层原理">Runloop底层原理</h3>
 [Runloop详解](https://imlifengfeng.github.io/article/487/)
 
 
@@ -1648,7 +1656,7 @@ int32_t __CFRunLoopRun()
 <br/>
 
 
-> <h2 id="Runloop有几种运行状态">Runloop有几种运行状态</h2>
+> <h3 id="Runloop有几种运行状态">Runloop有几种运行状态</h3>
 
 Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
@@ -1729,7 +1737,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 <br/>
 <br/>
 
-> <h2 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h2>
+> <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h3>
 
 
 - **分两种情况：手动干预释放和系统自动释放**
@@ -1809,7 +1817,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 <br/>
 
 
- > <h2 id ="RunLoop原理和与线程的联系">RunLoop原理和与线程的联系？说一下你对他的了解</h2>
+ > <h3 id ="RunLoop原理和与线程的联系">RunLoop原理和与线程的联系？说一下你对他的了解</h3>
 
 1. RunLoop 的作用就是来管理线程的，当线程的 RunLoop开启后，线程就会在执行完任务后，处于休眠状态，随时等待接受新的任务，而不是退出。
 
@@ -1841,7 +1849,27 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 <br/>
 
 
-><h2 id = "APP">APP</h2>
+> <h2 id = "自动释放池">自动释放池</h2>
+
+
+<br/>
+
+> <h3 id = "自动释放池的实现原理">自动释放池实现原理</h3> 
+
+**实现原理：**
+
+&emsp; 自动释放池以栈的形式实现，当你创建一个新的自动释放池时，他将被添加到栈顶，当一个对象收到autorelease消息的时候，他被添加到当前线程的处于顶的自动释放池中，当自动释放池被回收时，他们就从栈中被删除，并且会给池子里面所有对象的使用都会做一次release操作
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+> <h2 id = "APP">APP</h2>
 
 <br/>
 
