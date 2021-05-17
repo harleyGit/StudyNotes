@@ -1,7 +1,11 @@
 - [**Swift基础**](#Swift基础)
+	- [Swift和OC混编注意事项](#Swift和OC混编注意事项)
 	- [面向协议编程](#面向协议编程)
 	- [协议中实用泛型](#协议中实用泛型)
 	- [路由导航](#路由导航)
+	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
+	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
+	- [值类型和引用类型区别](#值类型和引用类型区别)
 - [**组件化**](#组件化)
 	- [路由导航](#路由导航)
 - [**安全**](#安全)
@@ -23,7 +27,129 @@
 
 > <h1 id = "Swift基础">Swift基础</h1>
 
+<br/>
 
+> <h2 id = "Swift和OC混编注意事项">Swift和OC混编注意事项</h2>
+
+- **导入文件注意事项：**
+	- 在OC中创建swift文件，会弹出是否需要创建桥接文件项目名称-Bridging-Header.h，点击创建，在swift中调用OC类，只需要把OC类的头文件import到桥接文件中即可
+	
+	- 在OC中调用swift文件，需要导入隐式头文件：工程项目名-swift.h，xxx-Swift.h在项目中是看不到的，但是确实是可以import的
+	
+	- 在Swift代码中将需要暴露给OC调用的属性和方法前加上 @objc修饰符，关于这个内容可查看之前的博文
+
+<br/>
+
+- **使用第三方Framework相关配置：**
+	- 设置： target-->build setting -->Packaging -->Defines Module为 “Yes”；
+
+	- 然后，配置文件Target -> Build Phases  -> Link Binary，添加要导入的Framework；
+	
+	- 最后，还是要配置桥接文件，比如要使用 abc-lib.framework库中的 abc.h 就要这样配置：#import"abc-lib/abc.h";
+
+
+<br/>
+
+- **Subclass子类问题**
+	- 对于自定义的类而言，Objective-C的类，不能继承自Swift的类，即要混编的OC类不能是Swift类的子类。反过来，需要混编的Swift类可以继承自OC的类。 
+
+
+<br/>
+
+- **宏文件**
+	- 如Swift文件要使用OC中定义的宏，只能使用常量简单宏文件。
+
+<br/>
+
+- **Swift独有特性**
+	- Swift中有许多OC没有的特性，比如，Swift有元组、为一等公民的函数、还有特有的枚举类型。所以，要使用的混编文件要注意Swift独有属性问题。
+
+
+
+<br/>
+
+- **Swift中使用OC的block**
+
+Swift中使用Closure不能使用Block作为属性进行传值，必须是初始化方法或函数。
+
+**Objective-C文件中：**
+
+```
+#import typedef void (^Myblock)(NSString *arg);
+
+@interface FirViewController : UIViewController
+
+//@property (copy, nonatomic) Myblock myBlock;
+
+//这种作为公共参数的形式，如果在Swift类中去回调的话，是有问题的。提示没有初始化方法，所以使用下面的以Block为参数的方法
+
+- (void)transValue:(Myblock) block;
+
+@end
+```
+
+下面是.m文件
+
+```
+#import "FirViewController.h"
+
+@implementation FirViewController
+
+- (void)viewDidLoad{
+
+	[super viewDidLoad];
+	
+	self.view.backgroundColor = [UIColor whiteColor];
+
+}
+
+- (void)transValue:(Myblock)block {
+	
+	if (block) {
+		block(@"firBack");
+	}
+}
+
+@end
+```
+
+在Swift文件回调：
+
+在Swift使用OC的类时，首先在桥接文件中声明oc的头文件:**工程名-Bridging-Header.h**这是创建Swift工程的情况下
+
+```
+import UIKit
+
+class ViewController: UIViewController {
+
+override func viewDidLoad() {
+
+	super.viewDidLoad()
+	
+	self.view.backgroundColor = UIColor.whiteColor()
+
+}
+
+@IBOutlet weak var goFirst: UIButton!
+
+@IBAction func goFirstAction(sender: AnyObject) {
+
+	let firVC:FirViewController = FirViewController()
+	
+	firVC. transValue { ( arg:String !) -> Void in
+	
+	self.aBtn?.setTitle(arg, forState: UIControlState.Normal)
+
+}
+
+self.navigationController?.pushViewController(firVC, animated: true)
+
+}
+
+```
+
+
+<br/>
 <br/>
 
 > <h2 id = "面向协议编程">面向协议编程</h2>
@@ -221,7 +347,186 @@ func get2(_ type:Int )-> some Runnable{ //some让协议的关联类型变成透�
 
 
 
+<br/>
+<br/>
 
+
+> <h2 id="AnyAnyObjectAnyClass的区别">Any、AnyObject、AnyClass的区别</h2>
+
+- Any: 可以表示任意类型，甚至方法类型（func）
+- AnyObject: 表示任何class类型的实例对象（类似OC中的id类型）
+- AnyClass：表示任意类的元类型.任意类的类型都隐式遵守这个协议.  AnyObject.Type中的.Type就是获取元类型, 辟如你有一个Student类, Student.Type就是获取Student的元类型.
+
+```
+// AnyObject的定义：
+protocol AnyObject {
+
+}
+```
+
+&emsp; 特别之处在于，所有的 class 都隐式地实现了这个接口，这也是 AnyObject 只适用于 class 类型的原因。而在 Swift 中所有的基本类型，包括 Array 和 Dictionary 这些传统意义上会是 class 的东西，统统都是 struct 类型，并不能由 AnyObject 来表示，于是 Apple 提出了一个更为特殊的 Any，除了 class 以外，它还可以表示包括 struct 和 enum 在内的所有类型。
+为了深入理解，举个很有意思的例子。为了实验 Any 和 AnyObject 的特性，在 Playground 里写如下代码：
+
+```
+import UIKit
+
+let swiftInt: Int = 1
+let swiftString: String = "miao"
+
+var array: [AnyObject] = []
+array.append(swiftInt)
+array.append(swiftString)
+```
+
+&emsp; 我们在这里声明了一个 Int 和一个 String，按理说它们都应该只能被 Any 代表，而不能被 AnyObject 代表的。但是你会发现这段代码是可以编译运行通过的。那是不是说其实 Apple 的编程指南出错了呢？不是这样的，你可以打印一下 array，就会发现里面的元素其实已经变成了 NSNumber 和 NSString 了，这里发生了一个自动的转换。因为我们 import 了 UIKit (其实这里我们需要的只是 Foundation，而在导入 UIKit 的时候也会同时将 Foundation 导入)，在 Swift 和 Cocoa 中的这几个对应的类型是可以进行自动转换的。因为我们显式地声明了需要 AnyObject，编译器认为我们需要的的是 Cocoa 类型而非原生类型，而帮我们进行了自动的转换。
+
+&emsp; 在上面的代码中如果我们把 import UIKit 去掉的话，就会得到无法适配 AnyObject 的编译错误了。我们需要做的是将声明 array 时的 [AnyObject] 换成 [Any]，就一切正确了。
+
+```
+let swiftInt: Int = 1
+let swiftString: String = "miao"
+
+var array: [Any] = []
+array.append(swiftInt)
+array.append(swiftString)
+array
+
+```
+
+&emsp; 顺便值得一提的是，只使用 Swift 类型而不转为 Cocoa 类型，对性能的提升是有所帮助的，所以我们应该尽可能地使用原生的类型。
+
+
+<br/>
+<br/>
+
+> <h2 id="逃逸闭包使用">逃逸闭包怎么使用，它的关键字@escaping什么时候使用</h2>
+
+&emsp; **逃逸闭包概念：**一个接受闭包作为参数的函数，该闭包可能在函数返回后才被调用，也就是说这个闭包逃离了函数的作用域，这种闭包称为逃逸闭包。当你声明一个接受闭包作为形式参数的函数时，你可以在形式参数前写@escaping来明确闭包是允许逃逸。
+
+&emsp; 例如：当网络请求结束后调用的闭包。发起请求后过了一段时间后这个闭包才执行，并不一定是在函数作用域内执行的。
+
+
+```
+class ViewController: UIViewController {
+   
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        getData { (data) in
+            print("闭包结果返回--\(data)--\(Thread.current)")
+        }
+    }
+
+    func getData(closure:@escaping (Any) -> Void) {
+        print("函数开始执行--\(Thread.current)")
+        DispatchQueue.global().async {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now()+2, execute: {
+                print("执行了闭包---\(Thread.current)")
+                closure("345")
+            })
+        }
+        print("函数执行结束---\(Thread.current)")
+    }
+}
+
+
+```
+
+打印结果：
+
+```
+
+函数开始执行--<NSThread: 0x600000072f40>{number = 1, name = main}
+函数执行结束---<NSThread: 0x600000072f40>{number = 1, name = main}
+执行了闭包---<NSThread: 0x600000072f40>{number = 1, name = main}
+闭包结果返回--345--<NSThread: 0x600000072f40>{number = 1, name = main}
+
+```
+
+从结果可以看出，逃逸闭包的生命周期是长于函数的。
+
+- 逃逸闭包的生命周期：
+
+	- 闭包作为参数传递给函数；
+	
+	- 退出函数；
+	
+	- 闭包被调用，闭包生命周期结束。
+
+即逃逸闭包的生命周期长于函数，函数退出的时候，逃逸闭包的引用仍被其他对象持有，不会在函数结束时释放。
+
+
+<br/>
+
+
+**非逃逸闭包**
+
+&emsp; **非逃逸闭包概念：**一个接受闭包作为参数的函数， 闭包是在这个函数结束前内被调用。
+例如：
+
+```
+class ViewController: UIViewController {
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        handleData { (data) in
+            print("闭包结果返回--\(data)--\(Thread.current)")
+        }
+    }
+
+    func handleData(closure:(Any) -> Void) {
+        print("函数开始执行--\(Thread.current)")
+        print("执行了闭包---\(Thread.current)")
+        closure("4456")
+        print("函数执行结束---\(Thread.current)")
+    }
+}
+```
+
+复制代码以上代码最后的执行结果为：
+
+```
+函数开始执行--<NSThread: 0x6000000fe8c0>{number = 1, name = main}
+执行了闭包---<NSThread: 0x6000000fe8c0>{number = 1, name = main}
+闭包结果返回--4456--<NSThread: 0x6000000fe8c0>{number = 1, name = main}
+函数执行结束---<NSThread: 0x6000000fe8c0>{number = 1, name = main}
+```
+
+&emsp; 从结果可以看出，非逃逸闭包被限制在函数内。
+
+非逃逸闭包的生命周期：
+1、闭包作为参数传给函数；
+2、函数中运行改闭包；
+3、退出函数。
+
+**为什么要分逃逸闭包和非逃逸闭包?**
+
+&emsp; 为了管理内存，闭包会强引用它捕获的所有对象，比如你在闭包中访问了当前控制器的属性、函数，编译器会要求你在闭包中显示 self 的引用，这样闭包会持有当前对象，容易导致循环引用。
+而对于非逃逸闭包：
+
+&emsp; 非逃逸闭包不会产生循环引用，它会在函数作用域内释放，编译器可以保证在函数结束时闭包会释放它捕获的所有对象。
+
+&emsp; 使用非逃逸闭包可以使编译器应用更多强有力的性能优化，例如，当明确了一个闭包的生命周期的话，就可以省去一些保留（retain）和释放（release）的调用。
+
+&emsp; 非逃逸闭包它的上下文的内存可以保存在栈上而不是堆上。
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id="值类型和引用类型区别">值类型和引用类型区别</h2>
+
+[值类型和引用类型区别](https://juejin.cn/post/6844904000794394637)
+
+- **存储区别：**
+	- 值类型存储在栈区。 每个值类型变量都有其自己的数据副本，并且对一个变量的操作不会影响另一个变量。
+	
+	- 引用类型存储在其他位置（堆区），我们在内存中有一个指向该位置的引用。 引用类型的变量可以指向相同类型的数据。 因此，对一个变量进行的操作会影响另一变量所指向的数据。
+
+&emsp; Swift有三种声明类型的方式：**class，struct和enum**。 它们可以分为值类型**（struct和enum）和引用类型（class）**。 
+
+**一般Swift值类型在栈上分配。 引用类型在堆上分配。**
 
 
 

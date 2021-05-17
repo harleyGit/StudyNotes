@@ -6,12 +6,14 @@
 ***
 <br/>
 
-
+- [**线上面试控制平台**](https://www.showmebug.com/pads)
 - **[OC基础](#oc基础)**
 	- [UILabel多适应](#UILabel多适应)
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 	- [适配器、响应元是什么](#适配器响应元是什么)
 	- [热更新](#热更新)
+	- [retain和strong区别](#retain和strong区别)
+	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
 - [**性能优化**](#性能优化)
 	- [循环引用解决](#循环引用解决)
@@ -57,6 +59,7 @@
 		- [blokc分类](#blokc分类)
 		- [block原理](#block原理)
 		- [block都会发生循环引用吗](#block都会发生循环引用吗)
+	- [KVO的原理](#KVO的原理)
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 	- [self和super实现的原理](#self和super实现的原理)
@@ -218,6 +221,92 @@ IAP支付的过程：
 <br/>
 
 > <h2 id="热更新">[热更新](https://juejin.cn/post/6844904144411574285)</h2>
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id="retain和strong区别">retain和strong区别</h2>
+
+- **retain和strong都是强引用**，除了某些情况下不一样，比如修饰block，其他的时候也是可以通用的。
+	- [不同点](https://www.jianshu.com/p/19a7c049ab3d)：引入external(外部)变量时，retain和strong（copy）是有区别的，
+		- 在MRC(手动管理引用计数)时，block存在栈区（stack）的，因此使用的时候要注意此时的block是否还存在，以免操作了野指针而闪退。
+		- 在ARC(自动引用计数)时，block是存在堆区（heap）的。
+		- block的修饰符可以用storng、copy、retain进行修饰，但是要注意在MRC环境不要用retain
+
+
+
+<br/>
+<br/>
+
+
+
+<h2 id="为什么说atomic不是安全的">为什么说atomic不是安全的</h2>
+
+**先说我的结论：** 用atomic修饰后，这个属性的setter、getter方法是线程安全的，但是对于整个对象来说不一定是线程安全的。
+
+1).为什么setter、getter方法是线程安全的？
+
+因为在setter和getter赋值取值的时候添加了自旋锁，不懂看这[《oc中的线程锁》](https://www.jianshu.com/p/36bb249d4512)
+
+```
+// getter
+id objc_getProperty(id self, SEL _cmd, ptrdiff_t offset, BOOL atomic) {
+   // ...
+   if (!atomic) return *slot;
+
+   // Atomic retain release world
+   spinlock_t& slotlock = PropertyLocks[slot];
+   slotlock.lock();
+   id value = objc_retain(*slot);
+   slotlock.unlock();
+   // ...
+}
+
+// setter
+static inline void reallySetProperty(id self, SEL _cmd, id newValue, ptrdiff_t offset, bool atomic, bool copy, bool mutableCopy)
+{
+   // ...
+   if (!atomic) {
+       oldValue = *slot;
+       *slot = newValue;
+   } else {
+       spinlock_t& slotlock = PropertyLocks[slot];
+       slotlock.lock();
+       oldValue = *slot;
+       *slot = newValue;        
+       slotlock.unlock();
+   }
+   // ...
+}
+
+```
+
+
+<br/>
+
+2).为什么说atomic没办法保证整个对象的线程安全，这里主要看一下网上主流的答案？
+
+> 1.对于NSArray类型 @property(atomic)NSArray *array我们用atomic修饰，数组的添加和删除并不是线程安全的，这是因为数组比较特殊，我们要分成两部分考虑，一部分是&array也就是这个数组本身，另一部分是他所指向的内存部分。atomic限制的只是&array部分，对于它指向的对象没有任何限制。
+atomic表示，我TM也很冤啊！！！！
+
+
+> 2.当线程A进行写操作，这时其他线程的读或者写操作会因为该操作而等待。当A线程的写操作结束后，B线程进行写操作，然后当A线程需要读操作时，却获得了在B线程中的值，这就破坏了线程安全，如果有线程C在A线程读操作前release了该属性，那么还会导致程序崩溃。所以仅仅使用atomic并不会使得线程安全，我们还要为线程添加lock来确保线程的安全。
+个人觉得这个就有点杠精的意味了，atomic还要管到你方法外面去了？？？？？不过面试人家问你还要这么答，要严谨！！😄哈哈
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id="NSArray和NSMutableArray修饰符">NSArray和NSMutableArray修饰符</h2>
+[NSArray和NSMutableArray关键字修饰](https://www.jianshu.com/p/0fa2c965af4a)
+
+&emsp; **总结：**当修饰可变类型的属性时，如NSMutableArray、NSMutableDictionary、NSMutableString，用strong。当修饰不可变类型的属性时，如NSArray、NSDictionary、NSString，用copy。
+
 
 
 
@@ -1845,6 +1934,63 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 
 
 
+
+<br/>
+<br/>
+
+
+
+
+> <h2 id = "多线程">多线程</h2>
+
+<br/>
+
+> <h3 id = "进程和线程之间的关系"> [进程和线程之间的关系](https://juejin.cn/post/6844903939599515655) </h3>
+
+- **线程定义：**
+	- 线程是进程的基本执行单元，一个进程的所有任务都在线程中执行
+	- 进程要想执行任务，必须得有线程，进程至少要有一条线程
+	- 程序启动会默认开启一条线程，这条线程被称为主线程或 UI 线程
+
+
+<br/>
+
+
+- **进程定义**
+
+	- 进程是指在系统中正在运行的一个应用程序
+	
+	- 每个进程之间是独立的，每个进程均运行在其专用的且受保护的内存空间内
+	
+	- 通过“活动监视器”可以查看 Mac 系统中所开启的进程
+
+
+<br/>
+
+- **进程与线程的区别**
+
+	- 地址空间：同一进程的线程共享本进程的地址空间，而进程之间则是独立的地址空间。
+	
+	- 资源拥有：同一进程内的线程共享本进程的资源如内存、I/O、cpu(线程之间的资源是可以共享的，比如：在子线程请求到的图片，要转到住线程进行显示这就涉及到线程的通信、资源共享)等，**但是进程之间的资源是独立的**。
+	
+	- 一个进程崩溃后，在保护模式下不会对其他进程产生影响，但是一个线程崩溃整个进程都死掉。所以多进程要比多线程健壮。
+	
+	- 进程切换时，消耗的资源大，效率高。所以涉及到频繁的切换时，使用线程要好于进程。同样如果要求同时进行并且又要共享某些变量的并发操作，只能用线程不能用进程
+	
+	- 执行过程：每个独立的进程有一个程序运行的入口、顺序执行序列和程序入口。但是线程不能独立执行，必须依存在应用程序中，由应用程序提供多个线程执行控制。
+	
+	- 线程是处理器调度的基本单位，但是进程不是。
+
+
+
+
+
+
+
+
+
+
+
 <br/>
 <br/>
 
@@ -2481,6 +2627,70 @@ objc_object::sidetable_retainCount()
 <br/>
 
 2). AFN框架的Block
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="KVO的原理"> [KVO的原理](https://www.jianshu.com/p/e59bb8f59302) </h2>
+
+- **基本原理：**
+	- 	当观察某对象 A 时，KVO 机制动态创建一个对象A当前类的子类，并为这个新的子类重写了被观察属性 keyPath 的 setter 方法。setter 方法随后负责通知观察对象属性的改变状况。
+
+<br/>
+
+- **深入剖析原理：**
+
+>Apple 使用了 isa 混写（isa-swizzling）来实现 KVO 。当观察对象A时，KVO机制动态创建一个新的名为：NSKVONotifying_A 的新类，该类继承自对象A的本类，且 KVO 为 NSKVONotifying_A 重写观察属性的 setter 方法，setter 方法会负责在调用原 setter 方法之前和之后，通知所有观察对象属性值的更改情况。
+（备注： isa 混写（isa-swizzling）isa：is a kind of ； swizzling：混合，搅合；）
+
+>①NSKVONotifying_A 类剖析：在这个过程，被观察对象的 isa 指针从指向原来的 A 类，被 KVO 机制修改为指向系统新创建的子类 NSKVONotifying_A 类，来实现当前类属性值改变的监听；
+所以当我们从应用层面上看来，完全没有意识到有新的类出现，这是系统“隐瞒”了对 KVO 的底层实现过程，让我们误以为还是原来的类。但是此时如果我们创建一个新的名为“NSKVONotifying_A”的类，就会发现系统运行到注册 KVO 的那段代码时程序就崩溃，因为系统在注册监听的时候动态创建了名为 NSKVONotifying_A 的中间类，并指向这个中间类了。
+（isa 指针的作用：每个对象都有 isa 指针，指向该对象的类，它告诉 Runtime 系统这个对象的类是什么。所以对象注册为观察者时，isa 指针指向新子类，那么这个被观察的对象就神奇地变成新子类的对象（或实例）了。） 因而在该对象上对 setter 的调用就会调用已重写的 setter，从而激活键值通知机制。
+—>我猜，这也是 KVO 回调机制，为什么都俗称KVO技术为黑魔法的原因之一吧：内部神秘、外观简洁。
+
+>②子类setter方法剖析：KVO 的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用 2 个方法：
+被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；之后， observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的 setter 方法这种继承方式的注入是在运行时而不是编译时实现的。
+KVO 为子类的观察者属性重写调用存取方法的工作原理在代码中相当于：
+
+
+```
+-(void)setName:(NSString *)newName{
+    [self willChangeValueForKey:@"name"];    //KVO 在调用存取方法之前总调用
+    [super setValue:newName forKey:@"name"]; //调用父类的存取方法
+    [self didChangeValueForKey:@"name"];     //KVO 在调用存取方法之后总调用
+}
+```
+
+
+**嘿侍面试提问：**	当使用KVO时，一个类的实例使用kvo，它的属性值改变了，那它的另一个实例变量属性值会变吗？
+
+比如它有2个实例变量分别是A，B，若是A加的属性添加监听而B没有添加监听，则A的属性值可以改变B的不变。
+
+若2者都添加爱了监听，则属性值都会改变。
+
+
+<br/>
+
+注意：观察者是谁，就在谁里面写观察者方法
+
+```
+//观察者是self
+[self.myObject addObserver:self
+                       forKeyPath:@"num"
+                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
+                          context:nil];
+                          
+                          
+
+//观察键值方法                          
+-(void)observeValueForKeyPath:(NSString *)keyPath
+                     ofObject:(id)object
+                       change:(NSDictionary<NSString *,id> *)change
+                      context:(void *)context {}
+```
 
 
 <br/>
