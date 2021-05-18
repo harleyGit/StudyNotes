@@ -1,4 +1,6 @@
 - [**Swift基础**](#Swift基础)
+	- [道长基础面试题](https://www.jianshu.com/p/07c9c6464f83) 
+	- [Swift和OC区别](#Swift和OC区别)
 	- [Swift和OC混编注意事项](#Swift和OC混编注意事项)
 	- [面向协议编程](#面向协议编程)
 	- [协议中实用泛型](#协议中实用泛型)
@@ -6,6 +8,9 @@
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
 	- [值类型和引用类型区别](#值类型和引用类型区别)
+	- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
+- [**数据存储**](#数据存储)
+	- [CoreData](#CoreData) 
 - [**组件化**](#组件化)
 	- [路由导航](#路由导航)
 - [**安全**](#安全)
@@ -29,6 +34,20 @@
 
 <br/>
 
+> <h2 id = "Swift和OC区别">Swift和OC区别</h2>
+
+- swift是静态类型语言，OC是动态类型语言
+	- 静态概念：类型判断是在运行前做的（如编译阶段） 
+	- 静态表现：使用变量前需要声明变量。
+	- 动态概念：意思就是类型的检查是在运行时做的；
+	- 动态表现：使用变量前不需要声明变量。
+- swift是类型安全的语言、注重安全（解释为：是因为它清楚的知道代码在编译阶段处理值的类型**‌**），OC注重灵活；
+- swift注重面向协议编程、函数式编程、面向对象编程，OC注重面向对象编程；
+
+
+<br/>
+<br/>
+
 > <h2 id = "Swift和OC混编注意事项">Swift和OC混编注意事项</h2>
 
 - **导入文件注意事项：**
@@ -36,7 +55,7 @@
 	
 	- 在OC中调用swift文件，需要导入隐式头文件：工程项目名-swift.h，xxx-Swift.h在项目中是看不到的，但是确实是可以import的
 	
-	- 在Swift代码中将需要暴露给OC调用的属性和方法前加上 @objc修饰符，关于这个内容可查看之前的博文
+	- 在Swift代码中将需要暴露给OC调用的属性和方法前加上 @objc修饰符。
 
 <br/>
 
@@ -52,6 +71,8 @@
 
 - **Subclass子类问题**
 	- 对于自定义的类而言，Objective-C的类，不能继承自Swift的类，即要混编的OC类不能是Swift类的子类。反过来，需要混编的Swift类可以继承自OC的类。 
+	- 提问：为什呢OC不能继承字Swift的子类？
+		- 答：这是因为派发机制不同造成的,在原生声明（非 extension）中定义的普通方法和标记为 @objc 的方法都使用 V-Table 机制派发。用 Swift 编写的类是不能被 Objective-C 继承的，@objc 只是把方法暴露给 Objective-C，并没有改变方法派发的本质。
 
 
 <br/>
@@ -328,24 +349,6 @@ func get2(_ type:Int )-> some Runnable{ //some让协议的关联类型变成透�
 
 
 
-<br/>
-
-***
-<br/>
-
-
-> <h1 id="组件化">组件化</h1>
-[iOS组件化实践](https://www.jianshu.com/p/510ee1290ab4)
-
-> <h1 id="路由导航">路由导航</h1>
-
-[路由设计思路分析](https://github.com/harleyGit/StudyNotes/blob/master/Sources/iOS组件化路由设计思路分析.pdf)
-[](https://www.cnblogs.com/oc-bowen/p/6489070.html)
-
-[路由导航](http://www.cocoachina.com/cms/wap.php?action=article&id=27025)
-[ALRouter路由导航](https://www.jianshu.com/p/61f20e23afc0)
-
-
 
 <br/>
 <br/>
@@ -527,6 +530,233 @@ class ViewController: UIViewController {
 &emsp; Swift有三种声明类型的方式：**class，struct和enum**。 它们可以分为值类型**（struct和enum）和引用类型（class）**。 
 
 **一般Swift值类型在栈上分配。 引用类型在堆上分配。**
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="Swfit中的@Objc和dynamic的原理">Swfit中的@Objc和dynamic的原理</h2>
+[<br/>](https://gpake.github.io/2019/02/11/swiftMethodDispatchBrief/)
+
+&emsp; 这个问题涉及到**Swift派发原理
+
+- **类类型(Class Type)**
+
+	- 对于一个纯 Swift class 来说，默认使用 Table 派发，影响它方法调用的关键字有 final、 dynamic 和 extension。
+	
+	- 函数如果被标记成 final (可以在类和其类的extension(扩展)中使用)，编译器就会知道这个方法不会被 override，并把它的调用方式标记成直接调用。而对于未标记成 final 并在 class 内部（非 extension）中定义的方法，Swift 会用一种叫作 **Virtual Table 的机制**来在运行时查找到这个方法并进行调用。
+
+	- 	当一个方法被标记为 dymanic，你必须同时把它标记上 @objc，此时这个方法会使用 **Message 调用**，依赖 Objc runtime。
+
+	- 	因为定义在 extension 中的方法目前还不支持 override，所以定义在其中的方法都是直接派发的。
+
+
+<br/>
+
+- **值类型(Value Type)**
+
+	- struct, enum 这样的值类型不支持继承，所以无需动态派发，它所有的方法调用（包括遵守的协议方法），都是直接调用。
+	
+	- 虽然不支持继承，但值类型还是可以通过 extension 和 Protocol 可以实现扩展。
+
+<br/>
+
+- **Protocol**
+
+	- Protocol 是一个比较特殊的情况，不同于 Objective-C，Swift 在对待 Protocol 方法调用时更重视实例的类型，而不是实例的内在（比如 Objc 中的 isa）。
+
+<br/>
+
+**Dispatch**,这个Dispatch 是什么？
+
+>Dispatch 派发，指的是**语言底层**找到用户想要调用的方法，并执行调用过程的动作。
+Call 调用，指的是**语言在高级层面**，指示一个函数进行相关命令的行为。
+
+- 对于一个编译型语言来说，一般有三种方式可以派发到方法：**静态派发，基于 Table 的派发，消息派发**(**前者也被称作 Static Dispatch，后两个为 Dynamic Dispatch。**)。举例：
+
+	- Java 默认是使用 Table 方式派发的，你可以使用 final 关键字来强制动态派发。
+	
+	- C++ 默认是静态派发的，你可以使用 virtual 关键字来启用 Table 派发(一句话总结，编译器在编译期间就已经确定了的推断路径，运行期间按照既定路线走就行。)。
+	
+	- Objective-C 全都基于消息派发，不过也允许你使用 C level 的函数直接派发。
+	
+	- Swift 则巧妙的使用了这三种方法，分别应对不同的情况.
+
+
+<br/>
+
+
+**Dispatch种类：**
+
+- Direct Dispatch 直接派发
+	- 直接派发（静态派发）最快。不只是因为他的汇编命令少，还因为他可以应用很多编译器黑魔法，比如 inline 优化等。
+
+	- 不过这种方式局限性最大，因为不够动态而无法支持子类。
+
+<br/>
+
+- **Table 派发**
+
+	- 基于 Table 的派发机制是编译语言最常用的方式，Table 一般是用函数地址的数组来存储每个类的声明。大多数语言包括 Swift 都把这个称作 VTable，不过 Swift 中还有一个术语叫做 Witness Table 是服务于 Protocol 的，下面会提到。
+
+	- 每个子类都会有自己的 VTable 副本，子类中 override 的方法指针也会被替换成新的，子类新添加的方法则会被添加在 Table 的尾部。程序会在运行时确定每个函数具体的地址。
+
+	- 表的查找就实现而言非常简单，而且性能可以预测，不过还是比直接派发更慢一些。从字节码的角度来说，这种方法多了两步查找和一部跳转，这些都是开销。而且，这种方法没法使用一些黑魔法来优化。
+
+	- 另一个不好的点在于，这种基于数组的派发让 extension 没法扩展这个 table。因为在子类添加方法列表到尾部后，extension 就没有一个安全的 index 可以添加他的方法到 table 中。
+
+
+
+<br/>
+
+
+- **Message 派发**
+
+	- Message 派发是最灵活的派发方式。他是 Cocoa 的基石，也是 KVO，UIAppearance，Core Data 的核心。
+
+	- 他的关键功能是可以让开发者在运行时改变消息发送的行为。不仅可以通过 swizzling 修改 method，还可以通过 isa-swizzling 来修改对象。
+
+	- 一旦有消息发出，runtime 就会基于继承关系开始查找，虽然听起来很慢，但是有 cache 做保障，一旦 cache 经过预热，就和 Table 方式差不多快了。
+
+<br/>
+
+
+[**队列派发**](https://hechen.xyz/post/messagedispatchinswift/#pwt)
+
+&emsp; 在 Swift 中，针对拥有继承的 Class 类型来说，依然采用了 V-Table 这种实现形式达到对多态的支持，而针对值类型由于 Protocol 产生的多态而采用了另外一种函数表派发形式，这个表格被称为协议目击表 （Protocol Witness Table，简称 PWT），这个暂时略去不表。
+
+
+**V-Table**
+
+- 对于 V-Table 的应用场景下，每一个类都会维护一个函数表，里面记录着该类所有的函数指针，主要包含：
+
+	- 由父类继承而来的方法执行地址；
+	- 如果子类覆写了父类方法的话，表格里面就会保存被重载之后的函数。
+	- 子类新添加的函数会插入到这个表格的末尾
+- 在程序运行期间会根据这个表去查询真正要调用的函数是哪一个。这种特性就极大的提升了代码的灵活性，也是 Java，C++ 等语言得以支持多态这种语言特性的基石。当然，相对于静态派发而言，表格派发则多了很多的隐式花销，因为函数调用不再是直接调用了，而是需要通过先行查表的形式找到真实的函数指针来执行，编译器也无法再进行诸如 inline 等编译期优化了。
+
+
+<br/>
+
+- **PWT**
+
+	- 对于 Swift 来说，还有更为重要的 Protocol，对于符合同一协议的对象本身是不一定拥有继承关系的，因此 V-Table 就没法使用了。这里，Swift 使用了 Protocol Witness Table 的数据结构达到动态查询协议方法的目的。如果将上面的例子中的 Drawable 抽象成协议。
+
+
+
+
+<br/>
+
+
+- **关键字的影响:**
+	
+	- **final**
+		- 使用了 final 的，都用静态派发，因为 final 意味着完全没有动态性。final 用于类型，或是 function，都会造成这样的情况。
+		
+		- 而且 final 作用范围的方法，都不会被 export 到 OC runtime，也不会生成 selector
+
+
+
+	- **dynamic**
+		- 使用了 dynamic 的 class （只有 class 可以 dynamic），会开启 message 模式，让 OC runtime 可以调用。
+
+		- 必须 @import Foundation，必须有 @objc，如果是 class，还必须是 NSObject 的子类
+
+		- 延展阅读： dynamic vs @objc: dynamic 是强制使用 message 派发，KVO 需要。@objc 只是 export 给 objc，swift 还是静态派发
+
+
+	- **@objc / @nonobjc**
+		- @objc / @nonobjc 控制方法对于 objc 的可见性。但是不会改变 swift 中的函数如何被派发。
+
+		- @nonobjc 可以禁止函数使用 message 派发 （和 final 在汇编上看起来类似，偏向于使用 final)
+
+		- // 并不会这样，@nonobjc 依然是使用 Table 调用，但是 @nonobjc 之后无法使用 dynamic，会提示 error: a declaration cannot be both '@nonobjc' and 'dynamic'
+
+		- @objc 的原理是生成两个函数引用，一个给 swift 调用，一个给 objc 调用
+
+		- @objc final func aFunc() {} 会让消息使用直接派发，不过依然会 export 给 objc
+
+
+	- **@inline**
+		- @inline 可以告诉编译器去优化直接派发的性能。
+	
+		- see: https://github.com/vandadnp/swift-weekly/blob/master/issue11/README.md#inline
+	
+		- @inline 可以给生成的函数加上标记，后期编译器进行指定的优化
+	
+		- inline 可以选择的参数有两个 never 和 __always
+	
+		- 对于 inline 的使用建议：
+			- 0，默认行为是编译器自己决定要不要使用 inline 进行优化，你也应该保持默认行为。
+			- 1，如果你的函数特别长，你不想让你的打包体积变得特别大，可以使用 @inline(never)
+			- 2，如果你的函数很小，你希望他可以快一点，就可以使用 @inline(__always)，不过其实编译器也会帮你做这样的事情，所以你这么做也基本上不会让他变得更快
+			- 有趣的是，如果你用 dynamic @inline(__always) func dynamicOrDirect() {} 依然会得到一个 message 派发的函数。
+
+
+
+<br/>
+
+**方法可见性的影响**
+
+&ems; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
+
+<br/>
+
+**KVO**
+
+&ems;值得注意的是 KVO，被观察的属性也必须被声明为 dynamic，否则 setter 会走直接派发，无法触发变化。
+
+
+
+**派发效率从高到低为： 直接派发 > Table 派发 > Message 派发**
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="数据存储">数据存储</h1>
+	
+<br/>
+	
+<h2 id="CoreData">CoreData</h2>
+
+&emsp; 一个基本的 [**Core Data**](https://objccn.io/products/core-data/preview/) 栈由四个主要部分组成：托管对象 (managed objects) (**NSManagedObject**)，托管对象上下文 (managed object context) (**NSManagedObjectContext**)，持久化存储协调器 (persistent store coordinator) (**NSPersistentStoreCoordinator**)，以及持久化存储 (persistent store) (**NSPersistentStore**):
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd13.png)
+
+- **托管对象:** 位于这张图的最上层，它是架构里最有趣的部分，同时也是我们的数据模型 - 在这个例子里，它是 Mood 类的实例们。Mood 需要是 NSManagedObject 类的子类，这样它才能与 Core Data 其他的部分进行集成。每个 Mood 实例表示了一个 **mood**，也就是用户用相机拍摄的照片。
+
+- **托管对象上下文：** **mood** 对象是被 Core Data 托管的对象。也就是说，它们存在于一个特定的上下文 (context) 里：那就是托管对象上下文。托管对象上下文记录了它管理的对象，以及你对这些对象的所有操作，比如插入，删除和修改等。每个被托管的对象都知道自己属于哪个上下文。
+
+- **持久化存储协调器：**上下文与持久化存储协调器相连，协调器位于持久化存储和托管对象上下文之间。对于本章中的这个简单例子，我们不用太关心持久化存储协调器或者持久化存储，因为 NSPersistentContainer 这个辅助类会帮助我们把它们都设置好。可以这么说，默认情况下 Core Data 会使用一个 SQLite 类型的持久化存储，也就是说你的数据在底层实际上会被存储在一个 SQLite 数据库里。Core Data 也提供其他的存储类型 (比如 XML，二进制数据，内存)，但是现在我们不需要考虑其他的存储类型。
+
+
+
+<br/>
+
+***
+<br/>
+
+
+
+> <h1 id="组件化">组件化</h1>
+[iOS组件化实践](https://www.jianshu.com/p/510ee1290ab4)
+
+> <h1 id="路由导航">路由导航</h1>
+
+[路由设计思路分析](https://github.com/harleyGit/StudyNotes/blob/master/Sources/iOS组件化路由设计思路分析.pdf)
+[](https://www.cnblogs.com/oc-bowen/p/6489070.html)
+
+[路由导航](http://www.cocoachina.com/cms/wap.php?action=article&id=27025)
+[ALRouter路由导航](https://www.jianshu.com/p/61f20e23afc0)
+
+
 
 
 

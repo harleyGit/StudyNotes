@@ -2,6 +2,7 @@
 
 
 - [**HelloGitHub**](https://hellogithub.com)
+- [iOS 开发者资源大全](https://github.com/kechengsou/awesome-ios)
 - [**iOS开发规范**](https://www.shuzhiduo.com/A/oAe5R7LdQ9/)
 - [**iOS开源项目**](https://www.jianshu.com/p/36c76f757c76)
 - [**10大第三方类库**](http://www.cocoachina.com/ios/20170602/19421.html)
