@@ -17,6 +17,7 @@
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
 - [**性能优化**](#性能优化)
+	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
 	- [NSTimer循环引用解决](#NSTimer循环引用解决)
 	- [NSTimer计时不准确怎么办](#NSTimer计时不准确怎么办)
@@ -24,6 +25,7 @@
 		 - [图片的处理](#图片的处理)
 			 - [图片异步绘制](#图片异步绘制)
 			 - [图片格式判断](#图片格式判断) 
+			 - [ImageIO图片缩放](#ImageIO图片缩放)
 	- [图片上传](#图片上传)
 	- [界面保持流畅](#界面保持流畅)
 	- [UI卡顿优化](#UI卡顿优化)
@@ -63,6 +65,9 @@
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 	- [self和super实现的原理](#self和super实现的原理)
+	- [isa指针包含了什么（货拉拉面试）](#isa指针包含了什么)
+	- [weak原理（货拉拉）](#weak原理)
+	- [Category属性放在哪(货拉拉)](#Category属性放在哪)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
@@ -478,7 +483,11 @@ atomic表示，我TM也很冤啊！！！！
 
 ># <h1 id = "性能优化"> [性能优化](https://www.jianshu.com/p/3ad7880e3667) </h1>
 
-- [**性能优化总结**](https://juejin.cn/post/6844903590138478600)
+
+<br/>
+
+>## <h2 id = "性能优化总结"> [**性能优化总结**](https://juejin.cn/post/6844903590138478600) </h2>
+
 
 
 <br/>
@@ -919,6 +928,93 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
 <br/>
 <br/>
 
+
+> <h2 id="ImageIO图片缩放">ImageIO图片缩放</h2>
+
+UIImage 在设置和调整大小的时候，需要将原始图像加压到内存中，然后对内部坐标空间做一系列转换，整个过程会消耗很多资源。我们可以使用 ImageIO，它可以直接读取图像大小和元数据信息，不会带来额外的内存开销。
+
+- Swift代码
+
+```
+func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> UIImage {
+
+    //生成CGImageSourceRef 时，不需要先解码。
+    let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+    let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, imageSourceOptions)!
+    let maxDimensionInPixels = max(pointSize.width, pointSize.height) * scale
+    
+    //kCGImageSourceShouldCacheImmediately 
+    //在创建Thumbnail时直接解码，这样就把解码的时机控制在这个downsample的函数内
+    let downsampleOptions = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                 kCGImageSourceShouldCacheImmediately: true,
+                                 kCGImageSourceCreateThumbnailWithTransform: true,
+                                 kCGImageSourceThumbnailMaxPixelSize: maxDimensionInPixels] as CFDictionary
+    //生成
+    let downsampledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, downsampleOptions)!
+    return UIImage(cgImage: downsampledImage)
+}
+```
+
+
+
+<br/>
+
+- **OC实现**
+
+```
+- (UIImage *)resizeScaleImage:(CGFloat)scale {
+    
+    CGSize imgSize = self.size;
+    CGSize targetSize = CGSizeMake(imgSize.width * scale, imgSize.height * scale);
+    NSData *imageData = UIImageJPEGRepresentation(self, 1.0);
+    CFDataRef data = (__bridge CFDataRef)imageData;
+    
+    CFStringRef optionKeys[1];
+    CFTypeRef optionValues[4];
+    optionKeys[0] = kCGImageSourceShouldCache;
+    optionValues[0] = (CFTypeRef)kCFBooleanFalse;
+    CFDictionaryRef sourceOption = CFDictionaryCreate(kCFAllocatorDefault, (const void **)optionKeys, (const void **)optionValues, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, sourceOption);
+    CFRelease(sourceOption);
+    if (!imageSource) {
+        NSLog(@"imageSource is Null!");
+        return nil;
+    }
+    //获取原图片属性
+    int imageSize = (int)MAX(targetSize.height, targetSize.width);
+    CFStringRef keys[5];
+    CFTypeRef values[5];
+    //创建缩略图等比缩放大小，会根据长宽值比较大的作为imageSize进行缩放
+    keys[0] = kCGImageSourceThumbnailMaxPixelSize;
+    CFNumberRef thumbnailSize = CFNumberCreate(NULL, kCFNumberIntType, &imageSize);
+    values[0] = (CFTypeRef)thumbnailSize;
+    keys[1] = kCGImageSourceCreateThumbnailFromImageAlways;
+    values[1] = (CFTypeRef)kCFBooleanTrue;
+    keys[2] = kCGImageSourceCreateThumbnailWithTransform;
+    values[2] = (CFTypeRef)kCFBooleanTrue;
+    keys[3] = kCGImageSourceCreateThumbnailFromImageIfAbsent;
+    values[3] = (CFTypeRef)kCFBooleanTrue;
+    keys[4] = kCGImageSourceShouldCacheImmediately;
+    values[4] = (CFTypeRef)kCFBooleanTrue;
+    
+    CFDictionaryRef options = CFDictionaryCreate(kCFAllocatorDefault, (const void **)keys, (const void **)values, 4, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CGImageRef thumbnailImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options);
+    UIImage *resultImg = [UIImage imageWithCGImage:thumbnailImage];
+    
+    CFRelease(thumbnailSize);
+    CFRelease(options);
+    CFRelease(imageSource);
+    CFRelease(thumbnailImage);
+    
+    return resultImg;
+}
+```
+
+
+
+<br/>
+<br/>
+
 > <h2 id="图片上传">图片上传</h2>
 
 <br/>
@@ -1174,6 +1270,27 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 [**高德启动耗时优化**](https://cloud.tencent.com/developer/news/616444)
 
 
+
+
+<br/>
+
+
+- **优化点**
+
+	- 合并动态库，并减少使用 Embedded Framework，即非系统创建的动态 Framework，如果对包体积要求不严格还可以使用静态库代替。
+	
+	- 删除无用代码（未使用的静态变量、类和方法等）并抽取重复代码。
+	
+	- 避免在 +load 执行方法，使用 +initialize 代替。
+	
+	- 避免使用 attribute((constructor))，可将要实现的内容放在初始化方法中配合 dispatch_once 使用。
+	
+	- 减少非基本类型的 C++ 静态全局变量的个数。（因为这类全局变量通常是类或者结构体，如果在构造函数中有繁重的工作，就会拖慢启动速度）
+
+
+
+
+
 <br/>
 <br/>
 
@@ -1288,6 +1405,52 @@ SDWebImage的使用:
 
 
 > <h2 id = "内存优化">[**内存优化**](https://juejin.cn/post/6864492188404088846)</h2>
+
+- **内存泄漏**
+	- ARC模式下由于循环引用造成内存泄漏，可以使用**`weak`**和**`unowned`**来避免;
+		- 提问： [weak和unowened区别](https://hisoka0917.github.io/swift/2017/10/17/closure-unowned-weak-self/)？
+			- 答：1）.unowned相当于以前的unsafe_unretained，当对象被释放时，unowned引用地址不会被指向nil，而是维持原内存地址，而实际上该地址上的对象已经被释放，此时去访问这个地址，程序当然会崩溃。而weak的对象在释放后会指向nil，这样不会造成crash。
+			- 2）.如何正确选择这两者的使用，Apple给我们的建议是如果能够确定在访问时不会已被释放的话，尽量使用 unowned，如果存在被释放的可能，那就选择用 weak。
+		- 提问：weak的原理？
+			- 答：[weak原理](http://cloverkim.com/ios_weak-principle.html)
+
+<br/>
+
+- **野指针**
+	- 开发阶段可以通过开启编译里的 **Zombie Objects**（在edit scheme的Run中进行打开）复现问题，原理是 Hook 系统的 dealloc 方法，执行 __dealloc_zombie 将对象进行僵尸化，如果当前对象再次收到消息，则终止程序并打印出调用信息。 
+
+<br/>
+
+- **图片存取** 
+	- 图片读取
+		- imageNamed 会被缓存到内存中，适用于频繁使用的小图片；
+		- imageWithContentOfFile 适用于大图片，持有者生命周期结束后既被释放。
+	- 缩放图片 
+		- 将大图片加载到小空间时， UIImage （UIImage.contentsOfFile）需要先解压整个图像再渲染，会产生内存峰值，用 [ImageIO框架 替代 UIImage 可避免图像峰值](#ImageIO图片缩放)，ImageIO框架（CGImageSourceCreateWithURL）可以直接指定加载到内存的图像尺寸和信息，省去了解压缩的过程。
+	- 后台优化
+		-  当应用切入后台时，图像默认还在内存中 ，可以在退到后台或view消失时从内存中移除图片，进入前台或view出现时再加载图片 （通过监听系统通知) 
+	- HEIC格式 
+		- HEIC 是苹果推出的专门用于其系统的图片格式，iOS 11以上支持。
+		- 据测试，相同画质比 JPEG 节省 50% 内存，且支持保存辅助图片（深度图、视差图等）。 
+
+<br/>
+
+- **OOM 监控**
+	- 指 App 在前台因消耗内存过大导致被系统杀死，针对这类问题，我们需要记录发生 FOOM 时的调用栈、内存占用等信息，从而具体分析解决内存占用大的问题。
+	- **OOMDetector(腾讯开源)**通过  malloc/free 的更底层接口 malloc_logger_t 记录当前存活对象的内存分配信息，同时也根据系统的 backtrace_symbols 回溯了堆栈信息。之后再根据伸展树（Splay Tree）等做数据存储分析，具体方式参看这篇文章：[iOS微信内存监控](https://wetest.qq.com/lab/view/367.html)。
+
+
+<br/>
+
+- 其它优化
+	- 构建缓存时使用 NSCache 替代 NSMutableDictionary
+		- NSCache 是线程安全的，当内存不足时会自动释放内存（取数据时需要先判空），并且可以通过 countLimit 和 totalCostLimit 属性设置上限，另外对存在 Compressed Memory 情况下的内存警告也做了优化，这些都是 NSDictionary 不具备的。
+	- 不要将序列化的数据文件当作数据库使用
+		- Plists、XML、JSON等文件修改都必须替换整个文件，拓展性差，且开销大，容易误用
+		- NSUserDefaults默认是Plist
+
+
+
 
 
 
@@ -2930,6 +3093,146 @@ struct objc_super {
 
 
 
+
+<br/>
+<br/>
+
+
+
+>## <h2 id="isa指针包含了什么">[isa指针包含了什么](https://juejin.cn/post/6844904134286524429#heading-2)</h2>
+
+从源码里面看isa是Class类型：
+
+```
+struct objc_object {
+	Class _Nonnull isa OBJC_ISA_AVAILABILITY;
+}
+```
+
+Class 类型其实是objc_class:
+
+```
+typedef struct objc_class *Class;
+typedef struct objc_object *id;
+
+```
+
+
+&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。此外还有的成员变量就是**`superclass、cache、bits、data`**，在**`objc-runtime-new.h`**文件中，这是最新的:
+
+```
+struct objc_class : objc_object {
+    // Class ISA;
+    Class superclass;
+    cache_t cache;             // 方法缓存
+    class_data_bits_t bits;    // 获取具体类信息
+
+    class_rw_t *data() const {
+        return bits.data();
+    }
+    void setData(class_rw_t *newData) {
+        bits.setData(newData);
+    }
+
+    void setInfo(uint32_t set) {
+        ASSERT(isFuture()  ||  isRealized());
+        data()->setFlags(set);
+    }
+
+    void clearInfo(uint32_t clear) {
+        ASSERT(isFuture()  ||  isRealized());
+        data()->clearFlags(clear);
+    }
+
+    // set and clear must not overlap
+    void changeInfo(uint32_t set, uint32_t clear) {
+        ASSERT(isFuture()  ||  isRealized());
+        ASSERT((set & clear) == 0);
+        data()->changeFlags(set, clear);
+    }
+    
+    · · · · · · · · · ·
+    
+    · · · · · · · ·
+    
+    · · · · · ·
+    
+    //下面还有300多行代码，我就不粘贴复制了
+}
+
+
+```
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+>## <h2 id="weak原理">[weak原理](http://www.cocoachina.com/articles/18962)</h2>
+
+
+&emsp; **介绍：**Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址数组。更多人的人只是知道weak是弱引用，所引用对象的计数器不会加一，并在引用对象被释放的时候自动被设置为nil，通常用于解决循环引用问题。
+
+
+- weak 的实现原理可以概括一下三步：
+
+	- 1)、初始化时：runtime会调用objc_initWeak函数，初始化一个新的weak指针指向对象的地址。
+
+	- 2)、添加引用时：objc_initWeak函数会调用 objc_storeWeak() 函数， objc_storeWeak() 的作用是更新指针指向，创建对应的弱引用表。
+
+	- 3)、释放时，调用clearDeallocating函数。clearDeallocating函数首先根据对象地址获取所有weak指针地址的数组，然后遍历这个数组把其中的数据设为nil，最后把这个entry从weak表中删除，最后清理对象的记录。
+
+
+
+
+
+>## <h2 id="Category属性放在哪">[Category属性放在哪](https://www.jianshu.com/p/bc4678829397)</h2>
+
+
+Category的实现原理或者本质 ？
+
+   Category编译之后的底层结构是struct category_t，里面存储着分类的对象方法、类方法、属性、协议信息
+
+    在程序运行的时候，runtime会将Category的数据合并到类信息中（类对象、元类对象中）
+
+    分类的实现原理是将category中的方法，属性，协议数据放在category_t结构体中，然后将结构体内的方法列表拷贝到类对象的方法列表中。 
+
+3.Category的加载处理过程是什么？
+
+   通过Runtime加载某个类的所有Category数据
+
+    把所有Category的方法、属性、协议数据，合并到一个大数组中
+
+    后面参与编译的Category数据，会在数组的前面
+
+    将合并后的分类数据（方法、属性、协议），插入到类原来数据的前面
+
+可以理解为：
+
+    把 category 的实例方法、协议以及属性添加到类上。
+
+    把 category 的类方法和协议添加到类的 metaclass 上。
+
+其中需要注意的是：
+
+category 的方法没有「完全替换掉」原来类已经有的方法，也就是说如果 category 和原来类都有 methodA，那么 category 附加完成之后，类的方法列表里会有两个 methodA。
+
+category 的方法被放到了新方法列表的前面，而原来类的方法被放到了新方法列表的后面，这也就是我们平常所说的category 的方法会「覆盖」掉原来类的同名方法，这是因为运行时在查找方法的时候是顺着方法列表的顺序查找的，它只要一找到对应名字的方法，就会返回，不会管后面可能还有一样名字的方法。
+
+4.Category为什么不能添加成员变量?
+
+Category 可以给类增加方法和属性，但是并不会自动生成成员变量及set/get方法。因为category_t结构体中并不存在成员变量。我们知道成员变量是存放在实例对象中的，并且编译的那一刻就已经决定好了。而分类是在运行时才去加载的。那么我们就无法再程序运行时将分类的成员变量中添加到实例对象的结构体中。因此分类中不可以添加成员变量。
+
+在 Objective-C 提供的 runtime 函数中，确实有一个 class_addIvar() 函数用于给类添加成员变量，
+
+大概的意思说，这个函数只能在“构建一个类的过程中”调用。当编译类的时候，编译器生成了一个实例变量内存布局 ivar layout，来告诉运行时去那里访问类的实例变量们，一旦完成类定义，就不能再添加成员变量了。经过编译的类在程序启动后就被 runtime 加载，没有机会调用 addIvar。程序在运行时动态构建的类需要在调用 objc_registerClassPair 之后才可以被使用，同样没有机会再添加成员变量。
+
+不能为一个类动态的添加成员变量，可以给类动态增加方法和属性。因为方法和属性并不“属于”类实例，而成员变量“属于”类实例。我们所说的“类实例”概念，指的是一块内存区域，包含了isa指针和所有的成员变量。所以假如允许动态修改类成员变量布局，已经创建出的类实例就不符合类定义了，变成了无效对象。但方法定义是在objc_class中管理的，不管如何增删类方法，都不影响类实例的内存布局，已经创建出的类实例仍然可正常使用。
 
 
 

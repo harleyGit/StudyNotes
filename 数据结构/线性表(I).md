@@ -149,6 +149,7 @@ typedef struct Node* HeaderNode;
 ChainNode* insertNode(ChainNode *header, int i, int data) {
     
     if (header == NULL) {
+	    //传过来的header指针经过初始化会被覆盖掉，在main函数里面的header头节点仍然为null，所以在这个函数里要穿回头节点指针
         header = (ChainNode *)malloc(sizeof(ChainNode));
         //若不指向为null，则在遍历时可能这个指针指向了未知空间引起crash
         header->next = 0;

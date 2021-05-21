@@ -106,7 +106,7 @@
 
 
 
-> <h1 id = "iOS开发">[iOS开发](https://github.com/apple)</h1>
+># <h1 id = "iOS开发">[iOS开发](https://github.com/apple)</h1>
 
 <br/>
 
@@ -139,7 +139,6 @@
 * [键盘弹出(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/键盘弹出(I).md)
 * [模态视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/模态视图.html)
 * [NSArray排序(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray排序(I).md)
-* [强弱引用](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/强弱引用.md)
 * [响应链(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(I).md)
 * [响应链(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
 * [远程推送(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
