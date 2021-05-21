@@ -1,5 +1,6 @@
 - [**Swift基础**](#Swift基础)
 	- [道长基础面试题](https://www.jianshu.com/p/07c9c6464f83) 
+	- [Swift的缺省基类](#Swift的缺省基类)
 	- [Swift和OC区别](#Swift和OC区别)
 	- [Swift和OC混编注意事项](#Swift和OC混编注意事项)
 	- [面向协议编程](#面向协议编程)
@@ -31,6 +32,12 @@
 
 
 > <h1 id = "Swift基础">Swift基础</h1>
+
+
+
+<br/>
+
+>## <h2 id = "Swift的缺省基类">[Swift的缺省基类](https://struggleblog.com/2020/06/22/swift的缺省基类/)</h2>
 
 <br/>
 
