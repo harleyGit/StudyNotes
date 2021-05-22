@@ -4,10 +4,12 @@
 	-  [Vector向量](#Vector向量)
 	-  [(::)范围解析运算符](#范围解析运算符)
 	-  [include](#include)
+	-  [size()和strlen()](#size()和strlen())
 - [算法练习](#算法练习)
 	- [两数之和](#两数之和)
 	- [两数相加](#两数相加)
 	- [无重复字符的最长子串](#无重复字符的最长子串)
+	- [寻找两个正序数组的中位数](#寻找两个正序数组的中位数)
 
 
 <br/>
@@ -55,6 +57,29 @@
 ```
 
 
+
+<br/>
+
+
+> <h2 id="size()和strlen()">size()和strlen()</h2>
+
+- size()：计算string的长度；
+- strlen：计算字符的长度；
+
+这2个函数方法需要导入`#include <string.h>`的标准库。
+
+```
+//size()计算string的长度，strlen计算字符的长度
+size_t length = s.size();
+
+```
+
+
+- **size_t类型**
+	- size_t的真实类型与操作系统有关，在32位架构中被普遍定义为：
+		- typedef   unsigned int size_t;
+	- 而在64位架构中被定义为：
+		- typedef  unsigned long size_t;
 
 
 <br/>
@@ -309,3 +334,225 @@ int main(int argc, const char * argv[]) {
 输出: 0
 
 ```
+
+解答Code:
+
+```
+
+int lengthOfLongestSubstring(string methodName, string s) {
+    printf("\n=================%s=================\n", methodName.c_str());
+    int max = 0;
+    int head = 0;
+    int tail = 0;
+    
+    //size()计算string的长度，strlen计算字符的长度
+    size_t length = s.size();
+    
+    while (tail < length) {
+        //head指向头，若是没有遇到相同的它会一直指窗口第一个字符
+        for (int i = head; i < tail; i++) {
+            if (s[i] == s[tail]) {
+                max = max > tail - head ? max : tail - head;
+                //遇到相同的了，窗口要向后移动一格，退出本次循环。减少循环
+                //而且之前还循环过了，没必要再次循环一遍
+                head = i + 1;
+                break;
+            }
+        }
+        
+        tail++;
+        //当字符串只有一个字符时，若没有这段代码会出错的，一个它没法计算
+        max = max > tail - head ? max : tail - head;
+
+    }
+    
+    return  max;
+}
+
+
+
+
+int main(int argc, const char * argv[]) {
+    
+    string str = "abcabcbb";
+    string str1 = "bbbbb";
+    string str2 = "pwwkew";
+    string str3 = "lengthOfLongestSubstring";
+    string str4 = "c";
+
+    
+    int sum = lengthOfLongestSubstring("无重复字符的最长子串", str);
+    printf("\n 长度为： %i\n", sum);
+}
+```
+
+打印：
+
+```
+=================无重复字符的最长子串=================
+
+ 长度为： 3
+```
+
+
+<br/>
+<br/>
+
+
+> <h2 id="寻找两个正序数组的中位数">寻找两个正序数组的中位数</h2>
+
+```
+
+给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的 中位数 。
+
+ 
+
+示例 1：
+输入：nums1 = [1,3], nums2 = [2]
+输出：2.00000
+解释：合并数组 = [1,2,3] ，中位数 2
+
+示例 2：
+输入：nums1 = [1,2], nums2 = [3,4]
+输出：2.50000
+解释：合并数组 = [1,2,3,4] ，中位数 (2 + 3) / 2 = 2.5
+
+示例 3：
+输入：nums1 = [0,0], nums2 = [0,0]
+输出：0.00000
+
+示例 4：
+输入：nums1 = [], nums2 = [1]
+输出：1.00000
+
+示例 5：
+输入：nums1 = [2], nums2 = []
+输出：2.00000
+```
+
+
+答案Code：
+
+```
+double findMedianSortedArrays(string methodName,vector<int>& nums1, vector<int>& nums2) {
+    printf("\n=================%s=================\n", methodName.c_str());
+    
+    size_t length1 = nums1.size();
+    size_t length2 = nums2.size();
+    
+    if (length1 == 0 && length2 == 0) {
+        return  0;
+    }else if (length1 == 0 && length2 > 0){
+        //加 length2 != 1 这个判断是防止数组中只有一个元素时出错
+        if (length2 % 2 != 0 && length2 != 1) {
+            int middle = length2 / 2;
+            double a = (nums2[middle] + nums2[middle+1])/2.0;
+            return a;
+        }else {
+            int middle = length2 / 2;
+            
+            return  nums2[middle];
+        }
+        
+    }else if (length1 > 0 && length2 == 0) {
+        if (length1 % 2 != 0 && length1 != 1) {
+            int middle = length1 / 2;
+            double a = (nums1[middle] + nums1[middle+1])/2.0;
+            return a;
+        }else {
+            int middle = length2 / 2;
+            
+            return  nums1[middle];
+        }
+    }else {
+        int tag1 = 0;
+        int tag2 = 0;
+        vector<int> sums = vector<int>();
+        
+        while (tag1 < length1 || tag2 < length2 ) {
+            //tag1 < length1 加这个判断是为了防止即使num1数组加完了仍然在sums中添加元素造成死循环。程序崩溃了。
+            if (nums1[tag1] < nums2[tag2] && tag1 < length1) {
+                sums.push_back(nums1[tag1]);
+                if (tag1 < length1) {
+                    ++tag1;
+                }
+                
+            }else if (nums1[tag1] > nums2[tag2] && tag2 < length2) {
+                sums.push_back(nums2[tag2]);
+                if (tag2 < length2) {
+                    ++tag2;
+                }
+            }else {
+                
+                if (tag2 < length2) {
+                    //之所以要加一个判断，防止即使数组越界仍然可以添加元素，那结果就不对了
+                    sums.push_back(nums2[tag2]);
+                    ++tag2;
+                }
+                if (tag1 < length1) {
+                    sums.push_back(nums1[tag1]);
+                    ++tag1;
+                }
+            }
+        }
+        
+        int sumLength = sums.size();
+        if(sumLength % 2 == 0) {
+            int middle = length2 / 2;
+            
+            return  nums1[middle];
+            
+        }else {
+            int middle = sumLength / 2;
+            double a = (sums[middle] + sums[middle+1])/2.0;
+            
+            return a;
+        }
+    }
+    
+    
+    
+    return  0.0;
+}
+
+
+
+int main(int argc, const char * argv[]) {
+    
+    vector<int> nums1 = {1,3}, nums2 = {2};
+    //    vector<int> nums1 = {0,0}, nums2 = {0,0};
+    //    vector<int> nums1 = {}, nums2 = {};
+    //    vector<int> nums1 = {1}, nums2 = {};
+    //    vector<int> nums1 = {2}, nums2 = {};
+    
+    
+    
+    double c = findMedianSortedArrays("寻找两个正序数组的中位数", nums1, nums2);
+    printf("中位数为： %f", c);
+}
+
+```
+
+打印：
+
+```
+=================寻找两个正序数组的中位数=================
+中位数为： 2.500000
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
