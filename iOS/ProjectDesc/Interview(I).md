@@ -225,7 +225,7 @@ IAP支付的过程：
 <br/>
 <br/>
 
-> <h2 id="热更新">[热更新](https://juejin.cn/post/6844904144411574285)</h2>
+>## <h2 id="热更新">[热更新](https://juejin.cn/post/6844904144411574285)</h2>
 
 
 <br/>
@@ -1251,7 +1251,7 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 <br/>
 
 
-> <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
+>## <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
 
 ![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc3.png)
 
@@ -1261,6 +1261,43 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 &emsp; Apple 官方的《WWDC Optimizing App Startup Time》 将 iOS 应用的启动可分为 pre-main 阶段和 main 两个阶段，最佳的启动速度是400ms以内，最慢不得大于20s，否则会被系统进程杀死（最低配置设备）。
 
 &emsp; 为了更好的区分，笔者将整个启动流程分为三个阶段， **App总启动流程 = pre-main + main函数代理（didFinishLaunchingWithOptions）+ 首屏渲染（viewDidAppear），后两个阶段都属于 main函数  执行阶段**。
+
+
+<br/>
+
+[**APP的启动流程:**](https://www.jianshu.com/p/229dd6190b95)
+
+```
+1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
+
+2.创建沙盒(iOS8后，每次启动APP都会生成一个新的沙盒路径)
+
+3.根据Info.plist的配置检查相应权限状态
+
+4.加载Mach-O文件读取dyld路径并运行dyld动态连接器(内核加载了主程序，dyld只会负责动态库的加载)
+	4.1 首先dyld会寻找合适的CPU运行环境
+	4.2 然后加载程序运行所需的依赖库和我们自己写的.h.m文件编译成的.o可执行文件，并对这些库进行链接。
+	4.3 加载所有方法(runtime就是在这个时候被初始化并完成OC的内存布局)
+	4.4 加载C函数
+	4.5 加载category的扩展(此时runtime会对所有类结构进行初始化)
+	4.6 加载C++静态函数，加载OC+load
+	4.7 最后dyld返回main函数地址，main函数被调用
+```
+
+<br/>
+
+
+**Mach-O文件说明:**
+
+&emsp; Mach-O文件格式是 OS X 与 iOS 系统上的可执行文件格式，类似于windows的 PE 文件。像我们编译产生的.o文件、程序可执行文件和各种库等都是Mach-O文件。
+
+Mach-O文件主要有3部分组成：
+
+1).Header：保存了一些基本信息，包括了该文件运行的平台、文件类型、LoadCommands的个数等等。Headers的主要作用就是帮助系统迅速的定位Mach-O文件的运行环境，文件类型。保存了一些dyld重要的加载参数
+
+2).LoadCommands：可以理解为加载命令，在加载Mach-O文件时会使用这里的数据来确定内存的分布以及相关的加载命令。比如我们的main函数的加载地址，程序所需的dyld的文件路径，以及相关依赖库的文件路径。
+
+3).Data： 每一个segment的具体数据都保存在这里，这里包含了具体的代码、数据等等。
 
 
 
@@ -1404,7 +1441,7 @@ SDWebImage的使用:
 <br/>
 
 
-> <h2 id = "内存优化">[**内存优化**](https://juejin.cn/post/6864492188404088846)</h2>
+>## <h2 id = "内存优化">[**内存优化**](https://juejin.cn/post/6864492188404088846)</h2>
 
 - **内存泄漏**
 	- ARC模式下由于循环引用造成内存泄漏，可以使用**`weak`**和**`unowned`**来避免;
@@ -1461,7 +1498,7 @@ SDWebImage的使用:
 
 
 
-> <h2 id = "包体积优化">[包体积优化](https://juejin.cn/post/6844904169938092045)</h3>
+>## <h2 id = "包体积优化">[包体积优化](https://juejin.cn/post/6844904169938092045)</h3>
 
 <br/>
 
@@ -1892,23 +1929,23 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 <br/>
 
-> <h2 id="MVC和MVVM">[MVC和MVVM](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)</h2>
+>## <h2 id="MVC和MVVM">[MVC和MVVM](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)</h2>
 
 
 <br/>
 <br/>
 
-> <h2 id="单例类">[**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)</h2>
+>## <h2 id="单例类">[**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)</h2>
 
 <br/>
 <br/>
 
-> <h2 id="协议代理">[**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)</h2>
+>## <h2 id="协议代理">[**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)</h2>
 
 <br/>
 <br/>
 
-> <h2 id="KVC和KVO">[**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)</h2>
+>## <h2 id="KVC和KVO">[**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)</h2>
 
 
 
@@ -2117,7 +2154,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 <br/>
 <br/>
 
-> <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h3>
+>### <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h3>
 
 
 - **分两种情况：手动干预释放和系统自动释放**
@@ -2225,6 +2262,11 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 
 
 
+<br/>
+
+提问：Runloop在线程中有哪些用法？
+实例：[看这里](https://www.jianshu.com/p/e29f846d8a97)
+
 
 <br/>
 <br/>
@@ -2236,7 +2278,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 
 <br/>
 
-> <h3 id = "进程和线程之间的关系"> [进程和线程之间的关系](https://juejin.cn/post/6844903939599515655) </h3>
+>### <h3 id = "进程和线程之间的关系"> [进程和线程之间的关系](https://juejin.cn/post/6844903939599515655) </h3>
 
 - **线程定义：**
 	- 线程是进程的基本执行单元，一个进程的所有任务都在线程中执行
@@ -2482,7 +2524,7 @@ ViewController的生命周期方法说明:(详细说明都在代码注释中)
 <br/>
 <br/>
 
-> <h2 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h2>
+>## <h2 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h2>
 
 main()函数调用之前，其实是做了很多准备工作，主要是dyld这个动态链接器在负责，核心流程如下:
 
@@ -2880,6 +2922,8 @@ objc_object::sidetable_retainCount()
 - <h3 id="block原理">block原理</h3>
 [block原理](https://www.jianshu.com/p/00a0747740ba)
 
+[Block原理详解](https://gsl201600.github.io/2020/05/13/iOSblock原理详解/)
+
 
 
 <br/>
@@ -2925,7 +2969,7 @@ objc_object::sidetable_retainCount()
 <br/>
 
 
-> <h2 id="KVO的原理"> [KVO的原理](https://www.jianshu.com/p/e59bb8f59302) </h2>
+>## <h2 id="KVO的原理"> [KVO的原理](https://www.jianshu.com/p/e59bb8f59302) </h2>
 
 - **基本原理：**
 	- 	当观察某对象 A 时，KVO 机制动态创建一个对象A当前类的子类，并为这个新的子类重写了被观察属性 keyPath 的 setter 方法。setter 方法随后负责通知观察对象属性的改变状况。
@@ -3369,7 +3413,7 @@ RunLoop 启动前内部必须要有至少一个 Timer/Observer/Source，所以 A
 
 
 
-> <h2 id="网络性能优化">[**网络性能优化**](https://www.jianshu.com/p/a470ab485e39)</h2>
+>## <h2 id="网络性能优化">[**网络性能优化**](https://www.jianshu.com/p/a470ab485e39)</h2>
 
 
 <br/>
