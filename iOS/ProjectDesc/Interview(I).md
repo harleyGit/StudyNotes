@@ -77,6 +77,7 @@
 - [**类库** ](#类库)
 	- [FishHook](#fishhook) 
 	- [SDWebImage](#SDWebImage)
+	- [AFNetworking](#AFNetworking)
 	- [静态库和动态库](#静态库和动态库)
 		- [库引用错误解析](#库引用错误解析)
 - [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
@@ -3704,7 +3705,8 @@ hook系统函数，一个faceBook写的三方框架
 <br/>
 <br/>
 
-> <h2 id = "RxSwift">[RxSwift](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(I).md)<h2>
+>## <h2 id = "RxSwift">[RxSwift](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(I).md)<h2>
+
 
 
 
@@ -3712,7 +3714,19 @@ hook系统函数，一个faceBook写的三方框架
 <br/>
 <br/>
 
-> <h2 id = "静态库和动态库">[静态库和动态库](https://www.jianshu.com/p/a200b593696b)<h3>
+
+
+>## <h2 id = "AFNetworking">AFNetworking</h2>
+
+[AFNetworking实现原理](https://www.jianshu.com/p/7ef7f818aa95)
+
+
+
+
+<br/>
+<br/>
+
+>## <h2 id = "静态库和动态库">[静态库和动态库](https://www.jianshu.com/p/a200b593696b)<h3>
 
 介绍
 > 静态库：链接时完整地拷贝至可执行文件中，被多次使用就有多份冗余拷贝。利用静态函数库编译成的文件比较大，因为整个 函数库的所有数据都会被整合进目标代码中，他的优点就显而易见了，即编译后的执行程序不需要外部的函数库支持，因为所有使用的函数都已经被编译进去了。当然这也会成为他的缺点，因为如果静态函数库改变了，那么你的程序必须重新编译。
