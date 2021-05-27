@@ -1,3 +1,4 @@
+- [**Swfit开源代码**](https://github.com/apple)
 - [**Swift基础**](#Swift基础)
 	- [道长基础面试题](https://www.jianshu.com/p/07c9c6464f83) 
 	- [Swift的缺省基类](#Swift的缺省基类)
@@ -8,8 +9,12 @@
 	- [路由导航](#路由导航)
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
+	- [什么是写时复制(copy-on-write)](#什么是写时复制(copy-on-write))
 	- [值类型和引用类型区别](#值类型和引用类型区别)
-	- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
+	- [关键字](#关键字)
+		- [final修饰符](#final修饰符)
+		- [@Objc和Dynamic的使用](#@Objc和Dynamic的使用)
+		- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
 - [**数据存储**](#数据存储)
 	- [CoreData](#CoreData) 
 - [**组件化**](#组件化)
@@ -521,13 +526,167 @@ class ViewController: UIViewController {
 
 
 
+<br/>
+<br/>
+
+> <h2 id="什么是写时复制(copy-on-write)">什么是写时复制(copy-on-write)</h2>
+
+&emsp; **有两种传值方式：** 引用类型(Class)和值类型(Struct/Enum)。而值类型有一个copy的操作，它的意思是当你传递一个值类型的变量的时候(给一个变量赋值，或者函数中的参数传值)，它会拷贝一份新的值让你进行传递。你会得到拥有相同内容的两个变量，分别指向两块内存。
+
+&emsp; **问题：** 这样的话，在你频繁操作占用内存比较大的变量的时候就会带来严重的性能问题，Swift 也意识到了这个问题，所以推出了 Copy-on-Write 机制，用来提升性能。
+
+
+**什么是 Copy-on-Write？**
+
+&emsp; 当你有一个占用内存很大的一个值类型，并且不得不将它赋值给另一个变量或者当做函数的参数传递的时候，拷贝它的值是一个非常消耗内存的操作，因为你不得不拷贝它所有的东西放置在另一块内存中。
+
+&emsp; 为了优化这个问题，Swift 对于一些特定的值类型(集合类型：Array、Dictionary、Set)做了一些优化，在`对于 Array 进行拷贝的时候，当传递的值进行改变的时候才会发生真正的拷贝`。而对于`String、Int 等值类型，在赋值的时候就会发生拷贝`。下面来看代码验证一下：
+
+**先看一下基本类型(Int、String等)**
+
+```
+
+var num1 = 10
+var num2 = num1
+print(address(of: &num1)) //0x7ffee0c29828
+print(address(of: &num2)) //0x7ffee0c29820
+
+var str1 = "abc"          
+var str2 = str1
+print(address(of: &str1)) //0x7ffee0c29810
+print(address(of: &str2)) //0x7ffee0c29800
+
+//打印内存地址
+func address(of object: UnsafeRawPointer) -> String {
+    let addr = Int(bitPattern: object)
+    return String(format: "%p", addr)
+}
+
+
+```
+**`从上面的打印我们可以看出基本类型在进行赋值的时候就发生了拷贝操作。`**
+
+
+
+
+<br/>
+
+**在看一下集合类型：**
+
+```
+var arr1 = [1,2,3,4,5]
+var arr2 = arr1
+print(address(of: &arr1)) //0x6000023b06b0
+print(address(of: &arr2)) //0x6000023b06b0
+
+arr2[2] = 4
+print(address(of: &arr1)) //0x6000023b06b0
+print(address(of: &arr2)) //0x6000023b11f0
+
+
+
+```
+
+**`从上面代码我们可以看出，当arr1赋值给arr2时并没有发生拷贝操作，当arr2的值改变的时候才发生了拷贝操作`**
+
+
+<br/>
+
+**原理：**
+&emsp; 使用class，这是一个引用类型，因为当我们将引用类型分配给另一个时，两个变量将共享同一个实例，而不是像值类型一样复制它。
+
+```
+final class Ref<T> {
+    var value: T
+    init(value: T) {
+        self.value = value
+    }
+}
+```
+
+创建一个struct包装Ref：
+
+```
+struct Box<T> {
+    private var ref: Ref<T>
+    init(value: T) {
+        ref = Ref(value: value)
+    }
+ 
+    var value: T {
+        get { return ref.value }
+        set {
+            guard isKnownUniquelyReferenced(&ref) else {
+                ref = Ref(value: newValue)
+                return
+            }
+            ref.value = newValue
+        }
+    }
+}
+
+
+```
+
+
+由于struct是一个值类型，当我们将它分配给另一个变量时，它的值被复制，而属性ref的实例仍由两个副本共享，因为它是一个引用类型。
+
+然后，我们第一次更改两个Box变量的值时，我们创建了一个新的ref实例，这要归功于
+
+```
+guard isKnownUniquelyReferenced(&ref) else {
+    ref = Ref(value: newValue)
+    return
+}
+```
+
+两个Box变量不再共享相同的ref实例。
+
+>为了提供高效的写时复制特性，我们需要知道一个对象是否是唯一的。如果它是唯一引用，那么我们就可以直接原地修改对象。否则，我们需要在修改前创 建对象的复制。在 Swift 中，我们可以使用 isKnownUniquelyReferenced 函数来检查某个引 用只有一个持有者。如果你将一个 Swift 类的实例传递给这个函数，并且没有其他变量强引用 这个对象的话，函数将返回 true。如果还有其他的强引用，则返回 false。不过，对于 Objective-C 的类，它会直接返回 false。
+
+
+
+<br/>
+
+
+- **总结：**
+	- Copy-on-Write 是一种用来优化占用内存大的值类型的拷贝操作的机制。
+	- 对于 Int、String 等基本类型的值类型，它们在赋值的时候就会发生拷贝，它们没有 Copy-on-Write 这一特性（因为Copy-on-Write带来的开销往往比直接复制的开销要大）。
+	- 对于 Array、Dictionary、Se t类型，当它们赋值的时候不会发生拷贝，只有在修改的之后才会发生拷贝，即 Copy-on-Write。
+	- 对于自定义的结构体，不支持 Copy-on-Write。
+
+
+提问：为什么自定义struct不支持 Copy-on-Write？
+
+但是我们可以这样做：
+
+```
+struct User {
+    var identifier = 1
+}
+
+
+//使用
+let user = User()
+ 
+let box = Box(value: user)
+// box2 shares instance of box.ref
+var box2 = box                   
+box2.value.identifier = 2 
+```
+
+
+
+
 
 <br/>
 <br/>
 
-> <h2 id="值类型和引用类型区别">值类型和引用类型区别</h2>
+>## <h2 id="值类型和引用类型区别">[值类型和引用类型区别](https://juejin.cn/post/6844904000794394637)</h2>
 
-[值类型和引用类型区别](https://juejin.cn/post/6844904000794394637)
+[值类型和引用类型](https://www.cnblogs.com/luoxiaofu/p/8528383.html)
+
+
 
 - **存储区别：**
 	- 值类型存储在栈区。 每个值类型变量都有其自己的数据副本，并且对一个变量的操作不会影响另一个变量。
@@ -544,7 +703,79 @@ class ViewController: UIViewController {
 <br/>
 
 
-> <h2 id="Swfit中的@Objc和dynamic的原理">Swfit中的@Objc和dynamic的原理</h2>
+> <h2 id="关键字">关键字</h2>
+
+<br/>
+
+> <h3 id="final修饰符">final修饰符</h3>
+
+- **使用final规则：**
+	- final修饰符只能修饰类，表明该类不能被其他类继承，也就是它没资格当父类；
+	- final修饰符也可以修饰类中的属性、方法和下标，但前提是该类并没有被final修饰过；
+	- final不能修饰结构体和枚举；
+	- 结构体和枚举只能遵循协议（protocol）。虽然协议也可以遵循其他协议，但是它并不能重写遵循的协议的任何成员，这就是结构体和枚举不需要final修饰的原因。
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="@Objc和Dynamic的使用">@Objc和Dynamic的使用</h2>
+
+
+&emsp; **Objective-C** 和 **Swift** 在底层使用的是两套完全不同的机制:
+
+- Cocoa 中的 Objective-C 对象是基于运行时的，它从骨子里遵循了 KVC (Key-Value Coding，通过类似字典的方式存储对象信息) 以及动态派发 (Dynamic Dispatch，在运行调用时再决定实际调用的具体实现)。
+- Swift 为了追求性能，如果没有特殊需要的话，是不会在运行时再来决定这些的。也就是说，Swift 类型的成员或者方法在编译时就已经决定，而运行时便不再需要经过一次查找，而可以直接使用。
+
+**问题是:** 如果我们要使用 Objective-C 的代码或者特性来调用纯 Swift 的类型时候，我们会因为找不到所需要的这些运行时信息而导致失败,怎么办？
+
+1）.在 Swift 类型文件中，我们可以将需要暴露给 Objective-C 使用的任何地方 (包括类，属性和方法等) 的声明前面加上@objc修饰符。(注意这个步骤只需要对那些不是继承自NSObject的类型进行，如果你用 Swift 写的 class 是继承自NSObject的话，Swift 会默认自动为所有的非 private 的类和成员加上@objc。)
+
+2）.@objc修饰符的另一个作用是为 Objective-C 侧重新声明方法或者变量的名字。虽然绝大部分时候自动转换的方法名已经足够好用 (比如会将 Swift 中类似init(name: String)的方法转换成-initWithName:(NSString *)name这样)，但是有时候我们还是期望 Objective-C 里使用和 Swift 中不一样的方法名或者类的名字;
+
+3）.在[**Selector**](https://swifter.tips/selector/)一节中所提到的，即使是NSObject的子类，Swift 也不会在被标记为private的方法或成员上自动加@objc，以保证尽量不使用动态派发来提高代码执行效率。
+
+4）.如果我们确定使用这些内容的动态特性的话，我们需要手动给它们加上@objc修饰.
+
+但是需要注意的是，添加@objc修饰符并不意味着这个方法或者属性会变成动态派发，Swift 依然可能会将其优化为静态调用。
+
+**一定要用dynamic情况：** 如果你需要和 Objective-C 里动态调用时相同的运行时特性的话，你需要使用的修饰符是dynamic。
+
+5）.一般情况下在做 app 开发时应该用不上，但是在施展一些像动态替换方法或者运行时再决定实现这样的 "黑魔法" 的时候，我们就需要用到dynamic修饰符了。
+
+
+
+<br/>
+
+- **Dynamic**
+
+	- Swift中也有dynamic关键字，它可以用于修饰变量或函数，它的意思也与OC完全不同。它告诉编译器使用动态分发而不是静态分发。OC区别于其他语言的一个特点在于它的动态性，任何方法调用实际上都是消息分发，而Swift则尽可能做到静态分发。
+
+	- 因此，标记为dynamic的变量/函数会隐式的加上@objc关键字，它会使用OC的runtime机制。
+
+	- 虽然静态分发在效率上可能更好，不过一些app分析统计的库需要依赖动态分发的特性，动态的添加一些统计代码，这一点在Swift的静态分发机制下很难完成。这种情况下，虽然使用dynamic关键字会牺牲因为使用静态分发而获得的一些性能优化，但也依然是值得的。
+
+	- 使用动态分发，您可以更好的与OC中runtime的一些特性（如CoreData，KVC/KVO）进行交互，不过如果您不能确定变量或函数会被动态的修改、添加或使用了Method-Swizzle，那么就不应该使用dynamic关键字，否则有可能程序崩溃。
+
+
+
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id="Swfit中的@Objc和dynamic的原理">Swfit中的@Objc和dynamic的原理</h3>
+
 [<br/>](https://gpake.github.io/2019/02/11/swiftMethodDispatchBrief/)
 
 &emsp; 这个问题涉及到**Swift派发原理
