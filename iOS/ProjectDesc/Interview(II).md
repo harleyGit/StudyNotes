@@ -1,3 +1,4 @@
+> <h2 id=""></h2>
 - [**Swfit开源代码**](https://github.com/apple)
 - [**Swift基础**](#Swift基础)
 	- [道长基础面试题](https://www.jianshu.com/p/07c9c6464f83) 
@@ -13,18 +14,24 @@
 	- [值类型和引用类型区别](#值类型和引用类型区别)
 	- [关键字](#关键字)
 		- [final修饰符](#final修饰符)
-		- [@Objc和Dynamic的使用](#@Objc和Dynamic的使用)
+		- [@Objc和Dynamic的使用(Storehub)](#@Objc和Dynamic的使用)
 		- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
+- [**常用类库**](#常用类库)
+	- [ObjectMapper](#ObjectMapper)
+	- [SwiftJSON](#SwiftJSON)
 - [**数据存储**](#数据存储)
 	- [CoreData](#CoreData) 
 - [**组件化**](#组件化)
 	- [路由导航](#路由导航)
 - [**安全**](#安全)
-
 	- [MD5](#MD5)
 	- [防止反编译](#防止反编译)
 - [**多线程**](#多线程)
 	- [GCD控制线程数量](#GCD控制线程数量) 
+	- [线程锁](#线程锁)
+- [**底层**](#底层)
+	-  Swift动态性 
+
 
 
 <br/>
@@ -724,6 +731,18 @@ box2.value.identifier = 2
 
 > <h2 id="@Objc和Dynamic的使用">@Objc和Dynamic的使用</h2>
 
+[Swift动态性](https://juejin.cn/post/6888989886280368141)
+
+
+&emsp; Swift Runtime system主要包括动态类型转换，泛型实例化和协议一致性注册，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
+
+&emsp; Swift中的方法派发分为静态派发和动态派发，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+
+&emsp; 由于Swift为了性能，牺牲了它的动态性，使得我们在Swift层面上能做的事情很少。不过，由于Swift的类分为两种: 继承自NSObject的类以及默认继承自SwiftObject的类，既然Swift中有继承自NSObject的派生类，那么也就意味着OC的动态性也能在Swift里面应用
+
+
+
+
 
 &emsp; **Objective-C** 和 **Swift** 在底层使用的是两套完全不同的机制:
 
@@ -778,7 +797,7 @@ box2.value.identifier = 2
 
 [<br/>](https://gpake.github.io/2019/02/11/swiftMethodDispatchBrief/)
 
-&emsp; 这个问题涉及到**Swift派发原理
+&emsp; 这个问题涉及到**Swift派发原理**
 
 - **类类型(Class Type)**
 
@@ -949,6 +968,191 @@ Call 调用，指的是**语言在高级层面**，指示一个函数进行相�
 
 
 **派发效率从高到低为： 直接派发 > Table 派发 > Message 派发**
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="常用类库">常用类库</h1>
+<br/>
+
+> <h2 id="ObjectMapper">ObjectMapper</h2>
+
+使用ObjectMapper的时候，我们一定要实现Mappable协议。这个协议里又有两个要实现的方法：
+
+```
+init?(map: Map)
+mutating func mapping(map: Map)
+```
+
+流程解析如下：
+
+```
+//其对应的JSON如下：
+let json = """
+{
+"mathematics": "excellent",
+"physics": "bad",
+"chemistry": "fine"
+}
+
+
+
+//使用的时候，只用如下:
+struct Ability: Mappable {
+	var mathematics: String?
+	var physics: String?
+	var chemistry: String?
+
+	init?(map: Map) {
+
+	}
+
+	mutating func mapping(map: Map) {
+		mathematics <- map["mathematics"]
+		physics <- map["physics"]
+		chemistry <- map["chemistry"]
+	}
+}
+
+
+
+//然后将这段json解析为Ability的Model, 即:
+let ability = Mapper<Ability>().map(JSONString: json)
+```
+
+那么 **'<-'** 这么奇怪的符号，它又是啥意思呢？
+
+去看源码，发现这个符号是这个库自定义的一个操作符，在Operators.swift里如下：
+
+```
+infix operator <-
+
+/// Object of Basic type
+public func <- <T>(left: inout T, right: Map) {
+	switch right.mappingType {
+	case .fromJSON where right.isKeyPresent:
+		FromJSON.basicType(&left, object: right.value())
+	case .toJSON:
+		left >>> right
+	default: ()
+	}
+}
+
+```
+
+然后根据不同的泛型类型，这个操作符会进行不同的处理。
+
+接着，我们再看一下map方法。
+
+map方法存在于Mapper类中, 定义如下:
+
+```
+
+ func map(JSONString: String) -> M? {
+	if let JSON = Mapper.parseJSONString(JSONString: JSONString) as? [String: Any] {
+  		return map(JSON: JSON)
+	}
+	return nil
+}
+
+func map(JSON: [String: Any]) -> M? {
+	let map = Map(JSON: JSON)
+	if let klass = M.self as? Mappable.Type {
+  	if var obj = klass.init(map: map) as? M {
+    	obj.mapping(map: map)
+    	return obj
+  		}
+	}
+	return nil
+}
+
+```
+
+可以看到，在map的方法中，我们最后会调用Mappable协议中定义的mapping方法，来对json数据做出转化。
+
+最后再看一下Map这个类，这个类主要用来处理找到key所对应的value。处理方式如下:
+
+
+```
+private func valueFor(_ keyPathComponents: ArraySlice<String>, dict: [String: Any]) -> (Bool, Any?) {
+	guard !keyPathComponents.isEmpty else { return (false, nil) }
+
+	if let keyPath = keyPathComponents.first {
+  		let obj = dict[keyPath]
+  		if obj is NSNull {
+    		return (true, nil)
+  		} else if keyPathComponents.count > 1, let d = obj as? [String: Any] {
+    		let tail = keyPathComponents.dropFirst()
+    		return valueFor(tail, dict: d)
+  		} else if keyPathComponents.count > 1, let arr = obj as? [Any] {
+    		let tail = keyPathComponents.dropFirst()
+    		return valueFor(tail, array: arr)
+  		} else {
+    		return (obj != nil, obj)
+  		}
+	}
+
+	return (false, nil)
+}
+
+private func valueFor(_ keyPathComponents: ArraySlice<String>, array: [Any]) -> (Bool, Any?) {
+	guard !keyPathComponents.isEmpty else { return (false, nil) }
+
+	if let keyPath = keyPathComponents.first, let index = Int(keyPath), index >= 0 && index < array.count {
+  		let obj = array[index]
+  		if obj is NSNull {
+    		return (true, nil)
+  		} else if keyPathComponents.count > 1, let dict = obj as? [String: Any] {
+    		let tail = keyPathComponents.dropFirst()
+    		return valueFor(tail, dict: dict)
+  		} else if keyPathComponents.count > 1, let arr = obj as? [Any] {
+    		let tail = keyPathComponents.dropFirst()
+    		return valueFor(tail, array: arr)
+  		} else {
+    		return (true, obj)
+  		}
+	}
+
+	return (false, nil)
+}
+```
+
+
+其中在处理分隔符上，采用的是递归调用的方式，不过就我们目前项目中，还没有用到过。
+
+上述这几个步骤，就是ObjectMapper的核心方法。我也根据这些步骤，自己实现了一个解析的库。
+
+但是这个只能解析一些最简单的类型，其他的像enum之类的，还需要做一些自定义的转化。主要的数据转化都在Operators文件夹中。
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id="SwiftyJSON">SwiftyJSON</h2>
+
+
+构造器
+
+SwiftyJSON对外暴露的主要的构造器:
+
+
+```
+public init(data: Data, options opt: JSONSerialization.ReadingOptions = []) throws
+public init(_ object: Any)
+public init(parseJSON jsonString: String)
+```
+
+
 
 
 
@@ -1318,6 +1522,91 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
     NSLog(@"%@ 执行任务结束",[NSThread currentThread]);
 }
 ```
+
+
+<br/>
+<br/>
+
+>## <h2 id="线程锁">[线程锁](https://www.jianshu.com/p/256f555cf7b5)</h2>
+
+线程锁的种类：
+
+```
+ iOS中的常用的锁有如下几种：
+ 1、自旋锁：
+    使用与多线程同步的一种锁，线程反复检查锁变量是否可用。由于线程在这一过程中保持执行，因此是一种忙等待。一旦获取了自旋锁，线程会一直保持该锁，直到显示释放自旋锁。自旋锁避免了进程上下文的调度开销，因此对于线程只会阻塞很短时间的场合是有效的。NSSpinLock ,它现在被废弃了，不能使用了，它是有缺陷的，会造成死锁
+ 2、互斥锁
+    是一种用于多线程编程中，防止两条线程同时对同一公共资源（例如：同一个全局变量）进行读写的机制。互相排斥。例如线程A获取到锁，在释放锁之前，其他线程都获取不到锁。互斥锁也分为两种：递归锁和非递归锁。互斥锁是通过将代码切片成一个一个的临时区来实现。p_thread_mutex,NSLock,@synchronized这个顺序是按照性能排序的，也是我们常用的几个互斥锁。
+ 3、读写锁：
+    计算机程序的并发控制的一种同步机制，也称“共享 - 互斥锁”、多个读者，单个作者（写入）的锁机制。用于解决多线程对公共资源读写问题，读操作可并发重入，写操作时互斥的。读写锁通常用互斥锁、条件变量、信号量实现。
+ 4、信号量：
+    是一种更高级的同步机制，有更多的取值空间。用来实现更加复杂的同步，而不单单是线程间互斥。semphone在一定程度也可以当互斥锁用，它适用于编程逻辑更复杂的场景，同时它也是除了自旋锁以外性能最高的锁
+ 5、条件锁：
+    就是条件变量，当进程的某些资源要求不满足时就锁住进入休眠。当资源被分配到了，条件锁打开继续运行。NSCondition,条件锁我们调用wait方法就把当前线程进入等待状态，当调用了signal方法就可以让该线程继续执行，也可以调用broadcast广播方法。
+
+ 临时区：
+    指的是一块对公共资源进行访问的代码，并非一种机制或是算法。
+```
+
+- **iOS开发中常用的锁有如下几种：**
+	- @synchronized
+	- NSLock 非递归互斥锁
+	- NSRecursiveLock 递归锁
+	- NSConditionLock 条件锁
+	- pthread_mutex 互斥锁（C语言）
+	- dispatch_semaphore 信号量实现加锁（GCD）
+	- OSSpinLock （暂不建议使用，原因参见这里）
+
+
+<br/>
+
+- **自旋锁和互斥锁的一些问题**
+	- 互斥锁
+		- 互斥锁又分 递归锁(NSRecursiveLock 等) 和 非递归锁(NSLock 等)。
+		- 递归锁：可重入锁，统一线程在锁释放前可再次获取锁，即可以递归调用
+		- 非递归锁：不可重入，必须等锁释放后才能再次获取锁。
+
+	- 自旋锁和互斥锁的区别？
+		- 互斥锁：当线程获取锁但没有获取到时，线程进入休眠状态。等到锁被释放，线程会被唤醒同时获取到锁。继续执行任务改变线程状态。
+		- 自旋锁：当线程获取锁没有获取到时，不会进入休眠，而是一直循环看是否可用。线程一直处于活跃状态，不会改变线程状态。
+
+	- 自旋锁和互斥锁的使用场景分别是？
+		- 自旋锁：由于自旋锁一直等待会消耗较多CPU 资源，但是效率较高一旦锁释放立刻就能执行无序唤醒。所以适用于短时间内的轻量级锁定。
+		- 互斥锁：需要修改线程状态，唤醒或休眠线程。所以适用于时间长相对自旋锁效率低的场景。
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="底层">底层</h2>
+
+<br/>
+
+> <h2 id="Swift动态性">Swift动态性</h2>
+
+- **Swift Runtime**
+	- **Swift Runtime system**主要包括动态类型转换，泛型实例化和协议一致性注册，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
+	- Swift中的方法派发分为[静态派发和动态派发](https://www.jianshu.com/p/e0659093eaac)，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+	- 由于Swift为了性能，牺牲了它的动态性，使得我们在Swift层面上能做的事情很少。不过，由于Swift的类分为两种: 继承自NSObject的类以及默认继承自SwiftObject的类，既然Swift中有继承自NSObject的派生类，那么也就意味着OC的动态性也能在Swift里面应用
+
+
+
+<br/>
+
+
+- **OC Runtime**
+	- 在Swift中，继承自NSObject的类都保留了其动态性，所以我们可以通过OC runtime获取到其方法，所以，也可以通过这个方式对Swift代码进行hook。
+	- 从OC的运行时特性可知，所有的运行时方法都依赖TypeEncoding，也就是method_getTypeEncoding返回的结果，他指定了方法的参数类型以及在函数调用时参数入栈所要的内存空间，没有这个标识就无法动态的压入参数，而一些Swift特有的类型无法映射到OC的类型,也无法用OC的typeEncoding表示，就没法通过runtime获取;
+	- 除了继承自NSObject的类之外，继承自SwiftObject类也能开启其动态性，其开启方式是**在属性或方法前加上@objc和dynamic。@objc是用来将Swift的API导出给Objective-C和Objective-C runtime使用的，如果你的类继承自Objective-c的类（如NSObject）将会自动被编译器插入@objc标识。加了@objc标识的方法、属性无法保证都会被运行时调用，因为Swift会做静态优化。要想完全被动态调用，必须使用dynamic修饰。使用dynamic修饰将会隐式的加上@objc标识。**
+
+
+
+
+
 
 
 

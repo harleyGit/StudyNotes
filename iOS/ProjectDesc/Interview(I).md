@@ -16,6 +16,7 @@
 	- [load和initialize区别](#load和initialize区别)
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
+	- [数据本地持久化](#数据本地持久化)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -466,8 +467,50 @@ atomic表示，我TM也很冤啊！！！！
 
 
 <br/>
+<br/>
 
 
+>## <h2 id = "数据本地持久化">[数据本地持久化](https://www.jianshu.com/p/d1c621631f7e)</h2>
+
+- plist文件（序列化）
+	- 可以被序列化的类型
+
+	```
+	NSArray;  //数组
+	NSMutableArray;  //可变数组
+	NSDictionary;  //字典
+	NSMutableDictionary;  //可变字典
+	NSData;  //二进制数据
+	NSMutableData;  //可变二进制数据
+	NSString;  //字符串
+	NSMutableString;  //可变字符串
+	NSNumber;  //基本数据
+	NSDate;  //日期
+	```
+- preference（偏好设置）
+	- 使用NSUserDefaults保存程序的配置信息
+- NSKeyedArchiver（归档）
+	- 要使用归档，其归档对象必须实现NSCoding协议
+
+	```
+	NSCoding协议声明的两个方法都必须实现。
+	encodeWithCoder：用来说明如何将对象编码到归档中。
+	initWithCoder：用来说明如何进行解档来获取一个新对象。
+	```
+
+- SQLite3
+- FMDB
+	- 介绍： FMDB是一种第三方的开源库，FMDB就是对SQLite的API进行了封装，加上了面向对象的思想，让我们不必使用繁琐的C语言API函数，比起直接操作SQLite更加方便。
+	- 主要是使用以下三个类：
+
+	```
+	FMDatabase ： 一个单一的SQLite数据库，用于执行SQL语句。
+	FMResultSet ：执行查询一个FMDatabase结果集。
+	FMDatabaseQueue ：在多个线程来执行查询和更新时会使用这个类。
+	
+	```
+
+- CoreData
 
 
 
@@ -3029,6 +3072,53 @@ KVO 为子类的观察者属性重写调用存取方法的工作原理在代码�
 ```
 
 
+
+
+<br/>
+storehub提问：NSNotification的class方法指向谁？
+
+错误答案：指向了**NSKVONotifying_MyKVOModel**，这说明你根本就没有理解class方法如何使用的。
+
+```
+#import <objc/message.h>
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 初始化待观察类对象
+    self.myObject2 = [[MyKVOModel alloc]init];
+    self.myObject2.num = 2;
+    
+    [self.myObject2 addObserver:self
+                       forKeyPath:@"num"
+                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
+                          context:nil];
+                          
+    NSLog(@"%@", [self.myObject2 class]);
+	//[obj class]返回类对象本身
+	NSLog(@"---->>>2: %@", [self.myObject2 class]);
+	
+	//object_getClass(obj)返回类对象中的isa指向的元类对象，即指向元类对象
+	NSLog(@"---->>>3: %s", object_getClassName(self.myObject2));
+	NSLog(@"---->>>4: %@", object_getClass(self.myObject2));
+}
+
+```
+
+打印结果：
+
+```
+2021-05-27 12:31:41.461998+0800 KVO演示[5668:218909] MyKVOModel
+2021-05-27 12:31:43.766168+0800 KVO演示[5668:218909] ---->>>2: MyKVOModel
+2021-05-27 12:31:49.794671+0800 KVO演示[5668:218909] ---->>>3: NSKVONotifying_MyKVOModel
+2021-05-27 12:31:50.925324+0800 KVO演示[5668:218909] ---->>>4: NSKVONotifying_MyKVOModel
+
+```
+
+
+
+
 <br/>
 <br/>
 
@@ -3146,6 +3236,13 @@ struct objc_super {
 
 >## <h2 id="isa指针包含了什么">[isa指针包含了什么](https://juejin.cn/post/6844904134286524429#heading-2)</h2>
 
+在控制台输出obj的数据结构，排在第一位的就是isa的地址。
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd14.jpeg)
+
+&emsp; 若对象继承自NSObject，NSObject在底层的实现是结构体objc_object，里面只有一个isa成员变量，那么对象的首地址指向的第一块就是isa所在。
+
+
 从源码里面看isa是Class类型：
 
 ```
@@ -3209,8 +3306,107 @@ struct objc_class : objc_object {
 ```
 
 
+<br/>
+
+**isa结构**
+
+从上面的代码看，还是看不出isa的结构，但是看过 [**iOS alloc & init 方法解析**](https://juejin.cn/post/6844904133074370573) 的朋友应该有印象，在alloc方法里面会调用一个叫initIsa()的方法，那么是不是可以在这个方法中找到isa的真正结构呢？
+
+在runtime的源码文件**objc-object.h**,可以看到这个C++方法：**objc_object::initIsa**
+
+![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd15.png)
+
+点击isa_t,发现其是个联合体，接下来看**ISA_BITFIELD**
 
 
+```
+#include "isa.h"
+
+union isa_t {
+    isa_t() { }
+    isa_t(uintptr_t value) : bits(value) { }
+
+    Class cls;
+    uintptr_t bits;
+#if defined(ISA_BITFIELD)
+    struct {
+        ISA_BITFIELD;  // defined in isa.h
+    };
+#endif
+};
+```
+
+
+点击 ISA_BITFIELD可以看到其宏定义内容：
+
+```
+#if SUPPORT_PACKED_ISA
+
+    // extra_rc must be the MSB-most field (so it matches carry/overflow flags)
+    // nonpointer must be the LSB (fixme or get rid of it)
+    // shiftcls must occupy the same bits that a real class pointer would
+    // bits + RC_ONE is equivalent to extra_rc + 1
+    // RC_HALF is the high bit of extra_rc (i.e. half of its range)
+
+    // future expansion:
+    // uintptr_t fast_rr : 1;     // no r/r overrides
+    // uintptr_t lock : 2;        // lock for atomic property, @synch
+    // uintptr_t extraBytes : 1;  // allocated with extra bytes
+
+# if __arm64__
+#   define ISA_MASK        0x0000000ffffffff8ULL
+#   define ISA_MAGIC_MASK  0x000003f000000001ULL
+#   define ISA_MAGIC_VALUE 0x000001a000000001ULL
+#   define ISA_BITFIELD                                                      \
+      uintptr_t nonpointer        : 1;                                       \
+      uintptr_t has_assoc         : 1;                                       \
+      uintptr_t has_cxx_dtor      : 1;                                       \
+      uintptr_t shiftcls          : 33; /*MACH_VM_MAX_ADDRESS 0x1000000000*/ \
+      uintptr_t magic             : 6;                                       \
+      uintptr_t weakly_referenced : 1;                                       \
+      uintptr_t deallocating      : 1;                                       \
+      uintptr_t has_sidetable_rc  : 1;                                       \
+      uintptr_t extra_rc          : 19
+#   define RC_ONE   (1ULL<<45)
+#   define RC_HALF  (1ULL<<18)
+
+# elif __x86_64__
+#   define ISA_MASK        0x00007ffffffffff8ULL
+#   define ISA_MAGIC_MASK  0x001f800000000001ULL
+#   define ISA_MAGIC_VALUE 0x001d800000000001ULL
+#   define ISA_BITFIELD                                                        \
+      uintptr_t nonpointer        : 1;                                         \
+      uintptr_t has_assoc         : 1;                                         \
+      uintptr_t has_cxx_dtor      : 1;                                         \
+      uintptr_t shiftcls          : 44; /*MACH_VM_MAX_ADDRESS 0x7fffffe00000*/ \
+      uintptr_t magic             : 6;                                         \
+      uintptr_t weakly_referenced : 1;                                         \
+      uintptr_t deallocating      : 1;                                         \
+      uintptr_t has_sidetable_rc  : 1;                                         \
+      uintptr_t extra_rc          : 8
+#   define RC_ONE   (1ULL<<56)
+#   define RC_HALF  (1ULL<<7)
+
+# else
+#   error unknown architecture for packed isa
+# endif
+
+// SUPPORT_PACKED_ISA
+#endif
+
+```
+
+| 参数名 | 作用 | 大小 | 所在位置 |
+|:--|:--|:--|:--|
+| nonpointer | 是否对isa指针开启指针优化 0：纯isa指针只包含类对象地址  1：isa中包含了类对象地址、类信息、对象的引用计数等 | 1 | 0 |
+| has_assoc | 是否有关联对象 0：没有 1：存在 | 1 | 1 |
+| has_cxx_dtor | 该对象是否有C++或者Objc的析构器 如果有析构函数则需要做析构逻辑 如果没有则可以更快的释放对象 | 1 | 2 |
+| shiftcls | 存储类指针的值。开启指针优化的情况下，在arm64架构中有 33 位用来存储类指针 | 33 | 3 ~ 35 |
+| magic | 用于调试器判断当前对象是真的对象还是没有初始化的空间 | 5 | 36 ~ 40 |
+| weakly_referenced | 是否有弱引用 0：没有1：存在 | 1 | 41 |
+| deallocating | 是否正在释放内存 0：不是 1：是 | 1 | 42 |
+| has_sidetable_rc | 是否需要用到外挂引用计数，当对象引用技术大于 10 则需要借用该变量存储进位 | 1 | 43 |
+| extra_rc | 该对象的引用计数值，实际上是引用计数值减 1。 如果对象的引用计数为10，那么 extra_rc 为 9。如果引用计数大于 10 则需要使用 has_sidetable_rc | 19 | 44 ~ 63 |
 
 <br/>
 <br/>
