@@ -16,6 +16,20 @@
 		- [final修饰符](#final修饰符)
 		- [@Objc和Dynamic的使用(Storehub)](#@Objc和Dynamic的使用)
 		- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
+	- [语法基础](#语法基础)
+		- [只能被类遵守的protocol](#只能被类遵守的protocol)
+		- [defer 使用场景](#defer使用场景)
+		- [数组索引越界会Crash,字典取不到为nil](#数组索引越界会Crash,字典取不到为nil)
+		- [Self的使用场景](#Self的使用场景)
+		- [throws和rethrows的用法与作用](#throws和rethrows的用法与作用)
+		- [值类型和引用类型在什么时候使用](#值类型和引用类型在什么时候使用)
+		- [协议的动态](#协议的动态)
+		- [Swift和OC常量区别](#Swift和OC常量区别)
+		- [autoclosure的作用](#autoclosure的作用)
+		- [编译选择whole module optmization优化了什么](#编译选择wholemoduleoptmization优化了什么)
+		- [mutaing 的作用](#mutaing的作用)
+		- [怎么表示函数的参数类型只要是数字](#怎么表示函数的参数类型只要是数字)
+		- [dynamic的作用.](#dynamic的作用)
 - [**常用类库**](#常用类库)
 	- [ObjectMapper](#ObjectMapper)
 	- [SwiftJSON](#SwiftJSON)
@@ -970,6 +984,402 @@ Call 调用，指的是**语言在高级层面**，指示一个函数进行相�
 **派发效率从高到低为： 直接派发 > Table 派发 > Message 派发**
 
 
+
+<br/>
+<br/>
+
+
+> <h2 id="语法基础">语法基础</h2>
+
+<br/>
+
+> <h3 id="只能被类遵守的protocol">只能被类遵守的protocol</h3>
+
+```
+protocol OnlyClassProtocol : class {
+}
+```
+
+
+<br/>
+
+
+> <h3 id="defer使用场景">defer使用场景</h3>
+
+defer 语句块中的代码, 会在当前作用域结束前调用, 常用场景如异常退出后, 关闭数据库连接
+
+
+
+```
+func someQuery() -> ([Result], [Result]){
+    let db = DBOpen("xxx")
+    defer {
+        db.close()
+    }
+    guard results1 = db.query("query1") else {
+        return nil
+    }
+    guard results2 = db.query("query2") else {
+        return nil
+    }
+    return (results1, results2)
+}
+
+```
+
+需要注意的是, 如果有多个 defer, 那么后加入的先执行
+
+
+```
+
+func someDeferFunction() {
+    defer {
+        print("\(#function)-end-1-1")
+        print("\(#function)-end-1-2")
+    }
+    defer {
+        print("\(#function)-end-2-1")
+        print("\(#function)-end-2-2")
+    }
+    if true {
+        defer {
+            print("if defer")
+        }
+        print("if end")
+    }
+    print("function end")
+}
+someDeferFunction()
+// 输出
+// if end
+// if defer
+// function end
+// someDeferFunction()-end-2-1
+// someDeferFunction()-end-2-2
+// someDeferFunction()-end-1-1
+// someDeferFunction()-end-1-2
+```
+
+<br/>
+
+
+> <h3 id="数组索引越界会Crash,字典取不到为nil">数组索引越界会Crash,字典取不到为nil</h3>
+
+- 数组索引本来就是访问一段连续地址,越界访问也能访问到内存，但这段内存不一定可用，所以会引起Crash.
+- 字典的key并没有对应确定的内存地址,所以是安全的.
+
+
+
+
+<br/>
+
+
+> <h3 id="Self的使用场景">Self的使用场景</h3>
+
+Self 通常在协议中使用, 用来表示实现者或者实现者的子类类型.定义一个复制的协议:
+
+```
+protocol CopyProtocol {
+    func copy() -> Self
+}
+```
+
+
+如果是结构体去实现, 要将Self 换为具体的类型:
+
+```
+struct SomeStruct: CopyProtocol {
+    let value: Int
+    func copySelf() -> SomeStruct {
+        return SomeStruct(value: self.value)
+    }
+}
+```
+
+如果是类去实现, 则有点复杂, 需要有一个 required 初始化方法, 具体可以看这里:
+
+
+```
+class SomeCopyableClass: CopyProtocol {
+    func copySelf() -> Self {
+        return type(of: self).init()
+    }
+    required init(){}
+}
+```
+
+
+<br/>
+
+
+> <h3 id="throws和rethrows的用法与作用">throws和rethrows的用法与作用</h3>
+
+throws 用在函数上, 表示这个函数会抛出错误.
+有两种情况会抛出错误, 一种是直接使用 throw 抛出, 另一种是调用其他抛出异常的函数时, 直接使用 try xx 没有处理异常.
+
+```
+enum DivideError: Error {
+    case EqualZeroError;
+}
+func divide(_ a: Double, _ b: Double) throws -> Double {
+    guard b != Double(0) else {
+        throw DivideError.EqualZeroError
+    }
+    return a / b
+}
+func split(pieces: Int) throws -> Double {
+    return try divide(1, Double(pieces))
+}
+```
+
+
+rethrows 与 throws 类似, 不过只适用于参数中有函数, 且函数会抛出异常的情况, rethrows 可以用 throws 替换, 反过来不行
+
+```
+func processNumber(a: Double, b: Double, function: (Double, Double) throws -> Double) rethrows -> Double {
+    return try function(a, b)
+}
+```
+
+<br/>
+
+
+> <h3 id="值类型和引用类型在什么时候使用">值类型和引用类型在什么时候使用</h3>
+
+- **什么时候该用值类型：**
+	- 要用==运算符来比较实例的数据时.
+	- 你希望那个实例的拷贝能保持独立的状态时.
+	- 数据会被多个线程使用时.
+
+- **什么时候该用引用类型（class）：**
+	- 	要用==运算符来比较实例身份的时候.
+	- 	你希望有创建一个共享的、可变对象的时候.
+
+
+```
+let test1 = Test1()
+let test2 = Test1()
+//test1地址：SwiftTest.Test1	0x0000600003a1c300
+//test2地址：SwiftTest.Test1	0x0000600003a1c320
+if test1 === test2 {
+    print("test1 == test2 ")
+}else {
+    print("test1 != test2 ")
+    
+}
+
+let a1 = "123"
+let a2 = "123"
+
+
+if a1 == a2 {
+    print("a1 == a2 ")
+}else {
+    print("a1 != a2 ")
+    
+}
+```
+
+打印：
+
+```
+test1 != test2 
+a1 == a2 
+```
+
+
+
+
+
+<br/>
+
+
+> <h3 id="">协议的动态</h3>
+
+```
+protocol Pizzeria { 
+  func makePizza(_ ingredients: [String])
+  func makeMargherita()
+} 
+
+extension Pizzeria { 
+  func makeMargherita() { 
+    return makePizza(["tomato", "mozzarella"]) 
+  }
+}
+
+struct Lombardis: Pizzeria { 
+  func makePizza(_ ingredients: [String]) { 
+    print(ingredients)
+  } 
+
+  func makeMargherita() {
+    return makePizza(["tomato", "basil", "mozzarella"]) 
+  }
+}
+
+let lombardis1: Pizzeria  = Lombardis()
+let lombardis2: Lombardis = Lombardis() 
+lombardis1.makeMargherita()
+lombardis2.makeMargherita()
+
+
+//打印
+["tomato", "basil", "mozzarella"]
+["tomato", "basil", "mozzarella"]
+```
+
+分析: 在Lombardis的代码中，重写了makeMargherita的代码，所以永远调用的是Lombardis 中的 makeMargherita.
+
+再进一步，我们把 protocol Pizzeria 中的 func makeMargherita() 删掉，代码变为:
+
+
+
+```
+protocol Pizzeria {
+  func makePizza(_ ingredients: [String])
+}
+
+extension Pizzeria  {
+  func makeMargherita()  {
+    return makePizza(["tomato", "mozzarella"])
+  }
+}
+
+struct Lombardis: Pizzeria  {
+  func makePizza(_ ingredients: [String])  {
+    print(ingredients)
+  }
+  func makeMargherita() {
+    return makePizza(["tomato", "basil", "mozzarella"])
+  }
+}
+let lombardis1: Pizzeria = Lombardis()
+let lombardis2: Lombardis = Lombardis()
+lombardis1.makeMargherita()
+lombardis2.makeMargherita()
+
+* 打印结果:
+["tomato", "mozzarella"]
+["tomato", "basil", "mozzarella"]
+```
+
+因为lombardis1 是 Pizzeria，而 makeMargherita() 有默认实现，这时候我们调用默认实现。
+
+
+
+<br/>
+
+
+> <h3 id="Swift和OC常量区别">Swift和OC常量区别</h3>
+
+OC中定义的常量:
+
+```
+const int number = 0;
+```
+
+
+Swift 是这样定义常量的：
+```
+let number: Int = 0
+```
+
+
+- **区别:**
+	- OC中用 const 来表示常量，而 Swift 中用 let 来判断是不是常量.
+	- OC中 const 表明的常量类型和数值是在 compilation time 时确定的；
+	- Swift 中 let 只是表明常量（只能赋值一次），其类型和值既可以是静态的，也可以是一个动态的计算方法，它们在 runtime 时确定的。
+
+
+
+
+
+<br/>
+
+
+> <h3 id="autoclosure的作用">autoclosure的作用</h3>
+
+自动闭包, 会自动将某一个表达式封装为闭包
+
+```
+func autoClosureFunction(_ closure: @autoclosure () -> Int) {
+   closure()
+}
+autoClosureFunction(1)
+
+```
+
+
+<br/>
+
+
+> <h3 id="编译选择wholemoduleoptmization优化了什么">编译选择 whole module optmization 优化了什么</h3>
+
+编译器可以跨文件优化编译代码, 不局限于一个文件;
+[这里](https://www.jianshu.com/p/8dbf2bb05a1c)
+
+
+<br/>
+
+
+> <h3 id="mutaing的作用">mutaing的作用</h3>
+
+- **作用1：**
+
+```
+struct Person  {
+   var name: String  {
+       mutating get  {
+        return store
+        }
+     }
+} 
+```
+让不可变对象无法访问name 属性;
+
+
+<br/>
+
+
+> <h3 id="怎么表示函数的参数类型只要是数字">函数的参数类型只要是数字（Int、Float）都可以，要怎么表示</h3>
+
+使用泛型
+
+```
+func isNumber<T : SignedNumber>(number : T){
+print(" it is a number")
+}
+```
+
+
+
+<br/>
+
+
+> <h3 id="dynamic的作用">dynamic的作用.</h3>
+
+- **dynamic的作用.**
+
+	- 由于swift是一门静态语言，所以没有Objective-C中的消息发送这些动态机制，dynamic的作用就是让swift代码也能有oc中的动态机制，常用的就是KVO。
+	- 使用dynamic关键字标记属性，使属性启用Objc的动态转发功能；
+	- dynamic只用于类，不能用于结构体和枚举，因为它们没有继承机制，而Objc的动态转发就是根据继承关系来实现转发。
+
+
+
+
+
+<br/>
+
+
+> <h3 id=""></h3>
+
+
+
+<br/>
+
+
+> <h3 id=""></h3>
 
 <br/>
 

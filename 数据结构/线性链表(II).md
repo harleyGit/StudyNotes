@@ -1,7 +1,10 @@
-- **循环链表**
-- **双向链表**
-	- 双向链表的插入
-	- 双向链表的删除
+> <h2 id=""></h2>
+- [**循环链表**](#循环链表)
+- [**双向链表**](#双向链表)
+	- [双向链表的插入](#双向链表的插入)
+	- [双向链表的删除](#双向链表的删除)
+- **上一回顾**：[线性链表(I)](https://www.jianshu.com/p/60c6d1cc5a89)
+
 
 
 
@@ -11,7 +14,9 @@
 ***
 <br/>
 
-># 循环链表
+
+> <h2 id="循环链表">循环链表</h2>
+
 
 ![循环链表示意图](https://upload-images.jianshu.io/upload_images/2959789-2eb248ee9f51dc69.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -438,7 +443,8 @@ Program ended with exit code: 0
 ***
 <br/>
 
-># 双向链表
+
+> <h1 id="双向链表">双向链表</h1>
 
 
 ![双向链表的非空链表和空链表](https://upload-images.jianshu.io/upload_images/2959789-e28b820baa20fcd2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -446,7 +452,7 @@ Program ended with exit code: 0
 
 <br/>
 
-- **双向链表的插入**
+> <h2 id="双向链表的插入">双向链表的插入</h2>
 
 ![双向链表的插入](https://upload-images.jianshu.io/upload_images/2959789-00d156bcd57f5f58.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -454,7 +460,9 @@ Program ended with exit code: 0
 
 <br/>
 
-- **双向链表的删除**
+
+> <h2 id="双向链表的删除">双向链表的删除</h2>
+
 ![双向链表的删除](https://upload-images.jianshu.io/upload_images/2959789-3bd2dbc044214af7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ```
@@ -879,4 +887,3 @@ int main(int argc, const char * argv[]) {
 
 
 
-上一回顾：[线性链表(I)](https://www.jianshu.com/p/60c6d1cc5a89)

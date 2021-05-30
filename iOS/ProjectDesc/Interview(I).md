@@ -2011,7 +2011,8 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 <br/>
 
-> <h2 id = "Runloop">Runloop</h2>
+>## <h2 id = "Runloop">[Runloop](https://www.jianshu.com/p/e29f846d8a97)</h2>
+[Run Loop 原理详解](http://chuquan.me/2018/10/06/understand-ios-runloop/)
 
 <br/>
 
