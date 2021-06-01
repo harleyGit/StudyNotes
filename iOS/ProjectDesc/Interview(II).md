@@ -33,6 +33,8 @@
 - [**常用类库**](#常用类库)
 	- [ObjectMapper](#ObjectMapper)
 	- [SwiftJSON](#SwiftJSON)
+	- [RxSwift](#RxSwift)
+	- [Snapkit](#Snapkit)
 - [**数据存储**](#数据存储)
 	- [CoreData](#CoreData) 
 - [**组件化**](#组件化)
@@ -1548,7 +1550,7 @@ private func valueFor(_ keyPathComponents: ArraySlice<String>, array: [Any]) -> 
 
 
 
-> <h2 id="SwiftyJSON">SwiftyJSON</h2>
+> <h2 id="SwiftJSON">SwiftJSON</h2>
 
 
 构造器
@@ -1561,6 +1563,24 @@ public init(data: Data, options opt: JSONSerialization.ReadingOptions = []) thro
 public init(_ object: Any)
 public init(parseJSON jsonString: String)
 ```
+
+
+
+
+<br/>
+<br/>
+
+>## <h2 id="RxSwift">[RxSwift](https://juejin.cn/post/6844903862571106317#heading-2)</h2>
+
+
+
+
+
+<br/>
+<br/>
+
+>## <h2 id="Snapkit">[Snapkit](https://www.jianshu.com/p/44f3d812839f)</h2>
+
 
 
 

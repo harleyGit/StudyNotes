@@ -5,7 +5,7 @@
 
 ***
 <br/>
-
+> <h2 id=""></h2>
 - [**线上面试控制平台**](https://www.showmebug.com/pads)
 - **[OC基础](#oc基础)**
 	- [UILabel多适应](#UILabel多适应)
@@ -17,6 +17,7 @@
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
 	- [数据本地持久化](#数据本地持久化)
+	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？](#使用copy关键字为什么)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -66,8 +67,9 @@
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 	- [self和super实现的原理](#self和super实现的原理)
-	- [isa指针包含了什么（货拉拉面试）](#isa指针包含了什么)
-	- [weak原理（货拉拉）](#weak原理)
+	- [内存管理](#内存管理)
+		- [isa指针包含了什么（货拉拉面试）](#isa指针包含了什么)
+		- [weak原理（货拉拉）](#weak原理)
 	- [Category属性放在哪(货拉拉)](#Category属性放在哪)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
@@ -514,6 +516,18 @@ atomic表示，我TM也很冤啊！！！！
 
 
 
+<br/>
+<br/>
+
+> <h2 id="使用copy关键字为什么">@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？</h2>
+
+- 当修饰可变类型的属性时，如NSMutableArray、NSMutableDictionary、NSMutableString，用strong。当修饰不可变类型的属性时，如NSArray、NSDictionary、NSString，用copy；
+
+- 用 @property 声明 NSString、NSArray、NSDictionary 经常使用 copy 关键字，是因为他们有对应的可变类型：NSMutableString、NSMutableArray、NSMutableDictionary，他们之间可能进行赋值操作，为确保对象中的字符串值不会无意间变动，应该在设置新属性值时拷贝一份。
+
+
+[参考](https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01)
+[参考2](https://juejin.cn/post/6844903480017043464#heading-3)
 
 
 
@@ -2313,6 +2327,10 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 实例：[看这里](https://www.jianshu.com/p/e29f846d8a97)
 
 
+提问：主线程默认开启Runloop的mode是什么mode？
+主线程的Runloop默认的 RunloopMode 是 NSDefaultRunLoopMode。
+
+
 <br/>
 <br/>
 
@@ -3233,9 +3251,17 @@ struct objc_super {
 <br/>
 <br/>
 
+>## <h2 id="内存管理">[内存管理](https://github.com/harleyGit/StudyNotes/blob/master/底层/内存管理.md)</h2>
 
 
->## <h2 id="isa指针包含了什么">[isa指针包含了什么](https://juejin.cn/post/6844904134286524429#heading-2)</h2>
+
+
+<br/>
+<br/>
+
+
+
+>### <h3 id="isa指针包含了什么">[isa指针包含了什么](https://juejin.cn/post/6844904134286524429#heading-2)</h3>
 
 在控制台输出obj的数据结构，排在第一位的就是isa的地址。
 
@@ -3415,7 +3441,7 @@ union isa_t {
 
 
 
->## <h2 id="weak原理">[weak原理](http://www.cocoachina.com/articles/18962)</h2>
+>### <h3 id="weak原理">[weak原理](http://www.cocoachina.com/articles/18962)</h3>
 
 
 &emsp; **介绍：**Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址数组。更多人的人只是知道weak是弱引用，所引用对象的计数器不会加一，并在引用对象被释放的时候自动被设置为nil，通常用于解决循环引用问题。
