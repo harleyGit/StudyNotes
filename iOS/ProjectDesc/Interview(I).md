@@ -32,6 +32,7 @@
 	- [图片上传](#图片上传)
 	- [界面保持流畅](#界面保持流畅)
 	- [UI卡顿优化](#UI卡顿优化)
+	- [UITableView优化](#UITableView优化)
 	- [内存优化(微盟、货拉拉问到)](#内存优化)
 	- [启动优化(微盟、货拉拉问到)](#启动优化)
 	- 	[包体积优化](#包体积优化)
@@ -1498,6 +1499,201 @@ SDWebImage的使用:
 
 <br/>
 <br/>
+
+
+>## <h2 id = "UITableView优化">UITableView优化</h2>
+
+
+**1）.Cell的重用**
+
+- 如果cell内部显示的内容来自web，使用异步加载，缓存结果请求
+- 尽量少在cellForRowAtIndexPath中设置数据，假如有100个数据，那么cellForRowAtIndexPath会执行100次，但实际屏幕显示却只有几个。这样会大量消耗时间，可以在willDisplayCell里进行数据的设置，因为willDisplayCell只会在cell将要显示时调用，屏幕显示几个cell才会调用。可以大大减少数据设置时间
+
+```
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+//不要去设置cell的数据
+}
+-(void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+//当cell要显示时才去设置需要显示的cell对应的数据
+}
+```
+
+
+<br/>
+
+**2）.cell动画和绘制**
+
+重用时，它内部绘制的内容并不会被自动清除，因此你可能需要调用setNeedsDisplayInRect:或setNeedsDisplay方法。
+
+CPU与GPU的说明
+
+```
+CPU就是做绘制的操作把内容放到缓存里，GPU负责从缓存里读取数据然后渲染到屏幕上。CPU将准备好的bitmap放到RAM里，GPU去搬这快内存到VRAM中处理。 而这个过程GPU所能承受的极限大概在16.7ms完成一帧的处理，所以最开始提到的60fps其实就是GPU能处理的最高频率。 GPU是图形硬件，主要的工作是混合纹理并算出像素的RGB值，这是一个非常复杂的计算过程，计算的过程越复杂，所需要消耗的时间就越长，GPU的使用率就越高，这并不是一个好的现像，而我们需要做的是减少GPU的计算量。
+```
+
+如果不需要动画效果，最好不要使用insertRowsAtIndexPaths:withRowAnimation:方法，而是直接调 用reloadData方法
+
+当图片下载完成后，如果cell是可见的，还需要更新图像
+
+```
+NSArray *indexPaths = [self.tableView indexPathsForVisibleRows];
+for (NSIndexPath *visibleIndexPath in indexPaths) {
+if (indexPath == visibleIndexPath) { 
+MyTableViewCell *cell = (MyTableViewCell *)[self.tableView cellForRowAtIndexPath:indexPath];
+cell.image = image; 
+[cell setNeedsDisplayInRect:imageRect]; break; 
+}
+}// 也可不遍历，直接与头尾相比较，看是否在中间即可。
+```
+
+insertRowsAtIndexPaths:withRowAnimation:方法，插入新行需要在主线程执行，而一次插入很多行的话（例如50行），会长时间阻塞主线程。而换成reloadData方法的话，瞬间就处理完了。
+
+
+<br/>
+
+**3）.cell内部图片处理**
+
+>假如内存里有一张400x400的图片，要放到100x100的imageview里，如果不做任何处理，直接丢进去，问题就大了，这意味着，GPU需要对大图进行缩放到小的区域显示，需要做像素点的sampling，这种smapling的代价很高，又需要兼顾pixel alignment。计算量会飙升。
+OpenGL ES是直接调用底层的GPU进行渲染；Core Graphics是一个基于CPU的绘制引擎
+
+```
+//重新绘制图片
+//按照imageWidth, imageHeight指定宽高开始绘制图片
+UIGraphicsBeginImageContext(CGSizeMake(imageWidth, imageHeight));
+//把image原图绘制成指定宽高
+[image drawInRect:CGRectMake(0,0,imageWidth,  imageHeight)];
+//从绘制中获取指定宽高的图片
+UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+//结束绘制
+UIGraphicsEndImageContext();
+
+```
+
+**丢帧概念：** RunLoop开始，RunLoop是一个60fps的回调，也就是说每16.7ms绘制一次屏幕，也就是我们需要在这个时间内完成view的缓冲区创建，view内容的绘制这些是CPU的工作；然后把缓冲区交给GPU渲染，这里包括了多个View的拼接(Compositing),纹理的渲染(Texture)等等，最后Display到屏幕上。但是如果你在16.7ms内做的事情太多，导致CPU，GPU无法在指定时间内完成指定的工作，那么就会出现卡顿现象，也就是丢帧。
+
+
+
+<br/>
+
+**4）.圆角图片处理**
+
+- 直接在原图上层覆盖一个内部透明圆的图片。(目前来说最优的方式)
+- 重新绘制图片(虽然重新绘制后会减少渲染的计算，但还是会影响渲染。这种方式只是把GPU的压力转义到了CPU上。负载平衡)。下面是绘制图片的方法
+
+```
+//根据size 和 radius 把image重新绘制。
+-(UIImage *)getCornerRadius:(UIImage *)image size:(CGSize)size radius:(int)r
+{
+    int w = size.width;
+    int h = size.height;
+    int radius = r;
+
+    UIImage *img = image;
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, w, h, 8, 4 * w, colorSpace, kCGImageAlphaPremultipliedFirst);
+    CGRect rect = CGRectMake(0, 0, w, h);
+
+    CGContextBeginPath(context);
+    addRoundedRectToPath(context, rect, radius, radius);
+    CGContextClosePath(context);
+    CGContextClip(context);
+    CGContextDrawImage(context, CGRectMake(0, 0, w, h), img.CGImage);
+    CGImageRef imageMasked = CGBitmapContextCreateImage(context);
+    img = [UIImage imageWithCGImage:imageMasked];
+
+    CGContextRelease(context);
+    CGColorSpaceRelease(colorSpace);
+    CGImageRelease(imageMasked);
+    return img;
+}
+
+
+static void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWidth,
+                                 float ovalHeight)
+{
+    float fw, fh;
+    
+    if (ovalWidth == 0 || ovalHeight == 0)
+    {
+        CGContextAddRect(context, rect);
+        return;
+    }
+    
+    CGContextSaveGState(context);
+    CGContextTranslateCTM(context, CGRectGetMinX(rect), CGRectGetMinY(rect));
+    CGContextScaleCTM(context, ovalWidth, ovalHeight);
+    fw = CGRectGetWidth(rect) / ovalWidth;
+    fh = CGRectGetHeight(rect) / ovalHeight;
+    
+    CGContextMoveToPoint(context, fw, fh/2);  // Start at lower right corner
+    CGContextAddArcToPoint(context, fw, fh, fw/2, fh, 1);  // Top right corner
+    CGContextAddArcToPoint(context, 0, fh, 0, fh/2, 1); // Top left corner
+    CGContextAddArcToPoint(context, 0, 0, fw/2, 0, 1); // Lower left corner
+    CGContextAddArcToPoint(context, fw, 0, fw, fh/2, 1); // Back to lower right
+    
+    CGContextClosePath(context);
+    CGContextRestoreGState(context);
+}
+```
+
+当然这里圆角的处理最好还是使用不透明的mask来遮罩。既能不用因为绘制造成CPU计算，而多余区域的渲染造成GPU的计算。
+
+<br/>
+
+优化方案1:使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角
+
+```
+UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 100, 100, 100)];
+imageView.image = [UIImage imageNamed:@"myImg"]; 
+//开始对imageView进行画图 
+UIGraphicsBeginImageContextWithOptions(imageView.bounds.size, NO, 1.0); 
+//使用贝塞尔曲线画出一个圆形图
+[[UIBezierPath bezierPathWithRoundedRect:imageView.bounds cornerRadius:imageView.frame.size.width] addClip];
+[imageView drawRect:imageView.bounds];
+imageView.image = UIGraphicsGetImageFromCurrentImageContext(); 
+//结束画图 
+UIGraphicsEndImageContext();
+[self.view addSubview:imageView]; 
+
+```
+
+
+<br/>
+
+优化方案2：使用CAShapeLayer和UIBezierPath设置圆角
+
+```
+UIImageView *imageView = [[UIImageViewalloc]initWithFrame:CGRectMake(100,100,100,100)];
+imageView.image = [UIImageimageNamed:@"myImg"];
+UIBezierPath *maskPath = [UIBezierPathbezierPathWithRoundedRect:imageView.boundsbyRoundingCorners:UIRectCornerAllCornerscornerRadii:imageView.bounds.size];
+CAShapeLayer *maskLayer = [[CAShapeLayer alloc]init];
+//设置大小
+maskLayer.frame=imageView.bounds;
+//设置图形样子
+maskLayer.path=maskPath.CGPath;
+imageView.layer.mask=maskLayer;
+[self.viewaddSubview:imageView];
+
+```
+
+对于方案2需要解释的是：
+CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLayer需要贝塞尔曲线配合使用才有意义（也就是说才有效果）使用CAShapeLayer(属于CoreAnimation)与贝塞尔曲线可以实现不在view的drawRect（继承于CoreGraphics走的是CPU,消耗的性能较大）方法中画出一些想要的图形CAShapeLayer动画渲染直接提交到手机的GPU当中，相较于view的drawRect方法使用CPU渲染而言，其效率极高，能大大优化内存使用情况。
+总的来说就是用CAShapeLayer的内存消耗少，渲染速度快，建议使用优化方案2。
+
+[异步绘制](https://juejin.cn/post/6850418118850789390#heading-4)
+
+
+<br/>
+
+
+**4）.[cell图片加载优化](https://segmentfault.com/a/1190000018161741)**
+
+
+
+<br/>
+<br/>
+
 
 
 >## <h2 id = "内存优化">[**内存优化**](https://juejin.cn/post/6864492188404088846)</h2>

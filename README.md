@@ -467,7 +467,8 @@
 
 
 > <h1 id = "多线程">多线程 </h1>
-*	[GCD(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(I).md)    
+*	[GCD(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(I).md) 
+*	[GCD(II)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II).md)    
 * [NSOperation(I)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(I).md)    
 * [NSOperation(II)](https://github.com/harleyGit/StudyNotes/blob/master/多线程/NSOperation(II).md)    
 
