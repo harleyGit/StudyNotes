@@ -30,6 +30,7 @@
 		- [mutaing 的作用](#mutaing的作用)
 		- [怎么表示函数的参数类型只要是数字](#怎么表示函数的参数类型只要是数字)
 		- [dynamic的作用.](#dynamic的作用)
+		- [Swift的动态性](#Swift的动态性)
 - [**常用类库**](#常用类库)
 	- [ObjectMapper](#ObjectMapper)
 	- [SwiftJSON](#SwiftJSON)
@@ -43,6 +44,7 @@
 	- [MD5](#MD5)
 	- [防止反编译](#防止反编译)
 - [**多线程**](#多线程)
+	**‌**- [NSOperation](#NSOperation)
 	- [GCD控制线程数量](#GCD控制线程数量) 
 	- [线程锁](#线程锁)
 	- [文件读写锁](#文件读写锁)
@@ -1376,7 +1378,7 @@ print(" it is a number")
 <br/>
 
 
-> <h3 id=""></h3>
+>### <h3 id="Swift的动态性">[Swift的动态性](https://juejin.cn/post/6888989886280368141)</h3>
 
 
 
@@ -1916,6 +1918,11 @@ refreshAction
 <br/>
 
 > <h1 id="多线程">多线程</h1>
+
+
+<br/>
+
+>## <h2 id="NSOperation">[NSOperation](https://www.jianshu.com/p/d8caf596d5d0)</h2>
 
 <br/>
 

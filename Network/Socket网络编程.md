@@ -1,3 +1,5 @@
+> <h2 id=""></h2>
+- [**长链接和短链接**](#长链接和短链接)
 - **UDP和TCP**
 - **Scocket通信机制**
 	- Socket简介
@@ -8,6 +10,23 @@
 
 ***
 <br/>
+
+
+> <h2 id="长链接和短链接">长链接和短链接</h2>
+
+[HTTP长连接和短连接 + Websocket](https://www.cnblogs.com/barrywxx/p/8569380.html)
+
+
+![网络协议层划分](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/network0.png)
+
+
+
+
+<br/>
+
+***
+<br/>
+
 
 
 ># UDP和TCP 

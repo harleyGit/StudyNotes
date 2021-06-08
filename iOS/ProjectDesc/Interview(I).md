@@ -19,6 +19,7 @@
 	- [代码管理](#代码管理)
 	- [数据本地持久化](#数据本地持久化)
 	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？](#使用copy关键字为什么)
+	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -533,6 +534,135 @@ atomic表示，我TM也很冤啊！！！！
 
 
 
+<br/>
+<br/>
+
+> <h2 id="几个空的区别">nil、Nil、NULL、NSNull区别</h2>
+
+- nil：指向一个对象的空指针,对objective c id 对象赋空值.
+
+- Nil：指向一个类的空指针,表示对类进行赋空值.
+
+- NULL：指向其他类型（如：基本类型、C类型）的空指针, 用于对非对象指针赋空值.
+
+- NSNull：在集合对象中，表示空值的对象.
+
+
+
+<br/>
+
+1).nil 在指向一个对象的指针为空 定义如下：
+
+```
+#ifndef nil
+# if __has_feature(cxx_nullptr)
+#   define nil nullptr
+# else
+#   define nil __DARWIN_NULL
+# endif
+#endif
+```
+在Objective-C中用于id类型的对象
+
+```
+NSString *str = nil;
+NSURL    *url  = nil;
+id object      = nil;
+```
+
+<br/>
+
+2).Nil 指向一个类的指针为空 定义如下：
+
+```
+
+#ifndef Nil
+# if __has_feature(cxx_nullptr)
+#   define Nil nullptr
+# else
+#   define Nil __DARWIN_NULL
+# endif
+#endif
+```
+
+在Objective-C中用于Class类型的对象
+
+```
+Class Class1 = Nil;
+Clsss Class2 = [NSURL class];
+```
+
+
+<br/>
+
+3).NULL 指向C类型的指针为空 在stddef.h中定义如下:
+
+```
+#if defined(__need_NULL)
+#undef NULL
+#ifdef __cplusplus
+#  if !defined(__MINGW32__) && !defined(_MSC_VER)
+#    define NULL __null
+#  else
+#    define NULL 0
+#  endif
+#else
+#  define NULL ((void*)0)
+#endif
+```
+
+用于对非对象指针赋空值简单举例
+
+```
+int   *intA    = NULL;
+char *charC     = NULL;
+struct structStr = NULL; 
+```
+
+
+<br/>
+
+4).NSNull在Objective-C中是一个类.
+
+NSNull有 + (NSNull *)null; 单例方法.
+
+多用于集合(NSArray,NSDictionary)中值为空的对象.
+
+```
+NSMutableDictionary *mutableDictionary = [[NSMutableDictionary alloc] init];
+[mutableDictionary setObject:nil forKey:@"Key-nil"]; // 会引起Crash
+[mutableDictionary setObject:[NSNull null] forKey:@"Key-nil"]; // 不会引起Crash
+//所以在使用时，如下方法是比较安全的
+[mutableDictionary setObject:(nil == value ? [NSNull null] : value)
+                      forKey:@"Key"];
+                      
+                      
+                      
+//=======================================
+
+NSArray *array = [NSArray arrayWithObjects:
+                      [[NSObject alloc] init],
+                      [NSNull null],
+                      @"aaa",
+                      nil,
+                      [[NSObject alloc] init],
+                      [[NSObject alloc] init], nil];
+
+NSLog(@"%ld", array.count); // 输出 3，NSArray以nil结尾
+
+
+//======================================
+
+NSDictionary *dictionary = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                @"Object0", @"Key0",
+                                @"Object1", @"Key1",
+                                nil,        @"Key-nil"
+                                @"Object2", @"Key2",
+                                nil];
+NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
+
+```
+
 
 <br/>
 
@@ -579,7 +709,7 @@ NSTimer循环引用的解决方法，目前有以下几种
 <br/>
 
 
-**方法一：**类方法
+**方法一：** 类方法
 
 ```
 @interface NSTimer (JQUsingBlock)
