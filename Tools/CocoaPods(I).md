@@ -1,8 +1,10 @@
-
+> <h1 id=""></h1>
 - [**RVM安装**](#RVM安装)
-- [**CocoaPosds安装和卸载**](#CocoaPosds安装和卸载)
-- [**错误解决方案**](#错误解决方案)
-- [**卸载CocoaPosds**](#卸载CocoaPosds)
+- [**CocoaPosds**](#CocoaPosds)
+	- [**安装**](#安装) 
+	- [M1安装](#M1安装)
+	- [**错误解决方案**](#错误解决方案)
+	- [**卸载CocoaPosds**](#卸载CocoaPosds)
 
 
 
@@ -246,8 +248,11 @@ RVM reloaded!
 ***
 <br/>
 
-># <h1 id = "CocoaPosds安装和卸载">CocoaPosds安装和卸载</h1>
+># <h1 id = "CocoaPosds">CocoaPosds</h1>
 
+<br/>
+
+># <h2 id = "安装">安装</h2>
 
 -  根据系统版本选择指令
 
@@ -279,6 +284,7 @@ Mac为 OS X 10.11以后系统的安装cocoapods 指令
 
 
 -  **对安装后的CocoaPods进行测试：**
+
 `pod search RxSwift` 或者 `pod install`,会出现：
 ![pod search 失败提示](https://upload-images.jianshu.io/upload_images/2959789-7a3f49197f6a92cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -354,12 +360,166 @@ git clone https://github.com/CocoaPods/Specs.git master
 &emsp;  这时再次使用pod install 和 pod update ，如丝滑般流畅，就这破东西整了一天，记住不要轻易升级系统和新的版本Cocoapods否则后面的坑一个接着一个来。
 
 
+
 <br/>
 
 ***
 <br/>
 
-># <h1 id = "错误解决方案">错误解决方案</h1>
+
+
+>## <h2 id="M1安装">[M1安装](https://www.jianshu.com/p/66eefaaada7a)</h2>
+
+&emsp; 因为苹果的M1芯片与英特尔的芯片不同导致安装时也与以前不同导致出现各种的坑，现在开始M1芯片的Cocoapods安装。
+
+
+<br/>
+
+- **安装 Homebrew 过程**
+
+终端输入：
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+运行安装失败后的提示：
+
+![安装失败](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod3.png)
+
+<br/>
+
+选择国内的镜像下载地址进行下载：
+
+```
+/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
+```
+
+
+
+![国内源地址选择](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod4.png)
+
+
+选择一个地址后输入 y 开始执行脚本，然后输入你的开机密码，后面会下载很多文件
+
+![下载效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod5.png)
+
+
+不需要你操作，静静的等待安装完就行了，安装完成后的界面如下
+
+![下载完成](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod6.png)
+
+
+<br/>
+
+重启终端后输入命令 `brew -v` 即可，如下图所示:
+
+![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod7.png)
+
+更新 Homebrew
+
+`brew update`
+
+<br/>
+
+卸载 Homebrew
+
+`/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/HomebrewUninstall.sh)"
+`
+
+
+
+<br/>
+
+
+
+在终端输入：
+
+```
+/usr/bin/ruby -e "$(curl -fsSL https://cdn.jsdelivr.net/gh/ineo6/homebrew-install/install)"
+```
+
+&emsp; 若你的电脑系统是macOS big sur 12.3系统会提示你命令已废弃请使用
+
+```
+/bin/bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/ineo6/homebrew-install/install.sh)"
+```
+
+&emsp; 激动人心的时刻到了，终于下载了！但是要注意，在下载完后要注意 **Warning** 否则会导致意想不到的问题，一定按照其 **Warning** 提示进行操作。
+
+&emsp; 执行环境变量，添加 **Homebrew** 到 **/Users/zhoujiebing/.zprofile**文件的**PATH**中，执行下面命令即可:
+
+```
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/zhoujiebing/.zprofile
+ 
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+&emsp; 如果你不确定可以先试试命令brew help ,如果提示没有此命令,那就需要执行上面的两行命令了.执行了之后再次输入brew help 就会列出帮助信息了,那就说明你的homebrew安装好了,可以用了!
+
+
+<br/>
+
+- **安装rvm 出错**
+
+```
+Error running '__rvm_make -j8',
+please read /Users/harleyhuang/.rvm/log/1623324364_ruby-2.5.0/make.log
+
+There has been an error while running make. Halting the installation.
+
+```
+
+执行这2个命令：
+
+```
+brew install openssl
+
+rvm install 2.5.0 --with-openssl-dir=`brew --prefix openssl`
+```
+
+
+出现这个问题：
+
+```
+Requirements installation failed with status: 1.
+
+```
+
+解决：
+
+```
+rvm autolibs read-only
+
+rvm install ruby-2.6.5
+
+ruby -v
+```
+
+
+但是又出错了，真想骂MMP了，恶心的不行。
+
+```
+Error running '__rvm_make -j8',
+please read /Users/harleyhuang/.rvm/log/1623338341_ruby-2.6.5/make.log
+
+There has been an error while running make. Halting the installation.
+```
+
+
+在网上用谷歌搜了一圈还是解决不了，没办法只能到 rvm 的git 的问题搜索这个问题解决了：\
+\
+```
+//一个外国大佬提出的，也是踩了不少坑才弄好的
+CFLAGS="-Wno-error=implicit-function-declaration" rvm install 2.6.6
+```
+
+<br/>
+
+***
+<br/>
+
+># <h2 id = "错误解决方案">错误解决方案</h2>
 
 
 <br/>
@@ -444,7 +604,7 @@ e. `pod search afnetworking`, 检测是否可以使用了；
 
 
 
-># <h1 id = "卸载CocoaPosds">卸载CocoaPosds</h1>
+> <h2 id = "卸载CocoaPosds">卸载CocoaPosds</h2>
 
 **`第一种卸载方法：`**
 
