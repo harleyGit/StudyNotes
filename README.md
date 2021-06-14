@@ -217,6 +217,7 @@
 	       
 > <h2 id = "ProjectDesc">ProjectDesc</h2>
 * [**Desc(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
+* [**Desc(II)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(II).md)
 * [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
 * [**Interview(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(I).md)
 * [**Interview(II)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(II).md)
