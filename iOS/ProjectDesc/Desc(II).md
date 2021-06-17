@@ -1,5 +1,6 @@
 > <h2 id=""></h2>
 - [**项目**](#项目)
+	- [**文件架构** ](#文件架构)
 	- [**NSBundle**](#NSBundle)
 	- [ **类库**](#类库)
 		- 	[IQKeyboardManager](#IQKeyboardManager)
@@ -20,9 +21,28 @@
 <br/>
 
 
+
+
 > <h1 id="项目">项目</h1>
 
 <br/>
+
+> <h2 id="文件架构">文件架构</h2>
+
+- 路由导航类：ModuleContainer
+- WebView封装文件夹： CRM -> Business -> Module -> Hybrid -> Native -> View -> ZLMWebView
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
 
 > <h2 id="NSBundle">NSBundle</h2>
 
