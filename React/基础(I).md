@@ -1,5 +1,7 @@
-> <h2 id=""></h2>
+> <h1 id=""></h1>
 - [**生命周期**](#生命周期)
+- **参考资料：**
+	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 
 
 
