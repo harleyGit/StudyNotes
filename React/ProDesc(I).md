@@ -2,12 +2,15 @@
 - [**=> 箭头函数**](#箭头函数)
 - [window.sessionStorage](#window.sessionStorage)
 - [JSON.stringify()](#JSON.stringify())
+- [JSON.parse()](#JSON.parse())
+- [模块导入和导出](#模块导入和导出)
+	- [require](#require) 
 - [匿名函数](#匿名函数)
 	- [自调用函数](#自调用函数)
 		- [window.mapi](#window.mapi)
 - [Window](#Window)
 	- [Window Navigator](#WindowNavigator)
-	- [JSON.parse()](#JSON.parse())
+	- [window.mapi](#window.mapi)
 
 
 
@@ -310,8 +313,88 @@ JSON.stringify(value[, replacer [, space]])
 	
 
 
+<br/>
+
+***
+<br/>
+
+> <h1 id="JSON.parse()"> JSON.parse() </h1>
+
+&emsp; **JSON.parse()** 方法用来解析JSON字符串，构造由字符串描述的JavaScript值或对象。提供可选的 reviver 函数用以在返回之前对所得到的对象执行变换(操作)。
+
+```
+const json = '{"result":true, "count":42}';
+const obj = JSON.parse(json);
+
+console.log(obj.count);
+// expected output: 42
+
+console.log(obj.result);
+// expected output: true
+
+```
+
+打印：
+
+```
+> 42
+> true
+```
 
 
+<br/>
+
+**语法**
+
+```
+JSON.parse(text[, reviver])
+```
+
+
+<br/>
+
+参数
+
+- text
+
+`要被解析成 JavaScript 值的字符串，关于JSON的语法格式,请参考：JSON。`
+
+- reviver 可选
+
+`转换器, 如果传入该参数(函数)，可以用来修改解析生成的原始值，调用时机在 parse 函数返回之前。`
+
+- 返回值
+
+`Object 类型, 对应给定 JSON 文本的对象/值。`
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># <h1 id="模块导入和导出"> [模块导入和导出](https://www.cnblogs.com/libin-1/p/7127481.html) </h1>
+
+
+<br/>
+
+
+> <h2 id="require"> require </h2>
+
+&emsp; 在CommonJS中，有一个全局性方法require()，用于加载模块。假定有一个数学模块math.js，就可以像下面这样加载。
+
+|:--|:--|
+| 1 | var math = require('math'); |
+
+
+然后，就可以调用模块提供的方法：
+
+| 1 | var math = require('math'); |
+|:--|:--|
+| 2 | math.add(2,3); // 5 |
 
 
 
@@ -433,7 +516,39 @@ console.log("这是匿名函数的自执行的第二种写法，结果为："+(n
 - 浏览器无法报告晚于浏览器发布的新操作系统
 
 
+<br/>
+<br/>
 
+
+> <h2 id="window.mapi"> window.mapi </h2>
+
+```
+//=====================================================
+
+(function (win, mapi) {
+    mapi.registerResponseInterceptor = function (func) {
+        mapi['responseInterceptor'] = func;
+    }
+})(window, window['mapi'] || (window['mapi'] = {}));
+
+window.mapi.registerResponseInterceptor((res, request)=>{
+    return res + request;
+});
+
+
+
+// let aa = window.mapi.registerResponseInterceptor(1, 99);
+
+console.log("--------_>> %i", window.mapi.responseInterceptor(1,99));
+//或者下面
+//console.log("--------_>> %i", window.mapi["responseInterceptor"](1,99));
+```
+
+打印：
+
+```
+--------_>> 100
+```
 
 <br/>
 
@@ -441,55 +556,8 @@ console.log("这是匿名函数的自执行的第二种写法，结果为："+(n
 <br/>
 
 
-> <h1 id="JSON.parse()"> JSON.parse() </h1>
 
-&emsp; **JSON.parse()** 方法用来解析JSON字符串，构造由字符串描述的JavaScript值或对象。提供可选的 reviver 函数用以在返回之前对所得到的对象执行变换(操作)。
-
-```
-const json = '{"result":true, "count":42}';
-const obj = JSON.parse(json);
-
-console.log(obj.count);
-// expected output: 42
-
-console.log(obj.result);
-// expected output: true
-
-```
-
-打印：
-
-```
-> 42
-> true
-```
-
-
-<br/>
-
-**语法**
-
-```
-JSON.parse(text[, reviver])
-```
-
-
-<br/>
-
-参数
-
-- text
-
-`要被解析成 JavaScript 值的字符串，关于JSON的语法格式,请参考：JSON。`
-
-- reviver 可选
-
-`转换器, 如果传入该参数(函数)，可以用来修改解析生成的原始值，调用时机在 parse 函数返回之前。`
-
-- 返回值
-
-`Object 类型, 对应给定 JSON 文本的对象/值。`
-
+> <h1 id=""> </h1>
 
 
 <br/>

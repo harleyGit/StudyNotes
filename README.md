@@ -8,6 +8,7 @@
 	- [**错误总结**](#错误总结)
 	- [**ProjectDesc**](#ProjectDesc)
 - [**Flutter 开发**](#Flutter开发)
+- [**JavaScript**](#JavaScript)
 - [**React开发**](#React开发)
 - [**Egret Engine**](#EgretEngine)
 - [**底层**](#底层)
@@ -269,6 +270,18 @@
 *	[前端环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/前端环境配置.md)
 *	[跨组件状态共享](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享.md)
 
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id = "JavaScript">JavaScript</h1>
+- [**基础(I)‌**](https://github.com/harleyGit/StudyNotes/blob/master/JavaScript/基础(I).md)
 
 
 
