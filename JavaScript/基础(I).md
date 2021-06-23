@@ -1,5 +1,14 @@
 > <h1 id=""></h1>
 - [**import和require**](#import和require)
+- [**函数**](#函数)
+	- [Function()构造函数](#Function()构造函数)
+	- [自调用函数](#自调用函数)
+	- [函数是对象](#函数是对象)
+	- [箭头函数](#箭头函数)
+	- [函数作为方法调用](#函数作为方法调用)
+	- [使用构造函数调用函数](#使用构造函数调用函数)
+	- [作为函数方法调用函数](#作为函数方法调用函数)
+	- [JavaScript闭包](#JavaScript闭包)
 - **参考资料：**
 
 
@@ -193,7 +202,223 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 ***
 <br/>
 
-> <h1 id=""></h1>
+> <h1 id="函数">函数</h1>
+
+> <h2 id="Function()构造函数">**Function()构造函数**</h2>
+
+函数同样可以通过内置的 JavaScript 函数构造器（Function()）定义。
+
+```
+var myFunction = new Function("a", "b", "return a * b");
+
+var x = myFunction(4, 3);
+
+console.log(x)
+
+
+//等价于
+var myFunction1 = function (a, b) {return a * b};
+
+var x1 = myFunction1(4, 3);
+```
+打印为： 12
+
+
+<br/>
+
+
+> <h2 id="自调用函数">**自调用函数**</h2>
+
+
+- 函数表达式可以 "自调用"。
+
+- 自调用表达式会自动调用。
+
+- 如果表达式后面紧跟 () ，则会自动调用。
+
+- 不能自调用声明的函数。
+
+- 通过添加括号，来说明它是一个函数表达式：
+
+```
+(function () {
+    var x = "Hello!!";      // 我将调用自己
+})();
+```
+
+<br/>
+
+
+> <h2 id="函数是对象">**函数是对象**</h2>
+
+
+在 JavaScript 中使用 typeof 操作符判断函数类型将返回 "function" 。
+
+但是JavaScript 函数描述为一个对象更加准确。
+
+JavaScript 函数有 属性 和 方法。
+
+arguments.length 属性返回函数调用过程接收到的参数个数：
+
+```
+<body>
+
+<p> arguments.length 属性返回函数接收到参数的个数：</p>
+<p id="demo"></p>
+<script>
+function myFunction(a, b) {
+    return arguments.length;
+}
+document.getElementById("demo").innerHTML = myFunction(4, 3);
+</script>
+
+</body>
+```
+
+在HTML的显示效果是：
+
+```
+arguments.length 属性返回函数接收到参数的个数：
+
+2
+```
+
+
+
+
+
+<br/>
+
+
+> <h2 id="箭头函数">**箭头函数**</h2>
+
+
+ES6 新增了箭头函数。
+
+箭头函数表达式的语法比普通函数表达式更简洁。
+
+```
+(参数1, 参数2, …, 参数N) => { 函数声明 }
+
+(参数1, 参数2, …, 参数N) => 表达式(单一)
+// 相当于：(参数1, 参数2, …, 参数N) =>{ return 表达式; }
+```
+
+当只有一个参数时，圆括号是可选的：
+
+```
+(单一参数) => {函数声明}
+单一参数 => {函数声明}
+```
+
+
+没有参数的函数应该写成一对圆括号:
+
+```
+() => {函数声明}
+```
+
+实例：
+
+```
+// ES5
+var x = function(x, y) {
+     return x * y;
+}
+ 
+// ES6
+const x = (x, y) => x * y;
+```
+
+
+
+<br/>
+
+
+> <h2 id="函数作为方法调用">**函数作为方法调用**</h2>
+
+在 JavaScript 中你可以将函数定义为对象的方法。
+
+以下实例创建了一个对象 (myObject), 对象有两个属性 (firstName 和 lastName), 及一个方法 (fullName):\
+
+```
+var myObject = {
+    firstName:"John",
+    lastName: "Doe",
+    fullName: function () {
+        return this.firstName + " " + this.lastName;
+    }
+}
+myObject.fullName(); 
+
+```
+
+
+<br/>
+
+
+> <h2 id="使用构造函数调用函数">**使用构造函数调用函数**</h2>
+
+如果函数调用前使用了 new 关键字, 则是调用了构造函数。
+
+这看起来就像创建了新的函数，但实际上 JavaScript 函数是重新创建的对象：\
+
+```
+// 构造函数:
+function myFunction(arg1, arg2) {
+    this.firstName = arg1;
+    this.lastName  = arg2;
+}
+ 
+// This    creates a new object
+var x = new myFunction("John","Doe");
+x.firstName; 
+```
+
+
+
+<br/>
+
+
+> <h2 id="作为函数方法调用函数">**作为函数方法调用函数**</h2>
+
+在 JavaScript 中, 函数是对象。JavaScript 函数有它的属性和方法。
+
+call() 和 apply() 是预定义的函数方法。 两个方法可用于调用函数，两个方法的第一个参数必须是对象本身。
+
+```
+function myFunction(a, b) {
+    return a * b;
+}
+myObject = myFunction.call(myObject, 10, 2);     // 返回 20
+
+
+//参数为数组
+function myFunction(a, b) {
+    return a * b;
+}
+myArray = [10, 2];
+myObject = myFunction.apply(myObject, myArray);  // 返回 20
+```
+
+
+<br/>
+
+
+> <h2 id="JavaScript闭包">**JavaScript 闭包**</h2>
+
+```
+var add = (function () {
+    var counter = 0;
+    return function () {return counter += 1;}
+})();
+ 
+add();
+add();
+add();
+ 
+// 计数器为 3
+```
 
 
 
