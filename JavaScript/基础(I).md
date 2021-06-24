@@ -9,6 +9,17 @@
 	- [使用构造函数调用函数](#使用构造函数调用函数)
 	- [作为函数方法调用函数](#作为函数方法调用函数)
 	- [JavaScript闭包](#JavaScript闭包)
+- [**对象高级使用**](#对象高级使用)
+	- [创建 JavaScript 对象](#创建JavaScript对象)
+	- 	[使用Object生成对象](#使用Object生成对象)
+	- [	使用字面量创建对象](#使用字面量创建对象)
+	- 	[使用对象构造器](#使用对象构造器)
+	- [	属性添加到 JavaScript 对象](#属性添加到JavaScript对象)
+	- 	[把方法添加到JavaScript对象](#把方法添加到JavaScript对象)
+	- 	[JavaScript 类](#JavaScript类)
+	- 	[JavaScript 的对象是可变的](#JavaScript的对象是可变的)
+	- [	new 和不 new的区别](#new和不new的区别)
+- [**HTML的DOM**](#HTML的DOM)
 - **参考资料：**
 
 
@@ -339,7 +350,7 @@ const x = (x, y) => x * y;
 
 在 JavaScript 中你可以将函数定义为对象的方法。
 
-以下实例创建了一个对象 (myObject), 对象有两个属性 (firstName 和 lastName), 及一个方法 (fullName):\
+以下实例创建了一个对象 (myObject), 对象有两个属性 (firstName 和 lastName), 及一个方法 (fullName):
 
 ```
 var myObject = {
@@ -361,7 +372,7 @@ myObject.fullName();
 
 如果函数调用前使用了 new 关键字, 则是调用了构造函数。
 
-这看起来就像创建了新的函数，但实际上 JavaScript 函数是重新创建的对象：\
+这看起来就像创建了新的函数，但实际上 JavaScript 函数是重新创建的对象：
 
 ```
 // 构造函数:
@@ -422,12 +433,359 @@ add();
 
 
 
+
+
 <br/>
 
 ***
 <br/>
 
-> <h1 id=""></h1>
+># <h1 id="对象高级使用">[**‌对象高级使用**](https://www.runoob.com/js/js-objects.html)</h1>
+
+
+<br/>
+
+<h3 id="创建JavaScript对象">**1）.创建 JavaScript 对象**</h3>
+
+
+
+通过 JavaScript，您能够定义并创建自己的对象。
+
+- 创建新对象有两种不同的方法：
+	- 使用 Object 定义并创建对象的实例。
+	- 使用函数来定义对象，然后创建新的对象实例。
+
+
+- **使用 Object**
+
+在 JavaScript 中，几乎所有的对象都是 Object 类型的实例，它们都会从 Object.prototype 继承属性和方法。
+
+Object 构造函数创建一个对象包装器。
+
+- Object 构造函数，会根据给定的参数创建对象，具体有以下情况：
+
+	- 如果给定值是 null 或 undefined，将会创建并返回一个空对象。
+	- 如果传进去的是一个基本类型的值，则会构造其包装类型的对象。
+	- 如果传进去的是引用类型的值，仍然会返回这个值，经他们复制的变量保有和源对象相同的引用地址。
+	- 当以非构造函数形式被调用时，Object 的行为等同于 new Object()。
+
+语法格式：
+
+```
+// 以构造函数形式来调用
+new Object([value])
+```
+
+
+value 可以是任何值。
+
+<br/>
+
+
+<h3 id="使用Object生成对象">**2). 使用Object生成对象**</h3>
+
+
+以下实例使用 Object 生成布尔对象：
+
+```
+// 等价于 o = new Boolean(true);
+var o = new Object(true);
+```
+
+
+这个例子创建了对象的一个新实例，并向其添加了四个属性：
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>菜鸟教程(runoob.com)</title>
+</head>
+<body>
+
+<script>
+var person=new Object();
+person.firstname="John";
+person.lastname="Doe";
+person.age=50;
+person.eyecolor="blue"; 
+document.write(person.firstname + " is " + person.age + " years old.");
+</script>
+
+</body>
+</html>
+
+```
+
+HTML 显示：
+
+**John is 50 years old.**
+
+
+<br/>
+
+<h3 id="使用字面量创建对象">**3). 使用字面量创建对象**</h3>
+
+也可以使用对象字面量来创建对象，语法格式如下：
+
+```
+{ name1 : value1, name2 : value2,...nameN : valueN }
+```
+
+案例测试：
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>菜鸟教程(runoob.com)</title>
+</head>
+<body>
+
+<script>
+person={firstname:"John",lastname:"Doe",age:50,eyecolor:"blue"}
+document.write(person.firstname + " is " + person.age + " years old.");
+</script>
+
+</body>
+</html>
+```
+
+HTML显示：
+
+```
+John is 50 years old.
+```
+
+**JavaScript 对象就是一个 name:value 集合。**
+
+
+<br/>
+
+
+<h3 id="使用对象构造器">**4). 使用对象构造器**</h3>
+
+本例使用函数来构造对象：
+
+
+```
+function person(firstname,lastname,age,eyecolor){
+	this.firstname=firstname;
+	this.lastname=lastname;
+	this.age=age;
+    this.eyecolor=eyecolor;
+}
+myFather=new person("John","Doe",50,"blue");
+
+console.log(myFather.firstname + " is " + myFather.age + " years old.");
+```
+
+打印：
+
+```
+John is 50 years old.
+```
+
+在JavaScript中，this通常指向的是我们正在执行的函数本身，或者是指向该函数所属的对象（运行时）
+
+
+
+
+<br/>
+
+<h3 id="属性添加到JavaScript对象">**5）.属性添加到 JavaScript 对象**</h3>
+
+- 您可以通过为对象赋值，向已有对象添加新属性：
+
+- 假设 person 对象已存在 - 您可以为其添加这些新属性：firstname、lastname、age 以及 eyecolor：
+
+```
+person.firstname="John";
+person.lastname="Doe";
+person.age=30;
+person.eyecolor="blue";
+
+x=person.firstname;
+console.log(x)
+```
+
+打印为：
+
+```
+John
+```
+
+
+
+<br/>
+
+<h3 id="把方法添加到JavaScript对象">**6）.把方法添加到 JavaScript 对象**</h3>
+
+- 方法只不过是附加在对象上的函数。
+
+- 在构造器函数内部定义对象的方法：
+
+```
+function person(firstname,lastname,age,eyecolor){
+    this.firstname=firstname;
+    this.lastname=lastname;
+    this.age=age;
+    this.eyecolor=eyecolor;
+    this.changeName=changeName;
+	function changeName(name){
+		this.lastname=name;
+	}
+}
+
+//changeName() 函数 name 的值赋给 person 的 lastname 属性。
+myMother=new person("Sally","Rally",48,"green");
+myMother.changeName("Doe");
+console.log(myMother.lastname);
+```
+
+打印为：
+
+```
+Doe
+```
+
+
+
+<br/>
+
+<h3 id="JavaScript类">**7）.JavaScript 类**</h3>
+
+JavaScript 是面向对象的语言，但 JavaScript 不使用类。
+
+在 JavaScript 中，不会创建类，也不会通过类来创建对象（就像在其他面向对象的语言中那样）。
+
+JavaScript 基于 prototype，而不是基于类的。
+
+**JavaScript for...in 循环**
+
+JavaScript for...in 语句循环遍历对象的属性。
+
+```
+//注意： for...in 循环中的代码块将针对每个属性执行一次。
+for (variable in object)
+{
+    执行的代码……
+}
+```
+
+Demo案例：
+
+```
+function myFunction(){
+	var x;
+	var txt="";
+	var person={fname:"Bill",lname:"Gates",age:56}; 
+	for (x in person){
+		txt=txt + person[x];
+	}
+	console.log(txt);
+}
+
+myFunction()
+```
+
+打印：
+
+```
+BillGates56
+```
+
+
+<br/>
+
+<h3 id="JavaScript的对象是可变的">**8）.JavaScript 的对象是可变的**</h3>
+
+
+对象是可变的，它们是通过引用来传递的。
+
+以下实例的 person 对象不会创建副本：
+
+```
+var x = person;  // 不会创建 person 的副本，是引用
+
+```
+
+
+案例Demo：
+
+```
+var person = {firstName:"John", lastName:"Doe", age:50, eyeColor:"blue"}
+
+var x = person;
+x.age = 10;
+
+Console.log(
+person.firstName + " is " + person.age + " years old.")
+```
+
+打印：
+
+```
+John is 10 years old.
+```
+
+
+
+
+<h3 id="new和不new的区别">**9）.new 和不 new的区别**</h3>
+
+&emsp; 如果 new 了函数内的 this 会指向当前这个 person 并且就算函数内部不 return 也会返回一个对象。
+&emsp; 如果不 new 的话函数内的 this 指向的是 window。
+
+
+```
+function person(firstname,lastname,age,eyecolor)
+{
+    this.firstname=firstname;
+    this.lastname=lastname;
+    this.age=age;
+    this.eyecolor=eyecolor;
+    return [this.firstname,this.lastname,this.age,this.eyecolor,this] 
+}
+
+var myFather=new person("John","Doe",50,"blue");
+var myMother=person("Sally","Rally",48,"green");
+console.log(myFather) 
+console.log(myMother) 
+```
+
+打印：
+
+
+```
+this 输出一个 person 对象
+
+this 输出 window 对象
+```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id="HTML的DOM">**‌HTML的DOM**</h1>
+
+
+<br/>
+
+> <h2 id="改变CSS样式">**改变CSS样式**</h2>
+
+[qq](https://www.runoob.com/js/js-htmldom-css.html)
+
+
+
+
+
 
 
 
