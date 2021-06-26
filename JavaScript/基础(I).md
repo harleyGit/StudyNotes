@@ -20,6 +20,7 @@
 	- 	[JavaScript 的对象是可变的](#JavaScript的对象是可变的)
 	- [	new 和不 new的区别](#new和不new的区别)
 - [**HTML的DOM**](#HTML的DOM)
+	- [改变CSS样式](#改变CSS样式)
 - **参考资料：**
 
 
@@ -780,11 +781,27 @@ this 输出 window 对象
 
 > <h2 id="改变CSS样式">**改变CSS样式**</h2>
 
-[qq](https://www.runoob.com/js/js-htmldom-css.html)
 
+- **改变 HTML 样式**
+如需改变 HTML 元素的样式，请使用这个语法：
 
+```
+document.getElementById(id).style.property=新样式
 
+```
+案例demo：
 
+```
+<body>
+ 
+<p id="p1">Hello World!</p>
+<p id="p2">Hello World!</p>
+<script>
+document.getElementById("p2").style.color="blue";
+document.getElementById("p2").style.fontFamily="Arial";
+document.getElementById("p2").style.fontSize="larger";
+</script>
+```
 
 
 
