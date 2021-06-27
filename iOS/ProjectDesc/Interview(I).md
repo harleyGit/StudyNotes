@@ -70,6 +70,7 @@
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 	- [self和super实现的原理](#self和super实现的原理)
+	- [ARC原理是什么](#ARC原理是什么)
 	- [内存管理](#内存管理)
 		- [isa指针包含了什么（货拉拉面试）](#isa指针包含了什么)
 		- [weak原理（货拉拉）](#weak原理)
@@ -3571,6 +3572,16 @@ struct objc_super {
 - 此时这个结构体的第一个成员变量receiver就是子类，和 objc_msgSend 中的self相同。而第二个成员变量super_class就是指父类，调用 objc_msgSendSuper 的方法时会将这个结构体和returnSomething的selector传递过去。
 
 - 在结构体函数里面做的事情类似这样：从objc_super结构体指向的super_class的方法列表开始找 returnSomething的selector，找到后再用objc_super->receiver去调用这个selector。找不到就会报错。
+
+
+
+<br/>
+<br/>
+
+>## <h2 id="ARC原理是什么">[ARC原理是什么](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/ARC原理.md)</h2>
+
+&emsp; ARC 是 iOS 中管理引用计数的技术，帮助 iOS 实现垃圾自动回收，具体实现的原理是由编译器进行管理的，同时运行时库协助编译器辅助完成。主要涉及到 Clang （LLVM 编译器） 和 objc4 运行时库。
+
 
 
 
