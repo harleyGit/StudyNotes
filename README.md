@@ -285,6 +285,7 @@
 
 > <h1 id = "JavaScript">JavaScript</h1>
 - [**基础(I)‌**](https://github.com/harleyGit/StudyNotes/blob/master/JavaScript/基础(I).md)
+- [**字体自适应**](https://github.com/harleyGit/StudyNotes/blob/master/JavaScript/字体自适应.md)
 
 
 
