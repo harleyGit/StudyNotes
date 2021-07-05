@@ -1,5 +1,5 @@
 
-- 控制器Add、Delete
+- 控制器添加和
 	- 添加ViewController
 	- 移除ViewController
 
