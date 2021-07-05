@@ -21,6 +21,7 @@
 	- [	new 和不 new的区别](#new和不new的区别)
 - [**HTML的DOM**](#HTML的DOM)
 	- [改变CSS样式](#改变CSS样式)
+- [**数组**](#数组)
 - **参考资料：**
 
 
@@ -811,8 +812,85 @@ document.getElementById("p2").style.fontSize="larger";
 ***
 <br/>
 
-> <h1 id=""></h1>
+> <h1 id="数组">数组</h1>
+**1）.** 添加元素
 
+- push()方法是给数组尾巴添加一个或多个元素,返回的是添加数组后该数组长度;
+- add()方法是不能操作数组的，不然会报错;
+
+```
+//push 操作
+var arr = [1,2,3,4];
+var arrlength = arr.push(5);
+console.log("arr长度为："+arrlength+"\narr值为："+arr);
+
+打印：arr长度为：5， 值为：[1,2,3,4,5]
+
+
+//add 操作
+var arr = [1,2,3,4];
+var arrlength = arr.add(5);
+console.log("arr长度为："+arrlength+"\narr值为："+arr);
+
+//报错：arr.add add is not a function
+```
+
+
+
+**add()**主要是针对dom节点进行元素的添加，比如说你要向某个div里面添加一个片段就可以写:
+```
+$(".div").add("<p>hello,world!</p>");
+```
+
+它有一点像clone()函数，只是一个复制(基于原有的)一个添加（原有的或者新增的）； 
+
+
+<br/>
+<br/>
+
+**2.)删除元素:splice()和remove()区别** 
+
+- splice()主要是针对数组的插入，删除和替换元素，由参数决定。 
+
+```
+//index_num表示操作的数组下标，num表示操作的个数
+splice(index_num,num);
+```
+
+```
+var arr = [1,2,3,4];
+var arrrm = arr.splice(3,1);
+console.log("arr删除的数据为："+arrrm+"\narr删除后的值为："+arr);
+//arr删除的数据为：4
+//arr删除后的值为：1,2,3
+```
+
+
+- Remove()在js中主要是针对dom节点进行操作的，比如说我们要删除某个子节点的话可以这样使用：
+
+```
+$(".div select").remove("option:nth-child(2)");
+
+//删除select的第二个孩子节点。
+``` 
+
+纵上所述：有关数组元素和DOM元素的删除与新增一定要有所区分哟，切记不能混用！ 
+但是要是你实在是觉得splice这个字母不好记，硬要用arr.remove()操作来删除元素的话是未尝不可的，我们可以通过自定义原型方法来实现这个功能，满足你的想法：
+
+```
+Array.prototype.remove = function(val) { 
+    var index = this.indexOf(val); 
+    if (index > -1) { 
+        return  this.splice(index, 1); 
+    }
+
+};
+var arr = [1,2,3,4];
+var arrrm = arr.remove(4);
+console.log("arr删除的数据为："+arrrm+"\narr删除后的值为："+arr);
+//arr删除的数据为：4
+//arr删除后的值为：1,2,3
+```
 
 
 <br/>
@@ -821,6 +899,7 @@ document.getElementById("p2").style.fontSize="larger";
 <br/>
 
 > <h1 id=""></h1>
+> 
 
 
 
