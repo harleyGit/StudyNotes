@@ -1,5 +1,6 @@
 > <h1 id=""></h1>
 - [**生命周期**](#生命周期)
+- [**顶层API**](#顶层API)
 - **参考资料：**
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 
@@ -9,6 +10,7 @@
 
 ***
 <br/>
+
 
 ># <h1 id="生命周期">[生命周期](https://www.jianshu.com/p/c9bc994933d5)</h1>
 
@@ -49,3 +51,69 @@ export default Demo;
 ```
 
 
+<br/>
+
+***
+<br/>
+
+> <h1 id="顶层API">顶层API</h1>
+
+[createElement](https://juejin.cn/post/6844903970876440583)
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
