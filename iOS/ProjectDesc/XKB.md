@@ -4,9 +4,11 @@
 	- [clientWidth](#clientWidth)
 	- [JavaScript的childNodes和children](#JavaScript的childNodes和children)
 	- [.innerWidth](#innerWidth)
+	- [setTimeout](#setTimeout)
 - [**问题**](#问题)
 - [**开发心得**](#开发心得)
-	- [flex使用](#flex使用)
+	- [flex使用](#flex心得)
+	- [值为空](#值为空)
 
 
 
@@ -159,8 +161,42 @@ _userAgreement(){
 
 <br/>
 
-> <h2 id=""></h1>
+> <h2 id="setTimeout">setTimeout</h2>
 
+
+```
+
+<body>
+
+	<p>点击按钮，等待 3 秒后弹出 "Hello" 。</p>
+	<p>点击第二个按钮来阻止弹出函数 myFunction 的执行。 (你必须在 3 秒前点击)</p>
+	
+	<button onclick="myFunction()">先点我</button>
+	<button onclick="myStopFunction()">阻止弹出</button>
+	
+	<script>
+		var myVar;
+		
+		function myFunction() {
+		    myVar = setTimeout(function(){ alert("Hello") }, 3000);
+		}
+		
+		function myStopFunction() {
+		    clearTimeout(myVar);
+		}
+	</script>
+
+</body>
+
+```
+
+
+![弹框延迟](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_4.png)
+
+- clearTimeout() 方法可取消由 setTimeout() 方法设置的定时操作。
+- clearTimeout() 方法的参数必须是由 setTimeout() 返回的 ID 值。
+
+注意: 要使用 clearTimeout() 方法, 在创建执行定时操作时要使用全局变量：
 
 
 
@@ -234,7 +270,7 @@ _renderIndustryTemplate = () => {
 <br/>
 
 
-- flex 布局对其自身影响
+- **flex 布局对其自身影响**
 
 ```
 
@@ -252,8 +288,8 @@ _renderIndustryTemplate = () => {
 //test.js 文件
 //企业模板
 _test1 = () => {
-    return <div className='search-custom-template-industry-content'>
-        <div className='search-custom-template-industry-category'>
+    return <div className='div1'>
+        <div className='div2'>
 		        search-custom-template-industry-category
 		        <br/>
 		        search-custom-template-industry-category
@@ -280,7 +316,8 @@ _test1 = () => {
 
 效果：![自身使用display: flex效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_2.png)
 
-其内容是被子组件填充的，其高度是随着子组件的增加而增加，但是其宽度可以达到100%。
+- 其内容是被子组件填充的，其高度是随着子组件的增加而增加，但是其宽度可以达到100%;
+- 若是没有子组件，也没有设其宽度、高度，则它的内容是看不到的，需要设置其宽、高的；
 
 
 
@@ -326,6 +363,27 @@ _test1 = () => {
 &emsp; 当块级元素的父组件使用`display: flex`后页可以设置设置其宽度、高度。
 
 
+<br/>
+<br/>
+
+># <h2 id="值为空">值为空</h2>
+
+- 数组元素不存在
+
+```
+let array = [1, 2, 3, 4]
+
+let arr5 = array[5]
+if(arr5 === null ){
+	console.log('第5个元素不存在')
+}
+//判断arr5其为null是不对的，因为arr5不存在相当于没有定义，所以是undefined,所以正确的判断是：
+
+if(arr5 === null  || arr){
+	console.log('第5个元素不存在')
+}
+
+```
 
 
 
