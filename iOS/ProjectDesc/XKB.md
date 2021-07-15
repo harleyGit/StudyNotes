@@ -9,6 +9,10 @@
 - [**开发心得**](#开发心得)
 	- [flex使用](#flex心得)
 	- [值为空](#值为空)
+- [**配置**](#配置)
+	-  [打包](#打包)
+-  [代码解读](#代码解读)
+	- [tabs滚动](#tabs滚动)  
 
 
 
@@ -393,7 +397,29 @@ if(arr5 === null  || arr){
 <br/>
 
 
-># <h1 id=""></h1>
+># <h1 id="配置">配置</h1>
+
+- <h2 id="打包">打包</h2>
+	- Mac打包
+
+```
+npm run pkgv2 treasure
+
+//qa环境的包
+//upload=后面的参数是是否自动上传包
+//若是dev环境，把qa改为dev就好了
+npm run pkgv2 treasure -- -f -qa -upload=true
+```
+
+- Window打包
+
+```
+yarn  pkgv2 treasure
+```
+
+打包的文件是：
+
+![打包的文件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react8.png)
 
 
 
@@ -403,9 +429,81 @@ if(arr5 === null  || arr){
 <br/>
 
 
-># <h1 id=""></h1>
+># <h1 id="代码解读">代码解读</h1>
+
+<br/>
+
+> <h2 id="tabs滚动">tabs滚动</h2>
+
+顶部tabs数据： 
+
+```
+//完整一屏幕数据
+* let categories = [{ categoryName: '银行1234', categoryType: '1234567890' }, { categoryName: '大厦', categoryType: '1234567890' }, { categoryName: '王者荣耀', categoryType: '1234567890' }, { categoryName: '发现亚东', categoryType: '1234567890' }, { categoryName: '发现了我', categoryType: '1234567890' }, 
+//未完整一屏幕数据
+* { categoryName: '放几天', categoryType: '1234567890' }, { categoryName: '你从我房', categoryType: '1234567890' }, { categoryName: '老师那个', categoryType: '1234567890' },]
+```     
+
+```
+_startScroll = (index) => {
+    let { tabLayoutContentDiv, hsTabLayoutScroll } = this.refs
+    let tabLayoutContentWidth = tabLayoutContentDiv.clientWidth
+    let currentTab = tabLayoutContentDiv.childNodes[index];
+
+    //中心点左右边距
+    let centerMargin = window.innerWidth / 2 - currentTab.clientWidth / 2;
+
+    console.log('🍎  <<<<<<<<<', '\n 显示窗口宽度window.innerWidth：', window.innerWidth, '\n 其显示窗口宽度1/2: ', window.innerWidth / 2,
+        '\n 标签父组件Div的宽度tabLayoutContentWidth:', tabLayoutContentWidth,
+        '\n 滚动到第index: ', index, '标签', ' \n左边距离是currentTab.offsetLeft：', currentTab.offsetLeft, '\n宽度为currentTab.clientWidth：', currentTab.clientWidth, ' 它的宽度1/2为：', (currentTab.clientWidth / 2),
+        '\n 中心点减去第', index, '标签宽度后距离左边的距离centerMargin：', centerMargin,
+    )
+    //左边内容
+    //这是在第一个屏幕中的判断，主要判断是否在第一屏幕的中间位置需不需要滑动，是左边的内容
+    //currentTab.offsetLeft <= centerMargin： 判断选中的tab左边的距离和距离中心减去tab 1/2宽度 的距离值
+    //tabLayoutContentWidth <= window.innerWidth 这时判断tab父组件的宽度(其实也是所有tab的宽度)和 中心宽度减去选中tab的1/2宽度值
+    if (currentTab.offsetLeft <= centerMargin || tabLayoutContentWidth <= window.innerWidth) {
+        console.log('🍎 ======= \n 左边内容(-this.scrollOffset)： ', (-this.scrollOffset))
+
+        hsTabLayoutScroll._scrollTo(-this.scrollOffset, 250)
+    } else {//这是判断滑动以后右边的内容
+        console.log('🍎 >>>>>>> 右边内容 \n     <<<<<<<<<< 判断: ', tabLayoutContentWidth - currentTab.offsetLeft - currentTab.clientWidth > centerMargin,
+            '\n 标签父组件Div的宽度tabLayoutContentWidth: ', tabLayoutContentWidth,
+            '\n 选中标签左边距离currentTab.offsetLeft', currentTab.offsetLeft,
+            '\n 选中标签宽度currentTab.clientWidth: ', currentTab.clientWidth,
+            '\n 中心点减去选中标签1/2centerMargin: ', centerMargin)
+
+		//判断父组件宽度减去（选中tab的左边距离+选中tab的宽度）和 中线点的比较。
+		//这里的判断若是true说明父组件减去（选中tab的左边距离+选中tab的宽度）距离父组件最右边大于显示屏幕的宽度，所以可以继续左滑动
+		//若是false说明距离最右边的距离不足能显示屏幕的一半了，需要做补充差值忘左滑动，这时要注意滑到最右边时不能再滑了
+        if (tabLayoutContentWidth - currentTab.offsetLeft - currentTab.clientWidth > centerMargin) {            let currentTabX = currentTab.getBoundingClientRect().x;
+            console.log('🍎 =======  右边内容 true判断：', '\n Math.abs(currentTabX): ', Math.abs(currentTabX), '\n centerMargin: ', centerMargin,
+                '\n (Math.abs(currentTabX) > centerMargin): ', (Math.abs(currentTabX) > centerMargin))
+                
+			//选中tab的x距离中心点的差值判断，进行向左滑动，Math.abs()是绝对值
+            if (Math.abs(currentTabX) > centerMargin) {//这里是不足一屏幕时进行的滑动
+                hsTabLayoutScroll._scrollTo(-(Math.abs(currentTabX) - centerMargin), 250);
+            } else if (Math.abs(currentTabX) < centerMargin) {//这里是超出屏幕以后进行的滑动
+                hsTabLayoutScroll._scrollTo(centerMargin - Math.abs(currentTabX), 250);
+            }
+        } else {
+            //右边
+            //这里快滑到最右边了，做差值滑动
+            let remainWidth = tabLayoutContentWidth - (-this.scrollOffset) - window.innerWidth;
+            console.log('🍎 >>>>>>>  右边内容 false判断：', '\n 父组件Div的宽度tabLayoutContentWidth: ', tabLayoutContentWidth, '\n (-this.scrollOffset): ', (-this.scrollOffset),
+                '\n 显示窗口宽度window.innerWidth:', window.innerWidth,
+                '\n -remainWidth: ', -remainWidth)
+
+            hsTabLayoutScroll._scrollTo(-remainWidth, 250)
+        }
+
+    }
+}
+```
 
 
+
+![效果显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_5.png)
 
 <br/>
 
