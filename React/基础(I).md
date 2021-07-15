@@ -1,12 +1,14 @@
 > <h1 id=""></h1>
-- [**生命周期**](#生命周期)
+- [**基本用法**](#基本用法)
 	- [生命周期方法](#生命周期方法) 
+	- [参数传递](#参数传递)
 - [**顶层API**](#顶层API)
 - [**性能优化**](#性能优化)
 	- [值是否为空或有值](#值是否为空或有值) 
 - **参考资料：**
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 	- [Material-UI React组件库](https://v4-2-1.material-ui.com/zh/getting-started/installation/)
+	- [React生命周期](https://www.jianshu.com/p/c9bc994933d5)
 
 
 
@@ -16,12 +18,13 @@
 <br/>
 
 
-># <h1 id="生命周期">[生命周期](https://www.jianshu.com/p/c9bc994933d5)</h1>
+># <h1 id="基本用法">基本用法</h1>
 
 
 <br/>
 
 >## <h2 id="生命周期方法">[生命周期方法](https://www.runoob.com/react/react-component-life-cycle.html)</h2>
+
 
 
 - **componentWillMount** 在渲染前调用,在客户端也在服务端。
@@ -176,6 +179,86 @@ Component DID UPDATE!
 ```
 
 <br/>
+<br/>
+
+
+> <h2 id="参数传递">参数传递</h2>
+
+<br>
+
+> <h3 id="父子传参">父->子传参</h3>
+
+&emsp; 父组件通过props将数据传递给子组件，子组件通过this.props.属性名调用
+
+
+![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react9.gif)
+
+<br/>
+
+效果：
+
+![效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react10.png)
+
+
+
+<br>
+<br>
+
+> <h3 id="子父组件的通信">子->父组件的通信</h3>
+
+- 父组件通过props传递一个修改自身数据state的方法给子组件
+
+- 子组件调用父组件传递过来的方法，传递参数，修改父组件的属性。相当于子组件调用父组件的方法来更新父组件的数据，或者向父组件传递数据
+
+
+![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react11.png)
+
+<br/>
+
+![效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react12.gif)
+
+
+
+
+<br>
+<br>
+
+> <h3 id="兄弟节点之间的通信">兄弟节点之间的通信</h3>
+
+&emsp; 在一个兄弟节点中修改父组件的数据，然后父组件会同步到另一个需要通信的子组件，就完成了一次通信
+
+![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react13.png)
+
+
+
+
+<br>
+<br>
+
+> <h3 id="订阅模型">订阅模型</h3>
+
+- addEventListener 就是一个发布订阅模型
+
+- 订阅：element.addEventListener('click',callback)
+
+- 发布：当绑定元素的click事件被触发的时候，就会执行发布流程，调用订阅绑定的callback
+
+
+**原理图解：**
+
+![模型图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react14.png)
+
+<br/>
+
+![模型图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react15.png)
+
+
+
+
+
+
+
+
 
 
 
