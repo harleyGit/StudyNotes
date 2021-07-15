@@ -3,8 +3,10 @@
 	- [生命周期方法](#生命周期方法) 
 - [**顶层API**](#顶层API)
 - [**性能优化**](#性能优化)
+	- [值是否为空或有值](#值是否为空或有值) 
 - **参考资料：**
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
+	- [Material-UI React组件库](https://v4-2-1.material-ui.com/zh/getting-started/installation/)
 
 
 
@@ -202,6 +204,87 @@ Component DID UPDATE!
 > <h2 id="值是否为空或有值">值是否为空或有值</h2>
 
 &emsp; 所以在判断是否为空前，应预判、确定数据的类型，如果期望类型不清晰，则可能会导致错误的判断或考虑情况不周全。
+
+<br/>
+
+- null、为定义、0判断
+
+```
+var a1 = null
+var a2
+var a3 = 0
+Var a4= 1//或者 a4=-11
+
+if (!a1) {
+    console.log('a1 为null')
+}
+
+if (!a2) {
+    console.log('a2 没有定义')
+}
+
+if (!a3) {
+    console.log('a3 为0')
+}
+
+if (!a4) {
+    console.log('a4 为0')
+}
+```
+
+打印：
+
+```
+a1 为null
+a2 没有定义
+a3 为0
+//a4 没有打印
+```
+
+
+<br/>
+
+- a2没有定义判断
+
+```
+var a2
+
+if (!a2) {
+    console.log('a2 没有定义')
+}
+
+if (!a2.length) {
+    console.log('a3 没有leng属性')
+}
+
+会报错：：
+typeError: undefined is not an object(evaluating 'a2.length')
+//因为a2没有定义，你又使用它的length属性，所以会报错
+
+
+
+var a2
+ if (!a2 || !a2.length) {
+    console.log('a2 没有定义')
+}    
+打印： a2 没有定义
+
+==================================   
+
+var a2
+  if (!a2.length) {
+    console.log('a3 没有leng属性')
+}
+
+会报错：：
+typeError: undefined is not an object(evaluating 'a2.length')
+
+```
+
+
+
+
+<br/>
 
 &emsp; 确定数据类型后，然后根据不同的数据类型使用不同的方法来判断，例
 
