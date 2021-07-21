@@ -1,6 +1,7 @@
 > <h1 id=""></h1>
 - [**基本用法**](#基本用法)
 	- [生命周期方法](#生命周期方法) 
+	- [构造函数constructor](#构造函数constructor)
 	- [参数传递](#参数传递)
 		- [父->子传参](#父子传参)
 		- [子->父组件的通信](#子父组件的通信)
@@ -185,6 +186,127 @@ Component DID UPDATE!
 <br/>
 <br/>
 
+
+
+
+
+> <h2 id="构造函数constructor">构造函数constructor</h2>
+
+```
+Constructor(props){  
+     super(props);  
+}  
+```
+
+- 在React中，构造函数主要用于两个目的：
+	- 它用于通过向this.state分配对象来初始化组件的本地状态。
+	- 它用于绑定组件中出现的事件处理程序方法。
+
+**注意：** 如果你的React组件既不初始化状态，也不绑定方法，那么就不需要实现React组件的构造函数。
+
+&emsp; 不能在构造函数()中直接调用setState()方法。如果组件需要使用本地状态，则需要直接使用’this.state ‘，在构造函数中分配初始状态。构造函数只使用这个来分配初始状态，所有其他方法都需要使用set.state()方法。
+
+App.js
+
+```
+import React, { Component } from 'react';  
+  
+class App extends Component {  
+  constructor(props){  
+    super(props);  
+    this.state = {  
+         data: 'www.srcmini.com'  
+      }  
+    this.handleEvent = this.handleEvent.bind(this);  
+  }  
+  handleEvent(){  
+    console.log(this.props);  
+  }  
+  render() {  
+    return (  
+      <div className="App">  
+    <h2>React构造函数例子</h2>  
+    <input type ="text" value={this.state.data} />  
+        <button onClick={this.handleEvent}>点击</button>  
+      </div>  
+    );  
+  }  
+}  
+export default App;  
+```
+
+main.js
+
+```
+import React from 'react';  
+import ReactDOM from 'react-dom';  
+import App from './App.js';  
+  
+ReactDOM.render(<App />, document.getElementById('app'));  
+```
+
+
+
+<br/>
+
+> 有必要在构造函数中调用super()吗？
+
+&emsp; 是的，有必要在构造函数中调用super()。如果需要在组件的构造函数中设置属性或访问’this’，则需要调用super()。
+
+```
+class App extends Component {  
+    constructor(props){  
+        this.fName = "Jhon"; // this'在super()之前是不允许的  
+    }  
+    render () {  
+        return (  
+            <p> Name: { this.props.name }</p>  
+        );  
+    }  
+}  
+```
+
+&emsp; 当你运行上面的代码时，会得到一个错误，在super()之前不允许使用’this’。因此，如果需要访问构造函数中的道具，需要调用super(props)。
+
+
+
+<br/>
+
+> 箭头函数
+
+&emsp;  箭头函数是ES6标准的新特性。如果需要使用箭头函数，则没有必要将任何事件绑定到’this ‘。在这里，“this”的范围是全局的，不局限于任何调用函数。因此，如果你使用的是箭头函数，就不需要在构造函数中绑定’this’。
+
+
+```
+import React, { Component } from 'react';  
+  
+class App extends Component {  
+  constructor(props){  
+    super(props);  
+    this.state = {  
+         data: 'www.srcmini.com'  
+      }  
+  }  
+  handleEvent = () => {  
+    console.log(this.props);  
+  }  
+  render() {  
+    return (  
+      <div className="App">  
+    <h2>React构造函数例子</h2>  
+    <input type ="text" value={this.state.data} />  
+        <button onClick={this.handleEvent}>点击</button>  
+      </div>  
+    );  
+  }  
+}  
+export default App;  
+```
+
+
+
+<br/>
+<br/>
 
 > <h2 id="参数传递">参数传递</h2>
 
