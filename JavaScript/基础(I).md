@@ -22,6 +22,9 @@
 	- [	new 和不 new的区别](#new和不new的区别)
 - [**HTML的DOM**](#HTML的DOM)
 	- [改变CSS样式](#改变CSS样式)
+- [**打印Console**](#打印Console)
+	- [类型信息输出](#类型信息输出)
+	- [格式化输出](#格式化输出)
 - [**数组**](#数组)
 - **参考资料：**
 
@@ -831,6 +834,69 @@ document.getElementById("p2").style.fontFamily="Arial";
 document.getElementById("p2").style.fontSize="larger";
 </script>
 ```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+># <h1 id="打印Console">[打印Console](https://www.hangge.com/blog/cache/detail_1735.html)</h1>
+
+
+<br/>
+
+> <h2 id="类型信息输出">类型信息输出</h2>
+
+- 信息清除
+
+&emsp; 如果想要清空控制台里的日志信息，除了可以点击控制台面板左上角的清空按钮，还可以在 js 代码中执行如下命令：
+
+```
+console.clear()
+```
+
+
+- console.log：用于输出普通信息
+
+- console.info：用于输出提示性信息
+
+- console.warn：用于输出告警信息
+
+- console.error：用于输出错误信息
+
+
+
+
+<br/>
+
+> <h2 id="格式化输出">格式化输出</h2>
+
+**具体支持如下四种占位符：**
+
+- 字符（%s）
+
+- 整数（%d 或 %i）
+
+- 浮点数（%f）
+
+- 对象（%o）
+
+```
+console.log("%d年%d月%d日",2017,7,26);
+console.log("圆周率是%f",3.1415926);
+var dog = {};
+dog.name = "大黄";
+dog.color = "黄色";
+console.log("这是我家的小狗：%o", dog);
+```
+
+
+<br/>
+
+> <h2 id=""></h2>
 
 
 

@@ -8,6 +8,8 @@
 		- [兄弟节点之间的通信](#兄弟节点之间的通信)
 		- [订阅模型](#订阅模型)
 - [**顶层API**](#顶层API)
+	- [createElement](#createElement)
+	- [cloneElement](#cloneElement)
 - [**性能优化**](#性能优化)
 	- [值是否为空或有值](#值是否为空或有值) 
 - **参考资料：**
@@ -395,7 +397,347 @@ export default App;
 
 > <h1 id="顶层API">顶层API</h1>
 
-[createElement](https://juejin.cn/post/6844903970876440583)
+
+<br/>
+
+> <h2 id="createElement">[createElement](https://juejin.cn/post/6844903970876440583)</h2>
+
+
+
+
+<br/>
+
+> <h2 id="cloneElement">cloneElement</h2>
+
+```
+React.cloneElement(
+ element,
+ [props],
+ [...children]
+)
+
+克隆原来的元素，返回一个新的 React 元素；
+保留原始元素的 props，同时可以添加新的 props，两者进行浅合并；
+key 和 ref 会被保留，因为它们本身也是 props ，所以也可以修改；
+根据 react 的源码，我们可以从第三个参数开始定义任意多的子元素，如果定义了新的 children ，会替换原来的 children ；
+
+第一个参数：react组件或者dom,这dom是真实的dom结构也可以是自定义的；
+
+第二个参数：当前element的props、key、ref，也可以添加新的props；
+
+第三个参数：是props.children，不指定默认展示我们调用时添加的子元素，如果指定会覆盖我们调用克隆组件时里面包含的元素。
+```
+
+
+<br/>
+
+> **验证1:组件复制**
+
+CloneElementTest.js文件
+
+```
+export function CloneDemo(props) {
+    console.dir(props)
+    console.table({ 'text: %s': props.children.props.children, 'keyValue': props.keyValue})
+    return React.cloneElement(<div style={{ backgroundColor: 'red', display: "flex", justifyContent: "center", alignItems: "center" }} />,
+        props
+    )
+}
+export function ContainerBox() {
+    return <CloneDemo keyValue={'CloneDemo的Key'}><h1>ContainerBox: 这是在父组件添加的元素</h1></CloneDemo>
+}
+
+```
+
+
+Index.js文件
+
+```
+import { ContainerBox } from './Test/CloneElementTest';
+
+
+
+
+ReactDOM.render(
+  <React.StrictMode>
+   {<ContainerBox />}
+   
+	</React.StrictMode>,
+  document.getElementById('root')
+);
+
+
+reportWebVitals();
+
+
+
+```
+
+效果图：
+
+![效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react16.png)
+
+
+
+<br/>
+
+> **验证2:传参数**
+
+CloneElementTest.js
+
+```
+
+export function CloneDemo1({ dom = <div />, ...props }) {
+    console.dir(props)
+    console.table({ '🍎 text: ': props.children.props.children})
+
+    return React.cloneElement(dom, { ...props })
+}
+export function ContainerBox1() {
+    return <CloneDemo1 dom={<p></p>}><h1>这是在父组件添加的元素ContainerBox1</h1></CloneDemo1>
+}
+```
+
+Index.js
+
+```
+//组件导入
+import { ContainerBox1 } from './Test/CloneElementTest';
+
+
+
+
+ReactDOM.render(
+  <React.StrictMode>
+  {<ContainerBox1/>}
+  
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+
+
+
+reportWebVitals();
+```
+
+![标签元素排列](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react17.png)
+
+
+
+![props打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react18.png)
+
+
+
+
+
+<br/>
+
+> **验证2:传参数**
+
+
+
+
+<br/>
+
+> **验证2:传样式没有效果**
+
+CloneElementTest.js
+
+```
+const Exam2 = (props) => <div>这是一个自定义的ReactElement元素{props.children}</div>
+function CloneDemo2({ dom = <div />, ...rest }) {
+    console.log('🍎 <<<<<<<<<<<<<<<')
+    console.dir(dom)
+    console.log('🍎 ===============')
+    console.dir(rest)
+    console.log('🍎 >>>>>>>>>>>>>>>')
+
+    return React.cloneElement(dom, { ...rest })
+}
+export function ContainerBox2() {
+    return <CloneDemo2 dom={<Exam2 style={{ color: "red", textAlign: "center" }} />}><h1>这是在父组件添加的元素</h1></CloneDemo2>
+}
+
+```
+
+
+index.js
+
+```
+import { ContainerBox2 } from './Test/CloneElementTest';
+
+
+ReactDOM.render(
+  <React.StrictMode>
+  {<ContainerBox2 />}
+
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+
+
+
+reportWebVitals();
+```
+
+
+![控制台打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react19.png)
+
+![标签显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react20.png)
+
+
+
+
+<br/>
+
+> **验证2:传样式有效果**
+
+
+CloneElementTest.js
+
+```
+const Exam2_1 = (props) => {
+    console.log('🍎 <<<<<<<<<<<<<<<')
+    console.dir(props)
+    return <div style={{ ...props.styles, ...props.style }}>这是一个自定义的ReactElement元素{props.children}</div>
+}
+function CloneDemo2_1({ dom = <div />, ...rest }) {
+    const styles = {
+        color: "blue",
+        minWidth: "1200px",
+        margin: "100px auto",
+        textAlign: "left"
+    }
+    console.log('🍎 ===============')
+    console.dir(dom)
+    console.log('🍎 >>>>>>>>>>>>>>>')
+    console.dir(rest)
+    console.log('🍎 --------------->end')
+
+
+    return React.cloneElement(dom, { styles, ...rest })
+}
+export function ContainerBox2_1() {
+    return <CloneDemo2_1 dom={<Exam2_1 style={{ color: "red", textAlign: "center" }} />}><h1>这是在父组件添加的元素props.children</h1></CloneDemo2_1>
+}
+```
+
+
+index.js
+
+```
+import { ContainerBox2_1 } from './Test/CloneElementTest';
+
+
+ReactDOM.render(
+  <React.StrictMode>
+	{<ContainerBox2_1 />}
+
+
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+
+
+
+reportWebVitals();
+
+```
+
+![标签元素展示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react23.png)
+
+
+![属性打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react22.png)
+
+
+
+
+<br/>
+
+> **验证2:样式优先级**
+
+
+
+```
+const Exam2_2 = (props) => {
+    console.table({'🍎 Exam2_2 >>> props:%o': props,})
+    return <div style={{ ...props.style }}>这是一个自定义的ReactElement元素{props.children}</div>
+}
+function CloneDemo2_2({ dom = <div />, ...rest }) {
+    console.table({'🍊 CloneDemo2_2 >>> dom:%o': dom, 'rest: %o': rest})
+
+    const styles = {
+        color: "blue",
+        minWidth: "1200px",
+        margin: "100px auto",
+        textAlign: "center"
+    }
+    return React.cloneElement(dom, {
+        style: Object.assign({}, styles, dom.props.style), //将传入的样式放到最后提高他的优先级
+        ...rest
+    })
+}
+export function ContainerBox2_2() {
+    return <CloneDemo2_2 dom={<Exam2_2 style={{ color: "red", textAlign: "center" }} />}><h1>这是在父组件添加的元素2_2</h1></CloneDemo2_2>
+}
+```
+
+
+
+index.js
+
+```
+import { ContainerBox2_2 } from './Test/CloneElementTest';
+
+
+ReactDOM.render(
+  <React.StrictMode>
+  {<ContainerBox2_2 />}
+
+
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+
+
+
+reportWebVitals();
+
+
+
+
+```
+
+
+![标签元素展示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react24.png)
+
+
+![属性打印01](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react25.png)
+
+
+![属性打印02](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react26.png)
+
+
+
+
+
+
+<br/>
+
+> <h2 id=""></h2>
+
+
+
+
+<br/>
+
+> <h2 id=""></h2>
+
+
+
+<br/>
+
+> <h2 id=""></h2>
 
 
 
