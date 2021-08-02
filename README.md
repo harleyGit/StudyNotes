@@ -125,6 +125,7 @@
 *	[**iOS类继承**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
 *	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 *	[App发布](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
+*	[组件化](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/组件化.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
