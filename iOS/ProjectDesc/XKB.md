@@ -6,6 +6,7 @@
 - [标准库](#标准库)
 	- [Math.max()](#Mathmax)
 	- [Object.keys()](#Objectkeys)
+	- [Object.assign()](#Object.assign) 
 - [**属性**](#属性)
 	- [clientWidth](#clientWidth)
 	- [JavaScript的childNodes和children](#JavaScript的childNodes和children)
@@ -13,6 +14,8 @@
 	- [setTimeout](#setTimeout)
 - [**Window**](#Window)
 	- [Window.sessionStorage](#sessionStorage)
+- [**Element**](#Element)
+	- [Element.getBoundingClientRect()](#getBoundingClientRect)
 - [Dom对象](#Dom对象)
 	- [Dom元素创建设值(createElement)](#Dom元素创建设值)
 - [Event用法](#Event用法)
@@ -214,8 +217,33 @@ console.log(Object.keys(myObj)); // console: ['foo']
 
 <br/>
 
+> <h2 id="Object.assign">Object.assign() </h2>
+
+&emsp; **Object.assign()** 方法用于将所有可枚举属性的值从一个或多个源对象source复制到目标对象。它将返回目标对象target。
+
+```
+const target = { a: 1, b: 2 }
+const source = { b: 4, c: 5 }
+
+const returnedTarget = Object.assign(target, source)
+
+target // { a: 1, b: 4, c: 5 }
+returnedTarget // { a: 1, b: 4, c: 5 }
+
+```
+
+&emsp; Object.assign方法的第一个参数是目标对象，后面的参数都是源对象。
+
+&emsp; **注意:**如果目标对象与源对象有同名属性，或多个源对象有同名属性，则后面的属性会覆盖前面的属性。
+
+
+<br/>
+
 > <h2 id=""></h2>
 
+<br/>
+
+> <h2 id=""></h2>
 
 
 
@@ -486,6 +514,32 @@ div1..focus();
 
 
 
+
+<br/>
+
+***
+<br/>
+
+
+># <h1 id="Element">Element</h1>
+
+
+
+<br/>
+
+> <h2 id="getBoundingClientRect">Element.getBoundingClientRect()</h2>
+
+&emsp; Element.getBoundingClientRect() 方法返回元素的大小及其相对于视口的位置。
+
+&emsp; 如果是标准盒子模型，元素的尺寸等于width/height + padding + border-width的总和。如果box-sizing: border-box，元素的的尺寸等于 width/height。
+
+![位置显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react27.png)
+
+
+
+<br/>
+
+> <h2 id=""></h2>
 
 
 

@@ -40,6 +40,13 @@
 > <h1 id = "Git提交规范">Git提交规范</h1>
 
 ```
+⌘ -> command
+⇧ -> shift
+⌥ -> option
+⬆ -> 上箭头
+⬇ -> 下箭头
+⌃ -> Control
+
 - fix: 修复问题;
 - docs: 修改文档;
 - style: 修改代码格式，不影响代码逻辑;
