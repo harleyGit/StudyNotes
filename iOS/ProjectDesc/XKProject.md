@@ -10,6 +10,8 @@
 	- [调试解决](#调试解决) 
 		- [断点打印为null](#断点打印为null) 
 	- [ReactObj](#ReactObj) 
+		- [类](#类)
+		- [属性](#属性)
 		- [方法](#方法)
 	- [FMDB](#FMDB) 
 
@@ -128,222 +130,18 @@
 
 > <h2 id='ReactObj'>ReactObj</h2>
 
-<br/>
-
-> <h3 id='方法'>方法</h3>
-
-- [+(RACSignal *)createSignal:(RACDisposable * (^)(id<RACSubscriber> subscriber))didSubscribe](createSignal:)
-
-- [+(RACSignal *)return:(id)value](#return)
-
-- [-(__kindof RACStream *)map:(id (^)(id value))block](#map:)
-
-- [-(RACSignal *)flattenMap:(__kindof RACSignal * _Nullable (^)(ValueType _Nullable value))block](#flattenMap:)
-
-- [-(RACSignal *)doNext:(void (^)(id x))block](#doNext:)
-
-- 
-
 
 <br/>
-<br/>
+
 
 > <h3 id='类'>类</h3>
 - [RACBehaviorSubject](#RACBehaviorSubject)
 - [RACReplaySubject](#RACReplaySubject)
 - [RACCommand](#RACCommand)
-
-
-
-<br/>
-<br/>
-
->#### <h4 id='createSignal:'>+ (RACSignal *)createSignal:(RACDisposable * (^)(id<RACSubscriber> subscriber))didSubscribe</h4>
-
-```
-- (void) testMethod4 {
-    //创建信号
-    RACSignal *singalA = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
-        //发送信号
-        [subscriber sendNext:@"1"];
-        [subscriber sendNext:@(2)];
-        [subscriber sendCompleted];
-        
-        return [RACDisposable disposableWithBlock:^{
-            NSLog(@"------this is RACDisposable---------");
-        }];
-    }];
-    //订阅信号
-    [singalA subscribeNext:^(id  _Nullable x) {
-        NSLog(@"-------singalA value is %@-------",x);
-    }];
-}
-
-```
-
-打印：
-
-```
-2021-08-04 11:36:00.935943+0800 Test1[11228:186004] -------singalA value is 1-------
-2021-08-04 11:36:19.339155+0800 Test1[11228:186004] -------singalA value is 2-------
-2021-08-04 11:36:34.775731+0800 Test1[11228:186004] ------this is RACDisposable---------
-
-```
+- [RACSubject](#RACSubject)
 
 
 <br/>
-<br/>
-
->#### <h4 id='return'>[+(RACSignal *)return:(id)value](https://draveness.me/racsignal/)</h4>
-
-
-```
-+ (RACSignal *)return:(id)value {
-	return [RACReturnSignal return:value];
-}
-```
-
-&emsp; 该方法接受一个 NSObject 对象，并返回一个 RACSignal 的实例，它会将一个 UIKit 世界的对象 NSObject 转换成 ReactiveCocoa 中的 RACSignal。
-
-&emsp; 而 RACReturnSignal 也仅仅是把 NSObject 对象包装一下，并没有做什么复杂的事情：
-
-```
-+ (RACSignal *)return:(id)value {
-	RACReturnSignal *signal = [[self alloc] init];
-	signal->_value = value;
-	return signal;
-}
-```
-
-
-
-<br/>
-
-> <h4 id='map:'>- (__kindof RACStream *)map:(id (^)(id value))block </h4>
-
-```
-- (__kindof RACStream *)map:(id (^)(id value))block {
-	NSCParameterAssert(block != nil);
-
-	Class class = self.class;
-	
-	return [[self flattenMap:^(id value) {
-		return [class return:block(value)];
-	}] setNameWithFormat:@"[%@] -map:", self.name];
-}
-```
-
-&emsp; Map将原信号中的内容映射成新的指定内容。
- 通过对比，从map的实现方法中可以看出是基于flattenMap方法的一层封装，但同时又有不同之处。
- 
- **案例Demo：**
- 
- ```
- - (void) testMethod2 {
-    [[self.inputField.rac_textSignal map:^id _Nullable(NSString * _Nullable value) {
-        // 当源信号发出，就会调用这个block，修改源信号的内容
-        // 返回值：就是处理完源信号的内容。
-        return [NSString stringWithFormat:@"hello:%@",value];
-    }] subscribeNext:^(id  _Nullable x) {
-        NSLog(@"%@",x); // hello: "x"
-    }];
-    
-}
-```
-
-打印：
-
-```
-2021-08-03 17:41:58.501753+0800 Test1[21997:481962] hello:
-2021-08-03 17:42:04.605039+0800 Test1[21997:481962] hello:
-2021-08-03 17:42:07.073937+0800 Test1[21997:481962] hello:1
-2021-08-03 17:42:07.429275+0800 Test1[21997:481962] hello:12
-2021-08-03 17:42:07.736910+0800 Test1[21997:481962] hello:123
-2021-08-03 17:42:08.019351+0800 Test1[21997:481962] hello:1234
-```
-
- &emsp; **map:** 中的闭包参数value就是源信号的内容，直接拿到源信号的内容做处理，把处理好的内容，直接返回就好了，不用包装成信号，返回的值，就是映射的值。
-
-
-
-<br/>
-
-> <h4 id='flattenMap:'>- (RACSignal *)flattenMap:(__kindof RACSignal * _Nullable (^)(ValueType _Nullable value))block</h4>
-
-
-```
-- (void) testMethod1 {
-    [[self.inputField.rac_textSignal flattenMap:^__kindof RACSignal * _Nullable(NSString * _Nullable value) {
-        return  [RACSignal return:[NSString stringWithFormat:@"hello %@", value]];
-    }] subscribeNext:^(id  _Nullable x) {
-        NSLog(@"%@",x); // hello "x"
-    }];
-    
-    
-}
-```
-
-打印：
-
-```
-2021-08-03 17:36:47.264375+0800 Test1[21384:461035] hello S1
-2021-08-03 17:36:48.205486+0800 Test1[21384:461035] hello S12
-2021-08-03 17:36:48.748797+0800 Test1[21384:461035] hello S123
-2021-08-03 17:36:49.127409+0800 Test1[21384:461035] hello S1234
-```
-
-- flattenMap:中闭包参数value就是源信号的内容，拿到源信号的内容做处理；
-- value被包装成RACReturnSignal信号，返回出去；
-
-
-<br/>
-
-**flatternMap和Map的区别**
-- FlatternMap中的Block返回信号
-- Map中的Block返回对象
-- 开发中，如果信号发出的值不是信号，映射一般使用Map
-- 开发中，如果信号发出的值是信号，映射一般使用FlatternMap
-
-
-
-<br/>
-
-> <h4 id='doNext:'>-(RACSignal *)doNext:(void (^)(id x))block</h4>
-
-```
-- (void) testMethod3 {
-    
-    [[[[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
-        [subscriber sendNext:@"<<<<<<<<< 123456"];
-        [subscriber sendCompleted];
-        return nil;
-        
-    }] doNext:^(id x) {
-        //doNext：执行Next之前，会先执行这个Block： https://blog.csdn.net/s3590024/article/details/76071748
-        //doNext: 为一个附加操作，在一个next事件发生时执行的逻辑，而该逻辑并不改变事件本身。
-        // 执行 [subscriber sendNext:@"hi"] 之前会调用这个 Block
-        NSLog(@"================= 执行 %@", x);
-        
-    }] doCompleted:^{
-        // 执行 [subscriber sendCompleted] 之前会调用这 Block
-        NSLog(@">>>>>>>>>>>>>>doCompleted");
-        
-    }] subscribeNext:^(id x) {
-        NSLog(@"%@", x);
-    }];
-}
-```
-
-打印值：
-
-```
-2021-08-03 19:27:07.193319+0800 Test1[24609:580637] ================= 执行 <<<<<<<<< 123456
-2021-08-03 19:27:15.727391+0800 Test1[24609:580637] <<<<<<<<< 123456
-2021-08-03 19:27:28.381956+0800 Test1[24609:580637] >>>>>>>>>>>>>>doCompleted
-```
-
-
-
 <br/>
 
 > <h4 id='RACBehaviorSubject'>RACBehaviorSubject</h4>
@@ -408,9 +206,9 @@ RACBehaviorSubject *subject = [RACBehaviorSubject subject];
 
 <br/>
 
-> <h4 id='RACCommand'>RACCommand</h4>
+>#### <h4 id='RACCommand'>[RACCommand](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/ReactiveObjc(I).md)</h4>
 
-**`RACCommand:`**RAC中用于处理事件的类，可以把事件如何处理,事件中的数据如何传递，包装到这个类中，他可以很方便的监控事件的执行过程。
+**`RACCommand`**RAC中用于处理事件的类，可以把事件如何处理,事件中的数据如何传递，包装到这个类中，他可以很方便的监控事件的执行过程。
 
 
 **RACCommand使用步骤:**
@@ -511,6 +309,382 @@ RACBehaviorSubject *subject = [RACBehaviorSubject subject];
 <br/>
 
 > <h4 id=''></h4>
+
+
+
+<br/>
+
+> <h4 id=''></h4>
+
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='属性'>属性</h3>
+- [executionSignals](#executionSignals)
+
+<br/>
+
+> <h4 id='executionSignals'>executionSignals</h4>
+
+- **executionSignals:** RACCommand返回的信号时信号中的信号, 有两种方式可以获取最新的信号:
+	- switchToLatest: 获取内部的最新信号(被动执行)
+	- execute:        获取内部信号(这个是主动执行)
+
+```
+- (void)testMethod11 {
+    
+    RACCommand *command = [[RACCommand alloc] initWithSignalBlock:^RACSignal * _Nonnull(id  _Nullable input) {
+        NSLog(@"<<<<<< 🍎");
+        return [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+            NSLog(@"====== 🍎");
+            //input为传入的参数
+            [subscriber sendNext:@"发送数据"];
+            //NSError *error = [NSError new];
+            //[subscriber sendError:error];  发送error会自动调用
+            //每次都会创建一个信号，发送完数据，此处记得销毁消息，不然会一直处于执行中。
+            [subscriber sendCompleted];
+            return [RACDisposable disposableWithBlock:^{
+                NSLog(@"信号被销毁");
+            }];
+        }];
+    }];
+    
+    [command.executionSignals subscribeNext:^(id  _Nullable x) {
+        NSLog(@"获取一个信号---%@",x);
+        [x subscribeNext:^(id x) {
+            
+            NSLog(@"%@",x);
+        }];
+    }];
+    
+    [command.executing subscribeNext:^(NSNumber * _Nullable x) {
+        NSLog(@"监听完成---%@",x); //x为监听状态 0代表执行完毕，1代表执行中
+    }];
+    [command.errors subscribeNext:^(NSError * _Nullable x) {
+        NSLog(@"错误"); // 接受错误信息
+    }];
+    [command.executionSignals.switchToLatest subscribeNext:^(id  _Nullable x) {
+        NSLog(@"接受信号中的信号x为数据:%@",x);//x为发送的数据
+    }];
+    [command execute:@"11111"]; //调用command`
+    
+    
+}
+```
+
+打印：
+
+```
+2021-08-10 19:06:59.313989+0800 Test1[16755:560762] 监听完成---0
+2021-08-10 19:07:04.113967+0800 Test1[16755:560762] <<<<<< 🍎
+2021-08-10 19:07:08.761295+0800 Test1[16755:560762] 监听完成---1
+2021-08-10 19:07:13.356815+0800 Test1[16755:560762] 获取一个信号---<RACDynamicSignal: 0x6000010d1be0> name: 
+2021-08-10 19:07:21.296164+0800 Test1[16755:560762] ====== 🍎
+2021-08-10 19:07:24.038461+0800 Test1[16755:560762] 发送数据
+2021-08-10 19:07:25.469458+0800 Test1[16755:560762] 接受信号中的信号x为数据:发送数据
+2021-08-10 19:07:25.469853+0800 Test1[16755:560762] 信号被销毁
+2021-08-10 19:07:27.209794+0800 Test1[16755:560762] 监听完成---0
+```
+
+
+
+<br/>
+
+> <h4 id=''></h4>
+
+
+
+<br/>
+
+> <h4 id=''></h4>
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+>#### <h3 id='RACSubject'>[RACSubject](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/ReactiveObjc(I).md)</h3>
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='方法'>方法</h3>
+
+- [+(RACSignal *)createSignal:(RACDisposable * (^)(id<RACSubscriber> subscriber))didSubscribe](createSignal)
+
+- [+(RACSignal *)return:(id)value](#return)
+
+- [-(__kindof RACStream *)map:(id (^)(id value))block](#map)
+
+- [-(RACSignal *)flattenMap:(__kindof RACSignal * _Nullable (^)(ValueType _Nullable value))block](#flattenMap)
+
+- [-(RACSignal *)doNext:(void (^)(id x))block](#doNext)
+
+- [-(RACSignal *)takeUntil:(RACSignal *)signalTrigger](#takeUntil)
+
+- [-(RACSignal *)switchToLatest RAC_WARN_UNUSED_RESULT](#switchToLatest)
+
+
+
+
+<br/>
+<br/>
+
+
+>#### <h4 id='createSignal'>+ (RACSignal *)createSignal:(RACDisposable * (^)(id<RACSubscriber> subscriber))didSubscribe</h4>
+
+```
+- (void) testMethod4 {
+    //创建信号
+    RACSignal *singalA = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+        //发送信号
+        [subscriber sendNext:@"1"];
+        [subscriber sendNext:@(2)];
+        [subscriber sendCompleted];
+        
+        return [RACDisposable disposableWithBlock:^{
+            NSLog(@"------this is RACDisposable---------");
+        }];
+    }];
+    //订阅信号
+    [singalA subscribeNext:^(id  _Nullable x) {
+        NSLog(@"-------singalA value is %@-------",x);
+    }];
+}
+
+```
+
+打印：
+
+```
+2021-08-04 11:36:00.935943+0800 Test1[11228:186004] -------singalA value is 1-------
+2021-08-04 11:36:19.339155+0800 Test1[11228:186004] -------singalA value is 2-------
+2021-08-04 11:36:34.775731+0800 Test1[11228:186004] ------this is RACDisposable---------
+
+```
+
+
+<br/>
+<br/>
+
+>#### <h4 id='return'>[+(RACSignal *)return:(id)value](https://draveness.me/racsignal/)</h4>
+
+
+```
++ (RACSignal *)return:(id)value {
+	return [RACReturnSignal return:value];
+}
+```
+
+&emsp; 该方法接受一个 NSObject 对象，并返回一个 RACSignal 的实例，它会将一个 UIKit 世界的对象 NSObject 转换成 ReactiveCocoa 中的 RACSignal。
+
+&emsp; 而 RACReturnSignal 也仅仅是把 NSObject 对象包装一下，并没有做什么复杂的事情：
+
+```
++ (RACSignal *)return:(id)value {
+	RACReturnSignal *signal = [[self alloc] init];
+	signal->_value = value;
+	return signal;
+}
+```
+
+
+
+<br/>
+
+> <h4 id='map'>- (__kindof RACStream *)map:(id (^)(id value))block </h4>
+
+```
+- (__kindof RACStream *)map:(id (^)(id value))block {
+	NSCParameterAssert(block != nil);
+
+	Class class = self.class;
+	
+	return [[self flattenMap:^(id value) {
+		return [class return:block(value)];
+	}] setNameWithFormat:@"[%@] -map:", self.name];
+}
+```
+
+&emsp; Map将原信号中的内容映射成新的指定内容。
+ 通过对比，从map的实现方法中可以看出是基于flattenMap方法的一层封装，但同时又有不同之处。
+ 
+ **案例Demo：**
+ 
+ ```
+ - (void) testMethod2 {
+    [[self.inputField.rac_textSignal map:^id _Nullable(NSString * _Nullable value) {
+        // 当源信号发出，就会调用这个block，修改源信号的内容
+        // 返回值：就是处理完源信号的内容。
+        return [NSString stringWithFormat:@"hello:%@",value];
+    }] subscribeNext:^(id  _Nullable x) {
+        NSLog(@"%@",x); // hello: "x"
+    }];
+    
+}
+```
+
+打印：
+
+```
+2021-08-03 17:41:58.501753+0800 Test1[21997:481962] hello:
+2021-08-03 17:42:04.605039+0800 Test1[21997:481962] hello:
+2021-08-03 17:42:07.073937+0800 Test1[21997:481962] hello:1
+2021-08-03 17:42:07.429275+0800 Test1[21997:481962] hello:12
+2021-08-03 17:42:07.736910+0800 Test1[21997:481962] hello:123
+2021-08-03 17:42:08.019351+0800 Test1[21997:481962] hello:1234
+```
+
+ &emsp; **map:** 中的闭包参数value就是源信号的内容，直接拿到源信号的内容做处理，把处理好的内容，直接返回就好了，不用包装成信号，返回的值，就是映射的值。
+
+
+
+<br/>
+
+> <h4 id='flattenMap'>- (RACSignal *)flattenMap:(__kindof RACSignal * _Nullable (^)(ValueType _Nullable value))block</h4>
+
+
+```
+- (void) testMethod1 {
+    [[self.inputField.rac_textSignal flattenMap:^__kindof RACSignal * _Nullable(NSString * _Nullable value) {
+        return  [RACSignal return:[NSString stringWithFormat:@"hello %@", value]];
+    }] subscribeNext:^(id  _Nullable x) {
+        NSLog(@"%@",x); // hello "x"
+    }];
+    
+    
+}
+```
+
+打印：
+
+```
+2021-08-03 17:36:47.264375+0800 Test1[21384:461035] hello S1
+2021-08-03 17:36:48.205486+0800 Test1[21384:461035] hello S12
+2021-08-03 17:36:48.748797+0800 Test1[21384:461035] hello S123
+2021-08-03 17:36:49.127409+0800 Test1[21384:461035] hello S1234
+```
+
+- flattenMap:中闭包参数value就是源信号的内容，拿到源信号的内容做处理；
+- value被包装成RACReturnSignal信号，返回出去；
+
+
+<br/>
+
+**flatternMap和Map的区别**
+- FlatternMap中的Block返回信号
+- Map中的Block返回对象
+- 开发中，如果信号发出的值不是信号，映射一般使用Map
+- 开发中，如果信号发出的值是信号，映射一般使用FlatternMap
+
+
+
+<br/>
+
+> <h4 id='doNext'>-(RACSignal *)doNext:(void (^)(id x))block</h4>
+
+```
+- (void) testMethod3 {
+    
+    [[[[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"<<<<<<<<< 123456"];
+        [subscriber sendCompleted];
+        return nil;
+        
+    }] doNext:^(id x) {
+        //doNext：执行Next之前，会先执行这个Block： https://blog.csdn.net/s3590024/article/details/76071748
+        //doNext: 为一个附加操作，在一个next事件发生时执行的逻辑，而该逻辑并不改变事件本身。
+        // 执行 [subscriber sendNext:@"hi"] 之前会调用这个 Block
+        NSLog(@"================= 执行 %@", x);
+        
+    }] doCompleted:^{
+        // 执行 [subscriber sendCompleted] 之前会调用这 Block
+        NSLog(@">>>>>>>>>>>>>>doCompleted");
+        
+    }] subscribeNext:^(id x) {
+        NSLog(@"%@", x);
+    }];
+}
+```
+
+打印值：
+
+```
+2021-08-03 19:27:07.193319+0800 Test1[24609:580637] ================= 执行 <<<<<<<<< 123456
+2021-08-03 19:27:15.727391+0800 Test1[24609:580637] <<<<<<<<< 123456
+2021-08-03 19:27:28.381956+0800 Test1[24609:580637] >>>>>>>>>>>>>>doCompleted
+```
+
+
+<br/>
+
+> <h4 id='takeUntil'>-(RACSignal *)takeUntil:(RACSignal *)signalTrigger</h4>
+
+&emsp; **takeUntil:**给takeUntil传的是哪个信号，那么当这个信号发送信号或sendCompleted，就不能再接受源信号的内容了。
+
+```
+- (void) testMethod9 {
+    RACSubject *subjectA = [RACSubject subject];
+    RACSubject *subjectB = [RACSubject subject];
+    [[subjectA takeUntil:subjectB] subscribeNext:^(id  _Nullable x) {
+        NSLog(@"==%@+",x);
+    }];
+    [subjectA sendNext:@"1"];
+    [subjectA sendNext:@"2"];
+    
+    [subjectB sendNext:@"3"];
+    [subjectB sendCompleted];
+    
+    [subjectA sendNext:@"4"];
+}
+```
+
+打印：
+
+```
+2021-08-10 16:30:47.056630+0800 Test1[13385:391649] ==1+
+2021-08-10 16:30:48.273529+0800 Test1[13385:391649] ==2+
+```
+
+
+<br/>
+
+> <h4 id='switchToLatest'>-(RACSignal *)switchToLatest</h4>
+
+```
+- (void) testMethod10 {
+    RACSubject *signalOfSignals = [RACSubject subject];
+    RACSubject *signal = [RACSubject subject];
+    // 获取信号中信号最近发出信号，订阅最近发出的信号。
+    // 注意switchToLatest：只能用于信号中的信号
+    [signalOfSignals.switchToLatest subscribeNext:^(id x) {
+        NSLog(@"%@",x);
+    }];
+    //若是注释掉这一行，
+    [signalOfSignals sendNext:signal];
+    [signal sendNext:@1];
+    [signal sendNext:@"123"];
+}
+```
+
+打印：
+
+```
+2021-08-10 17:09:37.957480+0800 Test1[14129:421885] 1
+2021-08-10 17:09:37.957852+0800 Test1[14129:421885] 123
+```
+
 
 
 
