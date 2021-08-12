@@ -1,7 +1,10 @@
+> <h1 id=""></h1>
+- [属性](#属性)
+- [**控制器添加和移除**](#控制器添加和移除)
+	- [添加ViewController](#添加ViewController)
+	- [移除ViewController](#移除ViewController)
 
-- 控制器Add、Delete
-	- 添加ViewController
-	- 移除ViewController
+
 
 <br/>
 
@@ -9,7 +12,16 @@
 <br/>
 
 
-># 控制器Add、Delete
+># <h1 id="属性">属性</h1>
+
+
+<br/>
+
+***
+<br/>
+
+
+># <h1 id="控制器添加和移除">控制器添加和移除</h1>
 
 &emsp;  在日常的开发中常有这样一种需求，通过切换标签来切换不同的页面，如果在一个 controller 管理这些 view 的话，代码就显得耦合度过高，也与 Apple 的 MVC 模式不符合，Apple 推荐一个 controller 管理一个 view。 
 
@@ -47,7 +59,7 @@
 
 <br/>
 
-- **`添加ViewController`**
+> <h2 id="添加ViewController">添加ViewController</h2> 
 
 `ViewController.m 文件中`
 
@@ -79,8 +91,10 @@
 ![点击Button后](https://upload-images.jianshu.io/upload_images/2959789-b65c77527c3c3673.png?imageMogr2/auto-orient/strip%7CimageView2/2/h/240)
 
 <br/>
+<br/>
 
-- **`移除ViewController`**
+> <h2 id="移除ViewController">移除ViewController</h2> 
+
 
 `NewController.m`
 
