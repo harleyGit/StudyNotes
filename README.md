@@ -7,6 +7,7 @@
 	- [**Swift**](#Swift)
 	- [**错误总结**](#错误总结)
 	- [**ProjectDesc**](#ProjectDesc)
+- [**Go**](#Go)
 - [**Flutter 开发**](#Flutter开发)
 - [**JavaScript**](#JavaScript)
 - [**React开发**](#React开发)
@@ -39,6 +40,13 @@
 > <h1 id = "Git提交规范">Git提交规范</h1>
 
 ```
+⌘ -> command
+⇧ -> shift
+⌥ -> option
+⬆ -> 上箭头
+⬇ -> 下箭头
+⌃ -> Control
+
 - fix: 修复问题;
 - docs: 修改文档;
 - style: 修改代码格式，不影响代码逻辑;
@@ -124,6 +132,7 @@
 *	[**iOS类继承**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
 *	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 *	[App发布](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
+*	[组件化](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/组件化.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
@@ -170,6 +179,7 @@
 * [App签名原理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App签名原理.md)
 * [单元测试(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/单元测试(I).md)
 * [语法精练(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/语法精练(I).md)
+* [WKWebView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/WKWebView(I).md)
 * [**底层原理**](#底层原理)
 	* [ARC原理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/ARC原理.md) 
 
@@ -221,6 +231,7 @@
 
 	       
 > <h2 id = "ProjectDesc">ProjectDesc</h2>
+* [XKProject](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/XKProject.md)
 * [**Desc(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(I).md)
 * [**Desc(II)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Desc(II).md)
 * [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
@@ -236,6 +247,15 @@
 	
 
 
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id = "Go">Go</h1>
+- [环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Go/环境配置.md)
 
 
 <br/>
