@@ -6,6 +6,7 @@
 	- [路由导航](#路由导航)
 	- [网页](#网页) 
 		- [WebViewController](#HybridWebViewController)
+		- [应用](#应用)
 - [**三方库**](#三方库)
 	- [调试解决](#调试解决) 
 		- [断点打印为null](#断点打印为null) 
@@ -87,10 +88,170 @@
 <br/>
 
 
+> <h3 id='应用'>应用</h2>
+
+- [模拟网络调用](#模拟网络调用)
+
+使用ReactiveObjC进行网络请求：
+
+```
+//导入头文件
+#import <ReactiveObjC/ReactiveObjC.h>
+
+
+- (void)testMethod12 {
+    
+    //ApplicationViewModel中的代码
+    RACSubject *requestSubject1 = [RACSubject subject];
+    RACSubject *requestSubject2 = [RACSubject subject];
+
+    
+    [requestSubject1 subscribeNext:^(id  _Nullable x) {
+        NSLog(@"订阅数据2： %@", x);
+        [requestSubject2 sendNext:x];
+    } error:^(NSError * _Nullable error) {
+        [requestSubject1 sendError:error];
+        
+    }];
+    
+    [requestSubject2 subscribeNext:^(id  _Nullable x) {
+        NSLog(@"🔚 网络请求返回的数据： %@", x);
+    }];
+    
+    
+    //APICommand中的代码
+    RACCommand *command = [[RACCommand alloc] initWithSignalBlock:^RACSignal * _Nonnull(id  _Nullable input) {
+        NSLog(@"✈️开始网络请求： %@", input);
+        return  [self requestSignal:input];
+    }];
+    
+    [[command.executionSignals.switchToLatest map:^id _Nullable(id  _Nullable value) {
+        NSLog(@"过滤数据： %@", value);
+        return  value;
+    }] subscribeNext:^(id  _Nullable x) {
+        NSLog(@"订阅数据1： %@", x);
+        [requestSubject1 sendNext:x];
+    }];
+    
+    [command execute:@"param={token：12345678}"];
+    
+    
+    
+}
+
+
+- (RACSignal *) requestSignal:(NSString *)params {
+    
+    RACSignal *signal = [
+                         [
+                          [
+                           [
+                            [RACSignal return:params] map:^id _Nullable(id  _Nullable value) {
+        NSLog(@"🍎 <<<<<<< 执行 map 映射: %@", value);
+        NSString *requestInfo = [NSString stringWithFormat:@"接口url&请求头header&%@", value];
+        NSLog(@"======= 拼装后的请求信息 %@", requestInfo);
+
+        return  requestInfo;
+    }] flattenMap:^__kindof RACSignal * _Nullable(id  _Nullable value) {
+        NSLog(@">>>>> 执行 flattenMap1 方法: %@", value);
+        // combineLatestWith把两个信号组合成一个信号,跟zip一样，没什么区别
+        return  [[RACSignal return:value] combineLatestWith:[self post:value]];
+    }] doNext:^(id  _Nullable x) {
+        
+        //解元组：合并信号得到的是一个元组,里面存放的是两个信号发送的消息
+        RACTupleUnpack(NSString *str1,NSString *str2) = x;
+        
+        NSLog(@"🍊 <<<<< 执行 doNext 方法，请求信息：%@,  处理网络请求回的数据： %@", str1, str2);
+        
+    }] flattenMap:^__kindof RACSignal * _Nullable(id  _Nullable value) {
+        //解元组：合并信号得到的是一个元组,里面存放的是两个信号发送的消息
+        RACTupleUnpack(NSString *str1,NSString *str2) = value;
+        NSLog(@" ====== 执行 flattenMap2 方法, 请求信息：%@,  处理网络请求回的数据： %@", str1, str2);
+
+        return [RACSignal return:str2];
+    }];
+
+    
+    return  signal;
+}
+
+
+- (RACSignal *) post:(NSString *)value {
+    RACSignal *requestSignal = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+        
+        [subscriber sendNext:@"jsonData={title:拓客利器, functionCode: 10915}"];
+//        NSError *httpError = [NSError errorWithDomain:@"网络💔失联错误" code:10001 userInfo:@{
+//                                NSLocalizedDescriptionKey:@"返回的消息？",
+//                                NSLocalizedFailureReasonErrorKey:@"失败原因",
+//                                NSLocalizedRecoverySuggestionErrorKey:@"意见：恢复初始化",
+//                                @"自定义":@"自定义的内容",
+//        }];
+//        [subscriber sendError:httpError];
+        return  nil;
+    }];
+    
+    return  [requestSignal catch:^RACSignal * _Nonnull(NSError * _Nonnull error) {
+        NSLog(@">>>>> 捕捉错误❌⁉️");
+        return [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+            [subscriber sendNext:@"💣 检查年底网络，网络异常了"];
+            [subscriber sendCompleted];
+            return  nil;
+        }];
+    }];
+}
+
+/*
+ 
+ - (RACSignal *)catch:(RACSignal * (^)(NSError *error))catchBlock
+
+ 返回一个新信号N
+ 当receiver发生error时，catchBlock中收到相应错误信息，并返回一个新的信号M，同时订阅M，自此以后新信号N中的数据便是M中的数据了
+ 当receiver不发生error时，数据仍会通过N进行发送
+ 还有一个精简的方法是- (RACSignal *)catchTo:(RACSignal *)signal，意思是相同的
+
+ 比如[A catchTo: B]表示，返回一个新信号，其中的数据是，如果A不发生错误就是A的数据，如果A发生错误，则数据边来源于B
+ 
+ **************************>>>
+ 
+ 当对原信号进行订阅的时候，如果出现了错误，会去执行catchBlock( )闭包，入参为刚刚产生的error。catchBlock( )闭包产生的是一个新的RACSignal，并再次用订阅者订阅该信号。
+
+ 这里之所以说是高阶操作，是因为这里原信号发生错误之后，错误会升阶成一个信号。
+ 
+ */
+
+```
+
+打印：
+
+![日志打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd16.png)
+
+**心得体会：**
+
+&emsp; 从这一连串打印下来，对`ReactiveObjC`的信号有了一定的认识。在RACCommand的实例对象执行`[command execute:@"param={token：12345678}"];`后就执行其闭包内的方法进行调用`[self requestSignal:input]`执行网络请求，在这个方法中通过断点调试我们可以看到当执行到`return  [[RACSignal return:value] combineLatestWith:[self post:value]];`方法的`[self post:value]`时它会跳到这个`post`方法中，在这个方法内当执行到`[subscriber sendNext:@"jsonData={title:拓客利器, functionCode: 10915}"];`时，它其实发送了一个信号，然后整体就开始活泛起来了。它会跳转到下面的闭包执行
+
+```
+ //解元组：合并信号得到的是一个元组,里面存放的是两个信号发送的消息
+RACTupleUnpack(NSString *str1,NSString *str2) = x;
+
+NSLog(@"🍊 <<<<< 执行 doNext 方法，请求信息：%@,  处理网络请求回的数据： %@", str1, str2);
+```
+然后一层一层的执行信号的处理，有点像剥🧅洋葱的感觉。其源头就是请求的数据来了，然后激发了信号，对信号的处理。
 
 
 
 
+<br/>
+<br/>
+
+
+> <h3 id=''></h2>
+
+
+<br/>
+<br/>
+
+
+> <h3 id=''></h2>
 
 
 

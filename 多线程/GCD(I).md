@@ -8,7 +8,9 @@
 	- dispatch_after
 	- dispatch_time_t
 	- dispatch_walltime	
-- [**多线程**](https://meniny.cn/posts/iOS_Primer_017/)
+- **参考资料**
+	- [**多线程**](https://meniny.cn/posts/iOS_Primer_017/)
+	- [开源的Parse源码(GCD玩的出神入化)](https://github.com/ChenYilong/ParseSourceCodeStudy)
 
 
 

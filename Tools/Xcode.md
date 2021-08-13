@@ -1,11 +1,13 @@
-
+> <h2 id=''></h2>
 - **调试**
 - **配置**
 	- 导航显示开发页面 
 	- Command+点击 跳转到定义的方法
 - **清理缓存文件**
 - **Xcode完全卸载**
-- [**Xcode清理垃圾文件**](https://www.jianshu.com/p/4540d34431db)
+- **参考资料**
+	- [**Xcode清理垃圾文件**](https://www.jianshu.com/p/4540d34431db)
+	- [控制台调试](https://www.jianshu.com/p/75688613c6f4)
 
 
 

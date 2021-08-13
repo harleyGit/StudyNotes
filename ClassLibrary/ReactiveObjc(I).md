@@ -9,6 +9,7 @@
 - **参考资料**
 	- [ReactiveCocoa之RACCommand使用(五)](https://blog.csdn.net/majiakun1/article/details/52937770)
 	- [ReactiveObjC快速入门](https://juejin.cn/post/6953808004307222564#heading-10)
+	- [MVVM on iOS (ReactiveX)](https://sunxiaoshan.medium.com/mvvm-on-ios-reactivex-417b012b5d81)
  
 
 <br/>
