@@ -1,11 +1,12 @@
 > <h2 id=''></h2>
-- **调试**
-- **配置**
-	- 导航显示开发页面 
-	- Command+点击 跳转到定义的方法
-- **清理缓存文件**
-- **Xcode完全卸载**
+- [**调试**](#调试)
+- [**配置**](#配置)
+	- [导航显示开发页面](#导航显示开发页面)
+	- [跳转到定义方法](#跳转到定义方法)
+- [**清理缓存文件**](#清理缓存文件)
+	- [**Xcode完全卸载**](#Xcode完全卸载)
 - **参考资料**
+	- [Yapi](https://hellosean1025.github.io/yapi/index.html)
 	- [**Xcode清理垃圾文件**](https://www.jianshu.com/p/4540d34431db)
 	- [控制台调试](https://www.jianshu.com/p/75688613c6f4)
 
@@ -16,7 +17,8 @@
 ***
 <br/>
 
-># 调试
+> <h1 id='调试'>调试</h2>
+
 
 - 控制台**`bt`**命令
 	- 当xcode工具区打印的堆栈信息不全时，可以在控制台通过“bt”指令打印完整的堆栈信息
@@ -27,9 +29,14 @@
 ***
 <br/>
 
-># 快捷键
+> <h1 id='快捷键'>快捷键</h1>
 
 - 代码格式对齐：选中要对齐的代码，然后快捷键 `Contorl + i`
+* 单行注释：`command + /`，即`⌘ + /`;
+* 注释文档：`command + Option + /`，即`⌘ + ⌥ + /`;
+- [**常用快捷键总结**](https://yanhooit.gitbooks.io/ios_study_note/content/xcodekuai_jie_jian.html)
+
+
 
 
 
@@ -39,11 +46,15 @@
 ***
 <br/>
 
-># 配置
+
+> <h1 id='配置'>配置</h1>
+
+
+
 
 <br/>
 
-> 导航显示开发页面
+> <h2 id='导航显示开发页面'>导航显示开发页面</h2>
 
 打开`Xcode->Preferebces`,选择如下图：
 
@@ -52,7 +63,9 @@
 <br/>
 <br/>
 
-> Command+点击 跳转到定义的方法
+> <h2 id='跳转到定义方法'>跳转到定义方法</h2>
+
+Command+点击
 
 ![z47](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z47.png)
 
@@ -62,7 +75,11 @@
 ***
 <br/>
 
-># 清理缓存文件
+
+
+
+> <h1 id='清理缓存文件'>清理缓存文件</h1>
+
 
 <br/>
 
@@ -114,12 +131,10 @@ Command+shift+G 在Finder中，删除项目运行时产生的文件
 亲测，删除了3个项目文件。清了3.3G的内存
 
 <br/>
-
-***
 <br/>
 
 
-># 终端卸载
+> <h2 id='Xcode完全卸载'>Xcode完全卸载</h2>
 
 ```
 % sudo rm -rf /Applications/Xcode.app

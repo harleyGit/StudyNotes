@@ -601,7 +601,13 @@
 <br/>
 
 > <h1 id = "工具">工具</h1>
+- [SourceTree(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree(I).md)
+* [CocoaPods(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(I).md)
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
+* [Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac.md)
+* [Podfile书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)
+* [工具集](https://github.com/harleyGit/StudyNotes/blob/master/Tools/工具集.md)
+* [Git](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git.md)
 * [Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
 * [VSCode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/VSCode.md)
 * [数码](https://github.com/harleyGit/StudyNotes/blob/master/Tools/数码.md)
@@ -609,21 +615,9 @@
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令.md)
 * [codemagic](https://codemagic.io/apps)
 	 * [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
-* [SourceTree(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree(I).md)
-* [SourceTree(II)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree(II).md)
-* [CocoaPods(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(I).md)
-* [CocoaPods(II)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(II).md)
-* [CocoaPods(III)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(III).md)
 * [Android 模拟器 For Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Android-模拟器-For-Mac.md)
-* [Git](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git.md)
-* [Git分支](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git分支.md)
-* [Git问题(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git问题(I).md)
-* [GitBook配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/GitBook-配置.md)
 * [JAVA 和 Android 配置](https://github.com/harleyGit/StudyNotes/blob/master/Tools/JAVA-和-Android-配置.md)
-* [Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac.md)
-* [Podfile书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)
-* [工具集](https://github.com/harleyGit/StudyNotes/blob/master/Tools/工具集.md)
-*	[代码管理](https://github.com/harleyGit/StudyNotes/blob/master/Tools/代码管理.md)
+
 
 
 <br/>
