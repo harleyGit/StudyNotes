@@ -21,8 +21,8 @@
 - [**分支种类**](#分支种类)
 - [**Git安装**](#Git安装)
 - [Gitee配置](#Gitee配置)
-- 
 - **错误解决**
+	- [please used a personal access token instead](#tokeninstead) 
 	-  [LibreSSL SSL_connect：443](#LibreSSLSSL_connect443) 
 	-  [游离态Head解决](#游离态Head解决)
 - **`参考资料`**
@@ -734,6 +734,41 @@ v13.12.0
 ># <h1 id="错误解决">错误解决</h2>
 
 
+<br/>
+> <h2 id='tokeninstead'>please used a personal access token instead</h2>
+
+&emsp; 提交代码会发现如下问题：
+
+![密码不能使用](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git-1.png)
+
+&emsp; 这是因为GitHub为了安全，使用token替代了密码，你需要重新设置，这项规定是从2021.8.13日开始的。下面按照步骤来就可以解决了：
+
+![步骤一](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git-1.png)
+
+![步骤二](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git1.png)
+
+![步骤三](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git2.png)
+
+![步骤四](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git3.png)
+
+打开Mac上的KeyChain应用，然后按照下面步骤来：
+
+![步骤五](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git4.png)
+
+然后，你在终端输入你的提交代码命令
+
+```
+$ git push origin master
+$ （提示）输入你的git用户名：
+$ 输入用户名
+$ (提示)输入你的Git密码：
+$ 输入token值(这时不要输入Git密码，而是要输入刚刚拷贝的token值就可以了)
+```
+
+
+
+
+<br/>
 <br/>
 
 
