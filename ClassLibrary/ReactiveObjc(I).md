@@ -1,13 +1,15 @@
 > <h2 id=''></h2>
 - [**ReactiveObjc下载**](#ReactiveObjc下载)
 - [**类**](#类)
-	-  [RACSubject](#RACSubject)
+	- [RSCSignal(冷信号)](#RSCSignal)
+	-  [RACSubject(热信号)](#RACSubject)
 	-  [RACCommand](#RACCommand)
 		-  [属性](#属性)
 - [属性](#属性)
 - [方法](#方法)
 - **参考资料**
 	- [ReactiveCocoa之RACCommand使用(五)](https://blog.csdn.net/majiakun1/article/details/52937770)
+	- [操作符](https://juejin.cn/post/6934238669578436615)
 	- [ReactiveObjC快速入门](https://juejin.cn/post/6953808004307222564#heading-10)
 	- [MVVM on iOS (ReactiveX)](https://sunxiaoshan.medium.com/mvvm-on-ios-reactivex-417b012b5d81)
  
@@ -48,10 +50,84 @@ pod update --verbose
 
 > <h1 id='类'>类</h1>
 
+- 响应式编程思想(KVO)
+- 链式编程思想(block做参数, block返回对象本身)
+- ReactiveCocoa主要由以下四大核心组件构成
+	- 信号源: [RACStream]及其子类最核心
+	- 订阅者: [RACSubscriber]的实现类及其子类
+	- 调度器: [RACScheduler]及其子类
+	- 清洁工: [RACDisposable]及其子类
+
+
 
 <br/>
 
-> <h2 id='RACSubject'>RACSubject</h2>
+> <h2 id='RACSignal'>RACSignal(冷信号)</h2>
+
+- 只有数据改变时, 信号内部才会发出数据, 它本身不具备发送信号的能力, 而是交给内部一个订阅者去发出
+- 默认一个信号都是冷信号, 也就是值改变了,也不会触发, 只有订阅了这个信号, 这个信号才会变成热信号, 值改变才会触发
+- 不要分开订阅next, error, completed这样的话会把前面的订阅者清除掉, 应该使用直接返回这三种的订阅方法
+- **RACSignal底层实现大致原理：**
+	- 	创建信号，首先把didSubscribe保存到信号中，还不会触发。
+	- 当信号被订阅，也就是调用signal的subscribeNext:nextBlock
+		- subscribeNext内部会创建订阅者subscriber，并且把nextBlock保存到subscriber中。
+		- subscribeNext内部会调用siganl的didSubscribe
+	- siganl的didSubscribe中调用[subscriber sendNext:@1];
+	- sendNext底层其实就是执行subscriber的nextBlock
+
+
+**Demo**
+
+```
+- (void) testMethod0 {
+    //1.创建信号
+    RACSignal *siganal = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+        // block调用时刻：每当有订阅者订阅信号，就会调用block。
+                
+        // 2.发送信号
+        [subscriber sendNext:@"发送数据"];
+        
+        //数据发送完要调用sendCompleted，内部会自动调用[RACDisposable disposable]取消订阅信号。
+        [subscriber sendCompleted];
+//        NSError *error = [NSError new];
+//        [subscriber sendError:error];  //error会自动销毁信号
+        return [RACDisposable disposableWithBlock:^{
+            // block调用时刻：当信号发送完成或者发送错误，就会自动执行这个block,取消订阅信号。
+                        
+            // 执行完Block后，当前信号就不在被订阅了。
+            NSLog(@"信号被销毁");
+        }];
+    }];
+    
+    // 3.订阅信号,才会激活信号
+    [siganal subscribeNext:^(id  _Nullable x) {
+        // block调用时刻：每当有信号发出数据，就会调用block.
+        NSLog(@"%@",x); //接受数据
+    }];
+    
+    
+}
+```
+
+打印：
+
+```
+2021-08-16 13:39:12.056700+0800 Test1[12895:210417] 发送数据
+2021-08-16 13:39:17.833233+0800 Test1[12895:210417] 信号被销毁
+```
+
+
+<br/>
+
+- **RACSubscriber(订阅者), 用于发送信号, 这是一个协议不是一个类**
+- **RACDisposable用于取消订阅或者清理资源, 当信号发送完成或发送错误的时候, 就会自动触发它**
+- **RACSubject: 遵循了RACsubscriber协议的RACSignal,所以自己是信号, 也可以订阅其他信号**
+- **RACReplaySubject: RACSubject的子类, 重复提供信号, 先把发送过的信号缓存起来, 再次订阅时直接发送缓存的值**
+
+<br/>
+<br/>
+
+> <h2 id='RACSubject'>RACSubject(热信号)</h2>
 
 &emsp; `RACSubject（热信号）`继承于`RACSignal`，一个`subject`可认为是一个信号，你可以手动控制`sendNext、sendError、sendCompleted`事件。可以帮助你将非RAC桥接到RAC上。
 热信号特点：
