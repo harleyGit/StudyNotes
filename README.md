@@ -1,42 +1,3 @@
-> <h1 id=""></h1>
-- [**Git提交规范**](#Git提交规范)
-- [**C++**](#C++)
-- [**C**](#C)
-- [**iOS开发**](#iOS开发)
-	- [**Objective-C**](#Objective-C)
-	- [**Swift**](#Swift)
-	- [**错误总结**](#错误总结)
-	- [**ProjectDesc**](#ProjectDesc)
-- [**Go**](#Go)
-- [**Flutter 开发**](#Flutter开发)
-- [**JavaScript**](#JavaScript)
-- [**React开发**](#React开发)
-- [**CSS**](#CSS)
-- [**Egret Engine**](#EgretEngine)
-- [**底层**](#底层)
-- [**优化**](#优化)
-- [**动画/绘图**](#动画/绘图)
-- [**加密**](#加密)
-- [**类库**](#类库)
-- [**多线程**](#多线程)
-- [**数据存储**](#数据存储)
-- [**Network**](#Network)
-- [**数据结构**](#数据结构)
-- [**工具**](#工具)
-- [**读书笔记**](#读书笔记)
-- [**优秀资料**](#优秀资料)
-- [**优秀文章**](#优秀文章)
-- [**参考资料**](#参考资料)
-
-
-
-<br/>
-
-***
-<br/>
-
-
-
 > <h1 id = "Git提交规范">Git提交规范</h1>
 
 ```
@@ -65,6 +26,45 @@
 
 
 ```	
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="纲目">纲目</h1>
+- [**Git提交规范**](#Git提交规范)
+- [**C++**](#C++)
+- [**C**](#C)
+- [**iOS开发**](#iOS开发)
+	- [**Objective-C**](#Objective-C)
+	- [**Swift**](#Swift)
+	- [**错误总结**](#错误总结)
+	- [**ProjectDesc**](#ProjectDesc)
+- [**Go**](#Go)
+- [**Flutter**](#Flutter)
+- [**JavaScript**](#JavaScript)
+- [**React开发**](#React开发)
+- [**CSS**](#CSS)
+- [**Egret Engine**](#EgretEngine)
+- [**底层**](#底层)
+- [**优化**](#优化)
+- [**动画/绘图**](#动画/绘图)
+- [**加密**](#加密)
+- [**类库**](#类库)
+- [**多线程**](#多线程)
+- [**数据存储**](#数据存储)
+- [**Network**](#Network)
+- [**数据结构**](#数据结构)
+- [**工具**](#工具)
+- [**读书笔记**](#读书笔记)
+- [**优秀资料**](#优秀资料)
+- [**优秀文章**](#优秀文章)
+- [**参考资料**](#参考资料)
+
 
 
 <br/>
@@ -267,7 +267,7 @@
 <br/>
 
 
-> <h1 id = "Flutter开发">Flutter开发</h1>
+> <h1 id = "Flutter">Flutter</h1>
 *	[资料集](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/资料集.md)
 *	[类[I]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[I].md)
 *	[类[II]](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/类[II].md)
@@ -295,6 +295,8 @@
 *	[异常抛出](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/异常抛出.md)
 *	[前端环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/前端环境配置.md)
 *	[跨组件状态共享](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享.md)
+*	[**分享**](#分享)
+	* [WMShare(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享WMShare(I).md)
 
 
 
