@@ -1,9 +1,14 @@
 > <h1 id=""></h1>
-- [**文件结构**](#文件结构)
-- [React](#React)
+- [**模块导入和导出**](#模块导入和导出)
+	- [require](#require)
+- [ES6语法](#ES6语法)
+	- [=> 箭头函数](#箭头函数)
+	- [匿名函数](#匿名函数)
+		- [自调用函数](#自调用函数)
+- [**React**](#React)
 	- [ReactDom](#ReactDom)
 		- [unmountComponentAtNode()](#unmountComponentAtNode())  
-- [标准库](#标准库)
+- [**标准库**](#标准库)
 	- [Math.max()](#Mathmax)
 	- [Object.keys()](#Objectkeys)
 	- [Object.assign()](#Object.assign) 
@@ -14,11 +19,12 @@
 	- [setTimeout](#setTimeout)
 - [**Window**](#Window)
 	- [Window.sessionStorage](#sessionStorage)
+	- [Window Navigator](#WindowNavigator)
 - [**Element**](#Element)
 	- [Element.getBoundingClientRect()](#getBoundingClientRect)
-- [Dom对象](#Dom对象)
+- [**Dom对象**](#Dom对象)
 	- [Dom元素创建设值(createElement)](#Dom元素创建设值)
-- [Event用法](#Event用法)
+- [**Event用法**](#Event用法)
 	- [stopPropagation()](#stopPropagation())
 	- [preventDefault()](#preventDefault())
 	- [initEvent()](#initEvent())
@@ -30,6 +36,9 @@
 - [**Touch**](#Touch) 
 	- [属性](#属性) 
 		- [screenX](#screenX)
+- [**JSON**](#JSON)
+	- [JSON.parse()](#JSON.parse())
+	- [JSON.stringify()](#JSON.stringify())
 - [**问题**](#问题)
 - [**开发心得**](#开发心得)
 	- [flex使用](#flex心得)
@@ -47,80 +56,321 @@
 
 ***
 <br/>
-># <h1 id="文件结构">文件结构</h1>
+
+># <h1 id="模块导入和导出"> [模块导入和导出](https://www.cnblogs.com/libin-1/p/7127481.html) </h1>
+
 
 <br/>
 
-- 网络请求类： src > components-hybrid > mapi.js 
-- 路由模块：src > router > config > config.js 
-- 路由配置模块： WRouter.js
-- CheckPathInterceptor： 检查路径，对路径进行处理拦截
-- WRouterInterceptorChain： 路由导航拦截器链
 
+> <h2 id="require"> require </h2>
+
+&emsp; 在CommonJS中，有一个全局性方法require()，用于加载模块。假定有一个数学模块math.js，就可以像下面这样加载。
+
+|:--|:--|
+| 1 | var math = require('math'); |
+
+
+然后，就可以调用模块提供的方法：
+
+| 1 | var math = require('math'); |
+|:--|:--|
+| 2 | math.add(2,3); // 5 |
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+># <h1 id="ES6语法">ES6语法</h1>
+
+<br/>
+
+># <h2 id="箭头函数">[=> 箭头函数](https://juejin.cn/post/6844903573428371464)</h2>
+
+> [**基础语法**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
 
 ```
+(param1, param2, …, paramN) => { statements }
+(param1, param2, …, paramN) => expression
+//相当于：(param1, param2, …, paramN) =>{ return expression; }
 
- _resultRouterInterceptors = [
-    //检查路径的拦截器
-    CheckPathInterceptor,
-    //检查参数的拦截器
-    ParamInterceptor,
-    //路由配置拦截器，主要针对于要传递的参数
-    RouteConfigInterceptor,
-    //这个是WRouter的一个属性数组，但是在WRouter.js里根本看不到他的数组元素加入，
-    //其实是在index.js文件中window.WRouter.registerRouteInterceptor方法加入的，分别是：
-    //VersionInterceptor: 针对于版本的判断主要是针对于低版本的适配
-    //UserPackageInterceptor: 业务套餐拦截,对一些业务进行拦截配置
-    //PluginBuyInterceptor: 插件购买拦截,通过路径来检查是属于哪一模块
-    ...WRouter.routeCustomInterceptors,
-    LaunchModeInterceptor,
-    GoRouterInterceptor,
+// 当只有一个参数时，圆括号是可选的：
+(singleParam) => { statements }
+singleParam => { statements }
+
+// 没有参数的函数应该写成一对圆括号。
+() => { statements }
+```
+
+<br/>
+
+>- **正常语法：**
+
+```
+const elements = [
+  'Hydrogen',
+  'Helium',
+  'Lithium',
+  'Beryllium'
 ];
 
+let array = elements.map(function(element) {
+  return element.length;
+}); 
+console.log(array);
+
+```
+
+打印：
+
+```
+> Array [8, 6, 7, 9]
+```
+
+<br/>
+
+> **正常语法 改写1**
+
+```
+// 上面的普通函数可以改写成如下的箭头函数
+const elements = [
+  'Hydrogen',
+  'Helium',
+  'Lithium',
+  'Beryllium'
+];
+
+let array = elements.map((element) => {
+  return element.length;
+}); 
+console.log(array);
+```
+
+打印：
+
+```
+> Array [8, 6, 7, 9]
+```
+
+<br/>
+
+
+> **正常语法 改写2**
+
+```
+const elements = [
+  'Hydrogen',
+  'Helium',
+  'Lithium',
+  'Beryllium'
+];
+
+// 当箭头函数只有一个参数时，可以省略参数的圆括号
+let array = elements.map(element => {
+ return element.length;
+}); 
+
+console.log(array);
+```
+
+打印：
+
+```
+> Array [8, 6, 7, 9]
+```
+
+<br/>
+
+> **正常语法 改写3**
+
+```
+// 上面的普通函数可以改写成如下的箭头函数
+const elements = [
+  'Hydrogen',
+  'Helium',
+  'Lithium',
+  'Beryllium'
+];
+
+// 当箭头函数的函数体只有一个 `return` 语句时，可以省略 `return` 关键字和方法体的花括号
+let array = elements.map(element => element.length);
+console.log(array);
+```
+
+打印：
+
+```
+> Array [8, 6, 7, 9]
+```
+
+<br/>
+
+> **正常语法 改写4**
+
+```
+// 上面的普通函数可以改写成如下的箭头函数
+const elements = [
+  'Hydrogen',
+  'Helium',
+  'Lithium',
+  'Beryllium'
+];
+
+// 在这个例子中，因为我们只需要 `length` 属性，所以可以使用参数解构
+// 需要注意的是字符串 `"length"` 是我们想要获得的属性的名称，而 `lengthFooBArX` 则只是个变量名，
+// 可以替换成任意合法的变量名
+let array = elements.map(({ "length": lengthFooBArX }) => lengthFooBArX); // [8, 6, 7, 9]
+console.log(array);
+```
+
+打印：
+
+```
+> Array [8, 6, 7, 9]
 ```
 
 
 
-- ParamInterceptor： 路由参数
+<br/>
+<br/>
 
 
-- WRouter： 路由导航处理
+> <h2 id="匿名函数"> 匿名函数 </h2>
+
+<br/>
+
+> <h3 id="自调用函数"> 自调用函数 </h3>
+
+<br/>
+
+> <h3 id="window.mapi"> window.mapi </h3>
+
 
 ```
-//根据路径获取路由信息
-//从config.js中获取加的路由信息，放入allRouteMap数组中
-//从而获取加入的路由信息比如路径、标题、导出的方法等
-//其加载config.js中的路由信息是通过index.js中的 window.WRouter.init(config, WrappedComp.wrapped); 来进行获取的配置表的
-getRouteInfo:function(path){}
+(function (window, api) {
+　　var num = 1;
+
+　　function a() {
+　　　　console.log(num);
+　　}
+
+　　api.sum = function (x, y) {
+　　　　console.log("--->> %i", x+y);
+　　}
+  
+  api.version = "1.0.0";
+            
+})(window, window['api'] || (window['api'] = {}));
+
+
+window.api.sum(99, 1)
+
+console.log("++++ %s", window.api.version)
+
 
 ```
 
-
-- Mapi：执行一些原生的一些调用
-- Window的调用：MapiExts类的调用
-
-
-在sys-about.js 中 有这行代码：
+打印：
 
 ```
-_userAgreement(){
-        this.props.navigateTo({
-            pathname: '/system-setting/user-agreement'
-        });
+> "--->> %i" 100
+> "++++ %s" "1.0.0"
+```
+
+这个`windown['api']`相当于 `window.api`
+
+而 `window['api'] = {}` 是一个对象，而在代码中：
+
+```
+function (x, y) {
+	console.log("--->> %i", x+y);
+}
+```
+
+相当于是一个函数对象，所以可以穿入。
+
+
+衍生下：
+
+```
+//生成一个对象
+var person = {firstName:"John", lastName:"Doe", age:50, eyeColor:"blue"};
+
+//访问对象属性
+//你可以通过两种方式访问对象属性:
+//实例 1
+person.lastName;
+
+
+
+//或者实例 2
+//person["lastName"];
+```
+
+<br/>
+
+**与其比较：**
+
+```
+(function (n1,n2){
+
+console.log("这是匿名函数的自执行的第二种写法，结果为："+(n1+n2))
+
+}(10,100))//110
+```
+
+打印：
+
+```
+> "这是匿名函数的自执行的第二种写法，结果为：110"
+```
+
+
+
+<br/>
+
+
+```
+//=====================================================
+
+(function (win, mapi) {
+    mapi.registerResponseInterceptor = function (func) {
+        mapi['responseInterceptor'] = func;
     }
+})(window, window['mapi'] || (window['mapi'] = {}));
+
+window.mapi.registerResponseInterceptor((res, request)=>{
+    return res + request;
+});
+
+
+
+// let aa = window.mapi.registerResponseInterceptor(1, 99);
+
+console.log("--------_>> %i", window.mapi.responseInterceptor(1,99));
+//或者下面
+//console.log("--------_>> %i", window.mapi["responseInterceptor"](1,99));
 ```
-在 app.js中找到 `cloneElement` 这个方法，是这个方法把它带入的 ，详解：[React.Children与React.cloneElement杂谈](https://juejin.cn/post/6844903983975235592)
 
-[React.Children详解](https://www.cnblogs.com/chen-cong/p/10371329.html)
+打印：
 
-[React.cloneElement()给子组件传值](https://www.shuzhiduo.com/A/pRdBK9P2zn/)
-[修改CHILDREN(](https://www.freesion.com/article/2673922398/)
-
-
-在seek-areasure-home.js 的  window.getLoginInfo 调用的这个方法是 enterprise-chage.js 中的 _getLoginInfo 方法吗？
+```
+--------_>> 100
+```
 
 
-- [ ] 在【新增企业】中点开【地区】是在组件FilterAreap【filter-area.js】文件中，其地区文件时存在一个【area.js】文件中。
+
+<br/>
+<br/>
+
+
+
 
 
 
@@ -420,6 +670,25 @@ sessionStorage.clear();
 ```
 
 
+<br/>
+- **返回值**
+
+一个 **Storage** 对象。
+
+<br/>
+
+- **示例**
+
+下面的代码访问当前域名的 session Storage 对象，并使用 Storage.setItem() 访问往里面添加一个数据条目。
+
+```
+sessionStorage.setItem('myCat', 'Tom');
+Copy to Clipboard
+```
+
+<br/>
+
+
 
 &emsp; 下面的示例会自动保存一个文本输入框的内容，如果浏览器因偶然因素被刷新了，文本输入框里面的内容会被恢复，因此写入的内容不会丢失。
 
@@ -442,15 +711,34 @@ field.addEventListener("change", function() {
 ```
 
 <br/>
+<br/>
 
-> <h2 id=""></h1>
+> <h2 id="WindowNavigator"> Window Navigator </h2>
 
+**window.navigator 对象包含有关访问者浏览器的信息**
+
+![navigator信息](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react6.png)
+
+**警告!!!**
+
+- 来自 navigator 对象的信息具有误导性，不应该被用于检测浏览器版本，这是因为：
+- navigator 数据可被浏览器使用者更改
+- 一些浏览器对测试站点会识别错误
+- 浏览器无法报告晚于浏览器发布的新操作系统
 
 
 
 <br/>
+<br/>
 
-> <h2 id=""></h1>
+> <h2 id=""></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
 
 
 
@@ -757,6 +1045,124 @@ var x = touchItem.screenX;
 
 
 >### <h3 id=""></h3>
+
+
+
+<br/>
+
+***
+<br/>
+
+
+># <h1 id="JSON.stringify()"> [JSON.stringify()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify) </h1>
+
+&emsp; **JSON.stringify()** 方法将一个 JavaScript 对象或值转换为 JSON 字符串，如果指定了一个 replacer 函数，则可以选择性地替换值，或者指定的 replacer 是数组，则可选择性地仅包含数组指定的属性。
+
+
+```
+console.log(JSON.stringify({ x: 5, y: 6 }));
+// expected output: "{"x":5,"y":6}"
+
+console.log(JSON.stringify([new Number(3), new String('false'), new Boolean(false)]));
+// expected output: "[3,"false",false]"
+
+console.log(JSON.stringify({ x: [10, undefined, function(){}, Symbol('')] }));
+// expected output: "{"x":[10,null,null,null]}"
+
+console.log(JSON.stringify(new Date(2006, 0, 2, 15, 4, 5)));
+// expected output: ""2006-01-02T15:04:05.000Z""
+```
+
+<br/>
+
+**语法**
+
+```
+JSON.stringify(value[, replacer [, space]])
+```
+
+- **参数**
+
+
+	- **value**
+
+	```
+	将要序列化成 一个 JSON 字符串的值。
+	```
+
+	- **replacer 可选**
+
+	```
+	如果该参数是一个函数，则在序列化过程中，被序列化的值的每个属性都会经过该函数的转换和处理；如果该参数是一个数组，则只有包含在这个数组中的属性名才会被序列化到最终的 JSON 字符串中；如果该参数为 null 或者未提供，则对象所有的属性都会被序列化。
+	
+	```
+
+	- **space 可选**
+
+	```
+	
+	指定缩进用的空白字符串，用于美化输出（pretty-print）；如果参数是个数字，它代表有多少的空格；上限为10。该值若小于1，则意味着没有空格；如果该参数为字符串（当字符串长度超过10个字母，取其前10个字母），该字符串将被作为空格；如果该参数没有提供（或者为 null），将没有空格。
+	返回值
+	一个表示给定值的JSON字符串。
+	```
+	
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id="JSON.parse()"> JSON.parse() </h1>
+
+&emsp; **JSON.parse()** 方法用来解析JSON字符串，构造由字符串描述的JavaScript值或对象。提供可选的 reviver 函数用以在返回之前对所得到的对象执行变换(操作)。
+
+```
+const json = '{"result":true, "count":42}';
+const obj = JSON.parse(json);
+
+console.log(obj.count);
+// expected output: 42
+
+console.log(obj.result);
+// expected output: true
+
+```
+
+打印：
+
+```
+> 42
+> true
+```
+
+
+<br/>
+
+**语法**
+
+```
+JSON.parse(text[, reviver])
+```
+
+
+<br/>
+
+参数
+
+- text
+
+`要被解析成 JavaScript 值的字符串，关于JSON的语法格式,请参考：JSON。`
+
+- reviver 可选
+
+`转换器, 如果传入该参数(函数)，可以用来修改解析生成的原始值，调用时机在 parse 函数返回之前。`
+
+- 返回值
+
+`Object 类型, 对应给定 JSON 文本的对象/值。`
+
+
 
 
 

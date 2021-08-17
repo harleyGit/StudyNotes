@@ -1,8 +1,9 @@
 > <h2 id=''></h2>
 - [**ReactiveObjc下载**](#ReactiveObjc下载)
 - [**类**](#类)
-	- [RSCSignal(冷信号)](#RSCSignal)
+	- [RACSignal(冷信号)](#RACSignal)
 	-  [RACSubject(热信号)](#RACSubject)
+	-  [RACReplaySubject](#RACReplaySubject)
 	-  [RACCommand](#RACCommand)
 		-  [属性](#属性)
 - [属性](#属性)
@@ -158,7 +159,13 @@ pod update --verbose
 - subscribers：数组里包含了所有的当前订阅者，在self的同步操作时候会使用它遍历所属的订阅者。
 - disposable：包含接收者对其他信号的所有订阅。主要是用于取消订阅和清理资源的操作。
 
-**发送信号的接口：**
+<br/>
+
+**订阅信号：** 只是把订阅者保存起来，并且订阅者的nextBlock已经赋值了
+
+`- (RACDisposable *)subscribeNext:(void (^)(id x))nextBlock error:(void (^)(NSError *error))errorBlock;`
+
+**发送信号：** 遍历刚刚保存的所有订阅者，一个一个调用订阅者的nextBlock
 
 `- (void)sendNext:(nullable ValueType)value;`
 
@@ -193,6 +200,67 @@ pod update --verbose
 ```
 2018-11-21 11:26:31.507642+0800 HGSWB[3233:107079] 订阅信号： welcome to my home
 ```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h2 id='RACReplaySubject'>RACReplaySubject</h2>
+
+**RACReplaySubject使用步骤:**
+- 创建信号 [RACReplaySubject subject]，跟RACSiganl不一样，创建信号时没有block。
+- 可以先订阅信号，也可以先发送信号。
+	- 订阅信号 - (RACDisposable *)subscribeNext:(void (^)(id x))nextBlock
+	- 发送信号 sendNext:(id)value
+
+<br/>
+
+**RACReplaySubject:底层实现和RACSubject的区别：**
+- 调用sendNext发送信号，把值保存起来，然后遍历刚刚保存的所有订阅者，一个一个调用订阅者的nextBlock。
+- 调用subscribeNext订阅信号，遍历保存的所有值，一个一个调用订阅者的nextBlock
+- 如果想当一个信号被订阅，就重复播放之前所有值，需要先发送信号，在订阅信号。
+- 也就是先保存值，在订阅值。
+
+```
+- (void)testMethod13 {
+    // 1.创建信号
+    RACReplaySubject *replaySubject = [RACReplaySubject subject];
+
+    // 2.发送信号
+    [replaySubject sendNext:@1];
+    [replaySubject sendNext:@2];
+
+    // 3.订阅信号
+    [replaySubject subscribeNext:^(id x) {
+
+        NSLog(@"第一个订阅者接收到的数据%@",x);
+    }];
+
+    // 订阅信号
+    [replaySubject subscribeNext:^(id x) {
+
+        NSLog(@"第二个订阅者接收到的数据%@",x);
+    }];
+}
+```
+
+打印：
+
+```
+2021-08-16 19:29:41.423055+0800 Test1[23710:536357] 第一个订阅者接收到的数据1
+2021-08-16 19:29:43.493856+0800 Test1[23710:536357] 第一个订阅者接收到的数据2
+2021-08-16 19:29:48.676178+0800 Test1[23710:536357] 第二个订阅者接收到的数据1
+2021-08-16 19:29:49.399736+0800 Test1[23710:536357] 第二个订阅者接收到的数据2
+```
+
+
+
+
 
 
 <br/>
