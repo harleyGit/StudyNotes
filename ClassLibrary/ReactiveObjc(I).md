@@ -259,6 +259,15 @@ pod update --verbose
 ```
 
 
+<br/>
+
+- **RACTuple: 类似NSArray, 用来包装值**
+
+- **RACSequence: RAC中的集合类, 用于代替NSArray, NSDictionary, 可以使用它来快速来便利数组和字典**
+
+- **注意RACSequence会开启子线程, 要在completed做U更新**
+
+- **RACCommand: RAC中用于处理事件的类, 可以把事件如何处理, 事件中的数据如何传递, 包装到这个类中, 可以很方便的监控事件的执行过程**
 
 
 
@@ -362,6 +371,16 @@ pod update --verbose
 
 
 **Demo2**
+
+**`RACCommand使用注意点`**
+- 必须返回一个信号
+- executionSignals:RACCommand返回的信号时信号中的信号, 有两种方式可以获取最新的信号
+	- switchToLatest:获取内部的最新信号(被动执行)
+	- execute:获取内部信号(这个是主动执行)
+- executing:用来判断是否正在执行, 第一次不准确需要跳过
+- 一定要记得sendCompleted, 否则永远不会执行完成
+     
+     
 
 ```
 - (void)testMethod11 {
@@ -566,4 +585,59 @@ RAC(self.button, enable) = someSignal;
 
 ***
 <br/>
+
+> <h2 id='RACMulticastConnection(多播)'>RACMulticastConnection(多播)</h2>
+
+&emsp; 用于当一个信号, 被多次订阅时, 为保证创建信号时, 避免多次调用创建信号中的block, 造成副作用, 可以使用这个类处理
+** 封装在底层, 开发中很少使用! 就是用来解决RACSignal的副作用(副作用就是不管你订阅多少次我就只会执行一次) **
+使用
+
+[](https://www.jianshu.com/p/62c2729c4a72)
+[操作符](https://juejin.cn/post/6953808004307222564#heading-7)
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h2 id=''></h2>
 

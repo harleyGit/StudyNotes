@@ -24,6 +24,7 @@
 	- [Element.getBoundingClientRect()](#getBoundingClientRect)
 - [**Dom对象**](#Dom对象)
 	- [Dom元素创建设值(createElement)](#Dom元素创建设值)
+	- [滚动大小](#滚动大小)
 - [**Event用法**](#Event用法)
 	- [stopPropagation()](#stopPropagation())
 	- [preventDefault()](#preventDefault())
@@ -753,7 +754,7 @@ field.addEventListener("change", function() {
 <br/>
 
 
-># <h1 id="Dom对象">Dom对象</h1>
+># <h1 id="Dom对象">[Dom对象](https://aqingya.cn/articl/a3b68a60.html#题目4)</h1>
 
 
 <br/>
@@ -790,8 +791,39 @@ div1..focus();
 
 <br/>
 
-> <h2 id=""></h1>
+> <h2 id="滚动大小">滚动大小</h2>
 
+&emsp; 滚动大小 (scroll dimension), 指的是包含滚动内容的元素的大小。有些元素 (例如元素)，即使没有执行任何代码也能自动地添加滚动条；但另外一些元素，则需要通过 CSS 的 overflow 属性进行设置才能滚动。以下是 4 个与滚动大小相关的属性。
+
+- scrollHeight: 在没有滚动条的情况下，元素内容的总高度。
+- scrollwidth: 在没有滚动条的情况下，元素内容的总宽度。
+- scrollLeft: 被隐藏在内容区域左侧的像素数。通过设置这个属性可以改变元素的滚动位置。
+- scrollTop: 被隐藏在内容区域上方的像素数。通过设置这个属性可以改变元素的滚动位置。
+
+![滚动四属性](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react28.png)
+
+
+&emsp; 在确定文档的总高度时 (包括基于视口的最小高度时), 必须取得 scrollwidth/clientwidth 和 scrollHeight/clientHeight 中的最大值，才能保证在跨浏览器的环境下得到精确的结果。下面就是这样一个例子。
+
+&emsp; 注意，对于运行在混杂模式下的 IE, 则需要用 document . body 代替 document . documentElement。
+
+```
+var docHeight = Math.max(document.documentElement.scrollHeight, document.documentElement.clientHeight);
+var docWidth = Math.max(document.documentElement.scrollWidth, document.documentElement.clientWidth);
+
+console.log(docHeight);
+console.log(docWidth);
+```
+
+&emsp; 通过 scrollLeft 和 scrollTop 属性既可以确定元素当前滚动的状态，也可以设置元素的滚动位置。在元素尚未被滚动时，这两个属性的值都等于 0。如果元素被垂直滚动了，那么 scrollTop 的值会大于 0，且表示元素上方不可见内容的像素高度。如果元素被水平滚动了，那么 scrollLeft 的值会大于 0，且表示元素左侧不可见内容的像素宽度。这两个属性都是可以设置的，因此将元素的 scrollLeft 和 scrollTop 设置为 0, 就可以重置元素的滚动位置。下面这个函数会检测元素是否位于顶部，如果不是就将其回滚到顶部。
+
+```
+function scrollToTop(element) {
+    if (element.scrollTop != 0) {
+        element.scrollTop = 0;
+    }
+}
+```
 
 
 
