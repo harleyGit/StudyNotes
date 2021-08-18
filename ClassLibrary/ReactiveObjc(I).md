@@ -6,8 +6,16 @@
 	-  [RACReplaySubject](#RACReplaySubject)
 	-  [RACCommand](#RACCommand)
 		-  [属性](#属性)
-- [属性](#属性)
+	-  [RACMulticastConnection(多播)](#RACMulticastConnection(多播))
+	-  [RACScheduler](#RACScheduler)
+	-  [RACUnit](#RACUnit)
+	-  [RACEvent](#RACEvent)
+	-  
+- [属性](#属性2)
 - [方法](#方法)
+	- [rac_signalForSelector(替代代理)](#rac_signalForSelector)
+	- [rac_valuesAndChangesForKeyPath](#rac_valuesAndChangesForKeyPath)
+	- [rac_signalForControlEvents](#rac_signalForControlEvents)
 - **参考资料**
 	- [ReactiveCocoa之RACCommand使用(五)](https://blog.csdn.net/majiakun1/article/details/52937770)
 	- [操作符](https://juejin.cn/post/6934238669578436615)
@@ -589,8 +597,101 @@ RAC(self.button, enable) = someSignal;
 > <h2 id='RACMulticastConnection(多播)'>RACMulticastConnection(多播)</h2>
 
 &emsp; 用于当一个信号, 被多次订阅时, 为保证创建信号时, 避免多次调用创建信号中的block, 造成副作用, 可以使用这个类处理
-** 封装在底层, 开发中很少使用! 就是用来解决RACSignal的副作用(副作用就是不管你订阅多少次我就只会执行一次) **
-使用
+
+**&emsp; 封装在底层, 开发中很少使用! 就是用来解决RACSignal的副作用(副作用就是不管你订阅多少次我就只会执行一次)**
+
+```
+- (void) testMethod14 {
+    
+    RACSignal *signal1 = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+           [subscriber sendNext:@"--->> signal1🍺🍺🍺🍺🍺🍺🍺"];
+           [subscriber sendCompleted];
+           return [RACDisposable disposableWithBlock:^{
+               NSLog(@"signal1销毁了");
+           }];
+       }];
+    
+    //创建多播
+    RACMulticastConnection *connection = [signal1 publish];
+    //订阅多播
+    [connection.signal subscribeNext:^(id  _Nullable x) {
+        NSLog(@"拿到多播数据1 %@", x);
+    }];
+    
+    [connection.signal subscribeNext:^(id  _Nullable x) {
+        NSLog(@"拿到多播数据2 %@", x);
+    }];
+    
+    [connection.signal subscribeNext:^(id  _Nullable x) {
+        NSLog(@"拿到多播数据3 %@", x);
+    }];
+    
+    //千万不能忘记的进行连接
+    [connection connect];
+}
+```
+
+打印：
+
+```
+2021-08-18 11:48:48.366201+0800 Test1[11504:210180] 🍎 日志信息测试
+2021-08-18 11:49:13.758727+0800 Test1[11504:210180] 拿到多播数据1 --->> signal1🍺🍺🍺🍺🍺🍺🍺
+2021-08-18 11:49:15.727729+0800 Test1[11504:210180] 拿到多播数据2 --->> signal1🍺🍺🍺🍺🍺🍺🍺
+2021-08-18 11:49:17.091577+0800 Test1[11504:210180] 拿到多播数据3 --->> signal1🍺🍺🍺🍺🍺🍺🍺
+2021-08-18 11:49:21.832482+0800 Test1[11504:210180] signal1销毁了
+
+```
+
+
+
+<br/>
+
+创建的信号block订阅了2次，调用了2次，如下：
+
+```
+- (void) testMethod0 {
+    //1.创建信号
+    RACSignal *siganal = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+        // block调用时刻：每当有订阅者订阅信号，就会调用block。
+        
+        // 2.发送信号
+        [subscriber sendNext:@"发送数据"];
+        
+        //数据发送完要调用sendCompleted，内部会自动调用[RACDisposable disposable]取消订阅信号。
+        [subscriber sendCompleted];
+        //        NSError *error = [NSError new];
+        //        [subscriber sendError:error];  //error会自动销毁信号
+        return [RACDisposable disposableWithBlock:^{
+            // block调用时刻：当信号发送完成或者发送错误，就会自动执行这个block,取消订阅信号。
+            
+            // 执行完Block后，当前信号就不在被订阅了。
+            NSLog(@"信号被销毁");
+        }];
+    }];
+    
+    // 3.订阅信号,才会激活信号
+    [siganal subscribeNext:^(id  _Nullable x) {
+        // block调用时刻：每当有信号发出数据，就会调用block.
+        NSLog(@"%@",x); //接受数据
+    }];
+    
+    [siganal subscribeNext:^(id  _Nullable x) {
+        // block调用时刻：每当有信号发出数据，就会调用block.
+        NSLog(@"订阅2: %@",x); //接受数据
+    }];
+    
+    
+}
+```
+
+打印：
+
+```
+2021-08-18 11:45:47.833306+0800 Test1[11351:203977] 发送数据
+2021-08-18 11:45:51.432998+0800 Test1[11351:203977] 信号被销毁
+2021-08-18 11:45:55.143469+0800 Test1[11351:203977] 订阅2: 发送数据
+2021-08-18 11:45:57.378283+0800 Test1[11351:203977] 信号被销毁
+```
 
 [](https://www.jianshu.com/p/62c2729c4a72)
 [操作符](https://juejin.cn/post/6953808004307222564#heading-7)
@@ -602,7 +703,9 @@ RAC(self.button, enable) = someSignal;
 ***
 <br/>
 
-> <h2 id=''></h2>
+> <h2 id='RACScheduler'>RACScheduler</h2>
+
+**RAC中的队列, 用GCD封装的**
 
 
 
@@ -612,7 +715,9 @@ RAC(self.button, enable) = someSignal;
 ***
 <br/>
 
-> <h2 id=''></h2>
+> <h2 id='RACUnit'>RACUnit</h2>
+
+**表示stream不包含有意义的值! 可以直接理解为nil**
 
 
 
@@ -621,7 +726,9 @@ RAC(self.button, enable) = someSignal;
 ***
 <br/>
 
-> <h2 id=''></h2>
+> <h2 id='RACEvent'>RACEvent</h2>
+
+**把数据包装成信号事件**
 
 
 
@@ -630,7 +737,28 @@ RAC(self.button, enable) = someSignal;
 ***
 <br/>
 
-> <h2 id=''></h2>
+> <h2 id='属性2'>属性</h2>
+
+
+<br/>
+
+
+> <h3 id=''></h3>
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+<br/>
+
+
 
 
 
@@ -639,5 +767,73 @@ RAC(self.button, enable) = someSignal;
 ***
 <br/>
 
-> <h2 id=''></h2>
+> <h2 id='方法'>方法</h2>
 
+
+<br/>
+
+
+> <h3 id='rac_signalForSelector'>rac_signalForSelector(替代代理)</h3>
+
+**用法：** 返回一个信号, 判断是否调用某个方法
+
+
+
+<br/>
+<br/>
+
+> <h3 id='rac_valuesAndChangesForKeyPath'>rac_valuesAndChangesForKeyPath</h3>
+
+**用法：** 监听某个对象的属性变化(KVO)
+
+```
+//注意:keypath(<#...#>) 的使用, 可以避免在观察者里面使用字符串, @keypath(self, age) == @"age"
+[self rac_valuesForKeyPath:keypath(self, age) observer:self];
+    
+//移除观察者还需要使用OC的方法
+```
+
+
+
+<br/>
+<br/>
+
+> <h3 id='rac_signalForControlEvents'>rac_signalForControlEvents</h3>
+
+```
+//    监听登录按钮点击
+[[_nextBtn rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(__kindof UIControl * _Nullable x) {
+   //执行登录事件
+    [self.loginVM.loginCommand execute:nil];
+}];
+```
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
