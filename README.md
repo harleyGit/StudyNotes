@@ -296,7 +296,7 @@
 *	[前端环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/前端环境配置.md)
 *	[跨组件状态共享](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享.md)
 *	[**分享**](#分享)
-	* [WMShare(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/跨组件状态共享WMShare(I).md)
+	* [WMShare(I)](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/WMShare(I).md)
 
 
 
