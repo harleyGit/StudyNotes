@@ -95,13 +95,142 @@
 
 - **ProxyWidget：** 提供一个提供子部件的部件，而不是构建新的部件；
 	
-	- InheritedWidget：用于做数据共享，比如：`Theme/ThemeData, Text/DefaultTextStyle`等等都是通过InheritedWidget
+	- [InheritedWidget](https://juejin.cn/post/6855129006707228680)：用于做数据共享，比如：`Theme/ThemeData, Text/DefaultTextStyle`等等都是通过InheritedWidget
     来实现的数据共享，并且Flutter中的状态管理框架也都是通过它实现的，例如最为知名其中之一的状态管理框架Provider。
     
-    &emsp; 那么这个数据共享是什么意思呢？
+    &emsp; 那么这个数据共享是什么意思呢？，如下面的Code：
     
+    Main.dart文件
+    
+```
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: InheritedWidgetTestRoute(),
+    );
+  }
+}
+```
+
+<br/>
+
+**InheritedWidgetTestRoute.dart文件**
+
+```
+class InheritedWidgetTestRoute extends StatefulWidget {
+  @override
+  _InheritedWidgetTestRouteState createState() =>
+      new _InheritedWidgetTestRouteState();
+}
+
+class _InheritedWidgetTestRouteState extends State<InheritedWidgetTestRoute> {
+  int count = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("InheritedWidget"),
+      ),
+      body: Center(
+        child: ShareDataWidget(
+          //父widget
+          data: count,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                //注意：如果不使用builder或者单独抽取成一个组件类，
+                //而是像注释这样直接使用是错误的；
+                //child: Text(ShareDataWidget.of(context).data.toString()),//错误用法，非子widget
+                //用法1：
+                // child: Builder(//子widget中依赖ShareDataWidget
+                //   builder: (context) {
+                //     return Text(ShareDataWidget.of(context).data.toString());
+                //   },
+                // ),
+
+                //用法2：
+                child: _TestWidget(),
+              ),
+              RaisedButton(
+                child: Text("增加1"),
+                //每点击一次，将count自增，然后重新build,ShareDataWidget的data将被更新
+                onPressed: () => setState(() => ++count),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TestWidget extends StatefulWidget {
+  @override
+  __TestWidgetState createState() => new __TestWidgetState();
+}
+
+class __TestWidgetState extends State<_TestWidget> {
+  @override
+  Widget build(BuildContext context) {
+    //使用InheritedWidget中的共享数据
+    return Text(ShareDataWidget.of(context).data.toString());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    //父或祖先widget中的InheritedWidget改变(updateShouldNotify返回true)时会被调用。
+    //如果build中没有依赖InheritedWidget，则此回调不会被调用。
+    print("Dependencies change");
+  }
+}
+```
+    
+<br/>
+
+**ShareDataWidget.dart文件**
+
+```
+class ShareDataWidget extends InheritedWidget {
+  ShareDataWidget({@required this.data, Widget child}) : super(child: child);
+
+  //需要在子树中共享的数据，保存点击次数
+  final int data;
+
+  //定义一个便捷方法，方便子树中的widget获取共享数据
+  static ShareDataWidget of(BuildContext context) {
+    //dependOnInheritedWidgetOfExactType用法:https://juejin.cn/post/6855129006707228680
+    return context.dependOnInheritedWidgetOfExactType<ShareDataWidget>();
+  }
+
+  //该回调决定当data发生变化时，是否通知子树中依赖data的Widget
+  @override
+  bool updateShouldNotify(ShareDataWidget old) {
+    //如果返回true，则子树中依赖(build函数中有调用)本widget
+    //的子widget的`state.didChangeDependencies`会被调用
+    return old.data != data;
+  }
+}
+```
+    
+![效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter7.png)
 	 
-	 - ParentDataWidget
+<br/>
+
+ - ParentDataWidget
     
 ![ProxyWidget组件类图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter6.png)
 
@@ -116,6 +245,13 @@
 
 
 > <h2 id='生命周期'>生命周期</h2>
+
+![z16](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z16.png)
+
+上图大致是Flutter生命周期的示意图，其各个方法分别是：
+
+
+
 
 
 

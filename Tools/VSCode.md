@@ -1,6 +1,7 @@
 > <h2 id=""></h2>
 > [官方教程](https://code.visualstudio.com)
 - [**Flutter配置**](#Flutter配置)
+	- [快捷键](#快捷键) 
 - [**JavaScript配置**](#JavaScript配置)
 	- [Code自动保存](#Code自动保存)
 - [**必装插件**](#必装插件)
@@ -15,6 +16,44 @@
 
 
 > <h1 id="Flutter配置">Flutter配置</h1>
+
+
+<br/>
+
+> <h2 id="快捷键">快捷键</h2>
+
+- 代码格式化对齐： **`option+shift+F`**
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
 
 
 
