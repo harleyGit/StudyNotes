@@ -5,6 +5,7 @@
 	- [组件分类](#组件分类)
 	- [生命周期](#生命周期)
 - [**架构原理**](#架构原理)
+	- [渲染三颗树](#渲染三颗树)
 
 
 
@@ -246,14 +247,190 @@ class ShareDataWidget extends InheritedWidget {
 
 > <h2 id='生命周期'>生命周期</h2>
 
+- [**createState**](#createState)
+- [**initState**](#initState)
+- [**didChangeDependencies**](#didChangeDependencies)
+- [**build**](#build)
+- [**addPostFrameCallback**](#addPostFrameCallback)
+- [**didUpdateWidget**](#didUpdateWidget)
+- [**deactivate**](#deactivate)
+- [**dispose**](#dispose)
+
+
+<br/>
+<br/>
+
+
 ![z16](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z16.png)
 
-上图大致是Flutter生命周期的示意图，其各个方法分别是：
+上图是Flutter生命周期的示意图，其各个方法依次执行的分别是：
+
+<br/>
+<br/>
+
+> <h3 id='createState'>createState</h3>
+
+&emsp; createState 是 StatefulWidget 里创建 State 的方法，当要创建新的 StatefulWidget 的时候，会立即执行 createState，而且只执行一次，createState 必须要实现：
+
+```
+class MyScreen extends StatefulWidget {
+@override
+_MyScreenState createState() => _MyScreenState();
+}
+```
+
+
+<br/>
+<br/>
+
+> <h3 id='initState'>initState</h3>
+
+
+&emsp; 前面的 `createState` 是在创建 StatefulWidget 的时候会调用，initState 是 StatefulWidget 创建完后调用的第一个方法，而且只执行一次，类似于 **`Android 的 onCreate`**、**`iOS 的 viewDidLoad()`**，所以在这里 View 并没有渲染，但是这时 StatefulWidget 已经被加载到渲染树里了。
+
+&emsp; 这时 StatefulWidget 的 mount 的值会变为 true，直到 dispose 调用的时候才会变为 false。可以在 initState 里做一些初始化的操作
+
+&emsp; 在 override initState 的时候必须要调用 super.initState()：
+
+```
+@override
+void initState() {
+  super.initState();
+  ...
+}
+```
 
 
 
 
 
+<br/>
+<br/>
+
+
+
+> <h3 id='didChangeDependencies'>didChangeDependencies</h3>
+
+&emsp; 当 StatefulWidget 第一次创建的时候，didChangeDependencies 方法会在 initState 方法之后立即调用，之后当 StatefulWidget 刷新的时候，就不会调用了，除非你的 StatefulWidget 依赖的 InheritedWidget 发生变化之后，didChangeDependencies 才会调用，所以 didChangeDependencies 有可能会被调用多次
+
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id='build'>build</h3>
+
+
+&emsp; 在 StatefulWidget 第一次创建的时候，build 方法会在 didChangeDependencies 方法之后立即调用，另外一种会调用 build 方法的场景是，每当 UI 需要重新渲染的时候，build 都会被调用，所以 build 会被多次调用，然后 返回要渲染的 Widget。千万不要在 build 里做除了创建 Widget 之外的操作，因为这个会影响 UI 的渲染效率。
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='addPostFrameCallback'>addPostFrameCallback</h3>
+
+
+&emsp; addPostFrameCallback 是 StatefulWidge 渲染结束的回调，只会被调用一次，之后 StatefulWidget 需要刷新 UI 也不会被调用，addPostFrameCallback 的使用方法是在 initState 里添加回调：
+
+```
+import 'package:flutter/scheduler.dart';
+@override
+	void initState() {
+	super.initState();
+	SchedulerBinding.instance.addPostFrameCallback((_) => {
+		
+	});
+}
+
+```
+
+&emsp； 渲染完成后，在这个方法里我们可以在[获取页面中Widget大小和位置](https://juejin.cn/post/6844903950257242119)，而且还可以进行网络接口请求
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+> <h3 id='didUpdateWidget'>didUpdateWidget</h3>
+
+
+&emsp; `didUpdateWidget` 这个生命周期我们一般不会用到，只有在使用 key 对 Widget 进行复用的时候才会调用。
+
+&emsp; 这个Key是Widget、Element和[SemanticsNode的](https://juejin.cn/post/6844904167085965326)标识符，只有当新的Widget的Key与当前Element中Widget的Key相同时，它才会被用来更新现有的Element。 Key在具有相同父级的Element之间必须是唯一的。
+
+在案例枚举值**`KeyTest`**中可以看到。
+
+而Widget的是否能够更新是根据它的一个源码方法：
+
+```
+static bool canUpdate(Widget oldWidget, Widget newWidget) {
+return oldWidget.runtimeType == newWidget.runtimeType
+    && oldWidget.key == newWidget.key;
+}
+```
+
+&emsp; 来进行判断是否要更新，这里的`runtimeType`是其组件类型，而在上例中起类型都相同的，所以要根据其key的不同来进行判断。
+
+
+&emsp; 这里有涉及到Flutter中的[3颗渲染树](#渲染三颗树)🌲，其分别是：**Widget Tree**、**Element Tree**、RenderObject Tree。
+
+- Widget： Element的配置信息，与Element的关系可以是一对多，一份配置可以创造多个Element实例；
+
+- Element：Widget 的实例化，内部持有Widget和RenderObject；
+
+- RenderObject：负责渲染绘制。
+
+类比下：
+- Widget有点像是产品经理，负责规划产品、整理需求；
+- Element则是UI设计师，根据原型整理出最终设计图；
+- RenderObject就是我们程序开发者，负责具体的落地实现。
+
+
+
+
+
+<br/>
+
+> <h3 id='deactivate'>deactivate</h3>
+
+
+&emsp; 当要将 State 对象从渲染树中移除的时候，就会调用 deactivate 生命周期，这标志着 StatefulWidget 将要销毁，但是有时候 State 不会被销毁，而是重新插入到渲染树种。
+
+
+
+<br/>
+<br/>
+
+
+
+> <h3 id='dispose'>dispose</h3>
+
+&emsp; 当 View 不需要再显示，从渲染树中移除的时候，State 就会永久的从渲染树中移除，就会调用 dispose 生命周期，这时候就可以在 dispose 里做一些取消监听、动画的操作，和 initState 是相反的
+
+
+
+
+
+<br/>
+
+**）.**
+
+
+
+<br/>
+
+**）.**
 
 
 
@@ -311,6 +488,25 @@ widget的构建函数一般没有副作用。每当它被要求构建时，widge
 
 
 > <h1 id='架构原理'>架构原理</h1>
+
+
+
+> <h2 id='渲染三颗树'>渲染三颗树</h2>
+
+![3棵🌲](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter12.png)
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id='渲染三颗树'>渲染三颗树</h2>
+
+
 
 ![源码路径图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter0.png)
 源码路径图

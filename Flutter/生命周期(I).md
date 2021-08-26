@@ -109,25 +109,32 @@ addPostFrameCallback 是 StatefulWidge 渲染结束的回调，只会被调用�
 import 'package:flutter/scheduler.dart';
 @override
 void initState() {
-super.initState();
-SchedulerBinding.instance.addPostFrameCallback((_) => {});
+	super.initState();
+	SchedulerBinding.instance.addPostFrameCallback((_) => {
+	
+	});
 }
 
 ```
+
+
+&emsp； 渲染完成后，在这个方法里我们可以在[获取页面中Widget大小和位置](https://juejin.cn/post/6844903950257242119)，而且还可以进行网络接口请求
 
 
 <br/>
 
 - **didUpdateWidget**
 
-didUpdateWidget 这个生命周期我们一般不会用到，只有在使用 key 对 Widget 进行复用的时候才会调用。
+&emsp; didUpdateWidget 这个生命周期我们一般不会用到，只有在使用[key对 Widget进行复用](https://juejin.cn/post/6844904085007630349)的时候才会调用。
+
+&emsp; 要注意的是Key是Widget、Element和SemanticsNode的标识符。 只有当新的Widget的Key与当前Element中Widget的Key相同时，它才会被用来更新现有的Element。 Key在具有相同父级的Element之间必须是唯一的。
 
 
 <br/>
 
 - **deactivate**
 
-当要将 State 对象从渲染树中移除的时候，就会调用 deactivate 生命周期，这标志着 StatefulWidget 将要销毁，但是有时候 State 不会被销毁，而是重新插入到渲染树种。
+&emsp; 当要将 State 对象从渲染树中移除的时候，就会调用 deactivate 生命周期，这标志着 StatefulWidget 将要销毁，但是有时候 State 不会被销毁，而是重新插入到渲染树种。
 
 
 

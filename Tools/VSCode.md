@@ -2,6 +2,7 @@
 > [官方教程](https://code.visualstudio.com)
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
+	- [环境配置](#环境配置)
 - [**JavaScript配置**](#JavaScript配置)
 	- [Code自动保存](#Code自动保存)
 	- [文件图标vscode-icons](#vscode-icons)
@@ -28,7 +29,58 @@
 <br/>
 <br/>
 
-> <h2 id=""></h2>
+> <h2 id="环境配置">环境配置</h2>
+
+&emsp; 到Flutter的官网下载[**Flutter SDK releases**](https://flutter.dev/docs/development/tools/sdk/releases?tab=macos#macos)
+
+![官网下载flutterSDK包](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter8.png)
+
+然后解压到你想放入的文件夹，如下
+
+![放置flutter包](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter9.png)
+
+执行如下命令在Terminal:
+
+```
+$ ln -s /Users/harleyhuang/DevConfig/flutter/bin/flutter /usr/local/bin
+
+$ flutter
+
+$ flutter doctor
+```
+
+最后出现如下表示成功了！
+
+![成功配置好flutter](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter10.png)
+
+
+**PS：ls 那步是因为环境变量设置无效所以才将 flutter 设置成软连接的。官网上面一大堆环境变量设置其实都不是必须的，不必照做。**
+
+
+<br/>
+<br/>
+
+> **安装Android手机模拟器**
+
+&emsp; Xcode 自带 IOS 模拟器就不说了。问题出在安卓模拟器，之前用 Windows 搭建 flutter 环境都是在 Android Studio AVD 管理里面自己装安卓模拟器，再不济也是去装个什么腾讯模拟器、夜神模拟器啥的。但是在 M1 芯片的 macOS 上统统没有，如果是 inter 芯片的可以试试。好在谷歌也注意到这个问题了，给了一个 [M1 芯片上可以运行的安卓模拟器](https://github.com/google/android-emulator-m1-preview)
+
+
+
+
+<br/>
+<br/>
+
+
+> 创建一个项目
+
+- 在VSCode中下载Dart和Flutter插件
+- **Command+shift+P**快捷键创建一个项目
+
+![New a Project](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter11.png)
+
+
+
+
 
 
 
