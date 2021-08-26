@@ -4,9 +4,8 @@
 	- [快捷键](#快捷键) 
 - [**JavaScript配置**](#JavaScript配置)
 	- [Code自动保存](#Code自动保存)
-- [**必装插件**](#必装插件)
-	- [文件图标 vscode-icons](#vscode-icons) 
-	- [ESLint错误检测](#ESLint)
+	- [文件图标vscode-icons](#vscode-icons)
+
 
 <br/>
 
@@ -66,28 +65,15 @@
 
 > <h1 id="JavaScript配置">‌JavaScript配置</h1>
 
+<br/>
+
 > <h2 id="Code自动保存">Code自动保存</h2>
 
 
 ![自动保存](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_vscode0.png)
 
 
-
-
-
-
-
-
 <br/>
-
-***
-<br/>
-
-
-> <h1 id="必装插件">必装插件</h1>
-[](https://juejin.cn/post/6844903693104611341)
-
-
 <br/>
 
 > <h2 id='vscode-icons'>文件图标vscode-icons</h2>
@@ -174,7 +160,7 @@ npm i babel-eslint -g
 
 <br/>
 
-若是想还更精细的配置，如下进行酌情配置：
+若是想还更精细的配置，可以配置eslint文件到项目根目录，配置文件名称eslintrc.json，内容如下：
 
 ```
 {
@@ -337,6 +323,27 @@ npm i babel-eslint -g
 
 <br/>
 <br/>
+
+
+
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="必装插件">必装插件</h1>
+
+
+
+
 
 > <h2 id=''></h2>
 
