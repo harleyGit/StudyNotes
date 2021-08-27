@@ -8,9 +8,12 @@
 	- [状态管理](#状态管理)
 	- [布局组件](#布局组件)
 	- [滚动组件](#滚动组件)
+	- [简单多线程](https://github.com/harleyGit/StudyNotes/blob/master/Flutter/多线程和异步任务(I).md)
+	- [原生交互](#原生交互)
 	- [模型数据](#模型数据)
 - [**架构原理**](#架构原理)
 	- [渲染三颗树](#渲染三颗树)
+	- [底层概略](#底层概略)
 
 
 
@@ -819,6 +822,261 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 
 
 
+<br/>
+<br/>
+
+> <h2 id='原生交互'>原生交互</h2>
+
+
+![原生和Flutter交互](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter19.png)
+
+
+<br/>
+
+**平台通道支持的数据类型：**
+
+
+![数据类型支持](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter20.png)
+
+<br/>
+
+Flutter 通过 PlatformChannel 与原⽣进⾏交互，其中 PlatformChannel 分为三种：
+- BasicMessageChannel：⽤于传递字符串和半结构化的信息。
+- MethodChannel：⽤于传递⽅法调⽤。Flutter主动调⽤Native的⽅法，并获取
+- 相应的返回值。
+- EventChannel：⽤于数据流（event streams）的通信。
+
+
+- **场景适用：**
+	- MethodChannel:以⽅法的模式使⽤ 
+	- PlatformChannel EventChannel: 以事件的模式
+	- 使⽤ PlatformChannel BasicMessageChannel:可以在BasicMessageChannel ⽅便进⾏⾃定义扩展，主要⽤于个性化的扩展
+
+
+
+<br/>
+
+iOS代码：
+
+```
+//
+//  ViewController.m
+//  FlutterD
+//
+//  Created by 侯佳男 on 2018/10/30.
+//  Copyright © 2018年 侯佳男. All rights reserved.
+//
+
+#import "ViewController.h"
+#import "TargetViewController.h"
+#import <Flutter/Flutter.h>
+
+@interface ViewController ()
+
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)pushFlutterViewController {
+    FlutterViewController* flutterViewController = [[FlutterViewController alloc] initWithProject:nil nibName:nil bundle:nil];
+    // 设置路由名字 跳转到不同的flutter界面
+    /*flutter代码*/
+    /*
+    import 'dart:ui';
+    
+    void main() => runApp(_widgetForRoute(window.defaultRouteName));
+    
+    Widget _widgetForRoute(String route) {
+        switch (route) {
+            case 'myApp':
+                return new MyApp();
+            case 'home':
+                return new HomePage();
+            default:
+                return Center(
+                  child: Text('Unknown route: $route', textDirection: TextDirection.ltr),
+            );
+        }
+    }
+    */
+    [flutterViewController setInitialRoute:@"myApp"];
+    __weak __typeof(self) weakSelf = self;
+
+    // 要与main.dart中一致
+    NSString *channelName = @"com.pages.your/native_get";
+
+    FlutterMethodChannel *messageChannel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:flutterViewController];
+
+    [messageChannel setMethodCallHandler:^(FlutterMethodCall * _Nonnull call, FlutterResult  _Nonnull result) {
+        // call.method 获取 flutter 给回到的方法名，要匹配到 channelName 对应的多个 发送方法名，一般需要判断区分
+        // call.arguments 获取到 flutter 给到的参数，（比如跳转到另一个页面所需要参数）
+        // result 是给flutter的回调， 该回调只能使用一次
+        NSLog(@"method=%@ \narguments = %@", call.method, call.arguments);
+        
+        // method和WKWebView里面JS交互很像
+        // flutter点击事件执行后在iOS跳转TargetViewController
+        if ([call.method isEqualToString:@"iOSFlutter"]) {
+            TargetViewController *vc = [[TargetViewController alloc] init];
+            [self.navigationController pushViewController:vc animated:YES];
+        }
+        // flutter传参给iOS
+        if ([call.method isEqualToString:@"iOSFlutter1"]) {
+            NSDictionary *dic = call.arguments;
+            NSLog(@"arguments = %@", dic);
+            NSString *code = dic[@"code"];
+            NSArray *data = dic[@"data"];
+            NSLog(@"code = %@", code);
+            NSLog(@"data = %@",data);
+            NSLog(@"data 第一个元素%@",data[0]);
+            NSLog(@"data 第一个元素类型%@",[data[0] class]);
+        }
+        // iOS给iOS返回值
+        if ([call.method isEqualToString:@"iOSFlutter2"]) {
+            if (result) {
+                result(@"返回给flutter的内容");
+            }
+        }
+    }];
+    
+    [self.navigationController pushViewController:flutterViewController animated:YES];
+}
+// 点击跳转到flutter界面
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self pushFlutterViewController];
+}
+
+@end
+
+```
+
+
+Flutter端：
+
+```
+import 'dart:ui' as ui; // 调用window拿到route判断跳转哪个界面
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_module/HomePage.dart';
+
+
+void main() => runApp(_widgetForRoute(ui.window.defaultRouteName));
+
+// 根据iOS端传来的route跳转不同界面
+Widget _widgetForRoute(String route) {
+  switch (route) {
+    case 'myApp':
+      return new MyApp();
+    case 'home':
+      return new HomePage();
+    default:
+      return Center(
+        child: Text('Unknown route: $route', textDirection: TextDirection.ltr),
+      );
+  }
+}
+
+class MyApp extends StatelessWidget {
+
+  Widget _home(BuildContext context) {
+    return new MyHomePage(title: 'Flutter Demo Home Page');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new MaterialApp(
+      title: 'Flutter Demo',
+      theme: new ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      routes: <String, WidgetBuilder>{
+        "/home":(BuildContext context) => new HomePage(),
+      },
+      home: _home(context),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  _MyHomePageState createState() => new _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+
+  // 创建一个给native的channel (类似iOS的通知）
+  static const methodChannel = const MethodChannel('com.pages.your/native_get');
+
+  
+  _iOSPushToVC() async {
+    await methodChannel.invokeMethod('iOSFlutter', '参数');
+  }
+
+  _iOSPushToVC1() async {
+    Map<String, dynamic> map = {"code": "200", "data":[1,2,3]};
+    await methodChannel.invokeMethod('iOSFlutter1', map);
+  }
+
+  _iOSPushToVC2() async {
+    dynamic result;
+    try {
+      result = await methodChannel.invokeMethod('iOSFlutter2');
+    } on PlatformException {
+      result = "error";
+    }
+    if (result is String) {
+      print(result);
+      showModalBottomSheet(context: context, builder: (BuildContext context) {
+        return new Container(
+          child: new Center(
+            child: new Text(result, style: new TextStyle(color: Colors.brown), textAlign: TextAlign.center,),
+          ),
+          height: 40.0,
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      body: new Center(
+        child: new Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            new FlatButton(onPressed: () {
+              _iOSPushToVC();
+            }, child: new Text("跳转ios新界面，参数是字符串")),
+            new FlatButton(onPressed: () {
+              _iOSPushToVC1();
+            }, child: new Text("传参，参数是map，看log")),
+            new FlatButton(onPressed: () {
+              _iOSPushToVC2();
+            }, child: new Text("接收客户端相关内容")),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+```
+
 
 
 <br/>
@@ -827,7 +1085,7 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 
 
 
-> <h2 id='模型数据'>模型数据</h3>
+> <h2 id='模型数据'>模型数据</h2>
 
 &emsp; 在[JSON to Dart](#https://javiercbk.github.io/json_to_dart/)中我们可以直接把网络请求的json数据在这里生成Model，如下：
 
@@ -884,6 +1142,7 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 > <h1 id='架构原理'>架构原理</h1>
 
 
+<br/>
 
 > <h2 id='渲染三颗树'>渲染三颗树</h2>
 
@@ -949,7 +1208,7 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 
 
 
-> <h2 id='渲染三颗树'>渲染三颗树</h2>
+> <h2 id='底层概略'>底层概略</h2>
 
 
 
@@ -960,9 +1219,148 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 <br/>
 
 ![Flutter框架图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter1.png)
-分层框架图
+Flutter 整体结构图
 
 
+<br/>
+<br/>
+
+
+
+
+> **Flutter框架结构**
+
+- **Widget**
+	- Widget的概念其实是Flutter开发过程中会接触到的一个比较核心的思想，Flutter官方文档中写的“Everything's a widget”，在整个开发过程中你可以把一切都看作一个组件，组件式的构建UI，响应UI
+
+<br/>
+
+- **Rendering**
+	- Rendering是一个界面的渲染库，在Flutter中界面的渲染主要包括三个阶段：布局（Layout），绘制（Painting），合成（Composite）
+
+
+<br/>
+
+- **Animation**
+	- Animation是一个动画相关类，可以通过这个类创建一些基础的动画，补间动画（Tween Animation），类似于Android中的ValueAnimator和iOS中的Core Animation
+
+<br/>
+
+- **Painting**
+	- Painting封装了来自Engine层的绘制接口（下文将会提到）
+
+<br/>
+
+- **Gesture**
+	- 处理手势动作和手势相关交互
+
+
+<br/>
+
+- **Foundation**
+	- 底层框架，定义底层工具类和方法，提供其他层使用
+
+
+
+<br/>
+<br/>
+
+> Flutter引擎（Engine）
+
+![Flutter引擎](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter21.png)
+Flutter引擎
+
+
+&emsp; Flutter Engine使用C++实现，主要包括三个部分：**Dart Runtime**, **Skia（Google开源图形库）**,**Text(文字排版引擎)**
+
+**Skia**
+
+&emsp; Skia是一个谷歌出品的开源二维图形库，提供常用的API，并且可以在多种软硬件平台上运行。谷歌Chrome浏览器、Chorme OS、Android、火狐浏览器、火狐操作系统及其他许多产品都使用它作为图形引擎
+和其他跨平台方案不同Flutter没有使用原生的UI 和 绘制框架，以此来保证Flutter的高性能体验.
+
+
+
+<br/>
+<br/>
+
+> 嵌入层（Embedder）
+
+![嵌入层（Embedder）](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter22.png)
+嵌入层（Embedder）
+
+
+
+&emsp; 嵌入层的主要作用就是将Flutter嵌入到各个平台上去，其中主要负责的工作有：**surface渲染设置，线程的管理，原生插件管理，事件循环的交互**。
+
+&emsp; 嵌入层位于整个框架的最底层说明了Flutter的平台相关层非常低，大部分的渲染操作在Flutter本身内部完成，各个平台（Android，iOS等）只需要提供一个画布，这就让Flutter本身有了很好的跨端一致性。
+
+
+
+<br/>
+<br/>
+
+> **Flutter如何做到图形性能媲美原生**
+
+![各个平台比较](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter23.png)
+
+
+&emsp; 图形计算和绘制都是由相应的硬件来完成，而直接操作硬件的指令通常都会有操作系统屏蔽，应用开发者通常不会直接面对硬件，操作系统屏蔽了这些底层硬件操作后会提供一些封装后的API供操作系统之上的应用调用。
+
+&emsp; **Android SDK** 正是封装了Android操作系统API，提供了一个“UI描述文件XML+Java操作DOM”的UI系统。
+
+&emsp; **iOS的UIKit** 对View的抽象也是一样的，他们都将操作系统API抽象成一个基础对象（如用于2D图形绘制的Canvas），然后再定义一套规则来描述UI，如UI树结构，UI操作的单线程原则等。
+
+
+&emsp; 而Flutter基于这个原理提供了一个Dart API，在底层通过skia这种跨平台的绘制库（内部会调用操作系统API）实现了一套代码跨多端。
+
+
+![编译比较](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter24.png)
+
+编译比较
+
+
+
+<br/>
+
+**原理理解：**
+
+- 原生Android App
+	- 绘图时首先调用原生Java代码
+	- 调用绘图引擎Skia的C/C++代码
+	- 生成CPU/GPU指令完成绘图
+
+<br/>
+
+- Flutter App
+	- 首先调用Dart代码
+	- 直接调用Skia绘图引擎C/C++代码
+	- 生成CPU/GPU指令完成绘图
+
+<br/>
+
+- 	一般的跨平台框架（以RN为例）
+	- 	调用框架代码（JS）
+	- 	调用原生Java代码
+	- 	调用绘图引擎Skia的C/C++代码
+	- 	生成CPU/GPU指令完成绘图
+
+
+
+<br/>
+<br/>
+
+**渲染图解**
+
+![25](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter25.png)
+
+- GPU的 VSync 信号同步到 UI线程。
+- UI线程使用 Dart来构建抽象的视图结构。
+- 这份视图数据结构在 GPU 线程进行图层合成。
+- 视图数据提供给 Skia 引擎渲染为 GPU 数据。
+- 这些数据通过 OpenGL或者 Vulkan 提供给 GPU
+
+
+**`总结：`** Flutter 并不关心显示器、视频控制器以及 GPU 具体工作，它只关心向 GPU 提供视图数据，在显示器会发出一个垂直同步信号（VSync），尽可能快地在两个 VSync 信号之间计算并合成视图数据，并且把数据提供给 GPU 。
 
 
 
@@ -980,12 +1378,4 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 
 
 
-<br/>
 
-***
-<br/>
-
-
-
-
-> <h1 id=''></h1>
