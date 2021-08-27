@@ -4,6 +4,11 @@
 	- [优势](#优势)
 	- [组件分类](#组件分类)
 	- [生命周期](#生命周期)
+	- [路由管理](#路由管理)
+	- [状态管理](#状态管理)
+	- [布局组件](#布局组件)
+	- [滚动组件](#滚动组件)
+	- [模型数据](#模型数据)
 - [**架构原理**](#架构原理)
 	- [渲染三颗树](#渲染三颗树)
 
@@ -421,25 +426,396 @@ return oldWidget.runtimeType == newWidget.runtimeType
 
 
 
-
-<br/>
-
-**）.**
-
-
-
-<br/>
-
-**）.**
-
-
-
 <br/>
 <br/>
 
 
 
-> <h2 id=''></h2>
+> <h2 id='路由管理'>路由管理</h3>
+
+
+
+- **路由表**
+&emsp; 要想使用命名路由，我们必须先提供并注册一个路由表（routing table），这样应用程序才知道哪个名字与哪个路由组件相对应。其实注册路由表就是给路由起名字，路由表的定义如下：
+
+```
+Map<String, WidgetBuilder> routes;
+```
+
+<br/>
+
+- **注册路由表**
+
+&emsp; 路由表的注册方式很简单，我们回到之前“计数器”的示例，然后在MyApp类的build方法中找到MaterialApp，添加routes属性，代码如下：
+
+```
+MaterialApp(
+  title: 'Flutter Demo',
+  theme: ThemeData(
+    primarySwatch: Colors.blue,
+  ),
+  //注册路由表
+  routes:{
+   "new_page":(context) => NewRoute(),
+    ... // 省略其它路由注册信息
+  } ,
+  home: MyHomePage(title: 'Flutter Demo Home Page'),
+);
+```
+
+
+在使用时，我们可以直接使用起对应的**键**即可：
+
+```
+onPressed: () {
+  Navigator.pushNamed(context, "new_page");
+  //Navigator.push(context,
+  //  MaterialPageRoute(builder: (context) {
+  //  return NewRoute();
+  //}));  
+},
+
+```
+
+<br/>
+<br/>
+
+
+> <h2 id='状态管理'>状态管理</h3>
+
+- **常见的状态管理方：**
+	- Widget管理自己的状态。
+	- Widget管理子Widget状态。
+	- 混合管理（父Widget和子Widget都管理状态）。
+
+
+<br/>
+
+- **状态管理规则：**
+	- 如果状态是用户数据，如复选框的选中状态、滑块的位置，则该状态最好由父Widget管理。
+	- 如果状态是有关界面外观效果的，例如颜色、动画，那么状态最好由Widget本身来管理。
+	- 如果某一个状态是不同Widget共享的则最好由它们共同的父Widget管理。
+
+
+
+<br/>
+
+**全局状态管理**
+
+&emsp; 当应用中需要一些跨组件（包括跨路由）的状态需要同步时，上面几种状态管理很难胜任了。
+
+&emsp; 比如，我们有一个设置页，里面可以设置应用的语言，我们为了让设置实时生效，我们期望在语言状态发生改变时，APP中依赖应用语言的组件能够重新build一下，但这些依赖应用语言的组件和设置页并不在一起，所以这种情况用上面的方法很难管理。
+
+&emsp; 这时，正确的做法是通过一个全局状态管理器来处理这种相距较远的组件之间的通信。目前主要有两种办法：
+
+- 实现一个全局的事件总线，将语言状态改变对应为一个事件，然后在APP中依赖应用语言的组件的initState 方法中订阅语言改变的事件。当用户在设置页切换语言后，我们发布语言改变事件，而订阅了此事件的组件就会收到通知，收到通知后调用setState(...)方法重新build一下自身即可。
+
+- 使用一些专门用于状态管理的包，如Provider、Redux，读者可以在pub上查看其详细信息。
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='布局组件'>布局组件</h3>
+
+> 线性布局（Row和Column）
+
+&emsp; 通过Row和Column来实现线性布局，类似于Android中的LinearLayout控件,CSS中的display中的Flex。在Flutter中Row和Column都继承自Flex
+
+Rowd的参数配置：
+
+```
+Row({
+  ...  
+  //表示水平方向子组件的布局顺序(是从左往右还是从右往左)
+  TextDirection textDirection,    
+  //表示Row在主轴(水平)方向占用的空间，默认是MainAxisSize.max，表示尽可能多的占用水平方向的空间，此时无论子widgets实际占用多少水平空间
+  MainAxisSize mainAxisSize = MainAxisSize.max, 
+  //表示子组件在Row所占用的水平空间内对齐方式   
+  MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+  VerticalDirection verticalDirection = VerticalDirection.down,
+  //其对应的交叉轴对齐方式  
+  CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+  List<Widget> children = const <Widget>[],
+})
+```
+
+
+<br/>
+<br/>
+
+
+> 弹性布局（Flex）
+
+Flutter中的弹性布局主要通过Flex和Expanded来配合实现.
+
+```
+return Column(
+      children: <Widget>[
+        //Flex的两个子widget按1：2来占据水平空间  
+        Flex(
+          direction: Axis.horizontal,
+          children: <Widget>[
+            Expanded(
+              flex: 1,
+              child: Container(
+                height: 30.0,
+                color: Colors.red,
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                height: 30.0,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 20.0),
+          child: SizedBox(
+            height: 100.0,
+            //Flex的三个子widget，在垂直方向按2：1：1来占用100像素的空间  
+            child: Flex(
+              direction: Axis.vertical,
+              children: <Widget>[
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    height: 30.0,
+                    color: Colors.red,
+                  ),
+                ),
+                Spacer(
+                  flex: 1,
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    height: 30.0,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+
+效果图：
+
+![效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter15.png)
+
+<br/>
+<br/>
+
+
+> 层叠布局 Stack、Positioned
+
+
+
+<br/>
+<br/>
+
+> 对齐与相对定位（Align）
+
+Align 组件可以调整子组件的位置，并且可以根据子组件的宽高来确定自身的的宽高，定义如下：
+
+```
+Align({
+  Key key,
+  this.alignment = Alignment.center,
+  this.widthFactor,
+  this.heightFactor,
+  Widget child,
+})
+
+```
+
+- alignment : 需要一个AlignmentGeometry类型的值，表示子组件在父组件中的起始位置。AlignmentGeometry 是一个抽象类，它有两个常用的子类：Alignment和 FractionalOffset，我们将在下面的示例中详细介绍。
+
+- widthFactor和heightFactor是用于确定Align 组件本身宽高的属性；它们是两个缩放因子，会分别乘以子元素的宽、高，最终的结果就是Align 组件的宽高。如果值为null，则组件的宽高将会占用尽可能多的空间。
+
+
+<br/>
+
+```
+Container(
+  height: 120.0,
+  width: 120.0,
+  color: Colors.blue[50],
+  child: Align(
+    alignment: Alignment.topRight,
+    child: FlutterLogo(
+      size: 60,
+    ),
+  ),
+)
+```
+
+![右上](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter16.png)
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='滚动组件'>滚动组件</h3>
+
+
+<br/>
+
+> **GridView**
+
+GridView可以构建一个二维网格列表，其默认构造函数定义如下：
+
+```
+GridView({
+  Axis scrollDirection = Axis.vertical,
+  bool reverse = false,
+  ScrollController controller,
+  bool primary,
+  ScrollPhysics physics,
+  bool shrinkWrap = false,
+  EdgeInsetsGeometry padding,
+  @required SliverGridDelegate gridDelegate, //控制子widget layout的委托
+  bool addAutomaticKeepAlives = true,
+  bool addRepaintBoundaries = true,
+  double cacheExtent,
+  List<Widget> children = const <Widget>[],
+})
+```
+
+
+&emsp; SliverGridDelegate是一个抽象类，定义了GridView Layout相关接口，子类需要通过实现它们来实现具体的布局算法。Flutter中提供了两个SliverGridDelegate的子类SliverGridDelegateWithFixedCrossAxisCount和SliverGridDelegateWithMaxCrossAxisExtent.
+
+
+<br/>
+
+```
+GridView(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3, //横轴三个子widget
+      childAspectRatio: 1.0 //宽高比为1时，子widget
+  ),
+  children:<Widget>[
+    Icon(Icons.ac_unit),
+    Icon(Icons.airport_shuttle),
+    Icon(Icons.all_inclusive),
+    Icon(Icons.beach_access),
+    Icon(Icons.cake),
+    Icon(Icons.free_breakfast)
+  ]
+);
+```
+
+效果图：
+
+![网格图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter17.png)
+
+
+
+
+
+<br/>
+<br/>
+
+> **CustomScrollView**
+
+**可滚动组件的Sliver版**
+
+&emsp; Sliver有细片、薄片之意，在Flutter中，Sliver通常指可滚动组件子元素（就像一个个薄片一样）。
+
+&emsp; 但是在CustomScrollView中，需要粘起来的可滚动组件就是CustomScrollView的Sliver了，如果直接将ListView、GridView作为CustomScrollView是不行的，因为它们本身是可滚动组件而并不是Sliver！因此，为了能让可滚动组件能和CustomScrollView配合使用，Flutter提供了一些可滚动组件的Sliver版，如SliverList、SliverGrid等。
+
+&emsp; 实际上Sliver版的可滚动组件和非Sliver版的可滚动组件最大的区别就是前者不包含滚动模型（自身不能再滚动），而后者包含滚动模型 ，也正因如此，CustomScrollView才可以将多个Sliver"粘"在一起，这些Sliver共用CustomScrollView的Scrollable，所以最终才实现了统一的滑动效果。
+
+
+
+```
+import 'package:flutter/material.dart';
+
+class CustomScrollViewTestRoute extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    //因为本路由没有使用Scaffold，为了让子级Widget(如Text)使用
+    //Material Design 默认的样式风格,我们使用Material作为本路由的根。
+    return Material(
+      child: CustomScrollView(
+        slivers: <Widget>[
+          //AppBar，包含一个导航栏
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 250.0,
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text('Demo'),
+              background: Image.asset(
+                "./images/avatar.png", fit: BoxFit.cover,),
+            ),
+          ),
+
+          SliverPadding(
+            padding: const EdgeInsets.all(8.0),
+            sliver: new SliverGrid( //Grid
+              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, //Grid按两列显示
+                mainAxisSpacing: 10.0,
+                crossAxisSpacing: 10.0,
+                childAspectRatio: 4.0,
+              ),
+              delegate: new SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+                  //创建子widget      
+                  return new Container(
+                    alignment: Alignment.center,
+                    color: Colors.cyan[100 * (index % 9)],
+                    child: new Text('grid item $index'),
+                  );
+                },
+                childCount: 20,
+              ),
+            ),
+          ),
+          //List
+          new SliverFixedExtentList(
+            itemExtent: 50.0,
+            delegate: new SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+                  //创建列表项      
+                  return new Container(
+                    alignment: Alignment.center,
+                    color: Colors.lightBlue[100 * (index % 9)],
+                    child: new Text('list item $index'),
+                  );
+                },
+                childCount: 50 //50个列表项
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**分为三部分：**
+
+- 头部SliverAppBar：SliverAppBar对应AppBar，两者不同之处在于SliverAppBar可以集成到CustomScrollView。SliverAppBar可以结合FlexibleSpaceBar实现Material Design中头部伸缩的模型，具体效果，读者可以运行该示例查看。
+- 中间的SliverGrid：它用SliverPadding包裹以给SliverGrid添加补白。SliverGrid是一个两列，宽高比为4的网格，它有20个子组件。
+- 底部SliverFixedExtentList：它是一个所有子元素高度都为50像素的列表。
+
+![复杂列表](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter18.png)
+
 
 
 
@@ -449,27 +825,45 @@ return oldWidget.runtimeType == newWidget.runtimeType
 <br/>
 
 
-> <h2 id=''></h2>
 
 
+> <h2 id='模型数据'>模型数据</h3>
+
+&emsp; 在[JSON to Dart](#https://javiercbk.github.io/json_to_dart/)中我们可以直接把网络请求的json数据在这里生成Model，如下：
+
+```
+{
+    "firstName": "John",
+    "lastName": "Smith",
+    "sex": "male",
+    "age": 25,
+    "address": {
+        "streetAddress": "21 2nd Street",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10021"
+    },
+    "phoneNumber": [
+        {
+            "type": "home",
+            "number": "212 555-1234"
+        },
+        {
+            "type": "fax",
+            "number": "646 555-4567"
+        }
+    ]
+}
+```
 
 
 
 <br/>
-<br/>
 
+&emsp; 通过在 **[pub.dev](https://pub.dev)**我们可以搜索到相应的Flutter插件，比如：**provider**，这个就相当于iOS的 `pod search RXSwift`了。
 
-> <h2 id=''></h2>
+&emsp; 将`provider: ^6.0.0`粘贴到项目中的pubspec.yaml的文件夹中，然后执行`flutter pub get`指令，下载对应插件到项目中。
 
-
-
-在Flutter的类中
-
-您可以通过实现widget的build返回widget树（或层次结构）来定义widget的独特特征 。 这棵树更具体地表示了用户界面的widget层次。例如，工具栏widget的build函数可能返回一个包含一些文本和各种按钮的水平布局。 然后，框架递归地构建widget，直到该所有widget构建完成，然后framework将他们一起添加到树中。
-
-widget的构建函数一般没有副作用。每当它被要求构建时，widget应该返回一个新的widget树，无论widget以前返回的是什么。 Framework会将之前的构建与当前构建进行比较并确定需要对用户界面进行哪些修改。
-
-这种自动比较非常有效，可以实现高性能的交互式应用程序。而构建函数的设计则着重于声明widget是由什么构成的，而不是将用户界面从一个状态更新到另一个状态的(这很复杂性)，从而简化了代码。
 
 
 
@@ -493,7 +887,58 @@ widget的构建函数一般没有副作用。每当它被要求构建时，widge
 
 > <h2 id='渲染三颗树'>渲染三颗树</h2>
 
+**介绍：** 
+
+&emsp; 分别为Widget 树，Element 树和 RenderObject 树。当应用启动时 Flutter 会遍历并创建所有的 Widget 形成 Widget Tree。
+
+&emsp; 同时与 Widget Tree 相对应，通过调用 Widget 上的 createElement() 方法创建每个 Element 对象，形成 Element Tree。
+
+&emsp; 最后调用 Element 的 createRenderObject() 方法创建每个渲染对象，形成一个 Render Tree。 
+
+&emsp; Element就是Widget在UI树具体位置的一个实例化对象，大多数Element只有唯一的renderObject，但还有一些Element会有多个子节点，如继承自RenderObjectElement的一些类，比如MultiChildRenderObjectElement。最终所有Element的RenderObject构成一棵树，我们称之为”Render Tree“即”渲染树“。
+
+**总结一下：** 所以可以认为Flutter的UI系统包含三棵树：Widget树、Element树、渲染树。他们的依赖关系是：根据Widget树生成Element树，再依赖于Element树生成RenderObject 树。
+
+
 ![3棵🌲](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter12.png)
+
+
+
+<br/>
+<br/>
+
+**为什么需要3颗树⁉️**
+
+
+**使用三棵树的目的是尽可能复用 Element**
+
+&emsp; 复用 Element 对性能非常重要，因为 Element 拥有两份关键数据：Stateful widget 的状态对象及底层的 RenderObject。当应用的结构很简单时，或许体现不出这种优势，一旦应用复杂起来，构成页面的元素越来越多，重新创建 3 棵树的代价是很高的，所以需要最小化更新操作。当 Flutter 能够复用 Element 时，用户界面的逻辑状态信息是不变的，并且可以重用之前计算的布局信息，避免遍历整棵树。
+
+
+<br/>
+<br/>
+
+类比HTML中的DOM树，开始一个Flutter项目中的结构树，如下：
+
+
+![Demo结构树](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter13.png)
+
+
+&emsp; 在这个结构树中，Text、FloatingActionButton等组件都属于Widget，它表示了我们在Dart代码中所写的控件的结构，由他们构成了Widget树。
+
+<br/>
+
+&emsp; Element其实是Widget的另一种抽象，我们项目中使用的像 Container、Text 等这类组件和其属性只不过是我们想要构建的组件的配置信息，当调用`build()`方法想要在屏幕上显示这些组件时，Flutter 会根据这些信息生成该 Widget 控件对应的 Element，相对的Element也会被放到相应的 Element 树当中。我们把 Widget 组件当作一个虚拟的组件树，而真正被渲染在屏幕上的其实是 Elememt 这棵树，它持有其对应 Widget 的引用，如果他对应的 Widget 发生改变，它就会被标记为 dirty Element，于是下一次更新视图时根据这个状态只更新被修改的内容，从而达到提升性能的效果。
+
+
+![元素树对应控件树](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter14.png)
+
+
+<br/>
+
+&emsp; **`RenderObject`** 在 Flutter 当中做组件布局渲染的工作，其为了组件间的渲染搭配及布局约束也有对应的 RenderObject 树，我们也称之为渲染树。
+
+
 
 
 
