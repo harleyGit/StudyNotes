@@ -3,6 +3,9 @@
 
 > <h2 id=''></h2>
 - [**指令工作流**](#指令工作流)
+	- [**Terminal的Git指令**](#Terminal的Git指令) 
+		- [基本操作](#基本操作)
+		- [分支的操作](#分支的操作)
 	- [克隆到本地](#克隆到本地)
 	- [初始化本地仓库](#初始化本地仓库)
 	- [提交到缓存](#提交到缓存)
@@ -33,6 +36,7 @@
 	-  [LibreSSL SSL_connect：443](#LibreSSLSSL_connect443) 
 	-  [游离态Head解决](#游离态Head解决)
 - **`参考资料`**
+	- [有趣的学习Git](https://learngitbranching.js.org/) 
 	- [Git 分支阐述](https://www.cnblogs.com/hezhiying/p/9292314.html)
 	- [sourceTree合并某次提交](https://www.jianshu.com/p/12da57330ca0)
 	- [source tree进行rebase操作](https://www.jianshu.com/p/e54fd2ab8ce8)
@@ -51,7 +55,80 @@
 
 <br/>
 
-> 
+> <h2 id='Terminal的Git指令'>**Terminal的Git指令**</h2>
+
+<br/>
+
+> <h3 id='基本操作'>基本操作</h3>
+
+```
+// 查看一下当前分支的状态
+$ git status
+
+
+// git add 命令将其加入暂存区（Stage或者Index）中，暂存区是提交之前的一个临时区域。
+// 将具体某个文件如：README.md文件加入到暂存区
+$ git add README.md(文件名)
+
+// 将所有文件加入到暂存区
+$ git add .
+
+
+// 保存仓库的历史记录
+// -m参数后的"First commit"称作提交信息，是对这个提交的概述
+$ git commit -m "React资料集vConsole"
+
+
+// 查看日志信息
+$ git log
+// 显示提交信息的第一行,但是其实可以看到很多行
+// 每【回车键】一下就会下一行，敲击【q】健会退出
+$ git log --pretty=short
+// 显示指定目录、文件的日志,例如：README.md 文件
+$ git log README.md
+// 显示文件的改动
+$ git log -p
+// 显示README.md文件的改动
+$ git log -p README.md
+// 查看工作树和最新提交的差别
+// 查看本次提交与上次提交之间有什么差别，等确认完毕后再进行提交
+// 这里的HEAD是指向当前分支中最新一次提交的指针
+$ git diff HEAD
+
+
+```
+
+
+<br/>
+<br/>
+
+> <h3 id='分支的操作'>分支的操作</h3>
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+
+<br/>
+<br/>
+
+
 > <h2 id='克隆到本地'>克隆到本地</h2>
 
 > git clone -b dev https://github.com/xxx/xxx.git
