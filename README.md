@@ -24,9 +24,7 @@
 **获取Future文件夹下Pictures的图片路径：**
 
 ```
-
 https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
-
 ```	
 
 
