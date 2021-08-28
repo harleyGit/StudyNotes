@@ -3,16 +3,11 @@
 
 > <h2 id=''></h2>
 - [**指令工作流**](#指令工作流)
-	- [**Terminal的Git指令**](#Terminal的Git指令) 
-		- [基本操作](#基本操作)
-		- [分支的操作](#分支的操作)
-	- [克隆到本地](#克隆到本地)
-	- [初始化本地仓库](#初始化本地仓库)
-	- [提交到缓存](#提交到缓存)
-	- [提交到版本库](#提交到版本库)
-	- [关联本地库与远程库](#关联本地库与远程库)
-	- [推送代码到远程仓库](#推送代码到远程仓库)
-	- [拉取远程代码到本地](#拉取远程代码到本地)
+	- [基本操作](#基本操作)
+	- [分支的操作](#分支的操作)
+	- [更改提交的操作](#更改提交的操作)
+	- [推送至远程仓库](#推送至远程仓库)
+	- [从远程仓库获取](#从远程仓库获取)
 - [**工作流指令**](#工作流指令)
 	- [新功能分支](#新功能分支)
 	- [修复紧急bug](#修复紧急bug)
@@ -55,154 +50,313 @@
 
 <br/>
 
-> <h2 id='Terminal的Git指令'>**Terminal的Git指令**</h2>
-
-<br/>
-
 > <h3 id='基本操作'>基本操作</h3>
 
 ```
-// 查看一下当前分支的状态
+/*
+ * 初始化仓库
+*/
+// 创建一个GitTest的文件夹
+$ mkdir GitTest
+// 来到GitTest文件夹
+$ cd GitTest
+// 初始化仓库(实际上建立一个目录并初始化仓库)
+// 如果初始化成功，执行了git init命令的目录下就会生成．git目录
+// 这个．git目录里存储着管理当前目录内容所需的仓库数据
+$ git init
+// 创建一个README.md文件
+$ touch README.md
+
+
+/*
+ * 查看一下当前分支的状态
+*/
 $ git status
 
 
-// git add 命令将其加入暂存区（Stage或者Index）中，暂存区是提交之前的一个临时区域。
+
+
+/*
+ * git add 命令将其加入暂存区（Stage或者Index）中，暂存区是提交之前的一个临时区域
+*/
 // 将具体某个文件如：README.md文件加入到暂存区
 $ git add README.md(文件名)
-
 // 将所有文件加入到暂存区
 $ git add .
 
 
-// 保存仓库的历史记录
+
+ 
+/*
+ * 将当前暂存区中的文件实际保存到仓库的历史记录中
+*/ 
+// 记述一行提交信息
 // -m参数后的"First commit"称作提交信息，是对这个提交的概述
-$ git commit -m "React资料集vConsole"
+$  git commit -m 'First Commit'
 
 
-// 查看日志信息
-$ git log
-// 显示提交信息的第一行,但是其实可以看到很多行
-// 每【回车键】一下就会下一行，敲击【q】健会退出
-$ git log --pretty=short
-// 显示指定目录、文件的日志,例如：README.md 文件
-$ git log README.md
+/*
+ * 查看提交日志
+*/ 
+// git log命令可以查看以往仓库中提交的日志。包括可以查看什么人在什么时候进行了提交或合并，以及操作前后有怎样的差别
+$  git log
+// (只显示提交信息的第一行)没有显示一行，是显示最近的几条提交记录
+$  git log --pretty=short
+// 只显示指定目录、文件的日志
+$  git log README.md
 // 显示文件的改动
-$ git log -p
-// 显示README.md文件的改动
-$ git log -p README.md
+$  git log -p
+// 执行下面的命令，就可以只查看README.md文件的提交日志以及提交前后的差别
+$  git log -p README.md
+
+
+
+/*
+ * 查看更改前后的差别
+*/ 
+// 查看当前工作树与暂存区的差别
+// 若未用git add命令向暂存区添加任何东西，程序只会显示工作树与最新提交状态之间的差别。
+// 若显示了，则“+”号标出的是新添加的行，被删除的行则用“-”号标出。我们可以看到，这次只添加了一行
+$  git diff
 // 查看工作树和最新提交的差别
-// 查看本次提交与上次提交之间有什么差别，等确认完毕后再进行提交
-// 这里的HEAD是指向当前分支中最新一次提交的指针
-$ git diff HEAD
-
-
+// 在执行git commit命令之前先执行git diff HEAD命令，查看本次提交与上次提交之间有什么差别，等确认完毕后再进行提交。这里的HEAD是指向当前分支中最新一次提交的指针。
+// git diff HEAD
 ```
 
 
 <br/>
 <br/>
 
+
 > <h3 id='分支的操作'>分支的操作</h3>
 
+```
+/*
+ * 显示分支一览表
+*/ 
+// 可以将分支名列表显示，同时可以确认当前所在分支
+$  git branch
+
+
+/*
+ * 创建、切换分支
+*/ 
+// 切换到feature-A分支并进行提交
+// 创建名为feature-A的分支(或者用：$ git branch feature-A, 
+// $ git checkout feature-A)
+$  git checkout -b feature-A
+// 切换到master分支
+$ git checkout master
+// 切换回上一个分支
+// 切换回feature-A分支
+$  git checkout -
+
+
+/*
+ * 合并分支
+*/ 
+// 假设feature-A已经实现完毕，想要将它合并到主干分支master中,首先切换到master分支
+$  git checkout master
+// 合并feature-A分支
+// 为了在历史记录中明确记录下本次分支合并，我们需要创建合并提交。因此，在合并时加上--no-ff参数
+// 执行如下的命令后，编辑器会启动，用于录入合并的提交信息，填完后关闭提交信息的界面
+$ git merge --no-ff feature-A
+
+
+/*
+ * 以图表形式查看分支
+ * 非常直观，一定要记住
+*/ 
+// 下面一行命令能很清楚地看到特性分支（feature-A）提交的内容已被合并。除此以外，特性分支的创建以及合并也都清楚明了。
+$  git log --graph
+```
+
+
+<br/>
+<br/>
+
+> <h3 id='更改提交的操作'>更改提交的操作</h3>
+
+```
+/*
+ * 回溯历史版本
+*/ 
+// 1). 先回溯到上一节feature-A分支创建之前，创建一个名为fix-B的特性分支
+// 2). 要让仓库的HEAD、暂存区、当前工作树回溯到指定状态，需要用到git reset --hard命令。只要提供目标时间点的哈希值[插图]，就可以完全恢复至该时间点的状态，（哈希值输入4位以上即可）
+$  git reset --hard 081b86291d34d11d8df775bf40cae04d94d6d121
+```
+
+![git0](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git5.png)
+
+&emsp; 成功回溯到特性分支（feature-A）创建之前的状态.
+
+<br/>
+
+```
+// 创建fix-B分支
+$ git checkout -b fix-B
+// 提交fix-B分支在README.md文件的改动
+$  git add README.md
+$  git commit -m 'Fix B'
+/*
+ * 查看当前仓库的操作日志,这个很重要
+*/ 
+// git log命令只能查看以当前状态为终点的历史日志
+// 所以这里要使用git reflog命令，查看当前仓库的操作日志。在日志中找出回溯历史之前的哈希值
+$  git reflog
+$  git checkout master
+// 将HEAD、暂存区、工作树恢复到feature-A特性分支合并后这个时间点的状态
+$   git reset --hard 6e6b58c
+```
+
+![tool_git6](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git6.png)
+
+<br/>
+
+```
+/*
+ * 消除冲突
+*/ 
+$  git merge --no-ff fix-B
+// 有冲突，解决冲突后然后提交解决结果
+$  git add README.md
+$  git commit -m 'Fix conflict'
+
+
+/*
+ * 修改提交信息
+*/
+// 将上一条提交信息记为了"Fix conflict"，但它其实是fix-B分支的合并，解决合并时发生的冲突只是过程之一，这样标记实在不妥
+// 于是，我们要修改这条提交信息
+$  git commit --amend
+
+
+
+/*
+ * 压缩历史(变基操作)
+*/ 
+// 合并特性分支之前，如果发现已提交的内容中有些许拼写错误等，不妨提交一个修改，然后将这个修改包含到前一个提交之中，压缩成一个历史记录
+$  git checkout -b feature-C
+// 在feature-C分支上添加一个故意写错误的字母
+// 进行添加和提交，一步做到
+$  git commit -am 'Add feature-C'
+// 修正拼写错误
+$  git diff
+$  git commit -am 'Fix typo'
+// 更改历史
+// 将"Fix typo"修正的内容与之前一次的提交合并，在历史记录中合并为一次完美的提交
+$  git rebase -i HEAD~2
+// 执行上面的命令后会打开编辑器，如下截取的一部分：
+
+pick 5caef10 Add feature-C
+pick b90ee8b Fix typo
+
+// 将b90ee8b的Fix typo的历史记录压缩到5caef10的Addfeature-C里。按照如下修改所示，将b90ee8b左侧的pick部分删除，改写为fixup。
+
+pick 5caef10 Add feature-C
+fixup b90ee8b Fix typo
+
+// 保存内容，关闭编辑器。会提示：Successfully rebased and updated refs/heads/feature-C. 表示成功了
+// 这两个提交对象，将"Fix typo"的内容合并到了上一个提交 "Add feature-C"中，改写成了一个新的提交
+
+// 合并至master分支
+$  git checkout master
+$  git merge --no-ff feature-C
+```
+
+
 
 <br/>
 <br/>
 
-> <h3 id=''></h3>
+> <h2 id='推送至远程仓库'>推送至远程仓库</h2>
+
+```
+/*
+ * 添加远程仓库
+*/ 
+// GitHub上创建的仓库路径为“git@github.com：用户名 /git-tutorial.git”
+// 现在我们用git remote add命令将它设置成本地仓库的远程仓库
+$ git remote add origin git@github.com:harleyGit/GitTest.git
 
 
-<br/>
-<br/>
+/*
+ * 推送至远程仓库
+*/
+// 在本地master分支推送至远程的master分支
+// -u参数可以在推送的同时，将origin仓库的master分支设置为本地仓库当前分支的upstream（上游）
+// 添加了这个参数，将来运行git pull命令从远程仓库获取内容时，本地仓库的这个分支就可以直接从origin的master分支获取内容，省去了另外添加参数的麻烦
+$ git push -u origin master
 
-> <h3 id=''></h3>
+// 推送至master以外的分支
+// 除了master分支之外，远程仓库也可以创建其他分支。举个例子，我们在本地仓库中创建feature-D分支，并将它以同名形式push至远程仓库
+$ git checkout -b feature-D
+// 本地仓库feature-D分支，现在将它push给远程仓库并保持分支名称不变
+$ git push -u origin feature-D
 
+/*
+ * 推送到主分支
+*/ 
+$ git checkout master
+// 建立仓库第一次推送时
+$ git push -u origin master
+$ 第二次及以后推送代码到远程仓库，使用如下
+$ git push origin master
 
-<br/>
-<br/>
-
-> <h3 id=''></h3>
-
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id='克隆到本地'>克隆到本地</h2>
-
-> git clone -b dev https://github.com/xxx/xxx.git
-
-
-<br/>
-
-
-> <h2 id='初始化本地仓库'>初始化本地仓库</h2>
-
-> git init
-
-
-<br/>
-
-> <h2 id='提交到缓存'>提交到缓存</h2>
-
-&emsp; 添加文件到版本库（只是添加到缓存区） .代表添加文件夹下所有文件
-
-> git add .
-
-
-<br/>
-
-
-> <h2 id='提交到版本库'>提交到版本库</h2>
-&emsp； 把添加的文件提交到版本库，并填写提交备注。
-
-> git commit -m "提交记录"
-
-
-<br/>
-
-> <h2 id='关联本地库与远程库'>关联本地库与远程库</h2>
-
-> git remote add origin 你的远程库地址
+```
 
 
 
 
 <br/>
+<br/>
 
+> <h2 id='从远程仓库获取'>从远程仓库获取</h2>
 
+```
+/*
+ * 获取远程仓库
+*/ 
+// 首先我们换到其他目录下，将GitHub上的仓库clone到本地
+$  git clone git@github.com:harleyGit/GitTest.git
+// 用git branch -a命令查看当前分支的相关信息。添加 -a参数可以同时显示本地仓库和远程仓库的分支信息
+$  git branch -a
+```
 
-> <h2 id='推送代码到远程仓库'>推送代码到远程仓库</h2>
-
-
-**第一次推送时**
-> git push -u origin master
+![git7](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git7.png)
 
 <br/>
 
-**第二次及以后推送代码到远程仓库，使用如下：**
-> git push origin master
+```
+// 获取远程的feature-D分支至本地
+// -b参数的后面是本地仓库中新建分支的名称
+// 为了便于理解，我们仍将其命名为feature-D，让它与远程仓库的对应分支保持同名。新建分支名称后面是获取来源的分支名称。
+// 下面的指令中中指定了origin/feature-D，就是说以名为origin的仓库（这里指GitHub端的仓库）的feature-D分支为来源，在本地仓库中创建feature-D分支
+$  git checkout -b feature-D origin/feature-D
+// 向远程feature-D分支的远程仓库推送
+$  git commit -am 'Add feature-D'
+$  git push
 
 
+/*
+ * 获取最新的远程仓库分支
+*/ 
+// 将本地的feature-D分支更新到最新状态
+$ git pull origin feature-D
 
-<br/>
+// 为了在开发中保持分支的整洁度，建议从远程拉代码时使用变基
+$ git checkout master
+$ git pull --rebase
 
+```
 
-> <h2 id='拉取远程代码到本地'>拉取远程代码到本地</h2>
+&emsp; [**git pull --rebase** ](https://www.jianshu.com/p/b0a4d0c1e66f)的理解。
 
-&emsp; 当远程是在master分支，本地开发也是在分支，可以使用下面命令：
-> [git pull --rebase ](https://www.jianshu.com/p/b0a4d0c1e66f)
+&emsp; `git pull`作用是将远程仓库中的更改合并到当前分支中;
 
+&emsp; 默认模式下 相当于 git fetch + git merge FETCH_HEAD 命令;
 
-
-`git pull`作用是 将远程仓库中的更改合并到当前分支中;
-
-默认模式下 相当于 git fetch + git merge FETCH_HEAD 命令;
-
-更准确的说是，git pull 相当于: 先执行git fetch + 指定参数，然后执行git merge 命令将检索到的分支合并到当前分支。
-
-
+&emsp; 更准确的说是，git pull 相当于: 先执行git fetch + 指定参数，然后执行git merge 命令将检索到的分支合并到当前分支。
 
 
 
