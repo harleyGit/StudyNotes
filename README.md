@@ -258,7 +258,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 
 
 > <h1 id = "Go">Go</h1>
-- [环境配置](https://github.com/harleyGit/StudyNotes/blob/master/Go/环境配置.md)
+- [语法](https://github.com/harleyGit/StudyNotes/blob/master/Go/语法.md)
 
 
 <br/>
