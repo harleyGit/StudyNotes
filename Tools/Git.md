@@ -5,6 +5,7 @@
 - [**指令工作流**](#指令工作流)
 	- [基本操作](#基本操作)
 	- [分支的操作](#分支的操作)
+		- [分支的高级合并](#分支的高级合并) 
 	- [更改提交的操作](#更改提交的操作)
 	- [推送至远程仓库](#推送至远程仓库)
 	- [从远程仓库获取](#从远程仓库获取)
@@ -50,7 +51,7 @@
 
 <br/>
 
-> <h3 id='基本操作'>基本操作</h3>
+> <h2 id='基本操作'>基本操作</h2>
 
 ```
 /*
@@ -128,7 +129,7 @@ $  git diff
 <br/>
 
 
-> <h3 id='分支的操作'>分支的操作</h3>
+> <h2 id='分支的操作'>分支的操作</h2>
 
 ```
 /*
@@ -174,8 +175,54 @@ $  git log --graph
 
 <br/>
 <br/>
+> <h3 id='分支的高级合并'>分支的高级合并</h3>
 
-> <h3 id='更改提交的操作'>更改提交的操作</h3>
+![git5](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git8.png)
+
+低级的分支合并，执行的操作步骤为
+
+```
+$ git checkout master
+$ git merge feature-B
+```
+
+<br/>
+
+**高级分支合并：** 使用rebase进行合并，减少分支节点。
+
+![git6](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git9.png)
+
+&emsp; 首先是 git rebase：把 feature-B 分支上的 B1、B2节点剥下来放到临时区，让 feature-B 分支的拿到 M3、M4 的连接信息，然后从临时区把 B1、B2 连接到 M4 后面
+
+```
+# git rebase master feature-B 命令等于下面2条命令
+$ git checkout feature-B
+$ git rebase master
+```
+
+&emsp; 这里可能发生冲突，若是发生冲突我们需要解决冲突。而且这个冲突是一个一个解决的，每解决一个冲突执行如下命令：
+
+```
+$ git add .
+$ git rebase --continue
+```
+
+
+&emsp; 直到解决完冲突，此时对于 feature-B 分支来说是发生了变化，是塞入了 M3、M4；对于 master 分支来说并没有变化。不过由于 main 分支和 boxfilter 已经是一条线，可以快速合并（不会创建新节点），因此执行：
+
+```
+$ git checkout master
+$ git merge feature-B
+
+# 查看提交记录
+$ git log --graph
+```
+
+
+<br/>
+<br/>
+
+> <h2 id='更改提交的操作'>更改提交的操作</h2>
 
 ```
 /*
