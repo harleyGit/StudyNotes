@@ -2,7 +2,9 @@
 
 <br/>
 
+> <h2 id=''></h2>
 - **RxSwift角色定位**
+	- [**安装**](#安装) 
 	- Observable(被观察者)继承链
 	- 	Observable的核心函数
 	- 	` ObservableType` 协议扩展
@@ -31,6 +33,63 @@
 
 ***
 <br/>
+
+> <h1 id='安装'>安装</h1>
+
+- **Cocoapods安装**
+
+```
+platform :ios, '12.0'
+
+target 'RxSwiftDemo' do
+  # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for FilterNumber
+  pod 'RxSwift', '~> 6.2.0'
+  pod 'RxCocoa', '~> 6.2.0'
+end
+
+```
+
+
+<br/>
+
+- **手动安装**
+
+	- 在项目根目录，执行：
+
+		```
+		$ git submodule add git@github.com:ReactiveX/RxSwift.git
+		
+		```
+让RxSwift以submodule的方式集成到项目目录中。
+
+	- 打开项目文件，把RxSwift目录下的Rx.xcodeproj拖入到项目中如下图：
+	
+	![0](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_library0.png)
+	
+	- 	添加对应的库
+	
+	![1](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_library1.png)
+	
+
+	- 	导入 
+	
+	```
+	import RxSwift
+	import RxCocoa
+	```
+	
+
+
+
+<br/>
+
+***
+<br/>
+
+
 
 ># RxSwift角色定位
 
