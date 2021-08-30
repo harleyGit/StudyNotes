@@ -36,7 +36,7 @@
 
 > <h1 id='安装'>安装</h1>
 
-- **Cocoapods安装**
+> **Cocoapods安装**
 
 ```
 platform :ios, '12.0'
@@ -55,26 +55,27 @@ end
 
 <br/>
 
-- **手动安装**
+> **手动安装**
 
-	- 在项目根目录，执行：
+- 在项目根目录，执行：
 
 		```
 		$ git submodule add git@github.com:ReactiveX/RxSwift.git
 		
 		```
+
 让RxSwift以submodule的方式集成到项目目录中。
 
-	- 打开项目文件，把RxSwift目录下的Rx.xcodeproj拖入到项目中如下图：
+- 打开项目文件，把RxSwift目录下的Rx.xcodeproj拖入到项目中如下图：
 	
 	![0](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_library0.png)
 	
-	- 	添加对应的库
+- 	添加对应的库
 	
 	![1](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_library1.png)
 	
 
-	- 	导入 
+- 	导入 
 	
 	```
 	import RxSwift
