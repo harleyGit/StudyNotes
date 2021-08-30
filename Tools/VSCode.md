@@ -7,6 +7,13 @@
 	- [Code自动保存](#Code自动保存)
 	- [文件图标vscode-icons](#vscode-icons)
 	- [ESLint(语法错误检查)](#ESLint)
+- [**React配置**](#React配置)
+	- [Vue安装](#Vue安装)
+		- [安装brew](#安装brew)
+		- 	[安装Node js](#安装Nodejs)
+		- [	安装vue](#安装vue)
+	- [项目创建](#项目创建)
+	- [VSCode环境配置](#VSCode环境配置)
 - [**Go配置**](#Go配置)
 	- [Go环境配置](#Go环境配置)
 	- [VSCode配置](#VSCode配置)
@@ -382,6 +389,205 @@ npm i babel-eslint -g
 <br/>
 <br/>
 
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id='React配置'>React配置</h1>
+
+<br/>
+
+<h2 id="Vue安装">Vue安装</h2>
+
+<br/>
+
+> <h3 id="安装brew">安装brew</h3>
+
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+
+这里如果执行报错：
+
+```
+Failed to connect to raw.githubusercontent.com port 443: Connection refused
+```
+
+原因是https://raw.githubusercontent.com这个域名被国内和谐了，但是我们可以通过真实ip来进行访问。
+
+在 `https://www.ipaddress.com/` 查询 `raw.githubusercontent.com` 的真实IP。
+
+
+- 修改hosts
+
+```
+sudo vim /etc/hosts
+```
+
+
+添加如下内容
+
+```
+199.232.68.133 raw.githubusercontent.com
+```
+
+如果仍然报错
+
+```
+remote: Enumerating objects: 49, done.
+remote: Counting objects: 100% (49/49), done.
+remote: Compressing objects: 100% (49/49), done.
+error: RPC failed; curl 18 transfer closed with outstanding read data remaining
+fatal: The remote end hung up unexpectedly
+fatal: early EOF
+fatal: index-pack failed
+Failed during: git fetch origin --force
+```
+
+我们可以先ping一下github.com看看是否通，如果不通则同上述处理，只不过这次使用github.com的真实域名。
+
+如果还是不行的话，也别费那个劲了，直接跳过这步，使用下面手动安装就行了。
+
+也可以参考下面的文章：[M1芯片的Mac安装homebrew](https://blog.csdn.net/qq1808814025/article/details/112667458)
+
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id="安装Nodejs">安装Node js</h3>
+
+- 终端直接执行或者去[官网进行下载](https://nodejs.org/en/)
+
+```
+brew install nodejs
+```
+
+终端输入查看版本号，是否安装成功。
+
+```
+npm -v
+node -v
+```
+
+
+<br/>
+<br/>
+
+> <h2 id="安装vue">安装vue</h2>
+
+- 终端输入安装vue
+
+```
+Sudo npm i -g vue
+```
+
+- 安装vue-cli
+
+```
+Sudo npm install -g vue-cli
+```
+
+- 安装webpack
+
+```
+Sudo npm install -g webpack
+```
+
+
+![下载出现的问题](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react0.png)
+
+
+
+
+> <h2 id="项目创建">项目创建</h2>
+
+- 创建vue项目
+
+```
+vue init webpack myvue
+```
+
+- 使用VSCode开发React，语法自动补全插件
+
+![自动补全插件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react1.png)
+
+- 配置用户
+
+![配置用户](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react2.jpeg)
+
+
+- 搜索emmet.triggerExpansionOnTab，启用
+
+![启用](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react3.jpeg)
+
+- 打开setting.json设置
+
+command+shift+p,然后选择下面的
+
+![setting.json打开](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react4.png)
+
+把配置偏好设置，把这两个命令粘贴到用户设置
+
+```
+"editor.snippetSuggestions": "top",
+
+"emmet.triggerExpansionOnTab": true
+```
+
+如下图：
+
+![偏好设置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react5.png)
+
+完成配置后，重启就好了。
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="VSCode环境配置">VSCode环境配置</h2>
+
+- VSCode下载插件：**Debugger for Chrome**
+
+- 配置 VSCode 连接到 Chrome
+	- 在调试按钮的右侧选择 **add configuration**
+	- 选择 chrome 进行调试
+
+- Launch.json 配置：
+
+```
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}
+```
+
+
+- 启动 Debug 进行调试
+
+- 启动服务
+	- 在终端中运行 npm start 启动测试服务，运行调试后会自动启动 chrome 访问到 http://localhost:3000/ （在 launch.json 文件中配置过的）。此时应用会自动停在断点的位置。
 
 
 
