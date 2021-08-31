@@ -59,10 +59,10 @@ end
 
 - 在项目根目录，执行：
 
-		```
-		$ git submodule add git@github.com:ReactiveX/RxSwift.git
-		
-		```
+```
+$ git submodule add git@github.com:ReactiveX/RxSwift.git
+
+```
 
 让RxSwift以submodule的方式集成到项目目录中。
 
