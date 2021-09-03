@@ -830,6 +830,28 @@ $ go get github.com/derekparker/delve/cmd/dlv
 
 ![启动文件配置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go7.png)
 
+最后的launch.json配置如下：
+
+```
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [ 
+        {
+            "name": "Launch file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}"
+        }
+    ]
+}
+```
+
+然后点击甲壳虫进行debug测试，就可以跑代码了。😄哈哈
+
 
 
 
