@@ -12,8 +12,8 @@
 		- [安装brew](#安装brew)
 		- 	[安装Node js](#安装Nodejs)
 		- [	安装vue](#安装vue)
+	- [环境配置](#VSCode环境配置)
 	- [项目创建](#项目创建)
-	- [VSCode环境配置](#VSCode环境配置)
 - [**Go配置**](#Go配置)
 	- [Go环境配置](#Go环境配置)
 	- [VSCode配置](#VSCode配置)
@@ -504,15 +504,12 @@ Sudo npm install -g webpack
 ![下载出现的问题](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react0.png)
 
 
+<br/>
+<br/>
+
+> <h2 id="VSCode环境配置">环境配置</h2>
 
 
-> <h2 id="项目创建">项目创建</h2>
-
-- 创建vue项目
-
-```
-vue init webpack myvue
-```
 
 - 使用VSCode开发React，语法自动补全插件
 
@@ -550,10 +547,8 @@ command+shift+p,然后选择下面的
 
 
 <br/>
-<br/>
 
 
-> <h2 id="VSCode环境配置">VSCode环境配置</h2>
 
 - VSCode下载插件：**Debugger for Chrome**
 
@@ -590,6 +585,65 @@ command+shift+p,然后选择下面的
 	- 在终端中运行 npm start 启动测试服务，运行调试后会自动启动 chrome 访问到 http://localhost:3000/ （在 launch.json 文件中配置过的）。此时应用会自动停在断点的位置。
 
 
+
+
+<br/>
+<br/>
+
+> <h2 id="项目创建">项目创建</h2>
+
+
+> 脚手架创建项目
+
+```
+$ cd (放置项目文件夹的路径地址)
+$ npx create-react-app react_demo
+```
+
+- 用VSCode打开刚刚创建好的项目
+
+- 打开VSCode的 launch.json文件夹，按照下面修改：
+
+```
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            // 这个地址最好修改下，若是启动了好几个项目可能url重复，最好设置大点如： 3010等
+            "url": "http://localhost:3001",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}
+```
+
+- 在终端输入
+
+```
+$ nom start
+```
+
+- 可以调试了
+
+
+<br/>
+<br/>
+
+> 下载第三方插件
+
+- 使用npm进行下载，如：下载调试插件vconsole
+
+```
+$ nom install vconsole
+```
+
+&emsp; 然后在`pakcage.json`文件中`dependencies`字段中会自动出现`"vconsole": "^3.9.1",`这个插件的版本号
 
 
 <br/>
