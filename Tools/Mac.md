@@ -1,12 +1,32 @@
+> <h1 id=''></h1>
+> [**快捷键**](#快捷键)
 - [**DNS**](#DNS)
 	- [DNS缓存清除](#DNS缓存清除)
 - [**下载**](#下载)
-- **修改管理员 UserName 和 Password**
-- **Mac问题解决**
-	- Mac蓝牙不可用
-	- Mac清理内存
-	- 可删除的文件
-	- 破解软件无法安装
+- [**修改管理员UserName和Password**](#修改管理员UserName和Password)
+- [**Mac问题解决**](#Mac问题解决)
+	- [Mac蓝牙不可用](#Mac蓝牙不可用)
+	- [Mac清理内存](#Mac清理内存)
+	- [可删除的文件](#可删除的文件)
+	- [破解软件无法安装](#破解软件无法安装)
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id='快捷键'>快捷键</h1>
+
+- **锁屏：** `Command+Control+Q`
+- **关机终端命令：** `sudo halt` 或者 `sudo shutdown -h now`
+- **重启终端命令:** `sudo reboot` 或者 `sudo shutdown -r now`
+- **休眠终端命令：** `sudo shutdown -s now`
+- [x] **Finder显示隐藏文件:** `Command + shift + “ . ”`
+
+
+
+
 
 <br/>
 
@@ -117,7 +137,7 @@ brew deps        显示包依赖
 ***
 <br/>
 
-># 修改管理员 UserName 和 Password
+># <h1 id='修改管理员UserName和Password'>修改管理员 UserName 和 Password</h1>
 
 1️⃣重启iMac、Mac Air、Mac Pro；
 
@@ -140,11 +160,14 @@ brew deps        显示包依赖
 <br/>
 
 
-># Mac问题解决
+># <h1 id='Mac问题解决'>Mac问题解决</h1>
+
+
 
 <br/>
 
-> **Mac蓝牙不可用**
+> <h2 id='Mac蓝牙不可'>**Mac蓝牙不可用**</h2>
+
 
 `①  拔出与Mac连接的设备线；  `<br/>
 `② 关机;  `<br/>
@@ -156,7 +179,8 @@ brew deps        显示包依赖
 <br/>
 <br/>
 
-> **Mac清理内存**
+> <h2 id='Mac清理内存'>Mac清理内存</h2>
+
 
 **`查看文件夹内的内存占用情况`**
 
@@ -177,7 +201,7 @@ $ du -hd 5 |grep -n '\dG' |sort
 <br/>
 <br/>
 
-> **`可删除的文件`**
+> <h2 id='可删除的文件'>可删除的文件</h2>
 
 ```
 //该目录下的内容是Xcode在编译过程中产生的中间件，并且文件还特别大，在编译完成后能够被删除
@@ -244,7 +268,8 @@ rm -rf ~/Library/Caches/*
 <br/>
 <br/>
 
-> **破解软件无法安装**
+> <h2 id='破解软件无法安装'>**破解软件无法安装**</h2>
+
 
 - 【安全隐私】没有权限安装来路不明的 App
 
@@ -257,6 +282,26 @@ rm -rf ~/Library/Caches/*
 ![a28](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a28.png)
 
 在终端输入：`sudo xattr -d com.apple.quarantine /Applications/[App的名字].app`， 这个可以从文件夹中将app拖入终端，然后再输入密码解决了，亲测可用。
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=''></h1>
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=''></h1>
+
 
 
 
