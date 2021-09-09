@@ -9,6 +9,7 @@
 	- [更改提交的操作](#更改提交的操作)
 	- [推送至远程仓库](#推送至远程仓库)
 	- [从远程仓库获取](#从远程仓库获取)
+		- [克隆版本库](#克隆版本库)
 - [**工作流指令**](#工作流指令)
 	- [新功能分支](#新功能分支)
 	- [修复紧急bug](#修复紧急bug)
@@ -360,17 +361,38 @@ $ git push origin master
 
 > <h2 id='从远程仓库获取'>从远程仓库获取</h2>
 
+<br/>
+
+> <h3 id='克隆版本库'>克隆版本库</h2>
+
 ```
+$ git clone <版本库url地址>
+
+
 /*
  * 获取远程仓库
 */ 
 // 首先我们换到其他目录下，将GitHub上的仓库clone到本地
 $  git clone git@github.com:harleyGit/GitTest.git
+```
+
+&emsp; 该命令会在本地主机生成一个目录，与远程主机的版本库同名。如果要指定不同的目录名，可以将目录名作为`git clone`命令的第二个参数。
+
+```
+$ git clone <版本库url地址> <本地目录名>
+```
+
+&emsp; git clone支持多种协议，除了HTPP（s）外，还支持SSH、Git、本地文件的协议，通常来说Git协议下载速度最快，SSH协议用于需要用户认证的场合。
+
+```
 // 用git branch -a命令查看当前分支的相关信息。添加 -a参数可以同时显示本地仓库和远程仓库的分支信息
 $  git branch -a
 ```
 
 ![git7](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git7.png)
+
+
+
 
 <br/>
 
