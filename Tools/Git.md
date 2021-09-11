@@ -5,11 +5,18 @@
 - [**指令工作流**](#指令工作流)
 	- [基本操作](#基本操作)
 	- [分支的操作](#分支的操作)
+		- [查看分支](#查看分支) 
+		- [创建分支](#创建分支)
+		- [合并分支](#合并分支)
 		- [分支的高级合并](#分支的高级合并) 
 	- [更改提交的操作](#更改提交的操作)
 	- [推送至远程仓库](#推送至远程仓库)
+		- [git remote](#gitremote)
+		- [git push](#gitpush)
 	- [从远程仓库获取](#从远程仓库获取)
 		- [克隆版本库](#克隆版本库)
+		- [git fetch](#gitfetch)
+		- [拉取代码](#拉取代码)
 - [**工作流指令**](#工作流指令)
 	- [新功能分支](#新功能分支)
 	- [修复紧急bug](#修复紧急bug)
@@ -132,6 +139,13 @@ $  git diff
 
 > <h2 id='分支的操作'>分支的操作</h2>
 
+<br/>
+
+
+> <h3 id='查看分支'>查看分支</h3>
+
+&emsp; **`git branch`命令的`-r`选项，可以用来查看远程分支，`-a`选项查看所有分支。**
+
 ```
 /*
  * 显示分支一览表
@@ -140,6 +154,25 @@ $  git diff
 $  git branch
 
 
+// 查看远程分支
+$ git branch -r
+
+
+// 查看所有分支
+$ git branch -a
+```
+
+
+
+<br/>
+
+
+> <h3 id='创建分支'>创建分支</h3>
+
+&emsp; **可以使用git checkout创建一个新的分支**
+
+```
+
 /*
  * 创建、切换分支
 */ 
@@ -147,13 +180,24 @@ $  git branch
 // 创建名为feature-A的分支(或者用：$ git branch feature-A, 
 // $ git checkout feature-A)
 $  git checkout -b feature-A
+
+// 在origin/master的基础上，创建一个分支feature-R
+$ git checkout -b feature-R origin/master
+
 // 切换到master分支
 $ git checkout master
 // 切换回上一个分支
 // 切换回feature-A分支
 $  git checkout -
+```
 
 
+<br/>
+<br/>
+
+> <h3 id='合并分支'>合并分支</h3>
+
+```
 /*
  * 合并分支
 */ 
@@ -163,6 +207,13 @@ $  git checkout master
 // 为了在历史记录中明确记录下本次分支合并，我们需要创建合并提交。因此，在合并时加上--no-ff参数
 // 执行如下的命令后，编辑器会启动，用于录入合并的提交信息，填完后关闭提交信息的界面
 $ git merge --no-ff feature-A
+
+// 或者这样合并分支
+// 在本地当前分支合并远程分支origin/master
+$ git merge origin/master
+// 或者 $ git rebase origin/master
+
+
 
 
 /*
@@ -174,8 +225,11 @@ $  git log --graph
 ```
 
 
+
 <br/>
 <br/>
+
+
 > <h3 id='分支的高级合并'>分支的高级合并</h3>
 
 ![git5](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git8.png)
@@ -319,7 +373,65 @@ $  git merge --no-ff feature-C
 
 > <h2 id='推送至远程仓库'>推送至远程仓库</h2>
 
+<br/>
+
+> <h3 id='gitremote'>git remote</h3>
+
+&emsp; `git remote`命令就用来管理主机名，不带选项的时候`git remote`会列出所有远程主机。
+
 ```
+$ git remote
+
+origin
+
+
+// 使用-v参数，可以查看远程主机地址
+$ git remote -v
+
+// 表示当前只有一个远程主机，叫做origin，以及它的地址
+origin	 git@github.com:harleyGit/StudyNotes.git (fetch)
+origin	 git@github.com:harleyGit/StudyNotes.git (push)
+
+```
+
+<br/>
+
+&emsp; 克隆版本库的时候，Git会自动在本地分支与远程分支之间，建立一种追踪关系（tracking）。比如：在git clone的时候，所有本地分支默认与远程主机的同名分支，建立追踪关系。也就是说，本地的master分支自动"追踪"origin/master分支
+
+&emsp; Git也允许主动建立追踪关系，如：
+
+```
+// 制定master分支追踪origin/next分支
+$ git branch --set-upstream master xxxxx.baixing.jiaoyu.com origin/next
+```
+
+
+&emsp; 在克隆的时候，所使用的远程主机自动被Git命名为origin。如果想用其他的主机名，需要用`git clone`命令的`-o`选项指定。
+
+```
+$ git clone -o jQuery(主机名) https://www.mcyllpt.com/ github.com/jquery/jquery.git(主机网址)
+```
+
+&emsp; `git remote show`命令加上主机名，可以查看该主机的详細信息
+
+```
+$ git remote show origin
+* remote origin
+  Fetch URL: git@github.com:harleyGit/StudyNotes.git
+  Push  URL: git@github.com:harleyGit/StudyNotes.git
+  HEAD branch: master
+  Remote branch:
+    master tracked
+  Local branch configured for 'git pull':
+    master merges with remote master
+  Local ref configured for 'git push':
+    master pushes to master (up to date)
+
+
+
+// git remote add命令用于添加远程主机
+$ git remote add (主机名) (网址)
+
 /*
  * 添加远程仓库
 */ 
@@ -328,11 +440,42 @@ $  git merge --no-ff feature-C
 $ git remote add origin git@github.com:harleyGit/GitTest.git
 
 
+
+// git remote rm命令用于刪除远程主机
+$ git remote rm (主机名)
+
+// git remote rename命令用于远程主机的改名
+$ git remote rename (原主机名) (新主机名)
+```
+
+
+<br/>
+
+> <h3 id='gitpush'>git push</h3>
+
+&emsp; `git push`命令用于将本地分支的更新，推送到远程主机。它的格式与`git pull`命令相仿。
+
+**格式：git push <远程主机名> <本地分支名>:<远程分支名>**
+
+&emsp; 如果省略远程分支名，则表示将本地分支推送与之存在"追踪关系"的远程分支（通常两者同名），如果该远程分支不存在，则会被新建。
+
+```
+$ git push origin master
+
+
+// 若省略本地分支名，则表示删除指定远程分支，因为这等同于推送一个空的本地分支到远程分支
+$ git push origin :master
+// 等同于 $ git push origin --delete master （表示删除origin主机的master分支）
+
+// 若当前分支与远程分支之间存在追踪关系，则本地分支和远程分支都可以省略
+// 表示将当前分支推送到origin主机对应的分支
+$ git push origin
+
 /*
  * 推送至远程仓库
 */
 // 在本地master分支推送至远程的master分支
-// -u参数可以在推送的同时，将origin仓库的master分支设置为本地仓库当前分支的upstream（上游）
+// 如果当前分支支多个主机存在追踪关系，則可以使用-u选项指定一个默认主机，这样后面就可以不加任何参数使用git push
 // 添加了这个参数，将来运行git pull命令从远程仓库获取内容时，本地仓库的这个分支就可以直接从origin的master分支获取内容，省去了另外添加参数的麻烦
 $ git push -u origin master
 
@@ -392,6 +535,22 @@ $  git branch -a
 ![git7](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git7.png)
 
 
+<br/>
+<br/>
+
+
+> <h3 id='gitfetch'>git fetch</h3>
+
+**用法： 非常暴力的将某个远程主机的更新全部取回本地**
+
+&emsp； `git fetch`命令通常用來查看其他人的进程，因为它取回的代码对你本地的开发代码沒有影响。默认情況下，`git fetch`取回所有分支（branch）的更新
+　　
+```
+// 取回特定分支的更新，可以指定分支名: git fetch (远程主机名) (分支名)
+// 取回origin主机的master分支
+$ git fetch origin master
+
+```
 
 
 <br/>
@@ -405,14 +564,54 @@ $  git checkout -b feature-D origin/feature-D
 // 向远程feature-D分支的远程仓库推送
 $  git commit -am 'Add feature-D'
 $  git push
+```
+
+<br/>
+
+
+>  <h3 id='拉取代码'>拉取代码</h3>
+
+&emsp; `git pull`命令的作用是，取回远程主机某个分支的更新，再与本地的指定分支合并，它的完整格式稍稍有点复杂。
+
+&emsp; **格式: $ git pull <远程主机名> <远程分支名>:<本地分支名>**
+
+&emsp; 如果远程主机刪除了某个分支，默认情況下，`git pull` 不会在拉取远程分支的时候，刪除对应的本地分支。这是为了防止，由于其他人操作了远程主机，导致`git pull`不知不觉刪除了本地分支。
+　　
+&emsp; 但是，你可以改变这种情况，加上参数 `-p` 就会在本地刪除远程已经刪除的分支。
+
+```
+$ git pull -p
+
+// 等同于如下2条指令
+// $ git fetch --prune origin
+// $ git fetch -p 
+
+// 取回origin主机的next分支，与本地的master分支合并，如下：
+$ git pull origin next:master
+
+// 若当前分支与远程分支存在追踪关系，git pull就可以省略远程分支名
+// 本地当前分支对应origin主机“追踪分支”进行合并
+$ git pull origin
+// 若当前分支只有一个追踪分支，连远程主机名都可以省略
+$ git pull
 
 
 /*
  * 获取最新的远程仓库分支
 */ 
-// 将本地的feature-D分支更新到最新状态
+// 若远程分支是与当前分支合并，则冒号后面的部分可以省略
+// 取回origin/feature-D分支，再与当前分支合并，实质上是先做git fetch，再做git merge
+// $ git fetch origin ;   $ git merge origin/next
 $ git pull origin feature-D
+```
 
+
+<br/>
+<br/>
+
+
+
+```
 // 为了在开发中保持分支的整洁度，建议从远程拉代码时使用变基
 $ git checkout master
 $ git pull --rebase
