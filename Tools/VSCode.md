@@ -1,5 +1,7 @@
 > <h2 id=""></h2>
 > [官方教程](https://code.visualstudio.com)
+- [**常用插件**](#常用插件)
+	- [注释插件](#注释插件) 
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
 	- [环境配置](#环境配置)
@@ -17,6 +19,64 @@
 - [**Go配置**](#Go配置)
 	- [Go环境配置](#Go环境配置)
 	- [VSCode配置](#VSCode配置)
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id="常用插件">常用插件</h1>
+
+
+<br/>
+
+> <h2 id="注释插件">注释插件</h2>
+
+
+&emsp; **koroFileHeader**在vscode中用于生成文件头部注释和函数注释的插件，经过多版迭代后，插件：支持所有主流语言,功能强大，灵活方便，文档齐。
+
+**Code->首选项->设置->在搜索框中搜索 `fileheader`**，对其进行如下配置：
+
+```
+ //文件头注释:ctrl+cmd+i
+"fileheader.customMade": {
+        "Descripttion": "",
+        "Author": "gang.huang",
+        "Date": "Do not edit", // 文件创建时间(不变)
+        "LastEditTime": "Do not edit", // 文件最后编辑时间
+        "FilePath": "Do not edit", // 文件在项目中的相对路径 自动更新
+        "dateFormat": "YYYY-MM-DD HH:mm:ss" // 默认格式
+    },
+    // 函数注释 ctrl+cmd+t
+    // 函数注释
+    "fileheader.cursorMode": {
+        // 默认字段
+        "description": "",
+        "param": "",
+        "return": ""
+    },
+        
+```
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+
 
 
 <br/>
