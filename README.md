@@ -259,6 +259,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 
 > <h1 id = "Go">Go</h1>
 - [语法](https://github.com/harleyGit/StudyNotes/blob/master/Go/语法.md)
+- [语法(II)](https://github.com/harleyGit/StudyNotes/blob/master/Go/语法(II).md)
 
 
 <br/>

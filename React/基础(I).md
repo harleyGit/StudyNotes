@@ -13,6 +13,8 @@
 	- [cloneElement](#cloneElement)
 - [**性能优化**](#性能优化)
 	- [值是否为空或有值](#值是否为空或有值) 
+- [JavaScript语法](#JavaScript语法)
+	- [数组splice()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
 - **参考资料：**
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 	- [Material-UI React组件库](https://v4-2-1.material-ui.com/zh/getting-started/installation/)
@@ -911,12 +913,14 @@ isEmpty(undefined)     //true
 
 **空值有：** undefined、 null、 ''、 NaN、false、0、[]、{} 、空白字符串，这些都返回true。
 
+
+
 <br/>
 
 ***
 <br/>
 
-> <h1 id=""></h1>
+> <h1 id="JavaScript语法">JavaScript语法</h1>
 
 
 
