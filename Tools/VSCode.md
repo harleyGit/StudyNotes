@@ -221,6 +221,10 @@ $ flutter doctor
 //全局安装eslint
 $ sudo npm i eslint -g
 
+
+// 跳转到具体方法实现用到这个小插件命令
+$ sudo npm install -g eslint;  
+
 //如果用到html中的js校验
 $ sudo npm i eslint-plugin-html -g
 
@@ -861,6 +865,8 @@ $ ./hello
 > vscode配置GOPATH
 
 ![配置GOPATH](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go6.png)
+
+注意：这里图里面的注释错了，是 **`go.gopath`** 字段
 
 <br/>
 

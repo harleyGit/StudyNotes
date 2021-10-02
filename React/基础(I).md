@@ -1,13 +1,19 @@
-> <h1 id=""></h1>
+> <h2 id=""></h2>
 - [**基本用法**](#基本用法)
+	- [ReactDOM](#ReactDOM)
+		- [ReactDom.render](#ReactDom.render)
+	- [React视图渲染](#React视图渲染)
+	- [项目文件描述](#项目文件描述)
 	- [生命周期方法](#生命周期方法) 
 	- [构造函数constructor](#构造函数constructor)
+	- [React Hooks](#ReactHooks)
 	- [参数传递](#参数传递)
 		- [父->子传参](#父子传参)
 		- [子->父组件的通信](#子父组件的通信)
 		- [兄弟节点之间的通信](#兄弟节点之间的通信)
 		- [订阅模型](#订阅模型)
 - [**ES6基础**](#ES6基础)
+	- [异步编程](#异步编程)
 - [**顶层API**](#顶层API)
 	- [createElement](#createElement)
 	- [cloneElement](#cloneElement)
@@ -29,14 +35,195 @@
 <br/>
 
 
+![react31](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react31.png)
+
+
+
+
 ># <h1 id="基本用法">基本用法</h1>
 
 
 <br/>
 
+
+> <h2 id="ReactDOM">React DOM</h2>
+
+- react.js是React的核心文件，如组件、Hooks、虚拟DOM等，都在这个文件中。
+- react-dom.js则是对真实DOM的相关操作，如将虚拟DOM渲染到真实DOM里，或者从真实DOM中获取节点。
+
+
+<br/>
+
+**介绍：**ReactDOM对象是react-dom.js提供的一个用于进行DOM操作的对象，在该对象下有一系列API用于操作DOM。在React中需要和真实的DOM打交道时都需要通过ReactDOM的API进行。当然也可以使用一些原生DOM的API，但并不推荐这么做。
+
+
+
+<br/>
+
+> <h3 id='ReactDom.render'>ReactDom.render</h3>
+
+```
+ReactDOM.render(element, container[, callback])
+```
+
+- render方法是ReactDOM在开发时唯一常用的API。render方法用于将React生成的虚拟DOM生成到真实的DOM中去。
+- element是React生成的虚拟DOM，也叫作ReactElement或ReactNode。除此之外也可以使用字符串去实现。
+- element要放置在container的容器中，它必须是一个已经存在的真实DOM节点。
+- callback是将ReactNode渲染到container之后的回调函数。
+
+
+**index.js文件**
+```
+ReactDOM.render(
+  // <h1>Hello World</h1>,
+  'Hello React',
+  document.getElementById('root'),
+  () => {
+    console.log('渲染完成了')
+  }
+);
+```
+
+效果：
+
+![react32](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react32.png)
+
+
+这里将“Hello React”这段字符串渲染到了#root这个div中，当然也可以利用React-Node做更复杂的结构渲染。
+
+render方法通常用来渲染整个项目的根组件，其他组件都在根组件中一层层调用。在使用render方法时要注意container中如果有其他子内容都会被替换掉。另外render方法并不会修改container的其他特性，只是修改container的内容。
+
+
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="React视图渲染">React视图渲染</h2>
+
+
+
+
+<br/>
+
+> <h3 id='React.createElement'>React.createElement</h3>
+
+
+当需要用React创建虚拟DOM时，React专门提供了一个方法createElement()。注意该方法并非是原生DOM中的createElement。
+
+```
+React.createElement(type, config, children)
+```
+
+
+**具体参数如下:**
+
+1）type要创建的标签类型。如要创建的是个div标签，则写React.createElement（＂div＂），一定注意type的类型是一个字符串。
+
+2）congfig参数是设置生成的节点的相关属性，这里要注意congfig的类型是一个纯对象;
+
+3）children代表该元素的内容或者子元素,可以放字符串，数组等
+
+示例如下：
+
+```
+let h1 = React.createElement('h1', null, 'Hello React')
+let p = React.createElement('p', null, '欢迎吃🍎')
+React.createElement("h1", {
+    id: "title",
+    className: "title",
+    title: "港青",
+    style: {
+        width: '100px',
+        height: '100px'
+    }
+}, [h1, p])
+```
+
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id="项目文件描述">项目文件描述</h2>
+
+
+![react33](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react33.png)
+
+- node_modules，在项目中安装的依赖都会放在这个文件夹下
+
+- package.json，是整个项目的描述文件，里边有两块内容这里详细说一下。
+
+	- ①dependencies项目安装的依赖名称及版本信息。可以看到在构建完的项目中，已经帮开发者安装好了一些基本的依赖：＂react＂:＂^16.13.1＂，＂react-dom＂:＂^16.13.1＂，＂react-scripts＂:＂3.4.1＂。react和react-dom不需要再复述了。react-scripts是什么？create-react-app会把webpack、Babel、ESLint配置好合并在一个包里，方便开发人员使用，这个包就是react-scripts。
+	
+	- ②scripts中定义的是在命令行工具中可以使用到的一些命令。在当前目录my-app中，启动命令行工具，一起来测试一下这些命令
+
+- public文件夹。用来存放html模板。public文件夹中的index.html就是项目的html模板，不建议读者修改名字，否则需要重新配置html文件。
+- src文件夹。该文件夹中index.js是整个项目的入口文件。为了加快重新构建的速度，webpack只处理src中的文件。注意要将JS和CSS文件放在src中，否则该文件不会被webpack打包。
+
+
+<br/>
+
+
+> React.StrictMode
+
+&emsp; StrictMode是用来检查项目中是否有潜在风险的检测工具，类似于JavaScript中的严格模式。StrictMode跟Fragment类似，不会渲染任何真实的DOM。只是为后代元素触发额外的检查和警告。
+
+&emsp; StrictMode可以在代码中的任意地方使用，当然也可以直接用在index.js中，开启全局检测。除上述描述的特征外，StrictMode检查只在开发模式下运行，不会与生产模式冲突。
+
+<br/>
+
+**检测的项目如下：**
+
+1）识别具有不安全生命周期的组件。
+
+2）有关旧式字符串ref用法的警告。
+
+3）关于已弃用的findDOMNode用法的警告。
+
+4）检测意外的副作用。
+
+5）检测遗留的context API。
+
+
+在StrictMode模式下，如果检测到代码有以上问题，React会在控制台中打印出相应的警告。
+
+
+
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+
+
+
+<br/>
+<br/>
+
 >## <h2 id="生命周期方法">[生命周期方法](https://www.runoob.com/react/react-component-life-cycle.html)</h2>
 
 
+![37](![react36](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react37.png))
 
 - **componentWillMount** 在渲染前调用,在客户端也在服务端。
 
@@ -311,6 +498,209 @@ export default App;
 
 
 
+
+<br/>
+<br/>
+<br/>
+
+> <h2 id='ReactHooks'>React Hooks</h2>
+
+
+<br/>
+<br/>
+
+> <h3 id='useState'>useState</h3>
+
+
+```
+function useState<S>(initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>];
+
+// 简化
+const [state, setState] = useState(initialState)
+```
+
+&emsp; 调用该方法时传入state的初始值，该方法会返回一个数组，数组的第0位是state具体的值，而第1位是修改该state的方法，同类组件的setState方法一样，调用该方法会更新state，然后引起视图更新。
+
+
+**HOC.js**
+
+```
+export function TestHOC1() {
+    const [name, setName] = useState('kkb')
+    return <div>
+        <p>{name}</p>
+        <button
+            onClick={() => {
+                setName('开课吧')
+            }}>
+            显示全称
+        </button>
+    </div>
+}
+```
+
+
+效果图: 
+
+![react34](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react34.png)
+
+**在使用useState时，有三个问题要注意:**
+
+1）useState返回的setState方法同类组件的setState一样，也是一个异步方法，需要组件更新之后state的值才会变成新值;
+
+2）useState返回的setState并不具有类组件的setState合并多个state的作用，如果state中有个多state，在更新时，其他值一同更新.
+
+
+
+```
+export function TestHOC2() {
+    const [data, setData] = useState({ name: 'kkb', age: 10 })
+    return <div>
+        <p>{data.name}</p>
+        <button
+            onClick={() => {
+                setData({
+                    ...data, name: '开课吧'
+                })
+
+            }}>
+            显示全称
+        </button>
+    </div >
+}
+```
+
+效果图: 
+
+![react35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react35.png)
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id='useEffect'>useEffect</h3>
+
+
+&emsp; Effect翻译成专业术语称之为副作用。网络请求、DOM操作都是副作用的一种，useEffect就是专门用来处理副作用的。在类组件中副作用通常在componentDid-Mount和componentDidUpdate中进行处理，而useEffect就相当于componentDidMount、componentDidUpdate和componentWillUnmount的集合体。useEffect包括两个参数执行时的回调函数和依赖参数，并且回调函数还有一个返回函数
+
+
+```
+function TestHOC3_1() {
+    const [course, setCourse] = useState('Web高级工程师')
+    const [num, setNum] = useState(1)
+
+    useEffect(() => {
+        console.log('✈️组件挂载或更新')
+        return () => {
+            console.log('✈️清理更新前的一些全局类容， 或检测组件即将卸载')
+        };
+    }, [num]) // 只有num更新时才会执行回调函数
+					    // 一定注意依赖参数要传入一个空数组，不传的话组件的任何更新都会调用该副作用
+
+
+    return <div>
+        <div>
+            选择课程：
+            <select
+                value={course}
+                onChange={({ target }) => { setCourse(target.value) }}
+            >
+                <option value='Web 全栈工程师'>Web 全栈工程师</option>
+                <option value='Web 高级工程师'>Web 高级工程师</option>
+
+            </select>
+        </div>
+        <div>
+            购买数量：
+            <input
+                type='number'
+                value={num}
+                min={1}
+                onChange={({ target }) => { setNum(target.value) }}
+            >
+
+            </input>
+        </div>
+    </div>
+}
+
+export function TestHOC3() {
+    const [show, setShow] = useState(true)
+
+    return <div>
+        {show ? <TestHOC3_1 /> : ''}
+        <button onClick={() => {
+            setShow(!show)
+        }}>
+            {show ? '隐藏课程' : '显示课程'}
+        </button>
+    </div>
+}
+
+
+```
+
+
+
+效果图: 
+
+![react36](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react36.png)
+
+
+依赖参数，其本身是一个数组，在数组中放入要依赖的数据，当这些数据有更新时，就会执行回调函数。整个组件的生命周期过程如下：
+
+组件挂载→执行副作用（回调函数）→组件更新→执行清理函数（返还函数）→执行副作用（回调函数）→组件准备卸载→执行清理函数（返还函数）→组件卸载。
+
+上文讲过useEffect是componentDidMount、componentDidUpdate和componentWillUnmount的集合体，如果单纯只想要在挂载后、更新后、卸载前其中之一的阶段执行，可以参考以下操作。
+
+①componentDidMount。如果只想要在挂载后执行，可以把依赖参数置为空，这样在更新时就不会执行该副作用了。
+
+②componentWillUnmount。如果只想要在卸载前执行，同样把依赖参数置为空，该副作用的返还函数就会在卸载前执行。
+
+③componentDidUpdate。只检测更新相对比较麻烦，需要区分更新还是挂载需要检测依赖数据和初始值是否一致，如果当前的数据和初始数据保持一致就说明是挂载阶段，当然安全起见应和上一次的值进行对比，若当前的依赖数据和上一次的依赖数据完全一样，则说明组件没有更新
+
+
+<br/>
+
+
+> Hooks的使用规则
+
+
+&emsp； Hooks使用规则了解Hooks的使用之后，还需要具体了解一下Hooks的使用规则，主要为以下两点：
+
+1）只能在函数式组件和自定义Hooks之中调用Hooks，普通函数或者类组件中不能使用Hooks；
+
+2）只能在函数的第一层调用Hooks。如果函数中还嵌套了流程控制语句如if或者for，这些地方是不能再调用Hooks的，当然函数中嵌套了子函数，子函数中也一样不能使用Hooks。Hooks的设计极度依赖其定义时候的顺序，如组件更新时Hooks的调用顺序变了，就会出现不可预知的问题。Hooks的使用则是为了保证Hooks调用顺序的稳定性。为此React提供一个ESLint plugin来做静态代码检测。eslint-plugin-react-hooks新版的脚手架中，也内置了这套检测。当代码中的Hooks使用不符合上述规范时，在开发环境中会有错误警告。
+
+**注意：**
+
+&emsp； 在使用自定义Hook时，同样需要遵守Hooks的使用规则，另外注意React要求自定义Hook的命名也必须以use开始，以区别于其他函数。
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+
+
+
+<br/>
 <br/>
 <br/>
 
@@ -398,6 +788,115 @@ export default App;
 <br/>
 
 > <h2 id='异步编程'>异步编程</h2>
+
+&emsp; JavaScript引擎是基于事件循环的概念实现的，JavaScript引擎会把任务放在一个任务队列中，通过事件循环机制一一执行任务队列里的任务，从第一个依次执行到最后一个。有些任务执行可能时间会比较长，如果等待时间比较长的任务执行完成之后再执行下一个任务就会影响用户体验，所以JavaScript在设计的时候就有了同步和异步。异步任务不进入主线程，而进入任务队列中的任务，只有任务队列通知主线程，某个异步任务可以执行了，这个任务才会进入主线程执行。异步任务在ES5标准中通过回调来解决执行顺序问题.
+
+```
+/**
+* @description: 异步编程
+*/
+_asynchronousTest = () => {
+	asyncFn(function () {
+	  console.log('执行完之后的回调打印。。。。。')
+	})
+}
+
+function asyncFn(cb) {
+  setTimeout(() => {
+    console.log('🍎 异步逻辑')
+    cb && cb()
+  }, 1000);
+}
+
+
+```
+
+输出：
+
+```
+🍎 异步逻辑
+node_modules/vconsole/dist/vconsole.min.js:10
+执行完之后的回调打印。。。。。
+node_modules/vconsole/dist/vconsole.min.js:10
+```
+
+上述只是模拟异步过程，但是回调函数多了容易嵌套造成“回调地狱”，造成代码阅读困难。所以引入Promise语法。
+
+
+<br/>
+
+> **Promise基本语法**
+
+&emsp; 首先Promise是系统中预定义的类，通过实例化可以得到Promise对象。Promise对象会有三种状态，分别是pending、resolved、rejected
+
+```
+_asynchronousTest1 = () => {
+    let p1 = new Promise(function () {
+
+    })
+    console.log('🍎 p1：', p1)
+
+    let p2 = new Promise(function (resolve, reject) {
+      resolve('success...')
+    })
+    console.log('🍎 p2：', p2)
+
+
+    let p3 = new Promise(function (resolve, reject) {
+      resolve('reject...')
+    })
+    console.log('🍎 p3：', p3)
+
+}
+```
+
+输出：
+
+```
+🍎 p1： Promise {[[PromiseState]]: 'pending', [[PromiseResult]]: undefined}
+🍎 p2： Promise {[[PromiseState]]: 'fulfilled', [[PromiseResult]]: 'success...'}
+🍎 p3： Promise {[[PromiseState]]: 'fulfilled', [[PromiseResult]]: 'reject...'}
+```
+
+
+&emsp; 上述代码中Promise回调函数里如果没有调取resolve或者reject，那么就会返还一个Pending状态的Promise对象。如果调取了resolve函数就会返还一个resolved状态的Promise对象（在火狐上略有不同，会显示fullfilled状态的Promise对象）。如果调取了reject函数则会返还一个rejected状态的对象。每一个Promise对象都会有一个then方法，then方法里会接收两个参数（可选）.
+
+
+<br/>
+
+&emsp; 如下代码在执行then的时候会执行到第一个成功的回调中去，如果调取reject函数则会执行到then的第二个错误的回调中去。当然Promise也提供catch方法来捕捉reject错误
+
+```
+let p2 = new Promise(function (resolve, reject) {
+      // resolve('success...')
+      reject('失败')
+    })
+    console.log('🍎 p2：', p2)
+    p2.then(res => {
+      console.log('🍎 ♨️ res：', res)
+    }, err => {
+      console.log('💣 res：', err)
+    })
+
+```
+
+
+输出:
+
+```
+🍎 p2： Promise {[[PromiseState]]: 'rejected', [[PromiseResult]]: '失败'}
+💣 res： 失败
+node_modules/vconsole/dist/vconsole.min.js:10
+```
+
+
+
+<br/>
+
+> 
+
+
+
 
 
 
