@@ -7,6 +7,10 @@
 	- [生命周期方法](#生命周期方法) 
 	- [构造函数constructor](#构造函数constructor)
 	- [React Hooks](#ReactHooks)
+		- [useState](#useState)
+		- [useEffect](#useEffect)
+	- [React Router](#ReactRouter)
+		- [路由Demo](#路由Demo)
 	- [参数传递](#参数传递)
 		- [父->子传参](#父子传参)
 		- [子->父组件的通信](#子父组件的通信)
@@ -692,10 +696,416 @@ export function TestHOC3() {
 
 <br/>
 <br/>
+<br/>
+
+> <h2 id='ReactRouter'>React Router</h2>
+
+&emsp; SPA（Single Page Application，单页面应用），整个应用只加载一个页面（入口页面），后续在与用户的交互过程中，通过DOM操作在这个单页上动态生成结构和内容。使用SPA可以使项目有更好的用户体验，减少请求、渲染和页面跳转产生的等待与空白，另外前端在项目中更具重要性，数据和页面内容都由异步请求（AJAX）+DOM操作来完成，前端则更多地去处理业务逻辑。
+
+&emsp; React-Router就是一套前端路由库，在项目中安装好React-Router之后，开发者就可以基于React开发单页面多视图的应用。
+
+&emsp; React Router Dom 就只是基於 React Route 更進階的套件，核心都還是 React Route，相同地，react-router-native 也是基於 React Route 更進階的套件。
+
+
+React-Router的安装命令如下：npm i react-router-dom
+
+&emsp; React Router Dom 其實只是多了四個 React Component：BrowserRouter、 HashRouter、Link、NavLink。
+
+
+WEB端的Router中提供了两种不同的模式**＜HashRouter/＞**和**＜BrowserRouter/＞**:
+
+- HashRouter是基于hash实现的一种路由方式，URL变化时主要是hash值进行变化。如http://127.0.0.1:3000/#/about、http://127.0.0.1:3000/#/user，可以看到URL里一定会有一个#号，也就是hash标识。hash模式的好处是一定不会向服务端发送请求，但URL里一定会有一个#号。
+- BrowserRouter则是基于H5 history API的一种路由方式。history的URL切换基于history提供的pushState方法，好处是URL和之前直接请求后端的URL没有什么区别，如http://127.0.0.1:3000/about、http://127.0.0.1:3000/user。当然问题也同样突出，在部署线上时，要注意直接输入URL还是会发起后端请求，所以后端一样也要做处理。
+
+
+&emsp; 在实际开发时，不管采取哪种路由模式，都需要在项目最外层配置好路由，告诉React该项目使用的是哪种路由，具体代码如下：
+
+**index.js**
+
+```
+import { BrowserRouter as Router, HashRouter } from 'react-router-dom';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <Router>
+      <App />
+    </Router>
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+```
+
+
+<br/>
+
+**App.js**
+
+```
+render() {
+    return <TestHOC4 />
+}
+```
+
+
+<br/>
+
+**HOC.js**
+
+```
+export function TestHOC4() {
+
+    return <div style={{ width: '100%', height: '100%' }}>
+        <React.Fragment>
+            {/* <Link to='/about'>数字</Link> */}
+            <Route path="/about" component={About} />
+        </React.Fragment>
+    </div>
+}
+
+export function TestHOC4_1() {
+    return <React.Fragment>
+        <Link to='/about'>首页</Link>
+        <Route path='/about' render={() => <div>1234567890</div>} />
+    </React.Fragment>
+}
+```
+
+效果图：
+
+![38](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react38.png)
+
+&emsp; 如果使用的是HashRouter，则把BrowserRouter替换成HashRouter即可。
+
+
+<br/>
+<br/>
+
+> <h3 id='路由Demo'>路由Demo</h3>
+
+**RouterAbout.js**
+
+```
+export default function RouterAboutView() {
+    return <div>
+        <h1>关于视图</h1>
+        <p>关于视图内容</p>
+    </div>
+}
+```
+
+<br/>
+
+**RouterIndexView.js**
+
+```
+export default function RouterIndexView() {
+    return <div>
+        <h1>首页视图</h1>
+        <p>首页视图内容</p>
+    </div>
+}
+```
+
+
+<br/>
+
+**RouterListView.js**
+
+```
+export default function RouterListView() {
+    const pageLength = Math.ceil(Data.length / 3)
+
+    let { page = 1 } = useParams()
+    return <div>
+        <h1>列表视图</h1>
+        <p>列表视图内容</p>
+        <List activePage={page} />
+        <Pagation activePage={page}
+            pageLength={pageLength}
+        />
+    </div>
+}
+
+const pageLen = 3 //每页多少条
+export function List(props) {
+    // 接受父级传递的props，props中必须包含activePage
+    // activePage代表当前实现第几页
+    let { activePage } = props
+    // 从当前页第几条开始，注意页码从1开始计数，但是js从0开始计数，所以减1
+    let start = (activePage - 1) * pageLen
+    let end = activePage * pageLen
+    // 当前页到第几条结束
+    let nowData = Data.filter((item, index) => index >= start && index < end)
+
+    return <ul>
+        {nowData.map(item => {
+            return (<li key={item.id}>
+                <h2>{item.title}</h2>
+                <p>{item.describe}</p>
+            </li>)
+        })}
+    </ul>
+}
+```
+
+
+
+<br/>
+
+**RouterRouter.js**
+
+```
+let Routers = [
+    {
+        path: '/',
+        exact: true,
+        render(props) {
+            return <RouterIndexView {...props} />
+        }
+    },
+    {
+        path: '/about',
+        exact: true,
+        render(props) {
+            return <RouterAboutView {...props} />
+        }
+    },
+    {
+        path: ['/list', '/list/:page'],
+        exact: true,
+        render(props) {
+            let { page = 1 } = props.match.params
+            if (page >= 1) {// 解析页码，如果没有传递页面则设置默认值为1
+                // 若/list/a等不是数字的情况下，则显示404视图
+                return <RouterListView {...props} />
+            }
+            return <RouterUndefinedView {...props} />
+        }
+    },
+    {
+        path: '',
+        exact: false,
+        render(props) {
+            return <RouterUndefinedView {...props} />
+        }
+    }
+]
+
+
+let Navs = [
+    {
+        to: '/',
+        exact: true,
+        title: '首页'
+    },
+    {
+        to: '/about',
+        exact: true,
+        title: '关于'
+    },
+    {
+        to: '/list',
+        title: '课程列表',
+        isActive(url) {
+            let urlData = url.split('/')
+            if (url === '/list' || (urlData.length === 3 && urlData[1] === 'list' && urlData[2] > 0)) {
+                // 判断url为‘/list’或‘/list/大于1的数字时’，选中当前项，否则不选中
+                return true
+            }
+            return false
+        }
+    },
+
+]
+
+export { Routers, Navs }
+
+
+
+// 🍎<==========================================>🍎
+
+export function Nav() {
+    let { pathname } = useLocation()
+
+    return <nav>
+        <span> | </span>
+        {
+            Navs.map(item => {
+                return <Fragment key={item.to}>
+                    <NavLink
+                        to={item.to}
+                        exact={item.exact}
+                        isActive={item.isActive ? () => {
+                            return item.isActive(pathname)
+                        } : null
+                        }
+                        activeStyle={{
+                            color: 'red'
+                        }}
+                    >
+                        {item.title}
+                        <span> | </span>
+                    </NavLink>
+                </Fragment>
+            })
+        }
+    </nav>
+}
+
+
+// 🍎<==========================================>🍎
+
+/**
+ * @description: 翻页导航组件
+ */
+export function Pagation(props) {
+    // activePage   当前第几页， pageLength总共多少页
+    let { activePage, pageLength } = props
+    console.log(activePage)
+
+    return <nav>
+        {
+            [...('.'.repeat(pageLength))].map((item, index) => {
+                index++
+                return <Fragment key={index}>
+                    <span> | </span>
+                    <Link
+                        to={'/list/' + index}
+                        style={{
+                            color: activePage == index ? 'red' : '#000'
+                        }}>
+                        {index}
+                    </Link>
+                </Fragment>
+            })
+        }
+        <span> | </span>
+    </nav>
+}
+
+
+
+
+// 🍎<==========================================>🍎
+
+
+/**
+ * @description: 列表数据
+ */
+
+export const Data = [{
+    id: 0,
+    title: ' iOS 架构师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 1,
+    title: ' Web 架构师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 2,
+    title: ' Go 架构师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 3,
+    title: ' Go 金牌就业班',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 4,
+    title: ' iOS 架构师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 5,
+    title: ' 百万架构师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+}, {
+    id: 6,
+    title: ' JavaEE 金牌就业班',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 7,
+    title: ' 数据分析全栈工程师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 8,
+    title: ' Android 开发师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+},
+{
+    id: 9,
+    title: '测试师',
+    describe: '授课深度对标阿里 P6等级，进入BAT等一线大厂，成为大厂进阶稀缺人才'
+}
+]
+
+```
+
+
+<br/>
+
+**RouterUndefinedView.js**
+
+```
+export default function RouterUndefinedView() {
+    return <div>
+        <h1>404视图</h1>
+        <p>404视图内容</p>
+    </div>
+}
+```
+
+调用：
+
+```
+/**
+   * @description: 路由导航综合练习
+   * 导航组件
+   */
+  _testRouter2 = () => {
+    return <Fragment>
+      <Nav />
+      <Switch>
+        {Routers.map(item => {
+          return <Route
+            key={item.path}
+            path={item.path}
+            exact={item.exact}
+            render={item.render} />
+        })}
+      </Switch>
+    </Fragment>
+  }
+```
+
+效果图：
+
+![39](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react39.png)
+
+
+<br/>
+<br/>
 
 > <h3 id=''></h3>
 
 
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+
+
+
+<br/>
+<br/>
+
+> <h3 id=''></h3>
 
 
 
