@@ -779,7 +779,7 @@ $ go version
 ***
 <br/>
 
-> <h2 id="VSCode配置">VSCode配置</h2>
+>## <h2 id="VSCode配置">[VSCode配置](https://sysin.org/blog/go-vs-code/)</h2>
 
 
 <br/>
