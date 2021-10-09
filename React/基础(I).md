@@ -4,6 +4,7 @@
 		- [ReactDom.render](#ReactDom.render)
 	- [React视图渲染](#React视图渲染)
 	- [项目文件描述](#项目文件描述)
+		- [import和require](#import和require)
 	- [生命周期方法](#生命周期方法) 
 	- [构造函数constructor](#构造函数constructor)
 	- [React Hooks](#ReactHooks)
@@ -207,8 +208,94 @@ React.createElement("h1", {
 
 
 <br/>
+<br/>
+<br/>
 
-> <h3 id=''></h3>
+> <h3 id='import和require'>import和require</h3>
+
+- **调用时间**
+	- require 是运行时调用，所以理论上可以运作在代码的任何地方
+	- import 是编译时调用，所以必须放在文件的开头
+
+<br/>
+
+- **本质区别：**
+	- require 是赋值过程，其实require的结果就是对象、数字、字符串、函数等，再把结果赋值给某个变量。它是普通的值拷贝传递。
+
+	- import 是解构过程。使用import导入模块的属性或者方法是引用传递。且import是read-only的，值是单向传递的。default是ES6 模块化所独有的关键字，export default {} 输出默认的接口对象，如果没有命名，则在import时可以自定义一个名称用来关联这个对象
+
+<br/>
+
+**require用法展示**
+
+
+&emsp; 在导出的文件中使用module.exports对模块中的数据导出，内容类型可以是字符串，变量，对象，方法等不予限定。使用require()引入到需要的文件中即可
+
+&emsp; 在模块中，将所要导出的数据存放在module的export属性中，在经过CommonJs/AMD规范的处理，在需要的页面中使用require指定到该模块，即可导出模块中的export属性并执行赋值操作（值拷贝）
+
+```
+// module.js
+module.exports = {
+    a: function() {
+        console.log('exports from module');
+    }
+}
+```
+
+```
+// sample.js
+var obj = require('./module.js');
+obj.a()  // exports from module
+```
+
+&emsp; 当我们不需要导出模块中的全部数据时，使用大括号包含所需要的模块内容
+
+```
+// module.js
+function test(str) {
+  console.log(str); 
+}
+module.exports = {
+ test
+}
+```
+
+
+```
+// sample.js
+let { test } =  require('./module.js');
+test ('this is a test');
+```
+
+
+
+<br/>
+
+**import 的基本语法**
+
+&emsp; 使用import导出的值与模块中的值始终保持一致，即引用拷贝，采用ES6中解构赋值的语法，import配合export结合使用
+
+```
+// module.js
+export function test(args) {
+  console.log(args);
+}
+// 定义一个默认导出文件, 一个文件只能定义一次
+export default {
+  a: function() {
+    console.log('export from module');
+  }
+}
+
+export const name = 'gzc'
+```
+
+```
+// 使用_导出export default的内容
+import _, { test, name } from './a.js'
+
+test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
+```
 
 
 

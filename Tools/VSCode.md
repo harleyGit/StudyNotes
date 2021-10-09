@@ -462,6 +462,8 @@ npm i babel-eslint -g
 
 > <h1 id='React配置'>React配置</h1>
 
+[IntelliJ IDEA激活码获取](http://idea.javatiku.cn)
+
 <br/>
 
 <h2 id="Vue安装">Vue安装</h2>
