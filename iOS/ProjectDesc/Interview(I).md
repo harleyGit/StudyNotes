@@ -978,6 +978,8 @@ dispatch_semaphore_t semaphore_;
 
 > <h2 id="图片优化">图片优化</h2>
 
+[**京喜图片库优化**](https://jishuin.proginn.com/p/763bfbd5a439)
+
 <br/>
 
 **图片性能瓶颈：**
@@ -1444,6 +1446,9 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 
 >## <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
 
+
+[基于PGO优化启动时间](https://jishuin.proginn.com/p/763bfbd56d2b)
+
 ![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc3.png)
 
 
@@ -1886,6 +1891,8 @@ CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLaye
 
 >## <h2 id = "包体积优化">[包体积优化](https://juejin.cn/post/6844904169938092045)</h3>
 
+[包优化](https://jishuin.proginn.com/p/763bfbd5bce2)
+
 <br/>
 
 ![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc1.png)
@@ -1976,6 +1983,9 @@ Test/Resource/TabBarImage/tabBar_3@2x.png
 
 
 > <h2 id ="内存暴涨解决">内存暴涨解决</h2>
+
+[**自建内存泄漏检测工具**](https://jishuin.proginn.com/p/763bfbd56d2c)
+
 
 &emsp; 在列表滑动的情况内存莫名的增长，频繁访问图片的时候内存莫名的增长，频繁的打开和关闭数据库的时候内存莫名的增长……。 这些都是拜iOS的autorelease机制所赐；具体分析如下：
 

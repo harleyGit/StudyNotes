@@ -136,7 +136,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 *	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 *	[App发布](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
 *	[组件化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/组件化(I).md)
-*	[组件化(II)](#https://github.com/harleyGit/StudyNotes/blob/master/Objective-C/iOS/组件化(II).md)
+*	[静态库动态库](#https://github.com/harleyGit/StudyNotes/blob/master/Objective-C/iOS/静态库动态库.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
