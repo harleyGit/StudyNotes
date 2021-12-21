@@ -26,6 +26,7 @@
 	- [值是否为空或有值](#值是否为空或有值) 
 - [JavaScript语法](#JavaScript语法)
 	- [数组splice()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
+- [**创建到打包**](#创建到打包)
 - **参考资料：**
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 	- [Material-UI React组件库](https://v4-2-1.material-ui.com/zh/getting-started/installation/)
@@ -1925,7 +1926,50 @@ isEmpty(undefined)     //true
 ***
 <br/>
 
-> <h1 id=""></h1>
+> <h1 id="创建到打包">创建到打包</h1>
+
+&emsp; 搭建项目使用的是 `create-react-app (已自动集成webpack相关配置)`官方提供的脚手架命令，目录结构如下：
+
+![33](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react33.png)
+
+asq: 为什么 没有webpack配置文件？
+
+webpack的配置需要 输入 npm run eject 命令将所有内建的配置暴露出来。
+
+create-react-app 已经为做了绝大部分事情，配好了webpack
+
+现在就能使用 npm run start 开始写react 项目了
+
+<br/>
+<br/>
+
+> <h2 id='打包'>打包</h2>
+
+在package.json中又这么一段快捷指令，其是：
+
+```
+"scripts": {
+    "build": "node scripts/build.js",
+    "start": "node scripts/start.js",
+    "test": "node scripts/test.js --env=jsdom",
+  },
+```
+
+分别对应项目scripts下的文件：
+
+![40](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react40.webp)
+
+build文件就是打包项目打包的一系列配置.
+
+
+运行 npm run build 后项目中会多出一个build的文件夹
+
+![41](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react41.webp)
+
+
+我们只需要把 build这个文件夹 放到云服务器上 即可
+
+
 
 
 
