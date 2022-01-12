@@ -1,4 +1,5 @@
 > <h1 id=""></h1>
+- [**探索脚手架create-react-app原理**](https://juejin.cn/post/6844903604583661582)
 - [**模块导入和导出**](#模块导入和导出)
 	- [require](#require)
 - [ES6语法](#ES6语法)
@@ -12,6 +13,8 @@
 	- [Math.max()](#Mathmax)
 	- [Object.keys()](#Objectkeys)
 	- [Object.assign()](#Object.assign) 
+- [**三方库**](#三方库)
+	- [minirefresh](#minirefresh)
 - [**属性**](#属性)
 	- [clientWidth](#clientWidth)
 	- [JavaScript的childNodes和children](#JavaScript的childNodes和children)
@@ -498,6 +501,43 @@ returnedTarget // { a: 1, b: 4, c: 5 }
 
 
 
+<br/>
+
+***
+<br/>
+
+
+># <h1 id="三方库">三方库</h1>
+
+
+<br/>
+
+>## <h2 id="minirefresh">[minirefresh](https://github.com/minirefresh/minirefresh)</h2>
+
+&emsp; [优雅的H5下拉刷新。零依赖，高性能，多主题，易拓展.](http://www.minirefresh.com/minirefresh-doc/)
+
+![react42](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react42.png)
+
+
+<br/>
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+<br/>
+<br/>
+<br/>
+
+> <h2 id=""></h2>
+
+
+<br/>
+<br/>
+<br/>
+
+> <h2 id=""></h2>
 
 
 

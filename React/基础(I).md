@@ -1,5 +1,9 @@
 > <h2 id=""></h2>
 - [**基本用法**](#基本用法)
+	- [props用法](#props用法)
+		- [props类型验证](#props类型验证)
+		- [设置默认值](#设置默认值)
+		- [Children的用法](https://segmentfault.com/a/1190000011527160)
 	- [ReactDOM](#ReactDOM)
 		- [ReactDom.render](#ReactDom.render)
 	- [React视图渲染](#React视图渲染)
@@ -51,6 +55,82 @@
 
 <br/>
 
+> <h2 id="props用法">props用法</h2>
+
+<br/>
+
+> <h3 id="设置默认值">设置默认值</h3>
+
+```
+<body>
+
+<div id="example"></div>
+<script type="text/babel">
+class HelloMessage extends React.Component {
+	
+	static defaultProps = {// 写法一: 在组件的里面
+		name: '12345'
+	}
+	
+  render() {
+    return (
+      <h1>Hello, {this.props.name}</h1>
+    );
+  }
+}
+
+HelloMessage.defaultProps = {// 写法二: 在组件的外面
+  name: 'Runoob'
+};
+
+const element = <HelloMessage/>;
+
+ReactDOM.render(
+  element,
+  document.getElementById('example')
+);
+</script>
+
+</body>
+```
+
+效果图:
+
+**Hello,Runoob**
+
+
+
+<br/>
+<br/>
+
+> <h3 id="props类型验证">props类型验证</h3>
+
+&emsp; Props 验证使用 propTypes，它可以保证我们的应用组件被正确使用，React.PropTypes 提供很多验证器 (validator) 来验证传入数据是否有效。当向 props 传入无效数据时，JavaScript 控制台会抛出警告.
+
+```
+
+class MyTitle extends React.Component {
+  render() {
+    return (
+      <h1>Hello, {this.props.title}</h1>
+    );
+  }
+}
+ 
+ 
+// 设置类型为string
+MyTitle.propTypes = {
+  title: PropTypes.string
+};
+```
+
+
+
+
+
+<br/>
+<br/>
+<br/>
 
 > <h2 id="ReactDOM">React DOM</h2>
 
