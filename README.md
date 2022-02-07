@@ -330,6 +330,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 - [性能优化]()
 	- [性能优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/React/性能优化(I).md) 
 - **知识综合**
+	- [**ES6入门教程**](https://es6.ruanyifeng.com/)
 	- [XKBKnowledge](https://github.com/harleyGit/StudyNotes/blob/master/React/XKBKnowledge.md)
 
 

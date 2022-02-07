@@ -1,11 +1,14 @@
 > <h1 id=""></h1>
 - [**探索脚手架create-react-app原理**](https://juejin.cn/post/6844903604583661582)
 - [**模块导入和导出**](#模块导入和导出)
-	- [require](#require)
+	- [require和import](#require和import)
 - [ES6语法](#ES6语法)
 	- [=> 箭头函数](#箭头函数)
 	- [匿名函数](#匿名函数)
 		- [自调用函数](#自调用函数)
+	- [对象](#对象)
+		- [Object.setPrototypeOf()](#Object.setPrototypeOf())
+	- [Promise对象](#Promise对象)
 - [**React**](#React)
 	- [ReactDom](#ReactDom)
 		- [unmountComponentAtNode()](#unmountComponentAtNode())  
@@ -67,19 +70,85 @@
 <br/>
 
 
-> <h2 id="require"> require </h2>
+> <h2 id="require和import"> require和import </h2>
+
+> **调用时间**
+
+- require 是运行时调用，所以理论上可以运作在代码的任何地方
+- import 是编译时调用，所以必须放在文件的开头
+
+<br/>
+
+
+> **本质**
+
+- **`require 是赋值过程`**，其实require的结果就是对象、数字、字符串、函数等，再把结果赋值给某个变量。它是普通的值拷贝传递。
+
+- **`import 是解构过程。使用import导入模块的属性或者方法是引用传递`**。且import是read-only的，值是单向传递的。default是ES6 模块化所独有的关键字，export default {} 输出默认的接口对象，如果没有命名，则在import时可以自定义一个名称用来关联这个对象
+
+
+<br/>
+
+> **require用法**
 
 &emsp; 在CommonJS中，有一个全局性方法require()，用于加载模块。假定有一个数学模块math.js，就可以像下面这样加载。
 
 |:--|:--|
 | 1 | var math = require('math'); |
 
-
 然后，就可以调用模块提供的方法：
 
 | 1 | var math = require('math'); |
 |:--|:--|
 | 2 | math.add(2,3); // 5 |
+
+或者
+
+**写法一:**
+
+```
+// module.js
+module.exports = {
+    a: function() {
+        console.log('exports from module');
+    }
+}
+```
+
+使用:
+
+```
+// sample.js
+var obj = require('./module.js');
+obj.a()  // exports from module
+```
+
+
+<br/>
+
+**写法二:**
+
+当我们不需要导出模块中的全部数据时，使用大括号包含所需要的模块内容。
+
+```
+// module.js
+function test(str) {
+  console.log(str); 
+}
+module.exports = {
+ test
+}
+```
+
+使用:
+
+```
+// sample.js
+let { test } =  require('./module.js');
+test ('this is a test');
+```
+
+
 
 
 
@@ -95,22 +164,190 @@
 
 <br/>
 
-># <h2 id="箭头函数">[=> 箭头函数](https://juejin.cn/post/6844903573428371464)</h2>
+># <h2 id="箭头函数">[=> 箭头函数](https://juejin.cn/post/6844903573428371464)是ES6语法</h2>
 
 > [**基础语法**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
 
 ```
-(param1, param2, …, paramN) => { statements }
-(param1, param2, …, paramN) => expression
-//相当于：(param1, param2, …, paramN) =>{ return expression; }
+var f = v => v;
 
-// 当只有一个参数时，圆括号是可选的：
-(singleParam) => { statements }
-singleParam => { statements }
-
-// 没有参数的函数应该写成一对圆括号。
-() => { statements }
+// 等同于
+var f = function (v) {
+  return v;
+};
 ```
+
+<br/>
+
+如果箭头函数不需要参数或需要多个参数，就使用一个圆括号代表参数部分。
+
+```
+//情况一:没有参数,函数应该写成一对圆括号
+/*
+	() => { statements }
+*/
+
+var f = () => 5;
+// 等同于
+var f = function () { return 5 };
+
+
+
+//情况二: 当只有一个参数时，圆括号是可选的
+/*
+	(singleParam) => { statements }
+	singleParam => { statements }
+*/
+
+var sum = (num1, num2) => num1 + num2;
+// 等同于
+var sum = function(num1, num2) {
+  return num1 + num2;
+};
+```
+
+
+<br/>
+
+如果箭头函数的代码块部分多于一条语句，就要使用大括号将它们括起来，并且使用return语句返回。
+
+```
+var sum = (num1, num2) => { return num1 + num2; }
+```
+
+
+<br/>
+
+箭头函数可以与变量解构结合使用
+
+```
+const full = ({ first, last }) => first + ' ' + last;
+
+// 等同于
+function full(person) {
+  return person.first + ' ' + person.last;
+}
+```
+
+
+<br/>
+
+箭头函数的一个用处是简化回调函数。
+
+```
+// 普通函数写法
+[1,2,3].map(function (x) {
+  return x * x;
+});
+
+// 箭头函数写法
+[1,2,3].map(x => x * x);
+```
+
+
+另一个例子是
+
+```
+// 普通函数写法
+var result = values.sort(function (a, b) {
+  return a - b;
+});
+
+// 箭头函数写法
+var result = values.sort((a, b) => a - b);
+```
+
+下面是 rest 参数与箭头函数结合的例子。
+
+```
+const numbers = (...nums) => nums;
+
+numbers(1, 2, 3, 4, 5)
+// [1,2,3,4,5]
+
+const headAndTail = (head, ...tail) => [head, tail];
+
+headAndTail(1, 2, 3, 4, 5)
+// [1,[2,3,4,5]]
+```
+
+
+<br/>
+
+**使用注意点:**
+
+（1）箭头函数没有自己的this对象（详见下文）。
+
+（2）不可以当作构造函数，也就是说，不可以对箭头函数使用new命令，否则会抛出一个错误。
+
+（3）不可以使用arguments对象，该对象在函数体内不存在。如果要用，可以用 rest 参数代替。
+
+（4）不可以使用yield命令，因此箭头函数不能用作 Generator 函数。
+
+
+上面四点中，最重要的是第一点。对于普通函数来说，内部的this指向函数运行时所在的对象，但是这一点对箭头函数不成立。它没有自己的this对象，内部的this就是定义时上层作用域中的this。也就是说，箭头函数内部的this指向是固定的，相比之下，普通函数的this指向是可变的。
+
+```
+function foo() {
+  setTimeout(() => {
+    console.log('id:', this.id);
+  }, 100);
+}
+
+var id = 21;
+
+foo.call({ id: 42 });
+// id: 42
+```
+上面代码中，setTimeout()的参数是一个箭头函数，这个箭头函数的定义生效是在foo函数生成时，而它的真正执行要等到 100 毫秒后。如果是普通函数，执行时this应该指向全局对象window，这时应该输出21。但是，箭头函数导致this总是指向函数定义生效时所在的对象（本例是{id: 42}），所以打印出来的是42。
+
+
+<br/>
+
+下面例子是回调函数分别为箭头函数和普通函数，对比它们内部的this指向。
+
+```
+function Timer() {
+  this.s1 = 0;
+  this.s2 = 0;
+  // 箭头函数
+  setInterval(() => this.s1++, 1000);
+  // 普通函数
+  setInterval(function () {
+    this.s2++;
+  }, 1000);
+}
+
+var timer = new Timer();
+
+setTimeout(() => console.log('s1: ', timer.s1), 3100);
+setTimeout(() => console.log('s2: ', timer.s2), 3100);
+// s1: 3
+// s2: 0
+```
+上面代码中，Timer函数内部设置了两个定时器，分别使用了箭头函数和普通函数。前者的this绑定定义时所在的作用域（即Timer函数），后者的this指向运行时所在的作用域（即全局对象）。所以，3100 毫秒之后，timer.s1被更新了 3 次，而timer.s2一次都没更新。
+
+
+<br/>
+
+箭头函数实际上可以让this指向固定化，绑定this使得它不再可变，这种特性很有利于封装回调函数。下面是一个例子，DOM 事件的回调函数封装在一个对象里面。
+
+```
+var handler = {
+  id: '123456',
+
+  init: function() {
+    document.addEventListener('click',
+      event => this.doSomething(event.type), false);
+  },
+
+  doSomething: function(type) {
+    console.log('Handling ' + type  + ' for ' + this.id);
+  }
+};
+```
+上面代码的init()方法中，使用了箭头函数，这导致这个箭头函数里面的this，总是指向handler对象。如果回调函数是普通函数，那么运行this.doSomething()这一行会报错，因为此时this指向document对象。
+
 
 <br/>
 
@@ -370,8 +607,175 @@ console.log("--------_>> %i", window.mapi.responseInterceptor(1,99));
 
 
 
+
 <br/>
 <br/>
+<br/>
+
+> <h2 id="对象">对象</h2>
+
+CommonJS 模块输出一组变量，就非常合适使用简洁写法。
+
+
+```
+let ms = {};
+
+function getItem (key) {
+  return key in ms ? ms[key] : null;
+}
+
+function setItem (key, value) {
+  ms[key] = value;
+}
+
+function clear () {
+  ms = {};
+}
+
+module.exports = { getItem, setItem, clear };
+// 等同于
+module.exports = {
+  getItem: getItem,
+  setItem: setItem,
+  clear: clear
+};
+```
+
+
+
+<br/>
+
+> <h3 id = 'Object.setPrototypeOf()'> Object.setPrototypeOf()</h3>
+
+&emsp; Object.setPrototypeOf方法的作用与__proto__相同，用来设置一个对象的原型对象（prototype），返回参数对象本身。
+
+```
+let proto = {};
+let obj = { x: 10 };
+Object.setPrototypeOf(obj, proto);
+
+proto.y = 20;
+proto.z = 40;
+
+obj.x // 10
+obj.y // 20
+obj.z // 40
+
+```
+上面代码将proto对象设为obj对象的原型，所以从obj对象可以读取proto对象的属性。
+
+<br/>
+
+上面代码将proto对象设为obj对象的原型，所以从obj对象可以读取proto对象的属性。
+
+如果第一个参数不是对象，会自动转为对象。但是由于返回的还是第一个参数，所以这个操作不会产生任何效果。
+
+```
+Object.setPrototypeOf(1, {}) === 1 // true
+Object.setPrototypeOf('foo', {}) === 'foo' // true
+Object.setPrototypeOf(true, {}) === true // true
+```
+由于undefined和null无法转为对象，所以如果第一个参数是undefined或null，就会报错。
+
+```
+Object.setPrototypeOf(undefined, {})
+// TypeError: Object.setPrototypeOf called on null or undefined
+
+Object.setPrototypeOf(null, {})
+// TypeError: Object.setPrototypeOf called on null or undefined
+```
+
+
+<br/>
+<br/>
+
+> <h3 id = 'Object.getPrototypeOf()'> Object.getPrototypeOf()</h3>
+
+`Object.getPrototypeOf(obj);`
+
+下面是一个例子。
+
+```
+function Rectangle() {
+  // ...
+}
+
+const rec = new Rectangle();
+
+Object.getPrototypeOf(rec) === Rectangle.prototype
+// true
+
+Object.setPrototypeOf(rec, Object.prototype);
+Object.getPrototypeOf(rec) === Rectangle.prototype
+// false
+```
+
+如果参数不是对象，会被自动转为对象。
+
+```
+// 等同于 Object.getPrototypeOf(Number(1))
+Object.getPrototypeOf(1)
+// Number {[[PrimitiveValue]]: 0}
+
+// 等同于 Object.getPrototypeOf(String('foo'))
+Object.getPrototypeOf('foo')
+// String {length: 0, [[PrimitiveValue]]: ""}
+
+// 等同于 Object.getPrototypeOf(Boolean(true))
+Object.getPrototypeOf(true)
+// Boolean {[[PrimitiveValue]]: false}
+
+Object.getPrototypeOf(1) === Number.prototype // true
+Object.getPrototypeOf('foo') === String.prototype // true
+Object.getPrototypeOf(true) === Boolean.prototype // true
+```
+
+如果参数是undefined或null，它们无法转为对象，所以会报错。
+
+```
+Object.getPrototypeOf(null)
+// TypeError: Cannot convert undefined or null to object
+
+Object.getPrototypeOf(undefined)
+// TypeError: Cannot convert undefined or null to object
+```
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+
+> <h2 id="Promise对象">Promise对象</h2>
+
+&emsp;Promise是一个对象,用来传递异步操作消息.其构造函数接受一个函数作为参数,改函数的两个参数分别是resolve和reject.它们是2个函数,由Javascript引擎提供,不用自己部署.
+
+```
+var promise = new Promise(function(resolve, reject) {
+	// .....操作逻辑
+	
+	if(/*异步操作成功*/) {
+		resolve(value)
+	}else {
+		reject(error)
+	}
+})
+```
+Promise实例完成以后可以通过then方法分别指定Resolved状态和Rejected状态的回调函数:
+
+```
+promise.then(function(value){
+	// success
+}, function(value){
+	//failure
+})
+```
+
 
 
 
