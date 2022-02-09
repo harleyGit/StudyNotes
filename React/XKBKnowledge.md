@@ -1,14 +1,19 @@
 > <h1 id=""></h1>
 - [**探索脚手架create-react-app原理**](https://juejin.cn/post/6844903604583661582)
-- [**模块导入和导出**](#模块导入和导出)
-	- [require和import](#require和import)
 - [ES6语法](#ES6语法)
 	- [=> 箭头函数](#箭头函数)
 	- [匿名函数](#匿名函数)
 		- [自调用函数](#自调用函数)
 	- [对象](#对象)
 		- [Object.setPrototypeOf()](#Object.setPrototypeOf())
+	- [Generator](#Generator)
+		- [作为对象属性的Generator函数](#作为对象属性的Generator函数)
 	- [Promise对象](#Promise对象)
+	- [Module模块](#Module模块)
+		- [require和import](#require和import)
+			- [export用法](#export用法)
+			- [import用法](#import用法)
+			- [require用法](#require用法)
 - [**React**](#React)
 	- [ReactDom](#ReactDom)
 		- [unmountComponentAtNode()](#unmountComponentAtNode())  
@@ -54,103 +59,6 @@
 	-  [打包](#打包)
 -  [代码解读](#代码解读)
 	- [tabs滚动](#tabs滚动)  
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-># <h1 id="模块导入和导出"> [模块导入和导出](https://www.cnblogs.com/libin-1/p/7127481.html) </h1>
-
-
-<br/>
-
-
-> <h2 id="require和import"> require和import </h2>
-
-> **调用时间**
-
-- require 是运行时调用，所以理论上可以运作在代码的任何地方
-- import 是编译时调用，所以必须放在文件的开头
-
-<br/>
-
-
-> **本质**
-
-- **`require 是赋值过程`**，其实require的结果就是对象、数字、字符串、函数等，再把结果赋值给某个变量。它是普通的值拷贝传递。
-
-- **`import 是解构过程。使用import导入模块的属性或者方法是引用传递`**。且import是read-only的，值是单向传递的。default是ES6 模块化所独有的关键字，export default {} 输出默认的接口对象，如果没有命名，则在import时可以自定义一个名称用来关联这个对象
-
-
-<br/>
-
-> **require用法**
-
-&emsp; 在CommonJS中，有一个全局性方法require()，用于加载模块。假定有一个数学模块math.js，就可以像下面这样加载。
-
-|:--|:--|
-| 1 | var math = require('math'); |
-
-然后，就可以调用模块提供的方法：
-
-| 1 | var math = require('math'); |
-|:--|:--|
-| 2 | math.add(2,3); // 5 |
-
-或者
-
-**写法一:**
-
-```
-// module.js
-module.exports = {
-    a: function() {
-        console.log('exports from module');
-    }
-}
-```
-
-使用:
-
-```
-// sample.js
-var obj = require('./module.js');
-obj.a()  // exports from module
-```
-
-
-<br/>
-
-**写法二:**
-
-当我们不需要导出模块中的全部数据时，使用大括号包含所需要的模块内容。
-
-```
-// module.js
-function test(str) {
-  console.log(str); 
-}
-module.exports = {
- test
-}
-```
-
-使用:
-
-```
-// sample.js
-let { test } =  require('./module.js');
-test ('this is a test');
-```
-
-
-
-
 
 
 
@@ -751,6 +659,41 @@ Object.getPrototypeOf(undefined)
 <br/>
 <br/>
 
+> <h2 id="Generator">Generator</h2>
+
+>  <h3 id="作为对象属性的Generator函数">作为对象属性的 Generator 函数</h3>
+
+
+
+如果一个对象的属性是 Generator 函数，可以简写成下面的形式。
+
+```
+let obj = {
+  * myGeneratorMethod() {
+    ···
+  }
+};
+```
+
+上面代码中，myGeneratorMethod属性前面有一个星号，表示这个属性是一个 Generator 函数。
+
+它的完整形式如下，与上面的写法是等价的。
+
+```
+let obj = {
+  myGeneratorMethod: function* () {
+    // ···
+  }
+};
+```
+
+
+
+<br/>
+<br/>
+<br/>
+
+
 > <h2 id="Promise对象">Promise对象</h2>
 
 &emsp;Promise是一个对象,用来传递异步操作消息.其构造函数接受一个函数作为参数,改函数的两个参数分别是resolve和reject.它们是2个函数,由Javascript引擎提供,不用自己部署.
@@ -776,6 +719,307 @@ promise.then(function(value){
 })
 ```
 
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+> <h2 id="Module模块">Module模块</h2>
+
+&emsp; ES6 模块的设计思想是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。比如，CommonJS 模块就是对象，输入时必须查找对象属性。
+
+```
+// CommonJS模块
+let { stat, exists, readfile } = require('fs');
+
+// 等同于
+let _fs = require('fs');
+let stat = _fs.stat;
+let exists = _fs.exists;
+let readfile = _fs.readfile;
+
+```
+
+&emsp; 上面代码的实质是整体加载fs模块（即加载fs的所有方法），生成一个对象（_fs），然后再从这个对象上面读取 3 个方法。这种加载称为“运行时加载”，因为只有运行时才能得到这个对象，导致完全没办法在编译时做“静态优化”。
+
+&emsp; ES6 模块不是对象，而是通过export命令显式指定输出的代码，再通过import命令输入。
+
+```
+// ES6模块
+import { stat, exists, readFile } from 'fs';
+```
+
+&emsp; 上面代码的实质是从fs模块加载 3 个方法，其他方法不加载。这种加载称为“编译时加载”或者静态加载，即 ES6 可以在编译时就完成模块加载，效率要比 CommonJS 模块的加载方式高。当然，这也导致了没法引用 ES6 模块本身，因为它不是对象。
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+> <h2 id="require和import"> [require和import](https://www.cnblogs.com/libin-1/p/7127481.html) </h2>
+
+> **调用时间**
+
+- require 是运行时调用，所以理论上可以运作在代码的任何地方
+- import 是编译时调用，所以必须放在文件的开头
+
+<br/>
+
+
+> **本质**
+
+- **`require 是赋值过程`**，其实require的结果就是对象、数字、字符串、函数等，再把结果赋值给某个变量。它是普通的值拷贝传递。
+
+- **`import 是解构过程。使用import导入模块的属性或者方法是引用传递`**。且import是read-only的，值是单向传递的。default是ES6 模块化所独有的关键字，export default {} 输出默认的接口对象，如果没有命名，则在import时可以自定义一个名称用来关联这个对象
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id="export用法"> export用法 </h3>
+
+&emsp; 一个模块就是一个独立的文件。该文件内部的所有变量，外部无法获取。如果希望外部能够读取模块内部的某个变量，就必须使用`export`关键字输出该变量。下面是一个 JS 文件，里面使用export命令输出变量。
+
+```
+// profile.js
+export var firstName = 'Michael';
+export var lastName = 'Jackson';
+export var year = 1958;
+```
+
+&emsp; 上面代码是profile.js文件，保存了用户信息。ES6 将其视为一个模块，里面用export命令对外部输出了三个变量。
+
+export的写法，还可以等价下面的:
+
+```
+// profile.js
+var firstName = 'Michael';
+var lastName = 'Jackson';
+var year = 1958;
+
+export { firstName, lastName, year };
+```
+
+&emsp; 上面代码在export命令后面，使用大括号指定所要输出的一组变量。它与前一种写法（直接放置在var语句前）是等价的，但是应该优先考虑使用这种写法。因为这样就可以在脚本尾部，一眼看清楚输出了哪些变量,个人建议使用这个.
+
+&emsp; export命令除了输出变量，还可以输出函数或类（class）。
+
+```
+export function multiply(x, y) {
+  return x * y;
+};
+```
+
+上面代码对外输出一个函数multiply。
+
+&emsp; 通常情况下，export输出的变量就是本来的名字，但是可以使用as关键字重命名。
+
+```
+function v1() { ... }
+function v2() { ... }
+
+export {
+  v1 as streamV1,
+  v2 as streamV2,
+  v2 as streamLatestVersion
+};
+```
+
+&emsp; 上面代码使用as关键字，重命名了函数v1和v2的对外接口。重命名后，v2可以用不同的名字输出两次。
+
+
+<br/>
+
+> default默认导出和非默认导出
+
+```
+// 第一组
+export default function crc32() { // 输出
+  // ...
+}
+// crc32 不需要加 {}
+import crc32 from 'crc32'; // 输入
+
+
+
+
+// 第二组
+export function crc32() { // 输出
+  // ...
+};
+// crc32 需要加 {}
+import {crc32} from 'crc32'; // 输入
+```
+
+
+&emsp; `export default`命令用于指定模块的默认输出。显然，一个模块只能有一个默认输出，因此export default命令只能使用一次。所以，import命令后面才不用加大括号，因为只可能唯一对应export default命令。
+
+&emsp; 本质上，export default就是输出一个叫做default的变量或方法，然后系统允许你为它取任意名字。所以，下面的写法是有效的。
+
+```
+// modules.js
+function add(x, y) {
+  return x * y;
+}
+export {add as default};
+// 等同于
+// export default add;
+
+// app.js
+import { default as foo } from 'modules';
+// 等同于
+// import foo from 'modules';
+```
+
+
+<br/>
+<br/>
+
+> default导出和普通导出混合
+
+在一条import语句中，同时输入默认方法和其他接口，可以写成下面这样。
+
+```
+import _, { each, forEach } from 'lodash';
+```
+
+
+对应上面代码的export语句如下。
+
+```
+// 对应 import _ from 'lodash'
+export default function (obj) {
+  // ···
+}
+
+export function each(obj, iterator, context) {
+  // ···
+}
+
+export { each as forEach };
+```
+上面代码的最后一行的意思是，暴露出forEach接口，默认指向each接口，即forEach和each指向同一个方法。
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id="import用法"> import用法 </h3>
+
+
+> 整体模块加载
+
+```
+// circle.js
+
+
+export function area(radius) {
+  return Math.PI * radius * radius;
+}
+
+export function circumference(radius) {
+  return 2 * Math.PI * radius;
+}
+
+```
+
+
+加载所需要的模块和方法:
+
+```
+// main.js
+
+import { area, circumference } from './circle';
+
+console.log('圆面积：' + area(4));
+console.log('圆周长：' + circumference(14));
+上面写法是逐一指定要加载的方法，整体加载的写法如下。
+
+
+//等价于下面的
+
+import * as circle from './circle';
+
+console.log('圆面积：' + circle.area(4));
+console.log('圆周长：' + circle.circumference(14));
+```
+
+
+
+
+
+<br/>
+<br/>
+
+> <h3 id="require用法"> require用法 </h3>
+
+&emsp; 在CommonJS中，有一个全局性方法require()，用于加载模块。假定有一个数学模块math.js，就可以像下面这样加载。
+
+|:--|:--|
+| 1 | var math = require('math'); |
+
+然后，就可以调用模块提供的方法：
+
+| 1 | var math = require('math'); |
+|:--|:--|
+| 2 | math.add(2,3); // 5 |
+
+或者
+
+**写法一:**
+
+```
+// module.js
+module.exports = {
+    a: function() {
+        console.log('exports from module');
+    }
+}
+```
+
+使用:
+
+```
+// sample.js
+var obj = require('./module.js');
+obj.a()  // exports from module
+```
+
+
+<br/>
+
+**写法二:**
+
+当我们不需要导出模块中的全部数据时，使用大括号包含所需要的模块内容。
+
+```
+// module.js
+function test(str) {
+  console.log(str); 
+}
+module.exports = {
+ test
+}
+```
+
+使用:
+
+```
+// sample.js
+let { test } =  require('./module.js');
+test ('this is a test');
+```
 
 
 
