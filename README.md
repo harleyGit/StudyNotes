@@ -327,6 +327,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 - [**资料集**](https://github.com/harleyGit/StudyNotes/blob/master/React/资料集.md)
 - [**基础(I)**](https://github.com/harleyGit/StudyNotes/blob/master/React/基础(I).md)
 - [**基础(II)**](https://github.com/harleyGit/StudyNotes/blob/master/React/基础(II).md)
+- [**插件发布**](https://github.com/harleyGit/StudyNotes/blob/master/React/插件发布.md)
 - [性能优化]()
 	- [性能优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/React/性能优化(I).md) 
 - **知识综合**

@@ -1,5 +1,6 @@
 > <h1 id=""></h1>
 - [**探索脚手架create-react-app原理**](https://juejin.cn/post/6844903604583661582)
+	- [工程目录结构](#工程目录结构)
 - [ES6语法](#ES6语法)
 	- [=> 箭头函数](#箭头函数)
 	- [匿名函数](#匿名函数)
@@ -66,6 +67,38 @@
 
 ***
 <br/>
+
+> <h2 id="工程目录结构">工程目录结构</h2>
+
+```
+├── config  # webpack配置
+     ├── webpack.base.js # 公共配置
+     ├── webpack.dev.config.js # 开发环境配置
+     └── webpack.prod.config.js # 打包发布环境配置
+├── example # 开发时预览代码
+       ├── src # 示例代码目录
+            ├── app.js # 入口 js 文件
+            └── index.html # 入口 html 文件
+├── lib # 组件打包结果目录
+├── node_modules # 安装依赖时自动生成
+├── src # 组件源代码目录
+     ├── index.css # 组件样式
+     └── index.js  # 组件源代码
+├── .babelrc # babel 配置
+├── .npmignore # 指定发布 npm 的时候需要忽略的文件和文件夹
+├── README.md
+└── package.json
+```
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
 
 
 ># <h1 id="ES6语法">ES6语法</h1>
