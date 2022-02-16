@@ -24,7 +24,7 @@
 **获取Future文件夹下Pictures的图片路径：**
 
 ```
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png
 ```	
 
 
@@ -328,6 +328,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.jpg
 - [**基础(I)**](https://github.com/harleyGit/StudyNotes/blob/master/React/基础(I).md)
 - [**基础(II)**](https://github.com/harleyGit/StudyNotes/blob/master/React/基础(II).md)
 - [**插件发布**](https://github.com/harleyGit/StudyNotes/blob/master/React/插件发布.md)
+- [create-react-app流程分析](https://github.com/harleyGit/StudyNotes/blob/master/React/create-react-app流程分析.md)
 - [性能优化]()
 	- [性能优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/React/性能优化(I).md) 
 - **知识综合**
