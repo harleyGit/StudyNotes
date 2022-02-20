@@ -16,6 +16,8 @@
 ![文件放置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_1.png)
 
 
+<br/>
+
 ><h1 id='快捷键'>快捷键</h1>
 
 - 小点：command+L
@@ -29,7 +31,7 @@
 ***
 <br/>
 
-><h1 id='视频笔记'>视频笔记</h1>
+> <h1 id='视频笔记'>视频笔记</h1>
 
 > <h3 id='简单与非门'>简单与非门</h3>
 
@@ -55,11 +57,22 @@ yes && yes && yes = yes
 
 ```
 
+
+<br/>
+
+**认识测试行业**
+
+![st_2](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_2.png)
+
+
 问题一：
 
 问题二：
 
 问题三：
+
+
+
 
 
 
