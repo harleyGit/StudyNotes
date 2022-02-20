@@ -27,6 +27,12 @@
 https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png
 ```	
 
+**获取SoftwareTest文件夹下Pictures的图片路径：**
+
+```
+https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/.png
+```	
+
 
 
 <br/>
@@ -50,6 +56,7 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png
 - [**React**](#React)
 - [**CSS**](#CSS)
 - [**Egret Engine**](#EgretEngine)
+- [**软件测试**](#软件测试)
 - [**底层**](#底层)
 - [**优化**](#优化)
 - [**动画/绘图**](#动画/绘图)
@@ -360,6 +367,20 @@ https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png
 * [配置](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/ee配置.md)
 * [项目伊始](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/ee项目伊始.md)
 * [engine](https://github.com/harleyGit/StudyNotes/blob/master/EgretEngine/engine.md)
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id = "软件测试">软件测试</h1>
+-  	[**测试笔记(I)**](https://github.com/harleyGit/StudyNotes/blob/master/SoftwareTest/SoftTest/测试笔记(I).md)
+
+
+
 
 
 
