@@ -62,7 +62,7 @@ yes && yes && yes = yes
 
 **认识测试行业**
 
-![st_2](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_2.png)
+![sss](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_2.png)
 
 
 问题一：
