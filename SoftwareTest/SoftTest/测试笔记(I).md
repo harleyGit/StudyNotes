@@ -12,6 +12,8 @@
 ***
 <br/>
 
+![文件放置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_1.png)
+
 ><h1 id='快捷键'>快捷键</h1>
 
 - 小点：command+L
