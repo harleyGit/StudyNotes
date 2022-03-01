@@ -21,16 +21,23 @@
 
 <br/>
 
-**获取Future文件夹下Pictures的图片路径：**
+***
+<br/>
+
+- **获取StudyNotes文件夹下Pictures的图片路径：**
 
 ```
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png
+![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png)
 ```	
 
-**获取SoftwareTest文件夹下Pictures的图片路径：**
+
+<br/>
+<br/>
+
+- **获取SoftwareTest文件夹下Pictures的图片路径：**
 
 ```
-https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/.png
+![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/.png)
 ```	
 
 
