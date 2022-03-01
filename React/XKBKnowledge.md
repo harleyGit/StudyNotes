@@ -33,6 +33,7 @@
 	- [.innerWidth](#innerWidth)
 	- [setTimeout](#setTimeout)
 - [**Window**](#Window)
+	- [window属性](#window属性)
 	- [Window.sessionStorage](#sessionStorage)
 	- [Window Navigator](#WindowNavigator)
 - [**Node全局对象**](#Node全局对象)
@@ -1451,6 +1452,63 @@ returnedTarget // { a: 1, b: 4, c: 5 }
 
 ># <h1 id="Window">Window</h1>
 
+**介绍:**
+
+&emsp; 浏览器里面，window对象（注意，w为小写）指当前的浏览器窗口。它也是当前页面的顶层对象，即最高一层的对象，所有其他对象都是它的下属。一个变量如果未声明，那么默认就是顶层对象的属性。
+
+```
+a = 1;
+window.a // 1
+```
+
+&emsp; 上面代码中，a是一个没有声明就直接赋值的变量，它自动成为顶层对象的属性。
+
+&emsp; window有自己的实体含义，其实不适合当作最高一层的顶层对象，这是一个语言的设计失误。最早，设计这门语言的时候，原始设想是语言内置的对象越少越好，这样可以提高浏览器的性能。因此，语言设计者 Brendan Eich 就把window对象当作顶层对象，所有未声明就赋值的变量都自动变成window对象的属性。这种设计使得编译阶段无法检测出未声明变量，但到了今天已经没有办法纠正了。
+
+
+
+<br/>
+
+
+> <h2 id="window属性">window属性</h1>
+
+> **window.name**
+
+&emsp; window.name属性是一个字符串，表示当前浏览器窗口的名字。窗口不一定需要名字，这个属性主要配合超链接和表单的target属性使用。
+
+```
+window.name = 'Hello World!';
+console.log(window.name)
+// "Hello World!"
+```
+
+&emsp; 该属性只能保存字符串，如果写入的值不是字符串，会自动转成字符串。各个浏览器对这个值的储存容量有所不同，但是一般来说，可以高达几MB。
+
+&emsp; 只要浏览器窗口不关闭，这个属性是不会消失的。举例来说，访问a.com时，该页面的脚本设置了window.name，接下来在同一个窗口里面载入了b.com，新页面的脚本可以读到上一个网页设置的window.name。页面刷新也是这种情况。一旦浏览器窗口关闭后，该属性保存的值就会消失，因为这是窗口已经不存在了。
+
+
+<br/>
+
+
+> **window.frameElement**
+&emsp;window.frameElement属性主要用于当前窗口嵌在另一个网页的情况（嵌入<object>、<iframe>或<embed>元素），返回当前窗口所在的那个元素节点。如果当前窗口是顶层窗口，或者所嵌入的那个网页不是同源的，该属性返回null。
+
+```
+// HTML 代码如下
+// <iframe src="about.html"></iframe>
+
+// 下面的脚本在 about.html 里面
+var frameEl = window.frameElement;
+if (frameEl) {
+  frameEl.src = 'other.html';
+}
+```
+上面代码中，frameEl变量就是<iframe>元素。
+
+
+
+
+<br/>
 <br/>
 
 > <h2 id="sessionStorage">Window.sessionStorage</h1>
