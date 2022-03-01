@@ -1,10 +1,12 @@
 > <h1 id=""></h1>
 - [**探索脚手架create-react-app原理**](https://juejin.cn/post/6844903604583661582)
 	- [工程目录结构](#工程目录结构)
-- [ES6语法](#ES6语法)
+- [**ES6语法**](#ES6语法)
 	- [=> 箭头函数](#箭头函数)
 	- [匿名函数](#匿名函数)
 		- [自调用函数](#自调用函数)
+			- [自调用挂载到window](#自调用挂载到window)
+			- [window.mapi](#window.mapi)
 	- [对象](#对象)
 		- [Object.setPrototypeOf()](#Object.setPrototypeOf())
 	- [Generator](#Generator)
@@ -15,6 +17,7 @@
 			- [export用法](#export用法)
 			- [import用法](#import用法)
 			- [require用法](#require用法)
+				- [require('文件路径')](#require文件路径)
 - [**React**](#React)
 	- [ReactDom](#ReactDom)
 		- [unmountComponentAtNode()](#unmountComponentAtNode())  
@@ -32,6 +35,10 @@
 - [**Window**](#Window)
 	- [Window.sessionStorage](#sessionStorage)
 	- [Window Navigator](#WindowNavigator)
+- [**Node全局对象**](#Node全局对象)
+	- [process](#process)
+		- [属性举例](#属性举例)
+		- [方法举例](#方法举例)
 - [**Element**](#Element)
 	- [Element.getBoundingClientRect()](#getBoundingClientRect)
 - [**Dom对象**](#Dom对象)
@@ -454,7 +461,46 @@ console.log(array);
 
 <br/>
 
-> <h3 id="window.mapi"> window.mapi </h3>
+
+
+> <h4 id="自调用挂载到window"> 自调用挂载到window </h4>
+
+windowTest.js
+
+```
+
+const sendMessage = (message) => {
+    console.log('🍎 》〉》〉》 message: ', message)
+}
+(function (window) {
+    window.sendMessage = sendMessage
+
+})(window)
+```
+
+<br/>
+
+App.js
+
+```
+import './Test/windowTest.js'
+
+
+render() {
+	 window.sendMessage('11111111111')
+   return <div />
+}
+```
+
+因为在App.js文件中进行调用的,所以它只会执行一次也就是使用 `npm start` 命令来执行时在控制台会有打印输出,如下:
+
+![挂载到window上了](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react54.png)
+
+
+<br/>
+<br/>
+
+> <h4 id="window.mapi"> window.mapi </h4>
 
 
 ```
@@ -1022,6 +1068,7 @@ console.log('圆周长：' + circle.circumference(14));
 
 &emsp; 在CommonJS中，有一个全局性方法require()，用于加载模块。假定有一个数学模块math.js，就可以像下面这样加载。
 
+
 |:--|:--|
 | 1 | var math = require('math'); |
 
@@ -1078,7 +1125,17 @@ test ('this is a test');
 ```
 
 
+<br/>
 
+> <h5 id='require文件路径'>require('文件路径')</h3>
+
+![加载模块逻辑图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react52.png)
+
+&emsp; node中使用require时若参数是一个文件夹时，或者特殊的情况require('..');require('.');
+
+&emsp;这里以require('./router')说明，说明是查找router文件夹.这时候，node会优先在router文件夹查找package.json这个文件(即使有index.js这个文件也会先被忽略)，然后查找package.json文件里的main键值对应的值xx.js，然后拿到这个值进行加载相应的文件. 否则，如果没有键值main或者没有找到xx.js则开始查找当前目录下有没有index.js，如果有则使用，否则出错。因为这里router文件夹下有index.js文件所以就会加载index文件夹.如下:
+
+![加载index.js文件夹](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react53.png)
 
 
 
@@ -1484,6 +1541,87 @@ field.addEventListener("change", function() {
 <br/>
 
 > <h2 id=""></h2>
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="Node全局对象">Node全局对象</h1>
+
+<br/>
+
+> <h2 id="process">process</h2>
+
+**介绍:** process对象是 Node 的一个全局对象，提供当前 Node 进程的信息。它可以在脚本的任意位置使用，不必通过require命令加载。该对象部署了EventEmitter接口。
+
+<br/>
+
+> <h3 id='属性举例:'>属性举例:</h3>
+
+```
+process.argv：返回一个数组，成员是当前进程的所有命令行参数。
+process.env：返回一个对象，成员为当前Shell的环境变量，比如process.env.HOME。
+process.installPrefix：返回一个字符串，表示 Node 安装路径的前缀，比如/usr/local。相应地，Node 的执行文件目录为/usr/local/bin/node。
+process.pid：返回一个数字，表示当前进程的进程号。
+process.platform：返回一个字符串，表示当前的操作系统，比如Linux。
+process.title：返回一个字符串，默认值为node，可以自定义该值。
+process.version：返回一个字符串，表示当前使用的 Node 版本，比如v7.10.0。
+```
+
+
+<br/>
+
+> **process.env**
+
+- process.env属性返回一个对象，包含了当前Shell的所有环境变量。比如，process.env.HOME返回用户的主目录。
+
+- 通常的做法是，新建一个环境变量NODE_ENV，用它确定当前所处的开发阶段，生产阶段设为production，开发阶段设为develop或staging，然后在脚本中读取process.env.NODE_ENV即可。
+
+运行脚本时，改变环境变量，可以采用下面的写法:
+
+```
+$ export NODE_ENV=production && node app.js
+# 或者
+$ NODE_ENV=production node app.js
+```
+
+
+<br/>
+
+> <h3 id='方法举例'>方法举例</h3>
+
+```
+process.chdir()：切换工作目录到指定目录。
+process.cwd()：返回运行当前脚本的工作目录的路径。
+process.exit()：退出当前进程。
+process.getgid()：返回当前进程的组ID（数值）。
+process.getuid()：返回当前进程的用户ID（数值）。
+process.nextTick()：指定回调函数在当前执行栈的尾部、下一次Event Loop之前执行。
+process.on()：监听事件。
+process.setgid()：指定当前进程的组，可以使用数字ID，也可以使用字符串ID。
+process.setuid()：指定当前进程的用户，可以使用数字ID，也可以使用字符串ID。
+```
+
+
+
+- **process.cwd()，process.chdir()**
+
+cwd方法返回进程的当前目录（绝对路径），chdir方法用来切换目录。
+
+```
+> process.cwd()
+'/home/aaa'
+
+> process.chdir('/home/bbb')
+> process.cwd()
+'/home/bbb'
+```
+
+**注意: **process.cwd()与__dirname的区别。前者进程发起时的位置，后者是脚本的位置，两者可能是不一致的。比如，node ./code/program.js，对于process.cwd()来说，返回的是当前目录（.）；对于__dirname来说，返回是脚本所在目录，即./code/program.js。
 
 
 
