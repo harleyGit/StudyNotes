@@ -347,7 +347,8 @@
 	- [性能优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/React/性能优化(I).md) 
 - **知识综合**
 	- [**ES6入门教程**](https://es6.ruanyifeng.com/)
-	- [XKBKnowledge](https://github.com/harleyGit/StudyNotes/blob/master/React/XKBKnowledge.md)
+	- [XKBKnowledge(I)](https://github.com/harleyGit/StudyNotes/blob/master/React/XKBKnowledge(I).md)
+	- [XKBKnowledge(II)](https://github.com/harleyGit/StudyNotes/blob/master/React/XKBKnowledge(II).md)
 
 
 

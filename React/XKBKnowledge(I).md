@@ -1618,7 +1618,7 @@ field.addEventListener("change", function() {
 
 <br/>
 
-> <h3 id='属性举例:'>属性举例:</h3>
+> <h3 id='属性举例'>属性举例:</h3>
 
 ```
 process.argv：返回一个数组，成员是当前进程的所有命令行参数。
@@ -2435,36 +2435,6 @@ _startScroll = (index) => {
 ***
 <br/>
 
-
-># <h1 id=""></h1>
-
-
-
-<br/>
-
-***
-<br/>
-
-
-># <h1 id=""></h1>
-
-
-
-<br/>
-
-***
-<br/>
-
-
-># <h1 id=""></h1>
-
-
-
-
-<br/>
-
-***
-<br/>
 
 
 
