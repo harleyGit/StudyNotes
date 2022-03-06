@@ -622,10 +622,10 @@ Pdf文档形式
 
 - 5）.mysql_secure_installation 可以设置密码(这个是可选的，可以不设置密码，我是直接回车的);
 - 6）. 启动MySQL：
-	- 后台启动MySQL：`brew service start mysql` ；
+	- 后台启动MySQL：`brew services start mysql` ；
 	- 前台启动mysql(关闭控制台，服务停止)：`mysql.server start` ；
 	- 若是出现： **Error: Can't connect to local MySQL server through socket '/tmp/mysql.sock' (2)** 则可能是MySQL没有启动造成的，启动以后就可以了；
-	- 若是使用后台启动：`brew service start mysql` 和前台启动：`mysql.server start`  没有成功，则可以： **`sudo mysql.server start`**
+	- 若是使用后台启动：`brew services start mysql` 和前台启动：`mysql.server start`  没有成功，则可以： **`sudo mysql.server start`**
 - 连接MySQL：**mysql -u root -p**
 
 
