@@ -9,6 +9,10 @@
 	- [接口测试](#接口测试)
 	- [HTTP协议简介](#HTTP协议简介)
 	- [接口测试流程](#接口测试流程)
+- [**MySQL数据库**](#MySQL数据库)
+	- [数据库安装](#数据库安装)
+	- [MySQL数据库启动](#MySQL数据库启动)
+	- [启动问题解决](#启动问题解决)
 - [面试题](#面试题)
 
 
@@ -583,9 +587,58 @@ Pdf文档形式
 接口测试用例文档10要素：
 编号、用例名称（标题）、模块、优先级、预置条件、请求方法、URL、请求头、请求体（请求数据）、预期结果
 ```  
+
+
+<br/>
+<br/>	
+
+> <h2 id='postman断言'>postman断言</h2>
    
 
 
+<br/>
+
+***
+<br/>
+
+> <h1 id='MySQL数据库'>MySQL数据库</h1>
+
+<br/>
+
+> <h2 id='数据库安装'>数据库安装</h2>
+
+- 1）.安装Homebrew，详细步骤参见[Homebrew官网](https://brew.sh/);
+- 2）.`brew doctor`确认brew在正常工作;
+- 3）.`brew update`更新包;
+- 4）.`brew install mysql` 安装mysql;
+
+<br/>
+
+![brew安装MySQL](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_16.png)
+
+<br/>
+
+> <h2 id='MySQL数据库启动'>MySQL数据库启动</h2>
+
+- 5）.mysql_secure_installation 可以设置密码(这个是可选的，可以不设置密码，我是直接回车的);
+- 6）. 启动MySQL：
+	- 后台启动MySQL：`brew service start mysql` ；
+	- 前台启动mysql(关闭控制台，服务停止)：`mysql.server start` ；
+	- 若是出现： **Error: Can't connect to local MySQL server through socket '/tmp/mysql.sock' (2)** 则可能是MySQL没有启动造成的，启动以后就可以了；
+	- 若是使用后台启动：`brew service start mysql` 和前台启动：`mysql.server start`  没有成功，则可以： **`sudo mysql.server start`**
+- 连接MySQL：**mysql -u root -p**
+
+
+<br/>
+<br/>
+
+> <h2 id='启动问题解决'>启动问题解决</h2>
+
+<br/>
+
+> **问题1:** 连接Mysql出现ERROR 2002(HY000):Can‘t connect to local MySQL server through socket ‘/tmp/mysql.sock
+
+![问题解决](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_17.png)
 
  
      
