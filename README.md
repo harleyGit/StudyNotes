@@ -54,6 +54,7 @@
 - [**C**](#C)
 - [**iOS开发**](#iOS开发)
 	- [**Objective-C**](#Objective-C)
+	- [**逆向**](#逆向)
 	- [**Swift**](#Swift)
 	- [**错误总结**](#错误总结)
 	- [**ProjectDesc**](#ProjectDesc)
@@ -200,6 +201,20 @@
 * [WKWebView(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/WKWebView(I).md)
 * [**底层原理**](#底层原理)
 	* [ARC原理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/ARC原理.md) 
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id = "逆向">逆向</h2>
+* [资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Reverse/资料集.md)
+
+
+
+
+
 
 
 <br/>
@@ -409,7 +424,7 @@
  *	[Runtime(II)](https://github.com/harleyGit/StudyNotes/blob/master/底层/Runtime(II).md)
  *	[Runtime(III)](https://github.com/harleyGit/StudyNotes/blob/master/底层/Runtime(III).md)
 - [**内存管理**](https://github.com/harleyGit/StudyNotes/blob/master/底层/内存管理.md)
-[](https://github.com/harleyGit/StudyNotes/blob/master/底层/.md)
+- [**浅谈Mach-O**](https://github.com/harleyGit/StudyNotes/blob/master/底层/浅谈Mach-O.md)
 [](https://github.com/harleyGit/StudyNotes/blob/master/底层/.md)
 
 
