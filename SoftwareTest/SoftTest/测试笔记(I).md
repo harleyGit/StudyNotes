@@ -656,13 +656,18 @@ Pdf文档形式
 |:--|:--|
 | `brew services start mysql` ； | 后台启动MySQL |
 | mysql -u root -p | 连接数据库 |
-| create DATABASE Database1; | 创建Database1数据库 |
+|  show databases  |  查看当前所有存在的数据库  |
+| create database Database1; | 创建Database1数据库 |
+|  drop database Database1  |  删除 Database1 数据库 |
 | use Database1; | 使用 Database1数据库 |
-| CREATE TABLE c (<br/>id int,<br/>name VARCHAR(20),<br/>age TINYINT UNSIGNED<br/>); | 创建表c |
+| create table c (<br/>id int,<br/>name VARCHAR(20),<br/>age TINYINT UNSIGNED<br/>); | 创建表c |
 | show tables;  | 展示有哪几张表 |
 | desc Database1; |  展示Database1数据库有哪几张表 |
 | exit; |  退出 |
 | select * from c; | 查看c表中的所有数据 |
+|    |    |
+|    |    |
+|    |    |
      
      
 	
