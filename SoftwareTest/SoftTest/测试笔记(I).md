@@ -13,6 +13,7 @@
 	- [数据库安装](#数据库安装)
 	- [MySQL数据库启动](#MySQL数据库启动)
 	- [启动问题解决](#启动问题解决)
+	- [数据库操作](#数据库操作)
 - [面试题](#面试题)
 
 
@@ -641,10 +642,40 @@ Pdf文档形式
 ![问题解决](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_17.png)
 
  
+ 
+ 
+ 
+ <br/>
+<br/>
+
+> <h2 id='数据库操作'>数据库操作</h2>
+
+<br/>
+
+|  **命令**  |  **用法说明**  |
+|:--|:--|
+| `brew services start mysql` ； | 后台启动MySQL |
+| mysql -u root -p | 连接数据库 |
+| create DATABASE Database1; | 创建Database1数据库 |
+| use Database1; | 使用 Database1数据库 |
+| CREATE TABLE c (<br/>id int,<br/>name VARCHAR(20),<br/>age TINYINT UNSIGNED<br/>); | 创建表c |
+| show tables;  | 展示有哪几张表 |
+| desc Database1; |  展示Database1数据库有哪几张表 |
+| exit; |  退出 |
+| select * from c; | 查看c表中的所有数据 |
      
      
 	
 	
+ 
+  
+  
+
+ 
+
+
+
+
 	
 	
 	
