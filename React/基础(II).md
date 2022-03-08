@@ -1,5 +1,152 @@
 > <h2 id=''></h2>
-- [高阶组件](#高阶组件)
+- [**React基础**](#React基础)
+	- [**props**](#props)
+	- [生命周期](#生命周期)
+- [**高阶组件**](#高阶组件)
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id='React基础'>React基础</h1>
+
+<br/>
+
+> <h2 id='props'>props</h2>
+
+子组件prop: 在React中prop有一个内置的属性children,它表示子组件的集合也就是组件的数量.
+
+
+propTypes: 可以对prop中的属性进行约束,如下:
+
+```
+static propTypes = {
+	classPrefix: React.PropTypes.string,
+	activeIndex: React.PropTypes.number,
+}
+
+```
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id='生命周期'>生命周期</h2>
+
+生命周期可以分为挂载、渲染、卸载,分成两类:
+- 当组件在挂载或卸载时;
+- 当组件接收新的数据时,即组件更新时;
+
+```
+
+Class App extends Component {
+	
+	/**
+		* 生命周期方法
+	**/
+	//类型约束 外部访问: App.propTypes
+	static propTypes = {
+		//.. ...
+	}
+	
+	// 默认props的属性
+	static defaultProps = {
+		// .. .. 
+	}
+	
+	// 初始化时的方法
+	constructor(props) {
+		super(props)
+		this.state = {
+			// . . .. 	
+		}
+	}
+	
+	// 会在render方法之前执行, 组件初始化时运行一次
+	componentWillMount() {
+		// . ..
+	}	
+	
+	
+	// 会在render方法之后执行, 组件初始化时运行一次
+	componentDidMount() {
+		// ...
+	}
+	
+	// 组件卸载, 执行一些清理方法,如事件回收或是清除定时器
+	componentWillUnmount() {
+		// . . ..
+	}	
+	
+	
+	// 渲染组件
+	render() {
+		return <div/>
+	}
+	
+	
+	
+	
+	
+	/**
+		* 数据更新方法
+		* 若是state更新了,一次执行shouldComponentUpdate、componentWillUpdate、render、componentDidUpdate
+	**/
+	
+	// 若是由父组件更新props造成子组件更新,则componentWillReceiveProps先执行,接着是shouldComponentUpdate......
+	componentWillReceiveProps(nextProps) {
+		// this.setState({})
+	}
+	
+	// 可以加一些判断,让它需要时更新,不需时不更新
+	shouldComponentUpdate(nextProps, nextState)() {
+		// return true
+	}
+	
+	componentWillUpdate(nextPorps, nextState) {
+		//...
+	}
+	
+	componentDidUpdate(prevProps, preState) {
+		// . . .
+	}
+	
+	
+}
+```
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+
+
 
 
 
