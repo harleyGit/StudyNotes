@@ -667,7 +667,7 @@
 * [Git](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Git.md)
 * [Xcode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Xcode.md)
 * [VSCode](https://github.com/harleyGit/StudyNotes/blob/master/Tools/VSCode.md)
-* [IDEA](https://github.com/harleyGit/StudyNotes/blob/master/Tools/IDEA.md)
+* [IntelliJ系列软件](https://github.com/harleyGit/StudyNotes/blob/master/Tools/IntelliJ系列软件.md)
 * [数码](https://github.com/harleyGit/StudyNotes/blob/master/Tools/数码.md)
 * [Unix命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Unix命令.md)
 * [Linux命令](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Linux命令.md)
