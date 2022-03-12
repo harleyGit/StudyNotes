@@ -1,6 +1,12 @@
 > <h1 id=""></h1>
 - [**探索脚手架create-react-app原理**](https://juejin.cn/post/6844903604583661582)
 	- [工程目录结构](#工程目录结构)
+- [**JavaScript**](#JavaScript) 
+	- [内置对象](#内置对象)
+		- [Reflect](#Reflect)
+		- [new.target](#new.target)
+	- [表达式和运算符](#表达式和运算符)
+		- [typeof](#typeof)
 - [**ES6语法**](#ES6语法)
 	- [=> 箭头函数](#箭头函数)
 	- [匿名函数](#匿名函数)
@@ -36,6 +42,7 @@
 	- [window属性](#window属性)
 	- [Window.sessionStorage](#sessionStorage)
 	- [Window Navigator](#WindowNavigator)
+	- [iframe](#iframe)
 - [**Node全局对象**](#Node全局对象)
 	- [process](#process)
 		- [属性举例](#属性举例)
@@ -97,6 +104,134 @@
 ├── README.md
 └── package.json
 ```
+
+
+<br/>
+
+***
+<br/>
+
+
+
+
+># <h1 id="JavaScript">JavaScript</h1>
+
+
+># <h2 id="内置对象">内置对象</h2>
+
+<br/>
+
+># <h3 id="Reflect">Reflect</h3>
+&emsp; Reflect 是一个内置的对象，它提供拦截 JavaScript 操作的方法。这些方法与proxy handlers (en-US)的方法相同。Reflect不是一个函数对象，因此它是不可构造的。
+
+`Reflect.construct(target, argumentsList[, newTarget])`
+
+- target
+	- 被运行的目标构造函数
+- argumentsList
+	- 类数组，目标构造函数调用时的参数。
+- newTarget 可选
+	- 作为新创建对象的原型对象的constructor属性， 参考 new.target 操作符，默认值为target。
+- 返回值
+	- 以target（如果newTarget存在，则为newTarget）函数为构造函数，argumentList为其初始化参数的对象实例。
+- 异常
+	- 如果target或者newTarget不是构造函数，抛出TypeError,异常。
+
+
+<br/>
+
+># <h3 id="new.target">new.target</h3> 
+&emsp; new.target属性允许你检测函数或构造方法是否是通过new运算符被调用的。在通过new运算符被初始化的函数或构造方法中，new.target返回一个指向构造方法或函数的引用。在普通的函数调用中，new.target 的值是undefined。
+
+- 普通函数调用 new.target
+
+&emsp; 在普通的函数调用中（和作为构造函数来调用相对），new.target的值是undefined。这使得你可以检测一个函数是否是作为构造函数通过new被调用的。
+
+
+```
+function Foo() {
+  if (!new.target) throw "Foo() must be called with new";
+  console.log("Foo instantiated with new");
+}
+
+Foo(); // throws "Foo() must be called with new"
+new Foo(); // logs "Foo instantiated with new"
+```
+
+
+<br/>
+
+- 构造方法中的 new.target
+
+&emsp; 在类的构造方法中，new.target指向直接被new执行的构造函数。并且当一个父类构造方法在子类构造方法中被调用时，情况与之相同。
+
+```
+class A {
+  constructor() {
+    console.log(new.target.name);
+  }
+}
+
+class B extends A { constructor() { super(); } }
+
+var a = new A(); // logs "A"
+var b = new B(); // logs "B"
+```
+
+
+<br/>
+
+># <h3 id=""></h3> 
+
+
+<br/>
+
+># <h3 id=""></h3> 
+
+
+
+<br/>
+<br/>
+
+
+># <h2 id="表达式和运算符">表达式和运算符</h2>
+
+<br/>
+
+># <h3 id="typeof">typeof</h3>
+typeof 操作符返回一个字符串，表示未经计算的操作数的类型。
+
+```
+console.log(typeof 'blubber');
+// expected output: "string"
+
+console.log(typeof true);
+// expected output: "boolean"
+
+console.log(typeof undeclaredVariable);
+// expected output: "undefined"
+
+```
+
+
+<br/>
+
+
+
+># <h3 id=""></h3>
+
+
+
+<br/>
+
+
+># <h3 id=""></h3>
+
+
+<br/>
+
+
+
 
 
 
@@ -1491,7 +1626,7 @@ console.log(window.name)
 
 
 > **window.frameElement**
-&emsp;window.frameElement属性主要用于当前窗口嵌在另一个网页的情况（嵌入<object>、<iframe>或<embed>元素），返回当前窗口所在的那个元素节点。如果当前窗口是顶层窗口，或者所嵌入的那个网页不是同源的，该属性返回null。
+&emsp;`window.frameElement`属性主要用于当前窗口嵌在另一个网页的情况（嵌入`<object>`、`<iframe>`或`<embed>`元素），返回当前窗口所在的那个元素节点。如果当前窗口是顶层窗口，或者所嵌入的那个网页不是同源的，该属性返回null。
 
 ```
 // HTML 代码如下
@@ -1503,7 +1638,7 @@ if (frameEl) {
   frameEl.src = 'other.html';
 }
 ```
-上面代码中，frameEl变量就是<iframe>元素。
+上面代码中，frameEl变量就是`<iframe>`元素。
 
 
 
@@ -1591,7 +1726,56 @@ field.addEventListener("change", function() {
 <br/>
 <br/>
 
-> <h2 id=""></h2>
+># <h2 id='iframe'>iframe</h2>
+
+
+
+&emsp; 对于iframe嵌入的窗口，document.getElementById方法可以拿到该窗口的 DOM 节点，然后使用contentWindow属性获得iframe节点包含的window对象。
+
+```
+var frame = document.getElementById('theFrame');
+var frameWindow = frame.contentWindow;
+```
+&emsp; 上面代码中，frame.contentWindow可以拿到子窗口的window对象。然后，在满足同源限制的情况下，可以读取子窗口内部的属性。
+
+```
+// 获取子窗口的标题
+frameWindow.title
+```
+
+
+`<iframe/>`元素的contentDocument属性，可以拿到子窗口的document对象。
+
+```
+var frame = document.getElementById('theFrame');
+var frameDoc = frame.contentDocument;
+
+// 等同于
+var frameDoc = frame.contentWindow.document;
+```
+
+&emsp; `<iframe>`元素遵守同源政策，只有当父窗口与子窗口在同一个域时，两者之间才可以用脚本通信，否则只有使用window.postMessage方法。
+
+&emsp; `<iframe>`窗口内部，使用window.parent引用父窗口。如果当前页面没有父窗口，则window.parent属性返回自身。因此，可以通过window.parent是否等于window.self，判断当前窗口是否为iframe窗口。
+
+```
+if (window.parent !== window.self) {
+  // 当前窗口是子窗口
+}
+```
+
+&emsp;` <iframe>`窗口的window对象，有一个frameElement属性，返回`<iframe>`在父窗口中的 DOM 节点。对于非嵌入的窗口，该属性等于null。
+
+```
+var f1Element = document.getElementById('f1');
+var f1Window = f1Element.contentWindow;
+
+f1Window.frameElement === f1Element // true
+window.frameElement === null // true
+```
+
+
+
 
 
 
