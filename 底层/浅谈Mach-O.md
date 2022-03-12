@@ -15,7 +15,7 @@
 
 
 
-> <h1 id='进程与二进制格式'>进程与二进制格式</h1>
+> <h1 id='进程与二进制格式'>[进程与二进制格式](https://www.desgard.com/macos%20kernel/objective-c/iosre/2017/10/07/iosre-1.html)</h1>
 
 
 &emsp; 进程在众多操作系统中都有提及，它是作为一个正在执行的程序的实例，这是 UNIX 的一个基本概念。而进程的出现是特殊文件在内存中加载得到的结果，这种文件必须使用操作系统可以认知的格式，这样才对该文件引入依赖库，初始化运行环境以及顺利地执行创造条件。
@@ -24,6 +24,23 @@
 
 
 <br/>
+
+> **Mach-O 格式的文件类型:**
+
+|**类型**|**名称**|
+|:--|:--|
+| Mach-O Object | 目标文件  .o |
+| Mach-O Ececutable | 可执行文件 |
+| Mach-O Dynamically | 动态库文件 .a 、 .dylib |
+| Mach-O dynamic linker | 动态链接器文件 |
+| Mach-O dSYM companion | 符号表文件 |
+| Bundle  | 自己创建的动态库，运行在沙盒中，无法被 dyld 链接，只能通过 dlopen() 加载 |
+| Framework | 包含Dylib、资源文件和头文件的文件夹 |
+ 
+
+<br/>
+
+> **Mach-O文件格式和用途**
 
 
 |  **可执行格式**  |  **magic** |  **用途** |
