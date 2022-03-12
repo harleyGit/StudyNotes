@@ -14,6 +14,8 @@
 	- [MySQL数据库启动](#MySQL数据库启动)
 	- [启动问题解决](#启动问题解决)
 	- [数据库操作](#数据库操作)
+- [**Python**](#Python)
+	- [安装](#安装)
 - [面试题](#面试题)
 
 
@@ -672,6 +674,53 @@ Pdf文档形式
      
 	
 	
+<br/>
+
+***
+<br/>
+
+
+> <h1 id='Python'>Python</h2>
+
+<br/>
+
+
+
+
+> <h2 id='安装'>安装</h2>
+
+<br/>
+
+&emsp; 在Mac上其实自带python环境，但是很多的library安装python是2.7的版本。 验证：可以在终端Terminal中输入：`python`，退出则输入：`exit()`
+
+![验证](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/st_18.png)
+
+ 
+- Python官网下载[Mac安装包](https://www.python.org/downloads/macos/)，下载完安装包后，然后傻瓜式安装就好了；
+- 环境配置：
+	- 得到python路径，终端输入：**`which python3`**；
+	- 打开 .bash_profile: **`open .bash_profil`e**;
+	- 在其文件中粘贴进python路径：**`alias python="/Library/Frameworks/Python.framework/Versions/3.9/bin/python3"`**， `command+s`进行保存；
+	- 起作用： **`source .bash_profile`**;
+- 以上操作你每关闭终端一次，再次打开都需要重新`source ~/.bash_profile`一下，所以还需要下一步骤
+- 输入： 
+	- **`vi ~/.zshrc`** 
+	- 按i 进行输入，添加：**`source ~/.bash_profile`** 
+	- 按esc输入: :wq进行保存退出
+
+
+
+
+
+
+> <h2 id=''></h2>
+
+<br/>
+<br/>
+
+
+<br/>
+	
  
   
   
@@ -737,11 +786,11 @@ Pdf文档形式
 
 ><h1 id='面试题'>面试题</h1>
 
-> 面试题一：ssjlslsl
+> 面试题一：
 
 答案：
 
->面试题二：jjgdgggg
+>面试题二：
 
 答案：
 
