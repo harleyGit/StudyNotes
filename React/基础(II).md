@@ -107,6 +107,24 @@ Class App extends Component {
 		// this.setState({})
 	}
 	
+	// componentWillReceiveProps 的替代方法
+	static getDerivedStateFromProps(nextProps, prevState) {
+
+        console.log(' >> 🍎 nextProps: ', nextProps, '\n prevState:', prevState)
+
+        // 该方法内禁止访问this
+        // nextProps: 最近更新的nextProps, prevState: 没有更新的state
+        if (nextProps.isAllCheckModeState !== prevState.isAllCheckModeState) {
+            return {
+                isAllCheckMode: nextProps.isAllCheckModeState
+            }
+        }
+
+        // 不需要更新状态 返回null
+        return null
+    }
+    
+	
 	// 可以加一些判断,让它需要时更新,不需时不更新
 	shouldComponentUpdate(nextProps, nextState)() {
 		// return true
