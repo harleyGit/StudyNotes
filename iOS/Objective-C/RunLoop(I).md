@@ -5,6 +5,7 @@
 ><h2 id=''></h2>
 - [**NSTimer**](#NSTimer)
 - [**RunLoop**](#RunLoop)
+	- [Runloop的作用](#Runloop的作用)
 	- [Runloop数据结构](#Runloop数据结构)
 	- [Runloop与线程的联系](#Runloop与线程的联系)
 	- [RunLoop在OC中有获取](#RunLoop在OC中有获取)
@@ -72,6 +73,89 @@ int main(void) {
 - Foundation 框架中的 NSRunLoop
 - Core Foundation 框架中的 CFRunLoop
 其中 NSRunLoop 是对 CFRunLoop 的简单封装，需要着重研究的只有 CFRunLoop
+
+
+<br/>
+<br/>
+
+><h2 id='Runloop的作用'>Runloop的作用</h2>
+
+**Runloop可以做什么?**
+
+- 处理Crash
+- 保持线程的存活、线程保活
+- 监测、优化卡顿
+
+<br/>
+
+> 线程的保活
+- 使用runloop进行保活
+- 使用条件锁可以保活
+
+![主线程和子线程Runloop区别](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/ios_oc91.png)
+
+
+保活简单Code
+
+```
+//第1步:
+-(IBAction)beginAction:(id)sender {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        self.stopped =NO;
+        __weak typeof(self) weakSelf = self;
+        self.thread = [NSThread alloc] initWithBlock:^{
+            NSLog(@"startRun ========>>>>");
+            [[NSRunLoop currentRunLoop] addPort:[[NSPort alloc] init] forMode:NSDefaultRunLoopMode];
+            while (!weakSelf.isStoped) {
+                //使用它是因为是执行一次,而用[runloop run];是死循环,执行多次
+                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+            }
+            NSLog(@"stop  <<<<=======");
+        };
+    })
+    self.thread.name = @"sssssss";
+    [self.thread start];
+}
+
+
+//第2步: 执行任务
+- (IBAction)callAction:(id)sender{
+    [self performSelector:@selector(doSomething) onThread:self.thread withObject:nil waitUntilDone:NO];
+}
+//子线程需要执行的任务
+- (void)doSomething {
+    NSLog(@"%s   %@", __func__, [NSThread currentThread]);
+}
+
+
+//第3步:停止runloop
+- (IBAction)stopAction:(id)sender{
+    [self performSelector:@selector(stopThread) onThread:self.thread withObject:nil waitUntilDone:YES];
+}
+
+-(void) stopThread{
+    self.stopped = YES;
+    
+   
+    //停止Runloop
+    //任务执行完以后,要对其进行销毁释放资源 [NSRunLoop currentRunLoop].getCFRunLoop 等价于 CFRunLoopGetCurrent()
+    CFRunLoopStop(CFRunLoopGetCurrent());
+    
+    //停止强引用
+    self.thread = nil;
+}
+
+```
+
+
+
+<br/>
+
+> 监测优化卡顿
+- 使用observer进行监测
+
+
 
 
 <br/>
