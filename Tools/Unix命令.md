@@ -13,7 +13,7 @@
 - [**命令后话**](#命令后话)
 - [**`Shell编程`**](#Shell编程)
 	- [Shell命令](#Shell命令)
-- **``**
+- [**`脚本与变量`**](#脚本与变量)
 - **``**
 - **``**
 - **``**
@@ -466,6 +466,63 @@ program-name arguments
 ***
 <br/>
 
+> <h1 id='脚本与变量'>脚本与变量</h1>
+
+
+> 自建一个脚本
+
+- 1.新建一个txt文件在其输入 who 命令,文件名为cmmd
+
+- 2.将cmmd文件其变为可执行文件
+
+```
+// +x表明希望file(s)具有可执行权限。
+chmod +x /Users/xxx/DevConfig/ccmd
+```
+
+- 3.环境变量配置
+
+```
+% open .bash_profile
+
+// 在 .bash_profile 进行如下配置:
+# 自定义命令ccmd
+export cmmdPath=/Users/xxx/DevConfig
+export PATH=$PATH:$cmmdPath
+# 自定义命令ccmd End
+
+//然后保存commad+s
+
+//输入命令
+% source .bash_profile
+
+% ccmd
+harleyhuang console  Apr  4 22:27 
+harleyhuang ttys000  Apr  4 22:27 
+
+```
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=''></h1>
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id=''></h1>
+脚本与变量
 ># **‌**
 
 
