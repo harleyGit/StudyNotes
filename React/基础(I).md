@@ -1,5 +1,7 @@
 > <h2 id=""></h2>
 - [**基本用法**](#基本用法)
+	- [React环境搭建](#React环境搭建)
+	- [JSX简介](#JSX简介)
 	- [props用法](#props用法)
 		- [props类型验证](#props类型验证)
 		- [设置默认值](#设置默认值)
@@ -20,6 +22,7 @@
 		- [父->子传参](#父子传参)
 		- [子->父组件的通信](#子父组件的通信)
 		- [兄弟节点之间的通信](#兄弟节点之间的通信)
+		- [context传值](#context传值)
 		- [订阅模型](#订阅模型)
 - [**ES6基础**](#ES6基础)
 	- [异步编程](#异步编程)
@@ -62,6 +65,123 @@
 ># <h1 id="基本用法">基本用法</h1>
 
 
+<br/>
+
+> <h2 id="React环境搭建">React环境搭建</h2>
+
+安装React有以下两种方式：
+- 使用CDN链接；
+- 使用create-react-app工具。
+
+<br/>
+> **CDN链接**
+
+开发环境CDN(不适用于生产环境):
+
+```
+<script src="https://unpkg.com/react@16/umd/react.development.js">
+</script>
+
+ <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js">
+</script>
+```
+
+
+<br/>
+生产环境CDN(是经过优化处理后的依赖包，可以节约带宽，提高效率):
+
+```
+<script src="https://unpkg.com/react@16/umd/react.production.min.js"> </script>
+ <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"> </script>
+```
+
+
+&emsp; CDN的全称是Content Delivery Network，即内容分发网络。CDN是构建在现有网络基础之上的智能虚拟网络，依靠部署在各地的边缘服务器，通过中心平台的负载均衡、内容分发和调度等功能模块，使用户就近获取所需内容，降低网络拥塞，提高用户访问的响应速度和命中率。
+
+&emsp; 所以在项目中我们可以直接把CDN下载到我们本地,可以提高访问速度.防止因为网络不好无法加载网页.
+
+
+<br/>
+
+新建HTML文件并命名为react_example.html，编写代码如下：
+
+
+```
+01  <!DOCTYPE html>
+ 02  <html lang="en">
+ 03  
+ 04  <head>
+ 05      <meta charset="UTF-8">
+ 06      <title>React Example</title>
+ 07      <script src="https://unpkg.com/react@16/umd/react.development.js">
+         </script> 
+08      <script src="https://unpkg.com/react-dom@16/umd/react-dom.         development.js"></script> 
+09  </head> 
+10   
+11  <body> 
+12      <div id="app"></div> 
+13  </body> 
+14  <script> 
+15      const e = React.createElement( 
+16          'h1', 
+17          null, 
+18          'Hello React!' 
+19      ) 
+20      ReactDOM.render( 
+21          e, 
+22          document.getElementById('app') 
+23      ) 
+24  </script> 
+25   
+26  </html>
+```
+
+&emsp; 上述代码中使用的是React的原生写法，为了简化编码，React还提供了一种叫作JSX（JavaScript XML）的写法。想要在React中使用JSX，需要引入Babel的依赖包，命令如下：
+
+```
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js">
+</script>
+```
+
+<br/>
+
+> create-react-app创建React项目
+
+&emsp; create-react-app是React团队推荐的工具，通过该工具无须任何配置就能快速构建React开发环境。它在内部使用Babel和Webpack，但读者无须了解它们的任何细节。要使用该工具，需要确保已安装的Node版本是8.10以上，npm版本是5.6以上。
+
+使用这个比较简单,傻瓜式操作,不懂的自行网上搜索.
+
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id="JSX简介">JSX简介</h2>
+
+
+- **定义组件时，最外层的标签只能有一个。**
+
+```
+const Article = () => (
+      <h3>This is title</h3>
+      <p>This is content</p >     
+      <span>This is author</span>   
+  )
+```
+
+&emsp; 上述代码会报错,需要在其最外层用一个标签对其进行包裹.可以用**`<div></div>、 <React.Fragment> </React.Fragment>、<>   </>`**.但为了精确,最好选择最后一种,防止多渲染一层.
+
+
+&emsp; **小知识：** Babel是一个JavaScript编译器，它主要用于将ES 6及更新版本的代码转换为向后兼容的JavaScript语法。React官方的JSX编译器早期为JSTransform，但目前已经不再维护了。现在的JSX大多依靠Babel的JSX编译器进行编译。关于Babel的更多内容，可以访问其[官网](https://www.babeljs.cn/)。 
+
+
+
+
+
+
+<br/>
 <br/>
 
 > <h2 id="props用法">props用法</h2>
@@ -1337,6 +1457,19 @@ export default function RouterUndefinedView() {
 &emsp; 在一个兄弟节点中修改父组件的数据，然后父组件会同步到另一个需要通信的子组件，就完成了一次通信
 
 ![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react13.png)
+
+
+
+<br>
+<br>
+
+> <h3 id="context传值">context传值</h3>
+
+
+![context简单练习](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react55.png)
+
+
+
 
 
 

@@ -1,7 +1,6 @@
 > <h2 id=""></h2>
 > [官方教程](https://code.visualstudio.com)
 - [**常用插件**](#常用插件)
-	- [注释插件](#注释插件) 
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
 	- [环境配置](#环境配置)
@@ -32,10 +31,7 @@
 
 <br/>
 
-> <h2 id="注释插件">注释插件</h2>
-
-
-&emsp; **koroFileHeader**在vscode中用于生成文件头部注释和函数注释的插件，经过多版迭代后，插件：支持所有主流语言,功能强大，灵活方便，文档齐。
+- **koroFileHeader**在vscode中用于生成文件头部注释和函数注释的插件，经过多版迭代后，插件：支持所有主流语言,功能强大，灵活方便，文档齐。
 
 **Code->首选项->设置->在搜索框中搜索 `fileheader`**，对其进行如下配置：
 
@@ -59,6 +55,18 @@
     },
         
 ```
+
+
+<br/>
+
+
+- [vscode-icons](https://github.com/vscode-icons/vscode-icons)：文件图标插件；
+
+- [Path Intellisense](https://github.com/ChristianKohler/PathIntellisense)：当引入文件和书写文件路径时，可自动填充文件；
+
+- [Auto Rename Tag](https://github.com/formulahendry/vscode-auto-rename-tag)：修改HTML标签时，自动完成闭合标签的同步修改；
+
+- [open in browser](https://github.com/SudoKillMe/vscode-extensions-open-in-browser)：右击HTML文件，选择Open In Default Browser，就会在默认浏览器中打开HTML文件
 
 
 
