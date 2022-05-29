@@ -508,7 +508,7 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 - **安装 Homebrew 过程**
 
-终端输入：
+去[Homebrew官网复制下载命令](https://brew.sh/index_zh-cn)终端输入：
 
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -520,7 +520,7 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 <br/>
 
-选择国内的镜像下载地址进行下载：
+选择国内的镜像下载地址进行下载(最好是国外的,国内的容易出问题)：
 
 ```
 /bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
@@ -555,8 +555,9 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 卸载 Homebrew
 
-`/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/HomebrewUninstall.sh)"
-`
+```
+/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/HomebrewUninstall.sh)"
+```
 
 
 
@@ -590,8 +591,45 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 
 <br/>
+<br/>
 
-- **安装rvm 出错**
+> **安装ruby**
+
+```
+rvm install 3.0.0
+```
+
+
+<br/>
+
+- **若出现问题1,没有Skip**
+
+`Error running ' CFLAGS=-O3 *****(一堆路径)`
+` please read /Users/harleyhuang/.rvm/log/1653793499_ruby-3.0.0/configure.log
+There has been an error while running configure. Halting the installation.`
+
+解决:
+
+```
+//安装openssl
+brew install openssl@1.1
+
+//查看安装路径
+brew --prefix openssl@1.1
+#路径:/opt/homebrew/opt/openssl@1.1
+
+//安装ruby
+rvm install 3.0.0 --with-openssl-dir=/opt/homebrew/opt/openssl@1.1
+
+//有时它会提示已经安装,可以用下面的命令
+rvm reinstall 3.0.0 --with-openssl-dir=`brew --prefix openssl`
+```
+
+
+<br/>
+
+- **若出现问题2,没有Skip**
+
 
 ```
 Error running '__rvm_make -j8',
@@ -601,49 +639,148 @@ There has been an error while running make. Halting the installation.
 
 ```
 
-执行这2个命令：
+&emsp, 在网上搜索`Error running '__rvm_make -j8'`,发现寥寥无几或者根本没有搜到.那就只能复制这个地址`/Users/harleyhuang/.rvm/log/1623324364_ruby-2.5.0/make.log`然后到Finder中Command+F+G搜索这个文件.打开这个文件后发现经常出现这几个问题:
+
+`warning: no debug symbols in executable (-arch x86_64)`
+
+`readline.c:1904:37: error: use of undeclared identifier 'username_completion_function'; did you mean 'rl_username_completion_function'?
+                                    rl_username_completion_function);
+                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                    rl_username_completion_function
+readline.c:79:42: note: expanded from macro 'rl_username_completion_function'
+# define rl_username_completion_function username_completion_function
+                                         ^
+/opt/homebrew/opt/readline/include/readline/readline.h:485:14: note: 'rl_username_completion_function' declared here
+extern char *rl_username_completion_function PARAMS((const char *, int));
+             ^
+compiling psych_parser.c
+1 error generated.
+`
+
+
+然后想到可能是M1用的arm架构导致的,所以可以在命令前加入**`arch -arm64`**记忆区别:
+
 
 ```
 brew install openssl
 
 rvm install 2.5.0 --with-openssl-dir=`brew --prefix openssl`
+
+//或者下面安装-x86_64架构的rvm
+arch -x86_64 rvm install 3.0.0 --with-openssl-dir=/usr/local/opt/openssl@1.0
+
+// M1芯片的64架构:
+// arch -arm64 rvm install 3.0.0 --with-openssl-dir=`brew --prefix openssl`
+
+```
+
+然后就下载成功了!
+
+<br/>
+
+
+```
+//检查安装的的ruby版本
+rvm list 
+
+//检查ruby源 
+gem sources -l
+
+//移除不需要的ruby源
+gem sources --remove https://rubygems.org/
+
+//添加ruby源
+gem sources --add https://gems.ruby-china.com
+
+//指定系统默认的ruby版本
+rvm use 3.0.0 --default 
 ```
 
 
-出现这个问题：
+出现这个问题：`Requirements installation failed with status: 1.`
 
-```
-Requirements installation failed with status: 1.
-
-```
 
 解决：
 
 ```
 rvm autolibs read-only
 
-rvm install ruby-2.6.5
+//安装指定版本
+rvm install ruby-3.0.0
 
+//检查安装的的ruby版本
+rvm list 
+
+//指定系统默认的ruby版本
+rvm use 3.0.0 --default 
+
+
+//查看下载的的ruby版本号
 ruby -v
 ```
 
 
-但是又出错了，真想骂MMP了，恶心的不行。
+<br/>
+<br/>
+
+> 安装cocoapods(macOS10.11之后使用)
 
 ```
-Error running '__rvm_make -j8',
-please read /Users/harleyhuang/.rvm/log/1623338341_ruby-2.6.5/make.log
+// cocoapods 安装
+sudo gem install -n /usr/local/bin cocoapods
 
-There has been an error while running make. Halting the installation.
+// 设置
+pod setup
+
+// 测试
+pod search snapkit
+```
+
+有出错了!:
+
+```### Error LoadError - dlopen(/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle, 9): no suitable image found.  Did find:
+	/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle: mach-o, but wrong architecture
+	/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle: mach-o, but wrong architecture - /Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle
+<internal:/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/3.0.0/rubygems/core_ext/kernel_require.rb>:85:in 'require'
+......
+.....
+...
+
+Don't forget to anonymize any private data!
+
+Looking for related issues on cocoapods/cocoapods...
+Searching for inspections failed: undefined method `map' for nil:NilClass
+```
+
+然后进行了一番大搜索,发现又是架构的锅,日了狗了!命令撸起来:
+
+```
+sudo arch -arm64 gem install ffi
+ 
+sudo arch -arm64 gem install cocoapods
+
+//测试
+pod search afnetworking     
+```
+
+坎坷又来了:!
+
+`[!] CDN: trunk URL couldn't be downloaded: https://cdn.cocoapods.org/all_pods_versions_5_7_d.txt Response: Couldn't connect to server`
+
+```
+//在本地Podfile替代
+source 'https://cdn.cocoapods.org/'
+//用:
+source 'https://github.com/CocoaPods/Specs.git'
+
+
+//在本地移除久的引用,用新的
+pod repo remove trunk
+
+pod install --repo-update
 ```
 
 
-在网上用谷歌搜了一圈还是解决不了，没办法只能到 rvm 的git 的问题搜索这个问题解决了：\
-\
-```
-//一个外国大佬提出的，也是踩了不少坑才弄好的
-CFLAGS="-Wno-error=implicit-function-declaration" rvm install 2.6.6
-```
 
 <br/>
 

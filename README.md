@@ -213,6 +213,7 @@
 > <h2 id = "逆向">逆向</h2>
 * [**资料集**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Reverse/资料集.md)
 * [**逆向(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Reverse/逆向(I).md)
+* [**Mach-O格式**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Mach-O格式.md)
 
 
 
@@ -661,8 +662,8 @@
 <br/>
 
 > <h1 id = "工具">工具</h1>
-- [SourceTree(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree(I).md)
-* [CocoaPods(I)](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods(I).md)
+- [SourceTree](https://github.com/harleyGit/StudyNotes/blob/master/Tools/SourceTree.md)
+* [CocoaPods](https://github.com/harleyGit/StudyNotes/blob/master/Tools/CocoaPods.md)
 * [快捷键](https://github.com/harleyGit/StudyNotes/blob/master/Tools/快捷键.md)
 * [Mac](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Mac.md)
 * [Podfile书写格式](https://github.com/harleyGit/StudyNotes/blob/master/Tools/Podfile-书写格式.md)
