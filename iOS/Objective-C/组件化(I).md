@@ -10,6 +10,7 @@
 			- [工程中使用私有库](#工程中使用私有库)
 			- [问题解决](#问题解决)
 			- [443时间超时](#443时间超时)
+			- [更新发布](#更新发布)
 - **参考资料**
 	- [](https://juejin.cn/post/6921970988796248077) 
 	- [CocoaPods私有库的创建和版本更新](https://www.jianshu.com/p/51b0aed5db2a)
@@ -541,7 +542,105 @@ $ sudo killall -HUP mDNSResponder;say DNS cache has been flushed
 
 
 
+<br/>
+<br/>
+<br/>
 
+
+> <h3 id='更新发布'>更新发布</h3>
+
+在主项目MainProject、子库Foundation,步骤按照下面操作进行更新.
+
+
+&emsp; **1.** 首先我们需要把子库Foundation拉下来,放在iOS_PrivateLibraries.在Foundation库中新建一个TestOne的文件夹,用来存放新的功能代码,切记新的功能代码要放在这里,否则主项目MainProject无法使用.
+
+![新建更新代码文件夹](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc96.png)
+
+<br/>
+
+&emsp; **2.** 将新建的TestOne文件夹放入子库Foundation中:
+
+![TestOne放入子库中](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc97.png)
+
+<br/>
+
+&emsp; **3.** 新建LogInfo类,并进行配置
+
+![配置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc98.png)
+
+
+<br/>
+
+&emsp; **4.** 在主项目的Podfile配置子库Foundation的路径,将其和主项目连接起来
+
+主项目Podfile地址:/Users/xxx/Documents/GitLab/Ccrm/Ccrm-iOS/Podfile
+子库Foundation地址: /Users/xxx/Documents/GitLab/Ccrm/iOS_PrivateLibraries/Foundation 
+
+![主项目和子项目文件地址](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc100.png)
+
+<br/>
+
+主项目的Podfile引入本地子库Foundation路径,如下:
+
+![主项目和子项目的连接](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc99.png)
+
+然后在终端输入:
+
+```
+//切换到主项目文件地址
+cd /Users/xxx/Documents/GitLab/Ccrm/Ccrm-iOS
+
+pod install 
+```
+
+然后就可以在主项目中的**Pods/Development Pods/Foundation/TestOne**下看到之前在子库Foundation新建的文件,如下:
+
+![查看到主项目中子库Foundation代码](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc101.png)
+
+然后你就可以在主项目./Development Pods/Foundation文件下添加修改子库Foundation的代码,同时代码也会同步到子库中了.
+
+<br/>
+
+&emsp; **5.** 在Foundation中测试代码
+
+其实在Foundation的Example中也可以进行代码的测试,打开Terminal,然后定为到Example的地址:
+
+```
+cd /Users/xxx/Documents/GitLab/Ccrm/iOS_PrivateLibraries/Foundation/Example
+
+pod install
+```
+这样就可以在Example中进行子库代码的调试了
+
+
+<br/>
+
+&emsp; **6.** 子库代码修改完后,然后就可以修改配置文件的版本号,然后提交代码,打版本tag了
+
+![修改配置版本号,并提交代码](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc102.png)
+
+<br/>
+
+也可以不用更新版本号的,可以直接定位到要提交的记录,如下:
+
+![提交版本记录](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc103.png)
+
+
+
+<br/>
+
+**7.** 更新完了后,需要更新本地对应的资源索引
+
+```
+//查看组件库的索引库
+pod repo list
+
+pod repo update 资源索引库
+
+cd /Users/xxx/Documents/GitLab/Ccrm/Ccrm-iOS
+
+pod install
+```
 
 
 <br/>
