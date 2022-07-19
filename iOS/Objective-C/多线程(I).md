@@ -1,4 +1,5 @@
-- **线程组和依赖**
+><h2 id=''></h2>
+- [**线程组和依赖**](#线程组和依赖)
 	- 	**线程组处理**
 	- 	**NSOperation 依赖**
 - **多任务(任务是异步)**
@@ -9,8 +10,10 @@
 ***
 <br/>
 
+![GCD](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc105.png)
 
->#  线程组和依赖
+
+> <h1 id='线程组和依赖'>线程组和依赖</h1>  
 
 - **线程组处理**
 

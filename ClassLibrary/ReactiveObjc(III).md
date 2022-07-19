@@ -1,6 +1,31 @@
-# RAC 函数式响应式编程框架
-类似的框架：Masonry、AFNetworking、
-># 订阅信号
+
+<h2 id=''></h2>
+- [**RAC 函数式响应式编程框架**](#RAC函数式响应式编程框架)
+	- [订阅信号](#订阅信号)
+	- [私有方法订阅](#私有方法订阅)
+- [**RAC的KVO**](#RAC的KVO)
+- [**RAC的UI**](#RAC的UI)
+	- [UIButton订阅信号](#UIButton订阅信号)
+	- [UITextField的RAC](#UITextField的RAC)
+- [**通知的 RAC**](#通知的RAC)
+- [**NSTimer的RAC**](#NSTimer的RAC)
+- [**宏定义RAC**](#宏定义RAC)
+- [**RAC循环引用**](#RAC循环引用)
+
+<br/>
+
+***
+<br/>
+
+
+
+<h1 id='RAC函数式响应式编程框架'>RAC 函数式响应式编程框架</h1>
+
+**`类似的框架：Masonry、AFNetworking`**
+
+<h2 id='订阅信号'>订阅信号</h2>
+
+
 ```
 - (void) reactiveObjTest {
     //1.订阅信号    -- 在实际开发中，就是提供给外界订阅的
@@ -30,10 +55,15 @@
     
 }
 ```
-输出：`2019-06-06 15:34:46.583177+0800 Genealogy[6591:256569] O(∩_∩)O哈！`
 
+输出：
 
-#`源码：`
+`2019-06-06 15:34:46.583177+0800 Genealogy[6591:256569] O(∩_∩)O哈！`
+
+<br/>
+
+**`源码：`**
+
 ```
 
 + (instancetype)subject {
@@ -80,8 +110,11 @@
 
 
 <br/>
-#`对私有方法进行订阅`
+
+<h2 id='私有方法订阅'>私有方法订阅</h2>
+
 `GFamilyView.h`
+
 ```
 #import <UIKit/UIKit.h>
 
@@ -95,6 +128,7 @@ NS_ASSUME_NONNULL_END
 ```
 
 `GFamily.m`
+
 ```
 @interface GFamilyView ()
 
@@ -112,6 +146,7 @@ NS_ASSUME_NONNULL_END
 ```
 
 `GMyFamilyController.m`调用
+
 ```
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -125,25 +160,31 @@ NS_ASSUME_NONNULL_END
     }];
 }
 ```
+
 输出：
-`2019-06-06 17:13:19.408324+0800 Genealogy[7979:352547] 观察到了按钮点击！
-`
+
+`2019-06-06 17:13:19.408324+0800 Genealogy[7979:352547] 观察到了按钮点击！`
 
 
 
 <br/>
+
 ***
 <br/>
-># RAC的KVO
+
+<h1 id='RAC的KVO'>RAC的KVO</h1>
+
+
 导入文件：`#import <NSObject+RACKVOWrapper.h>`
 
 `GMyFamilyController.m  文件`
+
 ```
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.title = @"我的家族";
     
-//函数式编程思想
+	//函数式编程思想
     [self.familyView rac_observeKeyPath:@"frame" options:NSKeyValueObservingOptionNew observer:self block:^(id value, NSDictionary *change, BOOL causedByDealloc, BOOL affectedOnlyLastComponent) {
         //
         NSLog(@"%@", change);
@@ -155,57 +196,76 @@ NS_ASSUME_NONNULL_END
 }
 ```
 输出：
-`2019-06-06 18:04:55.406959+0800 Genealogy[8733:402957] {
+
+```
+2019-06-06 18:04:55.406959+0800 Genealogy[8733:402957] {
     kind = 1;
     new = "NSRect: {{0, 0}, {50, 50}}";
 }
-`
-
-
-<br/>
+```
 
 
 
 
 <br/>
+
 ***
 <br/>
-># RAC 的 UI
 
-#`UIButton 订阅信号`
+<h1 id='RAC的UI'>RAC的UI</h1>
+
+
+<h2 id='UIButton订阅信号'>UIButton订阅信号</h2>
+
+**`UIButton订阅信号`**
+
 ```
 //包装按钮的点击为信号，然后订阅事件
 [[self.buildFamilyBtn rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(__kindof UIControl * _Nullable x) {
             NSLog(@"--> %@", x);
         }];
 ```
+
 输出：
-`2019-06-08 13:03:02.562591+0800 Genealogy[2559:126706] --> <UIButton: 0x7fe04fe66540; frame = (167 271.667; 80 80); opaque = NO; layer = <CALayer: 0x60000024e480>>`
+
+```
+2019-06-08 13:03:02.562591+0800 Genealogy[2559:126706] --> <UIButton: 0x7fe04fe66540; frame = (167 271.667; 80 80); opaque = NO; layer = <CALayer: 0x60000024e480>>
+```
+
 
 <br/>
+<br/>
+
+<h2 id='UITextField的RAC'>UITextField的RAC</h2>
 
 
-#`UITextField 的 RAC`
+**`UITextField 的 RAC`**
+
 ```
  [[self.textField rac_textSignal] subscribeNext:^(NSString * _Nullable x) {
             NSLog(@"-->> %@", x);
         }];
 ```
+
 输出：
-`2019-06-08 13:25:44.316737+0800 Genealogy[2772:148790] -->> W`
-`2019-06-08 13:25:44.560117+0800 Genealogy[2772:148790] -->> Ww`
-`2019-06-08 13:25:44.577652+0800 Genealogy[2772:148790] -->> Www`
-`2019-06-08 13:25:44.597110+0800 Genealogy[2772:148790] -->> Wwww`
+
+```
+2019-06-08 13:25:44.316737+0800 Genealogy[2772:148790] -->> W
+2019-06-08 13:25:44.560117+0800 Genealogy[2772:148790] -->> Ww
+2019-06-08 13:25:44.577652+0800 Genealogy[2772:148790] -->> Www
+2019-06-08 13:25:44.597110+0800 Genealogy[2772:148790] -->> Wwww
+```
 
 
 
 
 
 <br/>
+
 ***
 <br/>
 
->#  通知的 RAC
+<h1 id='通知的 RAC'>通知的 RAC</h1>
 
 ```
 //包装信号，订阅信号
@@ -214,54 +274,73 @@ NS_ASSUME_NONNULL_END
             NSLog(@"--> %@",x);
         }];
 ```
+
 输出：
-`2019-06-08 13:14:18.153235+0800 Genealogy[2690:139236] --> NSConcreteNotification 0x600002bd4a80 {name = UIApplicationDidEnterBackgroundNotification; object = <UIApplication: 0x7f9cf46014a0>}
-`
+
+```
+2019-06-08 13:14:18.153235+0800 Genealogy[2690:139236] --> NSConcreteNotification 0x600002bd4a80 {name = UIApplicationDidEnterBackgroundNotification; object = <UIApplication: 0x7f9cf46014a0>}
+```
 
 
 
 
 <br/>
+
 ***
 <br/>
 
-># NSTimer 的 RAC
+
+<h1 id='NSTimer的RAC'>NSTimer的RAC</h1>
+
 ```
 //通过源码可以看到是在GCD的基础上进行封装的NSTimer
 [[RACSignal interval:1.0 onScheduler:[RACScheduler scheduler]] subscribeNext:^(NSDate * _Nullable x) {
             NSLog(@"%@, thread: %@", x, [NSThread currentThread]);
         }];
 ```
+
 输出：
-`2019-06-08 14:53:27.684149+0800 Genealogy[3360:188747] Sat Jun  8 14:53:27 2019, thread: <NSThread: 0x6000013a5600>{number = 4, name = (null)}`
-`2019-06-08 14:53:28.684820+0800 Genealogy[3360:188776] Sat Jun  8 14:53:28 2019, thread: <NSThread: 0x6000013a5800>{number = 5, name = (null)}`
-`2019-06-08 14:53:29.684560+0800 Genealogy[3360:188776] Sat Jun  8 14:53:29 2019, thread: <NSThread: 0x6000013a5800>{number = 5, name = (null)}
-`
+
+```
+2019-06-08 14:53:27.684149+0800 Genealogy[3360:188747] Sat Jun  8 14:53:27 2019, thread: <NSThread: 0x6000013a5600>{number = 4, name = (null)}
+2019-06-08 14:53:28.684820+0800 Genealogy[3360:188776] Sat Jun  8 14:53:28 2019, thread: <NSThread: 0x6000013a5800>{number = 5, name = (null)}
+2019-06-08 14:53:29.684560+0800 Genealogy[3360:188776] Sat Jun  8 14:53:29 2019, thread: <NSThread: 0x6000013a5800>{number = 5, name = (null)}
+```
 
 
 
 <br/>
+
 ***
 <br/>
-># 宏定义的 RAC
 
-#`宏定义信号赋值`
+
+<h1 id='宏定义RAC'>宏定义RAC</h1>
+
+
+>**`宏定义信号赋值`**
+
 ```
  //用来给某个对象的某个属性绑定信号，只要产生信号内容，就会把内容给属性赋值
  RAC(self.label, text) = self.textField.rac_textSignal;
 ```
+
 效果图：![UILabel 和 UITextField](https://upload-images.jianshu.io/upload_images/2959789-9fbb5123b2acf374.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 <br/>
 
-#`观察者的宏定义`
+>**`观察者的宏定义`**
+
+
 ```
 [RACObserve(self.familyView, frame) subscribeNext:^(id  _Nullable x) {
         NSLog(@"---->> %@", x);
     }];
 ```
+
 输出：
+
 `2019-06-08 15:20:47.845109+0800 Genealogy[3581:216452] ---->> NSRect: {{0, 0}, {50, 50}}`
 
 
@@ -270,18 +349,19 @@ NS_ASSUME_NONNULL_END
 
 
 <br/>
+
 ***
 <br/>
 
-># RAC 的循环引用
+<h1 id='RAC循环引用'>RAC循环引用</h1>
 
-#`GBuildFamilyController.m`
+
+**`GBuildFamilyController.m`**
+
 ```
 - (void)dealloc {
     NSLog(@"GBuildFamilyController 调用dealloc 方法");
 }
-
-
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -303,13 +383,16 @@ NS_ASSUME_NONNULL_END
 }
 
 ```
+
 当pop时，会输出：
+
 `2019-06-08 16:56:15.727436+0800 Genealogy[4656:316390] GBuildFamilyController 调用dealloc 方法`
 
 
 
 
 <br/>
+
 ***
 <br/>
 
@@ -317,6 +400,7 @@ NS_ASSUME_NONNULL_END
 
 
 <br/>
+
 ***
 <br/>
 
@@ -324,6 +408,7 @@ NS_ASSUME_NONNULL_END
 
 
 <br/>
+
 ***
 <br/>
 

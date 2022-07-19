@@ -77,8 +77,8 @@ pod update --verbose
 - 默认一个信号都是冷信号, 也就是值改变了,也不会触发, 只有订阅了这个信号, 这个信号才会变成热信号, 值改变才会触发
 - 不要分开订阅next, error, completed这样的话会把前面的订阅者清除掉, 应该使用直接返回这三种的订阅方法
 - **RACSignal底层实现大致原理：**
-	- 	创建信号，首先把didSubscribe保存到信号中，还不会触发。
-	- 当信号被订阅，也就是调用signal的subscribeNext:nextBlock
+	- 创建信号: `+ (RACSignal<ValueType> *)createSignal:(RACDisposable * _Nullable (^)(id<RACSubscriber> subscriber))didSubscribe `	，首先把**didSubscribe**保存到信号中，还不会触发;
+	- 信号被订阅: `- (RACDisposable *)subscribeNext:(void (^)(id x))nextBlock`, 也就是调用signal的subscribeNext:方法
 		- subscribeNext内部会创建订阅者subscriber，并且把nextBlock保存到subscriber中。
 		- subscribeNext内部会调用siganl的didSubscribe
 	- siganl的didSubscribe中调用[subscriber sendNext:@1];

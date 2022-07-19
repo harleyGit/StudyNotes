@@ -16,6 +16,9 @@
 	- [React Hooks](#ReactHooks)
 		- [useState](#useState)
 		- [useEffect](#useEffect)
+		- [useCallBack](#useCallBack)
+		- [useMemo](#useMemo)
+			- [长轮询案例](#长轮询案例)
 	- [React Router](#ReactRouter)
 		- [路由Demo](#路由Demo)
 	- [参数传递](#参数传递)
@@ -35,10 +38,12 @@
 	- [数组splice()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
 - [**创建到打包**](#创建到打包)
 - **参考资料：**
+	- [**JavaScript(阮一峰)**](https://www.ruanyifeng.com/blog/javascript/)
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
 	- [Material-UI React组件库](https://v4-2-1.material-ui.com/zh/getting-started/installation/)
 	- [React生命周期](https://www.jianshu.com/p/c9bc994933d5)
 	- [hook](https://juejin.cn/post/6844903999083118606)
+	- [异步和轮询](https://juejin.cn/post/6844904170865033223)
 
 
 
@@ -878,17 +883,13 @@ export function TestHOC2() {
 
 
 
-
-
-
-
 <br/>
 <br/>
 
 > <h3 id='useEffect'>useEffect</h3>
 
 
-&emsp; Effect翻译成专业术语称之为副作用。网络请求、DOM操作都是副作用的一种，useEffect就是专门用来处理副作用的。在类组件中副作用通常在componentDid-Mount和componentDidUpdate中进行处理，而useEffect就相当于componentDidMount、componentDidUpdate和componentWillUnmount的集合体。useEffect包括两个参数执行时的回调函数和依赖参数，并且回调函数还有一个返回函数
+&emsp;Effect翻译成专业术语称之为副作用。网络请求、DOM操作都是副作用的一种，useEffect就是专门用来处理副作用的。在类组件中副作用通常在componentDid-Mount和componentDidUpdate中进行处理，而useEffect就相当于componentDidMount、componentDidUpdate和componentWillUnmount的集合体。useEffect包括两个参数执行时的回调函数和依赖参数，并且回调函数还有一个返回函数
 
 
 ```
@@ -967,13 +968,153 @@ export function TestHOC3() {
 ③componentDidUpdate。只检测更新相对比较麻烦，需要区分更新还是挂载需要检测依赖数据和初始值是否一致，如果当前的数据和初始数据保持一致就说明是挂载阶段，当然安全起见应和上一次的值进行对比，若当前的依赖数据和上一次的依赖数据完全一样，则说明组件没有更新
 
 
+
+<br/>
+<br/>
+
+> <h3 id='useCallback'>useCallback</h3>
+
+
+**useCallback(fn,deps):**
+- fn就是是一个函数，把你想要做的事放到函数中
+- deps就是指fn函数所依赖的参数,如果没有依赖就可以不需要引入
+
+&emsp; useCallback的返回值是一个memoized回调函数，在它所依赖的参数不变的而情况下，(也就是指deps中的参数)返回的回调函数地址不变，如果依赖的参数发生变化，usecallback就会返回一个新的memoized回调函数，这时函数地址也会发生改变.
+&emsp; useCallback的这种形式和createRef、useRef有点相似，createRef函数创建的ref在每次执行时，或者重新更新组件时都会重新去创建ref，这时ref和之前的ref不同.但是通过useRef创建ref就不会出现这个问题，因为useRef创建的ref可以作为全局变量，它不会随着函数重新执行或者组件更新而去重新创建。
+
+**DEMO**
+
+```
+mport React, { useEffect, useState, useCallback, memo } from 'react';
+
+function TestApp1() {
+    let [count, setCount] = useState(0);
+
+    const childClick = useCallback(() => {
+        console.log("you click child")
+    }, [count])
+
+    function parentClick() {
+        console.log("you click parent count: ", count);
+        count++;
+
+        if (count === 4)
+            setCount(count);
+    }
+
+    return (
+        <div>
+            <div style={{ background: 'red', height: 44 }} onClick={parentClick}>ParentComponent</div>
+            <ChildComponent childClick={childClick}></ChildComponent>
+        </div>
+    )
+}
+
+const ChildComponent = memo((props) => {
+    console.log("ChildComponent is running")
+
+    return <div onClick={props.childClick} style={{ background: 'yellow', height: 44 }} >
+        ChildComponent
+    </div>
+})
+
+//或者在定义ChildComponent时外面不要包裹一层memo,可用const ChildComponentMemo = memo(ChildComponent);
+
+
+
+
+export default TestApp1
+```
+
+使用:
+
+```
+  render() {
+	  return (
+            <TestApp1/>
+        )
+  }
+```
+
+效果图:
+
+![react35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react35_0.png)
+
+
+
+<br/>
+<br/>
+
+> <h3 id='useMemo'>useMemo</h3>
+
+&emsp; useMemo、useCallback用法都差不多，都会在第一次渲染的时候执行，之后会在其依赖的变量发生改变时再次执行，并且这两个hooks都返回缓存的值，useMemo返回缓存的变量，useCallback返回缓存的函数。
+
+```
+import React, { useEffect, useState, useCallback, memo, useMemo } from 'react';
+
+const Child = ({ name, onClick }) => {
+    console.log('子组件?')
+    return (
+        <>
+            <div style={{ color: name.color }}>我是一个子组件，父级传过来的数据：{name.name}</div>
+            <button onClick={onClick.bind(null, '新的子组件name')}>改变name</button>
+        </>
+    );
+}
+const ChildMemo = memo(Child);
+
+const TestApp1 = (props) => {
+    const [count, setCount] = useState(0);
+    const [name, setName] = useState('Child组件');
+
+    return (
+        <>
+            <button onClick={(e) => { setCount(count + 1) }}>加1</button>
+            <p>count:{count}</p>
+            <ChildMemo
+                //使用useMemo，返回一个和原本一样的对象，第二个参数是依赖性，当name发生改变的时候，才产生一个新的对象
+                name={
+                    useMemo(() => ({
+                        name,
+                        color: name.indexOf('name') !== -1 ? 'red' : 'green'
+                    }), [name])
+                }
+                onClick={useCallback((newName) => setName(newName), [])}
+            // {/* useCallback((newName: string) => setName(newName),[]) */}
+            // {/* 这里使用了useCallback优化了传递给子组件的函数，只初始化一次这个函数，下次不产生新的函数*/}
+            />
+        </>
+    )
+}
+
+
+
+export default TestApp1
+```
+
+使用:
+
+```
+  render() {
+	  return (
+            <TestApp1/>
+        )
+  }
+```
+
+
+![react35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react35_1.png)
+
+总结:在子组件不需要父组件的值和函数的情况下，只需要使用memo函数包裹子组件即可。而在使用函数的情况，需要考虑有没有函数传递给子组件使用useCallback。而在值有所依赖的项，并且是对象和数组等值的时候而使用useMemo（当返回的是原始数据类型如字符串、数字、布尔值，就不要使用useMemo了）。不要盲目使用这些hooks
+
+
 <br/>
 
 
 > Hooks的使用规则
 
 
-&emsp； Hooks使用规则了解Hooks的使用之后，还需要具体了解一下Hooks的使用规则，主要为以下两点：
+&emsp;Hooks使用规则了解Hooks的使用之后，还需要具体了解一下Hooks的使用规则，主要为以下两点：
 
 1）只能在函数式组件和自定义Hooks之中调用Hooks，普通函数或者类组件中不能使用Hooks；
 
@@ -982,6 +1123,124 @@ export function TestHOC3() {
 **注意：**
 
 &emsp； 在使用自定义Hook时，同样需要遵守Hooks的使用规则，另外注意React要求自定义Hook的命名也必须以use开始，以区别于其他函数。
+
+
+<br/>
+<br/>
+
+> <h3 id='长轮询案例'>[长轮询案例](https://codeantenna.com/a/veVh4iDVA7)</h3>
+
+```
+const TestApp1 = () => {
+
+    // 轮询管理器
+    const intervalManager = myInterval(main)
+
+    // 轮询的方法
+    let count = 0
+    function main() {
+        count += 1
+        if (count == 5) {
+            count = 0
+            intervalManager.stop()
+        }
+        console.log('🍎 执行：', count)
+    }
+
+    function main1() {
+        const flag = parseInt(Math.random() * 2) === 1
+        console.log('flag', flag)
+        return flag ? Promise.resolve() : Promise.reject()
+    }
+
+
+
+    // 轮询
+    function myInterval(callback, interval = 2000) {
+        let timerId
+        let isStop = false
+
+        const start = async () => {
+            isStop = false
+            loop()
+        }
+
+        const stop = () => {
+            console.log('❌ 停止执行')
+            isStop = true
+            clearTimeout(timerId)
+        }
+
+        const loop = async () => {
+            try {
+                await callback(stop)
+            } catch (err) {
+                console.error('轮询出错：', err)
+                throw new Error('轮询出错：', err)
+            }
+
+            if (isStop) return
+            return (timerId = setTimeout(loop, interval))
+        }
+        return {
+            start,
+            stop
+        }
+    }
+
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ width: 100, height: 44, backgroundColor: 'yellow' }}
+                onClick={intervalManager.start}
+            >
+                开始
+            </div>
+            <div style={{ width: 100, height: 44, backgroundColor: 'red' }}
+                onClick={intervalManager.stop}
+            >
+                停止
+            </div>
+        </div>
+    )
+}
+
+export default TestApp1
+
+
+//使用
+ render() {
+	 return (
+            <TestApp1 name={'silajlgjsl'}/>
+        )
+ }
+```
+
+
+效果图:
+
+![长轮询](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react36_0.png)
+
+<br/>
+
+**函数地址请求**
+
+```
+const TestApp = () => {
+    const [origin, setOrigin] = useState('');
+    const updateState = useCallback(async () => {
+        const response = await fetch('https://httpbin.org/get');
+        const data = await response.json();
+        console.log('.》〉》〉🍎 data:', data)
+        setOrigin(data.origin);
+    }, []);
+    useEffect(() => {
+        setInterval(updateState, 3000);
+    }, [updateState]);
+    return <main>{`Your origin is: ${origin}`}</main>;
+}
+```
+
 
 
 <br/>

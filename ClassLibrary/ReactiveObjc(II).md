@@ -1,4 +1,19 @@
-># UIView 响应
+
+
+
+> <h2 id=''></h2>
+- [**UIView 响应**](#UIView响应)
+- [参考资料](#参考资料)
+	- [ReactiveObjc(I)](https://www.jianshu.com/p/2e07b07e5132)
+	- [ReactiveCocoa](https://www.jianshu.com/p/0845b1a07bfa)
+
+
+<br/>
+
+***
+<br/>
+
+<h2 id='UIView响应'>UIView 响应</h2>
 
 ```
 
@@ -12,7 +27,8 @@ RACObserve(self.view, frame) subscribeNext:^(id x){
 
 ```
 
-#`ViewController.m`
+ **`ViewController.m`**
+
 ```
 
 - （void）viewDidLoad{
@@ -47,13 +63,10 @@ RACObserve(self.view, frame) subscribeNext:^(id x){
 
 
 <br/>
+
 ***
 <br/>
 
 
 
 <br/>
-回顾：[ReactiveObjc(I)](https://www.jianshu.com/p/2e07b07e5132)
-<br/>
-参考资料：
-[ReactiveCocoa](https://www.jianshu.com/p/0845b1a07bfa)
