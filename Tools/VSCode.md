@@ -1,5 +1,6 @@
 > <h2 id=""></h2>
-> [官方教程](https://code.visualstudio.com)
+> [**官方教程**](https://code.visualstudio.com)
+- [**配置**](#配置)
 - [**常用插件**](#常用插件)
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
@@ -18,6 +19,31 @@
 - [**Go配置**](#Go配置)
 	- [Go环境配置](#Go环境配置)
 	- [VSCode配置](#VSCode配置)
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id="配置">配置</h1>
+
+>**修改字体大小**
+
+&emsp;打开VSCode,Command+shift+P,在弹出的输入框中输入**setting**,找到有JSON的一项进行设置:
+
+```
+//编辑器字体大小
+"editor.fontSize": 18,
+//窗体大小级别,可控制左边文件显示大小
+"window.zoomLevel":0.6,
+//终端字体大小
+"terminal.integrated.fontSize": 16,
+"terminal.integrated.fontWeight": "normal",
+```
+
 
 
 
@@ -67,6 +93,7 @@
 - [Auto Rename Tag](https://github.com/formulahendry/vscode-auto-rename-tag)：修改HTML标签时，自动完成闭合标签的同步修改；
 
 - [open in browser](https://github.com/SudoKillMe/vscode-extensions-open-in-browser)：右击HTML文件，选择Open In Default Browser，就会在默认浏览器中打开HTML文件
+- Gitlens: 查看git提交记录
 
 
 
