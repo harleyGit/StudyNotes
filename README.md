@@ -140,18 +140,21 @@
 
 <br/>
 
-![**iOS 系统学习教程**](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/iOSKnowledgeGraph.png)
+![iOS知识系统](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/iOSKnowledgeGraph.png)
+
 
 <br/>
 <br/>
 
 > <h2 id = "Objective-C">Objective-C</h2>
 * [**OC资料**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/OC资料.md)
+* [**‌知识体系**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/知识体系.md)
 *	[**iOS类继承**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
 *	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 *	[**App发布**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
 *	[**组件化(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/组件化(I).md)
 *	[**静态库动态库**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/静态库动态库.md)
+*	[**动态化和热更新**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/动态化和热更新.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
@@ -176,7 +179,7 @@
 * [远程推送(US)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
 * [坐标系(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/坐标系(I).md)
 * [App跳转](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App跳转.md)
-* [App生命周期](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App生命周期.md)
+* [App启动](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App启动.md)
 * [CoreData](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/CoreData.html)
 * [JSON数据的转化(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/JSON数据的转化(I).md)
 * [keyChain](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/keychain.md)
