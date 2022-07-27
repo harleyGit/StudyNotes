@@ -1,6 +1,12 @@
-> <h2 id=''></h2>
+> <h2 id=''></h2> 
 - 	 [APP启动流程](#APP启动流程)
-	- 	[ APP的生命流程](#APP的生命流程)
+	- 	 [Main函数执行前](#Main函数执行前)
+	- 	 [main() 函数执行后](#main()函数执行后)
+	- 	 [首屏渲染完成后](#首屏渲染完成后)
+- 	 [**App启动优化点**](#App启动优化点)
+	- [功能级别优化](#功能级别优化)
+	- [方法级别的启动优化](#方法级别的启动优化)
+- 	 [**APP的生命流程**](#APP的生命流程)
 	- 	 [APP的初始化流程(main)](#APP的初始化流程(main))
 	- 	 [main.m文件说明](#main.m文件说明)
 - [**UIAppDelegate**](#UIAppDelegate)
@@ -33,6 +39,281 @@
 
 <br/>
 
+&emsp; 一般而言，App 的启动时间，指的是从用户点击 App 开始，到用户看到第一个界面之间的时间。
+
+- App 的启动主要包括三个阶段：
+	- main() 函数执行前；
+	- main() 函数执行后；
+	- 首屏渲染完成后。
+
+
+<br/>
+<br/>
+
+> <h2 id='Main函数执行前'>Main函数执行前</h2>
+
+- 在 main() 函数执行前，系统主要会做下面几件事情：
+	- 加载可执行文件（App 的.o 文件的集合）；
+	- 加载动态链接库，进行 rebase 指针调整和 bind 符号绑定；
+	- Objc 运行时的初始处理，包括 Objc 相关类的注册、category 注册、selector 唯一性检查等；
+	- 初始化，包括了执行 +load() 方法、attribute((constructor)) 修饰的函数的调用、创建 C++ 静态全局变量。
+
+
+<br/>
+
+**这里可以做优化加速的点有:**
+
+- 减少动态库加载。每个库本身都有依赖关系，苹果公司建议使用更少的动态库，并且建议在使用动态库的数量较多时，尽量将多个动态库进行合并。数量上，苹果公司建议最多使用 6 个非系统动态库。
+- 减少加载启动后不会去使用的类或者方法。
+- +load() 方法里的内容可以放到首屏渲染完成后再执行，或使用 +initialize() 方法替换掉。因为，在一个 +load() 方法里，进行运行时方法替换操作会带来 4 毫秒的消耗。不要小看这 4 毫秒，积少成多，执行 +load() 方法对启动速度的影响会越来越大。
+- 控制 C++ 全局变量的数量。
+
+
+<br/>
+<br/>
+
+> <h2 id='main()函数执行后'>main() 函数执行后</h2>
+
+&emsp; main() 函数执行后的阶段，指的是从 main() 函数执行开始，到 appDelegate 的 didFinishLaunchingWithOptions 方法里首屏渲染相关方法执行完成。
+
+&emsp;首页的业务代码都是要在这个阶段，也就是首屏渲染前执行的，主要包括了：
+- 首屏初始化所需配置文件的读写操作；
+- 首屏列表大数据的读取；
+- 首屏渲染的大量计算等。
+
+&emsp; 很多时候，开发者会把各种初始化工作都放到这个阶段执行，导致渲染完成滞后。**更加优化的开发方式，应该是从功能上梳理出哪些是首屏渲染必要的初始化功能，哪些是 App 启动必要的初始化功能，而哪些是只需要在对应功能开始使用时才需要初始化的。**梳理完之后，将这些初始化功能分别放到合适的阶段进行。
+
+
+<br/>
+<br/>
+
+> <h2 id='首屏渲染完成后'>首屏渲染完成后</h2>
+
+
+&emsp;这个阶段主要完成的是非首屏其他业务服务模块的初始化、监听的注册、配置文件的读取等。
+
+&emsp;从函数上来看，这个阶段指的就是截止到 didFinishLaunchingWithOptions 方法作用域内执行首屏渲染之后的所有方法执行完成。简单说的话，这个阶段就是从渲染完成时开始，到 didFinishLaunchingWithOptions 方法作用域结束时结束。
+
+&emsp;这个阶段用户已经能够看到 App 的首页信息了，所以优化的优先级排在最后。但是，那些会卡住主线程的方法还是需要最优先处理的，不然还是会影响到用户后面的交互操作。
+
+
+<br/>
+
+***
+<br/>
+
+
+
+> <h1 id='App启动优化点'>App启动优化点</h1>
+
+
+<br/>
+
+> <h2 id='功能级别优化'>功能级别优化</h2>
+
+功能级别的启动优化，要从 main() 函数执行后这个阶段下手。
+
+优化的思路是： main() 函数开始执行后到首屏渲染完成前只处理首屏相关的业务，其他非首屏业务的初始化、监听注册、配置文件读取等都放到首屏渲染完成后去做。
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id='方法级别的启动优化'>方法级别的启动优化</h2>
+  
+&emsp; 经过功能级别的启动优化，也就是将非首屏业务所需的功能滞后以后，从用户点击 App 到看到首屏的时间将会有很大程度的缩短，也就达到了优化 App 启动速度的目的。
+
+&emsp; 在这之后，我们需要进一步做的，是检查首屏渲染完成前主线程上有哪些耗时方法，将没必要的耗时方法滞后或者异步执行。通常情况下，耗时较长的方法主要发生在计算大量数据的情况下，具体的表现就是加载、编辑、存储图片和文件等资源。
+
+
+那我们是不是只需要**优化对资源**的操作就可以了呢？
+
+当然不是。
+
+&emsp;就像 +load() 方法，一个耗时 4 毫秒，100 个就是 400 毫秒，这种耗时用户也是能明显感知到的。
+
+&emsp;比如，我以前使用的 ReactiveCocoa 框架（这是一个 iOS 上的响应式编程框架），每创建一个信号都有 6 毫秒的耗时。这样，稍不注意各种信号的创建就都被放在了首屏渲染完成前，进而导致 App 的启动速度大幅变慢。类似这样单个方法耗时不多，但是由于堆积导致 App 启动速度大幅变慢的方法数不胜数。所以，你需要一个能够对启动方法耗时进行全面、精确检查的手段。
+
+
+<br/>
+<br/>
+
+
+
+> <h3 id='检测耗时方法'>检测耗时方法</h3>
+
+**那我们如何针对耗时的方法进行精确的检测呢?如下:**
+
+<br/>
+
+> <h4 id='TimeProfiler'>Time Profiler</h4>
+
+&emsp; 使用Time Profiler定时抓取主线程上的方法调用堆栈，计算一段时间里各个方法的耗时。
+
+&emsp; 这个定时间隔要设置好否则颗粒度不过会漏过很多方法的,如果小于所有方法执行的时间（比如 0.002 秒），那么基本就能监控到所有方法。但这样做的话，整体的耗时时间就不够准确。一般将这个定时间隔设置为 0.01 秒。这样设置，对整体耗时的影响小，不过很多方法耗时就不精确了。但因为整体耗时的数据更加重要些，单个方法耗时精度不高也是可以接受的，所以这个设置也是没问题的.
+
+
+
+
+<br/>
+<br/>
+
+> <h4 id='objc_msgSend的hook'>objc_msgSend的hook</h4>
+
+&emsp; hook objc_msgSend 这种方式的优点是非常精确，而缺点是只能针对 Objective-C 的方法。当然，对于 c 方法和 block 也不是没有办法，你可以使用 **libffi 的 ffi_call** 来达成 hook，但缺点就是编写维护相关工具门槛高。
+
+&emsp; 如果对于检查结果精准度要求高的话，我比较推荐你使用 hook objc_msgSend 方式来检查启动方法的执行耗时。
+
+
+&emsp; Objective-C 里每个对象都会指向一个类，每个类都会有一个方法列表，方法列表里的每个方法都是由 selector、函数指针和 metadata 组成的。objc_msgSend 方法干的活儿，就是在运行时根据对象和方法的 selector 去找到对应的函数指针，然后执行。
+
+&emsp; 也就是说，objc_msgSend 是 Objective-C 里方法执行的必经之路，能够控制所有的 Objective-C 的方法。
+
+&emsp; objc_msgSend 本身是用汇编语言写的，这样做的原因主要有两个：一个原因是，objc_msgSend 的调用频次最高，在它上面进行的性能优化能够提升整个 App 生命周期的性能。而汇编语言在性能优化上属于原子级优化，能够把优化做到极致。所以，这种投入产出比无疑是最大的。另一个原因是，其他语言难以实现未知参数跳转到任意函数指针的功能。现在，苹果公司已经开源了 Objective-C 的运行时代码。你可以在苹果公司的开源网站，找到 [objc_msgSend的源码](https://opensource.apple.com/source/objc4/objc4-723/runtime/Messengers.subproj/)。
+
+
+&emsp; objc_msgSend 方法执行的逻辑是：先获取对象对应类的信息，再获取方法的缓存，根据方法的 selector 查找函数指针，经过异常错误处理后，最后跳到对应函数的实现。
+
+&emsp; 按照这个逻辑去看源码会更加清晰，更容易注意到实现细节。阅读 objc_msgSend 源码是编写方法级耗时工具的一个必要的环节，后面还需要编写一些对应的汇编代码。
+
+
+<br/>
+<br/>
+
+> <h4 id='fishhook的hook'>fishhook的hook</h4>
+
+&emsp; [fishhook](https://github.com/facebook/fishhook)是可以在 iOS 上运行的 Mach-O 二进制文件中动态地重新绑定符号
+
+&emsp; fishhook 实现的大致思路是，通过重新绑定符号，可以实现对 c 方法的 hook。dyld 是通过更新 Mach-O 二进制的 __DATA segment 特定的部分中的指针来绑定 lazy 和 non-lazy 符号，通过确认传递给 rebind_symbol 里每个符号名称更新的位置，就可以找出对应替换来重新绑定这些符号。
+
+<br/>
+
+下面大致说下fishhook的原理:
+
+首先，遍历 dyld 里的所有 image，取出 image header 和 slide。代码如下:
+
+```
+
+if (!_rebindings_head->next) {
+    _dyld_register_func_for_add_image(_rebind_symbols_for_image);
+} else {
+    uint32_t c = _dyld_image_count();
+    // 遍历所有 image
+    for (uint32_t i = 0; i < c; i++) {
+        // 读取 image header 和 slider
+        _rebind_symbols_for_image(_dyld_get_image_header(i), _dyld_get_image_vmaddr_slide(i));
+    }
+}
+```
+
+
+<br/>
+
+接下来，找到符号表相关的 command，包括 linkedit segment command、symtab command 和 dysymtab command。代码如下：
+
+```
+
+segment_command_t *cur_seg_cmd;
+segment_command_t *linkedit_segment = NULL;
+struct symtab_command* symtab_cmd = NULL;
+struct dysymtab_command* dysymtab_cmd = NULL;
+uintptr_t cur = (uintptr_t)header + sizeof(mach_header_t);
+for (uint i = 0; i < header->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
+    cur_seg_cmd = (segment_command_t *)cur;
+    if (cur_seg_cmd->cmd == LC_SEGMENT_ARCH_DEPENDENT) {
+        if (strcmp(cur_seg_cmd->segname, SEG_LINKEDIT) == 0) {
+            // linkedit segment command
+            linkedit_segment = cur_seg_cmd;
+        }
+    } else if (cur_seg_cmd->cmd == LC_SYMTAB) {
+        // symtab command
+        symtab_cmd = (struct symtab_command*)cur_seg_cmd;
+    } else if (cur_seg_cmd->cmd == LC_DYSYMTAB) {
+        // dysymtab command
+        dysymtab_cmd = (struct dysymtab_command*)cur_seg_cmd;
+    }
+}
+```
+
+
+<br/>
+
+然后，获得 base 和 indirect 符号表。实现代码如下：
+
+```
+
+// 找到 base 符号表的地址
+uintptr_t linkedit_base = (uintptr_t)slide + linkedit_segment->vmaddr - linkedit_segment->fileoff;
+nlist_t *symtab = (nlist_t *)(linkedit_base + symtab_cmd->symoff);
+char *strtab = (char *)(linkedit_base + symtab_cmd->stroff);
+// 找到 indirect 符号表
+uint32_t *indirect_symtab = (uint32_t *)(linkedit_base + dysymtab_cmd->indirectsymoff);
+```
+
+
+<br/>
+
+最后，有了符号表和传入的方法替换数组，就可以进行符号表访问指针地址的替换了，具体实现如下：
+
+```
+
+uint32_t *indirect_symbol_indices = indirect_symtab + section->reserved1;
+void **indirect_symbol_bindings = (void **)((uintptr_t)slide + section->addr);
+for (uint i = 0; i < section->size / sizeof(void *); i++) {
+    uint32_t symtab_index = indirect_symbol_indices[i];
+    if (symtab_index == INDIRECT_SYMBOL_ABS || symtab_index == INDIRECT_SYMBOL_LOCAL ||
+        symtab_index == (INDIRECT_SYMBOL_LOCAL   | INDIRECT_SYMBOL_ABS)) {
+        continue;
+    }
+    uint32_t strtab_offset = symtab[symtab_index].n_un.n_strx;
+    char *symbol_name = strtab + strtab_offset;
+    if (strnlen(symbol_name, 2) < 2) {
+        continue;
+    }
+    struct rebindings_entry *cur = rebindings;
+    while (cur) {
+        for (uint j = 0; j < cur->rebindings_nel; j++) {
+            if (strcmp(&symbol_name[1], cur->rebindings[j].name) == 0) {
+                if (cur->rebindings[j].replaced != NULL &&
+                    indirect_symbol_bindings[i] != cur->rebindings[j].replacement) {
+                    *(cur->rebindings[j].replaced) = indirect_symbol_bindings[i];
+                }
+                // 符号表访问指针地址的替换
+                indirect_symbol_bindings[i] = cur->rebindings[j].replacement;
+                goto symbol_loop;
+            }
+        }
+        cur = cur->next;
+    }
+symbol_loop:;
+```
+
+
+
+&emsp; 以上，就是 fishhook 的实现原理了。fishhook 是对底层的操作，其中查找符号表的过程和堆栈符号化实现原理基本类似，了解了其中原理对于理解可执行文件 Mach-O 内部结构会有很大的帮助。
+
+&emsp;耗时检查的完整代码，可以在[GCDFetchFeed](https://github.com/ming1016/GCDFetchFeed)里查看。在需要检测耗时时间的地方调用 [SMCallTrace start]，结束时调用 stop 和 save 就可以打印出方法的调用层级和耗时了。
+
+
+<br/>
+
+***
+<br/>
+
+
+
+> <h1 id='APP的生命流程'>APP的生命流程</h1>
+
+
+<br/>
+<br/>
+
+**1.App构建过程**
+
 -	从源代码到app, 当我们点击了 build 之后，做了什么事情呢？
 	-	预处理（Pre-process）：把宏替换，删除注释，展开头文件，产生 .i 文件。
 	-	编译（Compliling）：把之前的 .i 文件转换成汇编语言，产生 .s文件。
@@ -42,9 +323,7 @@
 <br/>
 <br/>
 
-> <h2 id='APP的生命流程'>APP的生命流程</h2>
-
--	APP的启动流程(pre-main)
+-	**2.APP的启动流程(pre-main)**
 
 ```
 1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
@@ -70,6 +349,7 @@
 &emsp;	当系统从xnu内核态把控制权转交给dyld变成用户态后dyld首先初始化程序环境，将可执行文件以及相应的系统依赖库与我们自己加入的库加载进内存中，生成对应的ImageLoader类对应的image对象(镜像文件)，对这些image进行链接，调用各image的初始化方法等等(注:这里多数情况都是采用的递归，从底向上的方法调用)，其中runtime就是在这个过程中被初始化的，这些事情大多数在`dyld:_mian`方法中被发生。
 
 
+<br/>
 <br/>
 
 > <h2 id='APP的初始化流程(main)'>APP的初始化流程(main)</h2>
