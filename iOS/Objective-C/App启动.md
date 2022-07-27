@@ -1,11 +1,15 @@
 > <h2 id=''></h2> 
 - 	 [APP启动流程](#APP启动流程)
-	- 	 [Main函数执行前](#Main函数执行前)
-	- 	 [main() 函数执行后](#main()函数执行后)
-	- 	 [首屏渲染完成后](#首屏渲染完成后)
+	- [Main函数执行前](#Main函数执行前)
+	- [main()函数执行后](#main函数执行后)
+	- [首屏渲染完成后](#首屏渲染完成后)
 - 	 [**App启动优化点**](#App启动优化点)
 	- [功能级别优化](#功能级别优化)
 	- [方法级别的启动优化](#方法级别的启动优化)
+	- [检测耗时方法](#检测耗时方法)
+	- [Time Profiler](#TimeProfiler)
+	- 	[objc_msgSend的hook](#objc_msgSend的hook)
+	- [fishhook的hook](#fishhook的hook)
 - 	 [**APP的生命流程**](#APP的生命流程)
 	- 	 [APP的初始化流程(main)](#APP的初始化流程(main))
 	- 	 [main.m文件说明](#main.m文件说明)
@@ -72,7 +76,7 @@
 <br/>
 <br/>
 
-> <h2 id='main()函数执行后'>main() 函数执行后</h2>
+> <h2 id='main函数执行后'>main() 函数执行后</h2>
 
 &emsp; main() 函数执行后的阶段，指的是从 main() 函数执行开始，到 appDelegate 的 didFinishLaunchingWithOptions 方法里首屏渲染相关方法执行完成。
 
