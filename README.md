@@ -140,7 +140,7 @@
 
 <br/>
 
-![iOS知识系统](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/iOSKnowledgeGraph.png)
+![iOS知识系统](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios0_0.png)
 
 
 <br/>
@@ -156,6 +156,7 @@
 *	[**组件化(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/组件化(I).md)
 *	[**静态库动态库**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/静态库动态库.md)
 *	[**动态化和热更新**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/动态化和热更新.md)
+*	[**链接器**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/链接器.md)
 *	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
