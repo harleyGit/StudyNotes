@@ -140,8 +140,7 @@
 
 <br/>
 
-![进阶](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc0_0.png)
-
+![进阶](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc0_0.png?token=GHSAT0AAAAAABXBBIRXCE2BHAYGPUQBKM2WYXE7TRQ)
 
 <br/>
 <br/>
@@ -157,7 +156,7 @@
 *	[**静态库动态库**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/静态库动态库.md)
 *	[**动态化和热更新**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/动态化和热更新.md)
 *	[**链接器**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/链接器.md)
-*	[调试](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/调试.md)
+*	[**‌开发协助**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/开发协助.md)
 * [iPhone适配](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
 * [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
