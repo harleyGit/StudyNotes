@@ -151,6 +151,7 @@
 *	[**iOS类继承**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iOS类继承.md)
 *	[**消息转发**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/消息转发.md)
 *	[**App启动**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App启动.md)
+*	[**App优化**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App优化.md)
 *	[**App发布**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/App发布.md)
 *	[**组件化(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/组件化(I).md)
 *	[**静态库动态库**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/静态库动态库.md)
