@@ -1,5 +1,5 @@
 > <h2 id=''></h2>
-> ![](./../Pictures/)
+![](./../../Pictures/)
 - [**App瘦身**](#App瘦身)
 	- [官方AppThinning](#官方AppThinning)
 	- [无用图片资源](#无用图片资源)
@@ -73,7 +73,7 @@ Reveal.framework/Versions/A/Reveal (for architecture arm64):  current ar archive
 
 &emsp; 其实，这里的大部分工作都是由 Xcode 和 App Store 来帮你完成的，你只需要通过 Xcode 添加 xcassets 目录，然后将图片添加进来即可。首先，新建一个文件选择 Asset Catalog 模板，如下图所示：
 
-![ios_oc1_5.webp](./../Pictures/ios_oc1_5.webp)
+![ios_oc1_5.webp](./../../Pictures/ios_oc1_5.webp)
 
 &emsp; 然后，按照 Asset Catalog 的模板添加图片资源即可，添加的 2x 分辨率的图片和 3x 分辨率的图片，会在上传到 App Store 后被创建成不同的变体以减小 App 安装包的大小。而芯片指令集架构文件只需要按照默认的设置， App Store 就会根据设备创建不同的变体，每个变体里只有当前设备需要的那个芯片指令集架构文件。
 
@@ -101,7 +101,29 @@ Reveal.framework/Versions/A/Reveal (for architecture arm64):  current ar archive
 
 如果你不想自己重新写一个工具的话，可以选择开源的工具直接使用。我觉得目前最好用的是[LSUnusedResources](https://github.com/tinymind/LSUnusedResources)，特别是对于使用编号规则的图片来说，可以通过直接添加规则来处理。
 
-![ios_oc1_6.gif](./../Pictures/ios_oc1_6.gif)
+![ios_oc1_6.gif](./../../Pictures/ios_oc1_6.gif)
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id='图片资源压缩'>图片资源压缩</h2>
+
+&emsp; 对于 App 来说，图片资源总会在安装包里占个大头儿。对它们最好的处理，就是在不损失图片质量的前提下尽可能地作压缩。目前比较好的压缩方案是，将图片转成 WebP。WebP 是 Google 公司的一个开源项目。
+
+首先，我们一起看看选择 WebP 的理由：
+- WebP 压缩率高，而且肉眼看不出差异，同时支持有损和无损两种压缩模式。比如，将 Gif 图转为 Animated WebP ，有损压缩模式下可减少 64% 大小，无损压缩模式下可减少 19% 大小。
+- WebP 支持 Alpha 透明和 24-bit 颜色数，不会像 PNG8 那样因为色彩不够而出现毛边。
+
+<br/>
+
+**如何把图片转成 WebP？**
+
+Google 公司在开源 WebP 的同时，还提供了一个图片压缩工具 cwebp来将其他图片转成 WebP。[**cwebp**](https://developers.google.com/speed/webp/docs/precompiled) 使用起来也很简单，只要根据图片情况设置好参数就行。
+
 
 
 
