@@ -160,6 +160,7 @@
 *	[**‌开发协助**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/开发协助.md)
 * [**iPhone适配**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/iPhone适配.md)
 * [**埋点**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/埋点.md)
+* [**问题解决**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/问题解决.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
 * [多线程(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
 * [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(I).md)
@@ -263,10 +264,7 @@
 > <h2 id = "错误总结">错误总结</h2>
 * [上架错误](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/上架错误.md)
 * [审核被拒](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/审核被拒.md)
-* [Crash日志](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Crash日志.md)
 * [Error(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Error(I).md)
-* [Error(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Error(II).md)
-* [Instrumets](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Error/Instrumets.md)
 
 
 <br/>
