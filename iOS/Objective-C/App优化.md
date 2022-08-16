@@ -5,6 +5,9 @@
 	- [无用图片资源](#无用图片资源)
 	- [代码瘦身](#代码瘦身)
 		- [LinkMap 结合 Mach-O 找无用代码](#LinkMap结合Mach-O找无用代码)
+	- [**App质量衡量**](#App质量衡量)
+		- [Instruments](#Instruments)
+			- [自定义Instruments工具](#自定义Instruments工具)
 
 
 
@@ -330,22 +333,62 @@ flags 采用位方式记录布尔值的方式，易于扩展、所用存储空�
 
 
 
-
-
-
-
-
-
-
-
-
-
+<br/>
+<br/>
 <br/>
 
 ***
 <br/>
 
-> <h1 id=''></h1>
+> <h1 id='App质量衡量'>App质量衡量</h1>
+
+<br/>
+
+> <h2 id='Instruments'>Instruments</h2>
+
+&emsp; 关于线下性能监控，苹果公司官方就有一个性能监控工具 Instruments。它是一款被集成在 Xcode 里，专门用来在线下进行性能分析的工具。
+
+&emsp; Instruments 的功能非常强大，比如说 Energy Log 就是用来监控耗电量的，Leaks 就是专门用来监控内存泄露问题的，Network 就是用来专门检查网络情况的，Time Profiler 就是通过时间采样来分析页面卡顿问题的。
+
+<br/>
+
+如下图所示，就是 Instruments 的各种性能检测工具:
+
+![ios_oc1_19.webp](./../../Pictures/ios_oc1_19.webp)
+
+
+**Instruments有以下两大优势：**
+- Instruments 基于os_signpost架构，可以支持所有平台。
+- Instruments 由于标准界面（Standard UI）和分析核心（Analysis Core）技术，使得我们可以非常方便地进行自定义性能监测工具的开发。当你想要给 Instruments 内置的工具换个交互界面，或者新创建一个工具的时候，都可以通过自定义工具这个功能来实现。
+
+
+<br/>
+
+&emsp; 其实，Instruments 的这些优势也不是与生俱来的，都是伴随着移动开发技术的发展而演进来的。就比如说自定义工具的功能吧，这是因为 App 的规模越来越大，往往还涉及到多个团队合作开发、集成多个公司 SDK 的情况，所以我们就需要以黑盒的方式来进行性能监控。这样的需求，也就迫使苹果公司要不断地增强 Instruments 的功能。
+
+&emsp; 从整体架构来看，Instruments 包括 Standard UI 和 Analysis Core 两个组件，它的所有工具都是基于这两个组件开发的。而且，你如果要开发自定义的性能分析工具的话，完全基于这两个组件就可以实现。
+
+
+<br/>
+<br/>
+
+> <h2 id='自定义Instruments工具'>自定义Instruments工具</h2>
+
+**步骤如下:**
+- 在 Xcode 中，点击 File > New > Project；
+- 在弹出的 Project 模板选择界面，将其设置为 macOS；
+- 选择 Instruments Package，点击后即可开始自定义工具的开发了。如下图所示:
+
+![ios_oc1_20.webp](./../../Pictures/ios_oc1_20.webp)
+
+
+&emsp; 经过上面的三步之后，会在新创建的工程里面生成一个.instrpkg 文件，接下来的开发过程主要就是对这个文件的配置工作了。这些配置工作中最主要的是要完成 Standard UI 和 Analysis Core 的配置。
+
+
+
+
+
+
 
 
 
