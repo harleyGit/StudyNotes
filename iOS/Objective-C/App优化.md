@@ -9,6 +9,7 @@
 		- [Instruments](#Instruments)
 			- [自定义Instruments工具](#自定义Instruments工具)
 		- [线上性能监控](#线上性能监控)
+- [**App电量优化**](#App电量优化)
 
 
 
@@ -550,14 +551,75 @@ uint64_t memoryUsage() {
 
 
 
-
-
+<br/>
+<br/>
 <br/>
 
 ***
 <br/>
 
-> <h2 id=''></h2>
+> <h1 id='App电量优化'>App电量优化</h1>
+
+&emsp; 手机耗电的原因可能是比如这个页面有没有开启定位，网络请求是不是频繁，亦或是定时任务时间是不是间隔过小造成的。可能是由上述原因造成的，接下来，你会去查找耗电问题到底是怎么引起的。但是哈，若你去翻代码的时候却发现，这个页面的相关功能在好几个版本中都没改过了？这个时候怎么办呢？
+
+&emsp; 我们可以用排除法进行一个一个的排除，但是若是排除法也没有找到这个时候如何解决。
+
+&emsp; 电量🔋的优化首先需要明确的是，只有获取到电量，才能够发现电量问题。所以，我就先从如何获取电量和你讲起。
+
+
+<br/>
+<br/>
+
+
+> <h2 id='获取电量'>获取电量</h2>
+
+&emsp; 在 iOS 中，IOKit framework 是专门用于跟硬件或内核服务通信的。所以，我们可以通过 IOKit framework 来获取硬件信息，进而获取到电量消耗信息。在使用 IOKit framework 时，你需要：
+
+- 首先，把 IOPowerSources.h、IOPSKeys.h 和 IOKit 这三个文件导入到工程中；
+- 然后，把 batteryMonitoringEnabled 置为 true；
+- 最后，通过如下代码获取 1% 精确度的电量信息。
+
+```
+#import "IOPSKeys.h"
+#import "IOPowerSources.h"
+-(double) getBatteryLevel{
+    // 返回电量信息
+    CFTypeRef blob = IOPSCopyPowerSourcesInfo();
+    // 返回电量句柄列表数据
+    CFArrayRef sources = IOPSCopyPowerSourcesList(blob);
+    CFDictionaryRef pSource = NULL;
+    const void *psValue;
+    // 返回数组大小
+    int numOfSources = CFArrayGetCount(sources);
+    // 计算大小出错处理
+    if (numOfSources == 0) {
+        NSLog(@"Error in CFArrayGetCount");
+        return -1.0f;
+    }
+    // 计算所剩电量
+    for (int i=0; i<numOfSources; i++) {
+        // 返回电源可读信息的字典
+        pSource = IOPSGetPowerSourceDescription(blob, CFArrayGetValueAtIndex(sources, i));
+        if (!pSource) {
+            NSLog(@"Error in IOPSGetPowerSourceDescription");
+            return -1.0f;
+        }
+        psValue = (CFStringRef) CFDictionaryGetValue(pSource, CFSTR(kIOPSNameKey));
+        int curCapacity = 0;
+        int maxCapacity = 0;
+        double percentage;
+        psValue = CFDictionaryGetValue(pSource, CFSTR(kIOPSCurrentCapacityKey));
+        CFNumberGetValue((CFNumberRef)psValue, kCFNumberSInt32Type, &curCapacity);
+        psValue = CFDictionaryGetValue(pSource, CFSTR(kIOPSMaxCapacityKey));
+        CFNumberGetValue((CFNumberRef)psValue, kCFNumberSInt32Type, &maxCapacity);
+        percentage = ((double) curCapacity / (double) maxCapacity * 100.0f);
+        NSLog(@"curCapacity : %d / maxCapacity: %d , percentage: %.1f ", curCapacity, maxCapacity, percentage);
+        return percentage;
+    }
+    return -1.
+```
+
+
 
 
 
