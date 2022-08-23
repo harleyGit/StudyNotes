@@ -10,6 +10,10 @@
 			- [自定义Instruments工具](#自定义Instruments工具)
 		- [线上性能监控](#线上性能监控)
 - [**App电量优化**](#App电量优化)
+	- [诊断电量](#诊断电量)
+	- [优化电量](#优化电量)
+- **资料**
+	- [微信 iOS 卡顿监控系统](https://www.cxymm.net/article/weixin_41963895/109177399)
 
 
 
@@ -622,12 +626,149 @@ uint64_t memoryUsage() {
 
 
 
+<br/>
+<br/>
+
+
+> <h2 id='诊断电量'>诊断电量</h2>
+
+
+回到最开始的地方，当你用排除法将所有功能注释掉后，如果还有问题，那么这个耗电一定是由其他线程引起的。创建这个耗电线程的地方可能是在其他地方，比如是由第三方库引起，或者是公司其他团队开发的库。
+
+
+我们还是先反过来看看出现电量问题的期间，哪个线程是有问题的。通过下面的这段代码，你就可以获取到所有线程的信息：
+
+```
+thread_act_array_t threads;
+mach_msg_type_number_t threadCount = 0;
+const task_t thisTask = mach_task_self();
+kern_return_t kr = task_threads(thisTask, &threads, &threadCount);
+```
+
+
+从上面代码可以看出，通过 task_threads 函数，我们就能够得到所有的线程信息数组 threads，以及线程总数 threadCount。threads 数组里的线程信息结构体 thread_basic_info 里有一个记录 CPU 使用百分比的字段 cpu_usage。thread_basic_info 结构体的代码如下：
+
+```
+struct thread_basic_info {
+        time_value_t    user_time;      /* user 运行的时间 */
+        time_value_t    system_time;    /* system 运行的时间 */
+        integer_t       cpu_usage;      /* CPU 使用百分比 */
+        policy_t        policy;         /* 有效的计划策略 */
+        integer_t       run_state;      /* run state (see below) */
+        integer_t       flags;          /* various flags (see below) */
+        integer_t       suspend_count;  /* suspend count for thread */
+        integer_t       sleep_time;     /* 休眠时间 */
+};
+
+```
+
+有了这个 cpu_usage 字段，你就可以通过遍历所有线程，去查看是哪个线程的 CPU 使用百分比过高了。如果某个线程的 CPU 使用率长时间都比较高的话，比如超过了 90%，就能够推断出它是有问题的。这时，将其方法堆栈记录下来，你就可以知道到底是哪段代码让你 App 的电量消耗多了。
+
+
+
+<br/>
+
+通过这种方法，你就可以快速定位到问题，有针对性地进行代码优化。多线程 CPU 使用率检查的完整代码如下：
+
+```
+// 轮询检查多个线程 CPU 情况
++ (void)updateCPU {
+    thread_act_array_t threads;
+    mach_msg_type_number_t threadCount = 0;
+    const task_t thisTask = mach_task_self();
+    kern_return_t kr = task_threads(thisTask, &threads, &threadCount);
+    if (kr != KERN_SUCCESS) {
+        return;
+    }
+    for (int i = 0; i < threadCount; i++) {
+        thread_info_data_t threadInfo;
+        thread_basic_info_t threadBaseInfo;
+        mach_msg_type_number_t threadInfoCount = THREAD_INFO_MAX;
+        if (thread_info((thread_act_t)threads[i], THREAD_BASIC_INFO, (thread_info_t)threadInfo, &threadInfoCount) == KERN_SUCCESS) {
+            threadBaseInfo = (thread_basic_info_t)threadInfo;
+            if (!(threadBaseInfo->flags & TH_FLAGS_IDLE)) {
+                integer_t cpuUsage = threadBaseInfo->cpu_usage / 10;
+                if (cpuUsage > 90) {
+                    //cup 消耗大于 90 时打印和记录堆栈
+                    NSString *reStr = smStackOfThread(threads[i]);
+                    //记录数据库中
+                    [[[SMLagDB shareInstance] increaseWithStackString:reStr] subscribeNext:^(id x) {}];
+                    NSLog(@"CPU useage overload thread stack：\n%@",reStr);
+                }
+            }
+        }
+    }
+}
+```
+
+
+
+<br/>
+<br/>
+
+> <h2 id='优化电量'>优化电量</h2>
+
+
+现在我们已经知道了在线上碰到电量问题时，应该如何解决，但是电量的不合理消耗也可能来自其他方面。CPU 是耗电的大头，引起 CPU 耗电的单点问题可以通过监控来解决，但点滴汇聚终成大海，每一个不合理的小的电量消耗，最终都可能会造成大的电量浪费。所以，我们在平时的开发工作中，时刻关注对耗电量的优化也非常重要。
+
+
+&emsp; 对 CPU 的使用要精打细算，要避免让 CPU 做多余的事情。对于大量数据的复杂计算，应该把数据传到服务器去处理，如果必须要在 App 内处理复杂数据计算，可以通过 GCD 的 **dispatch_block_create_with_qos_class** 方法指定队列的 Qos 为 QOS_CLASS_UTILITY，将计算工作放到这个队列的 block 里。在 QOS_CLASS_UTILITY 这种 Qos 模式下，系统针对大量数据的计算，以及复杂数据处理专门做了电量优化。
+
+
+
+<br/>
+
+**除了 CPU 会影响耗电，对电量影响较大的因素还有哪些呢？**
+
+
+除了 CPU，I/O 操作也是耗电大户。任何的 I/O 操作，都会破坏掉低功耗状态。那么，针对 I/O 操作要怎么优化呢？
+
+业内的普遍做法是，将碎片化的数据磁盘存储操作延后，先在内存中聚合，然后再进行磁盘存储。碎片化的数据进行聚合，在内存中进行存储的机制，可以使用系统自带的 NSCache 来完成。
+
+NSCache 是线程安全的，NSCache 会在到达预设缓存空间值时清理缓存，**这时会触发 cache:willEvictObject: 方法的回调，**在这个回调里就可以对数据进行 I/O 操作，达到将聚合的数据 I/O 延后的目的。I/O 操作的次数减少了，对电量的消耗也就减少了。
+
+
+SDWebImage 图片加载框架，在图片的读取缓存处理时没有直接使用 I/O，而是使用了 NSCache。使用 NSCache 的相关代码如下：
+
+```
+- (UIImage *)imageFromMemoryCacheForKey:(NSString *)key {
+    return [self.memCache objectForKey:key];
+}
+- (UIImage *)imageFromDiskCacheForKey:(NSString *)key {
+    // 检查 NSCache 里是否有
+    UIImage *image = [self imageFromMemoryCacheForKey:key];
+    if (image) {
+        return image;
+    }
+    // 从磁盘里读
+    UIImage *diskImage = [self diskImageForKey:key];
+    if (diskImage && self.shouldCacheImagesInMemory) {
+        NSUInteger cost = SDCacheCostForImage(diskImage);
+        [self.memCache setObject:diskImage forKey:key cost:cost];
+    }
+    return diskImage;
+}
+```
+
+可以看出，SDWebImage 将获取的图片数据都放到了 NSCache 里，利用 NSCache 缓存策略进行图片缓存内存的管理。每次读取图片时，会检查 NSCache 是否已经存在图片数据：如果有，就直接从 NSCache 里读取；如果没有，才会通过 I/O 读取磁盘缓存图片。
+
+
+使用了 NSCache 内存缓存能够有效减少 I/O 操作，你在写类似功能时也可以采用这样的思路，让你的 App 更省电。
+
+苹果公司专门维护了一个电量优化指南**“Energy Efficiency Guide for iOS Apps”**，分别从 CPU、设备唤醒、网络、图形、动画、视频、定位、加速度计、陀螺仪、磁力计、蓝牙等多方面因素提出了电量优化方面的建议。所以，当使用了苹果公司的电量优化指南里提到的功能时，严格按照指南里的最佳实践去做就能够保证这些功能不会引起不合理的电量消耗。
+
+同时，苹果公司在 2017 年 WWDC 的 Session 238 也分享了一个关于如何编写节能 App 的主题**“Writing Energy Efficient Apps”。**
+
+
+
 
 <br/>
 
 ***
 <br/>
 
+> <h2 id=''></h2>
+> <h2 id=''></h2>
 > <h2 id=''></h2>
 
 
