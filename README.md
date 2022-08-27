@@ -167,6 +167,8 @@
 * [**埋点**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/埋点.md)
 * [**问题解决**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/问题解决.md)
 * [**多线程(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/多线程(I).md)
+* [**动画**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/动画.md)
+* [**数据存储**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/数据存储.md)
 * [路由导航](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/路由导航.md)
 * [关键字(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(I).md)
 * [关键字(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/关键字(II).md)
@@ -181,7 +183,6 @@
 * [分类和扩展](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/分类和扩展.md)
 * [富文本](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/富文本.md)
 * [键盘弹出(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/键盘弹出(I).md)
-* [模态视图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/模态视图.html)
 * [NSArray排序(I).md](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray排序(I).md)
 * [响应链(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(I).md)
 * [响应链(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(II).md)
@@ -237,7 +238,7 @@
 <br/>
 
 	       
-> <h2 id = "Swift">[Swift](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
+>## <h2 id = "Swift">[Swift](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
 * [资料集](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/资料集.md)
 * [Swif包管理](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/Swift包管理.md)
 * [SwiftUI(I)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Swift/SwiftUI(I).md)
@@ -477,20 +478,13 @@
 <br/>
 
 > <h1 id = "动画/绘图">动画/绘图</h1>
-* [核心动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/核心动画.md)
-*	[仿射动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/仿射动画.md)
-*	[绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/绘制(I).md)
-*	[图片拉伸(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/图片拉伸(I).md)
-*	[位移动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/位移动画.md)
 *	[离屏渲染](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/离屏渲染.md)
-*	[CALayer动画](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/CALayer动画.md)
 *	[线条绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/线条绘制(I).md)
 *	[图片绘制(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/图片绘制(I).md)
 *	[CoreAnimation(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/CoreAnimation(I).md)
 *	[drawRect(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/drawRect(I).md)
 *	[layoutSubviews(I)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/layoutSubviews(I).md)
 *	[layoutSubviews(II)](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/layoutSubviews(II).md)
-*	[OpenGL](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/OpenGL.md)
 [](https://github.com/harleyGit/StudyNotes/blob/master/AnimationDraw/.md)
 
 
