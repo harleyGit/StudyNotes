@@ -1,13 +1,8 @@
-> <h1 id = "Git提交规范">Git提交规范</h1>
+> <h1 id = "常用">常用</h1>
+
+> ## **Git提交规范**
 
 ```
-⌘ -> command
-⇧ -> shift
-⌥ -> option
-⬆ -> 上箭头
-⬇ -> 下箭头
-⌃ -> Control
-
 - fix: 修复改bug;
 - docs: 文档注释;
 - style: 代码格式(不影响代码运行的变动);
@@ -21,31 +16,36 @@
 - build: 打包;
 - deps: 升级依赖;
 - feat: 新功能;
+
+⌘ -> command
+⇧ -> shift
+⌥ -> option
+⬆ -> 上箭头
+⬇ -> 下箭头
+⌃ -> Control
 ```
 
 <br/>
-
-***
 <br/>
 
-- **获取StudyNotes文件夹下Pictures的图片路径：**
+> <h2 id='模块图片相对路径'>模块图片相对路径</h2>
+
+- **iOS**
+	- Objective-C
+	- Swift
 
 ```
-![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/.png)
-```	
+./../../Pictures/
+```
 
-
-<br/>
-<br/>
-
-- **获取SoftwareTest文件夹下Pictures的图片路径：**
+- **其他文件夹**
 
 ```
-![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/.png)
-```	
+./../Pictures/
+```
 
 
-
+<br/>
 <br/>
 
 ***
@@ -797,7 +797,7 @@
 </a>
 
 </a>
-	<img src="https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/desktop2.tiff" alt="Mac桌面图片" width="960" height="540" border="30">
+	<img src="./Pictures/desktop2.tiff" alt="Mac桌面图片" width="960" height="540" border="30">
 </a>
 
 
