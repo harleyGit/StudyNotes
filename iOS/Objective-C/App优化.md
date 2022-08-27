@@ -1,5 +1,8 @@
 > <h2 id=''></h2>
 ![](./../../Pictures/)
+- [**卡顿监控**](#卡顿监控)
+	- [子线程监控检测时间间隔](#子线程监控检测时间间隔)
+	- [子线程监控退火算法](#子线程监控退火算法)
 - [**App瘦身**](#App瘦身)
 	- [官方AppThinning](#官方AppThinning)
 	- [无用图片资源](#无用图片资源)
@@ -14,6 +17,216 @@
 	- [优化电量](#优化电量)
 - **资料**
 	- [微信 iOS 卡顿监控系统](https://www.cxymm.net/article/weixin_41963895/109177399)
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id='卡顿监控'>卡顿监控</h1>
+
+&emsp; 微信的卡顿监控系统matrix开源出来了，包括Matrix for iOS/macOS和Android系统的监控方案。若你的 App 现在还没有卡顿监控系统，可以考虑直接集成 matrix-iOS，直接在 Podfile 里添加 pod ‘matrix-wechat’ 就可以了,其中很多细节值得我们学习:
+- 子线程监控检测时间间隔：matrix-iOS 监控卡顿的子线程是通过 NSThread 创建的，检测时间间隔正常情况是 1 秒，在出现卡顿情况下，间隔时间会受检测线程退火算法影响，按照斐波那契数列递增，直到没有卡顿时恢复为 1 秒。
+- 子线程监控退火算法：避免一个卡顿会写入多个文件的情况。
+- RunLoop 卡顿时间阈值设置：对于 RunLoop 超时阈值的设置，建议设置为 3 秒，微信设置的是 2 秒。
+- CPU 使用率阈值设置：当单核 CPU 使用率超过 80%，就判定 CPU 占用过高。CPU 使用率过高，可能导致 App 卡顿。
+
+&emsp; 这四点是能够让卡顿监控系统在对 App 性能损耗很小的情况下，更好地监控到线上 App 卡顿情况的四个细节.matrix-iOS 卡顿监控系统的主要代码在 WCBlockMonitorMgr.mm文件中.
+
+
+
+<br/>
+<br/>
+
+><h2 id='子线程监控检测时间间隔'>子线程监控检测时间间隔</h2>
+
+matrix-iOS 是在 addMonitorThread 方法里，通过 NSThread 添加一个子线程来进行监控的。addMonitorThread 方法代码如下：
+
+```
+- (void)addMonitorThread
+{
+    m_bStop = NO;
+    m_monitorThread = [[NSThread alloc] initWithTarget:self selector:@selector(threadProc) object:nil];
+    [m_monitorThread start];
+}
+```
+
+这段代码中创建的 NSThread 子线程，会去执行 threadProc 方法。这个方法包括了子线程监控卡顿的所有逻辑：
+
+```
+while (YES) {
+    @autoreleasepool {
+        if (g_bMonitor) {
+            // 检查是否卡顿，以及卡顿原因
+            ...
+            // 针对不同卡顿原因进行不同的处理
+            ...
+        }
+        
+        // 时间间隔处理，检测时间间隔正常情况是1秒，间隔时间会受检测线程退火算法影响，按照斐波那契数列递增，直到没有卡顿时恢复为1秒。
+        for (int nCnt = 0; nCnt < m_nIntervalTime && !m_bStop; nCnt++) {
+            if (g_MainThreadHandle && g_bMonitor) {
+                int intervalCount = g_CheckPeriodTime / g_PerStackInterval;
+                if (intervalCount <= 0) {
+                    usleep(g_CheckPeriodTime);
+                } else {
+                    ...
+                }
+            } else {
+                usleep(g_CheckPeriodTime);
+            }
+        }
+        if (m_bStop) {
+            break;
+        }
+    }
+```
+
+可以看出，创建的子线程通过 while 使其成为常驻线程，直到主动执行 stop 方法才会被销毁。其中，使用 usleep 方法进行时间间隔操作， g_CheckPeriodTime 就是正常情况的时间间隔的值，退火算法影响的是 m_nIntervalTime，递增后检测卡顿的时间间隔就会不断变长。直到判定卡顿已结束，m_nIntervalTime 的值会恢复成 1。
+
+接下来，跟踪 g_CheckPeriodTime 的定义就能够找到正常情况下子线程卡顿监控的时间间隔。 g_CheckPeriodTime 的定义如下：
+
+```
+static useconds_t g_CheckPeriodTime = g_defaultCheckPeriodTime;
+```
+
+
+其中 g_defaultCheckPeriodTime 的定义是：
+
+```
+#define BM_MicroFormat_Second 1000000
+const static useconds_t g_defaultCheckPeriodTime = 1 * BM_MicroFormat_Second;
+```
+
+
+可以看出，子线程监控检测时间间隔 g_CheckPeriodTime，被设置的值就是 1 秒
+
+
+
+
+
+<br/>
+<br/>
+
+><h2 id='子线程监控退火算法'>子线程监控退火算法</h2>
+
+
+&emsp; 子线程监控检测时间间隔设置为 1 秒，在没有卡顿问题，不需要获取主线程堆栈信息的情况下性能消耗几乎可以忽略不计。但是，当遇到卡顿问题时，而且一个卡顿持续好几秒的话，就会持续获取主线程堆栈信息，增加性能损耗。更重要的是，持续获取的这些堆栈信息都是重复的，完全没有必要。
+
+所以，matrix-iOS 采用了退火算法递增时间间隔，来避免因为同一个卡顿问题，不断去获取主线程堆栈信息的情况，从而提升了算法性能。
+
+同时，一个卡顿问题只获取一个主线程堆栈信息，也就是一个卡顿问题 matrix-iOS 只会进行一次磁盘存储，减少了存储 I/O 也就减少了性能消耗。
+
+所以，这种策略能够有效减少由于获取主线程堆栈信息带来的性能消耗。
+
+
+<br/>
+
+
+**matrix-iOS 是如何实现退火算法的呢？**
+
+
+因为触发退火算法的条件是卡顿，所以我们先回头来看看子线程监控卡顿主方法 threadProc 里和发现卡顿后处理相关的代码：
+
+```
+while (YES) {
+    @autoreleasepool {
+        if (g_bMonitor) {
+            // 检查是否卡顿，以及卡顿原因
+            EDumpType dumpType = [self check];
+            if (m_bStop) {
+                break;
+            }
+            // 针对不同卡顿原因进行不同的处理
+            ...
+            if (dumpType != EDumpType_Unlag) {
+                if (EDumpType_BackgroundMainThreadBlock == dumpType ||
+                    EDumpType_MainThreadBlock == dumpType) {
+                    if (g_CurrentThreadCount > 64) {
+                        // 线程数超过64个，认为线程过多造成卡顿，不用记录主线程堆栈
+                        dumpType = EDumpType_BlockThreadTooMuch;
+                        [self dumpFileWithType:dumpType];
+                    } else {
+                        EFilterType filterType = [self needFilter];
+                        if (filterType == EFilterType_None) {
+                            if (g_MainThreadHandle) {
+                                if (g_PointMainThreadArray != NULL) {
+                                    free(g_PointMainThreadArray);
+                                    g_PointMainThreadArray = NULL;
+                                }
+                                g_PointMainThreadArray = [m_pointMainThreadHandler getPointStackCursor];
+                                // 函数主线程堆栈写文件记录
+                                m_potenHandledLagFile = [self dumpFileWithType:dumpType];
+                                // 回调处理主线程堆栈文件
+                                ...
+                                
+                            } else {
+                                // 主线程堆栈写文件记录
+                                m_potenHandledLagFile = [self dumpFileWithType:dumpType];
+                                ...
+                            }
+                        } else {
+                            // 对于 filterType 满足退火算法、主线程堆栈数太少、一天内记录主线程堆栈过多这些情况不用进行写文件操作
+                            ...
+                        }
+                    }
+                } else {
+                    m_potenHandledLagFile = [self dumpFileWithType:dumpType];
+                }
+            } else {
+                [self resetStatus];
+            }
+        }
+        // 时间间隔处理，检测时间间隔正常情况是1秒，间隔时间会受检测线程退火算法影响，按照斐波那契数列递增，直到没有卡顿时恢复为1秒。
+        ...
+    }
+}  
+```
+
+可以看出，当检测出主线程卡顿后，matrix-iOS 会先看线程数是否过多。为什么会先检查线程数呢？
+
+按照微信团队的经验，线程数超出 64 个时会导致主线程卡顿，如果卡顿是由于线程多造成的，那么就没必要通过获取主线程堆栈去找卡顿原因了。根据 matrix-iOS 的实测，每隔 50 毫秒获取主线程堆栈会增加 3% 的 CPU 占用，所以当检测到主线程卡顿以后，我们需要先判断是否是因为线程数过多导致的，而不是一有卡顿问题就去获取主线程堆栈。
+
+
+如果不是线程过多造成的卡顿问题，matrix-iOS 会通过 needFilter 方法去对比前后两次获取的主线程堆栈，如果两次堆栈是一样的，那就表示卡顿还没结束，满足退火算法条件，needFilter 方法会返回 EFilterType。EFilterType 为 EFilterType_Annealing，表示类型为退火算法。满足退火算法后，主线程堆栈就不会立刻进行写文件操作。
+
+
+在 needFilter 方法里，needFilter 通过 [m_pointMainThreadHandler getLastMainThreadStack] 获取当前主线程堆栈，然后记录在 m_vecLastMainThreadCallStack 里。下次卡顿时，再获取主线程堆栈，新获取的堆栈和上次记录的 m_vecLastMainThreadCallStack 堆栈进行对比：
+- 如果两个堆栈不同，表示这是一个新的卡顿，就会退出退火算法；
+- 如果两个堆栈相同，就用斐波那契数列递增子线程检查时间间隔。
+
+递增时间的代码如下：
+
+```
+if (bIsSame) {
+    NSUInteger lastTimeInterval = m_nIntervalTime;
+    // 递增 m_nIntervalTime
+    m_nIntervalTime = m_nLastTimeInterval + m_nIntervalTime;
+    m_nLastTimeInterval = lastTimeInterval;
+    MatrixInfo(@"call stack same timeinterval = %lu", (unsigned long) m_nIntervalTime);
+    return EFilterType_Annealing;
+} 
+```
+
+&emsp; 可以看出，将子线程检查主线程时间间隔增加后，needFilter 就直接返回 EFilterType_Annealing 类型表示当前情况满足退火算法。使用退火算法，可以有效降低没有必要地获取主线程堆栈的频率。这样的话，我们就能够在准确获取卡顿的前提下，还能保障 App 性能不会受卡顿监控系统的影响。
+
+
+
+
+
+
+<br/>
+<br/>
+
+><h2 id=''></h2>
+
+
+<br/>
+<br/>
+
+><h2 id=''></h2>
 
 
 
