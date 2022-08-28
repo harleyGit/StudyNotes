@@ -6,6 +6,8 @@
 	- [void指针(void*)](https://blog.csdn.net/qq_39583450/article/details/109715890)
 - [**参考资料**]()
 	- [Linphone使用说明](https://www.mptablet.com/post/12045.html)
+	- [Linphone SDK编译说明](https://gitlab.linphone.org/BC/public/linphone-sdk/blob/master/README.md)
+	- [Linphone C API文档](https://download.linphone.org/releases/docs/liblinphone/latest/c/)
 	- [SDP消息格式](https://cxybb.com/article/aiwusheng/104723834)
 	- [SIP技术介绍](http://www.h3c.com/cn/d_200805/605897_30003_0.htm)
 
