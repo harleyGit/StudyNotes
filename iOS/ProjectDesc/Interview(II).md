@@ -1,8 +1,12 @@
 - [**Interview(I)**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(I).md)
+
+
 <br/>
 
 ***
 <br/>
+
+
 > <h2 id=""></h2>
 - [**Swfit开源代码**](https://github.com/apple)
 - [**Swift基础**](#Swift基础)
@@ -1610,7 +1614,7 @@ public init(parseJSON jsonString: String)
 
 &emsp; 一个基本的 [**Core Data**](https://objccn.io/products/core-data/preview/) 栈由四个主要部分组成：托管对象 (managed objects) (**NSManagedObject**)，托管对象上下文 (managed object context) (**NSManagedObjectContext**)，持久化存储协调器 (persistent store coordinator) (**NSPersistentStoreCoordinator**)，以及持久化存储 (persistent store) (**NSPersistentStore**):
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd13.png)
+![<br/>](./../../Pictures/ios_pd13.png)
 
 - **托管对象:** 位于这张图的最上层，它是架构里最有趣的部分，同时也是我们的数据模型 - 在这个例子里，它是 Mood 类的实例们。Mood 需要是 NSManagedObject 类的子类，这样它才能与 Core Data 其他的部分进行集成。每个 Mood 实例表示了一个 **mood**，也就是用户用相机拍摄的照片。
 
@@ -1628,7 +1632,16 @@ public init(parseJSON jsonString: String)
 
 
 > <h1 id="组件化">组件化</h1>
+
 [iOS组件化实践](https://www.jianshu.com/p/510ee1290ab4)
+
+
+<br/>
+
+***
+<br/>
+
+
 
 > <h1 id="路由导航">路由导航</h1>
 
@@ -1715,7 +1728,9 @@ OC实现MD5加密：
 
 
 > <h2 id="防止反编译">如何防止反编译？</h2>
+
 [防止反编译](https://icocos.github.io/2017/10/26/iOS——防止反编译总结/)
+
 <br/>
 
 - **本地数据加密**
@@ -1899,8 +1914,7 @@ refreshAction
 生成对应的转义之后的无序字符串
 
 
-![<br/>](https://user-gold-cdn.xitu.io/2018/1/11/160e332699f100d4?imageView2/0/w/1280/h/960/ignore-error/1
-)
+![<br/>](https://user-gold-cdn.xitu.io/2018/1/11/160e332699f100d4?imageView2/0/w/1280/h/960/ignore-error/1)
 
 
 

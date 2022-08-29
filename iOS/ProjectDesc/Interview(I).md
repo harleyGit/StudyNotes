@@ -463,7 +463,7 @@ atomic表示，我TM也很冤啊！！！！
 > <h3 id="pod instal和pod update区别">**pod install**和**pod update**区别
 </h3>
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd4.jpg)
+![<br/>](./../../Pictures/ios_pd4.jpg)
 
 - **pod install:**执行该命令时，如果Podfile.lock文件存在, 则直接从此文件中读取框架信息并且它会只下载Podfile.lock文件中指定的版本安装。对于不在Podfile.lock文件中的pod库，pod install命令会搜索这个pod库在Podfile文件中指定的版本来安装；如果Podfile.lock不存在, 则会读取Podfile文件内的框架信息，然后执行下载并且根据下载好的框架信息, 生成Podfile.lock文件。
 
@@ -778,14 +778,14 @@ _timer = [NSTimer jq_scheduledTimerWithTimeInterval:5.0
 <br/>
 
 
-**方法二：**用GCD的dispatch_timer方法替代NSTimer来进行计时
+**方法二：** 用GCD的dispatch_timer方法替代NSTimer来进行计时
 
 
 <br/>
 
-**方法三：**weakProxy示例
+**方法三：** weakProxy示例
 
-![引用示意图<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd7.png)
+![引用示意图<br/>](./../../Pictures/ios_pd7.png)
 
 新建一个继承NSProxy类的子类WeakProxy类
 
@@ -1216,7 +1216,7 @@ func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> 
 
 - 上传图片时出现的问题？需要注意的事项
 
-**事项一：**上传图片到服务器一般是将图片NSData上传到服务器，服务器返回一个图片NSString地址，之后再将NSString的路径转为url并通过url请求去更新图片（图片此时更新的便是NSString）
+**事项一：** 上传图片到服务器一般是将图片NSData上传到服务器，服务器返回一个图片NSString地址，之后再将NSString的路径转为url并通过url请求去更新图片（图片此时更新的便是NSString）
 
 上传的图片一般压缩方式是：
 
@@ -1336,7 +1336,7 @@ NSData的length是bytes格式需要进行除以1024进行单位转换,格式判�
 <br/>
 <br/>
 
-> <h2 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h2>
+>## <h2 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h2>
 
 <br/>
 
@@ -1409,7 +1409,7 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 
 在 Quartz 中，一个颜色是由一组值来表示的，比如 (0, 0, 1)。而颜色空间则是用来说明如何解析这些值的，离开了颜色空间，它们将变得毫无意义。比如,下面的值都表示蓝色：
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc0.png)
+![<br/>](./../../Pictures/ios_oc0.png)
 
 
 <br/>
@@ -1450,7 +1450,7 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 
 [基于PGO优化启动时间](https://jishuin.proginn.com/p/763bfbd56d2b)
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc3.png)
+![<br/>](./../../Pictures/ios_oc3.png)
 
 
 - **冷启动流程**
@@ -1896,7 +1896,7 @@ CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLaye
 
 <br/>
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc1.png)
+![<br/>](./../../Pictures/ios_oc1.png)
 
 
 - **资源瘦身**
@@ -1908,7 +1908,7 @@ CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLaye
 &emsp； 这里推荐使用工具 [LSUnusedResources](https://github.com/tinymind/LSUnusedResources)，可以根据项目实际情况定义查找文件的正则表达式。另外建议勾选 Ignore similar name ，避免扫描出图片组。
 
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc2.png)
+![<br/>](./../../Pictures/ios_oc2.png)
 
 
 <br/>
@@ -2290,7 +2290,7 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 <br/>
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc3.png)
+![<br/>](./../../Pictures/ios_oc3.png)
 
 
 - Documents：保存应用运行时生成的需要持久化的数据,iTunes会自动备份该目录。苹果建议将在应用程序中浏览到的文件数据保存在该目录下。
@@ -2544,7 +2544,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 输出结果：
 
-![输出结果 <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd8.png)
+![输出结果 <br/>](./../../Pictures/ios_pd8.png)
 
 
 
@@ -2593,7 +2593,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 下面我们配合着堆栈信息看一下这个Runloop什么时候结束一次迭代。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd0.png)
+![<br/>](./../../Pictures/ios_pd0.png)
 
 
 &emsp; 这里我们加入一个weak的全局变量reference来指向我们的对象。因为weak引用不持有我们的对象，不会影响所指向对象的生命周期，所以我们用它来输出以判断我们的对象什么时候释放。
@@ -2604,9 +2604,9 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 断点1和断点2:
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd1.png)
+![<br/>](./../../Pictures/ios_pd1.png)
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd2.png)
+![<br/>](./../../Pictures/ios_pd2.png)
 
 我们能看到断点1和断点2 runloop还是在执行的，断点3表示runloop一个迭代已经结束了，即将进入睡眠。
 
@@ -3334,7 +3334,7 @@ objc_object::sidetable_retainCount()
 
 1). 系统UIView的Block
 
-![UIView 的Blcok <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd11.png)
+![UIView 的Blcok <br/>](./../../Pictures/ios_pd11.png)
 
 如上图，使用系统自带的UIView 的Blcok，控制器能被销毁-->说明没有发送循环引用。
 
@@ -3352,11 +3352,11 @@ objc_object::sidetable_retainCount()
 
 实际开发中：使用通知（NSNotifation），调用系统自带的Block，在Block中使用self --> 会发生循环引用。
 
-![twoVC发送通知 --> 给oneVC <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd12.1.png)
+![twoVC发送通知 --> 给oneVC <br/>](./../../Pictures/ios_pd12.1.png)
 
-![oneVC 接收通知 使用通知-发生循环引用<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd12.2.png)
+![oneVC 接收通知 使用通知-发生循环引用<br/>](./../../Pictures/ios_pd12.2.png)
 
-![使用通知-发生循环引用 <br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd12.3.png)
+![使用通知-发生循环引用 <br/>](./../../Pictures/ios_pd12.3.png)
 
 
 **解决方法：`使用weakSelf`**
@@ -3614,7 +3614,7 @@ struct objc_super {
 
 在控制台输出obj的数据结构，排在第一位的就是isa的地址。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd14.jpeg)
+![<br/>](./../../Pictures/ios_pd14.jpeg)
 
 &emsp; 若对象继承自NSObject，NSObject在底层的实现是结构体objc_object，里面只有一个isa成员变量，那么对象的首地址指向的第一块就是isa所在。
 
@@ -3690,7 +3690,7 @@ struct objc_class : objc_object {
 
 在runtime的源码文件**objc-object.h**,可以看到这个C++方法：**objc_object::initIsa**
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd15.png)
+![<br/>](./../../Pictures/ios_pd15.png)
 
 点击isa_t,发现其是个联合体，接下来看**ISA_BITFIELD**
 
@@ -3930,7 +3930,7 @@ CFSocket 是最底层的接口，只负责 socket 通信。
 
 <br/>
 
-![ <br/> ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/AFNet11.png)
+![ <br/> ](./../../Pictures/AFNet11.png)
 
 
 
@@ -4103,7 +4103,7 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 &emsp; 一般在使用Socket的时候，后台会对Socket传输数据有一个自定义的协议，协议可能有些差别不过基本上是大同小异。 如图
 
-![基本定制协议<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd9.png)
+![基本定制协议<br/>](./../../Pictures/ios_pd9.png)
 
 &emsp; 也就是说我们通过Socket发送给服务器的数据，最终要转换成二进制流数据，并且按照协议约定的格式。
 
@@ -4135,7 +4135,7 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 关于粘包和拆包可以参考下图的几种情况：
 
-![粘包和拆包几种情况<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd10.png)
+![粘包和拆包几种情况<br/>](./../../Pictures/ios_pd10.png)
 
 - 上图中演示了以下几种情况：
 	- 正常的理想情况，两个包恰好满足TCP缓冲区的大小或达到TCP等待时长，分别发送两个包；
@@ -4212,7 +4212,7 @@ hook系统函数，一个faceBook写的三方框架
 
 
 
-> <h2 id = "SDWebImage">[SDWebImage](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/SDWebImage(I).md)</h2>
+>## <h2 id = "SDWebImage">[SDWebImage](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/SDWebImage(I).md)</h2>
 
 <br/>
 
