@@ -170,13 +170,13 @@ UIkit：iOS基础视图框架.
 
 &emsp; 下面三个图，包括了Foundation所以的类，图中灰色的是iOS不支持的，灰色部分是OS X系统的。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z56.jpg)
+![<br/>](./../../Pictures/z56.jpg)
 
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z57.jpg)
+![<br/>](./../../Pictures/z57.jpg)
 
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z58.jpg)
+![<br/>](./../../Pictures/z58.jpg)
 
 
 &emsp; **将上图Foundation框架中的类进行逻辑分类如下：**
@@ -306,12 +306,12 @@ struct objc_protocol_list *protocols;
 为了得到整个类组织架构的信息，objc_class结构里定义了第二个成员变量Class super_class，它指向父类的类对象。说了这么多，可能关系缕不清楚，有道是一张图胜过千言万语:
 
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z59.jpg)
+![<br/>](./../../Pictures/z59.jpg)
 
 
 图中可以看出，D3继承D2,D2继承D1,D1最终继承NSObject。下图从D3的一个对象开始，排列出D3 D2 D1 NSObject 类对象，元类对象等关系。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z60.png)
+![<br/>](./../../Pictures/z60.png)
 
 相当于 
 

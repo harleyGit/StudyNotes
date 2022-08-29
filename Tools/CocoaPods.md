@@ -516,7 +516,7 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 运行安装失败后的提示：
 
-![安装失败](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod3.png)
+![安装失败](./../Pictures/tool_pod3.png)
 
 <br/>
 
@@ -528,24 +528,24 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 
 
-![国内源地址选择](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod4.png)
+![国内源地址选择](./../Pictures/tool_pod4.png)
 
 
 选择一个地址后输入 y 开始执行脚本，然后输入你的开机密码，后面会下载很多文件
 
-![下载效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod5.png)
+![下载效果](./../Pictures/tool_pod5.png)
 
 
 不需要你操作，静静的等待安装完就行了，安装完成后的界面如下
 
-![下载完成](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod6.png)
+![下载完成](./../Pictures/tool_pod6.png)
 
 
 <br/>
 
 重启终端后输入命令 `brew -v` 即可，如下图所示:
 
-![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod7.png)
+![](./../Pictures/tool_pod7.png)
 
 更新 Homebrew
 
@@ -841,7 +841,7 @@ e. `pod search afnetworking`, 检测是否可以使用了；
 
 问题：电脑重启后，pod无法使用，会报错。需要每次在系统终端`rvm reload`后pod才能使用，否则pod无法使用。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod1.png)
+![<br/>](./../Pictures/tool_pod1.png)
 
 如上图，执行【步骤1】就会出现问题，执行【步骤2】出现【步骤3】警告，解决方案：
 
@@ -853,7 +853,7 @@ e. `pod search afnetworking`, 检测是否可以使用了；
 
 <br/>
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_pod2.png)
+![<br/>](./../Pictures/tool_pod2.png)
 
 在上图中执行`rvm -h`来查看rvm指令，上图只是截取的一部分。
 

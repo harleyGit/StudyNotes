@@ -146,7 +146,7 @@ struct DetailView_Previews: PreviewProvider {
 效果图：
 
 
-![详情图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/swiftUI2.png)
+![详情图](./../../Pictures/swiftUI2.png)
 
 <br/>
 

@@ -66,7 +66,7 @@
 代码的文件是可执行的二进制文件，在二进制文件中，这些文件呢如下图分布：
 
 
-![Code 文件分布](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/optimization0.png)
+![Code 文件分布](./../Pictures/optimization0.png)
 
 <br/>
 

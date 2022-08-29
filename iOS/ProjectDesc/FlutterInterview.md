@@ -36,7 +36,7 @@
 
 Widget、Element、RenderObject如何渲染的？
 
-![Flutter 的架构<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd5.png)
+![Flutter 的架构<br/>]((./../../Pictures/ios_pd5.png)
 
 分别对应：
 
@@ -81,7 +81,7 @@ Widget、Element、RenderObject如何渲染的？
 
 &emsp; Flutter Engine层面，有四个Runner各司其职，这里的Runner其实就是线程，不过这四个Runner是由Engine和Native之间的那个嵌入层(Embedder)去赋值的，Engine层只会使用这四个Runner，不会创建新的线程。
 
-![线程管理结构图<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd6.jpg)
+![线程管理结构图<br/>]((./../../Pictures/ios_pd6.jpg)
 
 四个Runner分别是：
 

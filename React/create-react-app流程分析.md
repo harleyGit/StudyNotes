@@ -88,7 +88,7 @@
 
 
 
-![主要流程图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react48.png)
+![主要流程图](./../Pictures/react48.png)
 **‌主要流程图**
 
 
@@ -171,7 +171,7 @@ const args = process.argv.slice(2);
 
 
 
-![start流程图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react49.png)
+![start流程图](./../Pictures/react49.png)
 
 <br/>
 
@@ -198,7 +198,7 @@ const args = process.argv.slice(2);
 11. 构建完成后，输出相关的构建信息：警告/警告/错误、文件大小信息、后续操作的提示
 
 
-![build流程图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react50.png)
+![build流程图](./../Pictures/react50.png)
 
 
 <br/>
@@ -232,6 +232,6 @@ const args = process.argv.slice(2);
 
 
 
-![eject流程图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react51.png)
+![eject流程图](./../Pictures/react51.png)
 
 

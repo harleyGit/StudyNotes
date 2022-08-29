@@ -37,7 +37,7 @@
 
 &emsp; 我们可以把KeyChain理解为一个Dictionary，所有数据都以key-value的形式存储，可以对这个Dictionary进行add、update、get、delete这四个操作。对于每一个应用来说，KeyChain都有两个访问区，私有区和公共区。私有区是一个sandbox，本程序存储的任何数据都对其他程序不可见。而要想在将存储的内容放在公共区，需要先声明公共区的名称，官方文档管这个名称叫“keychain access group”，声明的方法是新建一个plist文件，名字随便起，内容如下：
 
-![z31](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z31.jpeg)
+![z31](./../../Pictures/z31.jpeg)
 
 &emsp; “yourAppID.com.yourCompany.whatever”就是你要起的公共区名称，除了whatever字段可以随便定之外，其他的都必须如实填写。这个文件的路径要配置在 Project->build setting->Code Signing Entitlements里，否则公共区无效，配置好后，须用你正式的证书签名编译才可通过，否则xcode会弹框告诉你code signing有问题。所以，苹果限制了你只能同公司的产品共享KeyChain数据，别的公司访问不了你公司产品的KeyChain。
 
@@ -75,7 +75,7 @@ extern CFTypeRef kSecClassIdentityOSX_AVAILABLE_STARTING(MAC_10_7, __IPHONE_2_0)
 
 ```
 
-![z32](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z32.png)
+![z32](./../../Pictures/z32.png)
 
 
 
@@ -111,7 +111,7 @@ SecItemDelete 删除一个keychain item
 
 &emsp; 首先要在Capabilities下打开工程的Keychain Sharing按钮。然后需要分享Keychain的不同应用添 加相同的Group名称。Xcode6以后Group可以随便命名，不需要加AppIdentifierPrefix前缀，并且Xcode会在以entitlements结尾的文件内自动添加所有Group名称，然后在每一个Group前自动加上$(AppIdentifierPrefix)前缀。虽然文档内提到还需要添加一个包含group的.plist文件，其实它和.entitlements文件是同样的作用，所以不需要重复添加。 但是每个不同的应用第一条Group最好以自己的bundleID命名，因为如果entitlements文件内已经有Keychain Access Groups数组后item的Group属性默认就为数组内的第一条Group,其实keychaingroups的名字你可以随便起，（最好使用app的buddleid），在keychain groups里面加上你想要共享哪个group的数据，想共享几个就可以填写几个，前提是这些group必须的team必须相同，也就是（AppIdentifierPrefix）必须相同！
         
-![z33](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z33.png)
+![z33](./../../Pictures/z33.png)
 
  这样设置group会导致存储数据失败，如果不想共享某个group的数据，建议group传入AppIdentifierPrefix+bundleiD！在其他app的keychain group中，只填入想要共享数据的group！例如上图中的MCUUId和MCaccount两个keychain group！在另一个app中加入同样的group，就能实现这两个group中的数据共享，切记代码中传入group的时候要加上appidentifier前缀，否则会存储失败！当传入的group不在entitlements文件内时，此时传入的group的值必须为AppIdentifierPrefix+bundleiD，否则会造成存储失败！查询时也可以指定group查询，但是必须使用真机测试。
  

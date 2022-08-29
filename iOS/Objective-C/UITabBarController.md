@@ -17,11 +17,11 @@
 
 ># 介绍
 
-![UITabBarController 结构图](https://upload-images.jianshu.io/upload_images/2959789-1b77d4693c1742b8.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![UITabBarController 结构图](./../../Pictures/ios_oc1_28.png)
 
 <br/>
 
-![UITabBarController内部构造图](https://upload-images.jianshu.io/upload_images/2959789-782e2483f7e29b4b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![UITabBarController内部构造图](./../../Pictures/ios_oc1_28.png)
 
 
 

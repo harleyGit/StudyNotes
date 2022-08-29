@@ -223,7 +223,7 @@
 
 打印：
 
-![日志打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_pd16.png)
+![日志打印]((./../../Pictures/ios_pd16.png)
 
 **心得体会：**
 
@@ -273,9 +273,9 @@ NSLog(@"🍊 <<<<< 执行 doNext 方法，请求信息：%@,  处理网络请求
 
 按照下图的提示进行解决：
 
-![修改符号表](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/projectDesc0.png)
+![修改符号表]((./../../Pictures/projectDesc0.png)
 
-![环境配置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/projectDesc1.png)
+![环境配置]((./../../Pictures/projectDesc1.png)
 
 
 

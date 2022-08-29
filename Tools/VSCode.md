@@ -139,11 +139,11 @@
 
 &emsp; 到Flutter的官网下载[**Flutter SDK releases**](https://flutter.dev/docs/development/tools/sdk/releases?tab=macos#macos)
 
-![官网下载flutterSDK包](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter8.png)
+![官网下载flutterSDK包](./../Pictures/flutter8.png)
 
 然后解压到你想放入的文件夹，如下
 
-![放置flutter包](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter9.png)
+![放置flutter包](./../Pictures/flutter9.png)
 
 执行如下命令在Terminal:
 
@@ -157,7 +157,7 @@ $ flutter doctor
 
 最后出现如下表示成功了！
 
-![成功配置好flutter](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter10.png)
+![成功配置好flutter](./../Pictures/flutter10.png)
 
 
 **PS：ls 那步是因为环境变量设置无效所以才将 flutter 设置成软连接的。官网上面一大堆环境变量设置其实都不是必须的，不必照做。**
@@ -182,7 +182,7 @@ $ flutter doctor
 - 在VSCode中下载Dart和Flutter插件
 - **Command+shift+P**快捷键创建一个项目
 
-![New a Project](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter11.png)
+![New a Project](./../Pictures/flutter11.png)
 
 
 
@@ -228,7 +228,7 @@ $ flutter doctor
 > <h2 id="Code自动保存">Code自动保存</h2>
 
 
-![自动保存](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_vscode0.png)
+![自动保存](./../Pictures/tool_vscode0.png)
 
 
 <br/>
@@ -236,7 +236,7 @@ $ flutter doctor
 
 > <h2 id='vscode-icons'>文件图标vscode-icons</h2>
 
-![vscode-icons](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_vscode1.png)
+![vscode-icons](./../Pictures/tool_vscode1.png)
 
 &emsp; 首先为了我们在编码时有一个高效、易用的界面，我们需要对一些不明了的组件做一些美化。
 
@@ -602,7 +602,7 @@ Sudo npm install -g webpack
 ```
 
 
-![下载出现的问题](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react0.png)
+![下载出现的问题](./../Pictures/react0.png)
 
 
 <br/>
@@ -614,22 +614,22 @@ Sudo npm install -g webpack
 
 - 使用VSCode开发React，语法自动补全插件
 
-![自动补全插件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react1.png)
+![自动补全插件](./../Pictures/react1.png)
 
 - 配置用户
 
-![配置用户](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react2.jpeg)
+![配置用户](./../Pictures/react2.jpeg)
 
 
 - 搜索emmet.triggerExpansionOnTab，启用
 
-![启用](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react3.jpeg)
+![启用](./../Pictures/react3.jpeg)
 
 - 打开setting.json设置
 
 command+shift+p,然后选择下面的
 
-![setting.json打开](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react4.png)
+![setting.json打开](./../Pictures/react4.png)
 
 把配置偏好设置，把这两个命令粘贴到用户设置
 
@@ -641,7 +641,7 @@ command+shift+p,然后选择下面的
 
 如下图：
 
-![偏好设置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react5.png)
+![偏好设置](./../Pictures/react5.png)
 
 完成配置后，重启就好了。
 
@@ -768,7 +768,7 @@ $ nom install vconsole
 
 在[**Go**](https://golang.google.cn/dl/)进行下载，如下图：
 
-![下载包](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go0.png)
+![下载包](./../Pictures/go0.png)
 
 <br/>
 
@@ -778,7 +778,7 @@ $ nom install vconsole
  $ mkdir /Users/harleyhuang/Documents/GitHub/GoPath
 ```
 
-![GoPath文件夹](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go1.png)
+![GoPath文件夹](./../Pictures/go1.png)
 
 <br/>
 
@@ -832,11 +832,11 @@ $ go version
 
 &emsp; 按 F1 键，输入` >go:install`，下面会自动搜索相关命令，我们选择 `Go:Install/Update Tools `这个命令（使用 VS Code 打开 go 文件也会提示安装“xxx”工具）。
 
-![Install/Update Tools](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go3.png)
+![Install/Update Tools](./../Pictures/go3.png)
 
 
 
-![开始安装工具](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go3.png)
+![开始安装工具](./../Pictures/go3.png)
 
 
 <br/>
@@ -894,14 +894,14 @@ $ ./hello
 
 ```
 
-![编译文件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go4.png)
+![编译文件](./../Pictures/go4.png)
 
 
 <br/>
 
 > vscode配置GOPATH
 
-![配置GOPATH](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go6.png)
+![配置GOPATH](./../Pictures/go6.png)
 
 注意：这里图里面的注释错了，是 **`go.gopath`** 字段
 
@@ -924,14 +924,14 @@ $ go get github.com/derekparker/delve/cmd/dlv
 
 编译好的dlv会放在GOPATH的bin目录下。
 
-![启动文件配置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go5.png)
+![启动文件配置](./../Pictures/go5.png)
 
 
 <br/>
 
 > 添加配置
 
-![启动文件配置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go7.png)
+![启动文件配置](./../Pictures/go7.png)
 
 最后的launch.json配置如下：
 

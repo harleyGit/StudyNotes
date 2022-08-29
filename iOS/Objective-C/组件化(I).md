@@ -26,14 +26,14 @@
 
 - **具备组件化的情况**
 
-![ios_oc33](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc33.png)
+![ios_oc33](./../../Pictures/ios_oc33.png)
 
 
 <br/>
 
 - **组件生命周期维持**
 
-![ios_oc36](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc36.png)
+![ios_oc36](./../../Pictures/ios_oc36.png)
 
 
 <br/>
@@ -81,7 +81,7 @@
 
 一般一个项目主要分为三层：业务层、通用层、基础层
 
-![ios_oc25](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc25.webp)
+![ios_oc25](./../../Pictures/ios_oc25.webp)
 
 
 - 组件化封层之后，需要遵循一下原则：
@@ -98,7 +98,7 @@
 
 - **通用架构层级**
 
-![ios_oc35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc35.png)
+![ios_oc35](./../../Pictures/ios_oc35.png)
 
 
 <br/>
@@ -106,7 +106,7 @@
 
 - **通用架构注意：**
 
-![ios_oc34](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc34.png)
+![ios_oc34](./../../Pictures/ios_oc34.png)
 
 
 
@@ -162,7 +162,7 @@
 
 其中，各个模块间的关系如下所示：
 
-![ios_oc26](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc26.webp)
+![ios_oc26](./../../Pictures/ios_oc26.webp)
 
 
 
@@ -215,7 +215,7 @@ $ pod lib create HGLibrary
 //回车后终端会让你回答一些问题，如下：
 ```
 
-![私有库问题询问](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc5.png)
+![私有库问题询问](./../../Pictures/ios_oc5.png)
 
 
 
@@ -223,13 +223,13 @@ $ pod lib create HGLibrary
 
 - **2.文件夹模板展示**
 
-![文件展示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc6.png)
+![文件展示](./../../Pictures/ios_oc6.png)
 
 <br/>
 
 - **3.添加一个日志打印类`LogInfo`**
 
-![日志打印类](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc7.png)
+![日志打印类](./../../Pictures/ios_oc7.png)
 
 
 <br/>
@@ -244,22 +244,22 @@ $ cd /Users/harleyhuang/Desktop/HGLibrary/HGLibrary/Example
 $ pod install --no-repo-update
 ```
 
-![本地测试Pod install](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc8.png)
+![本地测试Pod install](./../../Pictures/ios_oc8.png)
 
 本地测试：
 
-![本地Pod install 效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc9.png)
+![本地Pod install 效果](./../../Pictures/ios_oc9.png)
 
 
 <br/>
 
 - **5.编辑CocoaPods的配置文件（后缀名为podspec)**
 
-![配置文件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc10.png)
+![配置文件](./../../Pictures/ios_oc10.png)
 
 复制私有库地址，在.podspec文件内的s.source替换地址
 
-![地址Copy](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc11.png)
+![地址Copy](./../../Pictures/ios_oc11.png)
 
 配置完成了
 
@@ -270,7 +270,7 @@ $ pod update --no-repo-update
 ```
 
 
-![success了](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc12.png)
+![success了](./../../Pictures/ios_oc12.png)
 
 
 打开项目，看看是否成功了。
@@ -302,7 +302,7 @@ $ pod lib lint
 ```
 
 
-![验证无法通过](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc15.png)
+![验证无法通过](./../../Pictures/ios_oc15.png)
 
 出现了2个警告和一个错误，后来分析原因：
 - 警告一：详细描述没有修改，需要进行修改；
@@ -339,7 +339,7 @@ $ git push origin master
 
 推送时，出现提示如下：
 
-![Error!](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc16.png)
+![Error!](./../../Pictures/ios_oc16.png)
 
 解决如下：
 
@@ -373,7 +373,7 @@ $ pod lib lint --allow-warnings --use-libraries
 
 打开github网站，在远程创建一个索引库：
 
-![远程创建索引库](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc13.png)
+![远程创建索引库](./../../Pictures/ios_oc13.png)
 
 
 远程索引库地址加入repo
@@ -387,7 +387,7 @@ $ pod repo add HGIndexLibraryRepo https://github.com/harleyGit/HGIndexLibraryRep
     
 在终端下的运行结果,此时索引库已经制作完成,可以进行创建组件工程了
     
-![索引库加入repo](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc14.png)
+![索引库加入repo](./../../Pictures/ios_oc14.png)
 
 
 <br/>
@@ -400,11 +400,11 @@ $ pod repo add HGIndexLibraryRepo https://github.com/harleyGit/HGIndexLibraryRep
 $ pod repo push HGIndexLibraryRepo HGLibrary.podspec
 ```
 
-![组件及索引完成](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc17.png)
+![组件及索引完成](./../../Pictures/ios_oc17.png)
 
 发布成功后，我们可以去码云看看HGIndexLibraryRepo的git项目有没有提交成功：
 
-![索引库完成](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc18.png)
+![索引库完成](./../../Pictures/ios_oc18.png)
 
 
 
@@ -418,7 +418,7 @@ $ pod search HGLibrary
 
 如下效果：
 
-![搜索库显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc19.png)
+![搜索库显示](./../../Pictures/ios_oc19.png)
 
 
 
@@ -448,7 +448,7 @@ end
 
 错误提示和解决如下图：
 
-![错误提示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc20.png)
+![错误提示](./../../Pictures/ios_oc20.png)
 
 
 后来各种尝试还是不行，经过同事提示原来私有库需要注明索引库的来源（公有库是不需要的），在Podfile注明引用库来源
@@ -466,7 +466,7 @@ source 'https://github.com/harleyGit/HGIndexLibraryRepo.git'
 接着再 工程中进行`pod install`,然后就可以再工程中使用了。😄
 
 
-![工程引用成功](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc21.png)
+![工程引用成功](./../../Pictures/ios_oc21.png)
 
 
 <br/>
@@ -508,18 +508,18 @@ $ export https_proxy=http://127.0.0.1:7890
 
 打开[**iPAddress**](https://github.com.ipaddress.com)，复制如下**IP Adress**：
 
-![图1](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc22.png)
+![图1](./../../Pictures/ios_oc22.png)
 
 
 
 打开[**github.global.ssl.fastly**](https://fastly.net.ipaddress.com/github.global.ssl.fastly.net#ipinfo)，复制如下**IP Adress**：
 
-![图2](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc23.png)
+![图2](./../../Pictures/ios_oc23.png)
 
 
 打开[**assets-cdn.Github.com - Github Website**](https://github.com.ipaddress.com/assets-cdn.github.com)，复制如下**IP Adress**：
 
-![图2](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc23.png)
+![图2](./../../Pictures/ios_oc23.png)
 
 <br/>
 
@@ -554,19 +554,19 @@ $ sudo killall -HUP mDNSResponder;say DNS cache has been flushed
 
 &emsp; **1.** 首先我们需要把子库Foundation拉下来,放在iOS_PrivateLibraries.在Foundation库中新建一个TestOne的文件夹,用来存放新的功能代码,切记新的功能代码要放在这里,否则主项目MainProject无法使用.
 
-![新建更新代码文件夹](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc96.png)
+![新建更新代码文件夹](./../../Pictures/ios_oc96.png)
 
 <br/>
 
 &emsp; **2.** 将新建的TestOne文件夹放入子库Foundation中:
 
-![TestOne放入子库中](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc97.png)
+![TestOne放入子库中](./../../Pictures/ios_oc97.png)
 
 <br/>
 
 &emsp; **3.** 新建LogInfo类,并进行配置
 
-![配置](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc98.png)
+![配置](./../../Pictures/ios_oc98.png)
 
 
 <br/>
@@ -576,13 +576,13 @@ $ sudo killall -HUP mDNSResponder;say DNS cache has been flushed
 主项目Podfile地址:/Users/xxx/Documents/GitLab/Ccrm/Ccrm-iOS/Podfile
 子库Foundation地址: /Users/xxx/Documents/GitLab/Ccrm/iOS_PrivateLibraries/Foundation 
 
-![主项目和子项目文件地址](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc100.png)
+![主项目和子项目文件地址](./../../Pictures/ios_oc100.png)
 
 <br/>
 
 主项目的Podfile引入本地子库Foundation路径,如下:
 
-![主项目和子项目的连接](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc99.png)
+![主项目和子项目的连接](./../../Pictures/ios_oc99.png)
 
 然后在终端输入:
 
@@ -595,7 +595,7 @@ pod install
 
 然后就可以在主项目中的**Pods/Development Pods/Foundation/TestOne**下看到之前在子库Foundation新建的文件,如下:
 
-![查看到主项目中子库Foundation代码](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc101.png)
+![查看到主项目中子库Foundation代码](./../../Pictures/ios_oc101.png)
 
 然后你就可以在主项目./Development Pods/Foundation文件下添加修改子库Foundation的代码,同时代码也会同步到子库中了.
 
@@ -617,13 +617,13 @@ pod install
 
 &emsp; **6.** 子库代码修改完后,然后就可以修改配置文件的版本号,然后提交代码,打版本tag了
 
-![修改配置版本号,并提交代码](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc102.png)
+![修改配置版本号,并提交代码](./../../Pictures/ios_oc102.png)
 
 <br/>
 
 也可以不用更新版本号的,可以直接定位到要提交的记录,如下:
 
-![提交版本记录](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc103.png)
+![提交版本记录](./../../Pictures/ios_oc103.png)
 
 
 

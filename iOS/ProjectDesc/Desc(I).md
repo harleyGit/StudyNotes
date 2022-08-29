@@ -266,7 +266,7 @@ func delay(_ delay: Double, closure: @escaping () -> Void) {
 
 ```
 
-![z48](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z48.png)
+![z48](./../../Pictures/z48.png)
 
 <br/>
 <br/>

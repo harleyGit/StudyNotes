@@ -53,7 +53,7 @@
 <br/>
 
 
-![react31](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react31.png)
+![react31](./../Pictures/react31.png)
 
 
 
@@ -306,7 +306,7 @@ ReactDOM.render(
 
 效果：
 
-![react32](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react32.png)
+![react32](./../Pictures/react32.png)
 
 
 这里将“Hello React”这段字符串渲染到了#root这个div中，当然也可以利用React-Node做更复杂的结构渲染。
@@ -380,7 +380,7 @@ React.createElement("h1", {
 > <h2 id="项目文件描述">项目文件描述</h2>
 
 
-![react33](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react33.png)
+![react33](./../Pictures/react33.png)
 
 - node_modules，在项目中安装的依赖都会放在这个文件夹下
 
@@ -529,7 +529,7 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 >## <h2 id="生命周期方法">[生命周期方法](https://www.runoob.com/react/react-component-life-cycle.html)</h2>
 
 
-![37](![react36](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react37.png))
+![37](![react36](./../Pictures/react37.png))
 
 - **componentWillMount** 在渲染前调用,在客户端也在服务端。
 
@@ -663,7 +663,7 @@ ReactDOM.render(
 
 效果图：
 
-![测试生命周期](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react7.png)
+![测试生命周期](./../Pictures/react7.png)
 
 
 控制台打印：
@@ -848,7 +848,7 @@ export function TestHOC1() {
 
 效果图: 
 
-![react34](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react34.png)
+![react34](./../Pictures/react34.png)
 
 **在使用useState时，有三个问题要注意:**
 
@@ -878,7 +878,7 @@ export function TestHOC2() {
 
 效果图: 
 
-![react35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react35.png)
+![react35](./../Pictures/react35.png)
 
 
 
@@ -952,7 +952,7 @@ export function TestHOC3() {
 
 效果图: 
 
-![react36](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react36.png)
+![react36](./../Pictures/react36.png)
 
 
 依赖参数，其本身是一个数组，在数组中放入要依赖的数据，当这些数据有更新时，就会执行回调函数。整个组件的生命周期过程如下：
@@ -1038,7 +1038,7 @@ export default TestApp1
 
 效果图:
 
-![react35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react35_0.png)
+![react35](./../Pictures/react35_0.png)
 
 
 
@@ -1103,7 +1103,7 @@ export default TestApp1
 ```
 
 
-![react35](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react35_1.png)
+![react35](./../Pictures/react35_1.png)
 
 总结:在子组件不需要父组件的值和函数的情况下，只需要使用memo函数包裹子组件即可。而在使用函数的情况，需要考虑有没有函数传递给子组件使用useCallback。而在值有所依赖的项，并且是对象和数组等值的时候而使用useMemo（当返回的是原始数据类型如字符串、数字、布尔值，就不要使用useMemo了）。不要盲目使用这些hooks
 
@@ -1219,7 +1219,7 @@ export default TestApp1
 
 效果图:
 
-![长轮询](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react36_0.png)
+![长轮询](./../Pictures/react36_0.png)
 
 <br/>
 
@@ -1328,7 +1328,7 @@ export function TestHOC4_1() {
 
 效果图：
 
-![38](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react38.png)
+![38](./../Pictures/react38.png)
 
 &emsp; 如果使用的是HashRouter，则把BrowserRouter替换成HashRouter即可。
 
@@ -1641,7 +1641,7 @@ export default function RouterUndefinedView() {
 
 效果图：
 
-![39](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react39.png)
+![39](./../Pictures/react39.png)
 
 
 <br/>
@@ -1679,13 +1679,13 @@ export default function RouterUndefinedView() {
 &emsp; 父组件通过props将数据传递给子组件，子组件通过this.props.属性名调用
 
 
-![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react9.gif)
+![Code](./../Pictures/react9.gif)
 
 <br/>
 
 效果：
 
-![效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react10.png)
+![效果](./../Pictures/react10.png)
 
 
 
@@ -1699,11 +1699,11 @@ export default function RouterUndefinedView() {
 - 子组件调用父组件传递过来的方法，传递参数，修改父组件的属性。相当于子组件调用父组件的方法来更新父组件的数据，或者向父组件传递数据
 
 
-![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react11.png)
+![Code](./../Pictures/react11.png)
 
 <br/>
 
-![效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react12.gif)
+![效果](./../Pictures/react12.gif)
 
 
 
@@ -1715,7 +1715,7 @@ export default function RouterUndefinedView() {
 
 &emsp; 在一个兄弟节点中修改父组件的数据，然后父组件会同步到另一个需要通信的子组件，就完成了一次通信
 
-![Code](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react13.png)
+![Code](./../Pictures/react13.png)
 
 
 
@@ -1725,7 +1725,7 @@ export default function RouterUndefinedView() {
 > <h3 id="context传值">context传值</h3>
 
 
-![context简单练习](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react55.png)
+![context简单练习](./../Pictures/react55.png)
 
 
 
@@ -1747,11 +1747,11 @@ export default function RouterUndefinedView() {
 
 **原理图解：**
 
-![模型图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react14.png)
+![模型图](./../Pictures/react14.png)
 
 <br/>
 
-![模型图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react15.png)
+![模型图](./../Pictures/react15.png)
 
 
 
@@ -1981,7 +1981,7 @@ reportWebVitals();
 
 效果图：
 
-![效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react16.png)
+![效果图](./../Pictures/react16.png)
 
 
 
@@ -2026,11 +2026,11 @@ ReactDOM.render(
 reportWebVitals();
 ```
 
-![标签元素排列](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react17.png)
+![标签元素排列](./../Pictures/react17.png)
 
 
 
-![props打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react18.png)
+![props打印](./../Pictures/react18.png)
 
 
 
@@ -2087,9 +2087,9 @@ reportWebVitals();
 ```
 
 
-![控制台打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react19.png)
+![控制台打印](./../Pictures/react19.png)
 
-![标签显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react20.png)
+![标签显示](./../Pictures/react20.png)
 
 
 
@@ -2150,10 +2150,10 @@ reportWebVitals();
 
 ```
 
-![标签元素展示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react23.png)
+![标签元素展示](./../Pictures/react23.png)
 
 
-![属性打印](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react22.png)
+![属性打印](./../Pictures/react22.png)
 
 
 
@@ -2215,13 +2215,13 @@ reportWebVitals();
 ```
 
 
-![标签元素展示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react24.png)
+![标签元素展示](./../Pictures/react24.png)
 
 
-![属性打印01](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react25.png)
+![属性打印01](./../Pictures/react25.png)
 
 
-![属性打印02](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react26.png)
+![属性打印02](./../Pictures/react26.png)
 
 
 
@@ -2411,7 +2411,7 @@ isEmpty(undefined)     //true
 
 &emsp; 搭建项目使用的是 `create-react-app (已自动集成webpack相关配置)`官方提供的脚手架命令，目录结构如下：
 
-![33](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react33.png)
+![33](./../Pictures/react33.png)
 
 asq: 为什么 没有webpack配置文件？
 
@@ -2438,14 +2438,14 @@ create-react-app 已经为做了绝大部分事情，配好了webpack
 
 分别对应项目scripts下的文件：
 
-![40](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react40.webp)
+![40](./../Pictures/react40.webp)
 
 build文件就是打包项目打包的一系列配置.
 
 
 运行 npm run build 后项目中会多出一个build的文件夹
 
-![41](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react41.webp)
+![41](./../Pictures/react41.webp)
 
 
 我们只需要把 build这个文件夹 放到云服务器上 即可

@@ -43,20 +43,20 @@
 
 &emsp; AMD（Asynchronous Module Definition）规范，即异步模块定义。它采用异步方式加载模块，模块的加载不影响后面语句的运行。所有依赖该模块的语句都定义在一个回调函数中，等加载完成之后，这个回调函数才会运行。RequireJS是对这个异步加载模块方法的实现。它的基本思想是：·通过define方法将代码定义为模块；·通过require方法实现代码的模块加载。使用require.js的示例项目结构如下：\
 
-![目录结构](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/node0.png)
+![目录结构](./../Pictures/node0.png)
 
 <br/>
 
 index.html Code
 
-![index.html](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/node1.png)
+![index.html](./../Pictures/node1.png)
 
 <br/>
 
 
 math.js Code：
 
-![math.js](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/node2.png)
+![math.js](./../Pictures/node2.png)
 
 RequireJS源码可以从[官方网站下载](https://requirejs.org/)
 
@@ -244,7 +244,7 @@ npx babel-node index.js
 
 > <h1 id='HTTP简介'>HTTP简介</h1>
 
-![请求模式](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/node3.png)
+![请求模式](./../Pictures/node3.png)
 
 
 <br/>

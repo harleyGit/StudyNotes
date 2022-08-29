@@ -19,13 +19,13 @@
 
 &emsp; Mach-O 文件主要由 header（头部）、Load command（加载命令）和Data 三部分组成，其中 Data 包含多个 Segment（段），Segment 包含多个Section（节区）.
 
-![格式结构](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc94.png)
+![格式结构](./../../Pictures/ios_oc94.png)
 
 &emsp; 查看Mach-O文件,可以使用MachOView软件.不同的CPU架构对应不同的Mach-O文件,比如同时支持 ARMv7 和 ARM64.可以将这2个不同的架构的Mach-O文件进行合并称为fat文件.
 
 
 
-![fat文件结构](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc95.png)
+![fat文件结构](./../../Pictures/ios_oc95.png)
 
 <br/>
 

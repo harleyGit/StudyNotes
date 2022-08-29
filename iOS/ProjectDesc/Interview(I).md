@@ -531,8 +531,9 @@ atomic表示，我TM也很冤啊！！！！
 - 用 @property 声明 NSString、NSArray、NSDictionary 经常使用 copy 关键字，是因为他们有对应的可变类型：NSMutableString、NSMutableArray、NSMutableDictionary，他们之间可能进行赋值操作，为确保对象中的字符串值不会无意间变动，应该在设置新属性值时拷贝一份。
 
 
-[参考](https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01)
-[参考2](https://juejin.cn/post/6844903480017043464#heading-3)
+- [参考](https://github.com/ChenYilong/iOSInterviewQuestions)
+- [参考2](https://juejin.cn/post/6844903480017043464#heading-3)
+- [copy的使用](https://www.jianshu.com/p/bdc516a514f6)
 
 
 

@@ -17,7 +17,7 @@
 [HTTP长连接和短连接 + Websocket](https://www.cnblogs.com/barrywxx/p/8569380.html)
 
 
-![网络协议层划分](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/network0.png)
+![网络协议层划分](./../Pictures/network0.png)
 
 
 
@@ -59,7 +59,7 @@
 
 &emsp;  Socket 其实并不是一个协议。它工作在 OSI 模型会话层（第5层），是为了方便大家直接使用更底层协议（一般是 TCP 或 UDP ）而存在的一个抽象层。Socket是对TCP/IP协议的封装，Socket本身并不是协议，而是一个调用接口(API)。
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z61.png)
+![<br/>](./../Pictures/z61.png)
 
 我们在应用层，使用socket，轻易的实现了进程之间的通信（跨网络的）。想想，如果没有socket，我们要直面TCP/IP协议，我们需要去写多少繁琐而又重复的代码。
 

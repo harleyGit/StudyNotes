@@ -63,7 +63,7 @@
 
 **WKNavigationDelegate方法加载流程图**
 
-![oc27](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc27.png)
+![oc27]((./../../Pictures/ios_oc27.png)
 
 - **代理方法内部剖析：**
 	- **decidePolicyForNavigationAction 剖析**
@@ -76,7 +76,7 @@
 		- 当 NetworkProcess 进程发生网络错误时，错误首先由 NSURLSession 回调到 WebContent 层。WebContent 会判断当前主文档加载状态，如果处于临时态，则错误会回调给 didFailProvisionalNavigation 方法；如果处于提交态，则错误会回调给 didFailNavigation 方法。
 
 
-			![oc28](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc28.png)
+			![oc28]((./../../Pictures/ios_oc28.png)
 			
 			主文档加载状态图
 

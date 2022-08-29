@@ -26,7 +26,7 @@ UIView从Draw到Render的过程有如下几步：
 
 &emsp; 下图就是从CPU到GPU的过程：
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/optimization0.jpg)
+![<br/>](./../Pictures/optimization0.jpg)
 
 <br/>
 
@@ -34,7 +34,7 @@ UIView从Draw到Render的过程有如下几步：
 
 <br/>
 
-![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/optimization1.jpg)
+![](./../Pictures/optimization1.jpg)
 
 iOS中图形绘制框架的大致结构
 

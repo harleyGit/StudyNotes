@@ -227,7 +227,7 @@ export class MyComponent extends Component {
 
 效果：
 
-![29](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react29.png)
+![29](./../Pictures/react29.png)
 
 
 
@@ -312,7 +312,7 @@ export class SimpleControlledComponent extends React.Component {
 
 
 效果图：
-![30](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react30.png)
+![30](./../Pictures/react30.png)
 
 
 

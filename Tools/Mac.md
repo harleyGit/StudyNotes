@@ -64,7 +64,7 @@
 
 - Mac的DNS服务IP配置
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_mac_0.png)
+![<br/>](./../Pictures/tool_mac_0.png)
 
 
 <br/>
@@ -273,13 +273,13 @@ rm -rf ~/Library/Caches/*
 
 - 【安全隐私】没有权限安装来路不明的 App
 
-![a27](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a27.jpg)
+![a27](./../Pictures/a27.jpg)
 
 打开权限，在终端输入：`sudo spctl --master-disable`
 
 - 文件损坏无法安装
 
-![a28](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a28.png)
+![a28](./../Pictures/a28.png)
 
 在终端输入：`sudo xattr -d com.apple.quarantine /Applications/[App的名字].app`， 这个可以从文件夹中将app拖入终端，然后再输入密码解决了，亲测可用。
 

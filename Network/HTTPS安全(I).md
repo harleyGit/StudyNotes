@@ -17,7 +17,7 @@
 
 <br/>
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z54.png)
+![<br/>](./../Pictures/z54.png)
 
 - **1\. 客户端发起HTTPS请求**
 

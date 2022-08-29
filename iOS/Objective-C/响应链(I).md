@@ -10,7 +10,7 @@
 
 ># <h1 id = "响应者继承链">响应者继承链</h1>
 
-![UI继承链](https://upload-images.jianshu.io/upload_images/2959789-20f988be2250ac28.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![UI继承链](./../../Pictures/ios_oc1_26.png)
 
 &emsp;  `响应者对象`：继承自`UIResponder`的对象称之为响应者对象。`UIApplication`、`UIView`、`UIViewController`和所有继承`UIView`的`UIKit`类都直接或间接的继承自`UIResponder`。
 

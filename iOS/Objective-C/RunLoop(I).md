@@ -1562,7 +1562,7 @@ if (sourceHandledThisLoop && stopAfterHandle) {
 
 [CFRunloop完整代码,](https://opensource.apple.com/source/CF/CF-1153.18/CFRunLoop.c.auto.html)Runloop过程处理图:
 
-![](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc0_1.webp)
+![](./../../Pictures/ios_oc0_1.webp)
 
 
 

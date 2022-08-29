@@ -22,7 +22,7 @@
 
 > MVC介绍
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z52.png)
+![<br/>](./../../Pictures/z52.png)
 
  
 - **黄线**意味着你不能 穿越这黄线，任何一个方向都不行，即M和V完全分离。
@@ -84,7 +84,7 @@
 <br/>
 
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z53.png)
+![<br/>](./../../Pictures/z53.png)
 
 
 - M：模型model的对象通常非常的简单。根据Apple的文档，model应包括数据和操作数据的业务逻辑。而在实践中，model层往往非常薄，不管怎样，model层的业务逻辑不应被拖入到controller。
@@ -102,7 +102,7 @@
 
 > MVC实战
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z54.png)
+![<br/>](./../../Pictures/z54.png)
 
 - Controller ->Model:单向通信，Controller需要将Model呈现给用户，因此需要知道模型的一切，还需要有同Model完全通信的能力，并且能任意使用Model的API。
 - 2、Controller ->View:单向通信，Ccontroller通过View来布局用户界面。
@@ -239,7 +239,7 @@
 @end
 ```
 
-![<br/>](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z55.png)
+![<br/>](./../../Pictures/z55.png)
 
 
 

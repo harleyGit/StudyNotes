@@ -80,11 +80,11 @@
 
 - 非全面屏状态栏（iPhoneX 之前机型导航栏） 
 
-![非全面屏状态栏](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a8.png)
+![非全面屏状态栏](./../../Pictures/a8.png)
 
 
 - 全面屏状态栏（iPhoneX 之后机型导航栏）
-![全面屏状态栏](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a9.png)
+![全面屏状态栏](./../../Pictures/a9.png)
 
 
 &emsp;	从以上两图，我们可以看出全面屏的顶部`Statusbar`变高了，其他部分没变。`Largetitle`是iOS11中新加入的特性。当然我们开发中很少用到Largetitle。
@@ -107,7 +107,7 @@
 
 -	iPhone 分辨率
 
-![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a6.png)
+![iPhone分辨率](./../../Pictures/a6.png)
 
 
 
@@ -251,9 +251,9 @@
 
 <br/>
 
-![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a7.png)
+![iPhone分辨率](./../../Pictures/a7.png)
 
-![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a10.png)
+![iPhone分辨率](./../../Pictures/a10.png)
 
 &emsp;	可以看到没有改变`tableView的frame`,只是显示范围变了。如果没有这个属性，我们要实现同样的效果，tableView尺寸要这样设置。当然手动修改insets也是可以的。
 
@@ -279,7 +279,7 @@ height = KScreenHeight - KStatusBarAndNavigationBarHeight
 
 
 
-![iPhone分辨率](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/a11.png)
+![iPhone分辨率](./../../Pictures/a11.png)
 
 如果你需要自定义内边距，代码将变成以下这样
 

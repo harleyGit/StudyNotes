@@ -58,7 +58,7 @@
 
 打开`Xcode->Preferebces`,选择如下图：
 
-![z46](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z46.png)
+![z46](./../Pictures/z46.png)
 
 <br/>
 <br/>
@@ -67,7 +67,7 @@
 
 Command+点击
 
-![z47](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z47.png)
+![z47](./../Pictures/z47.png)
 
 
 <br/>

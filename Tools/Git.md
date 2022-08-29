@@ -232,7 +232,7 @@ $  git log --graph
 
 > <h3 id='分支的高级合并'>分支的高级合并</h3>
 
-![git5](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git8.png)
+![git5](./../Pictures/tool_git8.png)
 
 低级的分支合并，执行的操作步骤为
 
@@ -245,7 +245,7 @@ $ git merge feature-B
 
 **高级分支合并：** 使用rebase进行合并，减少分支节点。
 
-![git6](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git9.png)
+![git6](./../Pictures/tool_git9.png)
 
 &emsp; 首先是 git rebase：把 feature-B 分支上的 B1、B2节点剥下来放到临时区，让 feature-B 分支的拿到 M3、M4 的连接信息，然后从临时区把 B1、B2 连接到 M4 后面
 
@@ -288,7 +288,7 @@ $ git log --graph
 $  git reset --hard 081b86291d34d11d8df775bf40cae04d94d6d121
 ```
 
-![git0](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git5.png)
+![git0](./../Pictures/tool_git5.png)
 
 &emsp; 成功回溯到特性分支（feature-A）创建之前的状态.
 
@@ -311,7 +311,7 @@ $  git checkout master
 $   git reset --hard 6e6b58c
 ```
 
-![tool_git6](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git6.png)
+![tool_git6](./../Pictures/tool_git6.png)
 
 <br/>
 
@@ -532,7 +532,7 @@ $ git clone <版本库url地址> <本地目录名>
 $  git branch -a
 ```
 
-![git7](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git7.png)
+![git7](./../Pictures/tool_git7.png)
 
 
 <br/>
@@ -1260,21 +1260,21 @@ v13.12.0
 
 &emsp; 提交代码会发现如下问题：
 
-![密码不能使用](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git-1.png)
+![密码不能使用](./../Pictures/tool_git-1.png)
 
 &emsp; 这是因为GitHub为了安全，使用token替代了密码，你需要重新设置，这项规定是从2021.8.13日开始的。下面按照步骤来就可以解决了：
 
-![步骤一](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git-1.png)
+![步骤一](./../Pictures/tool_git-1.png)
 
-![步骤二](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git1.png)
+![步骤二](./../Pictures/tool_git1.png)
 
-![步骤三](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git2.png)
+![步骤三](./../Pictures/tool_git2.png)
 
-![步骤四](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git3.png)
+![步骤四](./../Pictures/tool_git3.png)
 
 打开Mac上的KeyChain应用，然后按照下面步骤来：
 
-![步骤五](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_git4.png)
+![步骤五](./../Pictures/tool_git4.png)
 
 然后，你在终端输入你的提交代码命令
 

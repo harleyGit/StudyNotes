@@ -26,7 +26,7 @@
 - (void)storeImage2:(UIImage *_Nullable)image forKey:(NSString *)key DEPRECATED_MSG_ATTRIBUTE("please use storeImage: imageData: forKey: completion:");
 ```
 
-![z22](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z22.png)
+![z22](./../../Pictures/z22.png)
 
 
 

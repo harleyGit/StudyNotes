@@ -77,7 +77,7 @@
 ><h1 id='使用目录'> 使用目录</h1>
 
 
-![z6](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z6.png)
+![z6](./../Pictures/z6.png)
 
 
 - `.．`指向当前目录的上一级目录，也称为父目录;
@@ -373,7 +373,7 @@ huanggang ttys000  Nov  8 12:03
 ```
 管道如下图：
 
-![z9](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z9.png)
+![z9](./../Pictures/z9.png)
 
 <br/>
 
@@ -398,7 +398,7 @@ huanggang ttys000  Nov  8 12:03
 | :-- | :-- | :-- |
 | date; pwd | Sun Mar  6 10:37:19 CST 2022 <br/> /Users/harleyhuang/Documents/GitHub/StudyNotes | &emsp; 如果想在一行中输入多个命令，只需要使用分号作为命令之间的分隔符就行了 |  
 | sort bigdata > out &  | [1] 85527 | &emsp; 将命令或命令序列放入后台运行的写法是在命令尾部加上字符&。这表示该命令不再和终端绑定在一起，你可以继续其他工作。后台命令的标准输出仍会被导向终端，不过在大多数情况下，标准输入不会再和终端相关联。如果命令试图从标准输入中读取，它将停止运行，等待被带回前台. <br/><br/> &emsp; 第一个是命令的作业号（job number），第二个是进程ID（process ID），也称为PID。在刚才的例子中，作业号是1，进程ID是85527 |  
-| ps | ![ ](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_unix1.png) | ps命令能够给出系统中所运行进程的信息。如果不使用任何选项的话，该命令只会打印出你所拥有的进程状态 <br/><br/> ps命令会打印出4列信息（视系统而定）:PID（进程ID）；TTY（进程所在的终端号）；TIME（以分秒计算的进程所使用的计算机时间）；CMD（进程名称）。 |  
+| ps | ![ ](./../Pictures/tool_unix1.png) | ps命令能够给出系统中所运行进程的信息。如果不使用任何选项的话，该命令只会打印出你所拥有的进程状态 <br/><br/> ps命令会打印出4列信息（视系统而定）:PID（进程ID）；TTY（进程所在的终端号）；TIME（以分秒计算的进程所使用的计算机时间）；CMD（进程名称）。 |  
 | ps -f |  | 如果配合-f选项，ps会打印出更多的进程信息，包括父进程ID（PPID）、进程开始时间（STIME）及其他命令参数 |  
 
 
@@ -413,7 +413,7 @@ huanggang ttys000  Nov  8 12:03
 
 &emsp; UNIX系统在逻辑上被划分为两个不同的部分：内核和实用工具（Utility），如下图所示。或者你也可以认为是内核和其他部分，通常来说，所有的访问都要经由Shell。
 
-![Unxi系统](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/unix_tool2.png)
+![Unxi系统](./../Pictures/unix_tool2.png)
 
 
 &emsp; 内核是UNIX系统的核心所在，当打开计算机并启动（booted）之后，内核就位于计算机的内存中，直到关机为止。
@@ -430,7 +430,7 @@ huanggang ttys000  Nov  8 12:03
 &emsp; 当Shell启动时，它会在终端中显示出一个命令行提示符，通常是美元符$，然后等待用户输入命令（图2.6中的第1步和第2步）。每次输入命令并按Enter键（第3步）, Shell就会分析输入的内容，然后执行所请求的操作（第4步）。
 
 
-![操作步骤](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/tool_unix2.png)
+![操作步骤](./../Pictures/tool_unix2.png)
 
 &emsp; 如果你要求Shell调用某个程序，Shell会搜索磁盘，查找环境变量PATH中指定的所有目录，直到找到指定的程序。找到了该程序后，Shell会将自己复制一份（称为子Shell），让内核使用指定的程序替换这个子Shell，接着登录Shell就会“休眠”，等待被调用的程序执行完毕（第5步）。内核将指定程序复制到内存中并开始执行。这个复制过来的程序称为进程。程序和进程之间是有区别的，前者是保存在磁盘上的文件，而后者位于内存中并被逐行执行。
 

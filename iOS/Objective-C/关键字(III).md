@@ -59,7 +59,7 @@
 ># copy
 
 
-![几种拷贝区别](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z35.png)
+![几种拷贝区别](./../../Pictures/z35.png)
 
 &emsp;  copy建立一个相同的对象，如果一个NSString对象，假如地址为0x1111，内容为@"hello"，通过Copy到另一个对象之后，地址为0x2322，内容也相同，而新的对象retain为1，旧的对象是不会发生变化。
 

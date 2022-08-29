@@ -630,7 +630,7 @@ render() {
 
 因为在App.js文件中进行调用的,所以它只会执行一次也就是使用 `npm start` 命令来执行时在控制台会有打印输出,如下:
 
-![挂载到window上了](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react54.png)
+![挂载到window上了](./../Pictures/react54.png)
 
 
 <br/>
@@ -1265,13 +1265,13 @@ test ('this is a test');
 
 > <h5 id='require文件路径'>require('文件路径')</h3>
 
-![加载模块逻辑图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react52.png)
+![加载模块逻辑图](./../Pictures/react52.png)
 
 &emsp; node中使用require时若参数是一个文件夹时，或者特殊的情况require('..');require('.');
 
 &emsp;这里以require('./router')说明，说明是查找router文件夹.这时候，node会优先在router文件夹查找package.json这个文件(即使有index.js这个文件也会先被忽略)，然后查找package.json文件里的main键值对应的值xx.js，然后拿到这个值进行加载相应的文件. 否则，如果没有键值main或者没有找到xx.js则开始查找当前目录下有没有index.js，如果有则使用，否则出错。因为这里router文件夹下有index.js文件所以就会加载index文件夹.如下:
 
-![加载index.js文件夹](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react53.png)
+![加载index.js文件夹](./../Pictures/react53.png)
 
 
 
@@ -1413,7 +1413,7 @@ returnedTarget // { a: 1, b: 4, c: 5 }
 
 &emsp; [优雅的H5下拉刷新。零依赖，高性能，多主题，易拓展.](http://www.minirefresh.com/minirefresh-doc/)
 
-![react42](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react42.png)
+![react42](./../Pictures/react42.png)
 
 
 <br/>
@@ -1455,7 +1455,7 @@ returnedTarget // { a: 1, b: 4, c: 5 }
 &emsp; 内联元素以及没有 CSS 样式的元素的 clientWidth 属性值为 0。Element.clientWidth 属性表示元素的内部宽度，以像素计。该属性包括内边距 padding，但不包括边框 border、外边距 margin 和垂直滚动条（如果有的话）。
 
 
-![图解](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_3.png)
+![图解](./../Pictures/js_3.png)
 
 
 <br/>
@@ -1557,7 +1557,7 @@ returnedTarget // { a: 1, b: 4, c: 5 }
 ```
 
 
-![弹框延迟](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_4.png)
+![弹框延迟](./../Pictures/js_4.png)
 
 - clearTimeout() 方法可取消由 setTimeout() 方法设置的定时操作。
 - clearTimeout() 方法的参数必须是由 setTimeout() 返回的 ID 值。
@@ -1712,7 +1712,7 @@ field.addEventListener("change", function() {
 
 **window.navigator 对象包含有关访问者浏览器的信息**
 
-![navigator信息](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react6.png)
+![navigator信息](./../Pictures/react6.png)
 
 **警告!!!**
 
@@ -1924,7 +1924,7 @@ div1..focus();
 - scrollLeft: 被隐藏在内容区域左侧的像素数。通过设置这个属性可以改变元素的滚动位置。
 - scrollTop: 被隐藏在内容区域上方的像素数。通过设置这个属性可以改变元素的滚动位置。
 
-![滚动四属性](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react28.png)
+![滚动四属性](./../Pictures/react28.png)
 
 
 &emsp; 在确定文档的总高度时 (包括基于视口的最小高度时), 必须取得 scrollwidth/clientwidth 和 scrollHeight/clientHeight 中的最大值，才能保证在跨浏览器的环境下得到精确的结果。下面就是这样一个例子。
@@ -1977,7 +1977,7 @@ function scrollToTop(element) {
 
 &emsp; 如果是标准盒子模型，元素的尺寸等于width/height + padding + border-width的总和。如果box-sizing: border-box，元素的的尺寸等于 width/height。
 
-![位置显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react27.png)
+![位置显示](./../Pictures/react27.png)
 
 
 
@@ -2375,7 +2375,7 @@ _renderIndustryTemplate = () => {
 
 效果图：
 
-![父组件没有使用display: flex效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_0.png)
+![父组件没有使用display: flex效果](./../Pictures/js_0.png)
 
 没有使用display: flex情况下div是块级元素，独占一行。
 
@@ -2427,7 +2427,7 @@ _test1 = () => {
 
 ```
 
-效果：![自身使用display: flex效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_2.png)
+效果：![自身使用display: flex效果](./../Pictures/js_2.png)
 
 - 其内容是被子组件填充的，其高度是随着子组件的增加而增加，但是其宽度可以达到100%;
 - 若是没有子组件，也没有设其宽度、高度，则它的内容是看不到的，需要设置其宽、高的；
@@ -2466,7 +2466,7 @@ _test1 = () => {
 ```
 
 
-![父组件使用display: flex效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_1.png)
+![父组件使用display: flex效果](./../Pictures/js_1.png)
 
 
 结论：当父组件使用了 flex后，块级元素的宽度是随着内容的扩充而扩充，但他的高度相当于父级组件是100%充满的。
@@ -2528,7 +2528,7 @@ yarn  pkgv2 treasure
 
 打包的文件是：
 
-![打包的文件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/react8.png)
+![打包的文件](./../Pictures/react8.png)
 
 
 
@@ -2612,7 +2612,7 @@ _startScroll = (index) => {
 
 
 
-![效果显示](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/js_5.png)
+![效果显示](./../Pictures/js_5.png)
 
 <br/>
 
