@@ -29,59 +29,65 @@
 
 <br/>
 - ###单订阅
+
 ```
-         ///定义一个Controller
-          StreamController<List<String>> _dataController = StreamController<List<String>>();
-          ///获取 StreamSink 做 add 入口
-          StreamSink<List<String>> _dataSink = _dataController.sink;
-          ///获取 Stream 用于监听
-          Stream<List<String>> _dataStream =  _dataController.stream;
-          ///事件订阅对象
-          StreamSubscription _dataSubscription = _dataStream.listen((value){
-            ///do change
-            print('监听值为：${value}');
-          });
-          ///改变事件
-          _dataSink.add(["first", "second", "three", "more"]);
+ ///定义一个Controller
+  StreamController<List<String>> _dataController = StreamController<List<String>>();
+  ///获取 StreamSink 做 add 入口
+  StreamSink<List<String>> _dataSink = _dataController.sink;
+  ///获取 Stream 用于监听
+  Stream<List<String>> _dataStream =  _dataController.stream;
+  ///事件订阅对象
+  StreamSubscription _dataSubscription = _dataStream.listen((value){
+    ///do change
+    print('监听值为：${value}');
+  });
+  ///改变事件
+  _dataSink.add(["first", "second", "three", "more"]);
 ```
 打印：![输出监听值](https://upload-images.jianshu.io/upload_images/2959789-5ac8833fa3c8c3bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 `其他的`
-<br/>
-```
-          StreamController controller = StreamController<String>();
-          StreamSink sink = controller.sink;
-          Stream stream = controller.stream;
 
-          stream.transform(StreamTransformer<String, String>.fromHandlers(handleData: (String data, EventSink<String> sink) {
-            if (!data.contains('数据2')) {
-              sink.add(data);
-            }
-          })).listen((event) {
-            print('接受到的数据是： ${event}');
-          });
-          sink.add('3秒后才设置监听。');
+<br/>
+
 ```
+StreamController controller = StreamController<String>();
+StreamSink sink = controller.sink;
+Stream stream = controller.stream;
+
+stream.transform(StreamTransformer<String, String>.fromHandlers(handleData: (String data, EventSink<String> sink) {
+if (!data.contains('数据2')) {
+  sink.add(data);
+}
+})).listen((event) {
+print('接受到的数据是： ${event}');
+});
+sink.add('3秒后才设置监听。');
+```
+
 打印：
+
 `flutter: 接受到的数据是： 3秒后才设置监听。`
 
 
 <br/>
+
 ```
-          StreamController controller = StreamController<String>();
-          StreamSink sink = controller.sink;
-          Stream stream = controller.stream;
+StreamController controller = StreamController<String>();
+StreamSink sink = controller.sink;
+Stream stream = controller.stream;
 
 
-          StreamSubscription subscription = controller.stream.transform(StreamTransformer<String, String>.fromHandlers(handleData: (String data, EventSink<String> sink){
-            print('transform');
-            if (!data.contains('数据3')) {
-              sink.add(data);
-            }
-          })).listen((event) {
-            print('接受到的数据是： ${event}');
-          }); 
-          sink.add('我是一条新的消息');
+StreamSubscription subscription = controller.stream.transform(StreamTransformer<String, String>.fromHandlers(handleData: (String data, EventSink<String> sink){
+print('transform');
+if (!data.contains('数据3')) {
+  sink.add(data);
+}
+})).listen((event) {
+print('接受到的数据是： ${event}');
+}); 
+sink.add('我是一条新的消息');
 
 ```
 打印：
@@ -92,7 +98,9 @@
 
 
 <br/>
+
 - ### 广播类Stream
+
 ```
 // 初始化一个int类型的广播Stream controller
   final StreamController<int> ctrl = StreamController<int>.broadcast();
@@ -110,6 +118,7 @@
   // StreamController用完后需要释放
   ctrl.close();
 ```
+
 打印：
 ![控制台打印](https://upload-images.jianshu.io/upload_images/2959789-811d227510103818.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 

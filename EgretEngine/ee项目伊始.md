@@ -31,7 +31,7 @@
 
 > **项目结构**
 
-![z38](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z38.png)
+![z38](./../Pictures/z38.png)
 
 **各文件夹功能说明:**
 - .wing：包括 Egret 项目的任务配置文件和启动配置文件。
@@ -155,7 +155,7 @@ egret.runEgret({ renderMode: "webgl", audioType: 0,
 
 ># egretProperties.json 项目配置文件
 
-![结构](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z39.png)
+![结构](./../Pictures/z39.png)
 
 - engineVersion：项目当前用来运行游戏的 egret 引擎版本，
 - compilerVersion：项目当前使用的 egret 命令行版本，比如执行 build,publish 等命令，每个版本略有不同
@@ -268,7 +268,7 @@ $ egret run HelloEUI
 
 在 Egret 5.x 项目的 scripts 目录下，有个 config.ts 文件，里面可以配置 EUI 的编译模式
 
-![z41](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z41.png)
+![z41](./../Pictures/z41.png)
 
 ```
  if (command == 'build') {
@@ -325,13 +325,13 @@ protected createGameScene(): void {
 
 ```
 
-![z42](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z42.png)
+![z42](./../Pictures/z42.png)
 
 <br/>
 
 **配置主题**
 
-![z43](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z43.png)
+![z43](./../Pictures/z43.png)
 
 
 - 主题配置文件就是一个标准的JSON文件:

@@ -161,7 +161,7 @@ class ShadeSquare extends StatelessWidget {
 }
 ```  
 效果图：
-![行布局效果图](https://upload-images.jianshu.io/upload_images/2959789-44d63a4d4befd2ab.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![行布局效果图](./../Pictures/flutter1_0.png)
 
 <br/>
 
@@ -204,7 +204,7 @@ class ShadeSquare extends StatelessWidget {
 效果图：
 <br/>
 
-![列布局](https://upload-images.jianshu.io/upload_images/2959789-941cd5295a7f40f1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![列布局](./../Pictures/flutter1_1.png)
 
 <br/>
 

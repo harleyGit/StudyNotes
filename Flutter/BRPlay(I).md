@@ -252,7 +252,7 @@ appBar: AppBar(
 
 
 
-![z7](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z7.png)
+![z7](./../Pictures/z7.png)
 
 
 <br/>

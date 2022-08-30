@@ -11,7 +11,7 @@
 
 ># Provider
 
-![z21](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z21.png)
+![z21](./../Pictures/z21.png)
 
 &emsp; Flutter 实际上在一开始就为我们提供了一种状态管理方式，那就是 StatefulWidget。但是我们很快发现，它正是造成上述原因的罪魁祸首。
 

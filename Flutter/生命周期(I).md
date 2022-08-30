@@ -49,7 +49,7 @@ class TestWidget extends StatelessWidget{
 - **deactivate**
 - **dispose**
 
-![z16](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z16.png)
+![z16](./../Pictures/z16.png)
 
 ***
 <br/>

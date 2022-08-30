@@ -175,7 +175,7 @@ EUI是一套基于Egret核心显示列表的UI扩展库，它封装了大量的�
 `Egret UI` 的基础教程，我们假定您已经掌握了Egret核心库的一些基本使用经验，比如显示对象，事件等等，如果您还不具备这些基础知识，建议先从 [**Get Started**](https://docs.egret.com/engine/docs/getStarted/helloWorld) 开始学起。
 
 
-![z40](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z40.png)
+![z40](./../Pictures/z40.png)
 
 
 

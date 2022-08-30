@@ -1,10 +1,10 @@
 ># NULL 指针
 
-![NULL 指针的定义和用法](https://upload-images.jianshu.io/upload_images/2959789-28093bdf85865e9a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![NULL 指针的定义和用法](./../Pictures/c2_10.jpg)
 
 - **`静态内存、static 、new 的注意事项`**
 
-![静态内存、static 、new 的注意事项](https://upload-images.jianshu.io/upload_images/2959789-cc244d8418204ded.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![静态内存、static 、new 的注意事项](./../Pictures/c2_11.jpg)
 
 &emsp;  为对象分配内存和为各种基本数据类型(int, char, float. . . )分配内存在做法上完全一样：
 -  用new向内存池申请内存；
@@ -32,7 +32,7 @@
 
 **`动态数组引进`**
 
-![引进动态数组](https://upload-images.jianshu.io/upload_images/2959789-b4e58dda8a76969f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![引进动态数组](./../Pictures/c2_12.jpg)
 
 
 
@@ -76,12 +76,14 @@ obj2 = obj1;
 ```
 前两行代码很简明，它们创建出了两个MyClass类的实例obj1 和 obj2 。第三行代码把 obj1 的值赋值给了 obj2，这里就可能会埋下祸根！
 
-#`解决方法`
-![解决方法](https://upload-images.jianshu.io/upload_images/2959789-92e56e2a961a85ea.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**`解决方法`**
+
+![解决方法](./../Pictures/c2_13.jpg)
 
 
 &emsp;  上面方法并不能完全解决`逐位复制`问题，下面可以彻底解决：
-![解决方法_2](https://upload-images.jianshu.io/upload_images/2959789-b42bc65852d46399.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![解决方法_2](./../Pictures/c2_14.jpg)
 
 
 
@@ -89,36 +91,44 @@ obj2 = obj1;
 
 
 <br/>
+
 ***
 <br/>
+
 ># 动态对象强制类型转换
-#`强制内型转换隐患`
-![强制内型转换隐患](https://upload-images.jianshu.io/upload_images/2959789-9971aff7c5f81628.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-![强制内型转换隐患解决方法](https://upload-images.jianshu.io/upload_images/2959789-76dc1855955eaafd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**`强制内型转换隐患`**
 
+![强制内型转换隐患](./../Pictures/c2_15.jpg)
 
-
-
-
+![强制内型转换隐患解决方法](./../Pictures/c2_16.jpg)
 
 
 
 
 
 <br/>
+
 ***
 <br/>
+
 ># 避免内存泄漏
-#`内存泄漏的原因`
-![内存泄漏原因](https://upload-images.jianshu.io/upload_images/2959789-8fbcb2376f2db342.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-![内存泄漏消耗内存](https://upload-images.jianshu.io/upload_images/2959789-a9f93c1e76968782.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**`内存泄漏的原因`**
+
+![内存泄漏原因](./../Pictures/c2_10_0.jpg)
+
+<br/>
+
+![内存泄漏消耗内存](./../Pictures/c2_10_1.jpg)
 
 
-#`内存泄漏案例Demo`
-![内存泄露了](https://upload-images.jianshu.io/upload_images/2959789-9d71410d2d4880a2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+<br/>
 
+
+**`内存泄漏案例Demo`**
+
+![内存泄露了](./../Pictures/c2_10_2.jpg)
 
 
 

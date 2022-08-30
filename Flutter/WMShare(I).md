@@ -59,11 +59,11 @@
 
 > <h2 id='组件分类'>组件分类</h2>
 
-![有无状态组件](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter2.png)
+![有无状态组件](./../Pictures/flutter2.png)
 
 - **StatefulWidget:** 有状态组件，定义交互逻辑和业务数据，可以理解为具有动态可交互的内容界面，会根据数据的变化进行多次渲染。使用**`setState`**进行页面的类容的更新和刷新，这个和React一样。
 
-![StatefulWidget组件类图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter3.png)
+![StatefulWidget组件类图](./../Pictures/flutter3.png)
 
 
 <br/>
@@ -72,7 +72,7 @@
 - **StatelessWidget：** 无状态组件，外部传入的数据转化为界面展示的内容，只会渲染一次；
 
 
-![StatelessWidget组件类图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter4.png)
+![StatelessWidget组件类图](./../Pictures/flutter4.png)
 
 <br/>
 
@@ -98,7 +98,7 @@
 				
 				- Offstage/SizedBox/Align/Padding
 
-![RenderObjectWidget组件类图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter5.png)
+![RenderObjectWidget组件类图](./../Pictures/flutter5.png)
 
 
 <br/>
@@ -237,13 +237,13 @@ class ShareDataWidget extends InheritedWidget {
 }
 ```
     
-![效果图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter7.png)
+![效果图](./../Pictures/flutter7.png)
 	 
 <br/>
 
  - ParentDataWidget
     
-![ProxyWidget组件类图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter6.png)
+![ProxyWidget组件类图](./../Pictures/flutter6.png)
 
 **Element提供渲染的方法，而Widget只是它的配置而已。**
 
@@ -271,7 +271,7 @@ class ShareDataWidget extends InheritedWidget {
 <br/>
 
 
-![z16](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z16.png)
+![z16](./../Pictures/z16.png)
 
 上图是Flutter生命周期的示意图，其各个方法依次执行的分别是：
 
@@ -617,7 +617,7 @@ return Column(
 
 效果图：
 
-![效果](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter15.png)
+![效果](./../Pictures/flutter15.png)
 
 <br/>
 <br/>
@@ -666,7 +666,7 @@ Container(
 )
 ```
 
-![右上](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter16.png)
+![右上](./../Pictures/flutter16.png)
 
 
 
@@ -726,7 +726,7 @@ GridView(
 
 效果图：
 
-![网格图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter17.png)
+![网格图](./../Pictures/flutter17.png)
 
 
 
@@ -819,7 +819,7 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 - 中间的SliverGrid：它用SliverPadding包裹以给SliverGrid添加补白。SliverGrid是一个两列，宽高比为4的网格，它有20个子组件。
 - 底部SliverFixedExtentList：它是一个所有子元素高度都为50像素的列表。
 
-![复杂列表](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter18.png)
+![复杂列表](./../Pictures/flutter18.png)
 
 
 
@@ -830,7 +830,7 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 > <h2 id='原生交互'>原生交互</h2>
 
 
-![原生和Flutter交互](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter19.png)
+![原生和Flutter交互](./../Pictures/flutter19.png)
 
 
 <br/>
@@ -838,7 +838,7 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 **平台通道支持的数据类型：**
 
 
-![数据类型支持](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter20.png)
+![数据类型支持](./../Pictures/flutter20.png)
 
 <br/>
 
@@ -1161,7 +1161,7 @@ class _MyHomePageState extends State<MyHomePage> {
 **总结一下：** 所以可以认为Flutter的UI系统包含三棵树：Widget树、Element树、渲染树。他们的依赖关系是：根据Widget树生成Element树，再依赖于Element树生成RenderObject 树。
 
 
-![3棵🌲](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter12.png)
+![3棵🌲](./../Pictures/flutter12.png)
 
 
 
@@ -1182,7 +1182,7 @@ class _MyHomePageState extends State<MyHomePage> {
 类比HTML中的DOM树，开始一个Flutter项目中的结构树，如下：
 
 
-![Demo结构树](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter13.png)
+![Demo结构树](./../Pictures/flutter13.png)
 
 
 &emsp; 在这个结构树中，Text、FloatingActionButton等组件都属于Widget，它表示了我们在Dart代码中所写的控件的结构，由他们构成了Widget树。
@@ -1192,7 +1192,7 @@ class _MyHomePageState extends State<MyHomePage> {
 &emsp; Element其实是Widget的另一种抽象，我们项目中使用的像 Container、Text 等这类组件和其属性只不过是我们想要构建的组件的配置信息，当调用`build()`方法想要在屏幕上显示这些组件时，Flutter 会根据这些信息生成该 Widget 控件对应的 Element，相对的Element也会被放到相应的 Element 树当中。我们把 Widget 组件当作一个虚拟的组件树，而真正被渲染在屏幕上的其实是 Elememt 这棵树，它持有其对应 Widget 的引用，如果他对应的 Widget 发生改变，它就会被标记为 dirty Element，于是下一次更新视图时根据这个状态只更新被修改的内容，从而达到提升性能的效果。
 
 
-![元素树对应控件树](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter14.png)
+![元素树对应控件树](./../Pictures/flutter14.png)
 
 
 <br/>
@@ -1214,13 +1214,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-![源码路径图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter0.png)
+![源码路径图](./../Pictures/flutter0.png)
 源码路径图
 
 
 <br/>
 
-![Flutter框架图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter1.png)
+![Flutter框架图](./../Pictures/flutter1.png)
 Flutter 整体结构图
 
 
@@ -1269,7 +1269,7 @@ Flutter 整体结构图
 
 > Flutter引擎（Engine）
 
-![Flutter引擎](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter21.png)
+![Flutter引擎](./../Pictures/flutter21.png)
 Flutter引擎
 
 
@@ -1287,7 +1287,7 @@ Flutter引擎
 
 > 嵌入层（Embedder）
 
-![嵌入层（Embedder）](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter22.png)
+![嵌入层（Embedder）](./../Pictures/flutter22.png)
 嵌入层（Embedder）
 
 
@@ -1303,7 +1303,7 @@ Flutter引擎
 
 > **Flutter如何做到图形性能媲美原生**
 
-![各个平台比较](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter23.png)
+![各个平台比较](./../Pictures/flutter23.png)
 
 
 &emsp; 图形计算和绘制都是由相应的硬件来完成，而直接操作硬件的指令通常都会有操作系统屏蔽，应用开发者通常不会直接面对硬件，操作系统屏蔽了这些底层硬件操作后会提供一些封装后的API供操作系统之上的应用调用。
@@ -1316,7 +1316,7 @@ Flutter引擎
 &emsp; 而Flutter基于这个原理提供了一个Dart API，在底层通过skia这种跨平台的绘制库（内部会调用操作系统API）实现了一套代码跨多端。
 
 
-![编译比较](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter24.png)
+![编译比较](./../Pictures/flutter24.png)
 
 编译比较
 
@@ -1353,7 +1353,7 @@ Flutter引擎
 
 **渲染图解**
 
-![25](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/flutter25.png)
+![25](./../Pictures/flutter25.png)
 
 - GPU的 VSync 信号同步到 UI线程。
 - UI线程使用 Dart来构建抽象的视图结构。
