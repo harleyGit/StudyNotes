@@ -1,7 +1,9 @@
 > <h2 id=""></h2>
 - [**基本用法**](#基本用法)
-	- [React环境搭建](#React环境搭建)
-	- [JSX简介](#JSX简介)
+	- [**React环境搭建**](#React环境搭建)
+	- [**JSX简介**](#JSX简介)
+	- [**CSS高级使用**](#CSS高级使用)
+		- [文件模块化](#文件模块化)
 	- [props用法](#props用法)
 		- [props类型验证](#props类型验证)
 		- [设置默认值](#设置默认值)
@@ -34,7 +36,7 @@
 	- [cloneElement](#cloneElement)
 - [**性能优化**](#性能优化)
 	- [值是否为空或有值](#值是否为空或有值) 
-- [JavaScript语法](#JavaScript语法)
+- [**JavaScript语法**](#JavaScript语法)
 	- [数组splice()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
 - [**创建到打包**](#创建到打包)
 - **参考资料：**
@@ -182,6 +184,48 @@ const Article = () => (
 &emsp; **小知识：** Babel是一个JavaScript编译器，它主要用于将ES 6及更新版本的代码转换为向后兼容的JavaScript语法。React官方的JSX编译器早期为JSTransform，但目前已经不再维护了。现在的JSX大多依靠Babel的JSX编译器进行编译。关于Babel的更多内容，可以访问其[官网](https://www.babeljs.cn/)。 
 
 
+
+
+<br/>
+<br/>
+<br/>
+
+***
+<br/>
+
+
+> <h1 id="CSS使用">CSS使用</h1>
+
+
+<br/>
+
+>## <h2 id="文件模块化">[文件模块化](https://www.html.cn/create-react-app/docs/adding-a-css-modules-stylesheet/)</h2>
+
+&emsp; CSS文件使用 **文件名.module.css**,然后在js文件导入使用即可,避免css名字污染问题.
+
+Button-style.module.css
+
+```
+.headText {
+    font-size: 13px;
+    font-family: PingFangSC-Regular, PingFang SC;
+    font-weight: 400;
+    color: #333333;
+    line-height: 18px;
+}
+```
+
+在Button.js中使用
+
+```
+import CallingVerifyStyle from './calling-verify.module.css';
+
+render(
+	return (
+		<div className={CallingVerifyStyle.headText}/>
+	)
+)
+```
 
 
 
