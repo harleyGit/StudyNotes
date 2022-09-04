@@ -54,8 +54,7 @@
 
 > <h1 id="纲目">纲目</h1>
 - [**Git提交规范**](#Git提交规范)
-- [**C++**](#C++)
-- [**C**](#C)
+- [**C语言**](#C语言)
 - [**iOS开发**](#iOS开发)
 	- [**Objective-C**](#Objective-C)
 	- [**逆向**](#逆向)
@@ -92,12 +91,15 @@
 <br/>
 ￼
 
->#  <h1 id = "C++">[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h1>
-- 	[C2语法练习](./C/C2语法练习.md)
+>#  <h1 id = "C语言">C语言</h1>
+<br/>
+>## C
+*	[基础](./C/C基础.md)
+*	[指针](./C/C指针.md)
+<br/>
+<br/>
+>## <h2 id = "C++">[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
  *	[**基础**](./C/基础.md)
- *	 [指针(I)](./C/C2指针(I).md)
- *	[C预处理器](./C/C预处理器.md)
- *	[自定义数据类型](./C/自定义数据类型.md)
  *	[作用域](./C/作用域.md)
  *	[基础语法](./C/基础语法.html)
  *	[运算符](./C/C2运算符.md)
@@ -118,19 +120,6 @@
 
 
 <br/>
-<br/>
-
-
-> <h1 id = "C">C</h1>
-*	[基础](./C/C基础.md)
-*	[指针(I)](./C/指针(I).md)
-*	[指针(II)](./C/指针(II).md)
-*	[i++-与-++i的区别](./C/i++-与-++i的区别.md)
-
-
-
-
-
 <br/>
 
 ***
