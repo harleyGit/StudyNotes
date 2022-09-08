@@ -2,6 +2,7 @@
 - [**基本用法**](#基本用法)
 	- [**React环境搭建**](#React环境搭建)
 	- [**JSX简介**](#JSX简介)
+		- [原理](#原理)
 	- [**CSS高级使用**](#CSS高级使用)
 		- [文件模块化](#文件模块化)
 	- [props用法](#props用法)
@@ -181,7 +182,50 @@ const Article = () => (
 &emsp; 上述代码会报错,需要在其最外层用一个标签对其进行包裹.可以用**`<div></div>、 <React.Fragment> </React.Fragment>、<>   </>`**.但为了精确,最好选择最后一种,防止多渲染一层.
 
 
-&emsp; **小知识：** Babel是一个JavaScript编译器，它主要用于将ES 6及更新版本的代码转换为向后兼容的JavaScript语法。React官方的JSX编译器早期为JSTransform，但目前已经不再维护了。现在的JSX大多依靠Babel的JSX编译器进行编译。关于Babel的更多内容，可以访问其[官网](https://www.babeljs.cn/)。 
+&emsp; **小知识：** Babel是一个JavaScript编译器，它主要用于将ES 6及更新版本的代码转换为向后兼容的JavaScript语法。React官方的JSX编译器早期为JSTransform，但目前已经不再维护了。现在的JSX大多依靠Babel的JSX编译器进行编译。关于Babel的更多内容，可以访问其[官网](https://www.babeljs.cn/)。
+
+
+<br/>
+<br/>
+
+> <h2 id='原理'>原理</h2>
+
+
+- **1.createElement函数体拆解**
+
+![react0_0.png](./../Pictures/react0_0.png)
+
+<br/>
+
+- **1.1createElement函数代码讲解**
+
+	- **1.1.1 如何映射为DOM树**
+
+![react0_3.png](./../Pictures/react0_3.png)
+
+![react0_4.png](./../Pictures/react0_4.png)
+
+![react0_5.png](./../Pictures/react0_5.png)
+
+![react0_6.png](./../Pictures/react0_6.png)
+
+![react0_7.png](./../Pictures/react0_7.png) 
+<br/>
+<br/>
+
+- **2.React渲染流程**
+
+![react0_1.png](./../Pictures/react0_1.png)
+
+
+
+<br/>
+
+- **3.虚拟Dom树**
+
+![react0_2.png](./../Pictures/react0_2.png)
+
+
 
 
 
@@ -574,6 +618,11 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 
 
 ![37](![react36](./../Pictures/react37.png))
+
+
+<br/>
+
+![react0_8](![react36](./../Pictures/react0_8.png))
 
 - **componentWillMount** 在渲染前调用,在客户端也在服务端。
 
