@@ -617,12 +617,12 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 >## <h2 id="生命周期方法">[生命周期方法](https://www.runoob.com/react/react-component-life-cycle.html)</h2>
 
 
-![37](![react36](./../Pictures/react37.png))
+![react37](./../Pictures/react37.png)
 
 
 <br/>
 
-![react0_8](![react36](./../Pictures/react0_8.png))
+![react0_8](./../Pictures/react0_8.png)
 
 - **componentWillMount** 在渲染前调用,在客户端也在服务端。
 
