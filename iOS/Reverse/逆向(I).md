@@ -1,6 +1,7 @@
 
 ><h2 id=''></h2>
-- [**ptrace防护**](#ptrace防护)
+- [**安全机制**](#安全机制)
+	- [ptrace防护](#ptrace防护)
 - [HOOK原理](#HOOK原理)
 
 
@@ -11,7 +12,19 @@
 <br/>
 
 
-><h1 id='ptrace防护'>ptrace防护</h1>
+
+> <h1 id='安全机制'>安全机制</h1>
+
+> 安全启动
+
+**安全启动链:** 
+
+![ios_oc2_0](./../../Pictures/ios_oc2_0.png)
+
+
+<br/>
+
+> <h2 id='ptrace防护'>ptrace防护</h2>
 
 
 &emsp; Mac->Xcode->Xcode上集成了LLDB-> 问题:真机上上是如何进行应用程序的开发的呢?
@@ -31,7 +44,10 @@ trace(PT_DENY_ATTACH, 0, 0,);
 
 &emsp; 这个时候我们可以使用fishhook,fishhook是针对系统函数的hook.说的直白点就是对系统函数进行交换,这里的交换也就是涉及到代码的注入.
 
-![防调试图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/ios_oc93.png)
+防调试图:
+
+![ios_oc93.png](./../../Pictures/ios_oc93.png)
+
 
 ```
 //定义函数指针
@@ -54,7 +70,9 @@ int my_ptrace(int _request, pid_t _pid, caddr_t _addr, int _data) {
 
 **若是对方知道我们使用ptrace进行的防护,那我们如何防止对方对我们程序进行调试呢?**
 
-![防调试图](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/ios_oc92.png)
+防调试图:
+
+![ios_oc92.png](./../../Pictures/ios_oc92.png)
 
 
 <br/>
