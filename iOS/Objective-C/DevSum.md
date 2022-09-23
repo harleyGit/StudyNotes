@@ -1,10 +1,18 @@
 > <h2 id=''></h2>
 - [**属性**](#属性)
 	- [synthesize](#synthesize)
+	- [@class](#@class)
+	- [@selector](#@selector)
 - [**类型**](#类型)
 	- [Class和class用法](#Class和class用法)
+	- [现成的回调函数](#现成的回调函数)
+- [**标识**](#标识)
+	- [UDID](#UDID)
+	- [UUID](#UUID)
 - [**网络请求**](#网络请求)
-	- [字典数据NSNumber转化基本类型](#字典数NSNumber据转化基本类型)
+	- [字典数据NSNumber转化基本类型](#字典数据NSNumber转化基本类型)
+- [**异常**](#异常)
+	- [NSException](#NSException)
 
 
 
@@ -166,7 +174,32 @@ NS_ASSUME_NONNULL_END
 
 
 
+> <h2 id='@class'>@class</h2>
+
+[**@class**](https://www.jianshu.com/p/4f5081ef9eb3)
+
+
+<br/>
+<br/>
+
+
+>## <h2 id='@selector'>@selector</h2>
+
+[@selector](https://www.jianshu.com/p/96842c912a04)
+
+
+
+
+
+<br/>
+<br/>
+
+
 > <h2 id=''></h2>
+
+
+
+
 
 
 
@@ -270,12 +303,142 @@ inline static NSDictionary<NSNumber *, Class<Model>> *modeDic(void) {
 <br/>
 
 
+> <h2 id='现成的回调函数'>现成的回调函数</h2>
+
+&emsp; 通常我们在写一个不带参数的块回调函数是这样写的,在 **.h** 头文件中
+定义类型
+
+```
+typedef void (^leftBlockAction)();
+```
+
+在定义一个回调函数
+
+```
+-(void)leftButtonAction:(leftBlockAction)leftBlock;
+```
+
+<br/>
+
+在 **.m** 文件中
+
+```
+-(void)leftButtonAction:(leftBlockAction)leftBlock{
+leftBlock();
+}
+
+```
+
+<br/>
+
+
+现在有一个更方便的方法,就是在 **.h** 头文件定义属性方法
+
+```
+@property (nonatomic,copy) dispatch_block_t leftBlockAction;
+
+````
+
+<br/>
+
+在 **.m**文件 调用的方法里调用
+
+```
+if (self.leftBlockAction) {
+    self.leftBlockAction();
+}
+```
+
+在另个模块里直接
+
+```
+MyAlertView *alert = [[MyAlertView alloc]init];
+alert.leftBlockAction = ^() {
+
+    NSLog(@"left button clicked");
+};
+```
+
+这样就比自己定义闭包的方法简便了很多了
+
+
+<br/>
+<br/>
+
+
+
+
 > <h2 id=''></h2>
 
 
 
 <br/>
 <br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+
+
+
+	
+<br/>
+<br/>
+
+***
+<br/>
+
+> <h1 id='标识'>标识</h1>
+
+>## <h2 id='UDID'>[UDID](https://www.jianshu.com/p/8bc3b1d5323f)</h2>
+
+&emsp; UDID的全名为 Unique Device Identifier :设备唯一标识符。从名称上也可以看出，UDID这个东西是和设备有关的，而且是只和设备有关的，有点类似于MAC地址。需要把UDID这个东西添加到Provisoning Profile授权文件中，也就是把设备唯一标识符添加进去，以此来识别某一台设备。
+
+&emsp; UDID是一个40位十六进制序列，我们可以使用iTunes和Xcode来获取这个值。
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='UUID'>UUID</h2>
+
+&emsp; 英文名称是：Universally Unique Identifier,翻译过来就是通用唯一标识符。是一个32位的十六进制序列，使用小横线来连接：8-4-4-4-12 。UUID在某一时空下是唯一的。比如在当前这一秒，全世界产生的UUID都是不一样的；当然同一台设备产生的UUID也是不一样的。我在很早之前的一篇博客中使用了一种现在看起来非常愚蠢的方式来获取当前的UUID，下面也有读者反映了这个情况，现在最简单获取UUID的代码如下：
+
+```
+for (int i = 0; i < 10; i++)
+{
+    NSString *uuid = [NSUUID UUID].UUIDString;
+    NSLog(@"uuid 2 = %@",uuid);
+}
+```
+
+&emsp; 通过运行程序可以发现，循环10次，每一次打印的值都是不一样的，当然循环的再多，这个值永远不会出现两个一样的值。所以从某种程序上来说，UUID跟你的设备没有什么关系了。
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
 
 
 
@@ -365,7 +528,11 @@ inline static NSDictionary<NSNumber *, Class<Model>> *modeDic(void) {
 <br/>
 
 
-> <h1 id=''></h1>
+> <h1 id='异常'>异常</h1>
+
+
+>## <h2 id='NSException'>[NSException](https://www.cnblogs.com/lxlx1798/articles/10024109.html)</h2>
+
 
 
 <br/>
