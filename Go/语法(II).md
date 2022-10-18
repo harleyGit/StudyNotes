@@ -19,11 +19,18 @@
 
 &emsp; Go语言的源码复用建立在包（package）基础之上。Go语言的入口main()函数所在的包（package）叫main，main包想要引用别的代码，必须同样以包的方式进行引用，本章内容将详细讲解如何导出包的内容及如何导入其他包。
 
+&emsp; 引入包的概念,用于组织程序结构,GO语言的一个文件都要归属于一个包,而不能单独存在.
+
 &emsp; Go语言的包与文件夹一一对应，所有与包相关的操作，必须依赖于工作目录（GOPATH）。
+
+![go10_0.png.png](./../Pictures/go10_0.png)
+
+<br/>
+
 
 查看环境变量配置信息： **go env**
 
-![10](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go10.png)
+![go10.png](./../Pictures/go10.png)
 
 
 <br/>
