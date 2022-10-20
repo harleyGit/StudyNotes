@@ -972,6 +972,8 @@ sudo gem uninstall cocoapods-downloader
 xcuserdata
 *.lock
 Pods
+*.xcuserstate
+UserInterfaceState.xcuserstate
 
 
 
@@ -1061,6 +1063,37 @@ svc-keyfile.json
 /Lobby/index.html
 
 ```
+
+<br/>
+
+问题: UserInterfaceState.xcuserstate 文件添加进忽略文件,还是无法消除.
+
+<br/>
+
+&emsp; 提交的时候出现UserInterfaceState.xcuserstate文件，那就是git忽略文件的问题，检查项目中是否存在.gitignore文件，发现项目目录下是没有这个文件的，那就创建.gitignore文件，把需要忽略的文件后缀添加进去，然后提交。
+
+```
+// *.xcuserstate
+// UserInterfaceState.xcuserstate
+
+// cd 到项目目录下
+ls -la //查看项目所有文件（包括隐藏文件）
+// 如果没有.gitignore文件，执行以下命令，然后在编辑.gitignore文件，把要忽略的文件类型添加进去
+// 如果存在则看文件中是否包含要忽略的UserInterface.xcuserstate文件类型，没有则添加进去，保存
+vim .gitignore
+
+git status
+//如果会出现一个 modified（修改）: xxxx/UserInterfaceState.xcuserstate 的地址，如果没有跳过这一步
+// 如果有必须执行这一步，删除git 仓库中xxxx/UserInterfaceState.xcuserstate缓存文件
+// 否则提交还是会有.xcuserstate文件
+git rm --cached  xxxx/UserInterfaceState.xcuserstate
+
+git add . 
+git commit -m '忽略UserInterface.xcuserstate文件类型提交'
+git pull 
+git push
+```
+
 
 
 
