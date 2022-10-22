@@ -764,7 +764,11 @@ $ nom install vconsole
 
 <br/>
 
-> 下载软件包
+>### **方法1**
+
+- **1.1 下载软件包**
+	- pkg图形化安装包,.tar.gz是解压缩安装包
+
 
 在[**Go**](https://golang.google.cn/dl/)进行下载，如下图：
 
@@ -772,7 +776,7 @@ $ nom install vconsole
 
 <br/>
 
-> 打开终端，配置环境变量
+- **1.2 打开终端，配置环境变量**
 
 ```
  $ mkdir /Users/harleyhuang/Documents/GitHub/GoPath
@@ -808,6 +812,142 @@ $ go version
 ```
 
 
+
+<br/>
+<br/>
+
+>### **方法2**
+
+<br/>
+
+- **2.1[ 下载GoLang软件包](https://golang.google.cn/dl/)**
+
+
+
+- **2.2 下载后缀为`.tar.gz`的包**
+
+![go0_0.png](./../Pictures/go0_0.png)
+
+<br/>
+
+文件夹用处:
+
+![go0_3.png](./../Pictures/go0_3.png)
+
+
+<br/>
+
+- **2.3 这里用.tar.gz做例,移动下载包到指定目录,并用终端命令解压(双击打开也可以)**
+
+![go0_1.png](./../Pictures/go0_1.png)
+
+```
+% cd /Users/harleyhuang/DevelopToolConfiguration/GoConfig
+
+% ls
+go1.19.2.darwin-amd64.tar.gz
+
+//解压
+% tar -zxvf ./go1.19.2.darwin-amd64.tar.gz 
+```
+
+
+<br/>
+
+- **2.4  配置环境变量**
+
+	- 解压后得到一个go目录,进入到一个go/bin就可以使用
+
+![go0_2.png](./../Pictures/go0_2.png)
+
+- 终端配置环境变量
+
+```
+open .bash_profile
+
+# Go环境配置
+export GOROOT=$HOME/DevelopToolConfiguration/GoConfig
+export GOBIN=$GOROOT/bin
+export PATH=$PATH:$GOBIN
+#Go是我们的工作目录
+export GOPATH=$HOME/Documents/GitHub/GoProject/GoPath
+# Go END
+```
+
+
+**GoPath含义:**
+
+![go0_5.png](./../Pictures/go0_5.png)
+
+<br/>
+
+![go0_4.png](./../Pictures/go0_4.png)
+
+<br/>
+
+这里终端的$HOME变量和`/Users/harleyhuang`是等价的,请看:
+
+```
+cd
+
+% pwd
+/Users/harleyhuang
+
+% echo $HOME
+/Users/harleyhuang
+```
+
+<br/>
+
+```
+//回到终端后输入下面命令进行保存
+% source .bash_profile 
+
+//验证
+% go version
+go version go1.13.8 darwin/amd64
+
+ % go env
+```
+
+<br/>
+<br/>
+
+**最后注意**的是: 2种安装方式是不同的,若是安装了会导致冲突的.\
+
+之前先安装的是软件pkg安装的,后面使用.tar.gz压缩包安装的,导致一些问题比如:环境变量混乱、一些.go单独文件无法使用: 
+- go build xx.go
+- Go run xx.go
+
+会爆出各种问题,比如:一些文件在另一个文件里导致无法编译.后来是把软件安装的go文件彻底清掉才行的,命令如下:
+
+```
+//可以看到go的安装相关路径，一般默认情况下在是 /usr/local/go
+which go
+//软件安装显示如下,压缩包安装显示路径:/Users/harleyhuang/DevelopToolConfiguration/go/bin/go
+/usr/local/go
+
+
+Sudo rm -rf /usr/local/go
+
+rm -rf /etc/paths.d/go
+
+//将环境变量，有关 go 的删了即可
+vim ~/.bash_profile
+
+//执行完，再查看一下
+pkgutil --pkgs | grep -i go
+//显示如下
+com.google.sketchup8.sketchup.application
+com.google.sketchup8.sketchup.support
+com.googlecode.go
+
+
+
+
+
+
+```
 
 
 
