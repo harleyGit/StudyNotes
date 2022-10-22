@@ -913,7 +913,9 @@ go version go1.13.8 darwin/amd64
 <br/>
 <br/>
 
-**最后注意**的是: 2种安装方式是不同的,若是安装了会导致冲突的.\
+>### **注意**: 
+
+- **1.2种安装方式是不同的,若是安装了会导致冲突的**
 
 之前先安装的是软件pkg安装的,后面使用.tar.gz压缩包安装的,导致一些问题比如:环境变量混乱、一些.go单独文件无法使用: 
 - go build xx.go
@@ -928,7 +930,7 @@ which go
 /usr/local/go
 
 
-Sudo rm -rf /usr/local/go
+sudo rm -rf /usr/local/go
 
 rm -rf /etc/paths.d/go
 
@@ -941,13 +943,29 @@ pkgutil --pkgs | grep -i go
 com.google.sketchup8.sketchup.application
 com.google.sketchup8.sketchup.support
 com.googlecode.go
+```
 
 
 
+<br/>
+<br/>
 
-
+- **2.Mac的ARM架构的比如M1、M2还需要在.zshrc中再配置一下环境变量**
 
 ```
+open .zshrc
+
+//配置
+# Go环境配置
+export GOROOT=$HOME/DevConfig/GoConfig
+export PATH=$PATH:$GOROOT/bin
+export GOPATH=$HOME/Documents/GitHub/GoProject/GoPath 
+# Go END
+
+
+source .zshrc
+```
+
 
 
 
