@@ -17,6 +17,7 @@
 		- [克隆版本库](#克隆版本库)
 		- [git fetch](#gitfetch)
 		- [拉取代码](#拉取代码)
+	- [忽略文件配置](#忽略文件配置)
 - [**工作流指令**](#工作流指令)
 	- [新功能分支](#新功能分支)
 	- [修复紧急bug](#修复紧急bug)
@@ -625,6 +626,167 @@ $ git pull --rebase
 &emsp; 默认模式下 相当于 git fetch + git merge FETCH_HEAD 命令;
 
 &emsp; 更准确的说是，git pull 相当于: 先执行git fetch + 指定参数，然后执行git merge 命令将检索到的分支合并到当前分支。
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+> <h2 id='忽略文件配置'>忽略文件配置</h2>
+
+
+```
+# .ignore不起作用解决方案
+# git rm -r --cached .
+# git add .
+# git commit -m "update .ignore"
+
+
+# iOS 忽略文件
+*~
+.DS_Store
+*.xcworkspace
+xcuserdata
+*.lock
+Pods
+*.xcuserstate
+#用户界面文件
+UserInterfaceState.xcuserstate
+#断点文件
+**/xcdebugger/Breakpoints_v2.xcbkptlist
+
+
+
+
+# Flutter忽略文件
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+# Visual Studio Code related
+.vscode/
+# Flutter/Dart/Pub related
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.*
+# iOS/XCode related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+# Web related
+**/web/**/lib/generated_plugin_registrant.dart
+# Service account files
+svc-keyfile.json
+# Exceptions to above rules.
+!**/ios/**/default.mode1v3
+!**/ios/**/default.mode2v3
+!**/ios/**/default.pbxuser
+!**/ios/**/default.perspectivev3
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+**/ios/Flutter/.last_build_id
+
+
+# Egret游戏 忽略文件
+/Lobby/bin-release
+/Lobby/bin-debug
+/Lobby/node_modules
+/Lobby/template
+/Lobby/exml.e.d.ts
+/Lobby/native_require.js
+/.idea/
+/Lobby/template/runtime/native_require.js
+/Lobby/index.html
+
+```
+
+<br/>
+
+问题: UserInterfaceState.xcuserstate 文件添加进忽略文件,还是无法消除.
+
+<br/>
+
+&emsp; 提交的时候出现UserInterfaceState.xcuserstate文件，那就是git忽略文件的问题，检查项目中是否存在.gitignore文件，发现项目目录下是没有这个文件的，那就创建.gitignore文件，把需要忽略的文件后缀添加进去，然后提交。
+
+```
+// *.xcuserstate
+// UserInterfaceState.xcuserstate
+
+// cd 到项目目录下
+ls -la //查看项目所有文件（包括隐藏文件）
+// 如果没有.gitignore文件，执行以下命令，然后在编辑.gitignore文件，把要忽略的文件类型添加进去
+// 如果存在则看文件中是否包含要忽略的UserInterface.xcuserstate文件类型，没有则添加进去，保存
+vim .gitignore
+
+git status
+//如果会出现一个 modified（修改）: xxxx/UserInterfaceState.xcuserstate 的地址，如果没有跳过这一步
+// 如果有必须执行这一步，删除git 仓库中xxxx/UserInterfaceState.xcuserstate缓存文件
+// 否则提交还是会有.xcuserstate文件
+git rm --cached  xxxx/UserInterfaceState.xcuserstate
+
+git add . 
+git commit -m '忽略UserInterface.xcuserstate文件类型提交'
+git pull 
+git push
+```
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+
 
 
 
