@@ -11,6 +11,7 @@
 		- [SIP消息流程](#SIP消息流程)
 - [**Linphone官方API文档**](https://www.linphone.org/technical-corner/liblinphone)
 	- [资料](#资料)
+	- [linphoneSDK打包](#linphoneSDK打包)
 - [**知识点**](#知识点)
 - [**语法**](#语法)
 	- [输出<<](#输出<<)
@@ -254,6 +255,131 @@ SIP网络构成:
 
 
 
+
+<br/>
+<br/>
+<br/>
+
+
+
+><h2 id='linphoneSDK打包'>[linphoneSDK](https://github.com/BelledonneCommunications/linphone-sdk?from_wecom=1)打包</h2>
+
+**1.检查某个库是不是动或静态库**
+
+```
+cd xx.framwork
+ls
+file xx
+```
+
+
+<br/>
+
+- **2.下载依赖库**
+
+```
+// 下载Cmake
+// 检查是否安装成功,查看版本
+cmake -version
+
+
+//下载python
+// 检查是否安装成功,查看版本
+python -V 
+
+// 检查是否安装成功,查看版本
+pip3 --version            
+
+// M1 arm64 下载yasm 
+arch -arm64 brew install yasm  
+//检查版本
+yasm --version  
+
+// M1 arm64 下载nasm
+arch -arm64 brew install nasm 
+```
+
+<br/>
+
+[doxygen介绍](https://developer.aliyun.com/article/351968)
+
+```
+//M1 arm64 下载 doxygen
+arch -arm64 brew install doxygen
+```
+
+<br/>
+
+**安装pystache**
+
+```
+pip3 install pystache
+```
+
+
+<br/>
+
+**安装 six**
+
+```
+pip3 install six
+```
+
+<br/>
+
+**安装ninja,提高构建速度**
+
+```
+arch -arm64 brew install cmake ninja
+```
+
+
+<br/>
+<br/>
+
+- **3.下载[linphone-sdk](https://github.com/BelledonneCommunications/linphone-sdk?from_wecom=1)代码**
+
+**3.1 克隆linphone-sdk仓库**
+
+```
+% git clone https://github.com/BelledonneCommunications/linphone-sdk.git /Users/harleyhuang/Documents/GitHub/Linphone-SDK
+```
+
+<br/>
+
+**3.2下载子模块代码,有2.7GB**
+
+```
+ git submodule update --init --recursive
+```
+
+以后切换更新分支,都要用到上面的命令,需要注意了!
+
+<br/>
+<br/>
+
+**4.新建一个文件夹LinphoneFramework**
+
+```
+cd /Users/harleyhuang/Documents/GitHub/LinphoneFramework
+
+mkdir build && cd build
+
+// /Users/harleyhuang/Documents/GitHub/Linphone-SDK linphone的SDK源码
+cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Xcode -DLINPHONESDK_PLATFORM=IOS
+
+// 虽然使用Ninja也可以,但是出错了,其命令如下:
+cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Ninja -DLINPHONESDK_PLATFORM=IOS
+// Ninja出错了,故使用xcode进行构建
+cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Xcode -DLINPHONESDK_PLATFORM=IOS
+
+// 构建Release版本
+cmake --build . --config Release
+```
+
+[**linphone-sdk-iOS动态库**](https://download.linphone.org/snapshots/ios/)
+
+	
 
 
 
