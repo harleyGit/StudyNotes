@@ -20,6 +20,7 @@
 	- [Linphone使用说明](https://www.mptablet.com/post/12045.html)
 	- [Linphone SDK编译说明](https://gitlab.linphone.org/BC/public/linphone-sdk/blob/master/README.md)
 	- [Linphone C API文档](https://download.linphone.org/releases/docs/liblinphone/latest/c/)
+	- [从零开始搭建音视频通话服务](https://juejin.cn/post/7054576051539673101/)
 	- [SDP消息格式](https://cxybb.com/article/aiwusheng/104723834)
 	- [SIP技术介绍](http://www.h3c.com/cn/d_200805/605897_30003_0.htm)
 
@@ -280,13 +281,51 @@ file xx
 ```
 // 下载Cmake
 // 检查是否安装成功,查看版本
-cmake -version
+$ cmake -version
+cmake version 3.23.2
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
 
 
 //下载python
-// 检查是否安装成功,查看版本
-python -V 
+//M1 系列下载,python版本要在3到3.8.9之间,否则无法打成iOS的sdk
+$  arch -arm64 brew install python@3.8
 
+//根据安装好的提示配置pyton环境
+$ open .bash_profile
+
+//在 .bash_profile 写入如下:
+export PATH="/opt/homebrew/opt/python@3.8/bin:$PATH"
+alias python="/opt/homebrew/opt/python@3.8/bin/python3.8"
+export LDFLAGS="-L/opt/homebrew/opt/python@3.8/lib"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.8/lib/pkgconfig"
+
+$ source .bash_profile
+
+// 到这里并没有结束,因为若是只对上述进行配置,则在camke图形工具是没有办法进行使用的
+// 这是因为需要每次使用 source .bash_profile,可以进行如下操作:
+$ vim ~/.zshrc
+
+// 写入配置
+export PATH="/opt/homebrew/opt/python@3.8/bin:$PATH"
+alias python="/opt/homebrew/opt/python@3.8/bin/python3.8"
+export LDFLAGS="-L/opt/homebrew/opt/python@3.8/lib"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.8/lib/pkgconfig"
+
+// 到此python才算配置完成
+$ source ~/.bash_profile
+
+
+
+// 检查是否安装成功,查看版本
+$ python -V
+$ which python
+python: aliased to /opt/homebrew/opt/python@3.8/bin/python3.8
+```
+
+
+
+```
 // 检查是否安装成功,查看版本
 pip3 --version            
 
@@ -358,26 +397,39 @@ arch -arm64 brew install cmake ninja
 <br/>
 <br/>
 
-**4.新建一个文件夹LinphoneFramework**
+**4.1新建一个文件夹LinphoneFramework并打包**
 
 ```
 cd /Users/harleyhuang/Documents/GitHub/LinphoneFramework
 
 mkdir build && cd build
 
-// /Users/harleyhuang/Documents/GitHub/Linphone-SDK linphone的SDK源码
-cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Xcode -DLINPHONESDK_PLATFORM=IOS
 
 // 虽然使用Ninja也可以,但是出错了,其命令如下:
 cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Ninja -DLINPHONESDK_PLATFORM=IOS
-// Ninja出错了,故使用xcode进行构建
+
+// Ninja出错了,故使用xcode进行构建  /Users/harleyhuang/Documents/GitHub/Linphone-SDK linphone的SDK源码
 cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Xcode -DLINPHONESDK_PLATFORM=IOS
+
 
 // 构建Release版本
 cmake --build . --config Release
 ```
 
 [**linphone-sdk-iOS动态库**](https://download.linphone.org/snapshots/ios/)
+
+
+<br/>
+<br/>
+
+**4.2Cmake图形工具打包**
+
+![ios_oc0_4.png](./../../Pictures/ios_oc0_4.png)
+
+打包完成后的iOS平台库如下:
+
+![ios_oc0_5.png](./../../Pictures/ios_oc0_5.png)
+
 
 	
 
