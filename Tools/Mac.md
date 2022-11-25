@@ -17,6 +17,7 @@
 		- [控制台调试](https://www.jianshu.com/p/75688613c6f4)
 - [**开发必备工具**](#开发必备工具)
 	- [Charles使用](#Charles使用)
+	- [Wireshark🦈SIP](#Wireshark🦈SIP)
 	- [MacVim](#MacVim)
 	- [微信小助手扩展](#微信小助手扩展)
 	- [美区AppleID](#美区AppleID)
@@ -423,6 +424,9 @@ brew deps        显示包依赖
 
 > <h2 id='iPad'>iPad</h2>
 
+<br/>
+
+
 | iPad型号 | 发布时间 | 屏幕尺寸 | 芯片性能 | CPU | GPU | 电池 | 网络 | 功能 |
 |:--|:--|:--|:--|:--|:--|:--|:--|
 | iPad | 2010年1月27日 |  |  |   |  |  |  |  |
@@ -457,6 +461,17 @@ brew deps        显示包依赖
 
 >## <h2 id='Charles使用'>[Charles 使用](https://www.jianshu.com/p/633ac6221028)</h2>
 >
+
+
+<br/>
+<br/>
+<br/>
+
+
+># <h2 id='Wireshark🦈SIP'>Wireshark🦈SIP</h2>
+
+- [Wireshark使用教程](https://www.cnblogs.com/hls-code/p/16054209.html)
+- [抓取真机数据](https://blog.csdn.net/yulianlin/article/details/79095413)
 
 
 
