@@ -19,9 +19,12 @@
 - [**参考资料**]()
 	- [Linphone使用说明](https://www.mptablet.com/post/12045.html)
 	- [Linphone SDK编译说明](https://gitlab.linphone.org/BC/public/linphone-sdk/blob/master/README.md)
-	- [Linphone C API文档](https://download.linphone.org/releases/docs/liblinphone/latest/c/)
+	- [Linphone API Documentation](https://download.linphone.org/releases/docs/liblinphone/4.5/cs/api/Linphone.html)
+	- [Linphone C++ API文档](https://download.linphone.org/releases/docs/liblinphone/5.1/c++/annotated.html)
 	- [从零开始搭建音视频通话服务](https://juejin.cn/post/7054576051539673101/)
-	- [SDP消息格式](https://cxybb.com/article/aiwusheng/104723834)
+	- [Linphone资料](https://cxybb.com/searchArticle)
+	- [SIP消息格式](https://www.dsliu.com/wenti/5084.html)
+	- [SIP状态码](https://www.renrendoc.com/paper/183026178.html)
 	- [SIP技术介绍](http://www.h3c.com/cn/d_200805/605897_30003_0.htm)
 
 
@@ -288,17 +291,26 @@ CMake suite maintained and supported by Kitware (kitware.com/cmake).
 
 
 //下载python
-//M1 系列下载,python版本要在3到3.8.9之间,否则无法打成iOS的sdk
-$  arch -arm64 brew install python@3.8
+//目前python基于arm架构的M系列最低版本是3.8.5
+$  arch -arm64 brew install python@3.9
+
+//安装完成提示,这个是软链接地址
+Python has been installed as
+  /opt/homebrew/bin/python3.9
+  
+//查看真实地址
+realpath /opt/homebrew/bin/python3.9
+/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/python3.9
 
 //根据安装好的提示配置pyton环境
 $ open .bash_profile
 
 //在 .bash_profile 写入如下:
-export PATH="/opt/homebrew/opt/python@3.8/bin:$PATH"
-alias python="/opt/homebrew/opt/python@3.8/bin/python3.8"
-export LDFLAGS="-L/opt/homebrew/opt/python@3.8/lib"
-export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.8/lib/pkgconfig"
+# Python环境配置
+alias python=/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/python3.9
+export PythonHome=/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9
+export PATH=$PATH:$PythonHome/bin
+# Python End
 
 $ source .bash_profile
 
@@ -320,7 +332,7 @@ $ source ~/.bash_profile
 // 检查是否安装成功,查看版本
 $ python -V
 $ which python
-python: aliased to /opt/homebrew/opt/python@3.8/bin/python3.8
+python: aliased to /opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/python3.9
 ```
 
 
