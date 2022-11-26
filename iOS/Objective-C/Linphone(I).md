@@ -279,7 +279,9 @@ file xx
 
 <br/>
 
-- **2.下载依赖库**
+- **2.下载打包工具**
+
+**2.1 安装Cmake**
 
 ```
 // 下载Cmake
@@ -289,7 +291,27 @@ cmake version 3.23.2
 
 CMake suite maintained and supported by Kitware (kitware.com/cmake).
 
+$ which cmake
+/Applications/CMake.app/Contents/bin/cmake
 
+$ open .bash_profile
+
+//配置工具
+# CMake环境配置
+export PATH="/Applications/CMake.app/Contents/bin":"$PATH"
+# Cmake End
+```
+
+
+<br/>
+
+**2.2 安装Python**
+
+&emsp; Mac有自带的Python,但是版本太低.需要我们下载高版本的python,但是需要我们配置,然后才能使用我们自己下载的python.
+
+&emsp; 这里要提到的是,有软链接之说.其实这个后面经过多方面尝试才发现.可以通过软链接,也可以通过配置到环境变量来进行解决.
+
+```
 //下载python
 //目前python基于arm架构的M系列最低版本是3.8.5
 $  arch -arm64 brew install python@3.9
@@ -307,9 +329,10 @@ $ open .bash_profile
 
 //在 .bash_profile 写入如下:
 # Python环境配置
-alias python=/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/python3.9
-export PythonHome=/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9
-export PATH=$PATH:$PythonHome/bin
+export PATH=/opt/homebrew/bin/python3.9
+/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin:$PATH
+alias python3=/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/python3.9
+alias pip3=/opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/pip3
 # Python End
 
 $ source .bash_profile
@@ -318,23 +341,23 @@ $ source .bash_profile
 // 这是因为需要每次使用 source .bash_profile,可以进行如下操作:
 $ vim ~/.zshrc
 
-// 写入配置
-export PATH="/opt/homebrew/opt/python@3.8/bin:$PATH"
-alias python="/opt/homebrew/opt/python@3.8/bin/python3.8"
-export LDFLAGS="-L/opt/homebrew/opt/python@3.8/lib"
-export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.8/lib/pkgconfig"
-
 // 到此python才算配置完成
 $ source ~/.bash_profile
 
 
 
 // 检查是否安装成功,查看版本
-$ python -V
-$ which python
+$ python3 -V
+$ which python3
 python: aliased to /opt/homebrew/Cellar/python@3.9/3.9.15/Frameworks/Python.framework/Versions/3.9/bin/python3.9
 ```
 
+Python3.9的真实文件夹如下:
+
+[ios_oc1_45](./../../Pictures/ios_oc1_45.png)
+
+
+<br/>
 
 
 ```
@@ -427,6 +450,16 @@ cmake /Users/harleyhuang/Documents/GitHub/Linphone-SDK -G Xcode -DLINPHONESDK_PL
 // 构建Release版本
 cmake --build . --config Release
 ```
+
+终端构建成功后:
+
+[ios_oc1_46](./../../Pictures/ios_oc1_46.png)
+
+
+<br/>
+
+构建成功的文件如下:
+[ios_oc1_47](./../../Pictures/ios_oc1_47.png)
 
 [**linphone-sdk-iOS动态库**](https://download.linphone.org/snapshots/ios/)
 
