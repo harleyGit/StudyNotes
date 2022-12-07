@@ -14,7 +14,9 @@
 	- [不同账号内购后崩溃处理异常](#不同账号内购后崩溃处理异常)
 	- [适配器、响应元是什么](#适配器响应元是什么)
 	- [热更新](#热更新)
+	- [NSString的属性copy和strong区别](#NSString的属性copy和strong区别)
 	- [retain和strong区别](#retain和strong区别)
+	- [NSCache详解](#NSCache详解)
 	- [load和initialize区别](#load和initialize区别)
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
@@ -240,6 +242,97 @@ IAP支付的过程：
 <br/>
 <br/>
 
+> <h2 id="
+NSString的属性copy和strong区别">
+NSString的属性copy和strong区别</h2>
+
+```
+/ strong  类型  NSString
+@property (nonatomic, strong) NSString *strongString;
+// copy    类型  NSString
+@property (nonatomic, copy)   NSString *copyedString;
+
+
+/// 测试NSString的copy和strong区别
+- (void)testStringPropertyStrongAndCopy {
+    NSString *tmpString = @"123456";
+
+    self.strongString = tmpString;
+    self.copyedString = tmpString;
+
+    NSLog(@"tmpString: %@, %p", tmpString, tmpString);
+    NSLog(@"self.strongString: %@, %p", self.strongString, self.strongString);
+    NSLog(@"self.copyedString: %@, %p", self.copyedString, self.copyedString);
+    
+    tmpString = @"qqqqqq";
+    
+    NSLog(@"🍎tmpString: %@, %p", tmpString, tmpString);
+    NSLog(@"🍎self.strongString: %@, %p", self.strongString, self.strongString);
+    NSLog(@"🍎self.copyedString: %@, %p", self.copyedString, self.copyedString);
+    
+}
+```
+
+打印:
+
+```
+tmpString: 123456, 0x107b2bff0
+self.strongString: 123456, 0x107b2bff0
+self.copyedString: 123456, 0x107b2bff0
+
+
+🍎tmpString: qqqqqq, 0x107b2c070
+🍎self.strongString: 123456, 0x107b2bff0
+🍎self.copyedString: 123456, 0x107b2bff0
+```
+
+&emsp; tmpString修改值后,可以看到其内存地址变了,它只想了另一块内存地址了.所以strongString、copyedString的打印值还是不变.
+
+&emsp;&emsp;  解释:若是确定要给属性NSString赋一个不可变的值时，用strong，其他情况用copy。使用copy来修饰属性，在进行赋值的时候，会先做一个类型判断，如果赋的值是一个不可变的字符串，则走strong的策略，进行的是浅拷贝；如果是可变的字符串，则进行深拷贝创建一个新的对象。所以如果我们确定是给属性赋值一个不可变的值，就不用copy再多去判断一遍类型.
+
+<br/>
+
+&emsp; &emsp; 或者另一种解释: 苹果对NSString的copy做了优化，还是指向同一个内存地址，但是也不会互相影响。因为这里跟上面还是有点差别的，想想看，修改s2的值，不就是直接把s2指向新的地址了吗？是不会影响到s1指向的值的，那何必多占用一个内存呢？
+
+&emsp;&emsp;  我们经常使用对象接收网络数据，通常使用strong，因为不会改变。而如NSCache属性中的name字段，应该使用copy，不然打印出来的名字就有可能非预想值。这是为什么?
+
+解释: `copy 对于 NSString 是拷贝，strong对于NSString是引用，strong引用的NSString 可能会被更改，导致key 被修改，无法取出之前存的value`
+
+
+<br/>
+
+这里顺便插入一下NSMutableCopying和NSCopying, NSMutableCopying和NSCopying是同一个原理，在调用mutableCopy的时候会走到这个方法来索取一个新对象。至于他们两个的区别主要是用来区分浅拷贝和深拷贝。
+
+- **浅拷贝:只复制对象本身,对象里的属性,包含的对象不做拷贝;**
+- **深拷贝:即复制对象本身,对象里的包含对象,属性也都复制.**
+
+<br/>
+
+即你需要像下面这样实现这两个方法:
+
+```
+-(id)copyWithZone:(NSZone *)zone  
+{  
+    //浅拷贝的实现  
+    Person *person = [[[self class] allocWithZone:zone] init];  
+    person.username = _username;
+}
+
+
+-(id)mutableCopyWithZone:(NSZone *)zone  
+{  
+    //深拷贝的实现  
+    Person *person = [[[self class] allocWithZone:zone] init];  
+    person.username = [_username copy];
+}
+```
+
+
+
+
+<br/>
+<br/>
+
 
 
 > <h2 id="retain和strong区别">retain和strong区别</h2>
@@ -249,6 +342,14 @@ IAP支付的过程：
 		- 在MRC(手动管理引用计数)时，block存在栈区（stack）的，因此使用的时候要注意此时的block是否还存在，以免操作了野指针而闪退。
 		- 在ARC(自动引用计数)时，block是存在堆区（heap）的。
 		- block的修饰符可以用storng、copy、retain进行修饰，但是要注意在MRC环境不要用retain
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='NSCache详解'>NSCache详解</h2>
 
 
 
