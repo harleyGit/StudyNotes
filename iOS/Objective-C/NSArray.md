@@ -333,6 +333,37 @@ MLC[9799:359328] self.copyedArray: 0x6000009b1240, PersonModel: 0x6000009b0c20, 
 
 
 
+<br/>
+<br/>
+
+&emsp; 这里衍生一下到NSDictionary中,若是以NSMutableArray的地址为键,其为value
+
+```
+NSMutableArray *array = [NSMutableArray arrayWithObjects:@"1",@"2", nil];
+NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+dict[array] = array;
+for (NSMutableArray *key in dict.allKeys) {
+    NSLog(@"%@", key.class);
+    NSLog(@"%@", [dict[key] class]);
+}
+```
+
+
+<br/>
+
+打印:
+
+```
+key.class: __NSArrayI
+[dict[key] class]: __NSArrayM
+```
+
+&emsp; 因为NSMutableDictionary 在 set key-value 的时候会把 key copy 一下，NSMutableArray 被 copy 成 NSArray 了，也就对应类族里面__NSArrayI。
+
+
+
+
+
 
 
 <br/>

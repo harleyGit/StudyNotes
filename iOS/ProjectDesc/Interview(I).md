@@ -242,9 +242,7 @@ IAP支付的过程：
 <br/>
 <br/>
 
-> <h2 id="
-NSString的属性copy和strong区别">
-NSString的属性copy和strong区别</h2>
+> <h2 id="NSString的属性copy和strong区别">NSString的属性copy和strong区别</h2>
 
 ```
 / strong  类型  NSString
@@ -328,7 +326,7 @@ self.copyedString: 123456, 0x107b2bff0
 ```
 
 
-
+类似的[NSArray和NSMutableArray](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray.md#%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D)和这个差不多.
 
 <br/>
 <br/>
