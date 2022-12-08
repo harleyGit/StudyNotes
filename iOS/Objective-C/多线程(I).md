@@ -3,6 +3,9 @@
 	- [并发](#并发)
 	- [线程组和依赖](#线程组和依赖)
 		- 	[线程组处理](#线程组处理)
+- [**锁**](#锁)
+	- [OSSpinLock](#OSSpinLock)
+	- [dispatch_semaphore](#dispatch_semaphore)
 - [**NSOperation**](#NSOperation)
 	- [常驻线程](#常驻线程)
 	- 	[依赖](#依赖)
@@ -152,6 +155,50 @@ AsyTaskTest[5963:308103] 全部完成，线程：<NSThread: 0x604000070600>{numb
 
 
 
+<br/>
+<br/>
+<br/>
+
+***
+<br/>
+
+> <h1 id='锁'>锁</h1>
+
+<br/>
+<br/>
+
+> <h2 id='OSSpinLock'>OSSpinLock</h2>
+
+&emsp; OSSpinLock:自旋锁，性能最高的锁。原理很简单，就是一直 do while 忙等。它的缺点是当等待时会消耗大量 CPU 资源，所以它不适用于较长时间的任务。对于内存缓存的存取来说，它非常合适。
+
+
+<br/>
+<br/>
+
+> <h2 id='dispatch_semaphore'>dispatch_semaphore</h2>
+
+&emsp; dispatch_semaphore 是信号量，但当信号总量设为 1 时也可以当作锁来。在没有等待情况出现时，它的性能比 pthread_mutex 还要高，但一旦有等待情况出现时，性能就会下降许多。相对于 OSSpinLock 来说，它的优势在于等待时不会消耗 CPU 资源。对磁盘缓存来说，它比较合适。
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+
+
+
 
 <br/>
 <br/>
@@ -163,7 +210,7 @@ AsyTaskTest[5963:308103] 全部完成，线程：<NSThread: 0x604000070600>{numb
 
 
 
-> <h1 id='NSOperation'>NSOperation</h2>
+> <h1 id='NSOperation'>NSOperation</h1>
 
 &emsp; 在 AFNetworking 2.0 中，把每个请求都封装成了单独的 NSOperationQueue，再由 NSOperationQueue 根据当前的 CPU 数量和系统负载来控制并发。那么，为什么 AFNetworking 2.0 没有为每个请求创建一个线程，而只是创建了一个队列，用来接收 NSOperationQueue 的回调呢？
 

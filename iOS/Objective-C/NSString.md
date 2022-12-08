@@ -1,13 +1,22 @@
+> <h2 id=""></h2>
+- [**字符串操作**](#字符串操作)
+	- [计算文本Rect](#计算文本Rect)
+	- [NSCharacterSet字符串分割](#NSCharacterSet字符串分割)
+- [**参考资料**](#参考资料)
+	- [玩转 NSString](https://www.jianshu.com/p/d3f343b71cc2)
 
-- **计算文本Rect**
-- **NSCharacterSet字符串分割**
 
 <br/>
 
 ***
 <br/>
 
-># 计算文本Rect
+> <h1 id="字符串操作">字符串操作</h1>
+
+<br/>
+<br/>
+
+> <h2 id="计算文本Rect">计算文本Rect</h2>
 
 ```
 //计算一段文本的尺寸大小,在iOS7被弃用
@@ -50,11 +59,9 @@ typedef NS_OPTIONS(NSInteger, NSStringDrawingOptions) {
 
 
 <br/>
-
-***
 <br/>
 
-># NSCharacterSet字符串分割
+><h2 id='NSCharacterSet字符串分割'>NSCharacterSet字符串分割</h2> 
 
 `//根据一个给定的字符串获取一个NSCharacterSet对象`
 
@@ -96,7 +103,3 @@ NSLog(@"invertedSet----%@",[str componentsSeparatedByCharactersInSet:invertedSet
 <br/>
 
 
-
-参考资料：
-
-[玩转 NSString](https://www.jianshu.com/p/d3f343b71cc2)
