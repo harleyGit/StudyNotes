@@ -1,9 +1,12 @@
-
-- **nonatomic和atomic**
-- **retain**
-- **copy**
-- **assign**
-- **weak**
+> <h2 id=''></h2>
+- [**属性**](#属性)
+	- [**nonatomic和atomic**](#nonatomic和atomic)
+	- [**retain**](#retain)
+	- [**copy**](#copy)
+	- [**assign**](#assign)
+	- [**weak**](#weak)
+- [**宏定义**](#宏定义)
+	- [SD_UIKIT](#SD_UIKIT)
 
 
 
@@ -12,9 +15,10 @@
 
 ***
 <br/>
+<br/>
 
+> <h2 id='nonatomic和atomic'>nonatomic和atomic</h2>
 
-># nonatomic和atomic
 
 - nonatomic：不使用同步锁，非原子性
 - atomic：使用同步锁，原子性
@@ -28,11 +32,10 @@
 
 
 <br/>
-
-***
 <br/>
 
-># retain
+> <h2 id='retain'>retain</h2>
+
 
 &emsp;  retain到另外一个对象之后，地址是不会变化的，地址也为0x1111，实质上是建立一个指针，也就是指针拷贝，内容也是相同的，retain值会加1。
 
@@ -52,11 +55,11 @@
 
 
 <br/>
-
-***
 <br/>
 
-># copy
+
+> <h2 id='copy'>copy</h2>
+
 
 
 ![几种拷贝区别](./../../Pictures/z35.png)
@@ -80,11 +83,10 @@
 
 
 <br/>
-
-***
 <br/>
 
-># assign
+
+> <h2 id='assign'>assign</h2>
 
 内部实现
 
@@ -102,11 +104,11 @@
 
 
 <br/>
-
-***
 <br/>
 
-># weak
+
+> <h2 id='weak'>weak</h2>
+
 
 - **用法：**
 
@@ -131,4 +133,38 @@
 <br/>
 
 **[weak 实现原理](https://www.cnblogs.com/guohai-stronger/p/10161870.html)**
+
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id='宏定义'>宏定义</h1>
+
+<br/>
+
+
+>## <h2 id='SD_UIKIT'>[SD_UIKIT](https://www.jianshu.com/p/1d2e4d822732)</h2>
+
+
+```
+SD_UIKIT
+// iOS and tvOS are very similar, UIKit exists on both platforms
+// Note: watchOS also has UIKit, but it's very limited
+#if TARGET_OS_IOS || TARGET_OS_TV
+    #define SD_UIKIT 1
+#else
+    #define SD_UIKIT 0
+#endif
+
+```
+
+
+&emsp; iOS 和 tvOS 是非常相似的，UIKit在这两个平台中都存在，但是watchOS在使用UIKit时，是受限的。因此我们定义SD_UIKIT为真的条件是iOS 和 tvOS这两个平台。至于为什么要定义SD_UIKIT后边会解释的。
+
+
+
 

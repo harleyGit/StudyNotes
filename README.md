@@ -785,7 +785,7 @@
 </a>
 
 </a>
-	<img src="./Pictures/desktop2.tiff" alt="Mac桌面图片" width="960" height="540" border="30">
+	<img src="./../Pictures/desktop2.tiff" alt="Mac桌面图片" width="960" height="540" border="30">
 </a>
 
 
