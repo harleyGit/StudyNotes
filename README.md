@@ -205,6 +205,7 @@
 *	[**类库**](#类库)
 	*	[Linphone(I)](./iOS/Objective-C/Linphone(I).md)
 	*	[YYCache](./iOS/Objective-C/YYCache.md)
+	*	[AFNetworking](./iOS/Objective-C/AFNetworking.md)
 - [**项目开发**](#项目开发)
 	- [DevSum](./iOS/Objective-C/DevSum.md)
 
@@ -527,8 +528,6 @@
 	*	[图片选择(I)](./ClassLibrary/图片选择(I).md)
 	*	[RSwift(I)](./ClassLibrary/RSwift(I).md)
 * 网络
-	*	[AFNetworking(I)](./ClassLibrary/AFNetworking(I).md)
-	*	[AFNetworking(II)](./ClassLibrary/AFNetworking(II).md)
 	*	[Alamofire(I)](./ClassLibrary/Alamofire(I).md)
 	*	[Moya(I)](./ClassLibrary/Moya(I).md)
 *	[即时通讯](./ClassLibrary/即时通讯.md)
