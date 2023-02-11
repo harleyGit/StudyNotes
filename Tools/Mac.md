@@ -32,6 +32,7 @@
 	- [**美国地址生成器**](https://www.meiguodizhi.com/usa-address/hot-city-New-York)
 	- [**免费FQ**](https://github.com/Alvin9999/new-pac/wiki/ss免费账号)
 	- [**免费节点**](https://lncn.org)
+	- [iOS禁止更新描述文件](https://sysin.org/blog/disable-ios-update/)
 	- [**BetaProfiles(阻止苹果系统软件更新及证书)**](https://betaprofiles.com)
 	- [**AppleOpenSource(苹果系统资源下载)**](https://opensource.apple.com)
 	- [**反斗限免**](http://free.apprcn.com)
