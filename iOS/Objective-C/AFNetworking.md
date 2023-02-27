@@ -1,6 +1,16 @@
-> <h2 id=''></h2>
+> <h2 id=''></h2>https://www.jianshu.com/p/8184e762872c
 - [**基础**](#基础)
 	- [请求头配置](#请求头配置)
+	- [NSURLRequestCachePolicy缓存策略](#NSURLRequestCachePolicy缓存策略)
+	- [请求对象](#请求对象)
+		- [NSURLRequest](#NSURLRequest)
+		- [NSMutableRequest](#NSMutableRequest)
+- [**NSURLSession**](#NSURLSession)
+	- [NSURLSession实例化](#NSURLSession实例化)
+	- [NSURLSession属性](#NSURLSession属性)
+	- [管理回话](#管理回话)
+	- [Block接受数据](#Block接受数据)
+	- ‌[Delegate接受数据](#Delegate接受数据)
 - [**AFNetworking架构图**](#AFNetworking架构图)
 	- [AFNetworking3.0请求流程线程](#AFNetworking3.0请求流程线程)
 	- [属性](#属性)
@@ -15,9 +25,6 @@
 	- [方法]()
 		- [SessionConfig](#SessionConfig)
 - [**AFHTTPSessionManager**](#AFHTTPSessionManager)
-- [**NSURLSession**](#NSURLSession)
-	- [Block接受数据](#Block接受数据)
-	- ‌[Delegate接受数据](#Delegate接受数据)
 - [**AFURLRequestSerialization**](#AFURLRequestSerialization)
 - [多路复用](#多路复用)
 - [**参考资料:**](#)
@@ -49,6 +56,433 @@
 
 - **Accept**: 代表发送端（客户端）希望接受的数据类型;
 	- 比如: `headerDictionary[@"Accept"] = @"image/*,*/*;q=0.8"`
+
+
+
+<br/>
+<br/>
+
+> <h2 id='NSURLRequestCachePolicy缓存策略'>NSURLRequestCachePolicy缓存策略</h2>
+
+```
+// 默认的缓存策略， 如果缓存不存在，直接从服务端获取。如果缓存存在，会根据response中的Cache-Control字段判断下一步操作，如: Cache-Control字段为must-revalidata, 则询问服务端该数据是否有更新，无更新的话直接返回给用户缓存数据，若已更新，则请求服务端.
+1> NSURLRequestUseProtocolCachePolicy = 0,
+
+//忽略本地缓存数据，直接请求服务端.
+
+2> NSURLRequestReloadIgnoringLocalCacheData = 1, 
+
+//忽略本地缓存，代理服务器以及其他中介，直接请求源服务端.
+3> NSURLRequestIgnoringLocalAndRemoteCacheData = 4, 
+
+4> NSURLRequestReloadIgnoringCacheData = NSURLRequestReloadIgnoringLocalCacheData
+
+//有缓存就使用，不管其有效性(即忽略Cache-Control字段), 无则请求服务端.
+5> NSURLRequestReturnCacheDataElseLoad = 2, 
+
+//死活加载本地缓存. 没有就失败. (确定当前无网络时使用)
+6> NSURLRequestReturnCacheDataDontLoad = 3, 
+
+7> NSURLRequestReloadRevalidatingCacheData = 5, 缓存数据必须得得到服务端确认有效才使用(貌似是NSURLRequestUseProtocolCachePolicy中的一种情况)
+```
+
+&emsp; **URL Loading System**默认只支持如下5中协议: 其中只有http://和https://才有缓存策略.
+
+``` 
+(1) http:// 
+(2) https:// 
+(3) ftp:// 
+(4) file:// 
+(5) data:// 
+```
+
+&emsp; **NSURLRequestReturnCacheDataDontLoad**用于离线模式的，我为了能让用户在离线下面阅读，可以设计当没有网络的时候的策略为NSURLRequestReturnCacheDataDontLoad。 
+
+
+```
+if (有网) { 
+	cachePolicy = NSURLRequestUseProtocolCachePolicy; 
+}else{ 
+	cachePolicy = NSURLRequestReturnCacheDataDontLoad; 
+}
+```
+
+
+<br/>
+<br/>
+
+> <h2 id='请求对象'>请求对象</h2>
+
+<br/>
+<br/>
+
+> <h3 id='NSURLRequest'>NSURLRequest</h3>
+
+&emsp; NSURLRequest：封装一个请求，保存发给服务器的全部数据，包括一个NSURL对象，请求方法、请求头、请求体等;
+
+
+<br/>
+<br/>
+
+> <h3 id='NSMutableRequest'>NSMutableRequest</h3>
+
+&emsp; NSMutableURLRequest：NSURLRequest的子类
+
+NSMutableURLRequest是NSURLRequest的子类，常用方法有:
+
+```
+//设置请求超时等待时间（超过这个时间就算超时，请求失败）
+- (void)setTimeoutInterval:(NSTimeInterval)seconds;
+
+//设置请求方法（比如GET和POST）
+- (void)setHTTPMethod:(NSString *)method;
+
+//设置请求体
+- (void)setHTTPBody:(NSData *)data;
+
+//设置请求头
+- (void)setValue:(NSString *)value forHTTPHeaderField:(NSString *)field;
+```
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+
+***
+<br/>
+
+># <h1 id='NSURLSession'>[NSURLSession](https://juejin.cn/post/6844903971824500743)</h1>
+
+**介绍:**
+
+&emsp; NSURLSession 是对 NSURLConnection 的替代，是网络通信的管理者，协调一组相关的网络数据传输任务，请求是高度异步的。可以创建一个或多个 NSURLSession 实例将服务器数据提取并返回到App、下载文件或和文件上传到服务器，也支持身份验证、接收HTTP重定向等事件；当 App 挂起时，支持后台下载。
+
+<br/>
+
+![AFNet7.jpeg](./../../Pictures/AFNet7.jpeg)
+
+
+<br/>
+
+![ios_oc1_73](./../../Pictures/ios_oc1_73)
+
+
+- NSURLSessionConfiguration ：配置选项的封装，如与主机同时连接的最大并发数目、使用的多路径TCP策略、以及是否允许蜂窝网络, 请求缓存策略, 请求超时, cookies/证书存储等等；
+- NSURLSessionDelegate : 用于处理响应数据的代理；
+- NSURLSessionTask : 通过请求创建的任务；
+- NSURLSessionTaskMetrics ：对发送请求/DNS查询/TLS握手/请求响应等各种环节时间上的统计. 可用于分析App的请求缓慢到底是发生在哪个环节, 并对此优化APP性能。
+- NSURLSessionTaskTransactionMetrics
+
+<br/>
+<br/>
+
+&emsp; NSURLSession中比较重要的几个对象: NSURLSessionTask、NSURLSessionConfiguration、为它请求时执行的代理方法。
+
+
+![AFNet8.png](./../../Pictures/AFNet8.png)
+
+
+- NSURLSession的使用共分两步:
+	- 通过NSURLSession的实例创建task
+	- 通过task选择自己所需要的方法，有Delegate方法和Block方法执行task
+
+<br/>
+
+**一个完整的通信流程是:**
+
+```
+//step1 ：配置一些选项
+NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+
+//step2：设置处理响应数据的队列
+NSOperationQueue *queue = [NSOperationQueue mainQueue];
+
+//step3：创建 session
+NSURLSession *session = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:queue];
+
+//step4：利用 session 创建任务
+NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithString:@""]];
+
+//step5v`345679-jjj开始任务
+[task resume];//刚创建出来的task默认是挂起状态的，需要调用该方法来启动任务（执行任务）';
+
+```
+
+<br/>
+
+> task一共有4个delegate，只要设置了一个，就代表四个全部设置，有时候一些delegate不会被触发的原因在于这四种delegate是针对不同的URLSession类型和URLSessionTask类型来进行响应的，也就是说不同的类型只会触发这些delegate中的一部分，而不是触发所有的delegate。
+
+
+<br/>
+<br/>
+
+> <h2 id='NSURLSession实例化'>NSURLSession实例化</h2>
+
+
+```
+/** 全局共享单例
+ * 有很大局限性：
+ *  <li> 没有设置 delegate，因此不会调用代理方法;
+ *  <li> 没有定制 configuration 用于基本请求；
+ *  <li> 当收到服务器的响应报文时，不能增量地获取数据；
+ *  <li> 无法对默认连接行为进行定制；
+ *  <li> 执行身份验证的能力是有限的；
+ *  <li> App 挂起时，不能执行后台下载或上传。
+ * sharedSession 使用全局 NSURLCache、NSHTTPCookieStorage、NSURLCredentialStorage
+ * @note 如果使用缓存、cookie、身份验证或自定义网络协议进行任何操作，应该使用默认会话而不是共享会话。
+ * @note ：不管 session 执行的线程为主线程还是子线程，completionHandler 代码均在任意子线程执行。
+*/
+@property (class, readonly, strong) NSURLSession *sharedSession;
+
+/** 根据指定的 Configuration 创建一个网络会话
+ * 由于没有设置 delegate ，因此不会调用代理方法；
+ * completionHandler 中的代码均在任意子线程执行
+ */
++ (NSURLSession *)sessionWithConfiguration:(NSURLSessionConfiguration *)configuration;
+
+
+/** 使用指定的会话配置，委托和操作队列创建会话
+ * 设置了 delegate，因此期望响应数据通过代理方式处理；但是在创建Task的时候，若使用参数 completionHandler ，则响应仍然会在completionHandler 中处理，而非代理方法。因此，若保证使用代理方式处理，则需将 completionHandler 设置为nil 。
+ * @note   会话对象保存对 delegate 的强引用，直到应用程序退出或显式地使会话无效为止。如果不使会话无效，App 就会泄露内存，直到它退出。
+*/
++ (NSURLSession *)sessionWithConfiguration:(NSURLSessionConfiguration *)configuration delegate:(nullable id <NSURLSessionDelegate>)delegate delegateQueue:(nullable NSOperationQueue *)queue;
+```
+
+
+<br/>
+
+**NSURLSession关键参数：**
+
+- 代理delegate：可以设置一个 delegate，在会话生命周期内接收响应报文，处理身份验证等事件；
+	- 也可以 delegate=nil 使用 completionHandler 来处理服务器的响应报文；
+- queue：用来处理响应数据的线程，
+	- 若为 mainQueue，则代理方法或者  completionHandler 中的代码在主线程程执行；
+	- 若为 nil 或者创建一个操作队列，则在任意子线程执行；
+- configuration：对会话一些配置的封装：如使用Cache、Cookie、证书，或者是否允许在蜂窝网络上进行连接！
+- NSURLSession 对delegate、queue持有强引用，为避免内存泄漏，需要显式地使会话无效！
+- NSURLSession 实例是线程安全的：可以在任何线程中创建会话和任务；当代理方法调用时，将在正确的委托队列上调用。
+
+**注意：**只能使用上述方法获取一个 NSURLSession 对象，禁止使用 -init 或 +new等方法实例化；
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='Block接受数据'>Block接受数据</h2>
+
+
+使用Block很简单，只需要传入请求的Request就可以直接获取到数据。
+
+```
+- (IBAction)orginalDownLoadAction:(UIButton *)sender {
+    __weak typeof(self) weakself = self;
+    NSURLSession *session = [self createASession];
+    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:[self creatRequest:downURL] completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakself.showImageView.image = [UIImage imageWithData:data];
+        });
+    }];
+    [dataTask resume];
+}
+
+//  创建Session对象
+- (NSURLSession *)createASession {
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    operationQueue.maxConcurrentOperationCount = 1;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:operationQueue];
+    return session;
+}
+
+- (NSURLRequest *)creatRequest:(NSString *)url {
+    NSURLRequest *requset = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
+    return requset;
+}
+```
+
+
+<br/>
+<br/>
+
+
+> <h2 id='NSURLSession属性'>NSURLSession属性</h2>
+
+
+
+```
+/**  操作队列：需要在创建此对象时提供
+ * 作用域：与 NSURLSession 相关的所有代理方法调用和 completionHandler 都在这个队列上执行；
+ * @note 在 App 退出或 NSURLSession 被释放之前，session 对该队列保持强引用；为避免内存泄漏，需要使会话无效。
+ */
+@property (readonly, retain) NSOperationQueue *delegateQueue;
+
+/** 委托代理：需要在创建此对象时设置，负责处理身份验证挑战、缓存以及处理其它与会话相关的事件
+ * @note 会话对象对该委托具有强引用，为避免内存泄漏，需要显式地使会话无效；
+ */
+@property (nullable, readonly, retain) id <NSURLSessionDelegate> delegate;
+
+/** 一些配置选项：需要在创建此对象时设置
+ * @note 在iOS9之前，由于不是拷贝的副本，允许在初始化后通过修改 Configuration 的某些属性来进一步配置会话行为，这是一个 bug；
+ *       从iOS9开始，是入参的拷贝副本，以便会话的配置在初始化后不被影响！
+*/
+@property (readonly, copy) NSURLSessionConfiguration *configuration;
+
+/** 用于调试程序的描述性标签，默认为nil
+ */
+@property (nullable, copy) NSString *sessionDescription;
+```
+
+
+<br/>
+<br/>
+
+
+> <h2 id='管理会话'>管理会话</h2>
+
+
+
+```
+/** 完成任务并将 NSURLSession 置为无效！
+ * 异步方法，会立即返回，此时 NSURLSession 需要等待现有任务完成后才会无效，但新的任务不被创建；
+ * 代理方法继续执行，直到 -URLSession:didBecomeInvalidWithError: 执行，NSURLSession 无效。
+ * @note sharedSession 调用该方法没有任何影响。
+ */
+- (void)finishTasksAndInvalidate;
+
+/** 将 NSURLSession 置为无效，向此会话中所有未完成的任务发出 -cancel；但新的任务不被创建；
+ * @note: 任务取消取决于任务的状态，有些任务在发送 -cancel 时可能已经完成。
+ * @note sharedSession 调用该方法没有任何影响。
+ */
+- (void)invalidateAndCancel;
+
+ /** 清空所有 Cookie、Cache 和证书，删除磁盘文件，将正在进行的下载刷新到磁盘，并确保将来的请求发生在新的 socket上。
+  * @param completionHandler 当 reset 操作完成时被调用，handler 在委托队列上执行。
+  */
+- (void)resetWithCompletionHandler:(void (^)(void))completionHandler;
+
+/** 将Cookie和证书刷新到磁盘，清除临时缓存，并确保将来的请求发生在新的TCP连接上。
+ * @param completionHandler 当 reset 操作完成时被调用，handler 在委托队列上执行。
+ */
+- (void)flushWithCompletionHandler:(void (^)(void))completionHandler;
+
+/** 对会话中创建的未完成的 dataTasks、上传和下载任务调用 completionHandler
+ * @param completionHandler 要使用任务列表调用，在委托队列上执行；不包括完成、失败或被取消后无效的任何任务。
+ */
+- (void)getTasksWithCompletionHandler:(void (^)(NSArray<NSURLSessionDataTask *> *dataTasks, NSArray<NSURLSessionUploadTask *> *uploadTasks, NSArray<NSURLSessionDownloadTask *> *downloadTasks))completionHandler;
+
+/** 获取会话中的所有任务
+ * @param completionHandler 要使用任务列表调用
+ */
+- (void)getAllTasksWithCompletionHandler:(void (^)(NSArray<__kindof NSURLSessionTask *> *tasks))completionHandler API_AVAILABLE(macos(10.11), ios(9.0), watchos(2.0), tvos(9.0));
+```
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='Delegate接受数据'>Delegate接受数据</h2>
+
+可以真正的观测到数据的获取和请求的发送.
+
+```
+- (IBAction)orginalDownLoadAction:(UIButton *)sender {
+    NSURLSession *session = [self createASession];
+    
+    NSURLSessionDataTask *dataTask = [session dataTaskWithURL:[NSURL URLWithString:downURL]];
+    
+    [dataTask resume];
+}
+/**
+ 接收到服务器的响应
+ */
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler{ 
+ 
+    _mutableData = [[NSMutableData alloc] init];
+     // 允许处理服务器的响应，才会继续接收服务器返回的数据
+    if (completionHandler) {
+        completionHandler(NSURLSessionResponseAllow);
+    }
+}
+
+/**
+ 接收到服务器的数据（可能调用多次）
+ */
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data {
+    NSLog(@"接收数据返回");
+    [_mutableData appendData:data];
+}
+
+/**
+ 请求成功或者失败（如果失败，error有值）
+ 所有的代理都会执行此代理方法
+ */
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
+{
+    if (error) {
+        NSLog(@"下载有误 %@",[error localizedDescription]);
+    }
+    else {
+        NSLog(@"完成下载");
+        __weak typeof(self) weakself = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakself.showImageView.image = [UIImage imageWithData:_mutableData];
+        });
+    }
+}
+```
+
+
+
+
+
+<br/>
+
+**` url_session_manager_create_task_safely(dispatch_block_t block)`**
+
+```
+//task和block不匹配
+//taskid应该是唯一的，并发创建的task，id不唯一。
+static void url_session_manager_create_task_safely(dispatch_block_t block) {
+    if (NSFoundationVersionNumber < NSFoundationVersionNumber_With_Fixed_5871104061079552_bug) {
+        //源代码作者对这个bug在官方做了说明
+        // Fix of bug
+        // Open Radar:http://openradar.appspot.com/radar?id=5871104061079552 (status: Fixed in iOS8)
+        // Issue about:https://github.com/AFNetworking/AFNetworking/issues/2093
+        dispatch_sync(url_session_manager_creation_queue(), block);//同步，url_session_manager_creation_queue()创建了一个串行队列
+    } else {
+        block();
+    }
+}
+
+```
 
 
 
@@ -634,150 +1068,6 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
     delegate.uploadProgressBlock = uploadProgressBlock;
     delegate.downloadProgressBlock = downloadProgressBlock;
 }
-```
-
-
-<br/>
-
-***
-<br/>
-
-> <h1 id='NSURLSession'>NSURLSession</h1>
-
-<br/>
-
-![AFNet7.jpeg](./../../Pictures/AFNet7.jpeg)
-
-<br/>
-
-&emsp; NSURLSession中比较重要的几个对象: NSURLSessionTask、NSURLSessionConfiguration、为它请求时执行的代理方法。
-
-
-![AFNet8.png](./../../Pictures/AFNet8.png)
-
-
-- NSURLSession的使用共分两步:
-	- 通过NSURLSession的实例创建task
-	- 通过task选择自己所需要的方法，有Delegate方法和Block方法执行task
-> task一共有4个delegate，只要设置了一个，就代表四个全部设置，有时候一些delegate不会被触发的原因在于这四种delegate是针对不同的URLSession类型和URLSessionTask类型来进行响应的，也就是说不同的类型只会触发这些delegate中的一部分，而不是触发所有的delegate。
-
-<br/>
-<br/>
-
-
-> <h2 id='Block接受数据'>Block接受数据</h2>
-
-
-使用Block很简单，只需要传入请求的Request就可以直接获取到数据。
-
-```
-- (IBAction)orginalDownLoadAction:(UIButton *)sender {
-    __weak typeof(self) weakself = self;
-    NSURLSession *session = [self createASession];
-    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:[self creatRequest:downURL] completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            weakself.showImageView.image = [UIImage imageWithData:data];
-        });
-    }];
-    [dataTask resume];
-}
-
-//  创建Session对象
-- (NSURLSession *)createASession {
-    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
-    operationQueue.maxConcurrentOperationCount = 1;
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:operationQueue];
-    return session;
-}
-
-- (NSURLRequest *)creatRequest:(NSString *)url {
-    NSURLRequest *requset = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
-    return requset;
-}
-```
-
-
-<br/>
-<br/>
-
-
-> <h2 id='Delegate接受数据'>Delegate接受数据</h2>
-
-可以真正的观测到数据的获取和请求的发送.
-
-```
-- (IBAction)orginalDownLoadAction:(UIButton *)sender {
-    NSURLSession *session = [self createASession];
-    
-    NSURLSessionDataTask *dataTask = [session dataTaskWithURL:[NSURL URLWithString:downURL]];
-    
-    [dataTask resume];
-}
-/**
- 接收到服务器的响应
- */
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response
- completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler{ 
- 
-    _mutableData = [[NSMutableData alloc] init];
-     // 允许处理服务器的响应，才会继续接收服务器返回的数据
-    if (completionHandler) {
-        completionHandler(NSURLSessionResponseAllow);
-    }
-}
-
-/**
- 接收到服务器的数据（可能调用多次）
- */
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
-    didReceiveData:(NSData *)data {
-    NSLog(@"接收数据返回");
-    [_mutableData appendData:data];
-}
-
-/**
- 请求成功或者失败（如果失败，error有值）
- 所有的代理都会执行此代理方法
- */
-- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
-{
-    if (error) {
-        NSLog(@"下载有误 %@",[error localizedDescription]);
-    }
-    else {
-        NSLog(@"完成下载");
-        __weak typeof(self) weakself = self;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            weakself.showImageView.image = [UIImage imageWithData:_mutableData];
-        });
-    }
-}
-```
-
-
-
-
-
-<br/>
-
-**` url_session_manager_create_task_safely(dispatch_block_t block)`**
-
-```
-//task和block不匹配
-//taskid应该是唯一的，并发创建的task，id不唯一。
-static void url_session_manager_create_task_safely(dispatch_block_t block) {
-    if (NSFoundationVersionNumber < NSFoundationVersionNumber_With_Fixed_5871104061079552_bug) {
-        //源代码作者对这个bug在官方做了说明
-        // Fix of bug
-        // Open Radar:http://openradar.appspot.com/radar?id=5871104061079552 (status: Fixed in iOS8)
-        // Issue about:https://github.com/AFNetworking/AFNetworking/issues/2093
-        dispatch_sync(url_session_manager_creation_queue(), block);//同步，url_session_manager_creation_queue()创建了一个串行队列
-    } else {
-        block();
-    }
-}
-
 ```
 
 
