@@ -206,6 +206,9 @@
 	* [UITextField(I)](./iOS/Objective-C/UITextField(I).md)
 	* [UIViewController(I)](./iOS/Objective-C/UIViewController(I).md)
 	* [UIWindow(I)](./iOS/Objective-C/UIWindow(I).md)
+* [**优化**](#优化)
+	*	[内存优化](./iOS/Objective-C/内存优化.md)
+	*	[性能优化](./iOS/Objective-C/性能优化.md)
 * [**底层原理**](#底层原理)
 	* [ARC原理](./iOS/Objective-C/ARC原理.md) 
 	* [RunLoop(I)](./iOS/Objective-C/RunLoop(I).md)
@@ -439,34 +442,6 @@
 - [**内存管理**](./底层/内存管理.md)
 - [**浅谈Mach-O**](./底层/浅谈Mach-O.md)
 [](./底层/.md)
-
-
-
-
-
-
-
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-> <h1 id = "优化">优化</h1>
-*	[内存优化(I)](./Optimization/内存优化(I).md)
-*	[图片优化(I)](./Optimization/图片优化(I).md)
-*	[网络优化(I)](./Optimization/网络优化(I).md)
-*	[性能优化(I)](./Optimization/性能优化(I).md)
-*	[Instrument(Leak)](./Optimization/Instrument(Leak).md)
-*	[NSAutoreleasePool(I)](./Optimization/NSAutoreleasePool(I).md)
-[](./Optimization/.md)
-
-
-
 
 
 
