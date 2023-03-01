@@ -91,6 +91,7 @@
 	- [静态库和动态库](#静态库和动态库)
 		- [库引用错误解析](#库引用错误解析)
 - [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
+- [靠谱iOS](https://github.com/ChenYilong/iOSInterviewQuestions)
 
 
 
