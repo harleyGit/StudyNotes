@@ -53,9 +53,11 @@
 
 ***
 <br/>
+<br/>
 
 ># <h1 id=''></h1>
 
+<br/>
 <br/>
 
 > <h2 id=''></h2>
@@ -157,7 +159,7 @@
 > <h2 id = "Objective-C">Objective-C</h2>
 * [**OC资料**](./iOS/Objective-C/OC资料.md)
 * [**‌知识体系**](./iOS/Objective-C/知识体系.md)
-*	[**iOS类继承**](./iOS/Objective-C/iOS类继承.md)
+*	[**类**](./iOS/Objective-C/类.md)
 *	[**消息转发**](./iOS/Objective-C/消息转发.md)
 *	[**App启动**](./iOS/Objective-C/App启动.md)
 *	[**App优化**](./iOS/Objective-C/App优化.md)
@@ -183,7 +185,6 @@
 * [iPhone设计规范](https://zhuanlan.zhihu.com/p/127780364)
 * [本地化(I)](./iOS/Objective-C/本地化(I).md)
 * [闭包](./iOS/Objective-C/闭包.md)
-* [分类和扩展](./iOS/Objective-C/分类和扩展.md)
 * [键盘弹出(I)](./iOS/Objective-C/键盘弹出(I).md)
 * [**NSArray**](./iOS/Objective-C/NSArray.md)
 * [响应链(I)](./iOS/Objective-C/响应链(I).md)
