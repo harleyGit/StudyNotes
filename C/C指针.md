@@ -10,6 +10,13 @@
 - [**指针与数组**](#指针与数组)
 - [**指针与字符串**](#指针与字符串)
 - [**内存**](#内存)
+	- [静态存储区](#静态存储区)
+	- [栈区](#栈区)
+	- [堆区](#堆区)
+	- [内存泄漏](#内存泄漏)
+	- [内存溢出](#内存溢出)
+	- [野指针](#野指针)
+	- [指针置为nil和对象release的作用](#指针置为nil和对象release的作用)
 - [**指针类型**](#指针类型)
 	- [空指针](#空指针)
 	- [坏指针](#坏指针)
@@ -17,6 +24,9 @@
 	- [野指针](#野指针)
 - [**函数指针**](#函数指针)
 - [**结构体指针**](#结构体指针)
+	- [结构体赋值](#结构体赋值)
+	- [结构体链表](#结构体链表)
+	- [结构体指针声明](#结构体指针声明)
 	- 	[结构体变量申明](#结构体变量申明)
 - [**数组和指针**](#数组和指针)
 - [**函数和指针**](#函数和指针)
@@ -27,7 +37,8 @@
 	- [C 语言指针详解](https://www.cnblogs.com/lulipro/p/7460206.html)
 	- [malloc与free本质(内存的释放与回收)](https://www.cnblogs.com/shiweihappy/p/4246372.html)
 	- [静态存储区、栈区、堆区的区别](https://blog.csdn.net/u010977122/article/details/53099425)
- 
+
+
 
 
 
@@ -44,7 +55,7 @@
 
 **物理内存**
 
-&emsp;    ==维修==电脑师傅眼中的内存：内存在物理上是由一组DRAM芯片组成的.
+&emsp; **维修电脑师傅**眼中的内存：内存在物理上是由一组DRAM芯片组成的.
 
 <br/>
 
@@ -77,7 +88,7 @@
 -  1 汉字 = 2 byte = 16 bit;
 
 
-==**`+ 64 位的编译器各类型字节数显示`**==
+**`+ 64 位的编译器各类型字节数显示`**
 
 ```
 //不同的编译器位数，其字节数显示是不同的。通过在程序中打印：
@@ -140,7 +151,15 @@ int main(int argc, const char * argv[]) {
 ```
 输出：
 
-![变量地址输出](./../Pictures/c0_4.png)
+```
+🌷🌹(Mar  9 2023:20:06:13 [80行] testStuctureQuZhiAndFuZhi) num1:10, &num1: 0x7ffee9455b74
+
+🌷🌹(Mar  9 2023:20:06:13 [81行] testStuctureQuZhiAndFuZhi) ch1:A, &ch1:0x7ffee9455b72
+```
+
+
+<br/>
+<br/>
 
 
 ```
@@ -149,6 +168,8 @@ char b = M;
 float c = 3.14
 ```
 
+
+![变量地址输出](./../Pictures/c0_4.png)
 
 <br/>
 
@@ -344,6 +365,8 @@ p:0x7ffeefbff57c,  &p:0x7ffeefbff570,  &num:0x7ffeefbff57c
 
 ![变量和指针的存放区别](./../Pictures/c0_11.png)
 
+&emsp; aPointer指向的是首地址为0,加上加上其为整型的4个字节,所以称为aPointer指向一片内存区域,同理bPointer也是.
+
 
 
 
@@ -404,6 +427,7 @@ p:0x7ffeefbff57c,  &p:0x7ffeefbff570,  &num:0x7ffeefbff57c
 ># <h2 id='解址'>**‌解址**</h2>
 
 &emsp;  实质是：从指针指向的内存块中取出这个内存数据。
+
 &emsp;  对一个指针解地址，就可以取到这个内存数据，解地址 的写法，就是在指针的前面加一个`*`号。
 
 ```
@@ -465,13 +489,14 @@ printf("\n\nnum值改变后：num= %d, *p1= %d, *p3= %d", num, *p1, *p3);
 
 `num值改变后：num= 100, *p1= 100, *p3= 100`
 
-![浅拷贝示意图](./../Pictures/c0_13.png)
 
 
 <br/>
 <br/>
 
 > <h2 id='指针的属性'>指针的属性</h2>
+
+![浅拷贝示意图](./../Pictures/c0_13.png)
 
 
 ```
@@ -488,12 +513,15 @@ int main(void)
 ```
 
 `指针的值`：很好理解，如上面的num 变量 ，其地址的值就是0028FF40 ，因此 p1的值就是0028FF40。数据的地址用于在内存中定位和标识这个数据，因为任何2个内存不重叠的不同数据的地址都是不同的。
+
 `指针的类型`：指针的类型决定了这个指针指向的内存的字节数并如何解释这些字节信息。一般指针变量的类型要和它指向的数据的类型匹配。
  
  
 由于num的地址是0028FF40，因此p1  和  p2的值都是0028FF40
+
 `*p1`  :  将从地址0028FF40
 开始解析，因为p1是int类型指针，int占4字节，因此向后连续取4个字节，并将这4个字节的二进制数据解析为一个整数 97。
+
 `*p2`  :  将从地址0028FF40 开始解析，因为p2是char类型指针，char占1字节，因此向后连续取1个字节，并将这1个字节的二进制数据解析为一个字符，即`a`。
  
 同样的地址，因为指针的类型不同，对它指向的内存的解释就不同，得到的就是不同的数据。
@@ -548,29 +576,6 @@ C++中的字符串也可以通过指针来声明与操作。例如，在C++程�
 
 
 
-<h2 id=''></h2>
-- [内存](#内存)
-	- [静态存储区](#静态存储区)
-	- [栈区](#栈区)
-	- [堆区](#堆区)
-	- [内存泄漏](#内存泄漏)
-	- [内存溢出](#内存溢出)
-	- [野指针](#野指针)
-	- [指针置为nil和对象release的作用](#指针置为nil和对象release的作用)
-- [指针类型](#指针类型)
-	- [空指针](#空指针)
-	- [坏指针](#坏指针)
-	- [野指针](#野指针)
-- [函数指针](#函数指针)
-- [结构体指针](#结构体指针)
-	- [结构体变量申明和指针结构体声明](#结构体变量申明和指针结构体声明)
-	-[ 结构体变量申明](#结构体变量申明和指针结构体声明) 
-- [数组和指针](#数组和指针)
-- [函数和指针](#函数和指针)
-- [const 和指针](#const和指针)
-- [深拷贝和浅拷贝](#深拷贝和浅拷贝)
-
-
 
 <br/>
 <br/>
@@ -583,27 +588,30 @@ C++中的字符串也可以通过指针来声明与操作。例如，在C++程�
 
 <br/>
 
-- **`1.静态存储区`**
+<h4 id='静态存储区'>**`1.静态存储区`**</h4>
 
 &emsp;  内存在程序编译的时候就已经分配好，这块内存在程序的整个运行期间都存在。它主要存放静态数据、全局数据和常量。
 
 <br/>
 
-- **`2.栈区`**
+<h4 id='栈区'>**`2.栈区`**</h4>
+
 
 &emsp;  在执行函数时，函数（包括main函数）内局部变量的存储单元都可以在栈上创建，函数执行结束时这些存储单元自动被释放。栈内存分配运算内置于处理器的指令集中，效率很高，但是分配的内存容量有限。（任何变量都处于栈区，例如int a[] = {1, 2},变量a处于栈区。数组的内容也存在于栈区。）
 
 
 <br/>
 
-- **`3.堆区`**
+<h4 id='堆区'>**`3.堆区`**</h4>
+
 
 &emsp;  亦称动态内存分配。程序在运行的时候用malloc或new申请任意大小的内存，程序员自己负责在适当的时候用free或delete释放内存。动态内存的生存期可以由我们决定，如果我们不释放内存，程序将在最后才释放掉动态内存。 但是，良好的编程习惯是：如果某动态内存不再使用，需要将其释放掉，并立即将指针置位NULL，防止产生野指针。
 
 
 <br/>
 
-- **`4.内存泄漏：`**
+<h4 id='内存泄漏'>**`4.内存泄漏`**</h4>
+
 
 &emsp;  是指申请的内存空间使用完毕之后未回收。一次内存泄露危害可以忽略，但若一直泄漏，无论有多少内存，迟早都会被占用光，最终导致程序crash。
 
@@ -611,7 +619,8 @@ C++中的字符串也可以通过指针来声明与操作。例如，在C++程�
 <br/>
 
 
-- **`5.内存溢出：`**
+<h4 id='内存溢出'>**`5.内存溢出`**</h4>
+
 
 &emsp;  是指程序在申请内存时，没有足够的内存空间供其使用。通俗理解就是内存不够用了，通常在运行大型应用或游戏时，应用或游戏所需要的内存远远超出了你主机内安装的内存所承受大小，就叫内存溢出。最终导致机器重启或者程序crash。
 
@@ -619,7 +628,8 @@ C++中的字符串也可以通过指针来声明与操作。例如，在C++程�
 <br/>
 
 
-- **`6.野指针：`**
+<h4 id='野指针'>**`6.野指针`**</h4>
+
 
 &emsp;  指向一个已删除的对象或者受限内存区域的指针，参考：[野指针and空指针](https://www.cnblogs.com/mjios/archive/2013/04/22/3034788.html)，
 
@@ -627,7 +637,8 @@ C++中的字符串也可以通过指针来声明与操作。例如，在C++程�
 <br/>
 
 
-- **`7.指针置为nil和对象release的作用`**
+<h4 id='指针置为nil和对象release的作用'>**`7.指针置为nil和对象release的作用`**</h4>
+
 
 &emsp; `nil`就是把一个对象的指针置为空，只是切断了指针与内存中对象的联系；
 
@@ -766,8 +777,8 @@ p1:0x1006179f0, &p1:0x7ffeefbff548
 由打印值看：`p1并不为0，也就是在释放p1时，仅仅释放的是p1指向的内存空间，并没有将指针p1指为空，此时p1就成了野指针！`
 
 **解决方法：**
-	- `在定义一个指针时初始化为NULL;`
-	- `释放指针指向的内存空间时，将指针重置为NULL;`
+- `在定义一个指针时初始化为NULL;`
+- `释放指针指向的内存空间时，将指针重置为NULL;`
 
 **`优化代码`**
 
@@ -865,6 +876,7 @@ n = 20
 ```
  
 &emsp;  ptr是指向函数的`指针变量`，所以可把函数pointerFunc赋给ptr作为ptr的值，即把pointerFunc的入口地址赋给ptr,以后就可以用ptr来调用该函数。
+
 &emsp; 实际上ptr和pointerFunc都指向同一个入口地址，不同就是ptr是一个指针变量，不像函数名称那样是死的，它可以指向任何函数。在程序中把哪个函数的地址赋给它，它就指向哪个函数。而后用指针变量调用它，因此可以先后指向不同的函数。
 
 
@@ -882,37 +894,287 @@ n = 20
 
 如果p是一个结构体指针，则可以使用 p ->【成员】 的方法访问结构体的成员。p->member 等价于 (*p).member。
 
+> <h2 id='结构体赋值'>结构体赋值</h2>
+
+
 ```
-typedef struct
-{
-    char name[31];
+struct Student {
+    int num;
+    char name[20];
+    char sex[2];
     int age;
     float score;
-}Student;
+    char addr[60];
+};
 
 
-int main(int argc, const char * argv[])
-{
-     Student stu = {"Bob" , 19, 98.0};
-    Student*ps = &stu;
+void testStuctureQuZhiAndFuZhi(void) {
     
-    ps->age = 20;
-    ps->score = 99.0;
-    printf("name:%s age:%d\n",ps->name,ps->age);
-    return 0;
+    /**
+     *取值&赋值测试一:
+     */
+    struct Student student1 = {1, "Bob1", "M", 22, 99, "OC底层解析:https://juejin.cn/post/6949585271692197925"};
+    println("\n取值&赋值测试一:\n结构体student1赋值&取值: num:%d \nname:%s\n, addr: %s\n\n", student1.num, student1.name, student1.addr);//获取student2.num的值
+    //可以引入结构体变量成员的地址,也可以引用结构体变量的地址,如下:
+//    scanf("%d", &student1.num);//输入 &student1.num的值
+//    println("%o", &student1);//输出结构体变量&student1的首地址
+//    println("student1.num: %d", student1.num);
+
+    //用scanf函数输入结构体变量是,必须分别输入它们的成员的值,不能在scanf函数中使用结构体变量名一揽子全部成员的值.
+    //注意在scant函数中在成员student1.num和student1.score的前面都有地址符号&,而在student1.name前面没有&符号,这是因为name是数组名,本身就代表地址,故不能再添加一个&符号;
+
+    
+    
+    /**
+     *取值&赋值测试二:
+     */
+    struct Student student2;
+    struct Student *p;
+    p = &student2;
+    
+    student2.num = 1;
+    strcpy(student2.name, "Bob1");
+    strcpy(student2.sex, "M");
+    student2.age = 22;
+    student2.score = 99;
+    strcpy(student2.addr, "OC底层解析:https://juejin.cn/post/6949585271692197925");
+    println("\n取值&赋值测试二:\n<-------🍎使p指向一个结构体变量student2,有如下3种取值等价方式:");
+    println("student2.addr:%s", student2.addr);//获取student2.addr的值
+    println("(*p).addr:%s", (*p).addr);//获取student2.addr的值
+    println("p->addr:%s", p->addr);//获取student2.addr的值
+    
+    strcpy(p->addr, "67896786767");
+    println("地址p->addr:%s, student2.addr: %s", p->addr, student2.addr);
+    
 }
 ```
-输出：
 
-`name:Bob age:20`
+打印:
+
+```
+🌷🌹(Mar  9 2023:20:17:27 [82行] testStuctureQuZhiAndFuZhi) 
+取值&赋值测试一:
+结构体student1赋值&取值: num:1 
+name:Bob1
+, addr: OC底层解析:https://juejin.cn/post/6949585271692197925
+
+
+🌷🌹(Mar  9 2023:20:17:27 [106行] testStuctureQuZhiAndFuZhi) 
+取值&赋值测试二:
+<-------🍎使p指向一个结构体变量student2,有如下3种取值等价方式:
+🌷🌹(Mar  9 2023:20:17:27 [107行] testStuctureQuZhiAndFuZhi) student2.addr:OC底层解析:https://juejin.cn/post/6949585271692197925
+🌷🌹(Mar  9 2023:20:17:27 [108行] testStuctureQuZhiAndFuZhi) (*p).addr:OC底层解析:https://juejin.cn/post/6949585271692197925
+🌷🌹(Mar  9 2023:20:17:27 [109行] testStuctureQuZhiAndFuZhi) p->addr:OC底层解析:https://juejin.cn/post/6949585271692197925
+🌷🌹(Mar  9 2023:20:17:27 [112行] testStuctureQuZhiAndFuZhi) 地址p->addr:67896786767, student2.addr: 67896786767
+```
 
 
 
  <br/>
+ <br/>
  
-- **结构体变量申明和指针结构体声明**
+ > <h2 id='结构体链表'>结构体链表</h2>
 
-**`指针结构体声明`**
+```
+struct Student_1 {
+    int num;
+    float score;
+    struct Student_1 *next;
+};
+
+
+//创建链表
+struct Student_1 * createLinkList(void){
+    //定义结构体数组并初始化
+    struct Student_1 stu_arr[5] = {
+        {1, 99},
+        {2, 98},
+        {3, 97},
+        {4, 86},
+        {0, 0},
+    };
+    struct Student_1 *head;
+    struct Student_1 *p1, *p2;
+    
+    int n = 0;
+    //malloc(LEN)的作用是开辟一个长度为LEN的内存区,LENN已定义为sizeof(struct Student_1),即结构体struct Student_1的长度.
+    //malloc带回的是不指向任何类型数据的指针(void * 类型).而p1,p2是指向struct Student_1类型数据的指针变量,可以用强制类型转换的方法使指针的基类型改变为struct Student_1类型,在malloc(LEN)之前加了“(struct Student_1 *)”,他的作用是使malloc返回的指针转换为struct Student_1类型数据的指针.注意括号中的“*”号不可省略,否则变成转换成struct Student_1类型了,而不是指针类型了.
+    p1 = p2 = (struct Student_1 *)malloc(LEN);//开辟一个新单元
+    
+    //赋值 或者 scanf("%ld, %f", &p1->num, &p1->score);//输入第一个学生的学号成绩
+    p1->num = 10101;
+    p1->score = 89.6;
+    head=NULL;
+    
+    while (p1->num !=0) {//结束
+        n = n+1;
+        if (n==1) {
+            head = p1;
+        }
+        
+        for (int i = 0; i < 5; i++) {
+            p2 = p1;
+            p1 = (struct Student_1 *)malloc(LEN);
+            p1->num = stu_arr[i].num;
+            p1->score = stu_arr[i].score;
+            p2->next = p1;
+        }
+//        scanf("%d, %f", &p1->num, &p1->score);
+    }
+    p2->next = NULL;
+    
+    return  (head);
+}
+
+
+//打印链表
+void printLinkList(struct Student_1 *head){
+    struct Student_1 *p_head;
+    p_head = head;
+    
+    if (head != NULL) {
+        do {
+            println("num:%d  score:%5.1f", p_head->num, p_head->score);
+            p_head = p_head->next;
+        } while (p_head != NULL);
+    }
+}
+
+
+
+//测试链表
+void testLinkList(void) {
+    struct Student_1 *p_student;
+    p_student = createLinkList();
+    
+    println("num:%dscore:%5.1f\n", p_student->num, p_student->score);
+    printLinkList(p_student);
+    
+}
+
+```
+
+打印:
+
+```
+🌷🌹(Mar  9 2023:20:17:27 [17行] testLinkList) num:10101 score: 89.6
+
+🌷🌹(Mar  9 2023:20:17:27 [28行] printLinkList) num:10101  score: 89.6
+🌷🌹(Mar  9 2023:20:17:27 [28行] printLinkList) num:1  score: 99.0
+🌷🌹(Mar  9 2023:20:17:27 [28行] printLinkList) num:2  score: 98.0
+🌷🌹(Mar  9 2023:20:17:27 [28行] printLinkList) num:3  score: 97.0
+🌷🌹(Mar  9 2023:20:17:27 [28行] printLinkList) num:4  score: 86.0
+```
+ 
+ 
+ 
+ 
+ <br/>
+<br/>
+
+<h2 id='结构体变量申明'>结构体变量申明</h2>
+
+
+```
+typedef struct Student_1 {
+    int num;
+    float score;
+    struct Student_1 *next;
+}Student_1, *Student_1_Node;
+
+
+void testPointerStructDeclar2(Student_1_Node *node){
+    println("初始化内存前地址· node:%p  *node:%p", node, *node);
+    *node = (Student_1 *)malloc(LEN);
+    println("初始化内存后地址·  node:%p  *node:%p", node, *node);
+    (*node)->score = 750;
+}
+
+void testPointerStructDeclar(Student_1 *node){
+    println("初始化内存前地址· node:%p", node);
+    node = (Student_1 *)malloc(LEN);
+    println("初始化内存后地址· node:%p", node);
+    node->score = 750;
+}
+
+
+
+///调用打印
+void testStructureTypedefTwoPointer(void) {
+    println("<-----🍎结构体一级指针测试🍎----->");
+    Student_1 stu;
+    Student_1_Node stu_node;
+    println("stu:%p &stu:%p    stu_node:%p, &stu_node: %p", stu, &stu, stu_node, &stu_node);
+    stu_node = &stu;
+    println("stu_node:%p, &stu_node: %p", stu_node, &stu_node);
+    testPointerStructDeclar(&stu);
+    println("stu:%p &stu:%p", stu, &stu);
+    println("结构体指针节点stu.score:%f", stu.score);
+    println("结构体指针节点stu_node->score:%f\n\n", stu_node->score);
+
+    
+    
+    println("<-----🍎结构体二级指针测试🍎----->");
+    Student_1 stu2;
+    Student_1_Node stu_node2;
+    println("stu2:%p &stu2:%p    stu_node2:%p, &stu_node2: %p", stu2, &stu2, stu_node2, &stu_node2);
+    stu_node2 = &stu2;
+    println("stu_node2:%p, &stu_node2: %p", stu_node2, &stu_node2);
+    testPointerStructDeclar2(&stu_node2);
+    println("stu2:%p &stu2:%p", stu2, &stu2);
+    println("stu_node2:%p, &stu_node2: %p", stu_node2, &stu_node2);
+    println("结构体指针节点stu2.score:%f", stu2.score);
+    println("结构体指针节点stu_node2->score:%f", stu_node2->score);
+
+}
+
+```
+打印：
+
+```
+🌷🌹(Mar 10 2023:11:01:10 [15行] testStructureTypedefTwoPointer) <-----🍎结构体一级指针测试🍎----->
+🌷🌹(Mar 10 2023:11:01:10 [18行] testStructureTypedefTwoPointer) stu:0x7ffeea60fc30 &stu:0x4068000000000000    stu_node:0x0, &stu_node: 0x0
+🌷🌹(Mar 10 2023:11:01:10 [20行] testStructureTypedefTwoPointer) stu_node:0x7ffeea60fc30, &stu_node: 0x7ffeea60fc28
+🌷🌹(Mar 10 2023:11:01:10 [51行] testPointerStructDeclar) 初始化内存前地址· node:0x7ffeea60fc30
+🌷🌹(Mar 10 2023:11:01:10 [53行] testPointerStructDeclar) 初始化内存后地址· node:0x600001f3d200
+🌷🌹(Mar 10 2023:11:01:10 [22行] testStructureTypedefTwoPointer) stu:0x7ffeea60fc30 &stu:0x4068000000000000
+🌷🌹(Mar 10 2023:11:01:10 [23行] testStructureTypedefTwoPointer) 结构体指针节点stu.score:3.625000
+🌷🌹(Mar 10 2023:11:01:10 [24行] testStructureTypedefTwoPointer) 结构体指针节点stu_node->score:3.625000
+
+
+🌷🌹(Mar 10 2023:11:01:10 [28行] testStructureTypedefTwoPointer) <-----🍎结构体二级指针测试🍎----->
+🌷🌹(Mar 10 2023:11:01:10 [31行] testStructureTypedefTwoPointer) stu2:0x7ffeea60fc18 &stu2:0x0    stu_node2:0x4050000000000000, &stu_node2: 0x0
+🌷🌹(Mar 10 2023:11:01:10 [33行] testStructureTypedefTwoPointer) stu_node2:0x7ffeea60fc18, &stu_node2: 0x7ffeea60fc10
+🌷🌹(Mar 10 2023:11:01:10 [44行] testPointerStructDeclar2) 初始化内存前地址· node:0x7ffeea60fc10  *node:0x7ffeea60fc18
+🌷🌹(Mar 10 2023:11:01:10 [46行] testPointerStructDeclar2) 初始化内存后地址·  node:0x7ffeea60fc10  *node:0x600001f3d140 //可以看到与上述的结构体变量地址完全不同，是两个不同的结构体。相当于类初始化2个对象
+🌷🌹(Mar 10 2023:11:01:10 [35行] testStructureTypedefTwoPointer) stu2:0x7ffeea60fc18 &stu2:0x0
+🌷🌹(Mar 10 2023:11:01:10 [36行] testStructureTypedefTwoPointer) stu_node2:0x600001f3d140, &stu_node2: 0x7ffeea60fc10
+🌷🌹(Mar 10 2023:11:01:10 [37行] testStructureTypedefTwoPointer) 结构体指针节点stu2.score:0.000000
+🌷🌹(Mar 10 2023:11:01:10 [38行] testStructureTypedefTwoPointer) 结构体指针节点stu_node2->score:750.000000
+```
+
+
+解释图:
+
+![c0_30.png](./../Pictures/c0_30.png)
+
+- **注意:**
+	- 传入的参数不同,一个是参数是`Student_1 *node`为一级指针,另一个是`Student_1_Node *node`二级指针;
+	- 一级指针函数`void testPointerStructDeclar(Student_1 *node)`改变值后,打印的**stu.score**是随机的,是因为指向了一片未知内存区域;
+	- 二级指针函数`testPointerStructDeclar2(Student_1_Node *node)`改变值后,打印的**stu.score**是0,是因为它stu2传入的地址内存已经被`*node = (Student_1 )malloc(LEN);)`覆盖了,导致它实际上并没有被赋值;
+	- 请分别看2者打印的内存地址,就明白了.
+	- 所以在使用链表的时候使用结构体定义的指针变量**Student_1_Node**
+
+
+ <br/>
+ <br/>
+ 
+ 
+ 
+ 
+> <h2 id='结构体指针声明'>结构体指针声明</h2>
+
+
 
 ```
 typedef struct BinaryTreeNode {
@@ -985,62 +1247,6 @@ BinaryTree 为struct BinaryTreeNode*的别名
 
 -   BinaryTreeNode *L;
 
-```
-
-<br/>
-<br/>
-
-<h2 id='结构体变量申明'>结构体变量申明</h2>
-
-
-```
-typedef struct BinaryTreeNode {
-    char data;
-    struct BinaryTreeNode *leftChild;
-    struct BinaryTreeNode *rightChild;
-} BinaryTreeNode, *BinaryTree;
-
-
-void binaryTreeTest(void);
-
-
-
-int initBinaryTree(BinaryTreeNode *binaryTree){
-    binaryTree = NULL;
-    
-    return TRUE;
-}
-
-
-void  setTest(BinaryTreeNode *node){
-    node = (BinaryTreeNode *)malloc(sizeof(BinaryTreeNode));
-    printf("\n\n*node:%p, &node:%p", node, &node);
-    node->data = 'S';
-}
-
-//方法调用
-void binaryTreeTest(void){
-    BinaryTreeNode binaryTree;
-    
-    int statusCode = 0;
-
-    statusCode = initBinaryTree(&binaryTree);
-    printf("binaryTree:%p,  &binaryTree:%p", binaryTree, &binaryTree);
-    setTest(&binaryTree);
-    printf("\n\n-->>data:%c, binaryTree:%p, &binaryTree:%p", binaryTree.data, binaryTree, &binaryTree);
-
-    
-}
-
-```
-打印：
-
-```
-binaryTree:0x7ffeefbff4c8,  &binaryTree:0x0
-
-*node:0x1006609d0, &node:0x7ffeefbff488  //可以看到与上述的结构体变量地址完全不同，是两个不同的结构体。相当于类初始化2个对象
-
--->>data:, binaryTree:0x7ffeefbff4c8, &binaryTree:0x7ffeefbff4c8(lldb) 
 ```
 
 
