@@ -21,6 +21,12 @@
 	- [__block解决](#__block解决)
 	- [参数解决blcok](#参数解决blcok)
 - [**Block底层原理**](#Block底层原理)
+	- [block内如何修改block外部变量](#block内如何修改block外部变量)
+		- 	[查看block的C++代码](#查看block的C++代码)
+		- [block内部使用全局变量](#block内部使用全局变量)
+		- [	block内部使用静态函数](#block内部使用静态函数)
+		- [block内部改变使用__block](#block内部改变使用__block)
+		- [泛型指针void *和id的区别](#泛型指针void*和id的区别)
 - [**Block高级使用**](#Block高级使用)
 - [参考资料](#参考资料)
 	- [**Block 本质**](https://www.jianshu.com/p/4e79e9a0dd82)
@@ -684,8 +690,271 @@ typedef void(^KCBlock)(ViewController *);
 分析:`前`中的a打印来自于栈，站之后被block捕捉，a的地址发生了变化。中 后 中的a被拷贝进入了堆地址中了。
 
 <br/>
+<br/>
 
- 终端建立 C 语言文件
+
+> <h2 id='block内如何修改block外部变量'>block内如何修改block外部变量</h2>
+
+- 使用关键字__block,进行值的改变;
+- 加 static (放在静态存储区/全局初始化区 ) 缺点是会永久存储，内存开销大;
+- 将变量设置为全局变量，缺点也是内存开销大。
+
+<br/>
+
+> <h5 id='查看block的C++代码'>查看block的C++代码</h5>
+
+
+书写一段在main.m的OC代码如下:
+
+```
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+typedef void (^CYLBlock)(void);
+
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    @autoreleasepool {
+        appDelegateClassName = NSStringFromClass([AppDelegate class]);
+        
+        int age = 10;
+        CYLBlock block = ^{
+            NSLog(@"age is %@", @(age));
+        };
+        block();
+    }
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+}
+```
+
+终端编译如下:
+
+```
+cd /Users/harleyhuang/Desktop  
+
+xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc /Users/harleyhuang/Desktop/Test/Test/main.m 
+```
+
+在编译后的C++文件main.cpp中有75456行代码截取如下代码片段:
+
+```
+
+struct __NSConstantStringImpl {
+  int *isa;
+  int flags;
+  char *str;
+#if _WIN64
+  long long length;
+#else
+  long length;
+#endif
+};
+static __NSConstantStringImpl __NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0 __attribute__ ((section ("__DATA, __cfstring"))) = {__CFConstantStringClassReference,0x000007c8,"age is %@",9};
+
+
+struct __block_impl {
+  void *isa;
+  int Flags;
+  int Reserved;
+  void *FuncPtr;
+};
+
+/* @end */
+
+typedef void (*CYLBlock)(void);
+
+
+struct __main_block_impl_0 {
+  struct __block_impl impl;//见上面的__block_impl定义
+  struct __main_block_desc_0* Desc;
+  int age;
+  
+  //__main_block_impl_0结构退的构造函数，将对__main_block_impl_0做如下初始化
+  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int _age, int flags=0) : age(_age) {
+    //实际上_NSConcreteStackBlock也就相当于objc_class结构体实例。
+    //也就是说Block实质就是OC对象
+    impl.isa = &_NSConcreteStackBlock;//isa指针,可以用来判断block类型,这里是栈block.此外还有全局block和堆block
+    impl.Flags = flags;// 标志
+    impl.FuncPtr = fp;// 函数指针
+    Desc = desc;// des 指针
+  }
+};
+static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+  int age = __cself->age; // bound by copy
+
+            NSLog((NSString *)&__NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0, ((NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend)(objc_getClass("NSNumber"), sel_registerName("numberWithInt:"), (int)(age)));
+        }
+
+//__main_block_desc_0_DATA是__main_block_desc_0的变量,并声明定义好了
+//sizeof(struct __main_block_impl_0) 获取__main_block_impl_0结构体的大小
+static struct __main_block_desc_0 {
+  size_t reserved;
+  size_t Block_size;
+} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool; 
+        appDelegateClassName = NSStringFromClass(((Class (*)(id, SEL))(void *)objc_msgSend)((id)objc_getClass("AppDelegate"), sel_registerName("class")));
+
+        int age = 10;
+        //block变量生成是调用了__main_block_impl_0的初始化方法
+        //第一个参数传入的是静态无返回值的方法__main_block_func_0
+        //第二个参数传入的是__main_block_desc_0的结构体变量地址
+        //第三个参数传入的是age变量,这个是值传递
+        CYLBlock block = ((void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA, age));
+        ((void (*)(__block_impl *))((__block_impl *)block)->FuncPtr)((__block_impl *)block);
+    }
+    return UIApplicationMain(argc, argv, __null, appDelegateClassName);
+}
+static struct IMAGE_INFO { unsigned version; unsigned flag; } _OBJC_IMAGE_INFO = { 0, 2 };
+
+```
+
+
+&emsp; 根据编译后的C++代码可以看到age在外面已经定义了,传入block内的结构体函数中的age是值传递,若是在block内部结构体函数中改变age,其外部的age值也不会改变的.
+
+
+<br/>
+<br/>
+
+
+> <h5 id='block内部使用全局变量'>block内部使用全局变量</h5>
+
+将变量设置为全局变量,如下图:
+
+![ios_pd0_2.jpeg](./../../Pictures/ios_pd0_2.jpeg)
+
+可以看到全局变量在其静态实现函数**static void __main_block_func0**里已经设置为20了.
+
+
+
+<br/>
+<br/>
+
+> <h5 id='block内部使用静态函数'>block内部使用静态函数</h5>
+
+加 static (放在静态存储区/全局初始化区),**原理是 block 内部对外部auto变量进行指针捕获**
+
+
+![ios_pd0_3.jpeg](./../../Pictures/ios_pd0_3.jpeg)
+
+
+
+<br/>
+<br/>
+
+
+> <h5 id='block内部改变使用__block'>block内部改变使用__block</h5>
+
+&emsp; 在 ARC 中否添加 __block ，block 中的 auto 变量都会被从栈上 copy 到堆上。
+
+**__block 修饰符：**
+- __block 可以用于解决 block 内部无法修改 auto 变量值的问题
+- __block 不能修饰全局变量、静态、变量（static)
+编译器会将 __block 变量包装成一个对象
+
+
+![ios_pd0_4.jpeg](./../../Pictures/ios_pd0_4.jpeg)
+
+<br/>
+
+```
+typedef void (^CYLBlock)(void);
+
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    @autoreleasepool {
+        appDelegateClassName = NSStringFromClass([AppDelegate class]);
+        
+        __block int age = 0;
+        NSLog(@"定义前：%p", &age);         //栈区
+        CYLBlock block = ^{
+            age = 10;
+            NSLog(@"block内部：%p", &age);
+        };
+        NSLog(@"定义后：%p", &age);         //堆区
+
+        block();
+    }
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+}
+
+```
+
+打印:
+
+```
+2023-03-14 15:59:43.261768+0800 Test[12384:1038665] 定义前：0x7ffeee5edc80
+2023-03-14 15:59:43.262353+0800 Test[12384:1038665] 定义后：0x6000030c1838
+2023-03-14 15:59:43.262443+0800 Test[12384:1038665] block内部：0x6000030c1838
+```
+
+<br/>
+
+&emsp; 这里会执行 copy 操作，下面是编译后的 copy 方法，age struct 会被拷贝到堆里，自然里面的 age struct->age 也会拷贝到堆里
+
+```
+static void __main_block_copy_0(struct __main_block_impl_0*dst, struct __main_block_impl_0*src) {_Block_object_assign((void*)&dst->age, (void*)src->age, 8/*BLOCK_FIELD_IS_BYREF*/);}
+```
+
+&emsp; “定义后”和“block内部”两者的内存地址是一样的，我们都知道 block 内部的变量会被 copy 到堆区，“block内部”打印的是堆地址，因而也就可以知道，“定义后”打印的也是堆的地址。
+
+那么如何证明“block内部”打印的是堆地址？
+
+把三个16进制的内存地址转成10进制就是：
+
+```
+定义后前：6171559672
+block内部：5732708296
+定义后：5732708296
+```
+
+中间相差438851376个字节，也就是 418.5M 的空间，因为堆地址要小于栈地址，又因为 iOS 中主线程的栈区内存只有1M，Mac也只有8M，既然 iOS 中一条线程最大的栈空间是1M，显然a已经是在堆区了。
+
+这也证实了：a 在定义前是栈区，但只要进入了 block 区域，就变成了堆区。
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+
+**知识拓展:**
+
+> <h5 id='泛型指针void*和id的区别'>泛型指针void *和id的区别</h5>
+
+[__bridge 显式转换 id和void *](https://blog.csdn.net/u011363981/article/details/78272965)
+
+- id和void *并非完全一样;
+
+- void *是C语言中常用的;
+
+- `void *：` c语言中的泛型指针，指代任意的指针类型（即int *,float *,int*  *……）。当返回值是一个地址或者指针（其实指针本身就是地址）的时候，返回值的类型都可以用void *表示，也可以用此类型来定义任意类型的指针变量,比如结构体的初始化函数有malloc就是返回void *类型,是可以通过强制类型进行转换的.
+
+```
+int a;
+int *p = &a;
+```
+
+&emsp; &a这个变量能够赋值给p这个变量，说明&a这个变量的类型也是int *,所以当返回&a的时候，返回值类型是int *，也可以用通用型指针void *替代
+
+
+- id ：OC语言中的泛型指针，指代任意对象类型的指针。用于隐藏对象类型的类名部分，相当于C语言中的“void *”。但是id本身就是一个指针，而且可以指向任何一个继承了Object（或者NSObject）类的对象。
+	- 所以需要注意的是：id是一个指针，所以你在使用id的时候不需要加星号。比如id foo=nil定义了一个nil指针，这个指针指向NSObject的一个任意子类。而id *foo=nil则定义了一个指针，这个指针指向另一个指针，被指向的这个指针指向NSObject的一个子类
+	- 比如id person和void* personV，[person print]是可以的，但是[personV print]在编译的时候就会报错。因为ObjeciveC的编译器看到id，会假定它可以接受任何message，虽然在runtime时可能并不是这样的，但personV并不是Objective C类型，编译器就会报错，但是void *有可能是可以接收print message的
+
+但是[**id与void *可以转换**](https://www.cnblogs.com/dins/p/6710159.html)
+
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id='终端建立C语言文件'>终端建立C语言文件</h2>
  
 ```
 $ mkdir 003---Block原理探究
@@ -727,9 +996,6 @@ $./a.out
 #使用clang 进行编译，输入：
 $ clang -rewrite-objc block.c
 #会出现一个block.app的文件，其为c++文件。从这段简单的代码可以看到其实现的过程。
-
-
-
 ```
 
 
