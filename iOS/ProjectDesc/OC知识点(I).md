@@ -1,5 +1,4 @@
--  **[Interview(II)](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/Interview(II).md)** 
--  [**iOS面试集锦**](https://github.com/ChenYilong/iOSInterviewQuestions)
+-  **[OC知识点(II)](./OC知识点(II).md)** 
 -  [基础算法知识](https://hit-alibaba.github.io/interview/)
 
 <br/>
@@ -23,6 +22,8 @@
 	- [数据本地持久化](#数据本地持久化)
 	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？](#使用copy关键字为什么)
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
+- **多线程**
+	- [如何用GCD同步若干个异步调用](#如何用GCD同步若干个异步调用)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -67,17 +68,24 @@
 	- [OC的分类Category](#OC的分类Category)
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
+			- [block内如何修改block外部变量](#block内如何修改block外部变量)
 		- [block原理](#block原理)
 		- [block都会发生循环引用吗](#block都会发生循环引用吗)
+			- [系统UIView的动画Block](#系统UIView的动画Block)
+			- 	[通知+block](#通知+block)
 	- [KVO的原理](#KVO的原理)
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 	- [self和super实现的原理](#self和super实现的原理)
 	- [ARC原理是什么](#ARC原理是什么)
 	- [内存管理](#内存管理)
+		- [一个objc对象如何进行内存布局?](#一个objc对象如何进行内存布局)
 		- [isa指针包含了什么（货拉拉面试）](#isa指针包含了什么)
 		- [weak原理（货拉拉）](#weak原理)
-	- [Category属性放在哪(货拉拉)](#Category属性放在哪)
+		- [内存销毁时间表&步骤](#内存销毁时间表&步骤)
+		- [Category属性放在哪(货拉拉)](#Category属性放在哪)
+		- [能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?](#能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?)
+		- [objc使用什么机制管理对象内存](#objc使用什么机制管理对象内存)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
@@ -90,8 +98,11 @@
 	- [AFNetworking](#AFNetworking)
 	- [静态库和动态库](#静态库和动态库)
 		- [库引用错误解析](#库引用错误解析)
-- [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
-- [靠谱iOS](https://github.com/ChenYilong/iOSInterviewQuestions)
+- **资料**
+	- [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
+	- [靠谱iOS](https://github.com/ChenYilong/iOSInterviewQuestions)
+	- [求职寒冬:技巧](https://juejin.cn/post/7164222659528491022)
+	- [2021 面试心得](https://mp.weixin.qq.com/s/v-kAFWXW3lQSPy3QWsO62g)
 
 
 
@@ -773,9 +784,40 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 <br/>
 
 
+> <h1 id='多线程'>多线程</h1>
+
+<br/>
+
+> <h2 id='如何用GCD同步若干个异步调用？'>如何用GCD同步若干个异步调用？</h2>
+
+比如:如根据若干个url异步加载多张图片，然后在都下载完成后合成一张整图
+
+使用Dispatch Group追加block到Global Group Queue,这些block如果全部执行完毕，就会执行Main Dispatch Queue中的结束处理的block。
+
+
+```
+dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+dispatch_group_t group = dispatch_group_create();
+dispatch_group_async(group, queue, ^{ /*加载图片1 */ });
+dispatch_group_async(group, queue, ^{ /*加载图片2 */ });
+dispatch_group_async(group, queue, ^{ /*加载图片3 */ }); 
+dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        // 合并图片
+});
+```
+
+
+
+<br/>
+
+***
+<br/>
+
+
 
 ># <h1 id = "性能优化"> [性能优化](https://www.jianshu.com/p/3ad7880e3667) </h1>
 
+[包体积优化总览](https://juejin.cn/post/7185079396678991928/)
 
 <br/>
 
@@ -2466,7 +2508,11 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 
 >## <h2 id = "Runloop">[Runloop](https://www.jianshu.com/p/e29f846d8a97)</h2>
+
 [Run Loop 原理详解](http://chuquan.me/2018/10/06/understand-ios-runloop/)
+
+
+[深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/#base)
 
 <br/>
 
@@ -2733,7 +2779,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 <br/>
 
 
- > <h3 id ="RunLoop原理和与线程的联系">RunLoop原理和与线程的联系？说一下你对他的了解</h3>
+ > <h3 id ="RunLoop原理和与线程的联系">[RunLoop原理和与线程的联系？说一下你对他的了解](https://blog.csdn.net/wzzvictory/article/details/9237973)</h3>
 
 1. RunLoop 的作用就是来管理线程的，当线程的 RunLoop开启后，线程就会在执行完任务后，处于休眠状态，随时等待接受新的任务，而不是退出。
 
@@ -3085,6 +3131,8 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 [Runtime的消息转发](https://blog.csdn.net/zhw521411/article/details/85617353)
 
+[Objective-C 中的消息与消息转发](https://segmentfault.com/a/1190000018585408)
+
 <br/>
 <br/>
 
@@ -3420,6 +3468,38 @@ objc_object::sidetable_retainCount()
 [blokc分类](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(I).md)
 
 
+
+<br/>
+<br/>
+
+> <h4 id='block内如何修改block外部变量'>block内如何修改block外部变量</h4>
+
+
+&emsp; 默认情况下，在block中访问的外部变量是复制过去的，即：**写操作不对原变量生效**。但是你可以加上 __block 来让其写操作生效，示例代码如下:
+
+```
+   __block int auto = 0;
+   void (^foo)(void) = ^{ 
+       auto = 1; 
+   };
+   foo(); 
+   //这里，a的值被修改为1
+```
+
+&emsp; 这是网上常见的描述。你同样可以在面试中这样回答，但你并没有答到“点子上”。真正的原因，并没有这么“神奇”，而且这种说法也有点牵强。面试官肯定会追问“为什么写操作就生效了？” 实际上需要有几个必要条件：
+
+- "将 auto 从栈 copy 到堆"
+- “将 auto 变量封装为结构体(对象)”
+
+- 我会将本问题分下面几个部分，分别作答：
+	- 该问题研究的是哪种 block 类型?
+	- 在 block 内为什么不能修改 block 外部变量
+	- 最优解及原理解析
+	- 其他几种解法
+	- 改外部变量必要条件之"将 auto 从栈 copy 到堆"
+	- 改外部变量必要条件之“将 auto 变量封装为结构体(对象)”
+
+<br/>
 <br/>
 
 - <h3 id="block原理">block原理</h3>
@@ -3433,13 +3513,35 @@ objc_object::sidetable_retainCount()
 
 - <h3 id="block都会发生循环引用吗">block都会发生循环引用吗</h3>
 
-1). 系统UIView的Block
+<br/>
+
+> <h4 id='系统UIView的动画Block'>系统UIView的动画Block</h4>
+
+&emsp; 系统的某些block api中，比如 UIView 的 block 版本写动画时不需要考虑循环引用的问题，但也有一些系统 api 需要考虑内存泄漏的问题。
+
+
+**不会循环应用	,不会发生内存泄漏**
 
 ![UIView 的Blcok <br/>](./../../Pictures/ios_pd11.png)
 
 如上图，使用系统自带的UIView 的Blcok，控制器能被销毁-->说明没有发送循环引用。
 
 原理： UIView的调用的是类方法，当前控制器不可能强引用一个类 ，所以循环无法形成 --> 动画block不会造成循环引用的原因。
+
+&emsp; 上述的UIView动画 block 会立即执行，所以并不会持有 block 。 其中 duration 延迟时间并不能决定 block 执行的时机， block 始终是瞬间执行。
+
+这里涉及了 CoreAnimation （核心动画）相关的知识：
+
+首先分清下面几个结构概念：
+- UIView 层
+- Layer 层
+- data 数据层
+
+
+**其中**
+
+- UIView 层的block 仅仅是提供了类似快照 data 的变化。
+- 当真正执行  Animation 动画时才会将“原有状态”与“执行完 block 的状态”做一个差值，来去做动画。
 
 
 <br/>
@@ -3448,23 +3550,98 @@ objc_object::sidetable_retainCount()
 
 
 <br/>
+<br/>
 
-2). 通知+block可能会发生循环引用
+> <h4 id='通知+block'>通知+block</h4>
 
 实际开发中：使用通知（NSNotifation），调用系统自带的Block，在Block中使用self --> 会发生循环引用。
 
-![twoVC发送通知 --> 给oneVC <br/>](./../../Pictures/ios_pd12.1.png)
+twoVC发送通知 --> 给oneVC
 
-![oneVC 接收通知 使用通知-发生循环引用<br/>](./../../Pictures/ios_pd12.2.png)
+![ios_pd12.1.png](./../../Pictures/ios_pd12.1.png)
 
-![使用通知-发生循环引用 <br/>](./../../Pictures/ios_pd12.3.png)
+<br/>
+
+oneVC 接收通知 使用通知-发生循环引用
+
+![ios_pd12.2.png](./../../Pictures/ios_pd12.2.png)
+
+<br/>
+
+![ios_pd12.3.png](./../../Pictures/ios_pd12.3.png)
+
+
+&emsp; 其实和循环引用没有关系；这里 block 强引用了 self , 但是 self 并没有强引用block; 所以没有循环引用。
+
+**上述出现内存泄漏问题实际上是因为：**
+
+- [NSNoficationCenter defaultCenter] 持有了 block
+- 这个 block 持有了 self;
+- 而 [NSNoficationCenter defaultCenter] 是一个单例，因此这个单例持有了 self, 从而导致 self 不被释放。
 
 
 **解决方法：`使用weakSelf`**
 
+
+<br/>
+
+通知的另一种情况,如下:
+
+```
+//情况❶ NSNotificationCenterIVARBlock
+//会循环引用	,会发生内存泄漏
+ _observer = [[NSNotificationCenter defaultCenter] addObserverForName:@"testKey"
+                                                               object:nil
+                                                                queue:nil
+                                                           usingBlock:^(NSNotification *note) {
+     [self dismissModalViewControllerAnimated:YES];
+ }];
+```
+
+
+
+
 <br/>
 
 2). AFN框架的Block
+
+
+
+<br/>
+
+3). GCD的Block
+
+```
+//情况❶  GCDBlock
+//不会循环引用,不会发生内存泄漏
+dispatch_group_async(self.operationGroup, self.serialQueue, ^{
+   [self doSomething];
+});
+```
+
+
+
+<br/>
+
+4). NSOperationQueueBlock的Block
+
+```
+//情况❶ NSOperationQueueBlock
+//不会循环引用,不会发生内存泄漏
+[[NSOperationQueue mainQueue] addOperationWithBlock:^{ 
+	self.someProperty = xyz; 
+}]; 
+```
+
+
+&emsp; 在 Gnustep 源码中可以证实 [NSOperationQueue mainQueue] 是单例，然后参考 addOperationWithBlock 源码可知：
+
+虽然是单例，但它并不持有 block，不会造成循环引用，传递完成后就销毁了，不会造成无法释放的内存泄漏问题。
+
+拓展:
+
+&emsp;&emsp; [**GNUstep是GUN计划的项目之一**](https://www.jianshu.com/p/14bf1456dc25)，它将Cocoa的OC库重新开源实现了一遍，并且开源出来了。虽然GNUstep不是苹果官方的源码，是GNU计划写的，但是还是具有一定参考价值的。
+[GNUstep源码下载地址](http://www.gnustep.org/resources/downloads.php)
 
 
 
@@ -3666,24 +3843,75 @@ _offset 是在缓冲区里的数组的第一个元素索引
 >  <h2 id="self和super实现的原理">self和super实现的原理</h2>
 [self和super实现的原理](https://www.jianshu.com/p/7a9912c97fdb)
 
-
 **class 方法只是获取类，并不能获取真正获取其类对象。**
 
-- **原理：**
-	- self 调用方法事实际上是通过objc_msgSend(id _Nullable self, SEL _Nonnull op, ...)函数进行消息的发送，其中第一个参数是消息接收者，第二个参数op是调用的具体类的方法的selector，后面是 selector 方法的可变参数。如上例所示[self returnSomething]实际上是id _Nullable objc_msgSend(self, @selector(returnSomething))而returnSomething方法会从[self class]类中查找。
-	
-	- super调用方法事实际上是通过id _Nullable objc_msgSendSuper(struct objc_super * _Nonnull super, SEL _Nonnull op, ...)函数进行消息的发送，但是第一个参数是一个objc_super结构体。
+<br/>
+
+**使用clang重写命令:**
 
 ```
+clang -rewrite-objc test.m
+```
+
+可以将题目中的
+
+```
+[self class];
+[super class];
+```
+
+转化为如下:
+
+```
+   NSLog((NSString *)&__NSConstantStringImpl__var_folders_gm_0jk35cwn1d3326x0061qym280000gn_T_main_a5cecc_mi_0, NSStringFromClass(((Class (*)(id, SEL))(void *)objc_msgSend)((id)self, sel_registerName("class"))));
+
+   NSLog((NSString *)&__NSConstantStringImpl__var_folders_gm_0jk35cwn1d3326x0061qym280000gn_T_main_a5cecc_mi_1, NSStringFromClass(((Class (*)(__rw_objc_super *, SEL))(void *)objc_msgSendSuper)((__rw_objc_super){ (id)self, (id)class_getSuperclass(objc_getClass("Son")) }, sel_registerName("class"))));
+```
+
+<br/>
+
+
+**原理：**
+- 在调用[self class]时,会转换成objc_msgSend函数,我们把self作为第一个参数传递进去,第二个参数op是调用的具体类的方法的selector，后面是 selector 方法的可变参数.如例所示`[self returnSomething]`实际上是`id _Nullable objc_msgSend(self, @selector(returnSomething))`而returnSomething方法会从[self class]类中查找。如下:
+
+```
+id objc_msgSend(id self, SEL op, ...)
+```
+
+-  而在调用 [super class]时，会转化成 objc_msgSendSuper函数, 但是第一个参数是一个objc_super结构体。看下函数定义:
+
+```
+id objc_msgSendSuper(struct objc_super *super, SEL op, ...)
+```
+
+objc_super的结构体定义:
+
+```
+//结构体有两个成员，第一个成员是 receiver, 类似于上面的 objc_msgSend函数第一个参数self 
+//第二个成员是记录当前类的父类是什么。
 struct objc_super {
     __unsafe_unretained _Nonnull id receiver;
     __unsafe_unretained _Nonnull Class super_class;
 };
 ```
 
-- 此时这个结构体的第一个成员变量receiver就是子类，和 objc_msgSend 中的self相同。而第二个成员变量super_class就是指父类，调用 objc_msgSendSuper 的方法时会将这个结构体和returnSomething的selector传递过去。
 
-- 在结构体函数里面做的事情类似这样：从objc_super结构体指向的super_class的方法列表开始找 returnSomething的selector，找到后再用objc_super->receiver去调用这个selector。找不到就会报错。
+&emsp; 当调用 ［self class] 时，实际先调用的是 objc_msgSend函数，第一个参数是 Son 为当前的这个实例，然后在 Son 这个类里面去找 - (Class)class这个方法，没有，去父类 Father里找，也没有，最后在 NSObject类中发现这个方法。而 - (Class)class的实现就是返回self的类别，故上述输出结果为 Son。
+
+objc Runtime开源代码对- (Class)class方法的实现:
+
+```
+- (Class)class {
+   return object_getClass(self);
+}
+```
+
+
+&emsp; 而当调用 [super class]时，会转换成objc_msgSendSuper函数。第一步先构造 objc_super 结构体，结构体第一个成员就是 self 。 第二个成员是 (id)class_getSuperclass(objc_getClass(“Son”)) , 实际该函数输出结果为 Father。
+
+&emsp; 第二步是去 Father这个类里去找 - (Class)class，没有，然后去NSObject类去找，找到了。最后内部是使用 objc_msgSend(objc_super->receiver, @selector(class))去调用，
+
+&emsp; 此时已经和[self class]调用相同了，故上述输出结果仍然返回 Son。
 
 
 
@@ -3704,6 +3932,46 @@ struct objc_super {
 >## <h2 id="内存管理">[内存管理](https://github.com/harleyGit/StudyNotes/blob/master/底层/内存管理.md)</h2>
 
 
+
+<br/>
+<br/>
+
+> <h3 id="一个objc对象如何进行内存布局">一个objc对象如何进行内存布局?</h3>
+
+**在考虑有父类的情况下**
+
+- 所有父类的成员变量和自己的成员变量都会存放在该对象所对应的存储空间中.
+- 每一个对象内部都有一个isa指针,指向他的类对象,类对象中存放着本对象的:
+	- 对象方法列表（对象能够接收的消息列表，保存在它所对应的类对象中）
+	- 成员变量的列表,
+	- 属性列表,
+
+&emsp; 类对象内部也有一个isa指针指向元对象(meta class),元对象内部存放的是类方法列表,类对象内部还有一个superclass的指针,指向他的父类对象。
+
+&emsp; 每个 Objective-C 对象都有相同的结构，如下图所示：
+
+![ios_pd0_0](./../../Pictures/ios_pd0_0.png)
+
+翻译过来如下:
+
+| **Objective-C 对象的结构图** |
+|:--|
+| ISA指针 |
+| 根类的实例变量 |
+| 倒数第二层父类的实例变量 |
+| . . . . . |
+| 父类的实例变量 |
+| 类的实例变量 |
+
+<br/>
+
+- 根对象就是NSObject，它的superclass指针指向nil
+- 类对象既然称为对象，那它也是一个实例。类对象中也有一个isa指针指向它的元类(meta class)，即类对象是元类的实例。元类内部存放的是类方法列表，根元类的isa指针指向自己，superclass指针指向NSObject类。
+- 类对象 是放在**数据段(数据区)**上的, 和全局变量放在一个地方. 这也就是为什么: **同一个类对象的不同实例对象,的isa指针是一样的**.
+- 实例对象存放在堆中
+
+
+![ios_pd0_1](./../../Pictures/ios_pd0_1.png)
 
 
 <br/>
@@ -3737,7 +4005,7 @@ typedef struct objc_object *id;
 ```
 
 
-&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。此外还有的成员变量就是**`superclass、cache、bits、data`**，在**`objc-runtime-new.h`**文件中，这是最新的:
+&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。此外还有的成员变量就是**`superclass、cache、bits、data`** ，在**`objc-runtime-new.h`**文件中，这是最新的:
 
 ```
 struct objc_class : objc_object {
@@ -3906,10 +4174,39 @@ union isa_t {
 	- 3)、释放时，调用clearDeallocating函数。clearDeallocating函数首先根据对象地址获取所有weak指针地址的数组，然后遍历这个数组把其中的数据设为nil，最后把这个entry从weak表中删除，最后清理对象的记录。
 
 
+<br/>
+<br/>
 
+>## <h3 id="内存销毁时间表&步骤">内存销毁时间表&步骤</h3>
 
+```
+// 对象的内存销毁时间表
+// http://weibo.com/luohanchenyilong/ (微博@iOS程序犭袁)
+// https://github.com/ChenYilong
+// 根据 WWDC 2011, Session 322 (36分22秒)中发布的内存销毁时间表 
 
->## <h2 id="Category属性放在哪">[Category属性放在哪](https://www.jianshu.com/p/bc4678829397)</h2>
+ 1. 调用 -release ：引用计数变为零
+     * 对象正在被销毁，生命周期即将结束.
+     * 不能再有新的 __weak 弱引用， 否则将指向 nil.
+     * 调用 [self dealloc] 
+ 2. 子类 调用 -dealloc
+     * 继承关系中最底层的子类 在调用 -dealloc
+     * 如果是 MRC 代码 则会手动释放实例变量们（iVars）
+     * 继承关系中每一层的父类 都在调用 -dealloc
+ 3. NSObject 调 -dealloc
+     * 只做一件事：调用 Objective-C runtime 中的 object_dispose() 方法
+ 4. 调用 object_dispose()
+     * 为 C++ 的实例变量们（iVars）调用 destructors 
+     * 为 ARC 状态下的 实例变量们（iVars） 调用 -release 
+     * 解除所有使用 runtime Associate方法关联的对象
+     * 解除所有 __weak 引用
+     * 调用 free()
+```
+
+<br/>
+<br/>
+
+>## <h3 id="Category属性放在哪">[Category属性放在哪](https://www.jianshu.com/p/bc4678829397)</h3>
 
 
 Category的实现原理或者本质 ？
@@ -3954,6 +4251,89 @@ Category 可以给类增加方法和属性，但是并不会自动生成成员�
 
 
 
+
+<br/>
+<br/>
+
+
+> <h3 id='能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?'>能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?</h3>
+
+- 不能向编译后得到的类中增加实例变量；
+- 能向运行时创建的类中添加实例变量；
+
+<br/>
+
+**解释下：**
+
+&emsp; 因为编译后的类已经注册在 runtime 中，类结构体中的 objc_ivar_list 实例变量的链表 和 instance_size 实例变量的内存大小已经确定，同时runtime 会调用 class_setIvarLayout 或 class_setWeakIvarLayout 来处理 strong weak 引用。所以不能向存在的类中添加实例变量；
+
+&emsp; 运行时创建的类是可以添加实例变量，调用 class_addIvar 函数。但是得在调用 objc_allocateClassPair 之后，objc_registerClassPair 之前，原因同上。
+
+
+<br/>
+<br/>
+
+- **[Xcode编译过程步骤大概可以分为4个](https://blog.csdn.net/fanyun_01/article/details/118279039)：**
+	- (1).预处理（Pre-process）：把宏替换，删除注释，展开头文件，产生 .i 文件
+	- (2).编译（Compliling）：把之前的 .i 文件转换成汇编语言，产生 .s文件
+	- (3).汇编（Asembly）：把汇编语言文件转换为机器码文件，产生 .o 文件
+	- (4).链接（Link）：对.o文件中的对于其他的库的引用的地方进行引用，生成最后的可执行文件（同时也包括多个 .o 文件进行 link）
+
+
+
+<br/>
+
+[**OC动态性总结:**](https://blog.csdn.net/cordova/article/details/53876682)
+
+**编译时：** 即编译器对语言的编译阶段，编译时只是对语言进行最基本的检查报错，包括词法分析、语法分析等等，将程序代码翻译成计算机能够识别的语言（例如汇编等），编译通过并不意味着程序就可以成功运行。
+
+**运行时：** 即程序通过了编译这一关之后编译好的代码被装载到内存中跑起来的阶段，这个时候会具体对类型进行检查，而不仅仅是对代码的简单扫描分析，此时若出错程序会崩溃。
+
+&emsp; 可以说编译时是一个静态的阶段，类型错误很明显可以直接检查出来，可读性也好；而运行时则是动态的阶段，开始具体与运行环境结合起来。
+
+
+<br/>
+<br/>
+
+
+> <h3 id='objc使用什么机制管理对象内存'>objc使用什么机制管理对象内存</h3>
+
+- 通过 retainCount 的机制来决定对象是否需要释放。
+- release 对象的各种情况如下：
+
+
+<br/>
+
+- **1.对象成员变量**
+
+&emsp; 这个对象 dealloc 时候，成员变量 objc_storeStrong(&ivar,nil) release
+
+- **2.局部变量变量的释放 分情况：**
+
+	- 2.1strong obj变量，出了作用域{}，就  objc_storeStrong(obj,nil) release 对象；
+
+```
+void
+objc_storeStrong(id *location, id obj)
+{
+
+id prev = *location;
+if (obj == prev) {
+   return;
+}
+objc_retain(obj);
+*location = obj;
+objc_release(prev);
+}
+```
+
+- 2.1weak obj变量，出了作用域，objc_destroyWeak 将变量（obj）的地址从weak表中删除。；
+
+- 2.2 autorelease obj变量，交给 autoreleasePool对象管理， 
+	- （1）主动使用 @autoreleasepool{}，出了 {} 对象release 
+	- （2）不使用 @autoreleasepool{}，交给线程管理
+		- 	①线程开启runloop，在每次 kCFRunLoopBeforeWaiting 休眠时候，执行PoolPop（release对象）再PoolPush;
+		- 	②线程没有开启runloop，在线程结束时候执行 PoolPop（release对象）
 
 
 <br/>
@@ -4461,7 +4841,7 @@ Class XXX is implemented in both XXX and XXX. One of the two will be used. Which
 <br/>
 <br/>
 
-> <h2 id = "MJRefresh">**MJRefresh**<h3>
+>## <h2 id = "MJRefresh">**MJRefresh**<h3>
 
 - MJRefresh使用时有什么问题？有哪些需要注意的？
 
