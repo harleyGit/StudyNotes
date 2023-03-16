@@ -28,8 +28,10 @@
 		- [block内部改变使用__block](#block内部改变使用__block)
 		- [泛型指针void *和id的区别](#泛型指针void*和id的区别)
 - [**Block高级使用**](#Block高级使用)
-- [参考资料](#参考资料)
+- **参考资料**
 	- [**Block 本质**](https://www.jianshu.com/p/4e79e9a0dd82)
+	- [底层探索篇 ——block(上)](https://blog.csdn.net/LinShunIos/article/details/119852634)
+	- [底层探索篇 ——block(下)](https://blog.csdn.net/LinShunIos/article/details/119883001)
 	- [**Block 用法、举例、底层**](http://www.cocoachina.com/cms/wap.php?action=article&id=23147)
 	- [**Block 详解**](https://www.jianshu.com/p/00a0747740ba)
 	- [Block 详解](https://blog.csdn.net/majiakun1/article/details/80741215)
@@ -107,12 +109,15 @@ OC 函数中的局部变量在栈中存放。
 
 > <h2 id='全局block'>全局block</h2>
 
+&emsp; 全局block (NSGlobalBlock): 位于全局区，在block内部不使用外部变量，或者只使用静态变量和全局变量
+
 <br/>
 <br/>
 
 - NSGlobalBlock(全局block)： block在静态区。
 
 ```
+//这里不使用外部变量，所以是NSGlobalBlock。
 void (^block)(void) = ^{
         NSLog(@"welcome to block");
     };//匿名block代码块的定义
@@ -127,10 +132,12 @@ void (^block)(void) = ^{
 
 > <h2 id='堆block'>堆block</h2>
 
+&emsp; 堆block (NSMallocBlock): 位于堆区，在block内部使用变量或者oc属性，并且赋值给强引用或者Copy修饰的变量
 
 -  NSMallocBlock:  堆block；
 
 ```
+//使用了局部变量
 int a = 10;
 void (^block)(void) = ^{
         NSLog(@"welcome to block %d", a);
@@ -147,16 +154,27 @@ void (^block)(void) = ^{
 
 > <h2 id='栈block'>栈block</h2>
 
+&emsp; 栈block (NSStackBlock): 位于栈区，与MallocBlock一样，可以在内部使用局部变量或者oc属性。但是不能赋值给强引用或者copy修饰的变量。
 
 -  NSStackBlock(栈block)
 
 ```
 int a = 10;
- NSLog(@"第三种block： %@", ^{
-        NSLog(@"%d", a);
-    });
+NSLog(@"第三种block： %@", ^{
+    NSLog(@"%d", a);
+});
 
 //打印结果：第三种block： <__NSStackBlock__: 0x7ffee5cee960>
+
+
+
+//或者如下加了__weak,a变量没有被强引用持有,所以是NSStackBlock
+int b=10;
+Void (__weak ^block)(void)=^{
+	NSLog(@"Croci - %d", a);
+}
+
+NSLog(@"%@", block);
 
 ```
 
@@ -779,6 +797,7 @@ struct __main_block_impl_0 {
   }
 };
 static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+	//__cself是传进来的参数也就是block自身，那么__cself->age也就是block结构体的成员变量a。这里的int age 进行了值拷贝
   int age = __cself->age; // bound by copy
 
             NSLog((NSString *)&__NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0, ((NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend)(objc_getClass("NSNumber"), sel_registerName("numberWithInt:"), (int)(age)));
@@ -913,6 +932,7 @@ block内部：5732708296
 这也证实了：a 在定义前是栈区，但只要进入了 block 区域，就变成了堆区。
 
 
+[i->__forwarding->i 解析](https://www.jianshu.com/p/3b81139fa74b)
 
 <br/>
 <br/>
