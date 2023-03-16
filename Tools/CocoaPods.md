@@ -8,6 +8,8 @@
 	- [M1安装](#M1安装)
 	- [**错误解决方案**](#错误解决方案)
 	- [**卸载CocoaPosds**](#卸载CocoaPosds)
+- **资料**
+	- [CocoaPods使用指南](https://juejin.cn/post/7179231344147300412)
 
 
 
