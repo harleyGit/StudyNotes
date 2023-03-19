@@ -254,7 +254,7 @@
 >## <h2 id = "Swift">[Swift](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
 * [资料集](./iOS/Swift/资料集.md)
 * [**数据**](./iOS/Swift/数据.md)
-* [Swif包管理](./iOS/Swift/Swift包管理.md)
+* [Swif包管理](./../iOS/Swift/Swift包管理.md)
 * [SwiftUI(I)](./iOS/Swift/SwiftUI(I).md)
 * [SwiftUI 官方文档地址](https://developer.apple.com/documentation/swiftui/)
 * [SwiftUI 官方教程](https://developer.apple.com/tutorials/swiftui/)

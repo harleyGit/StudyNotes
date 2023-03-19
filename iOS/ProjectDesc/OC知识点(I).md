@@ -61,11 +61,15 @@
 		- [app启动优化](#启动优化)
 		- [app生命周期](#app生命周期)
 	- [main函数之前会做什么](#main函数之前会做什么)
-	- [Runtime的消息转发](#Runtime的消息转发)
 	- [响应者链](#响应者链)
 	- [OC的引用计数是存放](#OC的引用计数是存放)
 	- [类库没有导入](#类库没有导入)
-	- [OC的分类Category](#OC的分类Category)
+	- [类](#类)
+		- [load和initialize哪个先调用](#load和initialize哪个先调用)
+		- 消息转发
+		- sel和IMP是什么?二者关系如何
+		- [分类Category](#分类Category)
+			- [Asssociate关联的对象在什么时候释放](#Asssociate关联的对象在什么时候释放)
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
 			- [block内如何修改block外部变量](#block内如何修改block外部变量)
@@ -3122,17 +3126,6 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 
 
-
-<br/>
-<br/>
-
-
-> <h2 id = "Runtime的消息转发">Runtime的消息转发</h2>
-
-[Runtime的消息转发](https://blog.csdn.net/zhw521411/article/details/85617353)
-
-[Objective-C 中的消息与消息转发](https://segmentfault.com/a/1190000018585408)
-
 <br/>
 <br/>
 
@@ -3438,7 +3431,83 @@ objc_object::sidetable_retainCount()
 <br/>
 
 
-> <h2 id="OC的分类Category">OC的分类Category</h2>
+> <h2 id='类'>类</h2>
+
+
+> <h2 id='load和initialize哪个先调用'>load和initialize哪个先调用</h2>
+
+- load方的调用
+
+	- load方法是在dyld完成调用，是在main函数之前调用的
+	- load方法的调用顺序是父类 -> 子类 -> 分类
+	- 多个类和多个分类的调用顺序都是以编译顺序为主，可以在build Phases中调整
+
+
+- initialize方法的调用
+
+	- initialize在第一次消息发送的时候调用。所以load先于initialize调用。
+	- 调用initialize时，会优先调用父类，再子类
+
+
+- C++构造函数
+
+	- 如果C++构造方法写在objc中，系统会通过static_init()方法直接调用，此时的顺序为：C++ -> +load -> main
+	- 如果写在main或者自己的代码中，则调用顺序是为：+load -> C++ -> main
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id = "消息转发">消息转发</h3>
+
+[Runtime的消息转发](https://blog.csdn.net/zhw521411/article/details/85617353)
+
+[Objective-C 中的消息与消息转发](https://segmentfault.com/a/1190000018585408)
+
+
+
+<br/>
+
+- 方法的本质是：**消息发送**，消息有以下几个流程
+
+	- 快速查找：(objc_msgSend) ~ cache_t缓存查找
+	- 慢速查找：递归自己|父类lookUpImpOrForward
+	- 查找不到：动态方法决议resolveInstanceMethod
+	- 消息快速转发：forwardingTargetForSelector
+	- 消息慢速转发：methodSignatureForSelector & forwardInvocation
+
+
+<br/>
+<br/>
+
+> <h3 id = "sel和IMP是什么，二者关系如何">sel和IMP是什么，二者关系如何</h3>
+
+
+- **sel和IMP**
+
+	- sel是⽅法编号 ~ 在read_images期间就编译进⼊了内存
+	- imp就是我们函数实现指针 ，找imp就是找函数的过程
+	- sel就相当于书本的⽬录tittle 
+	- imp就是书本的⻚码
+
+
+
+
+- 查找具体的函数就是想看这本书⾥⾯具体篇章的内容：
+
+	- 我们⾸先知道想看什么tittle也就是(sel)
+	- 根据⽬录找到对应的⻚码也就是(imp)
+	- 翻到具体的内容方法实现
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id="分类Category">分类Category</h3>
 [OC的分类Category](https://blog.csdn.net/LIN1986LIN/article/details/86009099)
 
 <br/>
@@ -3453,6 +3522,19 @@ objc_object::sidetable_retainCount()
 
 因为在category的初始化防范中只把实例方法、协议以及属性添加到类上。
 
+
+<br/>
+<br/>
+
+
+> <h4 id="Asssociate关联的对象在什么时候释放">Asssociate关联的对象在什么时候释放</h4>
+
+
+流程图如下:
+
+![ios_oc1_93.jpeg](./../../Pictures/ios_oc1_93.jpeg)
+
+需要更深入的理解,可以对照runtime源码进行了解
 
 
 
