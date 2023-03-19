@@ -7,11 +7,25 @@
 		- [NSURLRequest](#NSURLRequest)
 		- [NSMutableRequest](#NSMutableRequest)
 - [**NSURLSession**](#NSURLSession)
-	- [NSURLSession实例化](#NSURLSession实例化)
+	- [创建NSURLSession](#创建NSURLSession)
 	- [NSURLSession属性](#NSURLSession属性)
-	- [管理回话](#管理回话)
-	- [Block接受数据](#Block接受数据)
-	- ‌[Delegate接受数据](#Delegate接受数据)
+	- [管理会话](#管理会话)
+	- [数据响应方式](#数据响应方式)
+		- [任务响应数据](#任务响应数据)
+		- [代理响应数据](#代理响应数据)
+	- [添加任务](#添加任务)
+	- [会话添加DataTasks](#会话添加DataTasks)
+		- 	[会话中添加DownloadTasks](#会话中添加DownloadTasks)
+		- [会话中添加UploadTasks](#会话中添加UploadTasks)
+		- 	[会话中添加StreamTasks](#会话中添加StreamTasks)
+		- [	会话中添加WebSocketTasks](#会话中添加WebSocketTasks)
+	- [NSURLSession完成一个网络请求](#NSURLSession完成一个网络请求)
+		- [sharedSession单例创建会话](#sharedSession单例创建会话)
+		- [配置session时 && 不设置delegate](#配置session时&&不设置delegate)
+		- [配置sesion && 设置delegate && 设置delegateQueue](#配置sesion&&设置delegate&&设置delegateQueue)
+		- [Post请求下载图片](#Post请求下载图片)
+		- 	[创建Post请求上传一个图片](#创建Post请求上传一个图片)
+		- ‌[Delegate接受数据](#Delegate接受数据)
 - [**AFNetworking架构图**](#AFNetworking架构图)
 	- [AFNetworking3.0请求流程线程](#AFNetworking3.0请求流程线程)
 	- [属性](#属性)
@@ -29,11 +43,14 @@
 - [**AFURLRequestSerialization**](#AFURLRequestSerialization)
 - [多路复用](#多路复用)
 - [**参考资料:**](#)
+	- [OC中的NSURLSession-
+一叶知秋0830(掘金)](https://juejin.cn/post/6844903971824500743)
 	- [ **AFNetworking到底做了什么？(二)**](https://www.jianshu.com/p/f32bd79233da)
 	- [**AFNetWorking 3.0之前设置请求头**](https://www.jianshu.com/p/45c722f726fd)
 	- [**请求头的配置用来完成HTTP Basic Auth的鉴权**](https://blog.csdn.net/deft_mkjing/article/details/51900737)
 	- [**AFNetworking使用技巧与问题**](https://www.jianshu.com/p/37018da11815)
 	- [**HTTPS认证**](https://www.jianshu.com/p/a84237b07611)
+	- [HTTPS使用](https://juejin.cn/post/7086488227602759693)
 
 
 
@@ -45,6 +62,8 @@
 
 
 > <h1 id='基础'>基础</h1>
+
+
 
 <br/>
 
@@ -185,16 +204,18 @@ NSMutableURLRequest是NSURLRequest的子类，常用方法有:
 ![AFNet7.jpeg](./../../Pictures/AFNet7.jpeg)
 
 
-<br/>
 
-![ios_oc1_73](./../../Pictures/ios_oc1_73)
-
+NSURLSession是网络通信的管理者，是因为NSURLSession 协调一组相关类完成网络通信：
 
 - NSURLSessionConfiguration ：配置选项的封装，如与主机同时连接的最大并发数目、使用的多路径TCP策略、以及是否允许蜂窝网络, 请求缓存策略, 请求超时, cookies/证书存储等等；
 - NSURLSessionDelegate : 用于处理响应数据的代理；
 - NSURLSessionTask : 通过请求创建的任务；
 - NSURLSessionTaskMetrics ：对发送请求/DNS查询/TLS握手/请求响应等各种环节时间上的统计. 可用于分析App的请求缓慢到底是发生在哪个环节, 并对此优化APP性能。
 - NSURLSessionTaskTransactionMetrics
+
+
+![ios_oc1_95.png](./../../Pictures/ios_oc1_95.png)
+
 
 <br/>
 <br/>
@@ -239,18 +260,18 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 <br/>
 <br/>
 
-> <h2 id='NSURLSession实例化'>NSURLSession实例化</h2>
+> <h2 id='创建NSURLSession'>创建NSURLSession</h2>
 
 
 ```
 /** 全局共享单例
  * 有很大局限性：
- *  <li> 没有设置 delegate，因此不会调用代理方法;
- *  <li> 没有定制 configuration 用于基本请求；
- *  <li> 当收到服务器的响应报文时，不能增量地获取数据；
- *  <li> 无法对默认连接行为进行定制；
- *  <li> 执行身份验证的能力是有限的；
- *  <li> App 挂起时，不能执行后台下载或上传。
+ * 没有设置 delegate，因此不会调用代理方法;
+ * 没有定制 configuration 用于基本请求；
+ * 当收到服务器的响应报文时，不能增量地获取数据；
+ * 无法对默认连接行为进行定制；
+ * 执行身份验证的能力是有限的；
+ * App 挂起时，不能执行后台下载或上传。
  * sharedSession 使用全局 NSURLCache、NSHTTPCookieStorage、NSURLCredentialStorage
  * @note 如果使用缓存、cookie、身份验证或自定义网络协议进行任何操作，应该使用默认会话而不是共享会话。
  * @note ：不管 session 执行的线程为主线程还是子线程，completionHandler 代码均在任意子线程执行。
@@ -288,51 +309,10 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 **注意：**只能使用上述方法获取一个 NSURLSession 对象，禁止使用 -init 或 +new等方法实例化；
 
 
-
 <br/>
 <br/>
-
-
-> <h2 id='Block接受数据'>Block接受数据</h2>
-
-
-使用Block很简单，只需要传入请求的Request就可以直接获取到数据。
-
-```
-- (IBAction)orginalDownLoadAction:(UIButton *)sender {
-    __weak typeof(self) weakself = self;
-    NSURLSession *session = [self createASession];
-    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:[self creatRequest:downURL] completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            weakself.showImageView.image = [UIImage imageWithData:data];
-        });
-    }];
-    [dataTask resume];
-}
-
-//  创建Session对象
-- (NSURLSession *)createASession {
-    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
-    operationQueue.maxConcurrentOperationCount = 1;
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:operationQueue];
-    return session;
-}
-
-- (NSURLRequest *)creatRequest:(NSString *)url {
-    NSURLRequest *requset = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
-    return requset;
-}
-```
-
-
-<br/>
-<br/>
-
 
 > <h2 id='NSURLSession属性'>NSURLSession属性</h2>
-
-
 
 ```
 /**  操作队列：需要在创建此对象时提供
@@ -358,13 +338,12 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 ```
 
 
-<br/>
-<br/>
 
+
+<br/>
+<br/>
 
 > <h2 id='管理会话'>管理会话</h2>
-
-
 
 ```
 /** 完成任务并将 NSURLSession 置为无效！
@@ -406,8 +385,398 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 <br/>
 <br/>
 
+> <h2 id='向会话添加任务'>向会话添加任务</h2>
 
-> <h2 id='Delegate接受数据'>Delegate接受数据</h2>
+在网络通信中，NSURLSession根据请求NSURLRequest可以[创建多种任务：](https://developer.apple.com/documentation/foundation/nsurlsessiontask?changes=latest_minor&language=objc)
+
+- NSURLSessionDataTask：数据任务，使用NSData对象发送和接收数据；数据任务旨在向服务器发出简短的，经常是交互式的请求；支持默认会话、临时会话，但不支持后台会话；
+	- 通过对代理方法 `-URLSession:dataTask:didReceiveData:` 的一系列调用来接收资源；该任务供使用者立即解析。
+
+- NSURLSessionUploadTask ：上传任务，与数据任务相似，但是它们还发送数据（通常以文件形式），并在应用程序不运行时支持后台上传；
+	- 通过引用要上传的文件或数据对象，或利用 `-URLSession:task:needNewBodyStream: `来提供上传主体显式创建的；与数据任务的区别在于实例构造方式不同！
+
+- NSURLSessionDownloadTask ：下载任务，直接将响应数据写入临时文件，任何类型的会话都支持下载和上传任务。
+	- 任务完成后，delegate 调用 `-URLSession:downloadTask:didFinishDownloadingToURL:` 在适当时机将该文件移动到沙盒的永久位置、或者读取该文件；
+	- 如果取消任务，NSURLSessionDownloadTask 可以生成一个 data blob，用于稍后恢复下载。
+
+- `NSURLSessionWebSocketTask ：WebSocket`任务，使用 RFC 6455 中定义的WebSocket协议通过TCP和TLS交换消息。
+
+- NSURLSessionStreamTask：从 iOS9 开始支持该任务，这允许TCP/IP连接到指定的主机和可选的安全握手和代理导航的端口；
+
+继承关系图,如下:
+
+![ios_oc1_96.png](./../../Pictures/ios_oc1_96.png)
+
+
+<br/>
+<br/>
+
+> <h2 id='数据响应方式'>数据响应方式</h2>
+
+
+<br/>
+
+> <h3 id='任务响应数据'>任务响应数据</h3>
+
+
+**通过NSURLSession 创建任务,有如下2种响应方式:**
+
+- 设置 delegate：响应报文被 NSURLSessionDelegate 的代理方法处理；
+- 使用 completionHandler 创建任务，那么在 completionHandler 中处理响应数据（即使设置了 delegate）；
+
+
+
+
+<br/>
+
+> <h3 id='代理响应数据'>代理响应数据</h3>
+
+&emsp; 根据不通的delegate任务，由不同的 NSURLSessionDelegate 方法来处理：
+
+- NSURLSessionDelegate : 是 session 级别的协议，主要管理 session 的生命周期、处理证书认证等
+- NSURLSessionTaskDelegate : 是 task 级别的协议，面向所有的委托方法
+- NSURLSessionDataDelegate : 是 task 级别的协议，主要用来处理 data 和 upload，如接收到响应，接收到数据，是否缓存数据
+- NSURLSession​Download​Delegate : 是 task 级别的协议，用来处理下载任务
+- NSURLSessionStreamDelegate : 是 task 级别的协议，用来处理 streamTask
+- NSURLSessionWebSocketDelegate: 是 task 级别的委托，处理特定于 WebSocketTask 的事件
+
+各个Delegate继承关系图,如下:
+
+![ios_oc1_97.png](./../../Pictures/ios_oc1_97.png)
+
+可以重复使用一个NSURLSession来创建多个任务，创建的 NSURLSessionTask 对象总是处于挂起状态，在它们执行之前必须调用 -resume 方法
+
+<br/>
+<br/>
+
+> <h2 id='添加任务'>添加任务</h2>
+
+
+
+<br/>
+<br/>
+
+> <h3 id='会话添加DataTasks'>会话添加DataTasks</h3>
+
+```
+/** 使用指定的 NSURLRequest 创建一个数据任务
+ * @param 请求可以有一个 body stream
+*/
+- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request;
+
+/** 使用指定的 URL 创建一个数据任务
+ */
+- (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url;
+
+/** 使用指定的 NSURLRequest 创建一个数据任务
+ * @param completionHandler 任务完成时调用；绕过正常的代理调用响应和数据传递；
+ *          如果设置了 delegate，在 authentication challenges 仍然会被调用；
+ *          该参数传递 nil，任务完成时调用代理方法，此时等同于 -dataTaskWithRequest: 方法
+ */
+- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+
+/** 使用指定的 URL 创建一个数据任务，提供一个简单的可取消异步接口来接收数据。
+ * @param completionHandler 任务完成时调用；绕过正常的代理调用响应和数据传递；
+ *          如果设置了 delegate，在 authentication challenges 仍然会被调用；
+ *          该参数传递 nil，任务完成时调用代理方法，此时等同于 -dataTaskWithRequest: 方法
+ */
+- (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+```
+
+<br/>
+<br/>
+
+> <h3 id='会话中添加DownloadTasks'>会话中添加DownloadTasks</h3>
+
+当下载成功完成时，需要将下载数据从临时文件拷贝至指定文件，临时文件将被自动删除。
+
+```
+/** 使用指定的 NSURLRequest 创建一个下载任务
+ */
+- (NSURLSessionDownloadTask *)downloadTaskWithRequest:(NSURLRequest *)request;
+- (NSURLSessionDownloadTask *)downloadTaskWithRequest:(NSURLRequest *)request completionHandler:(void (^)(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+
+/** 使用指定的 url 创建一个下载任务
+ */
+- (NSURLSessionDownloadTask *)downloadTaskWithURL:(NSURL *)url;
+- (NSURLSessionDownloadTask *)downloadTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+
+/** 使用 resume Data 创建一个下载任务，以恢复先前取消或失败的下载
+ * @resumeData 提供恢复下载所需的数据对象
+ * @note 如果下载不能恢复，将调用 -URLSession:task:didCompleteWithError:
+ */
+- (NSURLSessionDownloadTask *)downloadTaskWithResumeData:(NSData *)resumeData;
+- (NSURLSessionDownloadTask *)downloadTaskWithResumeData:(NSData *)resumeData completionHandler:(void (^)(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+```
+
+
+
+<br/>
+<br/>
+
+> <h3 id='会话中添加UploadTasks'>会话中添加 UploadTasks</h3>
+
+```
+/** 使用指定的 NSURLRequest 创建一个上传任务
+ * @request 上传任务的请求包含一个请求体以上传元数据，比如POST或PUT请求。
+ * @param fileURL 待上载的文件的URL
+ */
+- (NSURLSessionUploadTask *)uploadTaskWithRequest:(NSURLRequest *)request fromFile:(NSURL *)fileURL;
+- (NSURLSessionUploadTask *)uploadTaskWithRequest:(NSURLRequest *)request fromFile:(NSURL *)fileURL completionHandler:(void (^)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+
+/** 使用指定的 NSURLRequest 创建一个上传任务
+ * @param bodyData 请求体的元数据由 bodyData 提供
+ */
+- (NSURLSessionUploadTask *)uploadTaskWithRequest:(NSURLRequest *)request fromData:(NSData *)bodyData;
+- (NSURLSessionUploadTask *)uploadTaskWithRequest:(NSURLRequest *)request fromData:(nullable NSData *)bodyData completionHandler:(void (^)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
+
+/** 使用指定的 NSURLRequest 创建一个上传任务
+ * @note 必须由代理方法 -URLSession:task:needNewBodyStream: 提供上传的元数据
+ */
+- (NSURLSessionUploadTask *)uploadTaskWithStreamedRequest:(NSURLRequest *)request;
+```
+
+
+<br/>
+<br/>
+
+> <h3 id='会话中添加StreamTasks'>会话中添加 StreamTasks</h3>
+
+```
+/** 创建一个 StreamTask，该任务建立指定主机名和端口的双向TCP/IP连接
+ * @param hostname 主机名
+ * @param 端口
+*/
+- (NSURLSessionStreamTask *)streamTaskWithHostName:(NSString *)hostname port:(NSInteger)port API_AVAILABLE(macos(10.11), ios(9.0), watchos(2.0), tvos(9.0));
+
+/** 使用指定的 NSNetService 创建双向TCP/IP连接的 streamTask
+ * @param service 用于确定TCP/IP连接端点的NSNetService对象；在将任何数据读取或写入结果的streamTask 之前解析此网络服务。
+*/
+- (NSURLSessionStreamTask *)streamTaskWithNetService:(NSNetService *)service API_AVAILABLE(macos(10.11), ios(9.0), tvos(9.0)) API_UNAVAILABLE(watchos);
+```
+
+
+
+<br/>
+<br/>
+
+> <h3 id='会话中添加WebSocketTasks'>会话中添加 WebSocketTasks</h3>
+
+```
+/** 使用指定的 URL 创建一个 WebSocket 任务
+ * @param url 要连接 WebSocket 的 URL，必须有一个ws或wss方案；
+*/
+- (NSURLSessionWebSocketTask *)webSocketTaskWithURL:(NSURL *)url API_AVAILABLE(macos(10.15), ios(13.0), watchos(6.0), tvos(13.0));
+
+/** 根据指定的 URL 和协议数组，创建一个WebSocket任务
+ * @param url 要连接 WebSocket 的 URL
+ * @param protocols 与服务器进行协商的协议数组；这些协议将在WebSocket握手中用于与服务器协商一个优先的协议
+*/
+- (NSURLSessionWebSocketTask *)webSocketTaskWithURL:(NSURL *)url protocols:(NSArray<NSString *>*)protocols API_AVAILABLE(macos(10.15), ios(13.0), watchos(6.0), tvos(13.0));
+
+/** 使用指定的 NSURLRequest 创建一个WebSocket任务
+ * 可以在调用 -resume 之前修改请求的属性，该任务在 HTTP 握手阶段使用这些属性。
+ * 要添加自定义协议，请添加一个带有 Sec-WebSocket-Protocol的 HTTP headers，以及一个以逗号分隔的要与服务器协商的协议列表。
+ * 客户端提供的 HTTP headers 在与服务器握手时将保持不变。
+*/
+- (NSURLSessionWebSocketTask *)webSocketTaskWithRequest:(NSURLRequest *)request API_AVAILABLE(macos(10.15), ios(13.0), watchos(6.0), tvos(13.0));
+```
+
+
+<br/>
+<br/>
+
+> <h2 id='NSURLSession完成一个网络请求'>NSURLSession完成一个网络请求</h2>
+
+<br/>
+
+> <h3 id='sharedSession单例创建会话'>sharedSession单例创建会话</h3>
+
+&emsp; 创建了一个简单的 Get 请求， sharedSession 默认配置类，代理对象与操作队列默认为nil，来看下会话的回调结果：
+
+```
+{
+    //注意：NSURLRequest 默认是 GET 请求
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:iTunes_URL]];
+    NSURLSessionDataTask *dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSLog(@"currentThread : %@",[NSThread currentThread]);
+        if (error){
+            NSLog(@"请求失败：%@",error);
+        }else{
+            NSLog(@"请求成功");
+        }
+    }];
+    [dataTask resume];
+}
+
+/** 打印日志
+currentThread : <NSThread: 0x174263080>{number = 5, name = (null)}
+请求成功
+*/
+```
+
+这个会话成功的收到响应，而且响应的回调为任意分线程，这时如果要更新 UI ，就要回到主线程去!
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='配置session时&&不设置delegate'>配置session时 && 不设置delegate</h3>
+
+创建了一个简单的 Get 请求，为 session 设置了配置类，代理对象与操作队列默认为 nil，来看下会话的回调结果
+
+```
+{
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:iTunes_URL]];
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSLog(@"currentThread : %@",[NSThread currentThread]);
+        if (error){
+            NSLog(@"请求失败：%@",error);
+        }else{
+            NSLog(@"请求成功");
+        }
+    }];
+    [dataTask resume];
+
+/** 打印日志
+currentThread : <NSThread: 0x174263170>{number = 8, name = (null)}
+请求成功
+*/
+}
+```
+
+这个会话成功的收到响应，而且响应的回调为任意分线程!
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='配置sesion&&设置delegate&&设置delegateQueue'>配置sesion&&设置delegate&&设置delegateQueue</h2>
+
+创建了一个简单的 Get 请求，为 session 设置了配置类，代理对象，操作队列.使用Block接收相应的数据很简单，只需要传入请求的Request就可以直接获取到数据。
+
+```
+- (IBAction)orginalDownLoadAction:(UIButton *)sender {
+    __weak typeof(self) weakself = self;
+    NSURLSession *session = [self createASession];
+    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:[self creatRequest:downURL] completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+		    if(error){
+			     NSLog(@"请求失败：%@",error);
+		    }else {
+		       NSLog(@"请求成功");
+			    dispatch_async(dispatch_get_main_queue(), ^{
+            weakself.showImageView.image = [UIImage imageWithData:data];
+        });
+		    }
+    }];
+    [dataTask resume];
+}
+
+//  创建Session对象
+- (NSURLSession *)createASession {
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    operationQueue.maxConcurrentOperationCount = 1;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:operationQueue];
+    return session;
+}
+
+- (NSURLRequest *)creatRequest:(NSString *)url {
+    NSURLRequest *requset = [NSURLRequest requestWithURL:[NSURL URLWithString:url]];
+    return requset;
+}
+```
+
+
+
+<br/>
+
+**内存泄漏:**
+
+&emsp; 在使用 Instruments 监控了以上请求的内存情况，发现除了 sharedSession 方式配置的 session ，其余的方式创建 task 都存在内存泄露：
+
+![ios_oc1_98.png](./../../Pictures/ios_oc1_98.png)
+
+
+这是为什么呢？还记得我们前文强调的嘛：
+
+>会话对象保存对委托的强引用，直到应用程序退出或显式地使会话无效为止。如果你不使会话无效，你的应用程序就会泄露内存，直到它退出。
+也就是说：如果我们不调用以下两个方法中的一个使 session 失效，session 是会内存泄露的。
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='Post请求下载图片'>Post 请求下载图片</h3>
+
+使用 session 创建了一个简单的下载图片的 downloadTask，下载成功后将文件从临时路径转移到我们指定的位置
+
+```
+{
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+    NSString *imagePath = @"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1528867244313&di=904a1b5eb7db534ea15ce4c266bfa1c4&imgtype=0&src=http%3A%2F%2Fpic.58pic.com%2F58pic%2F15%2F36%2F01%2F58PIC2958PICbAX_1024.jpg";
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:imagePath]];
+    NSURLSessionDownloadTask *downloadTask = [session downloadTaskWithRequest:request completionHandler:^(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSLog(@"currentThread : %@",[NSThread currentThread]);
+        if (error){
+            NSLog(@"请求失败：%@",error);
+        }else{
+            NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+            NSString *newFilePath = [documentsPath stringByAppendingPathComponent:response.suggestedFilename];
+            [[NSFileManager defaultManager] moveItemAtPath:location.path toPath:newFilePath error:nil];
+            NSLog(@"请求成功：%@",newFilePath);
+        }
+    }];
+    [downloadTask resume];
+}
+```
+
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='创建Post请求上传一个图片'>创建Post 请求上传一个图片</h3>
+
+上传一个文件时，需要在请求头添加 Content-Type ，设置边界 boundary 为任意值，[有兴趣的可以去了解下**HTTP协议**](https://www.cnblogs.com/EricaMIN1987_IT/p/3837436.html)
+
+```
+{
+    NSOperationQueue *queue = [NSOperationQueue mainQueue];
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:queue];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"updateFile"]];
+    request.HTTPMethod = @"POST";
+    [request setValue:@"multipart/form-data;boundary=***" forHTTPHeaderField:@"Content-Type"];
+    NSData *imageData = UIImageJPEGRepresentation([UIImage imageNamed:@"myBack"], 0.5);
+    NSMutableData *bodyData = [NSMutableData dataWithData:imageData];
+    NSURLSessionUploadTask *dask = [session uploadTaskWithRequest:request fromData:bodyData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSLog(@"currentThread : %@",[NSThread currentThread]);
+        if (error){
+            NSLog(@"请求失败：%@",error);
+        }else{
+            NSLog(@"请求成功");
+        }
+    }];
+    [dask resume];
+}
+```
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='Delegate接受数据'>Delegate接受数据</h3>
 
 可以真正的观测到数据的获取和请求的发送.
 
@@ -459,8 +828,6 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
     }
 }
 ```
-
-
 
 
 
