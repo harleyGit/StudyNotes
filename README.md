@@ -224,11 +224,19 @@
 * [**底层原理**](#底层原理)
 	* [ARC原理](./iOS/Objective-C/ARC原理.md) 
 	* [RunLoop(I)](./iOS/Objective-C/RunLoop(I).md)
+- **逆向**
+	- [**资料集01**](./iOS/Objective-C/资料集01.md)
+	- [**逆向(I)**](./iOS/Objective-C/逆向(I).md)
+	- [**Mach-O格式**](./iOS/Objective-C/Mach-O格式.md)
+- **错误总结**
+	- [上架错误](./iOS/Objective-C/上架错误.md)
+	- [审核被拒](./iOS/Objective-C/审核被拒.md)
+	- [Error](./iOS/Objective-C/Error.md)
 *	**类库**
 	*	[Linphone(I)](./iOS/Objective-C/Linphone(I).md)
 	*	[YYCache](./iOS/Objective-C/YYCache.md)
 	*	[AFNetworking](./iOS/Objective-C/AFNetworking.md)
-	*	[JSPatch 热更新](https://github.com/bang590/JSPatch)
+	*	[JSPatch热更新](https://github.com/bang590/JSPatch)
 		*	[JSPatch原理](http://blog.cnbang.net/tech/2808/)
 	*	[Aspects](https://github.com/steipete/Aspects)
 		*	[iOS切面编程](https://juejin.cn/post/6844904052778598408)
@@ -238,21 +246,6 @@
 
 
 <br/>
-<br/>
-
-
-
-> <h2 id = "逆向">逆向</h2>
-* [**资料集**](./iOS/Reverse/资料集.md)
-* [**逆向(I)**](./iOS/Reverse/逆向(I).md)
-* [**Mach-O格式**](./iOS/Reverse/Mach-O格式.md)
-
-
-
-
-
-
-
 <br/>
 <br/>
 
@@ -272,16 +265,8 @@
 
 <br/>
 <br/>
-
-	       
-> <h2 id = "错误总结">错误总结</h2>
-* [上架错误](./iOS/Error/上架错误.md)
-* [审核被拒](./iOS/Error/审核被拒.md)
-* [Error(I)](./iOS/Error/Error(I).md)
-
-
 <br/>
-<br/>
+
 
 	       
 > <h2 id = "ProjectDesc">ProjectDesc</h2>
@@ -551,13 +536,7 @@
 *	[SVProgressHUD(I)](./ClassLibrary/SVProgressHUD(I).md)
 *	**Bug收集**
 	*	[plcrashreporter](https://github.com/microsoft/plcrashreporter)
-[](./ClassLibrary/.md)
-[](./ClassLibrary/.md)
-[](./ClassLibrary/.md)
-[](./ClassLibrary/.md)
-[](./ClassLibrary/.md)
-[](./ClassLibrary/.md)
-[](./ClassLibrary/.md)
+
 
 
 
