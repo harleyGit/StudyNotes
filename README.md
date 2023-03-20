@@ -236,11 +236,8 @@
 	*	[Linphone(I)](./iOS/Objective-C/Linphone(I).md)
 	*	[YYCache](./iOS/Objective-C/YYCache.md)
 	*	[AFNetworking](./iOS/Objective-C/AFNetworking.md)
-	*	[JSPatch热更新](https://github.com/bang590/JSPatch)
-		*	[JSPatch原理](http://blog.cnbang.net/tech/2808/)
-	*	[Aspects](https://github.com/steipete/Aspects)
-		*	[iOS切面编程](https://juejin.cn/post/6844904052778598408)
-		*	[实现一个AOP框架](https://mp.weixin.qq.com/s/Y3bE_iywGzoxRe4xGMMb7A)
+	*	[JSPatch热更新](./iOS/Objective-C/JSPatch.md)
+	*	[Aspects切面编程(AOP)](./iOS/Objective-C/Aspects.md)
 - **项目开发**
 	- [DevSum](./iOS/Objective-C/DevSum.md)
 
