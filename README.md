@@ -120,6 +120,8 @@
 ><h2 id=''> C</h2>
 *	[基础](./C/C基础.md)
 *	[指针](./C/C指针.md)
+*	[排序算法](./C/排序算法.md)
+*	[LeetCode算法](./C/LeetCode.md)
 
 <br/>
 <br/>
@@ -140,8 +142,7 @@
 *	[类的高级应用](./C/C2类的高级应用.md)
 *	[异常处理](./C/C2异常处理.md)
 *	[C2Exercise(I)](./C/C2Exercise(I).md)
-*	[排序算法](./C/排序算法.md)
-*	[LeetCode(I)](./C/LeetCode(I).md)
+
 
 
 

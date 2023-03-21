@@ -1,16 +1,16 @@
 <h1 id=""></h1>
 - [**知识点**](#知识点)
-	-  [std::](#std)
-	-  [Vector向量](#Vector向量)
-	-  [(::)范围解析运算符](#范围解析运算符)
-	-  [include](#include)
-	-  [size()和strlen()](#size()和strlen())
+	- [std::](#std)
+	- [Vector向量](#Vector向量)
+	- [(::)范围解析运算符](#范围解析运算符)
+	- [include](#include)
+	- [size()和strlen()](#size()和strlen())
 - [算法练习](#算法练习)
 	- [两数之和](#两数之和)
 	- [两数相加](#两数相加)
 	- [无重复字符的最长子串](#无重复字符的最长子串)
 	- [寻找两个正序数组的中位数](#寻找两个正序数组的中位数)
-	-  [最长回文子串](#最长回文子串)
+	- [最长回文子串](#最长回文子串)
 
 
 <br/>
@@ -123,6 +123,8 @@ size_t length = s.size();
 
 答案Code：
 
+**C++ 代码**
+
 ```
 
 vector<int> twoSum(vector<int>& nums, int target) {
@@ -158,6 +160,41 @@ int main(int argc, const char * argv[]) {
 
 ```
 
+
+<br/>
+
+**C 代码**
+
+
+```
+int* twoSum(int* nums, int numsSize, int target, int* returnSize){
+    int *sum= NULL;
+    for(int i = 0; i < numsSize-1; i++){
+        for(int j= i+1; j < numsSize; j++){
+            if(target == nums[i]+nums[j]){
+                sum = (int *)malloc(sizeof(int) *2);
+                *returnSize = 2;
+                sum[0]= i;
+                sum[1]=j;
+                return sum;
+            }
+        }
+    }
+    return sum;
+}
+
+//调用
+int nums [4] = {2, 7, 11, 15};
+int returnSize = 2;
+int *returnArr = twoSum(nums, 4, 9, &returnSize);
+printArr(returnArr, 2);//宏定义
+```
+
+打印:
+
+```
+🌷🌹 18:41:00 [49行] +[HGTestAlgorithm testLeetcodeAlgorithmModule:]=> 00 01 
+```
 
 
 <br/>
@@ -299,6 +336,99 @@ int main(int argc, const char * argv[]) {
 }
 ```
 打印：`708`
+
+<br/>
+
+**递归解决法**
+
+```
+struct ListNode {
+      int val;
+      struct ListNode *next;
+};
+
+void get_sum(struct ListNode *pre, struct ListNode* l1, struct ListNode* l2, int carry ){
+    if (!l1 && !l2 && !carry) {
+        return;
+    }//递归边界：三者均为零（或指针为空）时则递归停止
+    
+    struct ListNode *node = (struct ListNode *)malloc(sizeof(struct ListNode));
+    node->next = NULL;//忘了加这个在leetcode会报错,但是真正运行时并不会报错.但是在打印这个链表时会报错
+    
+    int n1 = l1 ? l1->val : 0;//若l1存在则取其节点值，否则为0；
+    int n2 = l2 ? l2->val : 0;//若l2存在则取其节点值，否则为0；
+    int sum = carry + n1 + n2;
+    carry = sum / 10;//更新进位值；
+    node->val = sum % 10;//为当前新节点赋值；
+    pre->next = node;//将新节点放置于前驱节点之后；
+    
+    l1 = l1 ? l1->next : NULL;//更新l1至后继节点；
+    l2 = l2 ? l2->next : NULL;//更新l2至后继节点；
+    
+    get_sum(node, l1, l2, carry);//调用自身进行递归；
+}
+
+
+struct ListNode* addTwoNumbers(struct ListNode* l1, struct ListNode* l2){
+    //[2, 4, 3]
+    struct ListNode *l1_0 = (struct ListNode *)malloc(sizeof(struct ListNode));
+    l1_0->val = 2;
+    struct ListNode *l1_1 = (struct ListNode *)malloc(sizeof(struct ListNode));
+    l1_1->val = 4;
+    struct ListNode *l1_2 = (struct ListNode *)malloc(sizeof(struct ListNode));
+    l1_2->val = 3;
+    l1_2->next = NULL;
+    
+    l1_0->next = l1_1;
+    l1_1->next = l1_2;
+    
+    //[5, 6, 4]
+    struct ListNode *l2_0 = (struct ListNode *)malloc(sizeof(struct ListNode));
+    l2_0->val = 5;
+    struct ListNode *l2_1 = (struct ListNode *)malloc(sizeof(struct ListNode));
+    l2_1->val = 6;
+    struct ListNode *l2_2 = (struct ListNode *)malloc(sizeof(struct ListNode));
+    l2_2->val = 4;
+    l2_2->next = NULL;//要加,否则运行报错,因为不知道什么时候结束,这个可以作为判断链表结束时的条件
+    
+    l2_0->next =l2_1;
+    l2_1->next = l2_2;
+    
+    l1 = l1_0;
+    l2 = l2_0;
+
+    
+    
+    int carry = 0;//数值相加后的进位值,比如8+9 = 17,进位1
+    struct ListNode *headNode = (struct ListNode *)malloc(sizeof(struct ListNode));
+    headNode->val = 0; // 忘了这个 需要初始化赋值
+    //必须要初始化,原因: 在访问某个变量时，因为这个变量中含有未赋值的指针。定义但是不赋值的指针叫做野指针。
+    //野指针指向不明，对程序有不可知的后果，引用了更是出大问题，所以，c语言严格反对野指针
+    headNode->next = NULL; // 忘了这个 需要初始化赋值
+    
+    get_sum(headNode, l1, l2, carry);
+    
+    
+    struct ListNode *node = headNode->next;
+    while (node) {
+        println("%d", node->val);
+        node = node->next;
+    }
+    
+    return headNode->next;
+}
+
+//调用
+addTwoNumbers(NULL, NULL);
+```
+
+打印:
+
+```
+🌷🌹(Mar 20 2023:18:51:45 [77行] addTwoNumbers) 7
+🌷🌹(Mar 20 2023:18:51:45 [77行] addTwoNumbers) 0
+🌷🌹(Mar 20 2023:18:51:45 [77行] addTwoNumbers) 8
+```
 
 
 
