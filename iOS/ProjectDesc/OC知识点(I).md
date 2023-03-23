@@ -2473,23 +2473,25 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 <br/>
 
->## <h2 id="MVC和MVVM">[MVC和MVVM](./../设计模式.md#MVC)</h2>
+>## <h2 id="MVC和MVVM">[MVC和MVVM](./../Objective-C/设计模式.md#MVC)</h2>
 
 
 <br/>
 <br/>
 
->## <h2 id="单例类">[**单例类**](./../设计模式.md#单例类)</h2>
+>## <h2 id="单例类">[**单例类**](./../Objective-C/设计模式.md#单例类)</h2>
 
 <br/>
 <br/>
 
->## <h2 id="协议代理">[**协议代理**](./../设计模式.md#代理协议)</h2>
+>## <h2 id="协议代理">[**协议代理**](./../Objective-C/设计模式.md#代理协议)</h2>
+
+https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/设计模式.md#MVC
 
 <br/>
 <br/>
 
->## <h2 id="KVC和KVO">[**KVC和KVO**](./../设计模式.md#KVC和KVO)</h2>
+>## <h2 id="KVC和KVO">[**KVC和KVO**](./../Objective-C/设计模式.md#KVC和KVO)</h2>
 
 
 
