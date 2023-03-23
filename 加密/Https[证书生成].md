@@ -85,9 +85,14 @@ TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
 
 `无法进行下去了，因为只从中间CA生成开始而根CA没生成，需要先生成根CA，没尝试过。`
 
+
+
+![<br/>](./../../Pictures/z54.png)
+
 <br/>
 
 [根CA的生成](https://www.cnblogs.com/Security-Darren/p/4078867.html)
+
 
 <br/>
 

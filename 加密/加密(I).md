@@ -1,12 +1,12 @@
 
-- **网络安全**
-	- 消息认证码(MAC)是如何实现的？
-	- CCKeyDerivationPBKDF和SecRandomCopyBytes如何使用？
-- **加密库CommonCrypto**
-- **DES加密**
-- **SHAI**
-- **MD5摘要**
-- **越狱判断**
+- [**网络安全**](#网络安全)
+	- [消息认证码(MAC)是如何实现的？](#消息认证码(MAC)是如何实现的)
+	- [CCKeyDerivationPBKDF和SecRandomCopyBytes如何使用？](#CCKeyDerivationPBKDF和SecRandomCopyBytes如何使用)
+- [**加密库CommonCrypto**](#加密库CommonCrypto)
+- [**DES加密**](#DES加密)
+- [**SHAI**](#SHAI)
+- [**MD5摘要**](#MD5摘要)
+- [**越狱判断**](#越狱判断)
 
 
 <br/>
@@ -15,7 +15,8 @@
 <br/>
 
 
-># 网络安全
+> <h1 id='网络安全'>网络安全</h1>
+
 
 &ensp; 为了满足安全相关的需求，Apple向开发者提供了` Security` 框架与 `CommonCrypto` 接口，可以在应用中使用。`Security` 框架是一套C API 的集合，用于`管理证书、信任策略以及对设备安全数据存储的访问`。
 
@@ -36,8 +37,11 @@
 SecPKCS12Import() 函数导入身份和信任： [**使用Security.framework进行RSA 加密解密签名和验证签名**](https://www.cnblogs.com/cocoajin/p/6183443.html)
 
 <br/>
+<br/>
 
-- **消息认证码(MAC)是如何实现的？**
+
+> <h2 id='消息认证码(MAC)是如何实现的'>消息认证码(MAC)是如何实现的？</h2>
+
 
 **`HMAC`**:经常被称作秘钥消息认证码，由`RFC 2104`定义的。`HMAC `可以使用任何哈希函数，通常会使用`MD5`或`SHA-1`。
 
@@ -68,7 +72,8 @@ SecPKCS12Import() 函数导入身份和信任： [**使用Security.framework进�
 ***
 <br/>
 
-># 加密库CommonCrypto
+> <h1 id='加密库CommonCrypto'>加密库CommonCrypto</h1>
+
 
 ```
 //搜索 CommonCrypto
@@ -104,17 +109,8 @@ base64编码： 私钥。
 ***
 <br/>
 
-># DES加密
+> <h1 id='DES加密'>DES加密</h1>
 
-
-
-
-<br/>
-
-***
-<br/>
-
-># SHAI
 
 
 
@@ -124,7 +120,18 @@ base64编码： 私钥。
 ***
 <br/>
 
->#  MD5摘要
+> <h1 id='SHAI'>SHAI</h1>
+
+
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id='MD5摘要'>MD5摘要</h1>
 
 &ensp; 同样的数据，MD5 值一样的(`MD5只是摘抄数据的一部分，相当于指纹代表一个人一样，不可用于加密接口`)， Hash不可逆。
 
@@ -137,4 +144,5 @@ base64编码： 私钥。
 ***
 <br/>
 
-># 越狱判断
+> <h1 id='越狱判断'>越狱判断</h1>
+

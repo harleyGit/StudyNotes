@@ -189,6 +189,7 @@
 * [**关键字**](./iOS/Objective-C/关键字.md)
 * [**Block**](./iOS/Objective-C/Block.md)
 * [**异常**](./iOS/Objective-C/异常.md)
+* [**设计模式**](./iOS/Objective-C/设计模式.md)
 * [iPhone设计规范](https://zhuanlan.zhihu.com/p/127780364)
 * [本地化(I)](./iOS/Objective-C/本地化(I).md)
 * [闭包](./iOS/Objective-C/闭包.md)
@@ -198,7 +199,6 @@
 * [响应链(II)](./iOS/Objective-C/响应链(II).md)
 * [远程推送(US)](./iOS/Objective-C/远程推送(US).md)
 * [坐标系(I)](./iOS/Objective-C/坐标系(I).md)
-* [App跳转](./iOS/Objective-C/App跳转.md)
 * [keyChain](./iOS/Objective-C/keychain.md)
 * [NSTimer(I)](./iOS/Objective-C/NSTimer(I).md)
 * [Runtime(I)](./iOS/Objective-C/Runtime(I).md)
@@ -276,12 +276,6 @@
 * [**OC知识点(II)**](./iOS/ProjectDesc/OC知识点(II).md)
 * [FlutterInterview](./iOS/ProjectDesc/FlutterInterview.md)
 * [**Swift知识点(I)**](./iOS/ProjectDesc/Swift知识点(I).md)
-* **设计模式**
-	* [**单例类**](./iOS/ProjectDesc/单例类.md)
-	* [**协议代理**](./iOS/ProjectDesc/协议代理.md)
-	* [**KVC和KVO**](./iOS/ProjectDesc/KVC和KVO.md)
-	* [**‌MVC和MVVM**](./iOS/ProjectDesc/MVC和MVVM.md)
-	
 
 
 

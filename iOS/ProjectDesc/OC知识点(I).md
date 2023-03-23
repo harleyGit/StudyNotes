@@ -2473,23 +2473,23 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 <br/>
 
->## <h2 id="MVC和MVVM">[MVC和MVVM](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/MVC和MVVM.md)</h2>
+>## <h2 id="MVC和MVVM">[MVC和MVVM](./../设计模式.md#MVC)</h2>
 
 
 <br/>
 <br/>
 
->## <h2 id="单例类">[**单例类**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/单例类.md)</h2>
+>## <h2 id="单例类">[**单例类**](./../设计模式.md#单例类)</h2>
 
 <br/>
 <br/>
 
->## <h2 id="协议代理">[**协议代理**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/协议代理.md)</h2>
+>## <h2 id="协议代理">[**协议代理**](./../设计模式.md#代理协议)</h2>
 
 <br/>
 <br/>
 
->## <h2 id="KVC和KVO">[**KVC和KVO**](https://github.com/harleyGit/StudyNotes/blob/master/iOS/ProjectDesc/KVC和KVO.md)</h2>
+>## <h2 id="KVC和KVO">[**KVC和KVO**](./../设计模式.md#KVC和KVO)</h2>
 
 
 
