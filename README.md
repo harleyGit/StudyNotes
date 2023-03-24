@@ -177,7 +177,7 @@
 * [**iPhone适配**](./iOS/Objective-C/iPhone适配.md)
 * [**埋点**](./iOS/Objective-C/埋点.md)
 * [**问题解决**](./iOS/Objective-C/问题解决.md)
-* [**多线程(I)**](./iOS/Objective-C/多线程(I).md)
+* [**多线程**](./iOS/Objective-C/多线程.md)
 * [**动画**](./iOS/Objective-C/动画.md)
 * [**数据存储**](./iOS/Objective-C/数据存储.md)
 * [**JSON数据**](./iOS/Objective-C/JSON数据.md)
@@ -239,6 +239,7 @@
 	*	[Aspects切面编程(AOP)](./iOS/Objective-C/Aspects.md)
 - **项目开发**
 	- [DevSum](./iOS/Objective-C/DevSum.md)
+- [**知识点(I)**](./iOS/Objective-C/知识点(I).md)
 
 
 <br/>
@@ -257,6 +258,7 @@
 * [Swift-服务端](./iOS/Swift/Swift-服务端.md)
 * [String(I)](./iOS/Swift/String(I).md)
 [](./iOS/Swift/.md)
+- [**知识点(II)**](./iOS/Objective-C/知识点(II).md)
 
 
 <br/>
@@ -270,8 +272,6 @@
 * [**Desc(I)**](./iOS/ProjectDesc/Desc(I).md)
 * [**Desc(II)**](./iOS/ProjectDesc/Desc(II).md)
 * [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
-* [**OC知识点(I)**](./iOS/ProjectDesc/OC知识点(I).md)
-* [**OC知识点(II)**](./iOS/ProjectDesc/OC知识点(II).md)
 * [FlutterInterview](./iOS/ProjectDesc/FlutterInterview.md)
 * [**Swift知识点(I)**](./iOS/ProjectDesc/Swift知识点(I).md)
 

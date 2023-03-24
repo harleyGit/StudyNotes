@@ -1,4 +1,4 @@
--  **[OC知识点(II)](./OC知识点(II).md)** 
+-  **[OC知识点(II)](./../Swift/OC知识点(II).md)** 
 -  [基础算法知识](https://hit-alibaba.github.io/interview/)
 
 <br/>
@@ -24,6 +24,7 @@
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
 - **多线程**
 	- [如何用GCD同步若干个异步调用](#如何用GCD同步若干个异步调用)
+	- [dispatch_once安全的原因](#dispatch_once安全的原因)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -792,7 +793,7 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 
 <br/>
 
-> <h2 id='如何用GCD同步若干个异步调用？'>如何用GCD同步若干个异步调用？</h2>
+> <h2 id='如何用GCD同步若干个异步调用'>如何用GCD同步若干个异步调用？</h2>
 
 比如:如根据若干个url异步加载多张图片，然后在都下载完成后合成一张整图
 
@@ -813,8 +814,19 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 
 <br/>
+<br/>
+
+
+> <h2 id='dispatch_once安全的原因'>[dispatch_once安全的原因](./多线程.md#dispatch_once)</h2>
+
+
+
+
+
+<br/>
 
 ***
+<br/>
 <br/>
 
 
@@ -2473,25 +2485,25 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 <br/>
 
->## <h2 id="MVC和MVVM">[MVC和MVVM](./../Objective-C/设计模式.md#MVC)</h2>
+>## <h2 id="MVC和MVVM">[MVC和MVVM](./设计模式.md#MVC)</h2>
 
 
 <br/>
 <br/>
 
->## <h2 id="单例类">[**单例类**](./../Objective-C/设计模式.md#单例类)</h2>
+>## <h2 id="单例类">[**单例类**](./设计模式.md#单例类)</h2>
 
 <br/>
 <br/>
 
->## <h2 id="协议代理">[**协议代理**](./../Objective-C/设计模式.md#代理协议)</h2>
+>## <h2 id="协议代理">[**协议代理**](./设计模式.md#代理协议)</h2>
 
 
 
 <br/>
 <br/>
 
->## <h2 id="KVC和KVO">[**KVC和KVO**](./../Objective-C/设计模式.md#KVC和KVO)</h2>
+>## <h2 id="KVC和KVO">[**KVC和KVO**](./设计模式.md#KVC和KVO)</h2>
 
 
 
