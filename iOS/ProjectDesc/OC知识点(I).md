@@ -66,8 +66,8 @@
 	- [类库没有导入](#类库没有导入)
 	- [类](#类)
 		- [load和initialize哪个先调用](#load和initialize哪个先调用)
-		- 消息转发
-		- sel和IMP是什么?二者关系如何
+		- [消息转发](#消息转发)
+		- [sel和IMP是什么?二者关系如何](#sel和IMP是什么，二者关系如何)
 		- [分类Category](#分类Category)
 			- [Asssociate关联的对象在什么时候释放](#Asssociate关联的对象在什么时候释放)
 	- [Block深入探究](#Block深入探究)
@@ -2486,7 +2486,7 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 >## <h2 id="协议代理">[**协议代理**](./../Objective-C/设计模式.md#代理协议)</h2>
 
-https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/设计模式.md#MVC
+
 
 <br/>
 <br/>
