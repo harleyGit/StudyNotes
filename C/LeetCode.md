@@ -6,6 +6,9 @@
 	- [include](#include)
 	- [size()和strlen()](#size和strlen)
 - **算法练习**
+	- [宏定义](#宏定义)
+		- [普通打印-println](#普通打印-println)
+		- [数组打印-printArr](#数组打印-printArr)
 	- [两数之和](#两数之和)
 	- [两数相加](#两数相加)
 	- [无重复字符的最长子串](#无重复字符的最长子串)
@@ -16,6 +19,7 @@
 <br/>
 
 ***
+<br/>
 <br/>
 
 
@@ -92,6 +96,45 @@ size_t length = s.size();
 > <h1 id="算法练习">算法练习</h1>
 
 
+<br/>
+
+
+> <h2 id="宏定义">宏定义</h2>
+
+
+<br/>
+
+> <h3 id="普通打印-println">普通打印-println</h3>
+
+```
+///C语言自动换行定义的宏:https://www.bennyhuo.com/2020/06/14/c-println/
+#define println(format, ...) printf("🌷🌹(%s:%s [%d行] %s) "format"\n", __DATE__, __TIME__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+```
+
+
+<br/>
+<br/>
+
+> <h3 id="数组打印-printArr">数组打印-printArr</h3>
+
+
+
+```
+///C语言数组打印
+#define printArr(array,len) \
+    printf("🌷🌹 %s [%d行] %s=> ",__TIME__, __LINE__, __FUNCTION__); \
+    do  \
+    { \
+        for(int i = 0;i<len;i++) \
+        { \
+            printf("%02X ",array[i]); \
+        } \
+        printf("\r\n"); \
+    }while(0)
+```
+
+
+<br/>
 <br/>
 
 
@@ -229,7 +272,10 @@ printArr(returnArr, 2);//宏定义
 ```
 
 
-答案Code：
+
+<br/>
+
+
 
 ```
 typedef struct ListNode {
@@ -332,14 +378,28 @@ int main(int argc, const char * argv[]) {
         printf("%d", sumNode->value);
         sumNode = sumNode->next;
     }
+    
+    
    
 }
 ```
+
 打印：`708`
 
+&emsp; 因为第一个节点链表是:2, 4, 3
+	
+&emsp; 第二个节点链表是: 5, 6, 4	
+
+所以打印为: 807 才对
+
+
+<br/>
 <br/>
 
-**递归解决法**
+
+
+
+**C语言-递归解决法**
 
 ```
 struct ListNode {
@@ -444,29 +504,38 @@ addTwoNumbers(NULL, NULL);
  
 
 示例 1:
-
 输入: s = "abcabcbb"
 输出: 3 
 解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
-示例 2:
 
+
+示例 2:
 输入: s = "bbbbb"
 输出: 1
 解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
-示例 3:
 
+
+示例 3:
 输入: s = "pwwkew"
 输出: 3
 解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
      请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
-示例 4:
 
+
+示例 4:
 输入: s = ""
 输出: 0
-
 ```
 
-解答Code:
+
+解题思路:
+
+![c0_31.png](./../Pictures/c0_31.png)
+
+<br/>
+
+
+**C++解答Code:**
 
 ```
 
@@ -525,6 +594,48 @@ int main(int argc, const char * argv[]) {
  长度为： 3
 ```
 
+<br/>
+
+**C语言解答code**
+
+```
+int lengthOfLongestSubstring(char * s){
+    unsigned long length = strlen(s);
+    int head = 0;
+    int tail = 0;
+    int max = 0;
+
+    while (tail < length){
+       for(int i = head; i < tail; i++){
+           if(s[i] == s[tail]){
+               head = i+1;//窗口左边移动一格,注意不是: head  +=1;这不是按照目前的窗口进行加1,而是整个数组了,所以不行
+               break;
+           }
+       }
+       tail +=1;//窗口右边移动一格
+       max = max > (tail - head) ? max : (tail - head);
+   }
+    
+    println("长度是: %d", max);
+    
+    return max;
+}
+
+
+
+//调用
+char *s = "pwwkew";
+//char *s = "abcabcbb";
+lengthOfLongestSubstring(s);
+
+```
+
+
+打印:
+
+```
+🌷🌹(Mar 25 2023:10:55:27 [29行] lengthOfLongestSubstring) 长度是: 3
+```
 
 <br/>
 <br/>
