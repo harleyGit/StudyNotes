@@ -957,20 +957,20 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 
 **1.客户端发起HTTPS请求**
 
-　　&emsp; 这个没什么好说的，就是用户在浏览器里输入一个https网址，然后连接到server的443端口。
+&emsp; 这个没什么好说的，就是用户在浏览器里输入一个https网址，然后连接到server的443端口。
 
 <br/>
 　
 **2.服务端的配置**
 
-　　&emsp; 采用HTTPS协议的服务器必须要有一套数字证书，可以自己制作，也可以向组织申请。区别就是自己颁发的证书需要客户端验证通过，才可以继续访问，而使用受信任的公司申请的证书则不会弹出提示页面。这套证书其实就是一对公钥和私钥。如果对公钥和私钥不太理解，可以想象成一把钥匙和一个锁头，只是全世界只有你一个人有这把钥匙，你可以把锁头给别人，别人可以用这个锁把重要的东西锁起来，然后发给你，因为只有你一个人有这把钥匙，所以只有你才能看到被这把锁锁起来的东西。
+&emsp; 采用HTTPS协议的服务器必须要有一套数字证书，可以自己制作，也可以向组织申请。区别就是自己颁发的证书需要客户端验证通过，才可以继续访问，而使用受信任的公司申请的证书则不会弹出提示页面。这套证书其实就是一对公钥和私钥。如果对公钥和私钥不太理解，可以想象成一把钥匙和一个锁头，只是全世界只有你一个人有这把钥匙，你可以把锁头给别人，别人可以用这个锁把重要的东西锁起来，然后发给你，因为只有你一个人有这把钥匙，所以只有你才能看到被这把锁锁起来的东西。
 　
 
 <br/>
 　　
 **3.传送证书**
 
-　　&emsp; 这个证书其实就是公钥，只是包含了很多信息，如证书的颁发机构，过期时间等等。
+&emsp; 这个证书其实就是公钥，只是包含了很多信息，如证书的颁发机构，过期时间等等。
 　　
 　
 <br/>
@@ -978,21 +978,21 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 　
 **4.客户端解析证书**
 
-　　&emsp; 这部分工作是有客户端的TLS/SSL来完成的，首先会验证公钥是否有效，比如颁发机构，过期时间等等，如果发现异常，则会弹出一个警告框，提示证书存在问题。如果证书没有问题，那么就生成一个随机值。然后用证书对该随机值进行加密。就好像上面说的，把随机值用锁头锁起来，这样除非有钥匙，不然看不到被锁住的内容。
+&emsp; 这部分工作是有客户端的TLS/SSL来完成的，首先会验证公钥是否有效，比如颁发机构，过期时间等等，如果发现异常，则会弹出一个警告框，提示证书存在问题。如果证书没有问题，那么就生成一个随机值。然后用证书对该随机值进行加密。就好像上面说的，把随机值用锁头锁起来，这样除非有钥匙，不然看不到被锁住的内容。
 　　
 <br/>
 
 　　
 **5.传送加密信息**
 
-　　&emsp; 这部分传送的是用证书加密后的随机值，目的就是让服务端得到这个随机值，以后客户端和服务端的通信就可以通过这个随机值来进行加密解密了。
+&emsp; 这部分传送的是用证书加密后的随机值，目的就是让服务端得到这个随机值，以后客户端和服务端的通信就可以通过这个随机值来进行加密解密了。
 　　
 <br/>
 
 　
 **6.服务段解密信息**
 
-　　&emsp; 服务端用私钥解密后，得到了客户端传过来的随机值(私钥)，然后把内容通过该值进行对称加密。所谓对称加密就是，将信息和私钥通过某种算法混合在一起，这样除非知道私钥，不然无法获取内容，而正好客户端和服务端都知道这个私钥，所以只要加密算法够彪悍，私钥够复杂，数据就够安全。
+&emsp; 服务端用私钥解密后，得到了客户端传过来的随机值(私钥)，然后把内容通过该值进行对称加密。所谓对称加密就是，将信息和私钥通过某种算法混合在一起，这样除非知道私钥，不然无法获取内容，而正好客户端和服务端都知道这个私钥，所以只要加密算法够彪悍，私钥够复杂，数据就够安全。
 　　
 
 <br/>
@@ -1000,14 +1000,14 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 
 **7.传输加密后的信息**
 
-　　&emsp; 这部分信息是服务段用私钥加密后的信息，可以在客户端被还原。
+&emsp; 这部分信息是服务段用私钥加密后的信息，可以在客户端被还原。
 　　
 　　
 <br/>
 
 **8.客户端解密信息**
 
-　　&emsp; 客户端用之前生成的私钥解密服务段传过来的信息，于是获取了解密后的内容。整个过程第三方即使监听到了数据，也束手无策。
+&emsp; 客户端用之前生成的私钥解密服务段传过来的信息，于是获取了解密后的内容。整个过程第三方即使监听到了数据，也束手无策。
 
 <br/>
 <br/>
@@ -1325,9 +1325,12 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 }
 ```
 
+
+
+<br/>
 <br/>
 
-`- (NSURLSessionDataTask *)dataTaskWithHTTPMethod:(NSString *)method  URLString:(NSString *)URLString  parameters:(id)parameters  uploadProgress:(nullable void (^)(NSProgress *uploadProgress)) uploadProgress  downloadProgress:(nullable void (^)(NSProgress *downloadProgress)) downloadProgress  success:(void (^)(NSURLSessionDataTask *, id))success  failure:(void (^)(NSURLSessionDataTask *, NSError *))failure`
+
 
 ```
 //生成request，通过request生成task
@@ -1378,8 +1381,7 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 ```
 
 <br/>
-
-`- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request  uploadProgress:(nullable void (^)(NSProgress *uploadProgress)) uploadProgressBlock  downloadProgress:(nullable void (^)(NSProgress *downloadProgress)) downloadProgressBlock  completionHandler:(nullable void (^)(NSURLResponse *response, id _Nullable responseObject,  NSError * _Nullable error))completionHandler`
+<br/>
 
 ```
 - (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request
@@ -1404,8 +1406,8 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 
 
 <br/>
+<br/>
 
-`- (void)addDelegateForDataTask:(NSURLSessionDataTask *)dataTask  uploadProgress:(nullable void (^)(NSProgress *uploadProgress)) uploadProgressBlock  downloadProgress:(nullable void (^)(NSProgress *downloadProgress)) downloadProgressBlock  completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler`
 
 ```
 /*
@@ -1447,9 +1449,8 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 
 > <h1 id='AFURLRequestSerialization'>AFURLRequestSerialization</h1>
 
-
-
-**`- (NSMutableURLRequest *)requestWithMethod:(NSString *)method  URLString:(NSString *)URLString  parameters:(id)parameters   error:(NSError *__autoreleasing *)error`**
+<br/>
+<br/>
 
 ```
 //
@@ -1488,8 +1489,8 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 ```
 
 <br/>
+<br/>
 
-`- (NSURLRequest *)requestBySerializingRequest:(NSURLRequest *)request  withParameters:(id)parameters  error:(NSError *__autoreleasing *)error`
 
 ```
 //通过requestserializtion把参数转化成了查询字符串：请求头设置、默认属性、属性监听
