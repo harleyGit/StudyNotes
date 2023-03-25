@@ -817,7 +817,7 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 <br/>
 
 
-> <h2 id='dispatch_once安全的原因'>[dispatch_once安全的原因](./多线程.md#dispatch_once)</h2>
+># <h2 id='dispatch_once安全的原因'>[dispatch_once安全的原因](./多线程.md#dispatch_once)</h2>
 
 
 
@@ -2486,6 +2486,7 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 
 >## <h2 id="MVC和MVVM">[MVC和MVVM](./设计模式.md#MVC)</h2>
+
 
 
 <br/>
