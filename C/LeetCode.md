@@ -672,8 +672,10 @@ lengthOfLongestSubstring(s);
 输出：2.00000
 ```
 
+<br/>
 
-答案Code：
+
+**C++答案Code：**
 
 ```
 double findMedianSortedArrays(string methodName,vector<int>& nums1, vector<int>& nums2) {
@@ -783,6 +785,79 @@ int main(int argc, const char * argv[]) {
 
 ```
 
+
+<br/>
+<br/>
+
+解题思路:
+
+
+![c0_32.png](./../Pictures/c0_32.png)
+
+**C语言Code**
+
+```
+double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size){
+    int j = 0,k = 0;//要同时赋值为0,错误: int j, k=0;导致不知道j的值 ,j nums1数组下标值, num2数组下标值
+    double previous = 0.0,current = 0.0; //previous 指向前一个值, current 指向后一个值
+    int mid = (nums1Size + nums2Size) /2;
+    
+    for(int i = 0; i <= mid; i++){
+        if(j < nums1Size && k < nums2Size){
+            if(nums1[j]< nums2[k]){
+                previous = current;
+                current = nums1[j];
+                j++;
+                continue;
+            }else {
+                previous = current;
+                current = nums2[k];
+                k++;
+                continue;
+            }
+        }
+        
+        if(k < nums2Size){
+            previous = current;
+            current = nums2[k];
+            k++;
+            continue;
+        }
+        
+        if(j < nums1Size){
+            previous = current;
+            current = nums1[j];
+            j++;
+            continue;
+        }
+    }
+    
+    
+    double medValue = 0.0;
+    if(((nums1Size + nums2Size)%2) == 0){
+        medValue = (previous+current)/2;
+    }else{
+        medValue = current;
+    }
+    println("中位数:%f", medValue);
+    
+    return medValue;
+}
+
+
+
+
+//调用
+int num1[]={1, 2};
+int num2[]={3, 4};
+findMedianSortedArrays(num1, 2, num2, 2);
+```
+
+打印值:
+
+```
+🌷🌹(Mar 26 2023:10:30:44 [54行] findMedianSortedArrays) 中位数:2.500000
+```
 
 
 <br/>
