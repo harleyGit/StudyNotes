@@ -12,6 +12,7 @@
 	- [响应式](#响应式)
 	- [Event](#Event)
 	- [创建数据源](#创建数据源)
+	- [AnonymousObserver](#AnonymousObserver)
 	- [AsyncSubject](#AsyncSubject)
 - [**Subject**](#Subject)
 	- [PublishSubject](#PublishSubject)
@@ -43,8 +44,8 @@
 	- [网络请求](#网络请求)
 	- [UITableView](#UITableView)
 - **资料**
-	- [**Cocoi老师RxSwift源码**](https://www.jianshu.com/u/5981a4f71db5)
-	- [**RxSwift应用**](https://www.jianshu.com/p/f61a5a988590)
+	- [**Cocoi老师RxSwift源码**](https://www.jianshu.com/p/5533c99bfa8e)
+	- [RxSwift 使用详解系列](https://www.jianshu.com/p/f61a5a988590)
 	- [**RxSwift中文文档**](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/)
 	- [**RxSwift特征序列**](http://www.cocoachina.com/articles/29100)
 	- [**RxSwift销毁者Dispose源码分析**](https://blog.csdn.net/JeffersonZHabc/article/details/98962237)
@@ -62,6 +63,16 @@
 
 
 > <h1 id='RxSwift'>RxSwift</h1>
+
+
+- **RxSwift：** 它只是基于 Swift 语言的 Rx 标准实现接口库，所以 RxSwift 里不包含任何 Cocoa 或者 UI方面的类。
+- **RxCocoa：** 是基于 RxSwift针对于 iOS开发的一个库，它通过 Extension 的方法给原生的比如 UI 控件添加了 Rx 的特性，使得我们更容易订阅和响应这些控件的事件。
+
+
+
+![ios_swift_00.jpg](./../../Pictures/ios_swift_00.jpg)
+
+
 
 <br/>
 
@@ -86,7 +97,7 @@ end
 
 <br/>
 
-> **手动安装**
+> [**手动安装**](https://www.jianshu.com/p/543c35ebc4b5)
 
 - 在项目根目录，执行(或者直接**Download Zip**)：
 
@@ -448,6 +459,18 @@ let observer = Observable<Any>.create { (observer) -> Disposable in
 
 
 
+<br/>
+<br/>
+
+> <h2 id='AnonymousObserver'>AnonymousObserver</h2>
+
+
+继承关系图:
+
+![ios_swift_01.png](./../../Pictures/ios_swift_01.png)
+
+
+AnonymousObservable是Observable的子类，它们的继承关系是：AnonymousObservable -> Producer -> Observable -> ObservableType -> ObservableConvertibleType
 
 <br/>
 <br/>
