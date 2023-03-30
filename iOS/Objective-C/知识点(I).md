@@ -128,25 +128,24 @@ Label自适应宽度
 ```
 + (float)widthAuto:(NSString *)content fontSize:(CGFloat)fontSize contentheight:(CGFloat)height{
 
-		// 列寬
-		//    CGFloat contentHeight = height;
-		
-		// 用何種字體進行顯示
-		UIFont *font = [UIFont systemFontOfSize:fontSize];
-		
-		// 計算出顯示完內容需要的最小尺寸
-		CGSize size = CGSizeMake(100, 100);
-		
-		// 計算出顯示完內容需要的最小尺寸
-		NSDictionary * tdic = [NSDictionary dictionaryWithObjectsAndKeys:font,NSFontAttributeName,nil];
-		
-		//ios7方法，获取文本需要的size，限制宽度
-		CGSize  actualsize =[content boundingRectWithSize:size options:NSStringDrawingUsesLineFragmentOrigin |NSStringDrawingUsesFontLeading attributes:tdic context:nil].size;
-		
-		return actualsize.width;
+	// 列寬
+	//CGFloat contentHeight = height;
+	
+	// 用何種字體進行顯示
+	UIFont *font = [UIFont systemFontOfSize:fontSize];
+	
+	// 計算出顯示完內容需要的最小尺寸
+	CGSize size = CGSizeMake(100, 100);
+	
+	// 計算出顯示完內容需要的最小尺寸
+	NSDictionary * tdic = [NSDictionary dictionaryWithObjectsAndKeys:font,NSFontAttributeName,nil];
+	
+	//ios7方法，获取文本需要的size，限制宽度
+	CGSize  actualsize =[content boundingRectWithSize:size options:NSStringDrawingUsesLineFragmentOrigin |NSStringDrawingUsesFontLeading attributes:tdic context:nil].size;
+	
+	return actualsize.width;
 
 }
-
 ```
 
 
@@ -191,12 +190,19 @@ IAP支付的过程：
 &emsp; 以上流程中可能会出现漏单的情况：当客户端向苹果支付成功后，准备向服务端发起验证，此时若网络发生抖动或者人为退出app等情况，就会出现用户充值成功，但是没加金币的情况。
 解决方案：在paymentQueue:updatedTransactions:代理方法中获取到支付成功的回调，此时马上缓存订单信息（`包括支付凭证、订单号、用户id等；担心用户卸载app的，可以直接缓存到钥匙串`），然后再向服务端验证订单。若订单验证成功，则删除该项订单缓存；否则不做处理。另外，每次app启动的时候，可以延时几秒钟，去检测本地是否有未验证成功的苹果订单；如果有，就一个个重新验证。
 
+
 <br/>
+
 
 **刷单：**
 
 &emsp; 我们公司的app最早的时候，服务端还是用的Http请求，也没有考虑到刷单这一块，然后被某些用户钻了空子；他们先发起苹果支付，获取一个订单号，然后拿这个订单号和之前支付成功的凭证，向服务端发起验证；然后服务端发现订单号也对得上，凭证也验证有效，就给用户加金币了；用户用同一个凭证不断的换订单号。。。。。
-解决方案：首先服务端每次生成的订单号都缓存起来，客户端在请求完订单号后，将该订单号记录在内购订单对象里（赋值给SKPayment的applicationUsername属性）；然后当客户端支付成功后，把订单id和支付凭证传给服务端，服务端先拿凭证去苹果校验，苹果返回的结果中有一个transactionId（跟前面记录的applicationUsername是一致的） ，这时候服务端判断该transactionId和订单id是否一致，若一致，且该订单id是一个新id，之前没有缓存过；才算是完全的校验成功。
+
+<br/>
+
+**解决方案：**
+	- 首先服务端每次生成的订单号都缓存起来，客户端在请求完订单号后，将该订单号记录在内购订单对象里（赋值给SKPayment的applicationUsername属性）；
+	- 然后当客户端支付成功后，把订单id和支付凭证传给服务端，服务端先拿凭证去苹果校验，苹果返回的结果中有一个transactionId（跟前面记录的applicationUsername是一致的） ，这时候服务端判断该transactionId和订单id是否一致，若一致，且该订单id是一个新id，之前没有缓存过；才算是完全的校验成功。
 
 
 <br/>

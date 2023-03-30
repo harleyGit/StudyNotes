@@ -22,6 +22,7 @@
 - [**NSTimer**](#NSTimer)
 - [**参考资料**](#参考资料)
 	- [ **线程保活**](https://cloud.tencent.com/developer/article/1615137)
+	- [Runloop原理](https://www.cnblogs.com/guohai-stronger/p/9190220.html)
 	- [**深入研究 Runloop 与线程保活**](https://juejin.cn/post/6844903439692988423)
 	- [**线程保活**](https://www.jianshu.com/p/a761f4a85a15)
 	- [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
@@ -1870,23 +1871,6 @@ int32_t __CFRunLoopRun()
 
 
 
-
-<br/>
-
-***
-<br/>
-
-
-><h1 id='NSTimer'>NSTimer</h1>
-
-&emsp; **`NSTimer`** 是不准确的，当程序执行的时候，遇到cpu忙碌的时候，NSTimer会被放到一边不执行，就会造成该执行的事件不执行，会造成事件的叠加。
-
-&emsp; 所以说NSTimer通常会用来做一些有一定时间跨度的时间处理。
-
-解决办法：
-- 多线程，
-- CADdisplay link
-- [三种精准计时](https://www.cnblogs.com/XYQ-208910/p/6590829.html)
 
 
 

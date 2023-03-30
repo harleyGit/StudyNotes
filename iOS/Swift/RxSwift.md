@@ -10,6 +10,8 @@
 - [**Observable(可观察序列)**](#Observable(可观察序列))
 	- [函数式](#函数式)
 	- [响应式](#响应式)
+	- [Observable类](#Observable类)
+	- [AnonymousObservableSink](#AnonymousObservableSink)
 	- [Event](#Event)
 	- [创建数据源](#创建数据源)
 	- [AnonymousObserver](#AnonymousObserver)
@@ -301,13 +303,137 @@ extension ObservableType {
 
 <br/>
 <br/>
+<br/>
 
+> <h2 id='Observable类'>Observable类</h2>
 
 - **Observable<T>**
 	* **`Observable<T>`**   这个类就是 Rx 框架的基础，我们可以称它为可观察序列。它的作用就是可以异步地产生一系列的 Event（事件），即一个 Observable<T> 对象会随着时间推移不定期地发出 event(element : T) 这样一个东西。
 	*   而且这些 Event 还可以携带数据，它的泛型 <T> 就是用来指定这个 Event 携带的数据的类型。
 	*   有了可观察序列，我们还需要有一个 Observer（订阅者）来订阅它，这样这个订阅者才能收到 Observable<T> 不时发出的 Event。
 
+
+```
+public class Observable<Element> : ObservableType {
+    init() {
+#if TRACE_RESOURCES
+        _ = Resources.incrementTotal()
+#endif
+    }
+    
+    public func subscribe<Observer: ObserverType>(_ observer: Observer) -> Disposable where Observer.Element == Element {
+        rxAbstractMethod()
+    }
+    
+    public func asObservable() -> Observable<Element> { self }
+    
+    deinit {
+#if TRACE_RESOURCES
+        _ = Resources.decrementTotal()
+#endif
+    }
+}
+
+```
+
+<br/>
+
+- Observable实现了一个协议ObservableType，而且ObservableType协议继承自ObservableConvertibleType协议，所以在Observable中实现了两个协议方法：subscribe和asObservable。
+- subscribe方法没有具体实现的逻辑，需要子类去实现。
+- asObservable方法返回的是self，看似用处不大，其实不是这样的。asObservable是非常有用的，如果一类是Observable的子类，我们可以直接返回self，如果不是Observable的子类，我们可以通过重写这个协议方法来返回一个Observable对象，这样保证了协议的一致性。在使用的时候我们可以直接写类似self.asObservable().subscribe(observer)这样的代码，有利于保持代码的简洁性，是良好的封装性的体现。所以我觉得这个设计非常的好，在我们日常开发中也可以借鉴。
+- _ = Resources.incrementTotal()和_ = Resources.decrementTotal()这两行代码其实是RxSwift内部实现的一个引用计数。这部分内容我会在后面的文章中再详解。
+- Observable子类非常多，感兴趣可以看下,主要区别在于对subscribe方法的实现不一样。
+
+
+
+<br/>
+<br/>
+
+> <h2 id='AnonymousObservableSink'>AnonymousObservableSink</h2>
+
+```
+final private class AnonymousObservableSink<Observer: ObserverType>: Sink<Observer>, ObserverType {
+    typealias Element = Observer.Element 
+    typealias Parent = AnonymousObservable<Element>
+
+    // state
+    private let isStopped = AtomicInt(0)
+
+    #if DEBUG
+        private let synchronizationTracker = SynchronizationTracker()
+    #endif
+
+    override init(observer: Observer, cancel: Cancelable) {
+        super.init(observer: observer, cancel: cancel)
+    }
+
+    func on(_ event: Event<Element>) {
+        #if DEBUG
+            self.synchronizationTracker.register(synchronizationErrorMessage: .default)
+            defer { self.synchronizationTracker.unregister() }
+        #endif
+        switch event {
+        case .next:
+            if load(self.isStopped) == 1 {
+                return
+            }
+            self.forwardOn(event)
+        case .error, .completed:
+            if fetchOr(self.isStopped, 1) == 0 {
+                self.forwardOn(event)
+                self.dispose()
+            }
+        }
+    }
+
+    func run(_ parent: Parent) -> Disposable {
+        //parent 就是上面传过来的AnonymousObservable对象 //_subscribeHandler就是之前create函数的闭包 //在这个方法中把self转换成AnyObserver对象，也就是把AnonymousObservableSink对象转换成AnyObserver对象
+        parent.subscribeHandler(AnyObserver(self))
+    }
+}
+```
+
+- AnonymousObservableSink是Sink的子类，AnonymousObservableSink本身遵守ObseverType协议，与此同时实现了run方法;
+- AnonymousObservableSink是Observer和Observable的衔接的桥梁，也可以理解成管道。它存储了_observer和销毁者_cancel。通过sink就可以完成从Observable到Obsever的转变。
+- 在run方法中的这行代码parent._subscribeHandler(AnyObserver(self))，其中parent是一个AnonymousObservable对象。_subscribeHandler这个block调用，代码会执行到创建序列时的block。然后会调用发送信号的代码obserber.onNext("发送信号")，然后代码会经过几个中间步骤会来到AnonymousObservableSink类的on方法。
+
+
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
 
 <br/>
 <br/>
@@ -677,7 +803,15 @@ Subscription: 1, event: next(索大)
 
 > <h1 id='Driver'>Driver</h1>
 
-&emsp; Driver从名字上可以理解为驱动，在功能上它类似被观察者（Observable），而它本身也可以与被观察者相互转换（Observable: asDriver, Driver: asObservable）。它驱动着一个观察者，当它的事件流中有事件涌出时，被它驱动着的观察者就能进行相应的操作。一般我们会将一个Observable被观察者转换成Driver后再进行驱动操作：
+&emsp; Driver从名字上可以理解为驱动，在功能上它类似被观察者（Observable）.
+
+<br/>
+
+- 如果我们的序列满足如下特征，就可以使用它：
+	- 不会产生 error 事件
+	- 一定在主线程监听（MainScheduler）
+	- 共享状态变化（shareReplayLatestWhileConnected）
+
 
 使用UILabel私有扩展，并修改下binding方法：
 
