@@ -18,6 +18,8 @@
 ># 远程推送
 
 
+![ios_oc1_101.png](./../../Pictures/ios_oc1_101.png)
+
 ![远程通知原理示意图](https://upload-images.jianshu.io/upload_images/2959789-2fa616add34c4008.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 第6阶段：`APNS`在自身的已注册Push服务的iPhone列表中，查找有相应标识的iPhone，并把消息发到iPhone;

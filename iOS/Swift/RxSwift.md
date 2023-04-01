@@ -35,10 +35,13 @@
 	- [**create**](#create)
 - [**Scheduler调度器**](#Scheduler调度器)
 	- [切换线程](#切换线程)
+	- [CurrentThreadScheduler](#CurrentThreadScheduler)
 	- 	[MainScheduler](#MainScheduler)
 	- 	[SerialDispatchQueueScheduler](#SerialDispatchQueueScheduler)
 	- 	[ConcurrentDispatchQueueScheduler](#ConcurrentDispatchQueueScheduler)
 	- 	[OperationQueueScheduler](#OperationQueueScheduler)
+- 	[**Disposable**](#Disposable)
+	- 	
 - 	[ErrorHandling错误处](#ErrorHandling错误处)
 	- 	[retryWhen](#retryWhen)
 	- [catchError恢复](#catchError恢复)
@@ -73,6 +76,14 @@
 
 
 ![ios_swift_00.jpg](./../../Pictures/ios_swift_00.jpg)
+
+<br/>
+
+- **RxSwift主要有如下四个成员：**
+	- 可观察序列 - Observable
+	- 观察者 - Observer
+	- 调度者 - Scheduler
+	- 销毁者 - Dispose
 
 
 
@@ -799,6 +810,7 @@ Subscription: 1, event: next(索大)
 
 ***
 <br/>
+<br/>
 
 
 > <h1 id='Driver'>Driver</h1>
@@ -807,29 +819,50 @@ Subscription: 1, event: next(索大)
 
 <br/>
 
-- 如果我们的序列满足如下特征，就可以使用它：
-	- 不会产生 error 事件
-	- 一定在主线程监听（MainScheduler）
-	- 共享状态变化（shareReplayLatestWhileConnected）
-
-
-使用UILabel私有扩展，并修改下binding方法：
+UITextField绑定到UILable:
 
 ```
-func binding() {
-    textField.rx_text
-        .asDriver()
-        .drive(label.rx_sayHelloObserver)
-        .addDisposableTo(disposeBag)
-}
+//普通绑定
+ let result  = inputTF.rx.text.orEmpty
+    .asDriver() // 将序列转换为Driver序列
+    .flatMap {
+        return self.request(text: $0)
+            .asDriver(onErrorJustReturn: "检测到了错误事件")
+    }
+
+// 将结果绑定到textLabel显示，注意这里使用的是drive而不是bindTo
+let _ = result.map { "\($0 as! String)" } // 映射
+    .drive(self.textLabel.rx.text)
+    .disposed(by: disposeBag)
+        
+
+
+
+//使用driver
+let result  = inputTF.rx.text.orEmpty
+    .asDriver() // 将序列转换为Driver序列
+    .flatMap {
+        return self.request(text: $0)
+            .asDriver(onErrorJustReturn: "检测到了错误事件")
+    }
+
+// 将结果绑定到textLabel显示，注意这里使用的是drive而不是bindTo
+let _ = result.map { "\($0 as! String)" } // 映射
+    .drive(self.textLabel.rx.text)
+    .disposed(by: disposeBag)
 ```
     
 可见，Driver的drive方法与Observable的方法bindTo用法非常相似，事实上，它们的作用也是一样，说白了就是被观察者与观察者的绑定。那为什么RxSwift的作者又搞出Driver这么个东西来呢？
 其实，比较与Observable，Driver有以下的特性：
-- 它不会发射出错误(Error)事件
-- 对它的观察订阅是发生在主线程(UI线程)的
-- 自带shareReplayLatestWhileConnected
-- 当你将一个Observable转换成Driver时，用到的asDriver方法有下面几个重载：
+
+
+- 不会产生 error 事件
+- 一定在主线程监听（MainScheduler）
+- 共享状态变化（shareReplayLatestWhileConnected）
+
+<br/>
+
+当你将一个Observable转换成Driver时，用到的asDriver方法有下面几个重载：
 
 ```
 asDriver(onErrorJustReturn onErrorJustReturn: Self.E)
@@ -1333,7 +1366,9 @@ createO("🔴").subscribe{
 > <h1 id='Scheduler调度器'>Scheduler 调度器</h1>
 
 
-&emsp;  `Schedulers` 是 Rx 实现多线程的核心模块，它主要用于控制任务在哪个线程或队列运行。
+![ios_swift_02.png](./../../Pictures/ios_swift_02.png)
+
+&emsp;  `Schedulers` 是 Rx 实现多线程的核心模块，它主要用于控制任务在哪个线程或队列运行,它内部的实现是对GCD和OperationQueue进行了封装
 
 <br/>
 
@@ -1361,9 +1396,18 @@ sequence1.observeOn(backgroundScheduler) // 切换到后台线程
   }
 ```
 
-线程的切换支持 GCD 和 NSOperation，主要使用两个操作符：observeOn 和 subscribeOn ，常用的还是 observeOn 。
-- 调用 observeOn 指定接下来的操作在哪个线程；
-- 调用 subscribeOn 决定订阅者的操作执行在哪个线程。
+&emsp; 线程的切换支持 GCD 和 NSOperation，主要使用两个操作符：observeOn 和 subscribeOn ，常用的还是 observeOn 。
+
+<br/>
+
+- **observeOn**
+	- 调用 observeOn 指定接下来的操作在哪个线程；
+
+<br/>
+
+- **subscribeOn**
+	- 调用 subscribeOn 决定订阅者的操作执行在哪个线程;
+	- subscribeOn 来决定数据序列的构建函数在哪个 Scheduler 上运行。以上例子中，由于获取 Data 需要花很长的时间，所以用 subscribeOn 切换到 后台 Scheduler 来获取 Data。这样可以避免主线程被阻塞
 
 若我们没有明确调用这两个操作，后面的操作都是在当前线程执行的。
 
@@ -1380,6 +1424,14 @@ sequence1.observeOn(backgroundScheduler) // 切换到后台线程
 <br/>
 <br/>
 
+> <h2 id='CurrentThreadScheduler'>CurrentThreadScheduler</h2>
+
+**表示当前线程，默认就在当前线程上**
+
+
+
+<br/>
+<br/>
 
 
 > <h2 id='MainScheduler'>MainScheduler</h2>
@@ -1410,7 +1462,7 @@ public class func ensureExecutingOnScheduler()
 
 
 
-> <h2 id=''>ConcurrentDispatchQueueScheduler</h2>
+> <h2 id='ConcurrentDispatchQueueScheduler'>ConcurrentDispatchQueueScheduler</h2>
 
 &emsp;`ConcurrentDispatchQueueScheduler` 抽象了并行 DispatchQueue。如果你需要执行一些并发任务，可以切换到这个 Scheduler 运行。
 
@@ -1420,10 +1472,51 @@ public class func ensureExecutingOnScheduler()
 
 
 
-> <h2 id=''>OperationQueueScheduler</h2>
+> <h2 id='OperationQueueScheduler'>OperationQueueScheduler</h2>
 
 
 &emsp;`OperationQueueScheduler` 抽象了 NSOperationQueue。它具备 NSOperationQueue 的一些特点，例如，你可以通过设置maxConcurrentOperationCount，来控制同时执行并发任务的最大数量。
+
+
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/>
+<br/>
+
+
+
+
+># <h1 id='Disposable'>Disposable</h1>
+
+
+&emsp; Disposable是RxSwift的核心成员之一，它主要是用来清除不再需要的资源。
+
+
+- 通常来说，一个序列如果发出了 error 或者 completed 事件，那么所有内部资源都会被释放，不需要我们手动释放。
+- 但是如果你需要提前释放这些资源或取消订阅的话，那么你可以对返回的可被清除的资源（Disposable） 调用 dispose 方法。
+- 不过官方推荐使用清除包（DisposeBag）来管理订阅的生命周期，一般是把资源加入到一个全局的DisposeBag里面，它跟随着页面的生命周期，当页面销毁时DisposeBag也会随之销毁，同时DisposeBag里面的资源也会被一一释放
+- 当执行销毁时，销毁的是序列和观察者之间的响应关系，不是序列和观察者对象本身
+- 如果是加入到disposeBag，是在disposeBag对象销毁时，依次销毁里面存储的东西
+
+
+![ios_swift_03.png](./../../Pictures/ios_swift_03.png)
+
+
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
 
 
 
@@ -1438,6 +1531,44 @@ public class func ensureExecutingOnScheduler()
 
 
 
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
 
 
 

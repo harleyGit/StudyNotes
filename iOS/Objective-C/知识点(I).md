@@ -3882,6 +3882,9 @@ storehub提问：NSNotification的class方法指向谁？
 	- 	采用第三方的后台服务程序，比如：百度云推送、极光推送、友盟推送
 
 
+推送通知流程图:
+
+![ios_oc1_101.png](./../../Pictures/ios_oc1_101.png)
 
 
 [远程推送示意图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
