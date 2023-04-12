@@ -1,4 +1,6 @@
-- [**OC知识点(I)**](./Objective-C/知识点(I).md)
+- [**OC知识点(I)**](./../Objective-C/知识点(I).md)
+- [**React知识点**](./../../React/React知识点.md)
+- [**Flutter知识点**](./../../Flutter知识点.md)
 
 
 <br/>
@@ -10,7 +12,6 @@
 > <h2 id=""></h2>
 - [**Swfit开源代码**](https://github.com/apple)
 - [**Swift基础**](#Swift基础)
-	- [道长基础面试题](https://www.jianshu.com/p/07c9c6464f83) 
 	- [Swift的缺省基类](#Swift的缺省基类)
 	- [Swift和OC区别](#Swift和OC区别)
 	- [Swift和OC混编注意事项](#Swift和OC混编注意事项)
@@ -19,6 +20,9 @@
 	- [路由导航](#路由导航)
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
+		- [逃逸闭包](#逃逸闭包)
+		- [非逃逸闭包](#非逃逸闭包)
+		- [自动闭包](#自动闭包)
 	- [什么是写时复制(copy-on-write)](#什么是写时复制(copy-on-write))
 	- [值类型和引用类型区别](#值类型和引用类型区别)
 	- [关键字](#关键字)
@@ -61,6 +65,8 @@
 - [**底层**](#底层)
 	-  [Swift动态性 ](#Swift动态性)
 - [**前端**](#前端)
+- 参考资料
+	- [道长基础知识](https://www.jianshu.com/p/07c9c6464f83) 
 
 
 
@@ -79,9 +85,16 @@
 
 <br/>
 
->## <h2 id = "Swift的缺省基类">[Swift的缺省基类](https://struggleblog.com/2020/06/22/swift的缺省基类/)</h2>
+>## <h2 id = "缺省基类">[缺省基类](https://struggleblog.com/2020/06/22/swift的缺省基类/)</h2>
+
+[Swift源码解析之弱引用](http://www.manongjc.com/article/64837.html)
+
 
 <br/>
+<br/>
+<br/>
+
+
 
 > <h2 id = "Swift和OC区别">Swift和OC区别</h2>
 
@@ -120,7 +133,7 @@
 
 - **Subclass子类问题**
 	- 对于自定义的类而言，Objective-C的类，不能继承自Swift的类，即要混编的OC类不能是Swift类的子类。反过来，需要混编的Swift类可以继承自OC的类。 
-	- 提问：为什呢OC不能继承字Swift的子类？
+	- 提问：为什OC不能继承字Swift的子类？
 		- 答：这是因为派发机制不同造成的,在原生声明（非 extension）中定义的普通方法和标记为 @objc 的方法都使用 V-Table 机制派发。用 Swift 编写的类是不能被 Objective-C 继承的，@objc 只是把方法暴露给 Objective-C，并没有改变方法派发的本质。
 
 
@@ -183,9 +196,12 @@ Swift中使用Closure不能使用Block作为属性进行传值，必须是初始
 @end
 ```
 
+
+<br/>
+
 在Swift文件回调：
 
-在Swift使用OC的类时，首先在桥接文件中声明oc的头文件:**工程名-Bridging-Header.h**这是创建Swift工程的情况下
+在Swift使用OC的类时，首先在桥接文件(**工程名-Bridging-Header.h**)中声明oc的头文件,这是在创建Swift工程的情况下
 
 ```
 import UIKit
@@ -227,6 +243,15 @@ self.navigationController?.pushViewController(firVC, animated: true)
 - **OOP**：面向对象编程（英文Object Oriented Programming）；
 - **POP**：面向协议编程（Protocol Oriented Programming），是Swift的一种编程范式；
 
+
+<br/>
+
+所谓**协议**，**就是一组属性和/或方法的定义**，而如果某个具体类型想要遵守一个协议，那它需要实现这个协议所定义的所有这些内容。
+
+
+
+
+<br/>
 
 &emsp; 在Swift的协议中定义属性永远不要用 `let` 关键字。只读属性规定使用 `var` 关键字，并在后面单独跟上 `{ get }`。如果有一个方法改变了一个或多个属性，你需要标记它为 `mutating`。
 
@@ -288,7 +313,10 @@ anotherViewController.myMethod()
 <br/>
 
 > <h2 id = "协议中实用泛型">协议中实用泛型</h2>
-[protocol使用associatedType和泛型](https://blog.csdn.net/boildoctor/article/details/113116245)
+
+[protocol中使用关联类型associatedtype和泛型的教程和注意事项](https://blog.csdn.net/boildoctor/article/details/113116245)
+
+<br/>
 
 - 协议中使用关联类型代替泛型
 	- 协议不允许使用泛型参数,想要协议使用泛型,请使用关联类型代替；
@@ -364,7 +392,8 @@ class Car:Runnable{
 func get<T:Runnable>(_ type:Int)->T{ //让泛型类型T遵守协议,然后返回T
     if  0 == type{
         
-        //        let result = Person() as T //编译错误,系统认为 Person() 创建的结果 强转成T 可能失败,所以要用as!强转,因为可能失败,可能返回nil,所以是可选类型,要用as !
+        //编译错误,系统认为 Person() 创建的结果 强转成T 可能失败,所以要用as!强转,因为可能失败,可能返回nil,所以是可选类型,要用as !
+        //let result = Person() as T 
         let result = Person() as! T
         return result
     }
@@ -377,22 +406,27 @@ func get<T:Runnable>(_ type:Int)->T{ //让泛型类型T遵守协议,然后返回
 
 **方法二：不明确类型**
 
-some让协议的关联类型变成透明的, 在协议前面标记上 some 后，返回值的类型对编译器就变成透明的了。在这个值使用的时候编译器可以根据返回值进行类型推断得到具体类型。如果不加some 编译报错,会认为返回的是个关联类型,是不确定的类型
+some让协议的关联类型变成透明的, 在协议前面标记上 some 后，返回值的类型对编译器就变成透明的了。
+
+在这个值使用的时候编译器可以根据返回值进行类型推断得到具体类型。如果不加some 编译报错,会认为返回的是个关联类型,是不确定的类型
 
 ```
 @available(OSX 10.15.0, *)//要求系统超过10.15,编译提示自动添加
-func get2(_ type:Int )-> some Runnable{ //some让协议的关联类型变成透明的, 在协议前面标记上 some 后，返回值的类型对编译器就变成透明的了。在这个值使用的时候编译器可以根据返回值进行类型推断得到具体类型。如果不加some 编译报错,会认为返回的是个关联类型,是不确定的类型
-    return Car() //some只能返回一种类型
+func get2(_ type:Int )-> some Runnable{ //some让协议的关联类型变成透明的, 在协议前面标记上 some 后，返回值的类型对编译器就变成透明的了。
+
+	//在这个值使用的时候编译器可以根据返回值进行类型推断得到具体类型。如果不加some 编译报错,会认为返回的是个关联类型,是不确定的类型
+	return Car() //some只能返回一种类型
+}
 ```
 
 下面代码是错误的,因为some不能返回2种类型:
 
 ```
  func get3(_ type:Int )-> some Runnable{ //编译错误,some限制的类型不能返回2种类型
- if  0 == type{
- return Person()
- }
- return Car() //some只能返回一种类型
+	 if  0 == type{
+	 return Person()
+	 }
+	 return Car() //some只能返回一种类型
  }
 ```
 
@@ -453,7 +487,11 @@ array
 
 > <h2 id="逃逸闭包使用">逃逸闭包怎么使用，它的关键字@escaping什么时候使用</h2>
 
-&emsp; **逃逸闭包概念：**一个接受闭包作为参数的函数，该闭包可能在函数返回后才被调用，也就是说这个闭包逃离了函数的作用域，这种闭包称为逃逸闭包。当你声明一个接受闭包作为形式参数的函数时，你可以在形式参数前写@escaping来明确闭包是允许逃逸。
+
+> <h3 id='逃逸闭包'>逃逸闭包</h3>
+
+
+&emsp; **逃逸闭包概念：** 一个接受闭包作为参数的函数，该闭包可能在函数返回后才被调用，也就是说这个闭包逃离了函数的作用域，这种闭包称为逃逸闭包。当你声明一个接受闭包作为形式参数的函数时，你可以在形式参数前写@escaping来明确闭包是允许逃逸。
 
 &emsp; 例如：当网络请求结束后调用的闭包。发起请求后过了一段时间后这个闭包才执行，并不一定是在函数作用域内执行的。
 
@@ -508,11 +546,16 @@ class ViewController: UIViewController {
 
 
 <br/>
+<br/>
 
 
-**非逃逸闭包**
+> <h3 id='非逃逸闭包'>非逃逸闭包</h3>
 
-&emsp; **非逃逸闭包概念：**一个接受闭包作为参数的函数， 闭包是在这个函数结束前内被调用。
+
+
+
+
+&emsp; **非逃逸闭包概念：** 一个接受闭包作为参数的函数， 闭包是在这个函数结束前内被调用。
 例如：
 
 ```
@@ -553,6 +596,7 @@ class ViewController: UIViewController {
 **为什么要分逃逸闭包和非逃逸闭包?**
 
 &emsp; 为了管理内存，闭包会强引用它捕获的所有对象，比如你在闭包中访问了当前控制器的属性、函数，编译器会要求你在闭包中显示 self 的引用，这样闭包会持有当前对象，容易导致循环引用。
+
 而对于非逃逸闭包：
 
 &emsp; 非逃逸闭包不会产生循环引用，它会在函数作用域内释放，编译器可以保证在函数结束时闭包会释放它捕获的所有对象。
@@ -561,6 +605,47 @@ class ViewController: UIViewController {
 
 &emsp; 非逃逸闭包它的上下文的内存可以保存在栈上而不是堆上。
 
+
+
+<br/>
+<br/>
+
+
+
+
+
+> <h3 id='自动闭包'>自动闭包</h3>
+
+&emsp; 是一种用来把实际参数传递给函数表达式打包的闭包，不接受任何实际参数，当其调用是返回内部表达式的值。
+
+好处：用普通表达式代替闭包的写法，语法糖的一种
+
+```
+func loginfo(_ condition: Bool , _ message: String){
+
+    if condition {
+     print("lg_debug:\(message)")
+    }
+
+}
+
+
+func test()->String{
+    //耗时操作
+    return  "Application Error Occured"
+}
+
+loginfo(true, test())
+loginfo(true, "HelloWord")
+
+```
+
+
+<br/>
+<br/>
+
+
+> <h3 id=''></h3>
 
 
 <br/>
@@ -1584,7 +1669,12 @@ public init(parseJSON jsonString: String)
 <br/>
 <br/>
 
->## <h2 id="RxSwift">[RxSwift](https://juejin.cn/post/6844903862571106317#heading-2)</h2>
+>## <h2 id = "RxSwift">[RxSwift](./RxSwift.md)<h2>
+
+[RxSwift实现原理](https://juejin.cn/post/6844903862571106317#heading-2)
+
+
+
 
 
 
@@ -1595,6 +1685,15 @@ public init(parseJSON jsonString: String)
 
 >## <h2 id="Snapkit">[Snapkit](https://www.jianshu.com/p/44f3d812839f)</h2>
 
+
+
+
+
+
+<br/>
+<br/>
+
+>## <h2 id=""></h2>
 
 
 
