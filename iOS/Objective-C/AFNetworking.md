@@ -2,10 +2,12 @@
 > [](https://www.jianshu.com/p/8184e762872c)
 - [**基础**](#基础)
 	- [请求头配置](#请求头配置)
+	- [HTTP 状态码](#HTTP状态码)
 	- [NSURLRequestCachePolicy缓存策略](#NSURLRequestCachePolicy缓存策略)
 	- [请求对象](#请求对象)
 		- [NSURLRequest](#NSURLRequest)
 		- [NSMutableRequest](#NSMutableRequest)
+	- [网络缓存](#网络缓存)
 - [**NSURLSession**](#NSURLSession)
 	- [创建NSURLSession](#创建NSURLSession)
 	- [NSURLSession属性](#NSURLSession属性)
@@ -76,6 +78,26 @@
 
 - **Accept**: 代表发送端（客户端）希望接受的数据类型;
 	- 比如: `headerDictionary[@"Accept"] = @"image/*,*/*;q=0.8"`
+
+- [**host**](https://blog.csdn.net/weixin_45850939/article/details/120094342): 通过ip地址找到主机后,主机中可能有多台虚拟机,比如1.com、2.com、3.com等.这个host就是用来作区分的,比如:host=1.com,那说明找的是虚拟机1.com;
+
+
+
+
+<br/>
+<br/>
+
+
+>## <h2 id='HTTP状态码'>[HTTP 状态码](https://github.com/ChenYilong/iOSDevelopmentTips/blob/master/Tips/HTTP状态码汇总.md)</h2>
+
+当我们对一个URL地址做请求开发时,往往可以看到服务器返还给我们的一些状态码,比如:[**200, 404, 500, 301等**](https://www.runoob.com/http/http-status-codes.html),其义分别如下:
+- 200 - 请求成功
+- 301 - 资源（网页等）被永久转移到其它URL
+- 404 - 请求的资源（网页等）不存在
+- 500 - 内部服务器错误
+
+
+
 
 
 
@@ -169,7 +191,13 @@ NSMutableURLRequest是NSURLRequest的子类，常用方法有:
 <br/>
 <br/>
 
-> <h2 id=''></h2>
+> <h2 id='网络缓存'>网络缓存</h2>
+
+- [iOS网络缓存扫盲篇](https://www.jianshu.com/p/fb5aaeac06ef)
+- [NSURLCache详解和使用](https://blog.csdn.net/jeffasd/article/details/60140281)
+- [iOS NSCache和NSUrlCache缓存类实现示例详解](https://www.jb51.net/article/267106.htm)
+- [NSURLCache使用解析](https://cloud.tencent.com/developer/article/1186578)
+- [NSURLCache使用(一)------基本使用](https://blog.csdn.net/WangErice/article/details/100098825)
 
 
 

@@ -39,6 +39,7 @@
 	- [界面保持流畅](#界面保持流畅)
 	- [UI卡顿优化](#UI卡顿优化)
 	- [UITableView优化](#UITableView优化)
+		- [4).圆角图片处理](#圆角图片处理)
 	- [内存优化(微盟、货拉拉问到)](#内存优化)
 	- [启动优化(微盟、货拉拉问到)](#启动优化)
 	- 	[包体积优化](#包体积优化)
@@ -52,8 +53,10 @@
 - [**底层**](#底层)
 	- [Runloop](#Runloop)
 		- [Runloop底层原理](#Runloop底层原理)
+		- [延迟执行performSelecter相关方法是怎样被执行的？在子线程中也是一样的吗？](#延迟执行performSelecter相关方法是怎样被执行的在子线程中也是一样的吗)
 		- [Runloop有几种运行状态](#Runloop有几种运行状态)
 		- [RunLoop与自动释放池关系，什么时侯释放](#runloop与自动释放池关系什么时侯释放)
+		- [UIKit中Runloop什么时候进入休眠?](#UIKit中Runloop什么时候进入休眠)
 		- [RunLoop原理和与线程的联系](#RunLoop原理和与线程的联系)
 	- [自动释放池](#自动释放池)
 		- [自动释放池的实现原理](#自动释放池的实现原理)
@@ -64,6 +67,9 @@
 	- [main函数之前会做什么](#main函数之前会做什么)
 	- [响应者链](#响应者链)
 	- [OC的引用计数是存放](#OC的引用计数是存放)
+		- [arm64前后isa结构](#arm64前后isa结构)
+		- [引用计数的存储](#引用计数的存储)
+		- [引用计数的获取](#引用计数的获取)
 	- [类库没有导入](#类库没有导入)
 	- [类](#类)
 		- [load和initialize哪个先调用](#load和initialize哪个先调用)
@@ -90,10 +96,15 @@
 		- [内存销毁时间表&步骤](#内存销毁时间表&步骤)
 		- [Category属性放在哪(货拉拉)](#Category属性放在哪)
 		- [能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?](#能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?)
+		- [Xcode构建过程](#Xcode构建过程)
 		- [objc使用什么机制管理对象内存](#objc使用什么机制管理对象内存)
 - [**网络**](#网络)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
+		- [HttpDNS(域名劫持)](#HttpDNS域名劫持)
+		- [即时通讯性能调优](#即时通讯性能调优)
+		- [请求取消(页面返回)](#请求取消页面返回)
+		- [网络层设计](#网络层设计)
 	- [TCP和UDP区别](#TCP和UDP区别)
 	- [Socket通信](#Socket通信)
 		- [Socket封包、拆包](#Socket封包拆包)
@@ -108,6 +119,7 @@
 	- [靠谱iOS](https://github.com/ChenYilong/iOSInterviewQuestions)
 	- [求职寒冬:技巧](https://juejin.cn/post/7164222659528491022)
 	- [2021 面试心得](https://mp.weixin.qq.com/s/v-kAFWXW3lQSPy3QWsO62g)
+	- [技术文章集合](http://roadmap.isylar.com/Article/iOS%20代码瘦身实践_%20删除无用的类.html)
 
 
 
@@ -1146,6 +1158,9 @@ dispatch_semaphore_t semaphore_;
 
 [**京喜图片库优化**](https://jishuin.proginn.com/p/763bfbd5a439)
 
+
+[获取商城app图片](https://juejin.cn/post/6844903535969042446)
+
 <br/>
 
 **图片性能瓶颈：**
@@ -1188,9 +1203,10 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
         // 获取CGImage
         CGImageRef cgImage = [UIImage imageNamed:@"timg"].CGImage;
 
-		//+colorSpaceForImageRef: 方法来获取原始图片的颜色空间参数
-		//CGColorSpaceRef colorspaceRef = [UIImage colorSpaceForImageRef:imageRef];
+        //+colorSpaceForImageRef: 方法来获取原始图片的颜色空间参数
+        //CGColorSpaceRef colorspaceRef = [UIImage colorSpaceForImageRef:imageRef];
         // alphaInfo
+        ///获取image的alpha通道。通过通道获取图片数据
         CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(cgImage) & kCGBitmapAlphaInfoMask;
         BOOL hasAlpha = NO;
         if (alphaInfo == kCGImageAlphaPremultipliedLast ||
@@ -1201,6 +1217,7 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
         }
 
         // bitmapInfo
+        //alpha 的信息由枚举值 CGImageAlphaInfo 来表示:https://www.cnblogs.com/dins/p/ios-tu-pian.html
         CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host;
         bitmapInfo |= hasAlpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
 
@@ -1224,9 +1241,10 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
         /*
         从 imageRef 生成供UI层使用的 UIImage 对象，同时指定图片的 scale 和orientation 两个参数。
 
-				scale 指的是图片被渲染时需要被压缩的倍数，为什么会存在这个参数呢，因为苹果为了节省安装包体积，允许开发者为同一张图片上传不同分辨率的版本，也就是我们熟悉的@2x，@3x后缀图片。不同屏幕素质的设备，会获取到对应的资源。为了绘制图片时统一，这些图片会被set自己的scale属性，比如@2x图片，scale 值就是2，虽然和1x图片的绘制宽高一样，但是实际的长是width * scale。
+		scale 指的是图片被渲染时需要被压缩的倍数，为什么会存在这个参数呢，因为苹果为了节省安装包体积，允许开发者为同一张图片上传不同分辨率的版本，也就是我们熟悉的@2x，@3x后缀图片。
+		不同屏幕素质的设备，会获取到对应的资源。为了绘制图片时统一，这些图片会被set自己的scale属性，比如@2x图片，scale 值就是2，虽然和1x图片的绘制宽高一样，但是实际的长是width * scale。
 
-				orientation 很好理解，就是图片的旋转属性，告诉设备，以哪个方向作为图片的默认方向来渲染。
+		orientation 很好理解，就是图片的旋转属性，告诉设备，以哪个方向作为图片的默认方向来渲染。
         */
         //UIImage *newImage = [UIImage imageWithCGImage:newImageRef scale:image.scale orientation:image.imageOrientation];
 	     UIImage *newImage = [UIImage imageWithCGImage:cgImage];
@@ -1325,6 +1343,7 @@ func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> 
     
     CGSize imgSize = self.size;
     CGSize targetSize = CGSizeMake(imgSize.width * scale, imgSize.height * scale);
+    //在读取图片数据内容时:https://blog.csdn.net/majiakun1/article/details/16831753
     NSData *imageData = UIImageJPEGRepresentation(self, 1.0);
     CFDataRef data = (__bridge CFDataRef)imageData;
     
@@ -1333,6 +1352,7 @@ func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> 
     optionKeys[0] = kCGImageSourceShouldCache;
     optionValues[0] = (CFTypeRef)kCFBooleanFalse;
     CFDictionaryRef sourceOption = CFDictionaryCreate(kCFAllocatorDefault, (const void **)optionKeys, (const void **)optionValues, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    ///通過Data數據創建CGImageSource對象
     CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, sourceOption);
     CFRelease(sourceOption);
     if (!imageSource) {
@@ -1343,20 +1363,32 @@ func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> 
     int imageSize = (int)MAX(targetSize.height, targetSize.width);
     CFStringRef keys[5];
     CFTypeRef values[5];
-    //创建缩略图等比缩放大小，会根据长宽值比较大的作为imageSize进行缩放
+    //创建缩略图等比缩放大小，会根据长宽值比较大的作为imageSize进行缩放(設置縮略圖的寬高尺寸 需要設置為CFNumber值)
     keys[0] = kCGImageSourceThumbnailMaxPixelSize;
     CFNumberRef thumbnailSize = CFNumberCreate(NULL, kCFNumberIntType, &imageSize);
     values[0] = (CFTypeRef)thumbnailSize;
+    ///設置是否創建縮略圖，無論原圖像有沒有包含縮略圖kCFBooleanFalse
     keys[1] = kCGImageSourceCreateThumbnailFromImageAlways;
     values[1] = (CFTypeRef)kCFBooleanTrue;
+    ///設置縮略圖是否進行Transfrom變換
     keys[2] = kCGImageSourceCreateThumbnailWithTransform;
     values[2] = (CFTypeRef)kCFBooleanTrue;
+    ///設置如果不存在縮略圖則創建一個縮略圖，縮略圖的尺寸受開發者設置影響，如果不設置尺寸極限，則為圖片本身大小
+    ///默認為kCFBooleanFalse
     keys[3] = kCGImageSourceCreateThumbnailFromImageIfAbsent;
     values[3] = (CFTypeRef)kCFBooleanTrue;
     keys[4] = kCGImageSourceShouldCacheImmediately;
     values[4] = (CFTypeRef)kCFBooleanTrue;
     
+    //创建字典，
+    //keyCallBacks：字典键值的回调，系统预设值kCFTypeDictionaryKeyCallBacks适用于所有CFTypes类型；当KEY是可变类型时，需要保存一个不可变的副本，需要使用kCFCopyStringDictionaryKeyCallBacks；
+    //valueCallBacks:系统预设值kCFTypeDictionaryValueCallBacks适用于所有CFTypes类型
+    ///https://blog.csdn.net/weixin_34226182/article/details/92681617
     CFDictionaryRef options = CFDictionaryCreate(kCFAllocatorDefault, (const void **)keys, (const void **)values, 4, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+   
+    ///创建缩略图
+    ///isrc :表示的是图片数据源的容器, index:执行加载数据源中具体哪张图片，jpg，png都只有一张图片，所以直接填写0，但是如果是多图的，比如gif，这是就需要填写相应的下标
+    ///CFDictionaryRef:中配置图片的一些选项。
     CGImageRef thumbnailImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options);
     UIImage *resultImg = [UIImage imageWithCGImage:thumbnailImage];
     
@@ -1436,16 +1468,17 @@ NSData *eachImgData = UIImageJPEGRepresentation(image, 0.5);
 
     }
 
-   
+	/// 获取上下文里的内容，将视图写入到新的图像对象,size是设置画布的大小
     UIGraphicsBeginImageContext(size);
  
-	  CGRect thumbnailRect = CGRectZero;
+    CGRect thumbnailRect = CGRectZero;
     thumbnailRect.origin = thumbnailPoint;
     thumbnailRect.size.width = scaledWidth;
     thumbnailRect.size.height = scaledHeight;
     
 	[sourceImage drawInRect:thumbnailRect];
 
+	/// 获取上下文里的内容，将视图写入到新的图像对象
     newImage = UIGraphicsGetImageFromCurrentImageContext();
 
     if(newImage == nil){
@@ -1503,6 +1536,9 @@ NSData的length是bytes格式需要进行除以1024进行单位转换,格式判�
 
 >## <h2 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h2>
 
+
+注意[**离屏渲染**](./性能优化.md#离屏渲染)
+
 <br/>
 
 文本绘制
@@ -1527,7 +1563,9 @@ Alpha（不透明度）：
 
 &emsp; 当未解压缩的图片将要渲染到屏幕时，系统会在主线程对图片进行解压缩，而如果图片已经解压缩了，系统就不会再对图片进行解压缩。因此，也就有了业内的解决方案，在子线程提前对图片进行强制解压缩。
 
-&emsp; 而强制解压缩的原理就是对图片进行重新绘制，得到一张新的解压缩后的位图。其中，用到的最核心的函数是 
+&emsp; **而强制解压缩的原理就是对图片进行重新绘制，得到一张新的解压缩后的位图。其中，用到的最核心的函数是** 
+
+这个是CPU处理的,解压缩很耗时的!接下来将位图交给GPU进行混合渲染.
 
 ```
 /*
@@ -1544,9 +1582,6 @@ space ：就是我们前面提到的颜色空间，一般使用 RGB 即可；
 
 bitmapInfo ：就是我们前面提到的位图的布局信息。
 到这里，你已经掌握了强制解压缩图片需要用到的最核心的函数
-
-
-
 */
 
 
@@ -1601,93 +1636,6 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 } CG_AVAILABLE_STARTING(__MAC_10_0, __IPHONE_2_0);
 
 ```
-
-
-
-
-
-<br/>
-<br/>
-
-
->## <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
-
-
-[基于PGO优化启动时间](https://jishuin.proginn.com/p/763bfbd56d2b)
-
-![<br/>](./../../Pictures/ios_oc3.png)
-
-
-- **冷启动流程**
-
-&emsp; Apple 官方的《WWDC Optimizing App Startup Time》 将 iOS 应用的启动可分为 pre-main 阶段和 main 两个阶段，最佳的启动速度是400ms以内，最慢不得大于20s，否则会被系统进程杀死（最低配置设备）。
-
-&emsp; 为了更好的区分，笔者将整个启动流程分为三个阶段， **App总启动流程 = pre-main + main函数代理（didFinishLaunchingWithOptions）+ 首屏渲染（viewDidAppear），后两个阶段都属于 main函数  执行阶段**。
-
-
-<br/>
-
-[**APP的启动流程:**](https://www.jianshu.com/p/229dd6190b95)
-
-```
-1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
-
-2.创建沙盒(iOS8后，每次启动APP都会生成一个新的沙盒路径)
-
-3.根据Info.plist的配置检查相应权限状态
-
-4.加载Mach-O文件读取dyld路径并运行dyld动态连接器(内核加载了主程序，dyld只会负责动态库的加载)
-	4.1 首先dyld会寻找合适的CPU运行环境
-	4.2 然后加载程序运行所需的依赖库和我们自己写的.h.m文件编译成的.o可执行文件，并对这些库进行链接。
-	4.3 加载所有方法(runtime就是在这个时候被初始化并完成OC的内存布局)
-	4.4 加载C函数
-	4.5 加载category的扩展(此时runtime会对所有类结构进行初始化)
-	4.6 加载C++静态函数，加载OC+load
-	4.7 最后dyld返回main函数地址，main函数被调用
-```
-
-<br/>
-
-
-**Mach-O文件说明:**
-
-&emsp; Mach-O文件格式是 OS X 与 iOS 系统上的可执行文件格式，类似于windows的 PE 文件。像我们编译产生的.o文件、程序可执行文件和各种库等都是Mach-O文件。
-
-Mach-O文件主要有3部分组成：
-
-1).Header：保存了一些基本信息，包括了该文件运行的平台、文件类型、LoadCommands的个数等等。Headers的主要作用就是帮助系统迅速的定位Mach-O文件的运行环境，文件类型。保存了一些dyld重要的加载参数
-
-2).LoadCommands：可以理解为加载命令，在加载Mach-O文件时会使用这里的数据来确定内存的分布以及相关的加载命令。比如我们的main函数的加载地址，程序所需的dyld的文件路径，以及相关依赖库的文件路径。
-
-3).Data： 每一个segment的具体数据都保存在这里，这里包含了具体的代码、数据等等。
-
-
-
-
-<br/>
-
-[**高德启动耗时优化**](https://cloud.tencent.com/developer/news/616444)
-
-
-
-
-<br/>
-
-
-- **优化点**
-
-	- 合并动态库，并减少使用 Embedded Framework，即非系统创建的动态 Framework，如果对包体积要求不严格还可以使用静态库代替。
-	
-	- 删除无用代码（未使用的静态变量、类和方法等）并抽取重复代码。
-	
-	- 避免在 +load 执行方法，使用 +initialize 代替。
-	
-	- 避免使用 attribute((constructor))，可将要实现的内容放在初始化方法中配合 dispatch_once 使用。
-	
-	- 减少非基本类型的 C++ 静态全局变量的个数。（因为这类全局变量通常是类或者结构体，如果在构造函数中有繁重的工作，就会拖慢启动速度）
-
-
-
 
 
 <br/>
@@ -1794,9 +1742,8 @@ SDWebImage的使用:
 
 - [**卡顿监测**](https://juejin.cn/post/6844904004053368846#heading-6)
 	- Xcode 自带 Instruments
-	- 帧率FPS（CADisplayLink）监测
+	- [帧率FPS（CADisplayLink）监测](https://juejin.cn/post/6887831253739896840#heading-4)
 	- RunLoop 监听
-
 
 
 <br/>
@@ -1828,13 +1775,20 @@ SDWebImage的使用:
 
 重用时，它内部绘制的内容并不会被自动清除，因此你可能需要调用setNeedsDisplayInRect:或setNeedsDisplay方法。
 
-CPU与GPU的说明
+<br/>
 
-```
-CPU就是做绘制的操作把内容放到缓存里，GPU负责从缓存里读取数据然后渲染到屏幕上。CPU将准备好的bitmap放到RAM里，GPU去搬这快内存到VRAM中处理。 而这个过程GPU所能承受的极限大概在16.7ms完成一帧的处理，所以最开始提到的60fps其实就是GPU能处理的最高频率。 GPU是图形硬件，主要的工作是混合纹理并算出像素的RGB值，这是一个非常复杂的计算过程，计算的过程越复杂，所需要消耗的时间就越长，GPU的使用率就越高，这并不是一个好的现像，而我们需要做的是减少GPU的计算量。
-```
+- **CPU与GPU的说明**
 
-如果不需要动画效果，最好不要使用insertRowsAtIndexPaths:withRowAnimation:方法，而是直接调 用reloadData方法
+	- CPU就是做绘制的操作把内容放到缓存里，GPU负责从缓存里读取数据然后渲染到屏幕上。CPU将准备好的bitmap放到RAM里，GPU去搬这快内存到VRAM中处理。 
+
+	- 而这个过程GPU所能承受的极限大概在16.7ms完成一帧的处理，所以最开始提到的60fps其实就是GPU能处理的最高频率。 
+
+	- GPU是图形硬件，主要的工作是混合纹理并算出像素的RGB值，这是一个非常复杂的计算过程，计算的过程越复杂，所需要消耗的时间就越长，GPU的使用率就越高，这并不是一个好的现像，而我们需要做的是减少GPU的计算量。
+
+
+<br/>
+
+&emsp; 如果不需要动画效果，最好不要使用insertRowsAtIndexPaths:withRowAnimation:方法，而是直接调 用reloadData方法
 
 当图片下载完成后，如果cell是可见的，还需要更新图像
 
@@ -1872,13 +1826,21 @@ UIGraphicsEndImageContext();
 
 ```
 
-**丢帧概念：** RunLoop开始，RunLoop是一个60fps的回调，也就是说每16.7ms绘制一次屏幕，也就是我们需要在这个时间内完成view的缓冲区创建，view内容的绘制这些是CPU的工作；然后把缓冲区交给GPU渲染，这里包括了多个View的拼接(Compositing),纹理的渲染(Texture)等等，最后Display到屏幕上。但是如果你在16.7ms内做的事情太多，导致CPU，GPU无法在指定时间内完成指定的工作，那么就会出现卡顿现象，也就是丢帧。
+
+<br/>
+
+**丢帧概念：** 
+&emsp;&emsp;  RunLoop开始，RunLoop是一个60fps的回调，也就是说每16.7ms绘制一次屏幕，也就是我们需要在这个时间内完成view的缓冲区创建，view内容的绘制这些是CPU的工作；然后把缓冲区交给GPU渲染，这里包括了多个View的拼接(Compositing),纹理的渲染(Texture)等等，最后Display到屏幕上。但是如果你在16.7ms内做的事情太多，导致CPU，GPU无法在指定时间内完成指定的工作，那么就会出现卡顿现象，也就是丢帧。
 
 
 
 <br/>
+<br/>
+<br/>
 
-**4）.圆角图片处理**
+
+> <h4 id='圆角图片处理'>4）.圆角图片处理</h4>
+
 
 - 直接在原图上层覆盖一个内部透明圆的图片。(目前来说最优的方式)
 - 重新绘制图片(虽然重新绘制后会减少渲染的计算，但还是会影响渲染。这种方式只是把GPU的压力转义到了CPU上。负载平衡)。下面是绘制图片的方法
@@ -1975,13 +1937,23 @@ maskLayer.frame=imageView.bounds;
 //设置图形样子
 maskLayer.path=maskPath.CGPath;
 imageView.layer.mask=maskLayer;
-[self.viewaddSubview:imageView];
+[self.view addSubview:imageView];
 
 ```
 
+<br/>
+
 对于方案2需要解释的是：
-CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLayer需要贝塞尔曲线配合使用才有意义（也就是说才有效果）使用CAShapeLayer(属于CoreAnimation)与贝塞尔曲线可以实现不在view的drawRect（继承于CoreGraphics走的是CPU,消耗的性能较大）方法中画出一些想要的图形CAShapeLayer动画渲染直接提交到手机的GPU当中，相较于view的drawRect方法使用CPU渲染而言，其效率极高，能大大优化内存使用情况。
-总的来说就是用CAShapeLayer的内存消耗少，渲染速度快，建议使用优化方案2。
+
+&emsp;&emsp; CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLayer需要贝塞尔曲线配合使用才有意义（也就是说才有效果）
+
+&emsp;&emsp; 使用CAShapeLayer(属于CoreAnimation)与贝塞尔曲线可以实现不在view的drawRect（继承于CoreGraphics走的是CPU,消耗的性能较大）方法中画出一些想要的图形.
+
+&emsp;&emsp; CAShapeLayer动画渲染直接提交到手机的GPU当中.相较于view的drawRect方法,使用CPU渲染而言，其效率极高，能大大优化内存使用情况。
+
+&emsp; 总的来说就是用CAShapeLayer的内存消耗少，渲染速度快，建议使用优化方案2。
+
+<br/>
 
 [异步绘制](https://juejin.cn/post/6850418118850789390#heading-4)
 
@@ -1990,6 +1962,113 @@ CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLaye
 
 
 **4）.[cell图片加载优化](https://segmentfault.com/a/1190000018161741)**
+
+
+
+<br/>
+<br/>
+
+
+>## <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
+
+
+[基于PGO优化启动时间](https://jishuin.proginn.com/p/763bfbd56d2b)
+
+![<br/>](./../../Pictures/ios_oc3.png)
+
+
+- **冷启动流程**
+
+&emsp; Apple 官方的《WWDC Optimizing App Startup Time》 将 iOS 应用的启动可分为 pre-main 阶段和 main 两个阶段，最佳的启动速度是400ms以内，最慢不得大于20s，否则会被系统进程杀死（最低配置设备）。
+
+&emsp; 为了更好的区分，笔者将整个启动流程分为三个阶段， **App总启动流程 = pre-main + main函数代理（didFinishLaunchingWithOptions）+ 首屏渲染（viewDidAppear），后两个阶段都属于 main函数  执行阶段**。
+
+
+<br/>
+
+[**APP的启动流程**](https://www.jianshu.com/p/229dd6190b95)
+
+<br/>
+
+- [**二进制重排**](https://juejin.cn/post/6844904121896534024)
+	- 如何查看启动时调用了哪些方法?
+		- 	[hook objc_MsgSend](https://bbs.kanxue.com/thread-271270.htm) ( 只能拿到 oc 以及 swift @objc dynamic 后的方法 , 并且由于可变参数个数 , 需要用汇编来获取参数 .)
+			- 	[拓展: hook objc_msgSend从而获得OC方法执行时间](https://github.com/cxr0715/hook_objc_msgSend)
+		- 	静态扫描 macho 特定段和节里面所存储的符号以及函数数据 . (静态扫描 , 主要用来获取 load 方法 , c++ 构造(有关 c++ 构造 , 参考 从头梳理 dyld 加载流程 这篇文章有详细讲述和演示 ) .
+		- clang 插桩 ( 完美版本 , 完全拿到 swift , oc , c , block 全部函数 ) 
+
+
+
+```
+1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
+
+2.创建沙盒(iOS8后，每次启动APP都会生成一个新的沙盒路径)
+
+3.根据Info.plist的配置检查相应权限状态
+
+4.加载Mach-O文件读取dyld路径并运行dyld动态连接器(内核加载了主程序，dyld只会负责动态库的加载)
+	4.1 首先dyld会寻找合适的CPU运行环境
+	4.2 然后加载程序运行所需的依赖库和我们自己写的.h.m文件编译成的.o可执行文件，并对这些库进行链接。
+	4.3 加载所有方法(runtime就是在这个时候被初始化并完成OC的内存布局)
+	4.4 加载C函数
+	4.5 加载category的扩展(此时runtime会对所有类结构进行初始化)
+	4.6 加载C++静态函数，加载OC+load
+	4.7 最后dyld返回main函数地址，main函数被调用
+```
+
+<br/>
+
+
+**Mach-O文件说明:**
+
+&emsp; Mach-O文件格式是 OS X 与 iOS 系统上的可执行文件格式，类似于windows的 PE 文件。像我们编译产生的.o文件、程序可执行文件和各种库等都是Mach-O文件。
+
+Mach-O文件主要有3部分组成：
+
+1).Header：保存了一些基本信息，包括了该文件运行的平台、文件类型、LoadCommands的个数等等。Headers的主要作用就是帮助系统迅速的定位Mach-O文件的运行环境，文件类型。保存了一些dyld重要的加载参数
+
+2).LoadCommands：可以理解为加载命令，在加载Mach-O文件时会使用这里的数据来确定内存的分布以及相关的加载命令。比如我们的main函数的加载地址，程序所需的dyld的文件路径，以及相关依赖库的文件路径。
+
+3).Data： 每一个segment的具体数据都保存在这里，这里包含了具体的代码、数据等等。
+
+
+
+
+<br/>
+
+[**高德启动耗时优化**](https://cloud.tencent.com/developer/news/616444)
+
+
+
+
+<br/>
+
+
+- **优化点**
+
+	- 合并动态库，并减少使用 Embedded Framework，即非系统创建的动态 Framework，如果对包体积要求不严格还可以使用静态库代替。
+	
+	- 删除无用代码（未使用的静态变量、类和方法等）并抽取重复代码。
+	
+	- 避免在 +load 执行方法，使用 +initialize 代替。
+	
+	- [避免使用 attribute((constructor))](https://woshiccm.github.io/posts/__attribute__详解及应用/)，可将要实现的内容放在初始化方法中配合 dispatch_once 使用。
+	
+	- 减少非基本类型的 C++ 静态全局变量的个数。（因为这类全局变量通常是类或者结构体，如果在构造函数中有繁重的工作，就会拖慢启动速度）
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id = ""></h2>
+
+
+
+
 
 
 
@@ -2070,7 +2149,7 @@ CAShapeLayer继承于CALayer,可以使用CALayer的所有属性值；CAShapeLaye
 	
 - 移除无用图片资源
 
-&emsp； 这里推荐使用工具 [LSUnusedResources](https://github.com/tinymind/LSUnusedResources)，可以根据项目实际情况定义查找文件的正则表达式。另外建议勾选 Ignore similar name ，避免扫描出图片组。
+&emsp; 这里推荐使用工具 [LSUnusedResources](https://github.com/tinymind/LSUnusedResources)，可以根据项目实际情况定义查找文件的正则表达式。另外建议勾选 Ignore similar name ，避免扫描出图片组。
 
 
 ![<br/>](./../../Pictures/ios_oc2.png)
@@ -2534,9 +2613,6 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 >## <h2 id = "Runloop">[Runloop](https://www.jianshu.com/p/e29f846d8a97)</h2>
 
-[Run Loop 原理详解](http://chuquan.me/2018/10/06/understand-ios-runloop/)
-
-
 [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/#base)
 
 <br/>
@@ -2643,6 +2719,23 @@ int32_t __CFRunLoopRun()
 <br/>
 
 
+> <h3 id="延迟执行performSelecter相关方法是怎样被执行的在子线程中也是一样的吗">延迟执行performSelecter相关方法是怎样被执行的？在子线程中也是一样的吗？</h3>
+
+[performSelector: 方法详解(参考)](https://www.jianshu.com/p/9c17356034f1)
+
+&emsp; performSelecter实际上若是在子线程中执行,没有获取到runloop是不会执行方法的,因为其没有获取runloop(也就是没有创建runloop),即使performSelecter本身相当于一个Timer事件.
+
+&emsp; 但是performSelecter若是在主线程中执行,其方法回执行.因为主线程的runloop在程序一启动的时候就开启了
+
+
+
+
+
+
+
+<br/>
+<br/>
+
 > <h3 id="Runloop有几种运行状态">Runloop有几种运行状态</h3>
 
 Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
@@ -2724,7 +2817,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 <br/>
 <br/>
 
->### <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](https://github.com/harleyGit/StudyNotes/blob/master/底层/RunLoop(I).md)与自动释放池关系，什么时侯释放?</h3>
+>### <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](./RunLoop(I).md)与自动释放池关系，什么时侯释放?</h3>
 
 
 - **分两种情况：手动干预释放和系统自动释放**
@@ -2738,7 +2831,15 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 - **系统自动释放时机：**
 
-&emsp; 每个runloop中都创建一个Autorelease Pool，并在runloop的末尾进行释放。所以，一般情况下，每个接受autorelease消息的对象，都会在下个runloop开始前被释放。也就是说，在一段同步的代码中执行过程中，生成的对象接受autorelease消息后，一般是不会在作用域结束前释放的。Autorelease对象出了作用域之后，会被添加到最近一次创建的自动释放池中，并会在当前的 runloop 迭代结束（RunLoop 在第一次获取时创建, 在线程结束时销毁）时释放,至于何时runloop结束并没有固定的duration。
+&emsp; 每个Runloop中都创建一个AutoreleasePool，并在Runloop的末尾进行释放。
+
+&emsp; 所以，一般情况下，每个接受autorelease消息的对象，都会在下个Runloop开始前被释放。
+
+&emsp; 也就是说，在一段同步的代码中执行过程中，生成的对象接受autorelease消息后，一般是不会在作用域结束前释放的。
+
+&emsp; Autorelease对象出了作用域之后，会被添加到最近一次创建的自动释放池中，并会在当前的 runloop 迭代结束（RunLoop 在第一次获取时创建, 在线程结束时销毁）时释放,至于何时runloop结束并没有固定的duration。
+
+<br/>
 
 &emsp; Runloop是一个运行循环，但是它不可能一直运行着，所以它会有一个休眠期。Runloop维护着一个AutoreleasePool，当它进入休眠前它会把这个释放池里的对象进行释放。
 
@@ -2746,8 +2847,10 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 
 <br/>
+<br/>
 
-- **在UIKit中Runloop什么时候进入休眠？**
+
+> <h3 id='UIKit中Runloop什么时候进入休眠'>UIKit中Runloop什么时候进入休眠？</h3>
 
 先看一个简单Demo：
 
@@ -2765,7 +2868,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 下面我们配合着堆栈信息看一下这个Runloop什么时候结束一次迭代。
 
-![<br/>](./../../Pictures/ios_pd0.png)
+![ios_pd0.png](./../../Pictures/ios_pd0.png)
 
 
 &emsp; 这里我们加入一个weak的全局变量reference来指向我们的对象。因为weak引用不持有我们的对象，不会影响所指向对象的生命周期，所以我们用它来输出以判断我们的对象什么时候释放。
@@ -2776,9 +2879,9 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 断点1和断点2:
 
-![<br/>](./../../Pictures/ios_pd1.png)
+![ios_pd1.png](./../../Pictures/ios_pd1.png)
 
-![<br/>](./../../Pictures/ios_pd2.png)
+![ios_pd2.png](./../../Pictures/ios_pd2.png)
 
 我们能看到断点1和断点2 runloop还是在执行的，断点3表示runloop一个迭代已经结束了，即将进入睡眠。
 
@@ -2804,7 +2907,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 <br/>
 
 
- > <h3 id ="RunLoop原理和与线程的联系">[RunLoop原理和与线程的联系？说一下你对他的了解](https://blog.csdn.net/wzzvictory/article/details/9237973)</h3>
+ >### <h3 id ="RunLoop原理和与线程的联系">[RunLoop原理和与线程的联系？说一下你对他的了解](https://blog.csdn.net/wzzvictory/article/details/9237973)</h3>
 
 1. RunLoop 的作用就是来管理线程的，当线程的 RunLoop开启后，线程就会在执行完任务后，处于休眠状态，随时等待接受新的任务，而不是退出。
 
@@ -2914,6 +3017,53 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 &emsp; 自动释放池以栈的形式实现，当你创建一个新的自动释放池时，他将被添加到栈顶，当一个对象收到autorelease消息的时候，他被添加到当前线程的处于顶的自动释放池中，当自动释放池被回收时，他们就从栈中被删除，并且会给池子里面所有对象的使用都会做一次release操作
 
 
+
+
+<br/>
+
+> <h3 id = "何时需要autoreleasePool">何时需要autoreleasePool</h3>
+
+- **AutoreleasePool需要手动添加的情况:**
+	- 1).编写的不是基于UI框架的程序，例如命令行工具；
+	- 2).通过循环方式创建大量临时对象；
+	- 3).使用非Cocoa程序创建的子线程；
+
+<br/>
+
+下面详说第二种:
+
+&emsp; 在大循环中创建autorelease对象。当我们在一个循环中创建autorelease对象(不是用alloc创建的对象)，该对象会加入到autoreleasepage中，而这个page中的对象，会等到外部池子结束才会释放。
+
+&emsp; 在主线程的runloop中，会将所有的对象的释放权都交给了RunLoop 的释放池，而RunLoop的释放池会等待这个事件处理之后才会释放，因此就会使对象无法及时释放，堆积在内存造成内存泄露。
+
+[如下所示:](https://www.cnblogs.com/Mike-zh/p/4445174.html)
+
+```
+- (void)wrongSolution{
+    @autoreleasepool {
+        for (int i = 0; i < largeNumber; i++) {
+            NSString *str = [NSString stringWithFormat:@"hello -%04d", i];
+            str = [str stringByAppendingString:@" - world"];
+        }
+    }
+}
+```
+
+
+这样显然是没有效果的，释放池需要等循环执行之后再释放内存，这和使用RunLoop创建的释放池没有什么区别。 较好的方案就是每次循环的时候添加一个释放池：
+
+```
+- (void)correctSolution2{
+    for (int i = 0; i < largeNumber; i++) {
+        @autoreleasepool {
+            NSString *str = [NSString stringWithFormat:@"hello -%04d", i];
+            str = [str stringByAppendingString:@" - world"];
+        }
+    }
+}
+```
+
+这样每一次循环的结束时都会释放一次内存，因而这个循环全部执行完成时也几乎不消耗内存。
 
 
 <br/>
@@ -3154,7 +3304,7 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 <br/>
 
-- [响应者链（I）](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/响应链(I).md)
+- [响应者链](./响应链#响应者链.md)
 
 
 
@@ -3164,28 +3314,73 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 
 
 
-> <h2 id = "OC的引用计数是存放">OC的引用计数是存放在哪？</h2>
+>## <h2 id = "OC的引用计数是存放">[OC的引用计数是存放在哪？](https://www.jianshu.com/p/43571ab79821)</h2>
 
-在64bit操作系统中,apple对对象中的isa进行了优化使用isa_t结构来保存关于对象的更多信息.
+在弄明白这个问题之前,我们需要了解下arm64架构前后isa区别,这很重要!
+
+<br/>
+<br/>
+
+> <h3 id='arm64前后isa结构'>arm64前后isa结构</h3>
+
+- **arm64架构之前**
+
+&emsp; 在arm64架构之前isa就是一个普通的指针，其类型为objc_class. objc_class存储着Class、Meta-Class对象的内存地址。instance对象的isa指向class对象，class对象的isa指向meta-class对象；
 
 ```
-# if __arm64__
+// objc.h
+struct objc_object {
+    Class isa;  // 在 arm64 架构之前
+};
+```
+
+
+<br/>
+<br/>
+
+- **arm64架构之后**
+
+，对isa进行了优化，用nonpointer表示，变成了一个共用体（union）结构，还使用位域来存储更多的信息。将 64 位的内存数据分开来存储着很多的东西，其中的 33 位才是拿来存储class、meta-class对象的内存地址信息。要通过位运算将isa的值& ISA_MASK掩码，才能得到class、meta-class对象的内存地址
+
+
+在arm64架构之后也就是在64bit操作系统中,apple对对象中的isa进行了优化,其用nonpointer表示，变成了一个共用体（union）isa_t结构来使用,用来保存关于对象的更多信息.
+
+```
+// objc-private.h
+struct objc_object {
+private:
+    isa_t isa;  // 在 arm64 架构开始
+};
+
+union isa_t 
+{
+    isa_t() { }
+    isa_t(uintptr_t value) : bits(value) { }
+
+    Class cls;
+    uintptr_t bits;
+
+#if SUPPORT_PACKED_ISA
+
+# if __arm64__ // 在 __arm64__ 架构下
 #   define ISA_MASK        0x0000000ffffffff8ULL
 #   define ISA_MAGIC_MASK  0x000003f000000001ULL
 #   define ISA_MAGIC_VALUE 0x000001a000000001ULL
-#   define ISA_BITFIELD                                                      \
-      uintptr_t nonpointer        : 1;   //指针是否优化过                                   \
-      uintptr_t has_assoc         : 1;   //是否有设置过关联对象，如果没有，释放时会更快                                   \
-      uintptr_t has_cxx_dtor      : 1; 	 //是否有C++的析构函数（.cxx_destruct），如果没有，释放时会更快                                     \
-      uintptr_t shiftcls          : 33; //存储着Class、Meta-Class对象的内存地址信息 \
-      uintptr_t magic             : 6;  //用于在调试时分辨对象是否未完成初始化                                     \
-      uintptr_t weakly_referenced : 1;  //是否有被弱引用指向过，如果没有，释放时会更快                                     \
-      uintptr_t deallocating      : 1;  //对象是否正在释放                                     \
-      uintptr_t has_sidetable_rc  : 1;  //引用计数器是否过大无法存储在isa中                                     \
-      uintptr_t extra_rc          : 19  //里面存储的值是引用计数器减1
-#   define RC_ONE   (1ULL<<45)
-#   define RC_HALF  (1ULL<<18)
- 
+#   define ISA_BITFIELD 
+	struct{                                                     
+      uintptr_t nonpointer        : 1;   // 0：代表普通的指针，存储着 Class、Meta-Class 对象的内存地址
+							             // 1: 代表优化过，使用位域存储更多的信息                                   
+      uintptr_t has_assoc         : 1;   //是否有设置过关联对象，如果没有，释放时会更快                                   
+      uintptr_t has_cxx_dtor      : 1; 	 //是否有C++的析构函数（.cxx_destruct），如果没有，释放时会更快                                     
+      uintptr_t shiftcls          : 33;  //存储着Class、Meta-Class对象的内存地址信息 
+      uintptr_t magic             : 6;   //用于在调试时分辨对象是否未完成初始化                                     
+      uintptr_t weakly_referenced : 1;   //是否有被弱引用指向过，如果没有，释放时会更快                                     
+      uintptr_t deallocating      : 1;   //对象是否正在释放                                     
+      uintptr_t has_sidetable_rc  : 1;   //引用计数器是否过大无法存储在isa中                                     
+      uintptr_t extra_rc          : 19   //里面存储的值是引用计数器减1
+#     define RC_ONE   (1ULL<<45)
+#     define RC_HALF  (1ULL<<18)
+    }
 # elif __x86_64__
 #   define ISA_MASK        0x00007ffffffffff8ULL
 #   define ISA_MAGIC_MASK  0x001f800000000001ULL
@@ -3207,10 +3402,27 @@ main()函数调用之前，其实是做了很多准备工作，主要是dyld这�
 #   error unknown architecture for packed isa
 # endif
 
-
+}
 ```
 
-其中：extra_rc和has_sidetable_rc两个标志就是用来存储对象引用计数的.
+其中：extra_rc和has_sidetable_rc两个标志就是用来存储对象引用计数的.这个答案
+
+所以这里要做下区分:
+
+```
+nonpointer也就是之前说过的TaggedPointer技术
+如果isa非nonpointer，即 arm64 架构之前的isa指针。由于它只是一个普通的指针，存储着Class、Meta-Class对象的内存地址，所以它本身不能存储引用计数，所以以前对象的引用计数都存储在一个叫SideTable结构体的RefCountMap（引用计数表）散列表中。
+
+如果isa是nonpointer，则它本身可以存储一些引用计数。从以上union isa_t的定义中我们可以得知，isa_t中存储了两个引用计数相关的东西：extra_rc和has_sidetable_rc。
+
+extra_rc：里面存储的值是对象本身之外的引用计数的数量，这 19 位如果不够存储，has_sidetable_rc的值就会变为 1；
+has_sidetable_rc：如果为 1，代表引用计数过大无法存储在isa中，那么超出的引用计数会存储SideTable的RefCountMap中。
+
+所以，如果isa是nonpointer，则对象的引用计数存储在它的isa_t的extra_rc中以及SideTable的RefCountMap中。
+```
+
+
+<br/>
 
 
 isa中不同的位域代表不同的含义。
@@ -3255,8 +3467,10 @@ isa中不同的位域代表不同的含义。
 
 
 <br/>
+<br/>
 
-**引用计数的存储**
+> <h3 id='引用计数的存储'>引用计数的存储</h3>
+
 
 引用计数的增加主要通过retain()函数来实现.
 
@@ -3284,7 +3498,7 @@ objc_object::rootRetain()
 ALWAYS_INLINE id 
 objc_object::rootRetain(bool tryRetain, bool handleOverflow)
 {
-    if (isTaggedPointer()) return (id)this;
+    if (isTaggedPointer()) return (id)this; //如果是采用isTaggedPointer直接返回this本身
  
     bool sideTableLocked = false;
     //是否将引用计数结果转存到sidetable中
@@ -3295,7 +3509,7 @@ objc_object::rootRetain(bool tryRetain, bool handleOverflow)
  
     do {
         transcribeToSideTable = false;
-        oldisa = LoadExclusive(&isa.bits);
+        oldisa = LoadExclusive(&isa.bits);//取出isa_t
         newisa = oldisa;
         //不支持nonpointer：引用计数保存在sidetable中
         if (slowpath(!newisa.nonpointer)) {
@@ -3358,8 +3572,9 @@ objc_object::rootRetain(bool tryRetain, bool handleOverflow)
 
 
 <br/>
+<br/>
 
-**引用计数的获取**
+> <h3 id='引用计数的获取'>引用计数的获取</h3>
 
 因为对象的引用计数主要存储在isa位域extra_rc和散列表中,所以要获取对象的引用计数也需要从两个位置进行获取.
 
@@ -3375,19 +3590,20 @@ _objc_rootRetainCount(id obj)
 inline uintptr_t 
 objc_object::rootRetainCount()
 {
-    if (isTaggedPointer()) return (uintptr_t)this;
+	//如果是采用isTaggedPointer直接返回this本身
+    if (isTaggedPointer()) return (uintptr_t)this; 
  
     //添加sidetable操作锁
     sidetable_lock();
     //加载对象isa
-    isa_t bits = LoadExclusive(&isa.bits);
+    isa_t bits = LoadExclusive(&isa.bits);//取出isa_t
     ClearExclusive(&isa.bits);
     //如果对象开启了nonpointer
-    if (bits.nonpointer) {
+    if (bits.nonpointer) {//如果是优化的指针
         //获取isa中存储的引用计数
         uintptr_t rc = 1 + bits.extra_rc;
-        if (bits.has_sidetable_rc) {
-            //获取散列表中存储的引用计数
+        if (bits.has_sidetable_rc) {//如果引用计数过大无法存贮在isa中
+            //获取散列表中存储的引用计数(去sidetable中去拿取计数)
             rc += sidetable_getExtraRC_nolock();
         }
         sidetable_unlock();
@@ -3397,18 +3613,39 @@ objc_object::rootRetainCount()
     sidetable_unlock();
     return sidetable_retainCount();
 }
- 
- 
- 
+``` 
+
+<br/>
+
+- **sidetable_getExtraRC_nolock()**
+
+```
+size_t 
+objc_object::sidetable_getExtraRC_nolock()
+{
+    assert(isa.nonpointer);
+    SideTable& table = SideTables()[this];
+    RefcountMap::iterator it = table.refcnts.find(this);
+    if (it == table.refcnts.end()) return 0;
+    else return it->second >> SIDE_TABLE_RC_SHIFT;
+}
+```
+
+<br/>
+
+- **sidetable_retainCount()**
+
+``` 
+///没有优化过的isa去sidetable中拿计数
 uintptr_t
 objc_object::sidetable_retainCount()
 {
-    SideTable& table = SideTables()[this];
+    SideTable& table = SideTables()[this];//根据地址拿到SideTable
  
     size_t refcnt_result = 1;
     
     table.lock();
-    RefcountMap::iterator it = table.refcnts.find(this);
+    RefcountMap::iterator it = table.refcnts.find(this);/从SideTable中根据地址拿取RefcountMap
     if (it != table.refcnts.end()) {
         // this is valid for SIDE_TABLE_RC_PINNED too
         refcnt_result += it->second >> SIDE_TABLE_RC_SHIFT;
@@ -3422,7 +3659,7 @@ objc_object::sidetable_retainCount()
 
 - 在开启nonpointer的对象中,对象的引用计数包括两部分:
 	- 存储在isa中的引用计数;
-	- 存储在sidetable中的引用计数.
+	- 存储在[sidetable](./ARC原理.md#sideTable)中的引用计数.
 - 在未开启nonpointer的对象中,对象的引用计数全部存储在sidetable中，只需要从sidetable中获取就可以.
 
 
@@ -3437,6 +3674,7 @@ objc_object::sidetable_retainCount()
 [引用计数说起](https://juejin.cn/post/6844903919127101448)
 
 
+
 <br/>
 <br/>
 
@@ -3446,6 +3684,8 @@ objc_object::sidetable_retainCount()
 - 当一个类库没有进行导入文件时，但是我想使用它，如何做到？
 	使用runtime
 
+
+[参考:Framework 框架需要引入工程里面类](https://cloud.tencent.com/developer/article/1331432)
 
 
 <br/>
@@ -3475,13 +3715,17 @@ objc_object::sidetable_retainCount()
 	- 如果C++构造方法写在objc中，系统会通过static_init()方法直接调用，此时的顺序为：C++ -> +load -> main
 	- 如果写在main或者自己的代码中，则调用顺序是为：+load -> C++ -> main
 
+可以对照下[app启动优化加载顺序](#启动优化)
+
+参考: [C++写在objc和Main函数或者自己代码中,可以体会下](https://juejin.cn/post/7067067303497564173)
+
 
 
 <br/>
 <br/>
 
 
-> <h3 id = "消息转发">消息转发</h3>
+>### <h3 id = "消息转发">[消息转发](#./类.md#消息转发)</h3>
 
 [Runtime的消息转发](https://blog.csdn.net/zhw521411/article/details/85617353)
 
@@ -3541,7 +3785,7 @@ objc_object::sidetable_retainCount()
 
 - 不能添加实例变量，那为什么能添加属性？
 
-因为在category的初始化防范中只把实例方法、协议以及属性添加到类上。
+因为在category的初始化方法中只把实例方法、协议以及属性添加到类上。
 
 
 <br/>
@@ -3568,7 +3812,8 @@ objc_object::sidetable_retainCount()
 <br/>
 
 - <h3 id="blokc分类">blokc分类</h3>
-[blokc分类](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/Block(I).md)
+
+[blokc分类](./Block.md#Block分类)
 
 
 
@@ -3606,6 +3851,7 @@ objc_object::sidetable_retainCount()
 <br/>
 
 - <h3 id="block原理">block原理</h3>
+
 [block原理](https://www.jianshu.com/p/00a0747740ba)
 
 [Block原理详解](https://gsl201600.github.io/2020/05/13/iOSblock原理详解/)
@@ -3761,15 +4007,17 @@ dispatch_group_async(self.operationGroup, self.serialQueue, ^{
 
 - **深入剖析原理：**
 
->Apple 使用了 isa 混写（isa-swizzling）来实现 KVO 。当观察对象A时，KVO机制动态创建一个新的名为：NSKVONotifying_A 的新类，该类继承自对象A的本类，且 KVO 为 NSKVONotifying_A 重写观察属性的 setter 方法，setter 方法会负责在调用原 setter 方法之前和之后，通知所有观察对象属性值的更改情况。
+- Apple 使用了 isa 混写（isa-swizzling）来实现 KVO 。当观察对象A时，KVO机制动态创建一个新的名为：NSKVONotifying_A 的新类，该类继承自对象A的本类，且 KVO 为 NSKVONotifying_A 重写观察属性的 setter 方法，setter 方法会负责在调用原 setter 方法之前和之后，通知所有观察对象属性值的更改情况。
 （备注： isa 混写（isa-swizzling）isa：is a kind of ； swizzling：混合，搅合；）
 
->①NSKVONotifying_A 类剖析：在这个过程，被观察对象的 isa 指针从指向原来的 A 类，被 KVO 机制修改为指向系统新创建的子类 NSKVONotifying_A 类，来实现当前类属性值改变的监听；
-所以当我们从应用层面上看来，完全没有意识到有新的类出现，这是系统“隐瞒”了对 KVO 的底层实现过程，让我们误以为还是原来的类。但是此时如果我们创建一个新的名为“NSKVONotifying_A”的类，就会发现系统运行到注册 KVO 的那段代码时程序就崩溃，因为系统在注册监听的时候动态创建了名为 NSKVONotifying_A 的中间类，并指向这个中间类了。
-（isa 指针的作用：每个对象都有 isa 指针，指向该对象的类，它告诉 Runtime 系统这个对象的类是什么。所以对象注册为观察者时，isa 指针指向新子类，那么这个被观察的对象就神奇地变成新子类的对象（或实例）了。） 因而在该对象上对 setter 的调用就会调用已重写的 setter，从而激活键值通知机制。
-—>我猜，这也是 KVO 回调机制，为什么都俗称KVO技术为黑魔法的原因之一吧：内部神秘、外观简洁。
+- ①NSKVONotifying_A 类剖析：在这个过程，被观察对象的 isa 指针从指向原来的 A 类，被 KVO 机制修改为指向系统新创建的子类 NSKVONotifying_A 类，来实现当前类属性值改变的监听；
 
->②子类setter方法剖析：KVO 的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用 2 个方法：
+	- 所以当我们从应用层面上看来，完全没有意识到有新的类出现，这是系统“隐瞒”了对 KVO 的底层实现过程，让我们误以为还是原来的类。但是此时如果我们创建一个新的名为“NSKVONotifying_A”的类，就会发现系统运行到注册 KVO 的那段代码时程序就崩溃，因为系统在注册监听的时候动态创建了名为 NSKVONotifying_A 的中间类，并指向这个中间类了。
+	- （isa 指针的作用：每个对象都有 isa 指针，指向该对象的类，它告诉 Runtime 系统这个对象的类是什么。所以对象注册为观察者时，isa 指针指向新子类，那么这个被观察的对象就神奇地变成新子类的对象（或实例）了。） 因而在该对象上对 setter 的调用就会调用已重写的 setter，从而激活键值通知机制。
+	
+	- 我猜，这也是 KVO 回调机制，为什么都俗称KVO技术为黑魔法的原因之一吧：内部神秘、外观简洁。
+
+- ②子类setter方法剖析：KVO 的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用 2 个方法：
 被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；之后， observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的 setter 方法这种继承方式的注入是在运行时而不是编译时实现的。
 KVO 为子类的观察者属性重写调用存取方法的工作原理在代码中相当于：
 
@@ -3863,7 +4111,12 @@ storehub提问：NSNotification的class方法指向谁？
 
 
 > <h2 id="APNS底层原理">APNS如何通知的，底层如何处理？</h2>
+
 [APNs远程推送详解](https://juejin.cn/post/6844903893592178696#heading-42)
+
+推送通知流程图:
+
+![ios_oc1_101.png](./../../Pictures/ios_oc1_101.png)
 
 
 - **推送的实现方式：** 
@@ -3882,12 +4135,8 @@ storehub提问：NSNotification的class方法指向谁？
 	- 	采用第三方的后台服务程序，比如：百度云推送、极光推送、友盟推送
 
 
-推送通知流程图:
 
-![ios_oc1_101.png](./../../Pictures/ios_oc1_101.png)
-
-
-[远程推送示意图](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/远程推送(US).md)
+[远程推送](./远程推送.md)
 
 
 <br/>
@@ -3925,7 +4174,7 @@ storehub提问：NSNotification的class方法指向谁？
 
 - NSArray实现原理：
 
-&emsp； [NSArray原理](https://blog.csdn.net/Deft_MKJing/article/details/82732833)得益于使用了环形缓冲区的方法。
+&emsp;  [NSArray原理](https://blog.csdn.net/Deft_MKJing/article/details/82732833)得益于使用了环形缓冲区的方法。
 
 **ivars 的意思：**
 
@@ -4080,6 +4329,9 @@ objc Runtime开源代码对- (Class)class方法的实现:
 ![ios_pd0_1](./../../Pictures/ios_pd0_1.png)
 
 
+[内存5大分区](./内存管理.md#内存分区)
+
+
 <br/>
 <br/>
 
@@ -4102,6 +4354,8 @@ struct objc_object {
 }
 ```
 
+<br/>
+
 Class 类型其实是objc_class:
 
 ```
@@ -4111,7 +4365,9 @@ typedef struct objc_object *id;
 ```
 
 
-&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。此外还有的成员变量就是**`superclass、cache、bits、data`** ，在**`objc-runtime-new.h`**文件中，这是最新的:
+&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。
+
+&emsp; 此外还有的成员变量就是 **`superclass、cache、bits、data`** ，在 **`objc-runtime-new.h`** 文件中，这是最新的:
 
 ```
 struct objc_class : objc_object {
@@ -4268,7 +4524,9 @@ union isa_t {
 >### <h3 id="weak原理">[weak原理](http://www.cocoachina.com/articles/18962)</h3>
 
 
-&emsp; **介绍：**Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址数组。更多人的人只是知道weak是弱引用，所引用对象的计数器不会加一，并在引用对象被释放的时候自动被设置为nil，通常用于解决循环引用问题。
+**介绍：**
+
+&emsp;&emsp;  Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址数组。更多人的人只是知道weak是弱引用，所引用对象的计数器不会加一，并在引用对象被释放的时候自动被设置为nil，通常用于解决循环引用问题。
 
 
 - weak 的实现原理可以概括一下三步：
@@ -4309,8 +4567,10 @@ union isa_t {
      * 调用 free()
 ```
 
+
 <br/>
 <br/>
+
 
 >## <h3 id="Category属性放在哪">[Category属性放在哪](https://www.jianshu.com/p/bc4678829397)</h3>
 
@@ -4378,6 +4638,11 @@ Category 可以给类增加方法和属性，但是并不会自动生成成员�
 
 <br/>
 <br/>
+<br/>
+
+
+> <h3 id='Xcode构建过程'>Xcode构建过程</h3>
+
 
 - **[Xcode编译过程步骤大概可以分为4个](https://blog.csdn.net/fanyun_01/article/details/118279039)：**
 	- (1).预处理（Pre-process）：把宏替换，删除注释，展开头文件，产生 .i 文件
@@ -4636,6 +4901,11 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 
 <br/>
+<br/>
+<br/>
+
+> <h3 id='HttpDNS域名劫持'>HttpDNS(域名劫持)</h3>
+
 
 - [HTTPDNS实践](https://www.jianshu.com/p/fb54405dbdca)
 
@@ -4647,9 +4917,22 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 - [HttpDns 在 iOS 端的接入方案](https://juejin.cn/post/6844904144705339400)
 
-- [即时通讯性能调优](https://github.com/ChenYilong/iOSBlog/issues/6)
-- [网络请求优化之取消请求](https://www.jianshu.com/p/20f6172524d6)
-- [iOS网络层设计](https://www.jianshu.com/p/fe0dd50d0af1)
+
+<br/>
+<br/>
+<br/>
+
+>## <h3 id='即时通讯性能调优'>[即时通讯性能调优](https://github.com/ChenYilong/iOSBlog/issues/6)</h3>
+
+
+
+
+<br/>
+<br/>
+<br/>
+
+>## <h3 id='请求取消页面返回'>[请求取消(页面返回)](https://www.jianshu.com/p/20f6172524d6)</h2>
+
 
 
 
@@ -4658,12 +4941,26 @@ case ReloadRevalidatingCacheData // Unimplemented
 <br/>
 
 
-> <h2 id="TCP和UDP区别">TCP和UDP区别</h2>
+
+> <h2 id='网络层设计'>[网络层设计](https://www.jianshu.com/p/fe0dd50d0af1)</h2>
 
 
-- **TCP：**面向连接、传输可靠(保证数据正确性,保证数据顺序)、用于传输大量数据(流模式)、速度慢，建立连接需要开销较多(时间，系统资源)。
 
-- **UDP：**面向非连接、传输不可靠、用于传输少量数据(数据包模式)、速度快。
+
+
+
+
+
+<br/>
+<br/>
+
+
+>## <h2 id="TCP和UDP区别">[TCP和UDP区别](https://juejin.cn/post/6844903935669436424)</h2>
+
+
+- **TCP：** 面向连接、传输可靠(保证数据正确性,保证数据顺序)、用于传输大量数据(流模式)、速度慢，建立连接需要开销较多(时间，系统资源)。
+
+- **UDP：** 面向非连接、传输不可靠、用于传输少量数据(数据包模式)、速度快。
 
 - 比较：
 	- 基于连接与无连接；
@@ -4799,7 +5096,7 @@ hook系统函数，一个faceBook写的三方框架
 
 
 
->## <h2 id = "SDWebImage">[SDWebImage](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/SDWebImage(I).md)</h2>
+>## <h2 id = "SDWebImage">[SDWebImage](./SDWebImage.md)</h2>
 
 <br/>
 
@@ -4864,7 +5161,7 @@ hook系统函数，一个faceBook写的三方框架
 <br/>
 <br/>
 
->## <h2 id = "RxSwift">[RxSwift](https://github.com/harleyGit/StudyNotes/blob/master/ClassLibrary/RxSwift(I).md)<h2>
+>## <h2 id = "RxSwift">[RxSwift](./../Swift/RxSwift.md)<h2>
 
 
 
@@ -4885,7 +5182,9 @@ hook系统函数，一个faceBook写的三方框架
 <br/>
 <br/>
 
->## <h2 id = "静态库和动态库">[静态库和动态库](https://www.jianshu.com/p/a200b593696b)<h3>
+>## <h2 id = "静态库和动态库">[静态库和动态库](./静态库动态库.md)<h3>
+
+[静态库和动态库](https://www.jianshu.com/p/a200b593696b)
 
 介绍
 > 静态库：链接时完整地拷贝至可执行文件中，被多次使用就有多份冗余拷贝。利用静态函数库编译成的文件比较大，因为整个 函数库的所有数据都会被整合进目标代码中，他的优点就显而易见了，即编译后的执行程序不需要外部的函数库支持，因为所有使用的函数都已经被编译进去了。当然这也会成为他的缺点，因为如果静态函数库改变了，那么你的程序必须重新编译。

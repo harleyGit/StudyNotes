@@ -2,6 +2,10 @@
 - [**NSRunLoop**](#NSRunLoop)
 - [**RunLoop**](#RunLoop)
 	- [Runloop的作用](#Runloop的作用)
+		- [保活线程](#保活线程)
+		- [让crash的app回光返照](#让crash的app回光返照)
+		- [tableView加载图片优化](#tableView加载图片优化)
+		- [Async Test Case](#AsyncTestCase)
 	- [Runloop数据结构](#Runloop数据结构)
 	- [CFRunLoopRef的结构体](#CFRunLoopRef的结构体)
 		- [RunLoopMode](#RunLoopMode)
@@ -30,7 +34,8 @@
 	- [US1](https://www.jianshu.com/p/adf9eb244e81)
 	- [RunLoop 详解](https://www.jianshu.com/p/23e3ff9619c3)
 	- [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
-	- [孙源Runloop视频](https://day.app/2016/01/ios-runloop-xue-xi-and-yong-runloopshi-xian-dang-cheng-xu-kong-xian-shi-,zhi-xing-mou-xie-dai-ma/)
+	- [Runloop(孙源)](https://day.app/2016/01/ios-runloop-xue-xi-and-yong-runloopshi-xian-dang-cheng-xu-kong-xian-shi-,zhi-xing-mou-xie-dai-ma/)
+	- [Runloop视频(孙源)](http://b23.tv/5SbNAiP)
 
 
 
@@ -42,6 +47,9 @@
 
 
 ><h1 id='NSRunLoop'>NSRunLoop</h1>
+
+![ios_oc2_1.png](./../../Pictures/ios_oc2_1.png)
+
 
 
 &emsp;  ` NSRunLoop` 是基于 `CFRunLoopRef` 的OC封装，提供了面向对象的 API，但`不是线程安全`的。
@@ -279,7 +287,14 @@ int main(void) {
 ![主线程和子线程Runloop区别](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/ios_oc91.png)
 
 
-保活简单Code
+
+<br/>
+<br/>
+
+
+><h2 id='保活线程'>保活线程</h2>
+
+
 
 ```
 //第1步:
@@ -333,6 +348,47 @@ int main(void) {
 ```
 
 
+
+
+<br/>
+<br/>
+
+
+><h3 id='让crash的app回光返照'>让crash的app回光返照</h3>
+
+
+```
+CFRunLoopRef runloop = CFRunLoopGetCurrent();
+NSArray *allModels = CFBridgingRelease(CFRunLoopCopyAllModes(runLoop));
+while(1){
+	for(NSString *mode in allModes) {
+		CFRunLoopRunInMode((CFStringRef)mode, 0.001, false);
+	}
+}
+
+```
+
+<br/>
+<br/>
+
+
+><h3 id=''>tableView加载图片优化</h3>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+
+><h3 id='AsyncTestCase'>Async Test Case</h3>
+
+
+![ios_oc2_5.png](./../../Pictures/ios_oc2_5.png)
 
 
 <br/>
@@ -506,10 +562,17 @@ struct __CFRunLoopMode {
 
 下图是苹果文档中提到的5种Mode，第2个、第3个在iOS中没有暴露出来。
 
-- `NSRunLoopCommonModes` 实际上是一个 Mode 的集合，默认包括 `NSDefaultRunLoopMode` 和 `NSEventTrackingRunLoopMode`（注意：并不是说Runloop会运行在kCFRunLoopCommonModes这种模式下，而是相当于分别注册了 NSDefaultRunLoopMode和 UITrackingRunLoopMode。当然你也可以通过调用CFRunLoopAddCommonMode()方法将自定义Mode放到 kCFRunLoopCommonModes组合）
+- `NSRunLoopCommonModes` 实际上是一个 Mode 的集合，默认包括 `NSDefaultRunLoopMode` 和`NSEventTrackingRunLoopMode`
+	- （注意：并不是说Runloop会运行在kCFRunLoopCommonModes这种模式下，而是相当于分别注册了 NSDefaultRunLoopMode和 UITrackingRunLoopMode。当然你也可以通过调用CFRunLoopAddCommonMode()方法将自定义Mode放到 kCFRunLoopCommonModes组合）
 
 - `NSDefaultRunLoopMode` 默认模式，一般处理timer或者网络等事件；
+
 - `UITrackingRunLoopMode` UI模式，专门处理UI事件；
+
+- UIInitializationRunloopMode 私有,App启动的时候
+
+- GSEventReceiveRunLoopMode: 接受系统事件的内部 Mode，通常用不到
+
 
 ![5 种RunLoop Mode](https://upload-images.jianshu.io/upload_images/2959789-9624d88d118abea5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 

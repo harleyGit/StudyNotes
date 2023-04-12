@@ -178,7 +178,7 @@
 * [**埋点**](./iOS/Objective-C/埋点.md)
 * [**问题解决**](./iOS/Objective-C/问题解决.md)
 * [**多线程**](./iOS/Objective-C/多线程.md)
-* [**动画**](./iOS/Objective-C/动画.md)
+* [**‌图片与动画**](./iOS/Objective-C/图片与动画.md)
 * [**数据存储**](./iOS/Objective-C/数据存储.md)
 * [**JSON数据**](./iOS/Objective-C/JSON数据.md)
 * [路由导航](./iOS/Objective-C/路由导航.md)
@@ -194,8 +194,7 @@
 * [闭包](./iOS/Objective-C/闭包.md)
 * [键盘弹出(I)](./iOS/Objective-C/键盘弹出(I).md)
 * [**NSArray**](./iOS/Objective-C/NSArray.md)
-* [响应链(I)](./iOS/Objective-C/响应链(I).md)
-* [响应链(II)](./iOS/Objective-C/响应链(II).md)
+* [响应链](./iOS/Objective-C/响应链.md)
 * [远程推送(US)](./iOS/Objective-C/远程推送(US).md)
 * [坐标系(I)](./iOS/Objective-C/坐标系(I).md)
 * [keyChain](./iOS/Objective-C/keychain.md)
@@ -225,7 +224,7 @@
 	*	[内存优化](./iOS/Objective-C/内存优化.md)
 	*	[性能优化](./iOS/Objective-C/性能优化.md)
 * [**底层原理**](#底层原理)
-	* [ARC原理](./iOS/Objective-C/ARC原理.md) 
+	* [内存管理](./iOS/Objective-C/内存管理.md) 
 	* [RunLoop](./iOS/Objective-C/RunLoop.md)
 - **逆向**
 	- [**资料集01**](./iOS/Objective-C/资料集01.md)
@@ -239,6 +238,7 @@
 	*	[Linphone(I)](./iOS/Objective-C/Linphone(I).md)
 	*	[YYCache](./iOS/Objective-C/YYCache.md)
 	*	[AFNetworking](./iOS/Objective-C/AFNetworking.md)
+	*	[SDWebImage](./iOS/Objective-C/SDWebImage.md)
 	*	[JSPatch热更新](./iOS/Objective-C/JSPatch.md)
 	*	[Aspects切面编程(AOP)](./iOS/Objective-C/Aspects.md)
 - **项目开发**
@@ -455,7 +455,7 @@
 
 > <h1 id = "类库">类库</h1>
 *	[阿里云(I)](./ClassLibrary/阿里云(I).md)
-*	[Podfile文档](./ClassLibrary/Podfile文档.md)
+*	[个人库](./ClassLibrary/个人库.md)
 *	[极光推送](./ClassLibrary/极光推送.md)
 *	[加密](./ClassLibrary/加密.md)
 *	[今日头条(I)](./ClassLibrary/今日头条(I).md)
@@ -588,7 +588,6 @@
 * [CocoaPods](./Tools/CocoaPods.md)
 * [快捷键](./Tools/快捷键.md)
 * [Mac](./Tools/Mac.md)
-* [Podfile书写格式](./Tools/Podfile-书写格式.md)
 * [Git](./Tools/Git.md)
 * [VSCode](./Tools/VSCode.md)
 * [Postman](./Tools/Postman.md)

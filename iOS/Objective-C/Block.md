@@ -123,10 +123,10 @@ OC 函数中的局部变量在栈中存放。
 ```
 //这里不使用外部变量，所以是NSGlobalBlock。
 void (^block)(void) = ^{
-        NSLog(@"welcome to block");
-    };//匿名block代码块的定义
+						NSLog(@"welcome to block");
+					};//匿名block代码块的定义
     
-    block();
+block();
 ```
 
 
@@ -147,7 +147,7 @@ void (^block)(void) = ^{
         NSLog(@"welcome to block %d", a);
     };//匿名block代码块的定义
     
-    block();
+block();
 ```
 
 若访问了相应的内存空间，访问了外部的变量并且捕获了外部变量或者属性后，由全局block变为堆block。
