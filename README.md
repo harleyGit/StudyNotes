@@ -116,10 +116,11 @@
 >#  <h1 id = "C语言">C语言</h1>
 
 ><h2 id=''> C</h2>
-*	[基础](./C/C基础.md)
-*	[指针](./C/C指针.md)
-*	[排序算法](./C/排序算法.md)
-*	[LeetCode算法](./C/LeetCode.md)
+*	[**基础**](./C/C基础.md)
+*	[**指针**](./C/C指针.md)
+*	[**数据结构**](./C/数据结构.md)
+*	[**排序算法**](./C/排序算法.md)
+*	[**LeetCode算法**](./C/LeetCode.md)
 
 <br/>
 <br/>
@@ -559,24 +560,6 @@
 *	[**NSURLSession(III)**](./Network/NSURLSession(III).md)
 *	[**Socket网络编程**](./Network/Socket网络编程.md)
 *	[](./Network/.md)
-
-
-
-
-<br/>
-
-***
-<br/>
-
-> <h1 id = "数据结构">数据结构</h1>
-- [数据结构](https://www.cnblogs.com/linuxAndMcu/category/1084577.html)
-*	[递归](./数据结构/递归.md)
-*	[线性表(I)](./数据结构/线性表(I).md)
-*	[线性链表(II)](./数据结构/线性链表(II).md)
-*	[队列](./数据结构/队列.md)
-*	[二叉树](./数据结构/二叉树.md)
-*	[栈](./数据结构/栈.md)
-*	[](./数据结构/.md)
 
 
 
