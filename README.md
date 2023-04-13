@@ -516,23 +516,6 @@
 
 
 
-> <h1 id = "多线程">多线程 </h1>
-*	[GCD(I)](./多线程/GCD(I).md) 
-*	[GCD(II)](./多线程/GCD(II).md)    
-* [NSOperation(I)](./多线程/NSOperation(I).md)    
-* [NSOperation(II)](./多线程/NSOperation(II).md)    
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
-
 > <h1 id = "数据存储">数据存储 </h1>
 *	[数据持久化](./DataStorage/数据持久化.md)
 *	[相册和视频处理(I)](./DataStorage/相册和视频处理(I).md)
