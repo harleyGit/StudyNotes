@@ -24,7 +24,11 @@
 		- [非逃逸闭包](#非逃逸闭包)
 		- [自动闭包](#自动闭包)
 	- [什么是写时复制(copy-on-write)](#什么是写时复制(copy-on-write))
-	- [值类型和引用类型区别](#值类型和引用类型区别)
+	- [值类型和引用类型](#值类型和引用类型)
+		- [区别](#区别)
+		- [什么时候使用值类型?什么时候使用引用类型?](#什么时候使用值类型什么时候使用引用类型)
+		- [什么时候值类型会发生装箱](#什么时候值类型会发生装箱)
+		- [存在容器由组成(Existential Container)](#存在容器由组成)
 	- [关键字](#关键字)
 		- [final修饰符](#final修饰符)
 		- [@Objc和Dynamic的使用(Storehub)](#@Objc和Dynamic的使用)
@@ -717,37 +721,31 @@ print(address(of: &arr2)) //0x6000023b11f0
 **原理：**
 &emsp; 使用class，这是一个引用类型，因为当我们将引用类型分配给另一个时，两个变量将共享同一个实例，而不是像值类型一样复制它。
 
+
+在[OptimizationTips.rst](https://github.com/apple/swift/blob/main/docs/OptimizationTips.rst)里发现如下代码:
+
 ```
 final class Ref<T> {
-    var value: T
-    init(value: T) {
-        self.value = value
-    }
+  var val: T
+  init(_ v: T) { val = v }
 }
-```
 
-创建一个struct包装Ref：
-
-```
 struct Box<T> {
-    private var ref: Ref<T>
-    init(value: T) {
-        ref = Ref(value: value)
+  var ref: Ref<T>
+  init(_ x: T) { ref = Ref(x) }
+
+  var value: T {
+    get { return ref.val }
+    set {
+	  //有多个 reference，如果是多个 reference 则进行拷贝
+      if !isKnownUniquelyReferenced(&ref) {
+        ref = Ref(newValue)
+        return
+      }
+      ref.val = newValue
     }
- 
-    var value: T {
-        get { return ref.value }
-        set {
-            guard isKnownUniquelyReferenced(&ref) else {
-                ref = Ref(value: newValue)
-                return
-            }
-            ref.value = newValue
-        }
-    }
+  }
 }
-
-
 ```
 
 
@@ -756,8 +754,8 @@ struct Box<T> {
 然后，我们第一次更改两个Box变量的值时，我们创建了一个新的ref实例，这要归功于
 
 ```
-guard isKnownUniquelyReferenced(&ref) else {
-    ref = Ref(value: newValue)
+if !isKnownUniquelyReferenced(&ref) {
+    ref = Ref(newValue)
     return
 }
 ```
@@ -783,18 +781,16 @@ guard isKnownUniquelyReferenced(&ref) else {
 但是我们可以这样做：
 
 ```
-struct User {
-    var identifier = 1
+struct Person {
+    var name = ""
 }
 
-
-//使用
-let user = User()
- 
-let box = Box(value: user)
-// box2 shares instance of box.ref
-var box2 = box                   
-box2.value.identifier = 2 
+var p1 = Person(name: "aaa")
+print(address(of: &p1)) // 0x104d6a300
+var p2 = p1
+print(address(of: &p2)) // 0x104d6a310
+p2.name = "bbb"
+print(address(of: &p2)) // 0x104d6a310
 ```
 
 
@@ -802,22 +798,123 @@ box2.value.identifier = 2
 
 
 <br/>
+
+***
+<br/>
 <br/>
 
->## <h2 id="值类型和引用类型区别">[值类型和引用类型区别](https://juejin.cn/post/6844904000794394637)</h2>
+>## <h1 id="值类型和引用类型">[值类型和引用类型](https://juejin.cn/post/6844904000794394637)</h1>
 
 [值类型和引用类型](https://www.cnblogs.com/luoxiaofu/p/8528383.html)
 
 
+
+<br/>
+
+> <h2 id='区别'>区别</h2>
 
 - **存储区别：**
 	- 值类型存储在栈区。 每个值类型变量都有其自己的数据副本，并且对一个变量的操作不会影响另一个变量。
 	
 	- 引用类型存储在其他位置（堆区），我们在内存中有一个指向该位置的引用。 引用类型的变量可以指向相同类型的数据。 因此，对一个变量进行的操作会影响另一变量所指向的数据。
 
-&emsp; Swift有三种声明类型的方式：**class，struct和enum**。 它们可以分为值类型**（struct和enum）和引用类型（class）**。 
+<br/>
+
+&emsp; Swift有三种声明类型的方式：**class，struct和enum**。 它们可以分为值类型 **（struct和enum）和引用类型（class）**。 
 
 **一般Swift值类型在栈上分配。 引用类型在堆上分配。**
+
+
+<br/>
+<br/>
+
+>## <h3 id='什么时候使用值类型什么时候使用引用类型'>[什么时候使用值类型?什么时候使用引用类型?](https://juejin.cn/post/6844904000794394637)</h3>
+
+
+结构体和类的选择
+对于应该使用类还是结构，没有简单的答案。 尽管苹果建议在对具有标识（identity）的东西使用类，其他情况使用结构，但这不足以指导我们做出决定。 由于每种情况都不同，我们还需要虑性能：
+
+- 应当避免值类型包含引用类型的变量，因为它们违反了值的语义并产生额外的引用计数开销。
+- 具有动态行为的值类型（例如数组和字符串）应采用copy-on-write来摊销复制成本。
+- 值类型遵循协议时将被装箱，从而导致更高的创建成本。
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h3 id='什么时候值类型会发生装箱'>什么时候值类型会发生装箱</h3>
+
+**Swift编译器可以将值类型装箱后放到堆上**
+
+- 1.当值类型遵循了某个协议;
+	- 当值类型遵循了某个协议，且存[储在existential（存在性）容器](https://blog.csdn.net/preyer2011/article/details/129052530)中超过3个机器字长时(将放在堆上)，除分配成本外，还会产生额外的开销。
+	- Existential(存在性)容器是用于存储运行时未知类型的值的一种通用容器。 
+		- 较小的值类型可以内嵌在存在性(existential)容器中。 
+		- 较大的分配在堆上， 它们的引用存储在存在性(existential)容器缓冲区内。 此类值的生存期由值见证表(Value Witness Table)管理。 当调用协议方法时会产生引用计数和几个间接级别的开销。
+
+<br/>
+
+- 2.值类型和引用类型混合时
+	- 结构体中包含类，类中包含结构的情况
+
+
+<br/>
+
+- 3.带有泛型的值类型。
+
+让我们声明一个带泛型的结构体：
+
+```
+struct Bas<T> {
+    var x: T
+
+    init(xx: T) {
+        x = xx
+    }
+}
+```
+
+
+
+<br/>
+
+- 4. 逃避闭包捕获时
+	- Swift的闭包对所有局部变量都是通过引用来捕获的
+
+
+<br/>
+
+- 5. Inout参数
+
+让我们为foo(x :)生成一个接受inout参数的SIL：
+
+```
+func foo(x: inout Int) {
+    x += 1
+}
+```
+
+
+
+
+<br/>
+
+>## <h3 id='存在容器由组成'>[存在容器由组成:](https://blog.csdn.net/preyer2011/article/details/129052530)</h3>
+- Value Buffer ValueBuffer 占 3 个字的长度，如果符合协议的对象是值类型且小于等于 3 个字，则直接放入 ValueBuffer 中，如果对象是引用类型或者大于 3 个字的值类型，则将对象放在堆上，在 ValueBuffer 中保存一个指向堆上对象的引用。
+
+- 一个指向 值目击表（Value Witness Table, VWT） 的指针，用来创建、拷贝和销毁值，表中保存了创建、拷贝、销毁等函数的地址，其中创建、销毁函数的地址仅在当对象分配在堆上时才会有。
+
+- 一个指向 协议目击表（Protocol Witness Table, PWT） 的指针，每个符合了某个协议的类型都有自己的协议目击表，保存了实现协议中方法的方法地址。
+
+- 如果类型符合了多个协议，后面还会有第二个协议的协议目击表指针，以及第三个，第四个等。符合的协议越多，存在容器占用内存空间就越大。
+
+
+
+[为什么你需要使用泛型而不是 protocol](https://www.6hu.cc/archives/30535.html)
 
 
 
@@ -1072,13 +1169,13 @@ Call 调用，指的是**语言在高级层面**，指示一个函数进行相�
 
 **方法可见性的影响**
 
-&ems; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
+&emsp; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
 
 <br/>
 
 **KVO**
 
-&ems;值得注意的是 KVO，被观察的属性也必须被声明为 dynamic，否则 setter 会走直接派发，无法触发变化。
+&emsp;值得注意的是 KVO，被观察的属性也必须被声明为 dynamic，否则 setter 会走直接派发，无法触发变化。
 
 
 
@@ -1719,7 +1816,7 @@ public init(parseJSON jsonString: String)
 
 - **托管对象上下文：** **mood** 对象是被 Core Data 托管的对象。也就是说，它们存在于一个特定的上下文 (context) 里：那就是托管对象上下文。托管对象上下文记录了它管理的对象，以及你对这些对象的所有操作，比如插入，删除和修改等。每个被托管的对象都知道自己属于哪个上下文。
 
-- **持久化存储协调器：**上下文与持久化存储协调器相连，协调器位于持久化存储和托管对象上下文之间。对于本章中的这个简单例子，我们不用太关心持久化存储协调器或者持久化存储，因为 NSPersistentContainer 这个辅助类会帮助我们把它们都设置好。可以这么说，默认情况下 Core Data 会使用一个 SQLite 类型的持久化存储，也就是说你的数据在底层实际上会被存储在一个 SQLite 数据库里。Core Data 也提供其他的存储类型 (比如 XML，二进制数据，内存)，但是现在我们不需要考虑其他的存储类型。
+- **持久化存储协调器：** 上下文与持久化存储协调器相连，协调器位于持久化存储和托管对象上下文之间。对于本章中的这个简单例子，我们不用太关心持久化存储协调器或者持久化存储，因为 NSPersistentContainer 这个辅助类会帮助我们把它们都设置好。可以这么说，默认情况下 Core Data 会使用一个 SQLite 类型的持久化存储，也就是说你的数据在底层实际上会被存储在一个 SQLite 数据库里。Core Data 也提供其他的存储类型 (比如 XML，二进制数据，内存)，但是现在我们不需要考虑其他的存储类型。
 
 
 
@@ -1815,7 +1912,13 @@ OC实现MD5加密：
 ```
 值得注意的是：
 
-&emsp; 其中%02x是格式控制符：‘x’表示以16进制输出，‘02’表示不足两位，前面补0；如‘f’输出为0f，‘1f3’则输出1f3;还有就是为什么是result[16]呢，这是因为MD5算法最后生成的是128位，而在计算机的最小存储单位为字节，1个字节是8位，对应一个char类型，计算可得需要16个char。所以result是[16]。那么为什么输出的格式一定是%02x呢，而不是其它呢。这也是有原因的：因为约定MD5一般是以16进制的格式输出，那么其实这个问题就转换为把128个0和1以16进制来表示，每4位二进制对应一个16进制的元素，则需要32个16进制的元素，如果元素全部为0，放到char的数组中，正常是不会输出，如00001111，以%x输出，则是f,那么就会丢失0；但如果以%02x表示则输出结果是0f，正好是转换的正确结果。
+&emsp; 其中%02x是格式控制符：‘x’表示以16进制输出，‘02’表示不足两位，前面补0；如‘f’输出为0f，‘1f3’则输出1f3;
+
+还有就是为什么是result[16]呢，这是因为MD5算法最后生成的是128位，而在计算机的最小存储单位为字节，1个字节是8位，对应一个char类型，计算可得需要16个char,所以result是[16]。
+
+那么为什么输出的格式一定是%02x呢，而不是其它呢。这也是有原因的：因为约定MD5一般是以16进制的格式输出，那么其实这个问题就转换为把128个0和1以16进制来表示，每4位二进制对应一个16进制的元素，则需要32个16进制的元素，如果元素全部为0，放到char的数组中，正常是不会输出，如00001111，以%x输出，则是f,那么就会丢失0；
+
+但如果以%02x表示则输出结果是0f，正好是转换的正确结果。
 
 所以以上就是char[16]和%02x的来历。
 
