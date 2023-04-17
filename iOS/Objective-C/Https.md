@@ -1,11 +1,11 @@
 
-
-- **Https 安全简介**
-- **CA证书生成**
-	- 	生成 CA 目录
-	- 	生成CSR文件
-- **根证书生成**
-- **服务器SSL证书生成**
+> <h2 id=''></h2>
+- [**Https 安全简介**](#Https安全简介)
+- [**CA证书生成**](#CA证书生成)
+	- [生成 CA 目录](#生成CA目录)
+	- [生成CSR文件](#生成CSR文件)
+- [**根证书生成**](#根证书生成)
+- [**服务器SSL证书生成**](#服务器SSL证书生成)
 - [**HTTPS 原理解析**](https://juejin.im/entry/6844903506537611271)
 - [**OpenSSL证书生成及Mac上Apache服务器配置HTTPS**](https://www.jianshu.com/p/b2a9655fe687)
 - [**搭建CA服务器 US**](https://www.cnblogs.com/zhaojiedi1992/p/zhaojiedi_linux_011_ca.html)
@@ -23,7 +23,59 @@
 
 
 
-># Https 安全简介
+># <h0 id='Https安全简介'>Https 安全简介</h0>
+
+
+
+**🔐加密套件的安全握手协商:**
+
+![ios_oc2_8.png](./../../Pictures/ios_oc2_8.png)
+
+<br/>
+
+使用上面获取密钥又一个问题,就是他们是明文传输和容易在被中间人获取随机数:
+
+![ios_oc2_9.png](./../../Pictures/ios_oc2_9.png)
+
+
+<br/>
+
+下面我们使用RSA非对称加密,我们使用加密后的套件列表. 然后服务器使用加密后的套件和公钥一起发送给浏览器,以后浏览器发送数据可以通过公钥加密发送给服务器.即使别人截取也破解不了.
+
+![ios_oc2_10.png](./../../Pictures/ios_oc2_8.png)
+
+但是这就有一个问题就是中间有人架起中间服务器,这样就会导致数据还是会被泄密.
+
+<br/>
+<br/>
+
+&emsp; 所以我们采用数字证书,请中间数字证书签发机构CA颁给我们一个证书,当然这个是收费的.
+
+
+![ios_oc2_11.png](./../../Pictures/ios_oc2_11.png)
+
+- 浏览器传递一个随机数A给服务器、加密套件列表、非对称加密套件列表;
+
+- 服务端收到后保存随机数A,选择一个套件并生成一个随机数B.然后把加密后的随机数、加密套件、证书发送给浏览器
+
+- 浏览器对证书进行验证(通过Hash证书的明文生成的签名和证书自带的签名进行比照).若是通过,这个证书没有发生修改.然后取出证书中的公钥保存.
+
+- 浏览器结合随机数A和随机数B生成了随机数pre-master,然后使用公钥加密发送给服务器
+
+- 服务器收到加密后的随机数pre-master,进行解密.结合随机数A、随机数B、随机数pre-master生成新的密钥,以后用这个密钥进行对称加密,传送数据
+
+
+数字证书的签名其实就是通过hash函数对证书的明文进行计算的到了信息摘要,然后使用CA的私钥对信息摘要进行加密.加密后就得到了数字签名了.
+
+浏览器获取到CA的证书后,会用CA证书的hash函数计算证书明文得到信息摘要.然后利用浏览器内置的公钥对证书上的数字签名进行解密得到第二份摘要信息,然后对比,若一致,则证书是有效的.
+
+
+
+
+
+
+
+<br/>
 
 -   http使用的端口是80；
 
@@ -75,7 +127,7 @@ TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
 <br/>
 
 
-># CA证书生成
+># <h1 id='CA证书生成'>CA证书生成</h1>
 
  **` 自动生成`**
 -  在OpenSSL的安装目录下的misc目录下，运行脚本
@@ -106,8 +158,10 @@ TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
 
 
 <br/>
+<br/>
 
-- 生成 CA 目录
+> <h2 id='生成CA目录'>生成 CA 目录</h2>
+
 
 
 ```
@@ -176,8 +230,11 @@ dir                = /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA
 `intermediateCA.cnf.cnf`默认申请的有效期是365天，如果想要修改这个时长，可以在`[ CA_default ]的"default_days"`字段进行修改。
 
 <br/>
+<br/>
 
-- **生成CSR文件**
+
+> <h2 id='生成CSR文件'>生成CSR文件</h2>
+
 
 ```
 cd /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA
@@ -209,7 +266,8 @@ openssl ca -config rootCA.cnf -extensions v3_ca -notext -md sha256 -in /Users/ha
 <br/>
 
 
-># 根证书生成
+> <h1 id='根证书生成'>根证书生成</h1>
+
 
 -  新建一个SSL的文件夹
 -  终端定位到这个文件夹
@@ -243,8 +301,8 @@ openssl ca -config rootCA.cnf -extensions v3_ca -notext -md sha256 -in /Users/ha
 <br/>
 
 
+> <h1 id='服务器SSL证书生成'>服务器SSL证书生成</h1>
 
-># 服务器SSL证书生成
 
 -  创建服务器证书密钥文件(在SSL文件夹中生成私钥)
   使用openssl工具生成一个RSA私钥，
