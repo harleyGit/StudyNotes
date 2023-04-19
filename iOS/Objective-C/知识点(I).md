@@ -25,8 +25,15 @@
 	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？](#使用copy关键字为什么)
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
 - **多线程**
+	- [什么叫串行队列?并行队列?同步执行?异步执行?](#什么叫串行队列?并行队列?同步执行?异步执行?)
+	- [最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?(飞猪)](#最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?)
+		- [全局队列-CPU繁忙](#全局队列-CPU繁忙)
+		- [全局队列-CPU空闲](#全局队列-CPU空闲)
+		- [自建队列-CPU繁忙](#自建队列-CPU繁忙)
+		- [自建队列-CPU空闲](#自建队列-CPU空闲)
 	- [如何用GCD同步若干个异步调用](#如何用GCD同步若干个异步调用)
 	- [dispatch_once安全的原因](#dispatch_once安全的原因)
+	- [锁分为哪几类?说一下](#锁分为哪几类?说一下)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -54,6 +61,8 @@
 	- [KVC和KVO](#KVC和KVO)
 - [**底层**](#底层)
 	- [Runloop](#Runloop)
+		- [Runloop可以用来做什么](#Runloop可以用来做什么)
+		- [保活线程后,如何关闭?](#保活线程后,如何关闭?)
 		- [Runloop底层原理](#Runloop底层原理)
 		- [延迟执行performSelecter相关方法是怎样被执行的？在子线程中也是一样的吗？](#延迟执行performSelecter相关方法是怎样被执行的在子线程中也是一样的吗)
 		- [Runloop有几种运行状态](#Runloop有几种运行状态)
@@ -811,7 +820,331 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 
 > <h1 id='多线程'>多线程</h1>
 
+
+> <h2 id='什么叫串行队列?并行队列?同步执行?异步执行?'>什么叫串行队列?并行队列?同步执行?异步执行?</h2>
+
+- 串行队列:同一时间，只能执行一个任务的队列，称之为串行队列。
+
+- 并行队列:同一时间，可以多个任务一起执行的队列，称之为并行队列
+
+
+- 同步执行（sync）：
+	- 同步添加任务到指定的队列中，在添加的任务执行结束之前，会一直等待，直到队列里面的任务完成之后再继续执行。
+	- 只能在当前线程中执行任务，不具备开启新线程的能力。
+
+- 异步执行（async）：
+	- 异步添加任务到指定的队列中，它不会做任何等待，可以继续执行任务。
+	- 可以在新的线程中执行任务，具备开启新线程的能力。
+
+
+
+
 <br/>
+<br/>
+
+> <h2 id='最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?'>最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?(飞猪)</h2>
+
+**下面是用iPhone8真机,iOS13.1进行测试的**
+
+
+> <h3 id='全局队列-CPU繁忙'>全局队列-CPU繁忙</h3>
+
+```
++ (void)cpuBusy_printThreadCount {
+    kern_return_t kr = {0};
+    thread_array_t thread_list = {0};// 保存当前Mach task的线程列表
+    mach_msg_type_number_t thread_count = {0};// 保存当前Mach task的线程个数
+    //thread_info_data_t      threadInfo;         // 保存单个线程的信息列表
+    //mach_msg_type_number_t  threadInfoCount;    // 保存当前线程的信息列表大小
+    //thread_basic_info_t     threadBasicInfo;    // 线程的基本信息
+        
+    
+    // 通过“task_threads”API调用获取指定 task 的线程列表
+    //  mach_task_self_，表示获取当前的 Mach task
+    kr = task_threads(mach_task_self(), &thread_list, &thread_count);
+    
+    if (kr != KERN_SUCCESS) {
+        return;
+    }
+    
+    LogInfo(@"线程数量: %@", @(thread_count));
+    
+    // 回收内存，防止内存泄漏
+    kr = vm_deallocate(mach_task_self(), (vm_offset_t)thread_list, thread_count * sizeof(thread_t));
+    if (kr != KERN_SUCCESS) {
+        return;
+    }
+    return;
+}
+
++ (void)testThreadMaxCount_CPUBusy {
+    NSMutableSet<NSThread *> *set = [NSMutableSet set];
+    
+    for (int i =0; i < 1000; i++) {
+        dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
+        dispatch_async(queue, ^{
+            NSThread *thread = [NSThread currentThread];
+            [set addObject:[NSThread currentThread]];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                LogInfo(@"开始: %@", thread);
+                LogInfo(@"GCD 创建的线程数量: %lu", (unsigned long)set.count);
+                [self cpuBusy_printThreadCount];
+            });
+            
+            NSDate *date = [NSDate dateWithTimeIntervalSinceNow:10];//返回当前时间10秒后的时间
+            long i = 0;
+            while ([date compare:[NSDate date]]) {
+                i++;
+            }
+            [set removeObject:thread];
+            LogInfo(@"结束: %@", thread);
+        });
+    }
+}
+
+
+//调用
+[HGTestMultiThread testThreadMaxCount_CPUBusy];
+```
+
+截取了部分打印:
+
+```
+2023-04-17 13:22:59.076191+0800 MLC[3491:305082] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy]_block_invoke_2[75] 
+ 开始: <NSThread: 0x28179e0c0>{number = 8, name = main}
+
+2023-04-17 13:22:59.076270+0800 MLC[3491:305082] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy]_block_invoke_2[76] 
+ GCD 创建的线程数量: 6
+
+2023-04-17 13:22:59.076314+0800 MLC[3491:305082] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][56] 
+ 线程数量: 10
+
+2023-04-17 13:22:59.076350+0800 MLC[3491:305082] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy]_block_invoke_2[75] 
+ 开始: <NSThread: 0x281792940>{number = 9, name = main}
+
+2023-04-17 13:22:59.076381+0800 MLC[3491:305082] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy]_block_invoke_2[76] 
+ GCD 创建的线程数量: 6
+
+2023-04-17 13:22:59.076408+0800 MLC[3491:305082] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][56] 
+ 线程数量: 10
+```
+
+经过测试,创建的线程数量是:**6** . 当然这个数值也不是固定的,之前测试的是 **5**.
+
+
+<br/>
+<br/>
+
+
+> <h3 id='全局队列-CPU空闲'>全局队列-CPU 空闲</h3>
+
+我们通过 [NSThread sleepForTimeInterval:10]; 模拟 CPU 空闲 进行测试
+
+```
++ (void) testThreadMaxCount_CPUNotBusy {
+    NSMutableSet<NSThread *> *set = [NSMutableSet set];
+    
+    for (int i =0; i < 1000; i++) {
+        dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
+        dispatch_async(queue, ^{
+            NSThread *thread = [NSThread currentThread];
+            [set addObject:[NSThread currentThread]];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                LogInfo(@"开始: %@", thread);
+                LogInfo(@"GCD 创建的线程数量: %lu", (unsigned long)set.count);
+                [self cpuBusy_printThreadCount];
+            });
+            
+            //当前线程睡眠10秒
+            [NSThread sleepForTimeInterval:10];
+            [set removeObject:thread];
+            [set removeObject:thread];
+            LogInfo(@"结束: %@", thread);
+        });
+    }
+}
+```
+
+截取打印:
+
+```
+023-04-17 13:35:11.309423+0800 MLC[3542:308335] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy]_block_invoke_2[48] 
+ 开始: <NSThread: 0x28292b2c0>{number = 2, name = main}
+
+2023-04-17 13:35:11.309663+0800 MLC[3542:308335] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy]_block_invoke_2[49] 
+ GCD 创建的线程数量: 64
+
+2023-04-17 13:35:11.309968+0800 MLC[3542:308335] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][80] 
+ 线程数量: 68
+
+2023-04-17 13:35:11.310243+0800 MLC[3542:308335] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy]_block_invoke_2[48] 
+ 开始: <NSThread: 0x2829c4340>{number = 6, name = main}
+
+2023-04-17 13:35:11.310375+0800 MLC[3542:308335] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy]_block_invoke_2[49] 
+ GCD 创建的线程数量: 64
+
+2023-04-17 13:35:11.310596+0800 MLC[3542:308335] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][80] 
+ 线程数量: 68
+```
+
+经过测试，**线程数量最高是 64 个**
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='自建队列-CPU繁忙'>自建队列-CPU繁忙</h3>
+
+用自建队列 - CPU 繁忙 的表现，本例会模拟大部分 APP 的场景，不同业务方都创建单独的队列管理自己的任务
+
+```
++ (void) testThreadMaxCount_CPUBusy_SelfBuid {
+    NSMutableSet<NSThread *> *set = [NSMutableSet set];
+    
+    for (int i =0; i < 1000; i++) {
+        const char *label = [NSString stringWithFormat:@"label-self-thread:%d",i].UTF8String;
+        LogInfo(@"创建: %s",label);
+        dispatch_queue_t queue = dispatch_queue_create(label, DISPATCH_QUEUE_SERIAL);
+        dispatch_async(queue, ^{
+            NSThread *thread = [NSThread currentThread];
+            [set addObject:[NSThread currentThread]];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                static NSInteger lastCount = 0;
+                if (set.count <= lastCount) {
+                    return;
+                }
+                lastCount = set.count;
+                LogInfo(@"开始: %@", thread);
+                LogInfo(@"GCD 创建的线程数量: %lu", (unsigned long)set.count);
+                [self cpuBusy_printThreadCount];
+            });
+            
+            NSDate *date = [NSDate dateWithTimeIntervalSinceNow:10];//返回当前时间10秒后的时间
+            long i = 0;
+            while ([date compare:[NSDate date]]) {
+                i++;
+            }
+            [set removeObject:thread];
+            LogInfo(@"结束: %@", thread);
+        });
+    }
+}
+
+
+[self testThreadMaxCount_CPUBusy_SelfBuid];
+```
+
+
+截取打印:
+
+```
+2023-04-17 13:57:35.578833+0800 MLC[3672:317249] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy_SelfBuid]_block_invoke_2[57] 
+ GCD 创建的线程数量: 511
+
+2023-04-17 13:57:35.578922+0800 MLC[3672:317249] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][118] 
+ 线程数量: 516
+
+2023-04-17 13:57:35.583071+0800 MLC[3672:317249] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy_SelfBuid]_block_invoke_2[56] 
+ 开始: <NSThread: 0x2814d9540>{number = 516, name = main}
+
+2023-04-17 13:57:35.583093+0800 MLC[3672:317249] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUBusy_SelfBuid]_block_invoke_2[57] 
+ GCD 创建的线程数量: 512
+
+2023-04-17 13:57:35.583181+0800 MLC[3672:317249] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][118] 
+ 线程数量: 516
+```
+
+截取后创建最大线程数量是516个.
+
+
+
+<br/>
+<br/>
+
+
+> <h3 id='自建队列-CPU空闲'>自建队列-CPU空闲</h3>
+
+
+```
++ (void) testThreadMaxCount_CPUNotBusy_SelfBuid {
+    NSMutableSet<NSThread *> *set = [NSMutableSet set];
+    
+    for (int i =0; i < 1000; i++) {
+        const char *label = [NSString stringWithFormat:@"label-self-thread:%d",i].UTF8String;
+        LogInfo(@"创建: %s",label);
+
+        dispatch_queue_t queue = dispatch_queue_create(label, DISPATCH_QUEUE_SERIAL);
+        dispatch_async(queue, ^{
+            NSThread *thread = [NSThread currentThread];
+            [set addObject:[NSThread currentThread]];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                LogInfo(@"开始: %@", thread);
+                LogInfo(@"GCD 创建的线程数量: %lu", (unsigned long)set.count);
+                [self cpuBusy_printThreadCount];
+            });
+            
+            //当前线程睡眠10秒
+            [NSThread sleepForTimeInterval:10];
+            [set removeObject:thread];
+            LogInfo(@"结束: %@", thread);
+        });
+    }
+}
+```
+
+截取打印:
+
+```
+023-04-17 14:15:26.899259+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy_SelfBuid]_block_invoke_2[86] 
+ GCD 创建的线程数量: 512
+
+2023-04-17 14:15:26.899463+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][140] 
+ 线程数量: 516
+
+2023-04-17 14:15:26.899500+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy_SelfBuid]_block_invoke_2[85] 
+ 开始: <NSThread: 0x2820af780>{number = 516, name = main}
+
+2023-04-17 14:15:26.899593+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy_SelfBuid]_block_invoke_2[86] 
+ GCD 创建的线程数量: 512
+
+2023-04-17 14:15:26.899770+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][140] 
+ 线程数量: 516
+
+2023-04-17 14:15:26.899808+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy_SelfBuid]_block_invoke_2[85] 
+ 开始: <NSThread: 0x2820a2cc0>{number = 517, name = main}
+
+2023-04-17 14:15:26.899907+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread testThreadMaxCount_CPUNotBusy_SelfBuid]_block_invoke_2[86] 
+ GCD 创建的线程数量: 512
+
+2023-04-17 14:15:26.900094+0800 MLC[3784:327579] 🍎 +[HGTestMultiThread cpuBusy_printThreadCount][140] 
+ 线程数量: 516
+```
+
+**最多创建512个!**
+
+
+<br/>
+GCD 的全局队列会自动将线程数量限制在一个比较合理的数量。与之相比，自建队列创建的线程数量会偏大。
+
+考虑到线程数量过大会导致 CPU 调度成本上涨。
+
+所以，建议小型 APP 尽量使用全局队列管理任务；大型 APP 可以根据自己的实际情况决定适合自己的方案。
+
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
 
 > <h2 id='如何用GCD同步若干个异步调用'>如何用GCD同步若干个异步调用？</h2>
 
@@ -839,6 +1172,29 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 ># <h2 id='dispatch_once安全的原因'>[dispatch_once安全的原因](./多线程.md#dispatch_once)</h2>
 
+
+
+
+<br/>
+<br/>
+
+># <h2 id = "锁分为哪几类?说一下">[锁分为哪几类?说一下](./多线程.md#锁分类)</h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id = ""></h2>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id = ""></h2>
 
 
 
@@ -2618,6 +2974,62 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/#base)
 
 <br/>
+
+
+
+> <h3 id='Runloop可以用来做什么'>Runloop可以用来做什么</h3>
+
+- **可以用来做:**
+	- 处理crash
+	- 保持线程存活
+	- 监测优化卡顿
+		- observer可以用来做卡顿检测
+
+
+<br/>
+
+如何检测卡顿?
+
+Fps、屏幕刷新率59.94/s(这是和别人的一个区分点,一般人说是60hz/s)、ping、runloop
+
+<br/>
+<br/>
+
+
+> <h3 id='保活线程后,如何关闭?'>保活线程后,如何关闭?</h3>
+
+**线程保活出了用Runloop,还可以用NSCondition线程锁()!**
+
+使用一个变量isStoped来进行判断是否继续以这种条件模式进行保护
+
+![ios_oc2_14.png](./../../Pictures/ios_oc2_14.png)
+
+<br/>
+
+将isStoped标记为NO,并停止Runloop!
+
+若是以无条件方式进行跑runloop是无法使用 **CFRunLoopStop(CFRu你nLoopGetCurrent());** 进行停止的.这个可以翻看runtime看到.
+
+无条件跑runloop:
+
+```
+NSRunLoop *runloop = [NSRunLoop currentRunLoop];
+[runloop addPort:[NSPort port] forMode:NSDefaultRunLoopoMode];
+
+[runloop run];
+```
+
+
+![ios_oc2_15.png](./../../Pictures/ios_oc2_15.png)
+
+但是返现self.thread并没有进行析构方法的调用,这是因为强引用!可以
+
+```
+self.thread = nil;
+```
+
+
+
 
 
 > <h3 id ="Runloop底层原理">Runloop底层原理</h3>
