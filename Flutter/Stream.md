@@ -8,7 +8,9 @@
 
 
 <br/>
+
 &emsp;  为了方操作 Stream ，官方提供了StreamController,如下图所示，StreamSink来添加流 （入口），同时提供 stream 属性用于对外的监听和变换。 
+
 &emsp;  stream.listen的返回一个StreamSubscription，可以通过它的`pause(), resume(), cancel()`等方法来操作流的订阅。
 
 
@@ -45,7 +47,10 @@
   ///改变事件
   _dataSink.add(["first", "second", "three", "more"]);
 ```
-打印：![输出监听值](https://upload-images.jianshu.io/upload_images/2959789-5ac8833fa3c8c3bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+打印：
+
+![输出监听值](https://upload-images.jianshu.io/upload_images/2959789-5ac8833fa3c8c3bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 `其他的`
 
@@ -120,6 +125,7 @@ sink.add('我是一条新的消息');
 ```
 
 打印：
+
 ![控制台打印](https://upload-images.jianshu.io/upload_images/2959789-811d227510103818.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 

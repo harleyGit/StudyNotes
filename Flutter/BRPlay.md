@@ -1,24 +1,27 @@
-- **[Flutter生命周期（组件渲染）](https://juejin.im/post/6844903794879234061)**
-- **[Flutter的生命周期(交互)](https://juejin.im/post/6844903794883444743)**
-- **[Flutter开发实战详解（App的优化都有）](https://wizardforcel.gitbooks.io/gsyflutterbook/content/Flutter-1.html)**
-- **[MaterialApp使用详解](https://juejin.cn/post/6844903656932786189)**
-- **WidgetsFlutterBinding**
-- **范型限制**
-- **`WidgetsBinding.instance`**
-	- 渲染后的回调
-- **`AnnotatedRegion(不使用AppBar)`**
-	- AppBar的渐变色
-- **`系统字体缩放`**
-- **`导航返回拦截（WillPopScope）`**
-- **`Scaffold、TabBar、SafeArea、底部导航`**
-- **[PageView](http://flutter.link/2020/05/10/PageView/)**
-- **[文件存储](https://book.flutterchina.club/chapter10/file_operation.html)**
-- **‌[CupertinoPageTransitionsBuilder](https://juejin.cn/post/6844903966346575886)**
-- **[RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)**
-- **‌[MultiProvider 状态管理](https://juejin.cn/entry/6844903864852807694)**
-- **``**
-- **``**
-- **``**
+- [**WidgetsFlutterBinding**](#WidgetsFlutterBinding)
+- [**范型限制**](#范型限制)
+- [**`WidgetsBinding.instance`**](#`WidgetsBinding.instance`)
+	- [渲染后的回调](#渲染后的回调)
+- [**`AnnotatedRegion(不使用AppBar)`**](#AnnotatedRegion(不使用AppBar))
+	- [AppBar的渐变色](#AppBar的渐变色)
+- [**`系统字体缩放`**](#系统字体缩放)
+- [导航返回拦截（WillPopScope）](#导航返回拦截（WillPopScope）)
+- [Scaffold、TabBar、SafeArea、底部导航](#Scaffold、TabBar、底部导航)
+- [PageView](#PageView)
+- [文件储存](#文件储存)
+- [CupertinoPageTransitionsBuilder](#CupertinoPageTransitionsBuilder)
+- [RefreshConfiguration 刷新](#RefreshConfiguration刷新)
+- [MultiProvider状态管理](#MultiProvider状态管理)
+- **参考资料**
+	- **[Flutter生命周期（组件渲染）](https://juejin.im/post/6844903794879234061)**
+	- **[Flutter的生命周期(交互)](https://juejin.im/post/6844903794883444743)**
+	- **[Flutter开发实战详解（App的优化都有）](https://wizardforcel.gitbooks.io/gsyflutterbook/content/Flutter-1.html)**
+	- **[MaterialApp使用详解](https://juejin.cn/post/6844903656932786189)**
+	- **[PageView](http://flutter.link/2020/05/10/PageView/)**
+	- **[文件存储](https://book.flutterchina.club/chapter10/file_operation.html)**
+	- **‌[CupertinoPageTransitionsBuilder](https://juejin.cn/post/6844903966346575886)**
+	- **[RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)**
+	- **‌[MultiProvider 状态管理](https://juejin.cn/entry/6844903864852807694)**
 
 
 <br/>
@@ -31,7 +34,7 @@
 ***
 <br/>
 
-># WidgetsFlutterBinding
+># <h1 id='WidgetsFlutterBinding'>WidgetsFlutterBinding</h1>
 
 - `WidgetsFlutterBinding.ensureInitialized();`
 
@@ -67,7 +70,8 @@ E / flutter（3156）：如果您正在運行應用程序並且需要在調用`r
 ***
 <br/>
 
-># 范型限制
+># <h1 id='范型限制'>范型限制</h1>
+
 
 
 ```
@@ -156,8 +160,11 @@ enum AppLifecycleState {
 ```
 
 <br/>
+<br/>
 
-- **`渲染后的回调`**
+
+- ># <h2 id='渲染后的回调'>渲染后的回调</h2>
+
 	- 单次Frame绘制回调`(addPostFrameCallback)`
 
 ```
@@ -190,7 +197,9 @@ WidgetsBinding.instance.addPersistentFrameCallback((_){
 ***
 <br/>
 
-># AnnotatedRegion(不使用AppBar)
+
+># <h1 id='AnnotatedRegion(不使用AppBar)'>AnnotatedRegion(不使用AppBar)</h1>
+
 
 
 &emsp; `MediaQuery` 是一个 `InheritedWidget` ，它有一个叫 `MediaQueryData` 的参数，通过源码我们知道，一般情况下 `MediaQueryData` 的 `padding 的 top` 就是状态栏的高度。
@@ -233,8 +242,10 @@ class StatusDemo extends StatelessWidget {
 
 
 <br/>
+<br/>
 
-- AppBar的渐变色
+># <h2 id='AppBar的渐变色'>AppBar的渐变色</h2>
+
 
 
 ```
@@ -316,7 +327,9 @@ class _StatusDemoState extends State<StatusDemo> {
 ***
 <br/>
 
-># 系统字体缩放
+
+># <h id='系统字体缩放'>系统字体缩放</h1>
+
 &emsp; Flutter 中字体缩放也是和 MediaQueryData 的 textScaleFactor 有关。所以我们可以在需要的页面，通过最外层嵌套如下代码设置，将字体设置为默认不允许缩放。
 
 ```
@@ -332,7 +345,9 @@ MediaQuery(
 ***
 <br/>
 
-># [导航返回拦截（WillPopScope）](https://book.flutterchina.club/chapter7/willpopscope.html)
+># <h1 id='导航返回拦截（WillPopScope'>[导航返回拦截（WillPopScope）](https://book.flutterchina.club/chapter7/willpopscope.html)
+</h1>
+
 &emsp; 为了避免用户误触返回按钮而导致APP退出，在很多APP中都拦截了用户点击返回键的按钮，然后进行一些防误触判断，比如当用户在某一个时间段内点击两次时，才会认为用户是要退出（而非误触）。Flutter中可以通过`WillPopScope`来实现返回按钮拦截，我们看看`WillPopScope`的默认构造函数：
 
 ```
@@ -349,10 +364,12 @@ const WillPopScope({
 ***
 <br/>
 
-># [Scaffold、TabBar、底部导航](https://book.flutterchina.club/chapter5/material_scaffold.html)
+># <h1 id='Scaffold、TabBar、底部导航'>[Scaffold、TabBar、底部导航](https://book.flutterchina.club/chapter5/material_scaffold.html)</h1>
+
 
 
 <br/>
+
 - **Scaffold**
 
 ```
@@ -407,7 +424,9 @@ AppBar({
 ***
 <br/>
 
-># PageView
+
+># <h1 id='PageView'>PageView</h1>
+
 
 ```
 PageView({
@@ -444,7 +463,9 @@ PageView({
 ***
 <br/>
 
-># 文件储存
+
+># <h1 id='文件储存'>文件储存</h1>
+
 - `getTemporaryDirectory()`:获取临时目录,系统可随时清除的临时目录（缓存）。在iOS上，这对应于NSTemporaryDirectory() 返回的值。在Android上，这是getCacheDir())返回的值
 - `getApplicationDocumentsDirectory()`: 获取应用程序的文档目录，该目录用于存储只有自己可以访问的文件。只有当应用程序被卸载时，系统才会清除该目录。在iOS上，这对应于NSDocumentDirectory。在Android上，这是AppData目录。
 - `getExternalStorageDirectory()`: 来获取外部存储目录，如SD卡；由于iOS不支持外部目录，所以在iOS下调用该方法会抛出UnsupportedError异常，而在Android下结果是android SDK中getExternalStorageDirectory的返回值。
@@ -456,7 +477,9 @@ PageView({
 ***
 <br/>
 
-># CupertinoPageTransitionsBuilder
+># <h1 id='CupertinoPageTransitionsBuilder'>CupertinoPageTransitionsBuilder</h1>
+
+
 
 
 ```
@@ -480,8 +503,8 @@ PageView({
 ***
 <br/>
 
+># <h1 id='RefreshConfiguration刷新'>[RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)</h1>
 
-># [RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)
 
 &emsp;  全局配置RefreshConfiguration,配置子树下的所有SmartRefresher表现,一般存放于MaterialApp的根部:
 
@@ -513,7 +536,10 @@ PageView({
 ***
 <br/>
 
-># ‌[MultiProvider 状态管理](https://juejin.cn/entry/6844903864852807694)
+
+
+># <h1 id='MultiProvider状态管理'>‌[](https://juejin.cn/entry/6844903864852807694)</h1>
+
 
 状态管理：
 - Provider： 简单直接      
@@ -523,5 +549,11 @@ PageView({
 `注册 范围 使用 刷新 用后`要dispose掉，有RxSwift的风格。
 
 
+<br/>
 
+***
+<br/>
+
+
+># <h1 id=''></h1>
 
