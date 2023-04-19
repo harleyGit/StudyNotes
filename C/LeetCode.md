@@ -944,7 +944,8 @@ findMedianSortedArrays(num1, 2, num2, 2);
 <br/>
 
 
-> <h2 id="最长回文子串">最长回文子串</h2>
+>## <h2 id="最长回文子串">[最长回文子串](https://writings.sh/post/algorithm-longest-palindromic-substring#二维动态规划方法)</h2>
+
 [动态规划](https://blog.csdn.net/u013309870/article/details/75193592)
 
 给你一个字符串 s，找到 s 中最长的回文子串。
@@ -976,6 +977,109 @@ findMedianSortedArrays(num1, 2, num2, 2);
 
 
 ```
+
+
+<br/>
+
+解题思路:
+
+
+![c0_33.png](./../Pictures/c0_33.png)
+
+![c0_34.png](./../Pictures/c0_34.png)
+
+![c0_35.png](./../Pictures/c0_35.png)
+
+![c0_36.png](./../Pictures/c0_36.png)
+
+<br/>
+
+**代码:**
+
+```
+//最长回文子串
+char * longestPalindrome(char * s){
+    int length = strlen(s);
+    if(!s || length < 0){
+        return s;
+    }
+    
+    // dp[i][j] 表示 s[i..j] 是否回文，j >= i
+    int dp[length][length];
+    // 记录最大回文子串的长度，至少为 1
+    int maxLength = 1, begin = 0, end = 0;
+    
+    // 初始化
+    for(int i = 0; i<length; i++){
+        for(int j = i; j <length; j++){
+            dp[i][j] = 0;
+        }
+    }
+    
+    // 易知，单个字符 s[i..i] 构成回文
+    for(int i =0; i<length; i++){
+        dp[i][i]= 1;
+    }
+    
+    // 考虑递推
+    // 主要的递推关系是 dp[i][j] = dp[i+1][j-1]
+    // 所以倒序遍历 i ，才可以形成递推
+    for(int i = length - 1; i >= 0; i--){
+        for(int j = i; j < length; j++){
+            if(s[i] == s[j]){
+                if(j-1 >= i+1){ // 子串 s[i+1..j-1] 有效性
+                    if(dp[i+1][j-1]){
+                        dp[i][j] = 1;
+                    }
+                }else {
+                    // 此时 j < i + 2 即 j <= i+1
+                    // 再之 s[i] == s[j]，必回文
+                    dp[i][j] = 1;
+                }
+            }
+            
+            if(dp[i][j]){
+                // 更新最大长度
+                int length = j - i + 1;
+                
+                if( length > maxLength){
+                    maxLength = length;
+                    begin = i;
+                    end = j;
+                }
+            }
+        }
+    }
+    
+    //char *sub=(char *)malloc(sizeof(int) * (maxLength * 2));
+    //初始化sub，sub指向一块10个char大小的内存
+    char *sub = (char*)malloc(sizeof(char) * maxLength);
+    int i = 0;
+    for( ;i<maxLength; i++){
+        sub[i] = s[begin];
+        begin = begin+1;
+    }
+    //sub[i] = '\0';
+    
+    return sub;
+}
+
+
+///调用
+char *charArray= "babad";
+char *charArray= "cbbd";
+char *a = longestPalindrome(charArray);
+println("%s", a);
+```
+
+打印:
+
+```
+🌷🌹(Apr 19 2023:22:40:01 [74行] +[HGTestAlgorithm testLeetcodeAlgorithmModule:]) bb
+```
+
+
+
 
 
 
