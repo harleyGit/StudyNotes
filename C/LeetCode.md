@@ -16,6 +16,7 @@
 	- [无重复字符的最长子串](#无重复字符的最长子串)
 	- [寻找两个正序数组的中位数](#寻找两个正序数组的中位数)
 	- [最长回文子串](#最长回文子串)
+	- [正则表达式匹配](#正则表达式匹配)
 - **参考资料**
 	- [10大基础实用算法及其讲解](https://mp.weixin.qq.com/s?__biz=MzI0MjE3OTYwMg==&mid=401441966&idx=1&sn=653fe22c5a7e6c221fbf121124fd18a2&scene=21#wechat_redirect)
 	- [算法-春水煎茶](https://writings.sh/posts)
@@ -986,11 +987,8 @@ findMedianSortedArrays(num1, 2, num2, 2);
 
 
 ![c0_33.png](./../Pictures/c0_33.png)
-
 ![c0_34.png](./../Pictures/c0_34.png)
-
 ![c0_35.png](./../Pictures/c0_35.png)
-
 ![c0_36.png](./../Pictures/c0_36.png)
 
 <br/>
@@ -1089,8 +1087,98 @@ println("%s", a);
 <br/>
 
 
-> <h2 id=""></h2>
+> <h2 id="正则表达式匹配">正则表达式匹配</h2>
 
+给你一个字符串 s 和一个字符规律 p，请你来实现一个支持 '.' 和 '*' 的正则表达式匹配。
+
+- '.' 匹配任意单个字符
+- '*' 匹配零个或多个前面的那一个元素
+
+所谓匹配，是要涵盖 整个 字符串 s的，而不是部分字符串。
+
+ 
+示例 1：
+
+```
+输入：s = "aa", p = "a"
+输出：false
+解释："a" 无法匹配 "aa" 整个字符串。
+```
+
+示例 2:
+
+```
+输入：s = "aa", p = "a*"
+输出：true
+解释：因为 '*' 代表可以匹配零个或多个前面的那一个元素, 在这里前面的元素就是 'a'。因此，字符串 "aa" 可被视为 'a' 重复了一次。
+```
+
+示例 3：
+
+```
+输入：s = "ab", p = ".*"
+输出：true
+解释：".*" 表示可匹配零个或多个（'*'）任意字符（'.'）
+```
+
+
+提示：
+
+- 1 <= s.length <= 20
+- 1 <= p.length <= 20
+- s 只包含从 a-z 的小写字母。
+- p 只包含从 a-z 的小写字母，以及字符 . 和 *。
+- 保证每次出现字符 * 时，前面都匹配到有效的字符
+
+
+**code:**
+
+```
+/**解题思路:
+ *1、如果p为空，s为空匹配，s非空不匹配；
+ *2、s非空，p == s || p == '.'时第一个字符匹配；
+ *3、(p+1) != ''，则递归判断剩下的是否匹配 first_match && isMatch(++s, ++p)
+ *4、(p+1) == '*'，则有两种情况匹配：
+ *a: *匹配0个字符，s匹配剩下的，即isMatch(s, p+2)
+ *b: *匹配1个字符，继续用p匹配剩下的s，即first_match && isMatch(s+1, p)
+ */
+ 
+ 
+int isMatch(char * s, char * p){
+
+    if (!*p) {
+        return !*s;
+    }
+    
+    int isFirstMatch = *s && (*s == *p || *p == '.');
+    if (*(p+1) == '*') {
+        return isMatch(s, p+2) || (isFirstMatch && isMatch(++s, p));
+    }else {
+        return (isFirstMatch && isMatch(++s, ++p));
+    }
+}
+
+
+//调用
+//    char *s = "aa";
+//    char *p = "a";
+
+char *s = "aa";
+char *p = "a*";
+
+//    char *s = "ab";
+//    char *p = ".*";
+
+int is_match = isMatch(s, p);
+char *desc = is_match == 1 ? "匹配正则表达式" : "不匹配正则表达式";
+println("%s", desc);
+```
+
+打印:
+
+```
+🌷🌹(Apr 20 2023:20:28:39 [144行] +[HGTestAlgorithm testLeetcodeIsMatch]) 匹配正则表达式
+```
 
 
 

@@ -302,7 +302,7 @@
 
 > <h1 id = "Flutter">Flutter</h1>
 *	[资料集](./Flutter/资料集.md)
-*	[基础](./Flutter/基础.md)
+*	[类](./Flutter/类.md)
 *	[组件](./Flutter/组件.md)
 *	[Deer项目解析(I)](./Flutter/Deer项目解析(I).md)
 *	[Play](./Flutter/BRPlay.md)

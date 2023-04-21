@@ -54,12 +54,20 @@
 	- 	[包体积优化](#包体积优化)
 	- [内存暴涨解决](#内存暴涨解决)
 	- [文件存储优化](#文件存储优化)
+	- [Crash优化](#Crash优化)
+		- [你知道哪些类蔟?他们有什么有缺点?(大厂)](#你知道哪些类蔟?他们有什么有缺点?)
+		- [Runtime可以做什么?(大厂)](#Runtime可以做什么)
+		- [不使用三方SDK如何收集Crash堆栈信息?(大厂)](#不使用三方SDK如何收集Crash堆栈信息?)
+		- [有没有方法检测到异常后不让程序闪退?(大厂)](#有没有方法检测到异常后不让程序闪退?)
+		- [NSSetUncaughtExceptionHandler底层原理(大厂)](#NSSetUncaughtExceptionHandler底层原理)
 - [**架构与设计模式**](#架构与设计模式)
 	- [MVC和MVVM](#MVC和MVVM)
 	- [单例类](#单例类)
 	- [协议代理](#协议代理)
 	- [KVC和KVO](#KVC和KVO)
 - [**底层**](#底层)
+	- [Runtime](#Runtime)
+		- [Runtime可以做什么?(大厂)](#Runtime可以做什么?)
 	- [Runloop](#Runloop)
 		- [Runloop可以用来做什么](#Runloop可以用来做什么)
 		- [保活线程后,如何关闭?](#保活线程后,如何关闭?)
@@ -87,6 +95,7 @@
 		- [消息转发](#消息转发)
 		- [sel和IMP是什么?二者关系如何](#sel和IMP是什么，二者关系如何)
 		- [分类Category](#分类Category)
+			- [category作用是什么?](#category作用是什么?)
 			- [Asssociate关联的对象在什么时候释放](#Asssociate关联的对象在什么时候释放)
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
@@ -128,6 +137,7 @@
 - **资料**
 	- [**Quesion(I)**](https://rencheng.cc/2020/04/30/ios/general/iOS高级面试题/) 
 	- [靠谱iOS](https://github.com/ChenYilong/iOSInterviewQuestions)
+	- [逻辑教育**题集合](https://github.com/LithiumCarbonate/LGiOSQuestions/blob/master/2020-逻辑教育iOS面试题集合.md)
 	- [求职寒冬:技巧](https://juejin.cn/post/7164222659528491022)
 	- [2021 面试心得](https://mp.weixin.qq.com/s/v-kAFWXW3lQSPy3QWsO62g)
 	- [技术文章集合](http://roadmap.isylar.com/Article/iOS%20代码瘦身实践_%20删除无用的类.html)
@@ -812,6 +822,11 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 ```
 
 
+
+
+
+
+
 <br/>
 
 ***
@@ -835,6 +850,17 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 - 异步执行（async）：
 	- 异步添加任务到指定的队列中，它不会做任何等待，可以继续执行任务。
 	- 可以在新的线程中执行任务，具备开启新线程的能力。
+
+
+
+<br/>
+
+
+**拓展:**
+
+主队列是在main函数之前创建还是之后创建?
+
+&emsp; 主队列是在main函数之前就创建了,这个可以打断点看到!这个主队列的名字是:coma.apple.main-thread.这个可以打断点看到,也可以去苹果线程的源码去搜索到这个线程名字
 
 
 
@@ -1398,7 +1424,7 @@ NS_ASSUME_NONNULL_END
 
 &emsp; 不准确是因为当线程切换到主线程时会阻碍它计时，当用的是NSRunloopCommentModels时，可以用GCD来计时。
 
-&emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计
+&emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计(使用GCDTimer作为定时器，它是基于硬件时间的，相对来说更精准一点).
 
 接口定义：
 
@@ -2909,6 +2935,81 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 
 <br/>
+<br/>
+<br/>
+
+
+
+> <h2 id='Crash优化'>Crash优化</h2>
+
+![ios_oc2_16.png](./../../Pictures/ios_oc2_16.png)
+
+
+<br/>
+<br/>
+
+
+><h3 id='你知道哪些类蔟?他们有什么有缺点?'>你知道哪些类蔟?他们有什么有缺点?<h3>
+
+
+
+
+<br/>
+<br/>
+
+
+><h3 id='Runtime可以做什么'>[Runtime可以做什么?](#Runtime可以做什么?)</h3>
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+><h3 id='不使用三方SDK如何收集Crash堆栈信息?'>不使用三方SDK如何收集Crash堆栈信息?(大厂)</h3>
+
+
+
+
+<br/>
+<br/>
+
+
+><h3 id='有没有方法检测到异常后不让程序闪退?'>有没有方法检测到异常后不让程序闪退?(大厂)</h3>
+
+
+
+
+<br/>
+<br/>
+
+
+><h3 id='NSSetUncaughtExceptionHandler底层原理'>NSSetUncaughtExceptionHandler底层原理(大厂)</h3>
+
+
+
+
+<br/>
+<br/>
+
+
+><h3 id=''></h3>
+
+
+
+
+<br/>
+<br/>
+
+
+><h3 id=''></h3>
+
+
+<br/>
+<br/>
 
 ***
 <br/>
@@ -2967,6 +3068,23 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 ># <h1 id = "底层">底层</h1>
 
+<br/>
+
+># <h0 id = "Runtime">Runtime</h0>
+
+
+<br/>
+
+
+># <h3 id = "Runtime可以做什么?">Runtime可以做什么?</h3>
+
+- Method swizzle
+- 动态添加方法、属性;
+- 可以获取类的成员变量和属性
+
+
+<br/>
+<br/>
 <br/>
 
 >## <h2 id = "Runloop">[Runloop](https://www.jianshu.com/p/e29f846d8a97)</h2>
@@ -3231,7 +3349,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 <br/>
 <br/>
 
->### <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](./RunLoop(I).md)与自动释放池关系，什么时侯释放?</h3>
+>### <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](./RunLoop.md)与自动释放池关系，什么时侯释放?</h3>
 
 
 - **分两种情况：手动干预释放和系统自动释放**
@@ -4120,7 +4238,7 @@ objc_object::sidetable_retainCount()
 
 - initialize方法的调用
 
-	- initialize在第一次消息发送的时候调用。所以load先于initialize调用。
+	- initialize在第一次消息发送的时候调用(类第一次调用方法和实例第一次调用方法调用的时候)。所以load先于initialize调用。
 	- 调用initialize时，会优先调用父类，再子类
 
 
@@ -4203,7 +4321,30 @@ objc_object::sidetable_retainCount()
 
 
 <br/>
+
+- 拓展1: extension和categroy区别是什么?
+
+扩展是在编译的时候进行加载,category是在运行时的时候进行加载的
+
+
 <br/>
+<br/>
+
+
+
+
+> <h4 id="category作用是什么?">category作用是什么?</h4>
+
+- 添加方法
+- 多继承、公开私有方法
+- 降低耦合性,减少代码量
+
+
+
+
+<br/>
+<br/>
+
 
 
 > <h4 id="Asssociate关联的对象在什么时候释放">Asssociate关联的对象在什么时候释放</h4>
