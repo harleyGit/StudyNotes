@@ -17,6 +17,7 @@
 	- [寻找两个正序数组的中位数](#寻找两个正序数组的中位数)
 	- [最长回文子串](#最长回文子串)
 	- [正则表达式匹配](#正则表达式匹配)
+	- [三数之和](三数之和)
 - **参考资料**
 	- [10大基础实用算法及其讲解](https://mp.weixin.qq.com/s?__biz=MzI0MjE3OTYwMg==&mid=401441966&idx=1&sn=653fe22c5a7e6c221fbf121124fd18a2&scene=21#wechat_redirect)
 	- [算法-春水煎茶](https://writings.sh/posts)
@@ -1186,10 +1187,154 @@ println("%s", desc);
 <br/>
 
 
-> <h2 id=""></h2>
+>## <h2 id="三数之和">[三数之和](http://b23.tv/drt9epH)</h2>
+
+
+给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请
+
+你返回所有和为 0 且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+ 
+
+
+示例 1：
+
+```
+输入：nums = [-1,0,1,2,-1,-4]
+输出：[[-1,-1,2],[-1,0,1]]
+解释：
+nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0 。
+nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0 。
+nums[0] + nums[3] + nums[4] = (-1) + 2 + (-1) = 0 。
+不同的三元组是 [-1,0,1] 和 [-1,-1,2] 。
+注意，输出的顺序和三元组的顺序并不重要。
+```
+
+示例 2：
+
+```
+输入：nums = [0,1,1]
+输出：[]
+解释：唯一可能的三元组和不为 0 。
+```
+
+示例 3：
+
+```
+输入：nums = [0,0,0]
+输出：[[0,0,0]]
+解释：唯一可能的三元组和为 0 。
+```
+
+<br/>
+
+解题思路图:
+
+![c0_31.JPG](./../Pictures/c0_31.JPG)
 
 
 
+```
+///筛选
+int sortComp(const void* pa, const void* pb){
+    int a=*(int*)pa;
+    int b=*(int*)pb;
+    return a>b?1:-1;
+}
+
+
+int** threeSum(int* nums, int numsSize, int* returnSize, int** returnColumnSizes){
+    //C语言函数
+    qsort(nums, numsSize, sizeof(int), sortComp);
+    int baseLength = 100; //数组初始长度100
+    //初始化处理返回值，二维数组的大小和保存每一个一维数组大小的数组的空间保持一致
+    int **newArr = (int **)malloc(sizeof(int*) * baseLength);
+    *returnColumnSizes = (int *)malloc(sizeof(int)* baseLength);
+    *returnSize = 0;
+
+    for(int i = 0; i < numsSize; i ++){
+        if(i > 0 && nums[i] == nums[i -1]){//跳过重复元素(现在的元素和上一个相同了)
+            continue;
+        }
+        //不能放在for循环外面.否则后来循环不能计算末尾元素了,也就是第二个指针
+        int r = numsSize -1;
+        //i下标的下一个元素
+        int l = i + 1;
+        int target = 0 - nums[i];        
+        while(l < r){//l下标小于最末尾元素下标
+            if(nums[l]+nums[r] == target){//符合相加为0
+                //申请返回值二维数组的空间
+                newArr[*returnSize]= (int *)malloc(sizeof(int)*3);
+                //每一个数组大小都为3
+                (*returnColumnSizes)[*returnSize]= 3;
+                //赋值
+                newArr[*returnSize][0]= nums[i];
+                newArr[*returnSize][1]= nums[l];
+                newArr[*returnSize][2]= nums[r];
+
+                //二维数组的行数加1
+                (*returnSize)++;
+
+                //数组扩展一倍
+                if(*returnSize == baseLength){
+                    baseLength *=2;
+                    //relloc重新分配内存大小,但是地址不变:https://www.runoob.com/cprogramming/c-function-realloc.html
+                    newArr = (int **)realloc(newArr, sizeof(int*)*baseLength);
+                    *returnColumnSizes=(int*)realloc(*returnColumnSizes,sizeof(int)*baseLength);
+                }
+                while(l < r && nums[l] == nums[l+1]){//跳过重复元素
+                    l++;
+                }
+                while(l<r && nums[r] == nums[r-1]){//跳过重复元素
+                    r--;
+                }
+
+                l++;
+                r--;
+            }else if(nums[l]+nums[r] < target){//左边元素下标太小了
+                l++;
+            }else{
+                r--;
+            }
+        }
+    }
+    
+    return newArr;
+}
+
+
+///调用
+int nums[] = {-1,0,1,2,-1,-4};
+int numSize = sizeof(nums)/sizeof(int);
+
+///calloc:C 库函数 void *calloc(size_t nitems, size_t size) 分配所需的内存空间，并返回一个指向它的指针。malloc 和 calloc 之间的不同点是，malloc 不会设置内存为零，而 calloc 会设置分配的内存为零。
+///注意：calloc() 函数将分配的内存全部初始化为零。如果不需要初始化，可以使用 malloc() 函数代替。另外，使用 calloc() 函数时需要注意，如果分配的内存块过大，可能会导致内存不足的问题。
+int *returnSize = (int *)calloc(1, sizeof(int));
+
+//这里的内存分配最大值,即排列组合知识,C几取3
+//C6取3 == 20
+int** returnColumnSizes = (int**)malloc(sizeof(int*) * (numSize * (numSize - 1) * (numSize - 2)) / 6);
+
+int **a = threeSum(nums, numSize, returnSize, returnColumnSizes);
+for (int i = 0; i < *returnSize; i++) {
+    printf("🌷🌹行:");
+    int *b = a[i];
+    for (int j = 0; j < 3; j++) {
+        printf("%d, ", b[j]);
+    }
+    printf("\n");
+
+}
+```
+
+Log:
+
+```
+🌷🌹行:-1, -1, 2, 
+🌷🌹行:-1, 0, 1, 
+```
 
 <br/>
 <br/>
