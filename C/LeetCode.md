@@ -17,7 +17,7 @@
 	- [寻找两个正序数组的中位数](#寻找两个正序数组的中位数)
 	- [最长回文子串](#最长回文子串)
 	- [正则表达式匹配](#正则表达式匹配)
-	- [三数之和](三数之和)
+	- [三数之和](#三数之和)
 - **参考资料**
 	- [10大基础实用算法及其讲解](https://mp.weixin.qq.com/s?__biz=MzI0MjE3OTYwMg==&mid=401441966&idx=1&sn=653fe22c5a7e6c221fbf121124fd18a2&scene=21#wechat_redirect)
 	- [算法-春水煎茶](https://writings.sh/posts)

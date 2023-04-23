@@ -12,13 +12,19 @@
 	- [mixin](#mixin)
 		- [mixin怎么指定异常类型](#mixin怎么指定异常类型)
 - [**Widget组件**](#Widget组件)
+	- 状态
+		- createState方法什么时候调用?state里为什么可以直接获取到widget对象?
 	- [StatefulWidget生命周期](#StatefulWidget生命周期)
+	- widget频繁更改创建是否会影响性能?复用和更新机制是怎么样的?
 	- [widget有几种key](#widget有几种key)
 		- [什么时候用key](#什么时候用key)
 	- [什么是 Widgets、RenderObjects 和 Elements？](#什么是WidgetRenderObjects和Elements)
 		- [1).Widget](#1_Widget)
 		- [2).Element](#2_Element)
 		- [3).RenderObject](#3_RenderObject)
+		- [4).三者关系如何](#4_三者关系如何?)
+		- widget和Element什么关系?是一一对应的吗?
+	- [哪三棵树?](#哪三棵树?)
 	- [Widget、State、Context的核心概念和是为了解决什么问题?](#WidgetStateContext的核心概念和是为了解决什么问题)
 	- [简述StatelessWidget和StatefulWidget两种状态组件类](#简述StatelessWidget和StatefulWidget两种状态组件类)
 	- [为什么Navigator可以实现无需上下文路由导航？](#为什么Navigator可以实现无需上下文路由导航)
@@ -40,6 +46,7 @@
 - [**底层**](#底层)
 	- [Flutter是怎么完成组件渲染的](#Flutter是怎么完成组件渲染的)
 	- [简单解释下FrameWork层和Engine层](#简单解释下FrameWork层和Engine层)
+	- flutter绘制原理是什么?
 	- [简述Flutter的绘制流程](#简述Flutter的绘制流程)
 	- [热重载](#热重载)
 	- [Provider原理解析](#Provider原理解析)
@@ -591,6 +598,31 @@ class _ScreenState extends State<Screen> {
 
 
 
+
+<br/>
+<br/>
+
+ 
+
+> <h3 id='4_三者关系如何?'>4).三者关系如何?</h3>
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id='哪三棵树?'>哪三棵树?</h2>
+
+
+- widget树;
+- element树(不包含业务,只管绘制);
+- render(渲染树)树(根据element树计算所需要显示的树)
+
+&emsp; 把widget中绘制的部分給分离出来形成了element树.这个主要是在widget中的绘制方法 **Widget build(BuildContext context)**,业务相关的不用管它.
+
+
+
 <br/>
 <br/>
 
@@ -605,12 +637,6 @@ class _ScreenState extends State<Screen> {
 
 - State: 定义了StatefulWidget实例的行为，它包含了用于”交互/干预“Widget信息的行为和布局。应用于State的任何更改都会强制重建Widget。
 
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
 
 
 
