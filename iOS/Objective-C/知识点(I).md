@@ -91,6 +91,9 @@
 		- [引用计数的获取](#引用计数的获取)
 	- [类库没有导入](#类库没有导入)
 	- [类](#类)
+		- [一个NSObject对象占用多少内存？](#一个NSObject对象占用多少内存？)
+		- [对象的isa指针指向哪里？](#对象的isa指针指向哪里？)
+		- [类信息存放在哪里？](#类信息存放在哪里？)
 		- [load和initialize哪个先调用](#load和initialize哪个先调用)
 		- [消息转发](#消息转发)
 		- [sel和IMP是什么?二者关系如何](#sel和IMP是什么，二者关系如何)
@@ -4225,6 +4228,39 @@ objc_object::sidetable_retainCount()
 
 
 > <h2 id='类'>类</h2>
+
+
+<br/>
+<br/>
+
+
+> <h2 id='一个NSObject对象占用多少内存？'>一个NSObject对象占用多少内存？</h2>
+
+答：系统会为一个NSObject对象分配最少16个字节的内存空间。一个指针变量所占用的大小（64bit占8个字节，32bit占4个字节）
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='对象的isa指针指向哪里？'>对象的isa指针指向哪里？</h2>
+
+答：instance对象的`isa`指针指向class对象，class对象的`isa`指针指向meta-class对象，meta-class对象的`isa`指针指向基类的meta-class对象，基类自己的`isa`指针指向自己。
+
+
+> <h2 id='类信息存放在哪里？'>类信息存放在哪里？</h2>
+
+
+答：成员变量的具体值存放在实例对象（instance对象）；对象方法，协议，属性，成员变量信息存放在类对象（class对象）；类方法信息存放在元类对象（meta-class对象）。
+
+
+
+
+<br/>
+<br/>
+
+
 
 
 > <h2 id='load和initialize哪个先调用'>load和initialize哪个先调用</h2>

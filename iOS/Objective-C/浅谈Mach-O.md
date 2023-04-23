@@ -100,7 +100,7 @@ struct fat_arch {
 
 &emsp; 在运行iOS会生成一个 .app 文件，位于 工程目录/Product 文件夹下，.app 文件实际上是一个文件夹，我们可以右键，显示包内容，就可以查看文件夹中的内容了，其中有一个与工程同名的 Unix 可执行文件，这就是一个 Mach-O 格式的文件。我们可以使用 **`file、lipo -info `** 命令来查看,如下:
 
-![查看cpu类型](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc79.png)
+![查看cpu类型](./../../Pictures/ios_oc79.png)
 
 
 <br/>
@@ -111,7 +111,7 @@ struct fat_arch {
 
 &emsp; 之后我们用 Synalyze It! Pro 来查看 WeChat 的 Mach64 Header 的效果：
 
-![没法看](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc80.png)
+![没法看](./../../Pictures/ios_oc80.png)
 
 
 
@@ -123,7 +123,7 @@ struct fat_arch {
 > <h2 id='Mach-O文件格式'>Mach-O 文件格式</h2>
 
 
-![>Mach-O 文件格式](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc81.png)
+![>Mach-O 文件格式](./../../Pictures/ios_oc81.png)
 
 
 - **Mach-O 主要由 3 部分组成:**
@@ -282,11 +282,11 @@ int main() {
 
 &emsp; 使用 clang -g main.cpp -o main 生成执行文件。然后拖入到 MachOView 中来查看一下加载 Segment 的结构（当然使用 Synalyze It! 也能捕捉到这些信息的，但是 MachOView 更对结构的分层更加一目了然）：
 
-![图一](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc82.jpg)
+![图一](./../../Pictures/ios_oc82.jpg)
 
 <br/>
 
-![图二](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc83.jpg)
+![图二](./../../Pictures/ios_oc83.jpg)
 
 
 &emsp; 在 LC_SEGMENT_64 中有四个元素，分别是 __PAGEZERO、__TEXT、__DATA、__LINKEDIT 这四个 Segment。其中，__TEXT 的 __text Section 的加载是可以验证到的，我们从 Section 的实例中取出其 addr 来对比汇编之后代码的起始地址即可。使用 otool -vt main 来获取其汇编代码：
@@ -317,7 +317,7 @@ _main:
 
 对比 Synalyze It! 的分析结果中 SEG__TEXT.__text 中的 addr 观察：
 
-![图三](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc84.jpg)
+![图三](./../../Pictures/ios_oc84.jpg)
 
 其对应的物理地址均为 0x100000F60，说明其 LC_SEGMENT 对于 Segment 和 Section 的加载与我们的预期完全一致。
 
@@ -333,26 +333,26 @@ _main:
 将 Calculator 应用拖入到 Synalyze It! 和 Hopper Disassembler 中。首先使用 Synalyze It! 来查找一个 __stubs 地址：
 
 
-![图四](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc85.jpg)
+![图四](./../../Pictures/ios_oc85.jpg)
 
 取出地址 0x100016450 并在 Hopper 中查找对应的代码，并以此双击进入：
 
-![图五](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc86.jpg)
+![图五](./../../Pictures/ios_oc86.jpg)
 
 
-![图6](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc87.jpg)
+![图6](./../../Pictures/ios_oc87.jpg)
 
 到达第二幅图的位置的时候，我们发现无法继续进入，因为 _CFRelease 中的代码是没有意义的。我们拿出 0x100031000 这个首地址，在 MachOView 中查找：
 	
-![图8](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc88.jpg)
+![图8](./../../Pictures/ios_oc88.jpg)
 
 发现其低 32 位的值为 0x00000010001663E，将这个地址继续在 hopper 中搜索：
 
-![图9](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc89.jpg)
+![图9](./../../Pictures/ios_oc89.jpg)
 
 发现这一系列操作都会跳到 0x000000010001650c 这个位置，而这里就是 __TEXT.__stub_helper 的表头。
 
-![图10](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/ios_oc90.jpg)
+![图10](./../../Pictures/ios_oc90.jpg)
 
 &emsp; 也就是说，__la_symbol_ptr 里面的所有表项的数据在开始时都会被 binding 成 __stub_helper。而在之后的调用中，虽然依旧会跳到 __stub 区域，但是 __la_symbol_ptr 中由于在之前的调用中获取到了对应方法的真实地址，所以无需在进入 dyld_stub_binder 阶段，并直接调用函数。这样就完成了一次近似于 lazy 思想的延时 binding 过程。（这个过程可以用 lldb 来加以验证，在之后会补充。）
 

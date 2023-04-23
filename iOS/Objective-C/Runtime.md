@@ -1,11 +1,27 @@
-[**Runtime(II)**](https://github.com/harleyGit/StudyNotes/blob/master/底层/Runtime(II).md)
+
 
 <br/>
 
-- **简介**
-- **基本概念**
-- **基本方法**
-- **消息转发机制**
+- [**简介**](#简介)
+	- [**基本概念**](#基本概念)
+- [**类**](#类)
+	- [属性列表](#属性列表)
+	- [objc_object源码](#objc_object源码)
+	- [objc_class结构体](#objc_object源码)
+	- [Class(类)](#Class(类))
+	- [Object(对象)](#Object(对象))
+	- [Meta Class(元类)](#MetaClass(元类))
+	- [Method(方法)](#Method(方法))
+	- [AssociatedObject关联对象](#AssociatedObject关联对象)
+- [**消息转发机制**](#消息转发机制)
+	- [消息发送](#消息发送)
+- **资料**
+	- [class_method 参数](https://www.jianshu.com/p/e4237de0aedb)      
+	- 	[Runtime 详解 基础知识](https://www.jianshu.com/p/633e5d8386a8) 
+	- 	**[深入了解Category](https://tech.meituan.com/2015/03/03/diveintocategory.html)**
+	- 	[iOS runtime——函数/使用方法/使用场景/示例](https://blog.csdn.net/potato512/article/details/51106645)
+	- 	**[Runtime源码分析](https://juejin.cn/post/6844903952039821320)**
+	- [文章介绍](https://juejin.cn/user/3913917126673047/posts)
 
 
 <br/>
@@ -13,7 +29,7 @@
 ***
 <br/> 
 
-># 简介：
+> <h1 id='简介'>简介</h1>
 
 &emsp;  Runtime被称为 `iOS 开发中的黑魔法`，是一套C 语言的API.
 
@@ -22,20 +38,22 @@
 &emsp;  C语言函数在调用编译的时候就会决定调用哪个函数，而OC是一种动态语言，它会尽可能把代码从编译链接推迟到运行时，这就是OC运行时的多态。
 
 
-![z23](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z23.jpeg)
+![z23](./../../Pictures/z23.jpeg)
+
+
 
 <br/>
-
-***
 <br/> 
 
-># 基本概念
+> <h2 id='基本概念'>基本概念</h2>
 
 先来做道[题](https://halfrost.com/objc_runtime_isa_class/)
 
 <br/>
 
-`Obj *obj = [Obj new];`
+```
+Obj *obj = [Obj new];
+```
 
 - `实例对象`：通常类的实例化的对象，比如：obj 就是一个实例对象；
 - `类对象`：其实`类也是一个对象`，比如: Obj 其实也是一个对象；
@@ -51,9 +69,10 @@ objc_msgSend(objc_msgSend([NSObject class],@selector(alloc)),@selector(init));
 
 ```
 
-<br/>
 
-***
+
+
+<br/>
 <br/>
 
 
@@ -69,7 +88,9 @@ objc_msgSend(objc_msgSend([NSObject class],@selector(alloc)),@selector(init));
 ***
 <br/>
 
-># 基本方法
+> <h1 id='类'>类</h1>
+
+
 <br/>
 
 ```
@@ -78,15 +99,36 @@ object_getClass(id _Nullable obj)
 
 ```
 
-
 <br/>
-
-***
 <br/>
 
 
+> <h2 id='属性列表'>属性列表</h2>
+
+**property_getAttributes(objc_property_t _Nonnull property)**   
+
+获取属性的真实类型
+
+```
+const char *attrs = property_getAttributes(property);
+
+//Printing description of attrs:
+(const char *) attrs = 0x0000000108cc3c26 "T@\"NSMutableArray<ShowNewsModel>\",&,N,V_list1"
+```
+
+[property_getAttributes()](https://www.jianshu.com/p/cefa1da5e775)
+
+
+
 <br/>
-点击#import <objc/objc.h> ，可以发现class与object在Objective-C的定义：
+<br/>
+
+
+> <h2 id='objc_object源码'>objc_object源码</h2>
+
+
+
+点击 **#import <objc/objc.h>** ，可以发现class与object在Objective-C的定义：
 
 [调试Runtime源码](https://zhuanlan.zhihu.com/p/27786725),[ **Runtime源码**](https://github.com/RetVal/objc-runtime)
 
@@ -103,6 +145,13 @@ struct objc_object {
 typedef struct objc_object *id;
 
 ```
+
+
+<br/>
+<br/>
+
+
+> <h2 id='objc_class结构体'>objc_class结构体</h2>
 
 点击objc_class这个结构体，可以看到：
 
@@ -138,8 +187,11 @@ struct objc_class {
 ```
 
 <br/>
+<br/>
 
-**Class(类)**
+
+> <h2 id='Class(类)'>Class(类)</h2>
+
 
 > &emsp;  `struct objc_classs` 结构体里存放的数据称为`元数据(metadata)`，结构体内包含了isa、super_class(指向父类的指针)、属性(name[类的名字]、version[版本]、info、instance_size[实例大小])、ivars(实例变量列表)、methodLists(方法列表)、cache(缓存)、protocols(遵守的协议列表)。
 
@@ -147,29 +199,41 @@ struct objc_class {
 
 
 <br/>
+<br/>
 
-**Object(对象)**
 
-> &emsp;  这里的 id 被定义为一个指向 objc_object 结构体 的指针。从中可以看出 objc_object 结构体 只包含一个 Class 类型的 isa 指针。
+> <h2 id='Object(对象)'>Object(对象)</h2>
 
-> &emsp; 换句话说，一个 Object（对象）唯一保存的就是它所属 Class（类） 的地址。当我们对一个对象，进行方法调用时，比如 [receiver selector];，它会通过 objc_object 结构体的 isa 指针 去找对应的 objc_class 结构体，然后在 objc_class 结构体 的 methodLists（方法列表） 中找到我们调用的方法，然后执行。
+
+&emsp;  这里的 id 被定义为一个指向 objc_object 结构体 的指针。从中可以看出 objc_object 结构体 只包含一个 Class 类型的 isa 指针。
+
+&emsp; 换句话说，一个 Object（对象）唯一保存的就是它所属 Class（类） 的地址。当我们对一个对象，进行方法调用时，比如 [receiver selector];，它会通过 objc_object 结构体的 isa 指针 去找对应的 objc_class 结构体，然后在 objc_class 结构体 的 methodLists（方法列表） 中找到我们调用的方法，然后执行。
 
 
 <br/>
+<br/>
 
-**Meta Class(元类)**
 
-> &emsp; 对象（objc_object 结构体） 的 isa 指针 指向的是对应的 类对象（objc_class 结构体）。那么 类对象（objc_class 结构体）的 isa 指针 又指向什么呢？
+> <h2 id='MetaClass(元类)'>Meta Class(元类)</h2>
 
-> &emsp; objc_class 结构体 的 isa 指针 实际上指向的的是 类对象 自身的 Meta Class（元类）。
 
-> &emsp; Meta Class（元类） 就是一个类对象所属的 类。一个对象所属的类叫做 类对象，而一个类对象所属的类就叫做 元类。
+
+&emsp; 对象（objc_object 结构体） 的 isa 指针 指向的是对应的 类对象（objc_class 结构体）。那么 类对象（objc_class 结构体）的 isa 指针 又指向什么呢？
+
+&emsp; objc_class 结构体 的 isa 指针 实际上指向的的是 类对象 自身的 Meta Class（元类）。
+
+&emsp; Meta Class（元类） 就是一个类对象所属的 类。一个对象所属的类叫做 类对象，而一个类对象所属的类就叫做 元类。
 
  
 
 <br/>
+<br/>
 
-**Method(方法)**
+
+> <h2 id='Method(方法)'>Method(方法)</h2>
+
+
+
 
 ```
 struct objc_method {
@@ -183,14 +247,20 @@ struct objc_method {
 
 
 <br/>
+
 &emsp;  `类对象`中的`元数据`存储的都是如何创建一个实例的相关信息，那么`类对象`和`类方法`应该从哪里创建呢？就是从isa指针指向的结构体创建，`类对象`的isa指针指向的我们称之为`元类(metaclass)`，元类中保存了创建类对象以及类方法所需的所有信息，因此如简单字符串创建整个结构应该如下图所示:
 
-![类之间的关系](https://upload-images.jianshu.io/upload_images/2959789-f3bfac08dfb1b475.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+类之间的关系:
+
+![ios_oc2_21.png](./../../Pictures/ios_oc2_21.png)
+
+
 
 
 &emsp;  通过上图我们可以清晰的看出来一个`实例对象`也就是`struct objc_object结构体`它的isa指针指向`类对象`，`类对象`的isa指针指向了`元类`，`super_class指针`指向了父类的`类对象`，而元类的`super_class指针`指向了父类的`元类`，那元类的isa指针又指向了什么？为了更清晰的表达直接使用一个大神画的图。
 
-![类指向](https://upload-images.jianshu.io/upload_images/2959789-18610b1ef20d7458.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ios_oc2_22.png](./../../Pictures/ios_oc2_22.png)
+
 
 
 由上图我们可以得到：
@@ -293,12 +363,48 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 ```
-![控制台 person 实例对象包含的内容](https://upload-images.jianshu.io/upload_images/2959789-b982633cf07e507d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+控制台 person 实例对象包含的内容:
+
+
+![ios_oc2_23.png](./../../Pictures/ios_oc2_23.png)
+
 
 从上图可以看到person实例对象包含一个isa指针、属性变量。
 每个类在内存中有且只有一个类对象，所以每个类在内存中也有且只有一个元类对象;
+
 当你给对象发送消息时，消息是在寻找这个对象的类的方法列表;
 当你给类发消息时，消息是在寻找这个类的元类的方法列表。
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id='AssociatedObject关联对象'>AssociatedObject关联对象</h2>
+
+
+简介：关联是指把两个对象相互关联起来,使得其中的一个对象作为另外一个对象的一部分。一般用在分类中，因为在分类中是不可以再次申明定义一个属性变量的，这时可以用关联属性。
+
+```
+objc_getAssociatedObject(id _Nonnull object, const void * _Nonnull key);
+
+objc_setAssociatedObject(id _Nonnull object, const void * _Nonnull key, id _Nullable value, objc_AssociationPolicy policy);
+```
+
+[AssociatedObject 完全解析](https://www.jianshu.com/p/79479a09a8c0)
+
+[基本用法](https://www.jianshu.com/p/6f1343c7be26)
+
+[demo](https://www.jianshu.com/p/52a28d59ef10)
+
+[Runtime探索](https://www.jianshu.com/u/2de707c93dc4)
+
+
+
 
 
 
@@ -309,14 +415,31 @@ NS_ASSUME_NONNULL_END
 ***
 <br/>
 
-># 消息转发机制
+> <h1 id='消息转发机制'>消息转发机制</h1>
+
+![ios_oc2_26.png](./../../Pictures/ios_oc2_26.png)
+
+
+![ios_oc2_27.png](./../../Pictures/ios_oc2_27.png)
+
+
+![ios_oc2_28.png](./../../Pictures/ios_oc2_28.png)
+
+
 &emsp;   原理：Objective-C 语言 中，对象方法调用都是类似 `[receiver selector]; `的形式，其本质就是让对象在运行时发送消息的过程。
 
+
+<br/>
+
+
 **`编译阶段：`**`[receiver selector];` 方法被编译器转换为:
+
 ```
 objc_msgSend(receiver，selector) （不带参数）
 objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 ```
+
+<br/>
 
 **`运行时阶段：`**消息接受者 recever 寻找对应的 selector。
 
@@ -331,9 +454,14 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 
 > &emsp;  若找不到对应的 selector，消息被转发或者临时向 recever 添加这个 selector 对应的实现方法，否则就会发生崩溃。
 
-![消息转发示意图](https://upload-images.jianshu.io/upload_images/2959789-ff3d7417b9979be6.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+消息转发示意图:
+
+![ios_oc2_24.png](./../../Pictures/ios_oc2_24.png)
+
+
 
 <br/>
+
 创建一个MessageSend类
 
 ```
@@ -365,9 +493,11 @@ NS_ASSUME_NONNULL_END
 
 crash 错误：
 
-`2019-11-17 11:20:08.972291+0800 HGSWB[49471:2551396] -[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0`
+```
+2019-11-17 11:20:08.972291+0800 HGSWB[49471:2551396] -[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0
 
-`2019-11-17 11:20:09.047606+0800 HGSWB[49471:2551396] *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '-[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0'`
+2019-11-17 11:20:09.047606+0800 HGSWB[49471:2551396] *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '-[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0'
+```
 
 <br/>
 
@@ -406,6 +536,7 @@ void dynamicMethodIMP11(id self, SEL _cmd, NSString *msg) {
 
 @end
 ```
+
 打印：
 
 ```
@@ -472,8 +603,9 @@ MessageSend.m 文件
 ```
 
 打印：
-`2019-11-17 11:51:28.940038+0800 HGSWB[50835:2628501] SubMessageSend 的 sendMessage 方法
-`
+```
+2019-11-17 11:51:28.940038+0800 HGSWB[50835:2628501] SubMessageSend 的 sendMessage 方法
+```
 
 
 <br/>
@@ -528,10 +660,14 @@ MessageSend.m 文件
 
 &emsp; 因为 `SubMessageSend` 类中有 `sendMessage:` 可以相应，所以可以打印：
 
-`2019-11-17 12:41:04.617546+0800 HGSWB[52721:2786753] SubMessageSend 的 sendMessage 方法`
+```
+2019-11-17 12:41:04.617546+0800 HGSWB[52721:2786753] SubMessageSend 的 sendMessage 方法
+```
 
 当我在控制台中使用命令 `po anInvocation.methodSignature` 时，打印如下：
-![方法签名](https://upload-images.jianshu.io/upload_images/2959789-b34f0a623a15b90c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![ios_oc2_25.png](./../../Pictures/ios_oc2_25.png)
+
 
 &emsp;  当我把 `SubMessageSend` 类中 `sendMessage:` 方法注掉后会打印：
 `2019-11-17 12:47:29.881606+0800 HGSWB[53142:2878060] doesNotRecognizeSelector 不要逼我了，我没办法了，我要 Crash 了！！！
@@ -577,6 +713,20 @@ MessageSend.m 文件
 
 
 
+<br/>
+<br/>
+
+> <h2 id='消息发送'>消息发送</h2>
+
+&emsp;  执行一个方法，有些语言，编译器会执行一些额外的优化和错误检查，因为调用关系很直接也很明显。但对于消息分发来说，就不那么明显了。在发消息前不必知道某个对象是否能够处理消息。你把消息发给它，它可能会处理，也可能转给其他的 Object 来处理。一个消息不必对应一个方法，一个对象可能实现一个方法来处理多条消息。
+
+&emsp;  在Objective-C:中，消息是通过objc_msgSend()这个 runtime 方法及相近的方法来实现的。这个方法需要一个target，selector，还有一些参数。理论上来说，编译器只是把消息分发变成objc_msgSend来执行。比如下面这两行代码是等价的:
+
+```
+[array insertObject:foo atIndex:5];
+
+objc_msgSend(array, @selector(insertObject:atIndex:), foo, 5);
+```
 
 
 
@@ -585,6 +735,5 @@ MessageSend.m 文件
 ***
 <br/>
 
-[Runtime(II)](https://www.jianshu.com/p/afeba351f4b1)
-[class_method 参数](https://www.jianshu.com/p/e4237de0aedb)      
-[Runtime 详解 基础知识](https://www.jianshu.com/p/633e5d8386a8)                                                    
+
+                                   
