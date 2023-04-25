@@ -18,6 +18,7 @@
 	- [最长回文子串](#最长回文子串)
 	- [正则表达式匹配](#正则表达式匹配)
 	- [三数之和](#三数之和)
+	- [盛最多水的容器](#盛最多水的容器)
 - **参考资料**
 	- [10大基础实用算法及其讲解](https://mp.weixin.qq.com/s?__biz=MzI0MjE3OTYwMg==&mid=401441966&idx=1&sn=653fe22c5a7e6c221fbf121124fd18a2&scene=21#wechat_redirect)
 	- [算法-春水煎茶](https://writings.sh/posts)
@@ -1187,7 +1188,7 @@ println("%s", desc);
 <br/>
 
 
->## <h2 id="三数之和">[三数之和](http://b23.tv/drt9epH)</h2>
+>## <h2 id="三数之和">[三数之和(动态规划)](http://b23.tv/drt9epH)</h2>
 
 
 给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请
@@ -1340,7 +1341,56 @@ Log:
 <br/>
 
 
+> <h2 id="盛最多水的容器">盛最多水的容器(贪心算法)</h2>
+
+![c0_37.png](./../Pictures/c0_37.png)
+
+
+
+```
+int maxArea(int* height, int heightSize){
+    int left=0;
+    int right=heightSize-1;
+    int tall=0;//高
+    int area=0;//面积--储水量
+    int max=0;
+
+    while(left < right)
+    {
+        tall=height[left]<height[right] ? height[left] : height[right];
+        area=tall*(right-left);
+        max=max>area ? max : area;
+        
+        if(height[left] < height[right])left++;
+        else right--;
+    }
+
+    return max;
+}
+
+```
+
+<br/>
+<br/>
+
+
 > <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
 
 
 
@@ -1357,8 +1407,297 @@ Log:
 
 
 
+<br/>
+<br/>
 
 
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id=""></h2>
 
 
 
