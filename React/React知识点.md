@@ -35,6 +35,8 @@
 	- [React基础知识](https://github.com/semlinker/reactjs-interview-questions#什么是-react)
 	- [200行代码实现简版react](https://juejin.cn/post/6844903733998911501#heading-6)
 	- [十三水](https://jackniu81.github.io/2021/05/06/React-Interview-Questions-and-Answers/)
+	- [react-interview](https://github.com/hongxiaomin/react-interview)
+	- [React 面试题汇总](https://jackniu81.github.io/2021/05/06/React-Interview-Questions-and-Answers/#11-react有什么特点)
 
 
 
