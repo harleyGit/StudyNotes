@@ -68,6 +68,7 @@
 - [**底层**](#底层)
 	- [Runtime](#Runtime)
 		- [Runtime可以做什么?(大厂)](#Runtime可以做什么?)
+		- [使用hook防崩溃](#使用hook防崩溃)
 	- [Runloop](#Runloop)
 		- [Runloop可以用来做什么](#Runloop可以用来做什么)
 		- [保活线程后,如何关闭?](#保活线程后,如何关闭?)
@@ -3086,6 +3087,36 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 - 可以获取类的成员变量和属性
 
 
+
+<br/>
+<br/>
+
+
+># <h3 id = "使用hook防崩溃">使用hook防崩溃</h3>
+
+
+- 对于NSArray中的数组越界取值,可以用使用Swizze对NSArray的泪蔟进行方法交换.
+- 在load方法中用dispatch_onceToken,防止使用类的主动调用load方法;
+- 对于消息转发中,若是有的方法没有实现,可能引起崩溃.可以对**forwardingTargetForSelector**进行方法替换,针对于其他消息转发中的方法,是因为太复杂了.
+
+
+
+
+<br>
+
+拓展: 
+
+**1.不使用三方SDK如何收集Crash堆栈信息?** 
+
+我们可以在forwardingTargetForSelector的swizzle方法logic_forwardingTargetForSelector中让它指向一个类的某一个方法进行执行,在这个方法中收集crash堆栈信息.
+
+![ios_oc2_29.png](./../../Pictures/ios_oc2_29.png)
+
+可以使用[NSSetUncaughtExceptionHandler](https://juejin.cn/post/6953142642746064910)进行崩溃信息的收集.
+
+
+
+
 <br/>
 <br/>
 <br/>
@@ -3105,6 +3136,14 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 	- 保持线程存活
 	- 监测优化卡顿
 		- observer可以用来做卡顿检测
+
+
+
+- **保持线程保活:**
+
+![ios_oc2_30.png](./../../Pictures/ios_oc2_30.png)
+
+先弹出一个弹窗,点击弹窗后的**崩溃**按钮后,app才崩溃!
 
 
 <br/>
@@ -4762,10 +4801,32 @@ storehub提问：NSNotification的class方法指向谁？
 
 
 <br/>
+<br/>
 
 - NSArray实现原理：
 
-&emsp;  [NSArray原理](https://blog.csdn.net/Deft_MKJing/article/details/82732833)得益于使用了环形缓冲区的方法。
+
+这个可以先整体进行大致说一下,比如:NSArrays的[类蔟](https://juejin.cn/post/6844903912386854926).再然后述说它的底层,这个涉及到它的底层原理[环形缓冲区](https://blog.csdn.net/Deft_MKJing/article/details/82732833)
+
+
+<br/>
+
+- **类蔟**
+	- NSConstantArray:常量数组 
+	
+	- __NSArrayI: 多个元素是这个类
+	
+	- __NSArrayM: 数组有且只有一个元素,init后是一个可变数组
+	
+	- __NSPlaceholderArray:  可变或者不可变数组alloc后得到的类都是__NSPlaceholderArray
+	
+	- NSSingleObjectArrayI: 数组中有且只有一个元素就是这个类,若是多个就不是这个了  
+	
+  - __NSArray0:init不可变数组后生成的空数组
+
+ 
+
+<br/>
 
 **ivars 的意思：**
 

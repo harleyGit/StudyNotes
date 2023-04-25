@@ -246,6 +246,7 @@
 	*	[SDWebImage](./iOS/Objective-C/SDWebImage.md)
 	*	[JSPatch热更新](./iOS/Objective-C/JSPatch.md)
 	*	[Aspects切面编程(AOP)](./iOS/Objective-C/Aspects.md)
+	*	[DoraemonKit(图形调试工具)](https://github.com/didi/DoKit/blob/master/Doc/iOS_cn_guide.md)
 - **项目开发**
 	- [DevSum](./iOS/Objective-C/DevSum.md)
 - [**知识点(I)**](./iOS/Objective-C/知识点(I).md)

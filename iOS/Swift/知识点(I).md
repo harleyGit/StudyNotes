@@ -10,14 +10,16 @@
 
 
 > <h2 id=""></h2>
-- [**Swfit开源代码**](https://github.com/apple)
 - [**Swift基础**](#Swift基础)
+	- [Swift相对于OC的优缺点](#Swift相对于OC的优缺点)
 	- [Swift的缺省基类](#Swift的缺省基类)
 	- [Swift和OC区别](#Swift和OC区别)
 	- [Swift和OC混编注意事项](#Swift和OC混编注意事项)
 	- [面向协议编程](#面向协议编程)
-	- [协议中实用泛型](#协议中实用泛型)
-	- [路由导航](#路由导航)
+		- [优缺点](#优缺点)
+	- [协议中使用泛型](#协议中使用泛型)
+	- [静态多态和动态多态区别](#静态多态和动态多态区别)
+	- [数据解析中范型和协议有什么区别呢？(爱乐奇)](#数据解析中范型和协议有什么区别呢?)
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
 		- [逃逸闭包](#逃逸闭包)
@@ -61,17 +63,21 @@
 	- [MD5](#MD5)
 	- [防止反编译](#防止反编译)
 - [**多线程**](#多线程)
-	**‌**- [NSOperation](#NSOperation)
+	- [NSOperation](#NSOperation)
 	- [GCD控制线程数量](#GCD控制线程数量) 
 	- [线程锁](#线程锁)
 	- [文件读写锁](#文件读写锁)
-	- [文件分片下载](https://benarvintec.com/2018/10/10/iOS分片下载器)
 - [**底层**](#底层)
 	-  [Swift动态性 ](#Swift动态性)
+	-  [Virtual Table和Protocol Witness Table区别](#VirtualTable和ProtocolWitnessTable区别)
+		-  [Existential Container 5个内存单元](#ExistentialContainer5个内存单元)
+			-  [Value Buffer](#ValueBuffer)
+			-  [Value Witness Table](#ValueWitnessTable)
 - [**前端**](#前端)
-- 参考资料
+- **参考资料**
+	- [Swfit开源代码](https://github.com/apple)
 	- [道长基础知识](https://www.jianshu.com/p/07c9c6464f83) 
-
+	- [文件分片下载](https://benarvintec.com/2018/10/10/iOS分片下载器)
 
 
 <br/>
@@ -86,7 +92,94 @@
 > <h1 id = "Swift基础">Swift基础</h1>
 
 
+<br/>
+<br/>
 
+
+> <h2 id='Swift相对于OC的优缺点'>Swift相对于OC的优缺点</h2>
+
+
+下面的是笼统的回复:
+
+**1.优点**
+
+<br/>
+
+**1.1更加安全的语言**
+
+- OC（Objective-C）是一种动态语言，它的类型检查和错误检查都是在运行时完成的。这意味着在编译时，编译器无法检查类型错误和其他常见的编程错误。这样就可能导致运行时错误，从而影响应用程序的稳定性和安全性。
+
+- Swift是一种静态类型语言，这意味着编译器可以在编译时检查类型错误和其他常见的编程错误。这样可以减少运行时错误，从而提高应用程序的稳定性和安全性。此外，Swift还提供了一些安全性功能，例如可选类型、空类型和错误处理等，这些功能可以帮助开发人员更好地处理可能出现的错误和异常情况。
+
+
+<br/>
+
+**1.2更加简洁的语法**
+
+- Objective-C的语法相对较为繁琐，需要使用大量的语法结构和代码来完成一些基本的操作。例如，在Objective-C中，创建一个字符串需要使用NSString类，并使用alloc和init方法来分配和初始化内存，代码比较冗长。
+
+- Swift的语法相对简洁，使用起来更加方便。例如，Swift中可以使用字符串字面量创建一个字符串，无需使用类或初始化方法。Swift还提供了一些简洁的语法结构，例如可选绑定、guard语句和闭包表达式等，可以让代码更加易于编写和阅读。
+
+
+<br/>
+
+**1.3更加高效的性能**
+
+- Objective-C的性能相对较低，这是由于它是一种动态语言，需要在运行时进行类型检查和消息传递。这些操作会导致额外的开销，并影响应用程序的性能。
+
+- Swift的性能相对较高，这是由于它是一种静态类型语言，可以在编译时优化代码。此外，Swift还提供了一些性能优化功能，例如内联函数和高级优化等，可以进一步提高应用程序的性能。
+
+
+<br/>
+
+**1.4更加强大的特性**
+
+- Swift具有许多Objective-C所不具备的特性，例如结构体、泛型和函数式编程等。这些特性可以帮助开发人员更好地组织和管理代码，并提高应用程序的可重用性和可维护性。
+
+- Swift还具有许多其他特性，例如闭包、元组、类型推断和扩展等。这些特性可以帮助开发人员更加轻松地编写代码，并提高应用程序的质量和性能。
+
+
+<br/>
+<br/>
+
+
+
+**2.缺点**
+
+
+**2.1编译时间较长**
+
+- Swift是一种静态类型语言，需要进行类型检查和编译优化，因此编译时间相对较长。对于大型项目来说，编译时间可能会很长，这会影响开发人员的效率和生产力。
+
+<br/>
+
+**2.2不支持动态库**
+
+- Swift不支持动态库，这意味着在使用Swift编写的库时，需要将代码静态链接到应用程序中。这可能会导致一些问题，例如增加应用程序的大小和内存使用量，以及降低代码的可重用性和可维护性。
+
+
+<br/>
+
+
+**2.3.缺乏跨平台支持**
+
+Swift是由苹果公司开发的编程语言，主要用于开发iOS、macOS和watchOS等应用程序。虽然Swift也可以用于开发服务器端应用程序和其他平台上的应用程序，但是它在跨平台方面的支持相对较弱，这可能会限制它在一些情况下的使用。
+
+
+
+
+当然我们可以根据某一点进行回答,比如:
+
+- Swift比如:枚举对比OC枚举
+
+- 函数编程
+
+- 但是OC只能用block,不是函数
+
+
+
+
+<br/>
 <br/>
 
 >## <h2 id = "缺省基类">[缺省基类](https://struggleblog.com/2020/06/22/swift的缺省基类/)</h2>
@@ -249,6 +342,24 @@ self.navigationController?.pushViewController(firVC, animated: true)
 
 
 <br/>
+<br/>
+
+
+>## <h3 id='优缺点'>[优缺点](https://cloud.tencent.com/developer/article/1828213)</h3>
+
+- OOP缺点:
+	- 	在继承、代码复用等方面，其灵活度不高;
+	- 	Objective-C 时代的 OOP，其动态特性经常会导致异常；
+	- 	无法应用于值类型
+
+<br/>
+
+- POP优点: 
+	- 在继承、代码复用等方面，其灵活度高;
+	- 可以保证 Swift 作为静态语言的安全性
+	- 可以将其优势拓展到结构体（struct）和枚举（enum）类型上
+
+<br/>
 
 所谓**协议**，**就是一组属性和/或方法的定义**，而如果某个具体类型想要遵守一个协议，那它需要实现这个协议所定义的所有这些内容。
 
@@ -316,7 +427,7 @@ anotherViewController.myMethod()
 <br/>
 <br/>
 
-> <h2 id = "协议中实用泛型">协议中实用泛型</h2>
+> <h2 id = "协议中使用泛型">协议中使用泛型</h2>
 
 [protocol中使用关联类型associatedtype和泛型的教程和注意事项](https://blog.csdn.net/boildoctor/article/details/113116245)
 
@@ -433,6 +544,107 @@ func get2(_ type:Int )-> some Runnable{ //some让协议的关联类型变成透�
 	 return Car() //some只能返回一种类型
  }
 ```
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='静态多态和动态多态区别'>静态多态和动态多态区别</h2>
+
+```
+func foo<T: Drawable>(local: T) {
+    bar(local)
+}
+
+func bar<T: Drawable>(local: T) {
+    
+}
+
+let point = Point()
+foo(point)
+```
+
+上述代码中，泛型方法的调用过程大概如下：
+
+```
+// foo 方法执行时，Swift 将泛型 T 绑定为具体类型。示例中是 Point
+foo(point) --> foo<T = Point>(point)
+// 调用内部 bar 方法时，Swift 会使用已绑定的变量类型 Point 进一步绑定到 bar 方法的泛型 T 上。
+bar(local) --> bar<T = Point>(local)
+```
+
+相比协议类型而言，泛型类型在调用时总是能确定类型，因此无需使用 Existential Container。在调用泛型方法时，只需要将 Value Witness Table/Protocol Witness Table 作为额外参数进行传递。
+
+<br/>
+
+注：根据方法调用时数据类型是否确定可以将多态分为：静态多态（Static Polymorphism）和 动态多态（Dynamic Polymorphism）。
+- 在泛型类型调用方法时， Swift 会将泛型绑定为具体的类型。因此泛型实现的是静态多态。
+- 在协议类型调用方法时，类型是 Existential Container，需要在方法内部进一步根据 pwt 进行方法索引。因此协议实现的是动态多态。
+
+
+<br/>
+<br/>
+
+
+> <h2 id='数据解析中范型和协议有什么区别呢?'>数据解析中范型和协议有什么区别呢？</h2>
+
+
+**泛型类型在调用时总是能确定类型**
+
+- **协议使用场合：**
+	- 在函数、方法或者初始化器里作为形参类型或者返回类型
+	
+	- 作为常量、变量或者属性的类型
+	
+	- 作为数组、字典或者其他存储器的元素的类型
+
+
+&emsp; 协议在 Swift 中有两个目的，第一个目的是 用来实现多继承（Swift 语言被设计成单继承），第二个目的是 强制实现者必须遵守协议所指定的泛型约束。很明显，协议并不是用来表示某种类型，而是用来约束某种类型，比如：GenericProtocol 约束了 next() 方法的返回类型，而不是定义 GenericProtocol 的类型。而抽象类型成员则可以用来实现类型约束的。
+
+
+<br/>
+
+类型形式参数
+
+```
+func swapTwoValues<T>(_ a: inout T, _ b: inout T)
+```
+
+范型作为函数中参数类型的占位符,调用的时候传入实际类型!
+
+
+<br/>
+
+拓展下-泛型协议:
+
+```
+protocol Drawable { 
+    func draw() 
+}
+
+struct Point: Drawable {
+    var x, y: Double
+    func draw() { ... }
+}
+
+struct Line: Drawable {
+    var x1, y1, x2, y2: Double
+    func draw() { ... }
+}
+
+let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 0, x2: 1, y2: 1)
+```
+
+&emsp; value 既可以表示 Point 类型，又可以表示 Line 类型。事实上，value 的实际类型是编译器生成的一种特殊数据类型 Existential Container。Existential Container 是编译器生成的一种特殊的数据类型，用于管理遵守了相同协议的协议类型。因为这些数据类型的内存空间尺寸不同，使用 Existential Container 进行管理可以实现存储一致性。
+
+&emsp; Existential Container 对具体类型进行封装，从而实现存储一致性。[关于 Existential Container 的具体内容，可以参考《Swift性能优化(2)——协议与泛型的实现》](http://chuquan.me/2020/02/19/swift-performance-protocol-type-generic-type/)
+
+
+&emsp; 针对要将[泛型协议](http://chuquan.me/2021/09/25/swift-generic-protocol/)所约束的类型进行擦除，即 类型擦除 （Type Erase），从而骗过编译器，可以将**泛型协议封装成的具体类型**这个思路,也就是建立一个中间层!
+
+<br/>
 
 
 
@@ -2272,6 +2484,71 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 	- 除了继承自NSObject的类之外，继承自SwiftObject类也能开启其动态性，其开启方式是**在属性或方法前加上@objc和dynamic。@objc是用来将Swift的API导出给Objective-C和Objective-C runtime使用的，如果你的类继承自Objective-c的类（如NSObject）将会自动被编译器插入@objc标识。加了@objc标识的方法、属性无法保证都会被运行时调用，因为Swift会做静态优化。要想完全被动态调用，必须使用dynamic修饰。使用dynamic修饰将会隐式的加上@objc标识。**
 
 
+
+<br/>
+<br/>
+
+
+> <h2 id='VirtualTable和ProtocolWitnessTable区别'>Virtual Table和Protocol Witness Table区别</h2>
+
+
+
+<br/>
+
+
+> <h3 id='ExistentialContainer5个内存单元'>Existential Container 5个内存单元</h3>
+
+Existential Container 类型占据 5 个内存单元（也称 词，Word）。其结构如下图所示：
+
+![ios_swift0_1.png](./../../Pictures/ios_swift0_1.png)
+
+- 3 个词作为 Value Buffer。
+- 1 个词作为 Value Witness Table 的索引。
+- 1 个词作为 Protocol Witness Table 的索引。
+
+
+
+<br/>
+<br/>
+
+
+> <h4 id='Value Buffer'>Value Buffer</h4>
+Value Buffer
+
+Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对于 Small Value（存储空间小于等于 Value Buffer），可以直接内联存储在 Value Buffer 中。对于 Large Value（存储空间大于 Value Buffer），则会在堆区分配内存进行存储，Value Buffer 只存储对应的指针。如下图所示。
+
+
+![ios_swift0_0.png](./../../Pictures/ios_swift0_0.png)
+
+<br/>
+<br/>
+
+
+> <h4 id='Value Witness Table'>Value Witness Table</h4>
+
+
+![ios_swift0_2.png](./../../Pictures/ios_swift0_2.png)
+
+由于协议类型的具体类型不同，其内存布局也不同，Value Witness Table 则是对协议类型的生命周期进行专项管理，从而处理具体类型的初始化、拷贝、销毁。如下图所示：
+
+
+- Value Witness Table 管理协议类型的生命周期, 从而处理具体类型的初始化、拷贝、销毁;
+
+- Protocol Witness Table 则管理协议类型的方法调用;
+
+在 OOP 中，基于继承关系的多态是通过 Virtual Table 实现的；在 POP 中，没有继承关系，因为无法使用 Virtual Table 实现基于协议的多态，取而代之的是 Protocol Witness Table。
+
+
+<br/>
+
+- Virtual Table和Protocol Witness Table 的区别，我的理解是：
+	- 它们都是一个记录函数地址的列表（即函数表），只是它们的生成方式是不同的。
+	
+	- 对于 Virtual Table，在编译时，子类的函数表是通过对基类函数表进行拷贝、覆写、插入等操作生成的。
+	
+	- 对于 Protocol Witness Table，在编译时，函数表是通过检查具体类型对协议的实现，直接生成的。
+
+![ios_swift0_3.png](./../../Pictures/ios_swift0_3.png)
 
 <br/>
 
