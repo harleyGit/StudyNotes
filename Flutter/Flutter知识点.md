@@ -181,7 +181,7 @@
 
 - 继承（关键字 extends）、混入 mixins （关键字 with）、接口实现（关键字 implements）。这三者可以同时存在，前后顺序是extends -> mixins -> implements。
 
-- Flutter中的继承是单继承，子类重写超类的方法要用@Override，子类调用超类的方法要用super。
+- Flutter中的继承是单继承，子类重写超类的方法要加@Override，子类调用超类的方法要用super。
 
 - 在Flutter中，Mixins是一种在多个类层次结构中复用类代码的方法。mixins的对象是类，mixins绝不是继承，也不是接口，而是一种全新的特性，可以mixins多个类，mixins的使用需要满足一定条件。
 
@@ -433,20 +433,6 @@ class mixinsX2 extends implA with X{
 - didUpdateWidget：Widget 状态发生变化的时候调用。
 
 
-
-<br/>
-
-
-&emsp; Widget会被inflate（填充）到Element，并由Element管理底层渲染树。Widget并不会直接管理状态及渲染,而是通过State这个对象来管理状态。
-
-&emsp;Flutter创建Element的可见树，相对于Widget来说，是可变的，通常界面开发中，我们不用直接操作Element,而是由框架层实现内部逻辑。就如一个UI视图树中，可能包含有多个TextWidget(Widget被使用多次)，但是放在内部视图树的视角，这些TextWidget都是填充到一个个独立的Element中。
-
-&emsp;Element会持有renderObject和widget的实例。记住，Widget 只是一个配置，RenderObject 负责管理布局、绘制等操作。
-
-&emsp; 在第一次创建 Widget 的时候，会对应创建一个 Element， 然后将该元素插入树中。如果之后 Widget 发生了变化，则将其与旧的 Widget 进行比较，并且相应地更新 Element。重要的是，Element 不会被重建，只是更新而已。
-
-
-
 <br/>
 <br/>
 <br/>
@@ -459,11 +445,12 @@ class mixinsX2 extends implA with X{
 ![flutter1_2.png](./../Pictures/flutter1_2.png)
 
 
-- **主要有4种类型的Key：**
+- **主要有2种类型的Key：**
 	- GlobalKey（确保生成的Key在整个应用中唯一，是很昂贵的，允许element在树周围移动或变更父节点而不会丢失状态）
-	- LocalKey
-	- UniqueKey
-	- ObjectKey。
+	- LocalKey(包含下面3种)
+		- UniqueKey
+		- ObjectKey
+		- valueKey
 
 
 &emsp; 在flutter中，每个widget都是被唯一标识的。这个唯一标识在build或rendering阶段由框架定义。该标识对应于可选的Key参数，如果省略，Flutter将会自动生成一个。
@@ -475,11 +462,24 @@ class mixinsX2 extends implA with X{
 > <h3 id='什么时候用key'>什么时候用key</h3>
 
 
-- ValueKey:如果您有一个 Todo List应用程序，它将会记录你需要完成的事情。我们假设每个 Todo事情都各不相同，而你想要对每个 Todo 进行滑动删除操作。
+- **ValueKey**是先比较类型,然后比较其值,源码如下:
+
+```
+@override
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType)
+      return false;
+    return other is ValueKey<T>
+        && other.value == value;
+  }
+```
+
+
+例如: ValueKey如果您有一个 Todo List应用程序，它将会记录你需要完成的事情。我们假设每个 Todo事情都各不相同，而你想要对每个 Todo 进行滑动删除操作
 
 ```
 return TodoItem(
-    key: ValueKey(todo.task),
+    key: ValueKey("value1Name"),
     todo: todo,
     onDismissed: (direction){
         _removeTodo(context, todo);
@@ -487,23 +487,73 @@ return TodoItem(
 );
 ```
 
-- ObjectKey:如果你有一个生日应用，它可以记录某个人的生日，并用列表显示出来，同样的还是需要有一个滑动删除操作。我们知道人名可能会重复，这时候你无法保证给 Key 的值每次都会不同。但是，当人名和生日组合起来的 Object 将具有唯一性。这时候你需要使用 ObjectKey！官方显示比较类型，当类型不一致，判定为不是通过一个对象，如果另外一个也是ObjectKey,则判断地址是否相同，只有地址相同才判定为同一个对象。
+
+<br/>
+
+
+- ObjectKey先比较类型，当类型不一致，判定为不是同一个对象.如果另外一个也是ObjectKey,则判断地址是否相同，只有地址相同才判定为同一个对象
 
 ```
 @override
-bool operator ==(Object other) {
-if (other.runtimeType != runtimeType)
-  return false;
-return other is ObjectKey
-    && identical(other.value, value);
-}
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType)
+      return false;
+    return other is ObjectKey
+        && identical(other.value, value);
+  }
 ```
 
-- UniqueKey:如果组合的 Object 都无法满足唯一性的时候，你想要确保每一个 Key 都具有唯一性。那么，你可以使用UniqueKey。它将会通过该对象生成一个具有唯一性的 hash 码。不过这样做，每次 Widget 被构建时都会去重新生成一个新的 UniqueKey，失去了一致性。也就是说你的小部件还是会改变。（还不如不用😂）
+
+
+例如: 如果你有一个生日应用，它可以记录某个人的生日，并用列表显示出来，同样的还是需要有一个滑动删除操作。我们知道人名可能会重复，这时候你无法保证给 Key 的值每次都会不同。但是，当人名和生日组合起来的 Object 将具有唯一性。这时候你需要使用 ObjectKey！官方显示比较类型，当类型不一致，判定为不是通过一个对象，如果另外一个也是ObjectKey,则判断地址是否相同，只有地址相同才判定为同一个对象。
+
+```
+@override
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType)
+      return false;
+    return other is ObjectKey
+        && identical(other.value, value);
+  }
+```
+
+
+
+<br/>
+
+- 每次生成不同的值，当我们每次刷新都需要一个新的值，那么正是这个存在的意义。
+
+我们每次刷新就生成一个新的 颜色，并且渐隐渐显效果。
+
+```
+AnimatedSwitcher(
+  duration: Duration(milliseconds: 1000),
+  child: Container(
+    key: UniqueKey(),
+    height: 100,
+    width: 100,
+    color: Colors.primaries[count % Colors.primaries.length],
+  ),
+)
+```
+
+
+如果组合的 Object 都无法满足唯一性的时候，你想要确保每一个 Key 都具有唯一性。那么，你可以使用UniqueKey。它将会通过该对象生成一个具有唯一性的 hash 码。不过这样做，每次 Widget 被构建时都会去重新生成一个新的 UniqueKey，失去了一致性。也就是说你的小部件还是会改变。（还不如不用😂）
+
+
+<br/>
 
 - PageStorageKey:当你有一个滑动列表，你通过某一个 Item 跳转到了一个新的页面，当你返回之前的列表页面时，你发现滑动的距离回到了顶部。这时候，给 Sliver 一个 PageStorageKey！它将能够保持 Sliver 的滚动状态。
 
+
+<br/>
+
 - GlobalKey:GlobalKey 能够跨 Widget 访问状态。 在这里我们有一个 Switcher 小部件，它可以通过 changeState 改变它的状态。
+
+
+作为全局使用的key,当跨小部件我们通常可以使用GlobalKey来刷新其他小部件。
+
+&emsp; GlobalObjectKey和ObjectKey是否相等的判定条件是一致的，GlobalObjectKey继承GlobalKey,通过GlobalKey<T extends State<StatefulWidget>>来指定继承state，并实现StatefulWidget接口的类，然后可以通过GlobalKey.currentState来获取当前state,然后调用state.setState((){})完成当前小部件标记为dirty，在下一帧刷新当前小部件。
 
 ```
 class _ScreenState extends State<Screen> {
@@ -527,9 +577,9 @@ class _ScreenState extends State<Screen> {
 <br/>
 <br/>
 
-> <h2 id='什么是WidgetRenderObjects和Elements
-'>什么是Widget、RenderObjects和Elements?
-</h2>
+> <h2 id='什么是WidgetRenderObjects和Elements'>什么是Widget、RenderObjects和Elements?</h2>
+
+<br/>
 
 > <h3 id='1_Widget'>1).Widget</h3>
 
@@ -538,10 +588,9 @@ class _ScreenState extends State<Screen> {
 
 &emsp; Flutter创建Element的可见树，相对于Widget来说，是可变的，通常界面开发中，我们不用直接操作Element,而是由框架层实现内部逻辑。
 
-&emsp; 就如一个UI视图树中，可能包含有多个TextWidget(Widget被使用多次)，但是放在内部视图树的视角，这些TextWidget都是填充到一个个独立的Element中。Element会持有renderObject和widget的实例。
+&emsp; 比如一个UI视图树中，可能包含有多个TextWidget(Widget被使用多次)，但是放在内部视图树的视角，这些TextWidget都是填充到一个个独立的Element中。
 
-&emsp; 记住，Widget 只是一个配置，RenderObject 负责管理布局、绘制等操作。
-
+&emsp; Element会持有renderObject和widget的实例。记住，Widget 只是一个配置，RenderObject 负责管理布局、绘制等操作。
 
 <br/>
 
@@ -631,9 +680,9 @@ class _ScreenState extends State<Screen> {
 
 - Widget: 在Flutter中，几乎所有东西都是Widget。将一个Widget想象为一个可视化的组件（或与应用可视化方面交互的组件），当你需要构建与布局直接或间接相关的任何内容时，你正在使用Widget。
 
-- Widget树: Widget以树结构进行组织。包含其他Widget的widget被称为父Widget(或widget容器)。包含在父widget中的widget被称为子Widget。
+- Widget树: Widget以树结构进行组织。包含其他Widget的被称为父Widget(或widget容器)。包含在父widget中的widget被称为子Widget。
 
-- Context: 仅仅是已创建的所有Widget树结构中的某个Widget的位置引用。简而言之，将context作为widget树的一部分，其中context所对应的widget被添加到此树中。一个context只从属于一个widget，它和widget一样是链接在一起的，并且会形成一个context树。
+- Context: 仅仅是已创建的所有Widget树结构中的某个Widget的位置引用。简而言之，将context作为widget树的一部分，其中context所对应的widget被添加到此树中。**一个context只从属于一个widget**，它和widget一样是链接在一起的，并且会形成一个context树。
 
 - State: 定义了StatefulWidget实例的行为，它包含了用于”交互/干预“Widget信息的行为和布局。应用于State的任何更改都会强制重建Widget。
 
