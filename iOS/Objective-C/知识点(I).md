@@ -26,6 +26,7 @@
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
 - **多线程**
 	- [什么叫串行队列?并行队列?同步执行?异步执行?](#什么叫串行队列?并行队列?同步执行?异步执行?)
+	- [线程的挂起&恢复](#线程的挂起&恢复)
 	- [最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?(飞猪)](#最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?)
 		- [全局队列-CPU繁忙](#全局队列-CPU繁忙)
 		- [全局队列-CPU空闲](#全局队列-CPU空闲)
@@ -868,6 +869,14 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 
 
 
+
+<br/>
+<br/>
+
+
+> <h2 id='线程的挂起&恢复'>线程的挂起&恢复</h2>
+
+[susspend & resume](./多线程.md#线程暂停&恢复)
 
 <br/>
 <br/>
@@ -4811,18 +4820,7 @@ storehub提问：NSNotification的class方法指向谁？
 
 <br/>
 
-- **类蔟**
-	- NSConstantArray:常量数组 
-	
-	- __NSArrayI: 多个元素是这个类
-	
-	- __NSArrayM: 数组有且只有一个元素,init后是一个可变数组
-	
-	- __NSPlaceholderArray:  可变或者不可变数组alloc后得到的类都是__NSPlaceholderArray
-	
-	- NSSingleObjectArrayI: 数组中有且只有一个元素就是这个类,若是多个就不是这个了  
-	
-  - __NSArray0:init不可变数组后生成的空数组
+[NSArray类簇](./数组.md#类簇)
 
  
 

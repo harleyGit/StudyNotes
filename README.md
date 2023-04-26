@@ -194,7 +194,7 @@
 * [本地化(I)](./iOS/Objective-C/本地化(I).md)
 * [闭包](./iOS/Objective-C/闭包.md)
 * [键盘弹出(I)](./iOS/Objective-C/键盘弹出(I).md)
-* [**NSArray**](./iOS/Objective-C/NSArray.md)
+* [**数组**](./iOS/Objective-C/数组.md)
 * [响应链](./iOS/Objective-C/响应链.md)
 * [远程推送(US)](./iOS/Objective-C/远程推送(US).md)
 * [坐标系(I)](./iOS/Objective-C/坐标系(I).md)
