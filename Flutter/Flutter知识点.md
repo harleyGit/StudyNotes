@@ -418,6 +418,14 @@ class mixinsX2 extends implA with X{
 > <h1 id='Widget组件'>Widget组件</h1>
 
 
+&emsp; 在 Flutter 中，Widget 可以类比iOS的UIView ，你可以把它理解为“声明和构造 UI 的方法”，但它们又并非完全相同：
+
+- 首先，widget 拥有着不同的生命周期： 整个生命周期内它是不可变的，且只能够存活到被修改的时候。一旦 widget 实例或者它的状态发生了改变， Flutter 框架就会创建一个新的由 Widget 实例构造而成的树状结构。
+- 而在 iOS 里，修改一个视图并不会导致它重新创建实例，它作为一个可变对象，只会绘制一次，只有调用 setNeedsDisplay() 之后才会发生重绘。
+
+<br/>
+
+
 > <h2 id='StatefulWidget生命周期'>StatefulWidget生命周期</h2>
 
 ![flutter1_3.png](./../Pictures/flutter1_3.png)
@@ -675,16 +683,34 @@ class _ScreenState extends State<Screen> {
 <br/>
 <br/>
 
-> <h2 id='WidgetStateContext的核心概念和是为了解决什么问题'>Widget、State、Context 的核心概念和是为了解决什么问题？</h2>
+>## <h2 id='WidgetStateContext的核心概念和是为了解决什么问题'>[Widget、State、Context 的核心概念和是为了解决什么问题？](https://juejin.cn/post/6844903784187953165#heading-4)</h2>
 
 
 - Widget: 在Flutter中，几乎所有东西都是Widget。将一个Widget想象为一个可视化的组件（或与应用可视化方面交互的组件），当你需要构建与布局直接或间接相关的任何内容时，你正在使用Widget。
 
 - Widget树: Widget以树结构进行组织。包含其他Widget的被称为父Widget(或widget容器)。包含在父widget中的widget被称为子Widget。
 
-- Context: 仅仅是已创建的所有Widget树结构中的某个Widget的位置引用。简而言之，将context作为widget树的一部分，其中context所对应的widget被添加到此树中。**一个context只从属于一个widget**，它和widget一样是链接在一起的，并且会形成一个context树。
+- Context: 仅仅是已创建的所有Widget树结构中的**某个Widget的位置引用**。
+	- 简而言之，将context作为widget树的一部分，其中context所对应的widget被添加到此树中。
+	- **一个context只从属于一个widget**，它和widget一样是链接在一起的，并且会形成一个context树。
 
 - State: 定义了StatefulWidget实例的行为，它包含了用于”交互/干预“Widget信息的行为和布局。应用于State的任何更改都会强制重建Widget。
+
+
+
+<br/>
+
+
+**State 和 Context 的关系:**
+
+&emsp; 对于 StatefulWidget，State 与 Context 相关联。并且此关联是永久性的，State 对象将永远不会改变其 context。
+
+&emsp; 即使可以在树结构周围移动 Widget Context，State 仍将与该 context 相关联。
+
+&emsp; 当 State 与 Context 关联时，State 被视为已挂载。
+
+**重点**：State 对象 与 context 相关联，就意味着该 State 对象是不（直接）访问另一个 context！
+
 
 
 
