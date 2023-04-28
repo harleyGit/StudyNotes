@@ -124,6 +124,8 @@
 		- [Xcode构建过程](#Xcode构建过程)
 		- [objc使用什么机制管理对象内存](#objc使用什么机制管理对象内存)
 - [**网络**](#网络)
+	- [网络层又哪些优化策略](#网络层又哪些优化策略)
+	- [HTTPS握手流程?为什么密钥的传递使用非对称加密?双向认证了解吗](#HTTPS握手流程?为什么密钥的传递使用非对称加密?双向认证了解吗)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
 		- [HttpDNS(域名劫持)](#HttpDNS域名劫持)
@@ -3518,6 +3520,8 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 
 
 
+![ios_oc2_35.png](./../../Pictures/ios_oc2_35.png)
+
 <br/>
 
 提问：Runloop在线程中有哪些用法？
@@ -5362,11 +5366,32 @@ objc_release(prev);
 ***
 <br/>
 
-># 网络
+># <h1 id='网络'>网络</h1>
 
 [**iOS状态码解读**](https://github.com/ChenYilong/iOSDevelopmentTips/blob/master/Tips/HTTP状态码汇总.md)
 
+
 <br/>
+
+> <h2 id='HTTPS握手流程?为什么密钥的传递使用非对称加密?双向认证了解吗'>HTTPS握手流程?为什么密钥的传递使用非对称加密?双向认证了解吗</h2>
+
+![ios_oc2_37.png](./../../Pictures/ios_oc2_37.png)
+
+
+
+<br/>
+<br/>
+
+
+> <h2 id='网络层又哪些优化策略'>网络层又哪些优化策略</h2>
+
+![ios_oc2_38.png](./../../Pictures/ios_oc2_38.png)
+
+
+
+<br/>
+<br/>
+
 
 > <h2 id="NSURLSession与RunLoop的联系">NSURLSession与RunLoop的联系</h2>
 

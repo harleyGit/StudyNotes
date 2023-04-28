@@ -247,6 +247,7 @@
 	*	[JSPatch热更新](./iOS/Objective-C/JSPatch.md)
 	*	[Aspects切面编程(AOP)](./iOS/Objective-C/Aspects.md)
 	*	[DoraemonKit(图形调试工具)](https://github.com/didi/DoKit/blob/master/Doc/iOS_cn_guide.md)
+	*	[Masonry](./iOS/Objective-C/Masonry.md)
 - **项目开发**
 	- [DevSum](./iOS/Objective-C/DevSum.md)
 - [**知识点(I)**](./iOS/Objective-C/知识点(I).md)
@@ -269,6 +270,8 @@
 * [String(I)](./iOS/Swift/String(I).md)
 * **类库**
 	* [RxSwift](./iOS/Swift/RxSwift.md)
+* **底层**
+	* [动态性](./iOS/Swift/动态性.md)
 - [**知识点(I)**](./iOS/Swift/知识点(I).md)
 
 
@@ -446,7 +449,6 @@
 *	[即时通讯](./ClassLibrary/即时通讯.md)
 *	UI约束
 	*	[FlexLib(I)](./ClassLibrary/FlexLib(I).md)
-	*	[Masonry](./ClassLibrary/Masonry.md)
 	*	[Snapkit](./ClassLibrary/Snapkit.md)
 * JSON解析
 	*	[HandyJSON(I)](./ClassLibrary/HandyJSON(I).md)

@@ -30,26 +30,27 @@
 		- [区别](#区别)
 		- [什么时候使用值类型?什么时候使用引用类型?](#什么时候使用值类型什么时候使用引用类型)
 		- [什么时候值类型会发生装箱](#什么时候值类型会发生装箱)
-		- [存在容器由组成(Existential Container)](#存在容器由组成)
 	- [关键字](#关键字)
 		- [final修饰符](#final修饰符)
-		- [@Objc和Dynamic的使用(Storehub)](#@Objc和Dynamic的使用)
-		- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
+		- [dynamic](#dynamic)
+		- [@objc/@nonobjc](#@objc/@nonobjc)
+		- [@inline](#@inline)
 	- [语法基础](#语法基础)
 		- [只能被类遵守的protocol](#只能被类遵守的protocol)
 		- [defer 使用场景](#defer使用场景)
 		- [数组索引越界会Crash,字典取不到为nil](#数组索引越界会Crash,字典取不到为nil)
 		- [Self的使用场景](#Self的使用场景)
 		- [throws和rethrows的用法与作用](#throws和rethrows的用法与作用)
+		- [值类型(Value Type)](#值类型(ValueType))
 		- [值类型和引用类型在什么时候使用](#值类型和引用类型在什么时候使用)
+		- [Protocol](#Protocol)
 		- [协议的动态](#协议的动态)
 		- [Swift和OC常量区别](#Swift和OC常量区别)
 		- [autoclosure的作用](#autoclosure的作用)
 		- [编译选择whole module optmization优化了什么](#编译选择wholemoduleoptmization优化了什么)
-		- [mutaing 的作用](#mutaing的作用)
+		- [mutaing作用](#mutaing的作用)
 		- [怎么表示函数的参数类型只要是数字](#怎么表示函数的参数类型只要是数字)
 		- [dynamic的作用.](#dynamic的作用)
-		- [Swift的动态性](#Swift的动态性)
 - [**常用类库**](#常用类库)
 	- [ObjectMapper](#ObjectMapper)
 	- [SwiftJSON](#SwiftJSON)
@@ -68,11 +69,21 @@
 	- [线程锁](#线程锁)
 	- [文件读写锁](#文件读写锁)
 - [**底层**](#底层)
-	-  [Swift动态性 ](#Swift动态性)
-	-  [Virtual Table和Protocol Witness Table区别](#VirtualTable和ProtocolWitnessTable区别)
-		-  [Existential Container 5个内存单元](#ExistentialContainer5个内存单元)
-			-  [Value Buffer](#ValueBuffer)
-			-  [Value Witness Table](#ValueWitnessTable)
+	- [Objective-C和Swift底层使用2套不同机制](#Objective-C和Swift底层使用2套不同机制)
+	- [Swift动态性](#Swift动态性)
+	- [Swift派发方式](#Swift派发方式)
+		- [派发效率](#派发效率)
+		- [方法可见性影响](#方法可见性影响)
+		- [KVO](#KVO)
+		- [值类型和引用类型支持什么派发方式](#值类型和引用类型支持什么派发方式)
+		- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
+		- [@Objc和Dynamic的使用(Storehub)](#@Objc和Dynamic的使用)
+		- [OC调用Swift类型,找不到方法?](#OC调用Swift类型,找不到方法?)
+	- [存在容器由组成(Existential Container)](#存在容器由组成)
+	- [Virtual Table和Protocol Witness Table区别](#VirtualTable和ProtocolWitnessTable区别)
+	- [Existential Container 5个内存单元](#ExistentialContainer5个内存单元)
+		- [Value Buffer](#ValueBuffer)
+		- [Value Witness Table](#ValueWitnessTable)
 - [**前端**](#前端)
 - **参考资料**
 	- [Swfit开源代码](https://github.com/apple)
@@ -858,6 +869,20 @@ loginfo(true, "HelloWord")
 
 
 <br/>
+
+自动闭包, 会自动将某一个表达式封装为闭包
+
+```
+func autoClosureFunction(_ closure: @autoclosure () -> Int) {
+   closure()
+}
+autoClosureFunction(1)
+
+```
+
+
+
+<br/>
 <br/>
 
 
@@ -1041,14 +1066,20 @@ print(address(of: &p2)) // 0x104d6a310
 <br/>
 
 >## <h3 id='什么时候使用值类型什么时候使用引用类型'>[什么时候使用值类型?什么时候使用引用类型?](https://juejin.cn/post/6844904000794394637)</h3>
+&emsp; 关于在新建一个类型时如何选择到底是使用值类型还是引用类型的问题其实在理解了两者之间的区别后是非常简单的，在这苹果官方已经做出了非常明确的指示（以下内容引自苹果官方文档）：
+
+当你使用Cocoa框架的时候，很多API都要通过NSObject的子类使用，所以这>时候必须要用到引用类型class。在其他情况下，有下面几个准则：
+
+- 什么时候该用值类型： - 要用==运算符来比较实例的数据时 
+	- 你希望那个实例的拷贝能保持独立的状态时 
+	- 数据会被多个线程使用时
+
+- 什么时候该用引用类型（class）：
+	- 要用==运算符来比较实例身份的时候
+	
+	- 你希望有创建一个共享的、可变对象的时候
 
 
-结构体和类的选择
-对于应该使用类还是结构，没有简单的答案。 尽管苹果建议在对具有标识（identity）的东西使用类，其他情况使用结构，但这不足以指导我们做出决定。 由于每种情况都不同，我们还需要虑性能：
-
-- 应当避免值类型包含引用类型的变量，因为它们违反了值的语义并产生额外的引用计数开销。
-- 具有动态行为的值类型（例如数组和字符串）应采用copy-on-write来摊销复制成本。
-- 值类型遵循协议时将被装箱，从而导致更高的创建成本。
 
 
 
@@ -1114,23 +1145,6 @@ func foo(x: inout Int) {
 
 
 <br/>
-
->## <h3 id='存在容器由组成'>[存在容器由组成:](https://blog.csdn.net/preyer2011/article/details/129052530)</h3>
-- Value Buffer ValueBuffer 占 3 个字的长度，如果符合协议的对象是值类型且小于等于 3 个字，则直接放入 ValueBuffer 中，如果对象是引用类型或者大于 3 个字的值类型，则将对象放在堆上，在 ValueBuffer 中保存一个指向堆上对象的引用。
-
-- 一个指向 值目击表（Value Witness Table, VWT） 的指针，用来创建、拷贝和销毁值，表中保存了创建、拷贝、销毁等函数的地址，其中创建、销毁函数的地址仅在当对象分配在堆上时才会有。
-
-- 一个指向 协议目击表（Protocol Witness Table, PWT） 的指针，每个符合了某个协议的类型都有自己的协议目击表，保存了实现协议中方法的方法地址。
-
-- 如果类型符合了多个协议，后面还会有第二个协议的协议目击表指针，以及第三个，第四个等。符合的协议越多，存在容器占用内存空间就越大。
-
-
-
-[为什么你需要使用泛型而不是 protocol](https://www.6hu.cc/archives/30535.html)
-
-
-
-<br/>
 <br/>
 
 
@@ -1142,256 +1156,85 @@ func foo(x: inout Int) {
 
 - **使用final规则：**
 	- final修饰符只能修饰类，表明该类不能被其他类继承，也就是它没资格当父类；
-	- final修饰符也可以修饰类中的属性、方法和下标，但前提是该类并没有被final修饰过；
+	
 	- final不能修饰结构体和枚举；
+	
+	- final修饰符也可以修饰类中的属性、方法和下标，但前提是该类并没有被final修饰过；
+	
 	- 结构体和枚举只能遵循协议（protocol）。虽然协议也可以遵循其他协议，但是它并不能重写遵循的协议的任何成员，这就是结构体和枚举不需要final修饰的原因。
 
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id="@Objc和Dynamic的使用">@Objc和Dynamic的使用</h2>
-
-[Swift动态性](https://juejin.cn/post/6888989886280368141)
-
-
-&emsp; Swift Runtime system主要包括动态类型转换，泛型实例化和协议一致性注册，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
-
-&emsp; Swift中的方法派发分为静态派发和动态派发，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
-
-&emsp; 由于Swift为了性能，牺牲了它的动态性，使得我们在Swift层面上能做的事情很少。不过，由于Swift的类分为两种: 继承自NSObject的类以及默认继承自SwiftObject的类，既然Swift中有继承自NSObject的派生类，那么也就意味着OC的动态性也能在Swift里面应用
-
-
-
-
-
-&emsp; **Objective-C** 和 **Swift** 在底层使用的是两套完全不同的机制:
-
-- Cocoa 中的 Objective-C 对象是基于运行时的，它从骨子里遵循了 KVC (Key-Value Coding，通过类似字典的方式存储对象信息) 以及动态派发 (Dynamic Dispatch，在运行调用时再决定实际调用的具体实现)。
-- Swift 为了追求性能，如果没有特殊需要的话，是不会在运行时再来决定这些的。也就是说，Swift 类型的成员或者方法在编译时就已经决定，而运行时便不再需要经过一次查找，而可以直接使用。
-
-**问题是:** 如果我们要使用 Objective-C 的代码或者特性来调用纯 Swift 的类型时候，我们会因为找不到所需要的这些运行时信息而导致失败,怎么办？
-
-1）.在 Swift 类型文件中，我们可以将需要暴露给 Objective-C 使用的任何地方 (包括类，属性和方法等) 的声明前面加上@objc修饰符。(注意这个步骤只需要对那些不是继承自NSObject的类型进行，如果你用 Swift 写的 class 是继承自NSObject的话，Swift 会默认自动为所有的非 private 的类和成员加上@objc。)
-
-2）.@objc修饰符的另一个作用是为 Objective-C 侧重新声明方法或者变量的名字。虽然绝大部分时候自动转换的方法名已经足够好用 (比如会将 Swift 中类似init(name: String)的方法转换成-initWithName:(NSString *)name这样)，但是有时候我们还是期望 Objective-C 里使用和 Swift 中不一样的方法名或者类的名字;
-
-3）.在[**Selector**](https://swifter.tips/selector/)一节中所提到的，即使是NSObject的子类，Swift 也不会在被标记为private的方法或成员上自动加@objc，以保证尽量不使用动态派发来提高代码执行效率。
-
-4）.如果我们确定使用这些内容的动态特性的话，我们需要手动给它们加上@objc修饰.
-
-但是需要注意的是，添加@objc修饰符并不意味着这个方法或者属性会变成动态派发，Swift 依然可能会将其优化为静态调用。
-
-**一定要用dynamic情况：** 如果你需要和 Objective-C 里动态调用时相同的运行时特性的话，你需要使用的修饰符是dynamic。
-
-5）.一般情况下在做 app 开发时应该用不上，但是在施展一些像动态替换方法或者运行时再决定实现这样的 "黑魔法" 的时候，我们就需要用到dynamic修饰符了。
-
-
-
-<br/>
-
-- **Dynamic**
-
-	- Swift中也有dynamic关键字，它可以用于修饰变量或函数，它的意思也与OC完全不同。它告诉编译器使用动态分发而不是静态分发。OC区别于其他语言的一个特点在于它的动态性，任何方法调用实际上都是消息分发，而Swift则尽可能做到静态分发。
-
-	- 因此，标记为dynamic的变量/函数会隐式的加上@objc关键字，它会使用OC的runtime机制。
-
-	- 虽然静态分发在效率上可能更好，不过一些app分析统计的库需要依赖动态分发的特性，动态的添加一些统计代码，这一点在Swift的静态分发机制下很难完成。这种情况下，虽然使用dynamic关键字会牺牲因为使用静态分发而获得的一些性能优化，但也依然是值得的。
-
-	- 使用动态分发，您可以更好的与OC中runtime的一些特性（如CoreData，KVC/KVO）进行交互，不过如果您不能确定变量或函数会被动态的修改、添加或使用了Method-Swizzle，那么就不应该使用dynamic关键字，否则有可能程序崩溃。
-
-
-
-
-
-
-
-
-
-
-
-<br/>
-<br/>
-
-
-> <h3 id="Swfit中的@Objc和dynamic的原理">Swfit中的@Objc和dynamic的原理</h3>
-
-[<br/>](https://gpake.github.io/2019/02/11/swiftMethodDispatchBrief/)
-
-&emsp; 这个问题涉及到**Swift派发原理**
-
-- **类类型(Class Type)**
-
-	- 对于一个纯 Swift class 来说，默认使用 Table 派发，影响它方法调用的关键字有 final、 dynamic 和 extension。
-	
-	- 函数如果被标记成 final (可以在类和其类的extension(扩展)中使用)，编译器就会知道这个方法不会被 override，并把它的调用方式标记成直接调用。而对于未标记成 final 并在 class 内部（非 extension）中定义的方法，Swift 会用一种叫作 **Virtual Table 的机制**来在运行时查找到这个方法并进行调用。
-
-	- 	当一个方法被标记为 dymanic，你必须同时把它标记上 @objc，此时这个方法会使用 **Message 调用**，依赖 Objc runtime。
-
-	- 	因为定义在 extension 中的方法目前还不支持 override，所以定义在其中的方法都是直接派发的。
-
-
-<br/>
-
-- **值类型(Value Type)**
-
-	- struct, enum 这样的值类型不支持继承，所以无需动态派发，它所有的方法调用（包括遵守的协议方法），都是直接调用。
-	
-	- 虽然不支持继承，但值类型还是可以通过 extension 和 Protocol 可以实现扩展。
-
-<br/>
-
-- **Protocol**
-
-	- Protocol 是一个比较特殊的情况，不同于 Objective-C，Swift 在对待 Protocol 方法调用时更重视实例的类型，而不是实例的内在（比如 Objc 中的 isa）。
-
-<br/>
-
-**Dispatch**,这个Dispatch 是什么？
-
->Dispatch 派发，指的是**语言底层**找到用户想要调用的方法，并执行调用过程的动作。
-Call 调用，指的是**语言在高级层面**，指示一个函数进行相关命令的行为。
-
-- 对于一个编译型语言来说，一般有三种方式可以派发到方法：**静态派发，基于 Table 的派发，消息派发**(**前者也被称作 Static Dispatch，后两个为 Dynamic Dispatch。**)。举例：
-
-	- Java 默认是使用 Table 方式派发的，你可以使用 final 关键字来强制动态派发。
-	
-	- C++ 默认是静态派发的，你可以使用 virtual 关键字来启用 Table 派发(一句话总结，编译器在编译期间就已经确定了的推断路径，运行期间按照既定路线走就行。)。
-	
-	- Objective-C 全都基于消息派发，不过也允许你使用 C level 的函数直接派发。
-	
-	- Swift 则巧妙的使用了这三种方法，分别应对不同的情况.
-
-
-<br/>
-
-
-**Dispatch种类：**
-
-- Direct Dispatch 直接派发
-	- 直接派发（静态派发）最快。不只是因为他的汇编命令少，还因为他可以应用很多编译器黑魔法，比如 inline 优化等。
-
-	- 不过这种方式局限性最大，因为不够动态而无法支持子类。
-
-<br/>
-
-- **Table 派发**
-
-	- 基于 Table 的派发机制是编译语言最常用的方式，Table 一般是用函数地址的数组来存储每个类的声明。大多数语言包括 Swift 都把这个称作 VTable，不过 Swift 中还有一个术语叫做 Witness Table 是服务于 Protocol 的，下面会提到。
-
-	- 每个子类都会有自己的 VTable 副本，子类中 override 的方法指针也会被替换成新的，子类新添加的方法则会被添加在 Table 的尾部。程序会在运行时确定每个函数具体的地址。
-
-	- 表的查找就实现而言非常简单，而且性能可以预测，不过还是比直接派发更慢一些。从字节码的角度来说，这种方法多了两步查找和一部跳转，这些都是开销。而且，这种方法没法使用一些黑魔法来优化。
-
-	- 另一个不好的点在于，这种基于数组的派发让 extension 没法扩展这个 table。因为在子类添加方法列表到尾部后，extension 就没有一个安全的 index 可以添加他的方法到 table 中。
-
-
-
-<br/>
-
-
-- **Message 派发**
-
-	- Message 派发是最灵活的派发方式。他是 Cocoa 的基石，也是 KVO，UIAppearance，Core Data 的核心。
-
-	- 他的关键功能是可以让开发者在运行时改变消息发送的行为。不仅可以通过 swizzling 修改 method，还可以通过 isa-swizzling 来修改对象。
-
-	- 一旦有消息发出，runtime 就会基于继承关系开始查找，虽然听起来很慢，但是有 cache 做保障，一旦 cache 经过预热，就和 Table 方式差不多快了。
-
-<br/>
-
-
-[**队列派发**](https://hechen.xyz/post/messagedispatchinswift/#pwt)
-
-&emsp; 在 Swift 中，针对拥有继承的 Class 类型来说，依然采用了 V-Table 这种实现形式达到对多态的支持，而针对值类型由于 Protocol 产生的多态而采用了另外一种函数表派发形式，这个表格被称为协议目击表 （Protocol Witness Table，简称 PWT），这个暂时略去不表。
-
-
-**V-Table**
-
-- 对于 V-Table 的应用场景下，每一个类都会维护一个函数表，里面记录着该类所有的函数指针，主要包含：
-
-	- 由父类继承而来的方法执行地址；
-	- 如果子类覆写了父类方法的话，表格里面就会保存被重载之后的函数。
-	- 子类新添加的函数会插入到这个表格的末尾
-- 在程序运行期间会根据这个表去查询真正要调用的函数是哪一个。这种特性就极大的提升了代码的灵活性，也是 Java，C++ 等语言得以支持多态这种语言特性的基石。当然，相对于静态派发而言，表格派发则多了很多的隐式花销，因为函数调用不再是直接调用了，而是需要通过先行查表的形式找到真实的函数指针来执行，编译器也无法再进行诸如 inline 等编译期优化了。
-
-
-<br/>
-
-- **PWT**
-
-	- 对于 Swift 来说，还有更为重要的 Protocol，对于符合同一协议的对象本身是不一定拥有继承关系的，因此 V-Table 就没法使用了。这里，Swift 使用了 Protocol Witness Table 的数据结构达到动态查询协议方法的目的。如果将上面的例子中的 Drawable 抽象成协议。
-
-
-
-
-<br/>
-
-
-- **关键字的影响:**
-	
-	- **final**
-		- 使用了 final 的，都用静态派发，因为 final 意味着完全没有动态性。final 用于类型，或是 function，都会造成这样的情况。
+	- 使用了 final 的，都用静态派发，因为 final 意味着完全没有动态性。final 用于类型，或是 function，都会造成这样的情况。
 		
-		- 而且 final 作用范围的方法，都不会被 export 到 OC runtime，也不会生成 selector
+	- 而且 final 作用范围的方法，都不会被 export 到 OC runtime，也不会生成 selector
 
 
-
-	- **dynamic**
-		- 使用了 dynamic 的 class （只有 class 可以 dynamic），会开启 message 模式，让 OC runtime 可以调用。
-
-		- 必须 @import Foundation，必须有 @objc，如果是 class，还必须是 NSObject 的子类
-
-		- 延展阅读： dynamic vs @objc: dynamic 是强制使用 message 派发，KVO 需要。@objc 只是 export 给 objc，swift 还是静态派发
-
-
-	- **@objc / @nonobjc**
-		- @objc / @nonobjc 控制方法对于 objc 的可见性。但是不会改变 swift 中的函数如何被派发。
-
-		- @nonobjc 可以禁止函数使用 message 派发 （和 final 在汇编上看起来类似，偏向于使用 final)
-
-		- // 并不会这样，@nonobjc 依然是使用 Table 调用，但是 @nonobjc 之后无法使用 dynamic，会提示 error: a declaration cannot be both '@nonobjc' and 'dynamic'
-
-		- @objc 的原理是生成两个函数引用，一个给 swift 调用，一个给 objc 调用
-
-		- @objc final func aFunc() {} 会让消息使用直接派发，不过依然会 export 给 objc
-
-
-	- **@inline**
-		- @inline 可以告诉编译器去优化直接派发的性能。
-	
-		- see: https://github.com/vandadnp/swift-weekly/blob/master/issue11/README.md#inline
-	
-		- @inline 可以给生成的函数加上标记，后期编译器进行指定的优化
-	
-		- inline 可以选择的参数有两个 never 和 __always
-	
-		- 对于 inline 的使用建议：
-			- 0，默认行为是编译器自己决定要不要使用 inline 进行优化，你也应该保持默认行为。
-			- 1，如果你的函数特别长，你不想让你的打包体积变得特别大，可以使用 @inline(never)
-			- 2，如果你的函数很小，你希望他可以快一点，就可以使用 @inline(__always)，不过其实编译器也会帮你做这样的事情，所以你这么做也基本上不会让他变得更快
-			- 有趣的是，如果你用 dynamic @inline(__always) func dynamicOrDirect() {} 依然会得到一个 message 派发的函数。
 
 
 
 <br/>
-
-**方法可见性的影响**
-
-&emsp; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
-
 <br/>
 
-**KVO**
-
-&emsp;值得注意的是 KVO，被观察的属性也必须被声明为 dynamic，否则 setter 会走直接派发，无法触发变化。
+> <h3 id='dynamic'>dynamic</h3>
 
 
+- Swift中也有dynamic关键字，它可以用于修饰变量或函数，它的意思也与OC完全不同。它告诉编译器使用动态分发而不是静态分发。OC区别于其他语言的一个特点在于它的动态性，任何方法调用实际上都是消息分发，而Swift则尽可能做到静态分发。
 
-**派发效率从高到低为： 直接派发 > Table 派发 > Message 派发**
+- 因此，标记为dynamic的变量/函数会隐式的加上@objc关键字，会开启 message 模式，让 OC runtime 可以调用;
+
+- 虽然静态分发在效率上可能更好，不过一些app分析统计的库需要依赖动态分发的特性，动态的添加一些统计代码，这一点在Swift的静态分发机制下很难完成。这种情况下，虽然使用dynamic关键字会牺牲因为使用静态分发而获得的一些性能优化，但也依然是值得的。
+
+- 使用动态分发，您可以更好的与OC中runtime的一些特性（如CoreData，KVC/KVO）进行交互，不过如果您不能确定变量或函数会被动态的修改、添加或使用了Method-Swizzle，那么就不应该使用dynamic关键字，否则有可能程序崩溃。
+
+- 必须 @import Foundation，必须有 @objc，如果是 class，还必须是 NSObject 的子类
+
+- 延展阅读： dynamic vs @objc: dynamic 是强制使用 message 派发，KVO 需要。@objc 只是 export 给 objc，swift 还是静态派发
+
+
+
+<br/>
+<br/>
+
+> <h3 id='@objc/@nonobjc'>@objc/@nonobjc</h2>
+
+- @objc / @nonobjc 控制方法对于 objc 的可见性。但是不会改变 swift 中的函数如何被派发。
+
+- @nonobjc 可以禁止函数使用 message 派发 （和 final 在汇编上看起来类似，偏向于使用 final)
+
+- // 并不会这样，@nonobjc 依然是使用 Table 调用，但是 @nonobjc 之后无法使用 dynamic，会提示 error: a declaration cannot be both '@nonobjc' and 'dynamic'
+
+- @objc 的原理是生成两个函数引用，一个给 swift 调用，一个给 objc 调用
+
+- @objc final func aFunc() {} 会让消息使用直接派发，不过依然会 export 给 objc
+
+
+
+<br/>
+<br/>
+
+
+
+> <h3 id='@inline'>@inline</h3>
+
+	
+- @inline 可以告诉编译器去优化直接派发的性能。
+
+- [see](https://github.com/vandadnp/swift-weekly/blob/master/issue11/README.md#inline)
+
+- @inline 可以给生成的函数加上标记，后期编译器进行指定的优化
+
+- inline 可以选择的参数有两个 never 和 __always
+
+- 对于 inline 的使用建议：
+	- 默认行为是编译器自己决定要不要使用 inline 进行优化，你也应该保持默认行为。
+	
+	- 如果你的函数特别长，你不想让你的打包体积变得特别大，可以使用 @inline(never)
+	
+	- 2，如果你的函数很小，你希望他可以快一点，就可以使用 @inline(__always)，不过其实编译器也会帮你做这样的事情，所以你这么做也基本上不会让他变得更快
+	
+	- 有趣的是，如果你用 dynamic @inline(__always) func dynamicOrDirect() {} 依然会得到一个 message 派发的函数。
+
+
+
 
 
 
@@ -1400,6 +1243,7 @@ Call 调用，指的是**语言在高级层面**，指示一个函数进行相�
 
 
 > <h2 id="语法基础">语法基础</h2>
+
 
 <br/>
 
@@ -1412,13 +1256,12 @@ protocol OnlyClassProtocol : class {
 
 
 <br/>
+<br/>
 
 
 > <h3 id="defer使用场景">defer使用场景</h3>
 
-defer 语句块中的代码, 会在当前作用域结束前调用, 常用场景如异常退出后, 关闭数据库连接
-
-
+&emsp; **defer** **语句块中的代码**, **会在当前作用域结束前调用**, 常用场景如异常退出后, 关闭数据库连接.≥..
 
 ```
 func someQuery() -> ([Result], [Result]){
@@ -1437,8 +1280,10 @@ func someQuery() -> ([Result], [Result]){
 
 ```
 
-需要注意的是, 如果有多个 defer, 那么后加入的先执行
 
+<br/>
+
+需要注意的是, 如果有多个 defer, 那么**后加入的先执行**
 
 ```
 
@@ -1459,17 +1304,29 @@ func someDeferFunction() {
     }
     print("function end")
 }
+
+
+//调用
 someDeferFunction()
-// 输出
-// if end
-// if defer
-// function end
-// someDeferFunction()-end-2-1
-// someDeferFunction()-end-2-2
-// someDeferFunction()-end-1-1
-// someDeferFunction()-end-1-2
 ```
 
+<br/>
+
+**输出**
+
+```
+if end
+if defer
+function end
+someDeferFunction()-end-2-1
+someDeferFunction()-end-2-2
+someDeferFunction()-end-1-1
+someDeferFunction()-end-1-2
+```
+
+
+
+<br/>
 <br/>
 
 
@@ -1480,13 +1337,15 @@ someDeferFunction()
 
 
 
-
+<br/>
 <br/>
 
 
 > <h3 id="Self的使用场景">Self的使用场景</h3>
 
-Self 通常在协议中使用, 用来表示实现者或者实现者的子类类型.定义一个复制的协议:
+Self 通常在协议中使用, 用来表示实现者或者实现者的子类类型.
+
+定义一个复制的协议:
 
 ```
 protocol CopyProtocol {
@@ -1520,11 +1379,12 @@ class SomeCopyableClass: CopyProtocol {
 
 
 <br/>
-
+<br/>
 
 > <h3 id="throws和rethrows的用法与作用">throws和rethrows的用法与作用</h3>
 
 throws 用在函数上, 表示这个函数会抛出错误.
+
 有两种情况会抛出错误, 一种是直接使用 throw 抛出, 另一种是调用其他抛出异常的函数时, 直接使用 try xx 没有处理异常.
 
 ```
@@ -1551,6 +1411,22 @@ func processNumber(a: Double, b: Double, function: (Double, Double) throws -> Do
 }
 ```
 
+
+<br/>
+<br/>
+
+
+> <h3 id='值类型(ValueType)'>值类型(ValueType)</h3>
+
+- struct, enum 这样的值类型不支持继承，所以无需动态派发，它所有的方法调用（包括遵守的协议方法），都是直接调用。
+
+- 虽然不支持继承，但值类型还是可以通过 extension 和 Protocol 可以实现扩展。
+
+
+
+
+
+<br/>
 <br/>
 
 
@@ -1560,6 +1436,8 @@ func processNumber(a: Double, b: Double, function: (Double, Double) throws -> Do
 	- 要用==运算符来比较实例的数据时.
 	- 你希望那个实例的拷贝能保持独立的状态时.
 	- 数据会被多个线程使用时.
+
+<br/>
 
 - **什么时候该用引用类型（class）：**
 	- 	要用==运算符来比较实例身份的时候.
@@ -1600,7 +1478,18 @@ a1 == a2
 
 
 
+<br/><br/>
 
+> <h3 id='Protocol'>Protocol</h3>
+
+Protocol 是一个比较特殊的情况，不同于 Objective-C，Swift 在对待 Protocol 方法调用时更重视实例的类型，而不是实例的内在（比如 Objc 中的 isa）
+
+
+
+
+
+<br/>
+<br/>
 <br/>
 
 
@@ -1643,8 +1532,6 @@ lombardis2.makeMargherita()
 
 再进一步，我们把 protocol Pizzeria 中的 func makeMargherita() 删掉，代码变为:
 
-
-
 ```
 protocol Pizzeria {
   func makePizza(_ ingredients: [String])
@@ -1679,6 +1566,7 @@ lombardis2.makeMargherita()
 
 
 <br/>
+<br/>
 
 
 > <h3 id="Swift和OC常量区别">Swift和OC常量区别</h3>
@@ -1698,7 +1586,9 @@ let number: Int = 0
 
 - **区别:**
 	- OC中用 const 来表示常量，而 Swift 中用 let 来判断是不是常量.
+	
 	- OC中 const 表明的常量类型和数值是在 compilation time 时确定的；
+	
 	- Swift 中 let 只是表明常量（只能赋值一次），其类型和值既可以是静态的，也可以是一个动态的计算方法，它们在 runtime 时确定的。
 
 
@@ -1706,21 +1596,6 @@ let number: Int = 0
 
 
 <br/>
-
-
-> <h3 id="autoclosure的作用">autoclosure的作用</h3>
-
-自动闭包, 会自动将某一个表达式封装为闭包
-
-```
-func autoClosureFunction(_ closure: @autoclosure () -> Int) {
-   closure()
-}
-autoClosureFunction(1)
-
-```
-
-
 <br/>
 
 
@@ -1731,9 +1606,10 @@ autoClosureFunction(1)
 
 
 <br/>
+<br/>
 
 
-> <h3 id="mutaing的作用">mutaing的作用</h3>
+> <h3 id="mutaing的作用">[mutaing的作用](./关键字.md#Mutating)</h3>
 
 - **作用1：**
 
@@ -1750,6 +1626,7 @@ struct Person  {
 
 
 <br/>
+<br/>
 
 
 > <h3 id="怎么表示函数的参数类型只要是数字">函数的参数类型只要是数字（Int、Float）都可以，要怎么表示</h3>
@@ -1765,6 +1642,7 @@ print(" it is a number")
 
 
 <br/>
+<br/>
 
 
 > <h3 id="dynamic的作用">dynamic的作用.</h3>
@@ -1772,24 +1650,21 @@ print(" it is a number")
 - **dynamic的作用.**
 
 	- 由于swift是一门静态语言，所以没有Objective-C中的消息发送这些动态机制，dynamic的作用就是让swift代码也能有oc中的动态机制，常用的就是KVO。
+	
 	- 使用dynamic关键字标记属性，使属性启用Objc的动态转发功能；
+	
 	- dynamic只用于类，不能用于结构体和枚举，因为它们没有继承机制，而Objc的动态转发就是根据继承关系来实现转发。
 
 
-
-
-
 <br/>
-
-
->### <h3 id="Swift的动态性">[Swift的动态性](https://juejin.cn/post/6888989886280368141)</h3>
-
-
-
 <br/>
 
 
 > <h3 id=""></h3>
+
+
+
+
 
 <br/>
 
@@ -1998,16 +1873,6 @@ public init(parseJSON jsonString: String)
 
 
 
-
-<br/>
-<br/>
-
->## <h2 id=""></h2>
-
-
-
-
-
 <br/>
 
 ***
@@ -2024,7 +1889,8 @@ public init(parseJSON jsonString: String)
 
 ![<br/>](./../../Pictures/ios_pd13.png)
 
-- **托管对象:** 位于这张图的最上层，它是架构里最有趣的部分，同时也是我们的数据模型 - 在这个例子里，它是 Mood 类的实例们。Mood 需要是 NSManagedObject 类的子类，这样它才能与 Core Data 其他的部分进行集成。每个 Mood 实例表示了一个 **mood**，也就是用户用相机拍摄的照片。
+- **托管对象:** 位于这张图的最上层，它是架构里最有趣的部分，同时也是我们的数据模型 
+	- 在这个例子里，它是 Mood 类的实例们。Mood 需要是 NSManagedObject 类的子类，这样它才能与 Core Data 其他的部分进行集成。每个 Mood 实例表示了一个 **mood**，也就是用户用相机拍摄的照片。
 
 - **托管对象上下文：** **mood** 对象是被 Core Data 托管的对象。也就是说，它们存在于一个特定的上下文 (context) 里：那就是托管对象上下文。托管对象上下文记录了它管理的对象，以及你对这些对象的所有操作，比如插入，删除和修改等。每个被托管的对象都知道自己属于哪个上下文。
 
@@ -2053,11 +1919,11 @@ public init(parseJSON jsonString: String)
 
 > <h1 id="路由导航">路由导航</h1>
 
-[路由设计思路分析](https://github.com/harleyGit/StudyNotes/blob/master/Sources/iOS组件化路由设计思路分析.pdf)
-[](https://www.cnblogs.com/oc-bowen/p/6489070.html)
+- [路由设计思路分析](https://github.com/harleyGit/StudyNotes/blob/master/Sources/iOS组件化路由设计思路分析.pdf)
 
-[路由导航](http://www.cocoachina.com/cms/wap.php?action=article&id=27025)
-[ALRouter路由导航](https://www.jianshu.com/p/61f20e23afc0)
+- [iOS 组件化 —— 路由设计思路分析](https://www.cnblogs.com/oc-bowen/p/6489070.html)
+
+- [ALRouter路由导航](https://www.jianshu.com/p/61f20e23afc0)
 
 
 
@@ -2356,7 +2222,7 @@ refreshAction
 
 <br/>
 
->## <h2 id="NSOperation">[NSOperation](https://www.jianshu.com/p/d8caf596d5d0)</h2>
+>## <h2 id="NSOperation">[NSOperation](./../Objective-C/多线程.md#NSOperation)</h2>
 
 <br/>
 
@@ -2450,13 +2316,6 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 
 
 <br/>
-<br/>
-
->## <h2 id="文件读写锁">[文件读写锁](https://github.com/harleyGit/StudyNotes/blob/master/多线程/GCD(II).md)</h2>
-
-
-
-<br/>
 
 ***
 <br/>
@@ -2464,13 +2323,35 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 
 > <h1 id="底层">底层</h2>
 
+
+<br/>
 <br/>
 
-> <h2 id="Swift动态性">Swift动态性</h2>
+
+
+<br/><br/>
+> <h2 id='Objective-C和Swift底层使用2套不同机制'>Objective-C和Swift底层使用2套不同机制</h2>
+
+&emsp; **Objective-C** 和 **Swift** 在底层使用的是两套完全不同的机制:
+
+- Cocoa 中的 Objective-C 对象是基于运行时的，它从骨子里遵循了 KVC (Key-Value Coding，通过类似字典的方式存储对象信息) 以及动态派发 (Dynamic Dispatch，在运行调用时再决定实际调用的具体实现)。
+
+- Swift 为了追求性能，如果没有特殊需要的话，是不会在运行时再来决定这些的。也就是说，Swift 类型的成员或者方法在编译时就已经决定，而运行时便不再需要经过一次查找，而可以直接使用。
+
+
+<br/>
+<br/>
+
+>## <h2 id="Swift动态性">[Swift动态性](https://juejin.cn/post/6888989886280368141)</h2>
 
 - **Swift Runtime**
 	- **Swift Runtime system**主要包括动态类型转换，泛型实例化和协议一致性注册，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
-	- Swift中的方法派发分为[静态派发和动态派发](https://www.jianshu.com/p/e0659093eaac)，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+	- Swift中的方法派发分为[静态派发和动态派发](https://www.jianshu.com/p/e0659093eaac)，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；
+	
+	- 其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。
+	
+	- 动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+	
 	- 由于Swift为了性能，牺牲了它的动态性，使得我们在Swift层面上能做的事情很少。不过，由于Swift的类分为两种: 继承自NSObject的类以及默认继承自SwiftObject的类，既然Swift中有继承自NSObject的派生类，那么也就意味着OC的动态性也能在Swift里面应用
 
 
@@ -2480,11 +2361,147 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 
 - **OC Runtime**
 	- 在Swift中，继承自NSObject的类都保留了其动态性，所以我们可以通过OC runtime获取到其方法，所以，也可以通过这个方式对Swift代码进行hook。
+	
 	- 从OC的运行时特性可知，所有的运行时方法都依赖TypeEncoding，也就是method_getTypeEncoding返回的结果，他指定了方法的参数类型以及在函数调用时参数入栈所要的内存空间，没有这个标识就无法动态的压入参数，而一些Swift特有的类型无法映射到OC的类型,也无法用OC的typeEncoding表示，就没法通过runtime获取;
+	
 	- 除了继承自NSObject的类之外，继承自SwiftObject类也能开启其动态性，其开启方式是**在属性或方法前加上@objc和dynamic。@objc是用来将Swift的API导出给Objective-C和Objective-C runtime使用的，如果你的类继承自Objective-c的类（如NSObject）将会自动被编译器插入@objc标识。加了@objc标识的方法、属性无法保证都会被运行时调用，因为Swift会做静态优化。要想完全被动态调用，必须使用dynamic修饰。使用dynamic修饰将会隐式的加上@objc标识。**
 
 
 
+[静态派发与动态派发(iOS成长指北-掘金)](https://juejin.cn/post/6954157785542049805)
+
+
+
+<br/>
+<br/>
+
+> <h3 id='Swift派发方式'>[Swift派发方式](./动态性.md#Swift派发方式)</h3>
+
+
+<br/>
+<br/>
+
+> <h4 id='派发效率'>派发效率</h4>
+
+
+派发效率从高到低为： **直接派发 > Table 派发 > Message 派发**
+
+
+<br/>
+<br/>
+
+> <h4 id='方法可见性影响'>方法可见性影响</h4>
+
+&emsp; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
+
+<br/>
+<br/>
+
+> <h4 id='KVO'>KVO</h4>
+
+&emsp;值得注意的是 KVO，被观察的属性也必须被声明为 dynamic，否则 setter 会走直接派发，无法触发变化。
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+> <h4 id='值类型和引用类型支持什么派发方式'>值类型和引用类型支持什么派发方式</h4>
+
+首先，值类型和引用类型都支持静态派发。
+
+但是，仅引用类型（即 Class）支持动态派发。这样做的原因是，简而言之，对于动态性或动态派发而言，我们需要继承，而我们的值类型并不支持继承。
+
+
+
+<br/>
+<br/>
+
+
+> <h4 id="Swfit中的@Objc和dynamic的原理">Swfit中的@Objc和dynamic的原理</h4>
+
+[Swift 底层是怎么调度方法的](https://gpake.github.io/2019/02/11/swiftMethodDispatchBrief/)
+
+&emsp; 这个问题涉及到**Swift派发原理**
+
+- **类类型(Class Type)**
+
+	- 对于一个纯 Swift class 来说，默认使用 Table 派发，影响它方法调用的关键字有 final、 dynamic 和 extension。
+	
+	- 函数如果被标记成 final (可以在类和其类的extension(扩展)中使用)，编译器就会知道这个方法不会被 override，并把它的调用方式标记成直接调用。而对于未标记成 final 并在 class 内部（非 extension）中定义的方法，Swift 会用一种叫作 **Virtual Table 的机制**来在运行时查找到这个方法并进行调用。
+
+	- 	当一个方法被标记为 dymanic，你必须同时把它标记上 @objc，此时这个方法会使用 **Message 调用**，依赖 Objc runtime。
+
+	- 	因为定义在 extension 中的方法目前还不支持 override，所以定义在其中的方法都是直接派发的。
+
+
+
+<br/>
+<br/>
+
+
+> <h4 id="@Objc和Dynamic的使用">@Objc和Dynamic的使用</h4>
+
+[Swift动态性](https://juejin.cn/post/6888989886280368141)
+
+
+&emsp; Swift Runtime system主要包括动态类型转换，泛型实例化和协议一致性注册，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
+
+&emsp; Swift中的方法派发分为静态派发和动态派发，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+
+&emsp; 由于Swift为了性能，牺牲了它的动态性，使得我们在Swift层面上能做的事情很少。不过，由于Swift的类分为两种: 继承自NSObject的类以及默认继承自SwiftObject的类，既然Swift中有继承自NSObject的派生类，那么也就意味着OC的动态性也能在Swift里面应用
+
+
+
+<br/>
+<br/>
+
+> <h4 id='OC调用Swift类型,找不到方法?'>OC调用Swift类型,找不到方法?</h4>
+
+**问题是:** 如果我们要使用 Objective-C 的代码或者特性来调用纯 Swift 的类型时候，我们会因为找不到所需要的这些运行时信息而导致失败,怎么办？
+
+- 1）.在 Swift 类型文件中，我们可以将需要暴露给 Objective-C 使用的任何地方 (包括类，属性和方法等) 的声明前面加上@objc修饰符。(注意这个步骤只需要对那些不是继承自NSObject的类型进行，如果你用 Swift 写的 class 是继承自NSObject的话，Swift 会默认自动为所有的非 private 的类和成员加上@objc。)
+
+- 2）.@objc修饰符的另一个作用是为 Objective-C 侧重新声明方法或者变量的名字。虽然绝大部分时候自动转换的方法名已经足够好用 (比如会将 Swift 中类似init(name: String)的方法转换成-initWithName:(NSString *)name这样)，但是有时候我们还是期望 Objective-C 里使用和 Swift 中不一样的方法名或者类的名字;
+
+- 3）.在[**Selector**](https://swifter.tips/selector/)一节中所提到的，即使是NSObject的子类，Swift 也不会在被标记为private的方法或成员上自动加@objc，以保证尽量不使用动态派发来提高代码执行效率。
+
+- 4）.如果我们确定使用这些内容的动态特性的话，我们需要手动给它们加上@objc修饰.
+	- 但是需要注意的是，添加@objc修饰符并不意味着这个方法或者属性会变成动态派发，Swift 依然可能会将其优化为静态调用。
+
+	- **一定要用dynamic情况：** 如果你需要和 Objective-C 里动态调用时相同的运行时特性的话，你需要使用的修饰符是dynamic。
+
+- 5）.一般情况下在做 app 开发时应该用不上，但是在施展一些像动态替换方法或者运行时再决定实现这样的 "黑魔法" 的时候，我们就需要用到dynamic修饰符了。
+
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+>## <h2 id='存在容器组成'>[存在容器组成](https://blog.csdn.net/preyer2011/article/details/129052530)</h2>
+
+- Value Buffer 占 3 个字的长度，如果符合协议的对象是值类型且小于等于 3 个字，则直接放入 ValueBuffer 中，如果对象是引用类型或者大于 3 个字的值类型，则将对象放在堆上，在 ValueBuffer 中保存一个指向堆上对象的引用。
+
+- 一个指向 值目击表（Value Witness Table, VWT） 的指针，用来创建、拷贝和销毁值，表中保存了创建、拷贝、销毁等函数的地址，其中创建、销毁函数的地址仅在当对象分配在堆上时才会有。
+
+- 一个指向 协议目击表（Protocol Witness Table, PWT） 的指针，每个符合了某个协议的类型都有自己的协议目击表，保存了实现协议中方法的方法地址。
+
+- 如果类型符合了多个协议，后面还会有第二个协议的协议目击表指针，以及第三个，第四个等。符合的协议越多，存在容器占用内存空间就越大。
+
+
+
+[为什么你需要使用泛型而不是 protocol](https://www.6hu.cc/archives/30535.html)
+
+
+<br/>
 <br/>
 <br/>
 
@@ -2494,9 +2511,11 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 
 
 <br/>
+<br/>
+<br/>
 
 
-> <h3 id='ExistentialContainer5个内存单元'>Existential Container 5个内存单元</h3>
+> <h2 id='ExistentialContainer5个内存单元'>Existential Container 5个内存单元</h2>
 
 Existential Container 类型占据 5 个内存单元（也称 词，Word）。其结构如下图所示：
 
