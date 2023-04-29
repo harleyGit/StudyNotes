@@ -223,6 +223,7 @@
 	*	[Https](./iOS/Objective-C/Https.md)
 * **优化**
 	*	[内存优化](./iOS/Objective-C/内存优化.md)
+	*	[二进制重排](./iOS/Objective-C/二进制重排.md)
 	*	[性能优化](./iOS/Objective-C/性能优化.md)
 * [**底层原理**](#底层原理)
 	* [基础](./iOS/Objective-C/基础.md)
