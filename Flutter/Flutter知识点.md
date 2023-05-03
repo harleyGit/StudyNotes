@@ -7,6 +7,7 @@
 - [**原生**](#原生)
 	- [如何与iOS和Android通信](#如何与iOS和Android通信)
 - [**类**](#类)
+	- [函数支持重载吗](#函数支持重载吗)
 - [**关键字**](#关键字)
 	- [mixin、extends、implement之间的关系?](#mixinextendsimplement之间的关系)
 	- [mixin](#mixin)
@@ -158,7 +159,65 @@
 
 
 
-> <h2 id=''></h2>
+> <h2 id='函数支持重载吗'>函数支持重载吗</h2>
+
+Dart中函数是不支持重载的,原因请看下面:
+
+<br/>
+
+
+我们可以使用反证法，假设dart支持函数重载，那么可能就会有以下这段代码:
+
+```
+class IllegalCode {
+  overloaded(num data) {
+  }
+  overloaded(List data){//假设支持函数重载，实际上这是非法的
+  }
+}
+
+main() {
+    var data1 = 100; 
+    var data2 = ["100"];
+    //由于dart中的类型是可选的，以下函数调用，根本就无法分辨下面代码实际上调用哪个overloaded函数。
+    overloaded(data1);
+    overloaded(data2);
+}
+```
+
+个人一些想法，如果仅从可选类型角度去考虑的话，实际上dart现在是可以支持基于类型的函数重载的，因为Dart有类型推导功能。如果dart能够推导出上述data1和data2类型，那么就可以根据推导出的类型去匹配重载的函数。Kotlin就是这样做的，以Kotlin为例:
+
+
+```
+fun overloaded(data: Int) {
+    //....
+}
+fun overloaded(data: List<String>) {
+   //....
+}
+fun main(args: Array<String>) {
+    val data1 = 100 //这里Kotlin也是采用类型推导为Int
+    val data2 = listOf("100")//这里Kotlin也是采用类型推导为List<String>
+    //所以以下重载函数的调用在Kotlin中是合理的
+    overloaded(data1)
+    overloaded(data2)
+}
+```
+
+
+
+<br/><br/>
+
+>## <h2 id='函数里的参数是值传递还是引用传递'>[函数里的参数是值传递还是引用传递](https://juejin.cn/post/6931340267324702733#heading-8)</h2>
+
+这要分情况,当参数是一个对象的实例时时引用传递,当是一个值类型时是值传递.
+
+
+- **值传递和引用传递区别:**
+	- 值传递（pass by value）是指在调用函数时将实际参数复制一份传递到函数中，这样在函数中如果对参数进行修改，将不会影响到实际参数。
+	
+	- 引用传递（pass by reference）是指在调用函数时将实际参数的地址直接传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。
+
 
 
 
