@@ -17,11 +17,16 @@
 	- [寻找两个正序数组的中位数](#寻找两个正序数组的中位数)
 	- [最长回文子串](#最长回文子串)
 	- [正则表达式匹配](#正则表达式匹配)
-	- [三数之和](#三数之和)
 	- [盛最多水的容器](#盛最多水的容器)
+	- [三数之和](#三数之和)
+	- [电话号码的字母组合]()
 - **参考资料**
+	- [**leetcode 热题100**](https://leetcode-cn.com/problem-list/2cktkvj/)
+	- [C语言(菜鸟教程)](https://www.runoob.com/cprogramming/c-tutorial.html)
 	- [10大基础实用算法及其讲解](https://mp.weixin.qq.com/s?__biz=MzI0MjE3OTYwMg==&mid=401441966&idx=1&sn=653fe22c5a7e6c221fbf121124fd18a2&scene=21#wechat_redirect)
 	- [算法-春水煎茶](https://writings.sh/posts)
+	- [**代码随想录**](https://www.programmercarl.com/)
+		- [代码随想录(B站视频)](https://space.bilibili.com/525438321/)
 
 
 <br/>
@@ -1375,6 +1380,266 @@ int maxArea(int* height, int heightSize){
 
 
 > <h2 id=""></h2>
+
+
+给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按 任意顺序 返回。
+
+给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。
+
+![c0_38.png](./../Pictures/c0_38.png)
+
+ 
+
+示例 1：
+
+```
+输入：digits = "23"
+输出：["ad","ae","af","bd","be","bf","cd","ce","cf"]
+```
+
+示例 2：
+
+```
+输入：digits = ""
+输出：[]
+```
+
+示例 3：
+
+```
+输入：digits = "2"
+输出：["a","b","c"]
+```
+
+
+
+**[回溯法](https://programmercarl.com/回溯算法理论基础.html#回溯法的效率)解决n个for循环问题**
+
+思路:
+
+![c0_39.png](./../Pictures/c0_39.png)
+
+
+
+<br/>
+
+**回溯三部曲：**
+
+- 确定回溯函数参数
+
+首先需要一个字符串pathArray来收集叶子节点的结果，然后用一个字符串数组resultLetters保存起来，这两个变量我依然定义为全局。
+
+再来看参数，参数指定是有题目中给的char* digits，然后还要有一个参数就是int型的index。
+
+这个index是记录遍历第几个数字了，就是用来遍历digits的（题目中给出数字字符串），同时index也表示树的深度。
+
+代码如下：
+
+```
+///数组要加*号,否则报错:excess elements in char array initializer [solution.c]
+///原因:是多个字符串，不是单个字符，这得用，指针数组
+///每个号码盘代表的数字
+char *numberChar[10]= {
+    "",     //0
+    "",     //1
+    "abc",  //2
+    "def",  //3
+    "ghi",  //4
+    "jkl",  //5
+    "mno",  //6
+    "pqrs", //7
+    "tuv",  //8
+    "wxyz", //9
+};
+///字母组合结果
+char **resultLetters;
+///每次遍历到枝节点时盛放元素的数组
+char *pathArray;
+///存放结果数组元素序列号, 不能在这里直接赋值,否则在leetcode不通过
+int resultTop;
+///路径深度
+int pathTop;
+
+void backTracking(char* digits, int index) 
+```
+
+
+
+- 确定终止条件
+
+例如输入用例"23"，两个数字，那么根节点往下递归两层就可以了，叶子节点就是要收集的结果集。
+
+那么终止条件就是如果index 等于 输入的数字个数（strlen(digits)了（本来index就是用来遍历digits的）。
+
+然后收集结果，结束本层递归。
+
+代码如下：
+
+```
+//若当前下标等于digits数组长度
+if (strlen(digits) == index) {
+    //在这里不需要把pathArray置为NULL,因为在下面的循环遍历中会把它覆盖掉的
+
+    int digitLength = (int)strlen(digits);
+    //复制digits数组，因为最后要多存储一个0，所以数组长度要+1
+    char *tempStr = (char *)malloc(sizeof(char)*(digitLength+1));
+    for (int j = 0; j < digitLength ; j++) {
+        tempStr[j]= pathArray[j];
+    }
+    
+    //tempStr最后一个要设置为空,也就是0
+    tempStr[digitLength]= 0;
+    resultLetters[resultTop++]= tempStr;
+    
+    return;
+}
+```
+
+
+- 确定单层遍历逻辑
+
+首先要取index指向的数字，并找到对应的字符集（手机键盘的字符集）。
+
+然后for循环来处理这个字符集，代码如下：
+
+```
+///键盘第几个数字
+//将字符数字转换为真的数字,要减去字符'0',不是数字0否则会出错
+int currentIndex = digits[index] - '0';
+///获取对应键盘数字的字符串元素
+char *numbers = numberChar[currentIndex];
+///键盘字符串长度
+int numberLength = (int)strlen(numbers);
+
+for (int i = 0; i < numberLength; i++) {
+    pathArray[pathTop++]= numbers[i];
+    //递归，处理下一层数字
+    backTracking(digits, index+1);
+    pathTop--;
+}
+```
+
+
+所以总的代码是:
+
+
+```
+///数组要加*号,否则报错:excess elements in char array initializer [solution.c]
+///原因:是多个字符串，不是单个字符，这得用，指针数组
+///每个号码盘代表的数字
+char *numberChar[10]= {
+    "",     //0
+    "",     //1
+    "abc",  //2
+    "def",  //3
+    "ghi",  //4
+    "jkl",  //5
+    "mno",  //6
+    "pqrs", //7
+    "tuv",  //8
+    "wxyz", //9
+};
+///字母组合结果
+char **resultLetters;
+///每次遍历到枝节点时盛放元素的数组
+char *pathArray;
+///存放结果数组元素序列号, 不能在这里直接赋值,否则在leetcode不通过
+int resultTop;
+///路径深度
+int pathTop;
+
+void backTracking(char* digits, int index) {
+    
+    //若当前下标等于digits数组长度
+    if (strlen(digits) == index) {
+        //在这里不需要把pathArray置为NULL,因为在下面的循环遍历中会把它覆盖掉的
+
+        int digitLength = (int)strlen(digits);
+        //复制digits数组，因为最后要多存储一个0，所以数组长度要+1
+        char *tempStr = (char *)malloc(sizeof(char)*(digitLength+1));
+        for (int j = 0; j < digitLength ; j++) {
+            tempStr[j]= pathArray[j];
+        }
+        
+        //tempStr最后一个要设置为空,也就是0
+        tempStr[digitLength]= 0;
+        resultLetters[resultTop++]= tempStr;
+        
+        return;
+    }
+    
+    ///键盘第几个数字
+    //将字符数字转换为真的数字,要减去字符'0',不是数字0否则会出错
+    int currentIndex = digits[index] - '0';
+    ///获取对应键盘数字的字符串元素
+    char *numbers = numberChar[currentIndex];
+    ///键盘字符串长度
+    int numberLength = (int)strlen(numbers);
+    
+    for (int i = 0; i < numberLength; i++) {
+        pathArray[pathTop++]= numbers[i];
+        //递归，处理下一层数字
+        backTracking(digits, index+1);
+        pathTop--;
+    }
+}
+
+char ** letterCombinations(char * digits, int* returnSize){
+    
+    int length = (int)strlen(digits);
+    resultLetters = (char **)malloc(sizeof(char*) * 300);
+    pathArray = (char *)malloc(sizeof(char) * length);
+    *returnSize = 0;
+
+    ///若digits数组中元素个数为0，返回空集
+    if (length == 0) {
+        return resultLetters;
+    }
+    pathTop = resultTop = 0;
+    backTracking(digits, 0);
+    *returnSize = resultTop;
+    
+    return resultLetters;
+}
+
+
+
+
+///调用
+///递归回溯
++ (void)testLetterCombinations{
+    char digits[] = {"23"};
+    int size = 1;
+    
+    char **a = letterCombinations(digits, &size);
+    
+    for (int i = 0; i < size; i++) {
+        printf("🌷🌹行:");
+        char *b = a[i];
+        for (int j = 0; j < 3; j++) {
+            printf("%c", b[j]);
+        }
+        printf("\n");
+
+    }
+}
+
+```
+
+
+**Log:**
+
+```
+🌷🌹行:ad
+🌷🌹行:ae
+🌷🌹行:af
+🌷🌹行:bd
+🌷🌹行:be
+🌷🌹行:bf
+🌷🌹行:cd
+🌷🌹行:ce
+🌷🌹行:cf
+```
 
 
 
