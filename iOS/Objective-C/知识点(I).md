@@ -49,9 +49,15 @@
 	- [图片上传](#图片上传)
 	- [界面保持流畅](#界面保持流畅)
 	- [UI卡顿优化](#UI卡顿优化)
+	- [WKWebview白屏](#WKWebview白屏)
 	- [UITableView优化](#UITableView优化)
 		- [4).圆角图片处理](#圆角图片处理)
-	- [内存优化(微盟、货拉拉问到)](#内存优化)
+	- [内存优化(微盟、货拉拉问到、七猫)](#内存优化)
+		- [内存泄漏](#内存泄漏)
+		- [野指针](#野指针)
+		- [图片存取](#图片存取)
+		- [OOM 监控(七猫)](#OOM监控)
+		- [其它优化](#其它优化)
 	- [启动优化(微盟、货拉拉问到)](#启动优化)
 	- 	[包体积优化](#包体积优化)
 	- [内存暴涨解决](#内存暴涨解决)
@@ -2146,6 +2152,33 @@ SDWebImage的使用:
 	- RunLoop 监听
 
 
+
+<br/><br/>
+
+
+> <h2 id='WKWebview白屏'>WKWebview白屏</h2>
+
+
+- WKWebview白屏问题，严格来说，是一种内存方面的问题；之前的UIWebview因为内存使用过大会Crash，而WKWebview不会Crash，会白屏；
+
+
+- WKWebView是一个多进程组件，Network Loading以及UI Rendering在其它进程中执行，当WKWebView总体的内存占用比较大时，WebContent Process会Crash，从而出现白屏现象。
+
+
+- 解决办法：
+
+	- KVO监听URL, 当URL为nil，重新reload
+
+
+	- 在进程被终止回调中，重新reload
+
+```
+// 此方法适用iOS9.0以上 
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView NS_AVAILABLE(10_11, 9_0){
+		//reload
+}
+```
+
 <br/>
 <br/>
 
@@ -2479,6 +2512,11 @@ Mach-O文件主要有3部分组成：
 
 >## <h2 id = "内存优化">[**内存优化**](https://juejin.cn/post/6864492188404088846)</h2>
 
+
+<br/><br/>
+
+> <h3 id='内存泄漏'>内存泄漏</h3>
+
 - **内存泄漏**
 	- ARC模式下由于循环引用造成内存泄漏，可以使用**`weak`**和**`unowned`**来避免;
 		- 提问： [weak和unowened区别](https://hisoka0917.github.io/swift/2017/10/17/closure-unowned-weak-self/)？
@@ -2487,33 +2525,62 @@ Mach-O文件主要有3部分组成：
 		- 提问：weak的原理？
 			- 答：[weak原理](http://cloverkim.com/ios_weak-principle.html)
 
-<br/>
+<br/><br/>
+
+> <h3 id='野指针'>野指针</h3>
+
 
 - **野指针**
 	- 开发阶段可以通过开启编译里的 **Zombie Objects**（在edit scheme的Run中进行打开）复现问题，原理是 Hook 系统的 dealloc 方法，执行 __dealloc_zombie 将对象进行僵尸化，如果当前对象再次收到消息，则终止程序并打印出调用信息。 
 
-<br/>
+
+<br/><br/>
+
+> <h3 id='图片存取'>图片存取</h3>
+
 
 - **图片存取** 
 	- 图片读取
 		- imageNamed 会被缓存到内存中，适用于频繁使用的小图片；
 		- imageWithContentOfFile 适用于大图片，持有者生命周期结束后既被释放。
 	- 缩放图片 
-		- 将大图片加载到小空间时， UIImage （UIImage.contentsOfFile）需要先解压整个图像再渲染，会产生内存峰值，用 [ImageIO框架 替代 UIImage 可避免图像峰值](#ImageIO图片缩放)，ImageIO框架（CGImageSourceCreateWithURL）可以直接指定加载到内存的图像尺寸和信息，省去了解压缩的过程。
+		- 将大图片加载到小空间时， UIImage （UIImage.contentsOfFile）需要先解压整个图像再渲染，会产生内存峰值.用 [ImageIO框架 替代 UIImage 可避免图像峰值](#ImageIO图片缩放)，ImageIO框架（CGImageSourceCreateWithURL）可以直接指定加载到内存的图像尺寸和信息，省去了解压缩的过程。
 	- 后台优化
 		-  当应用切入后台时，图像默认还在内存中 ，可以在退到后台或view消失时从内存中移除图片，进入前台或view出现时再加载图片 （通过监听系统通知) 
 	- HEIC格式 
 		- HEIC 是苹果推出的专门用于其系统的图片格式，iOS 11以上支持。
 		- 据测试，相同画质比 JPEG 节省 50% 内存，且支持保存辅助图片（深度图、视差图等）。 
 
-<br/>
 
-- **OOM 监控**
+<br/><br/>
+
+> <h3 id='OOM监控'>OOM 监控</h3>
+
+Out Of Memory: 内存不足
+
+- **OOM(Out Of Memory) 监控**
+
 	- 指 App 在前台因消耗内存过大导致被系统杀死，针对这类问题，我们需要记录发生 FOOM 时的调用栈、内存占用等信息，从而具体分析解决内存占用大的问题。
-	- **OOMDetector(腾讯开源)**通过  malloc/free 的更底层接口 malloc_logger_t 记录当前存活对象的内存分配信息，同时也根据系统的 backtrace_symbols 回溯了堆栈信息。之后再根据伸展树（Splay Tree）等做数据存储分析，具体方式参看这篇文章：[iOS微信内存监控](https://wetest.qq.com/lab/view/367.html)。
 
 
-<br/>
+	- 流程是监控 App 生命周期内的内存增减，在收到内存警告时，记录内存信息，获取当前所有对象信息和内存占用值，并在合适的时机上传到服务器。目前比较出名的 OOM 监控框架有 Facebook 的 [**FBAllocationTracker**](https://github.com/facebookarchive/FBAllocationTracker) ，国内的有腾讯开源的[**OOMDetector**](https://github.com/Tencent/OOMDetector)。
+
+
+	- FBAllocationTracker
+		- 原理是 hook 了 malloc/free 等方法，以此在运行时记录所有实例的分配信息，从而发现一些实例的内存异常情况，有点类似于在 app 内运行、性能更好的 Allocation。但是这个库只能监控 Objective-C 对象，所以局限性非常大，同时因为没办法拿到对象的堆栈信息，所以更难定位 OOM 的具体原因。
+
+
+	- OOMDetector
+		- **OOMDetector(腾讯开源)** 通过  malloc/free 的更底层接口 malloc_logger_t 记录当前存活对象的内存分配信息，同时也根据系统的 backtrace_symbols 回溯了堆栈信息。之后再根据伸展树（Splay Tree）等做数据存储分析，具体方式参看这篇文章：[iOS微信内存监控](https://wetest.qq.com/lab/view/367.html)。
+
+
+这里要说明下，内存警告和 OOM 没有必然相关性。当瞬间申请了大量内存，而 CPU 正在执行其他任务，会导致进程没有收到内存警告就发生了 OOM；当进程收到内存警告时，如果该进程优先级较高，且系统通过杀死低优先级进程已释放了足够内存，就不会在接收到 OOM。
+
+<br/><br/>
+
+> <h3 id='其它优化'>其它优化</h3>
+
+
 
 - 其它优化
 	- 构建缓存时使用 NSCache 替代 NSMutableDictionary
