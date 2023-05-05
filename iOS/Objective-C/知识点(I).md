@@ -19,7 +19,6 @@
 	- [NSString的属性copy和strong区别](#NSString的属性copy和strong区别)
 	- [retain和strong区别](#retain和strong区别)
 	- [NSCache详解](#NSCache详解)
-	- [load和initialize区别](#load和initialize区别)
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
 	- [数据本地持久化](#数据本地持久化)
@@ -103,6 +102,8 @@
 		- [一个NSObject对象占用多少内存？](#一个NSObject对象占用多少内存？)
 		- [对象的isa指针指向哪里？](#对象的isa指针指向哪里？)
 		- [类信息存放在哪里？](#类信息存放在哪里？)
+		- [load和initialize区别](#load和initialize区别)
+			- [load和initialize是谁调用的?走的都是消息转发吗?(富途牛牛)](#load和initialize是谁调用的?走的都是消息转发吗?)
 		- [load和initialize哪个先调用](#load和initialize哪个先调用)
 		- [消息转发](#消息转发)
 		- [sel和IMP是什么?二者关系如何](#sel和IMP是什么，二者关系如何)
@@ -418,133 +419,6 @@ self.copyedString: 123456, 0x107b2bff0
 
 
 > <h2 id='NSCache详解'>NSCache详解</h2>
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id="load和initialize区别">load和initialize区别</h2>
-
-- **调用顺序**
-	- 以main为分界，load方法在main函数之前执行，initialize在main函数之后执行
-
-- **相同点**
-	- load和initialize会被自动调用，不能手动调用它们。
-	- 子类实现了load和initialize的话，会隐式调用父类的load和initialize方法
-	- load和initialize方法内部使用了锁，因此它们是线程安全的。
-	
-- **不同点**
-	- 子类中没有实现load方法的话，会调用父类的load方法(**亲自写代码证实了**)；而子类如果没有实现initialize方法的话，也会自动调用父类的initialize方法。
-	- 当类被引用进项目的时候就会执行load函数(在main函数开始执行之前）,与这个类是否被用到无关,每个类的load函数只会自动调用一次.由于load函数是系统自动加载的，因此不需要调用父类的load函数，否则父类的load函数会多次执行。
-	- initialize在第一次给某个类发送消息时调用（比如实例化一个对象），并且只会调用一次，是懒加载模式，如果这个类一直没有使用，就不回调用到initialize方法。
-
-
-<br/>
-
-**load**
-
-&emsp; 提问：当有FatherClass、FatherClass (fatherCategory)、SubClass、SubClass (subCategory)四个类，当它们都实现了load方法时，它们的调用顺序是怎么样的(得物(毒)面试提问)？
-
-自己实际操作了一下，当我们在load方法中，加入了这段代码`[super load]`会出现下面的打印，调用顺序如下：
-
-```
-2021-05-19 12:21:01.565405+0800 OCTest[5522:237002] FatherClass 的 load 方法调用了
-2021-05-19 12:21:01.565927+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
-2021-05-19 12:21:01.566003+0800 OCTest[5522:237002] SubClass 的 load 方法调用了
-2021-05-19 12:21:01.566087+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
-2021-05-19 12:21:01.566152+0800 OCTest[5522:237002] ++++++ >>> SubClass Category 的 load 方法调用了
-2021-05-19 12:21:01.566205+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
-
-```
-
-
-当我们在load方法中去除`[super load]`方法时是以下打印：
-
-```
-2021-05-19 12:53:11.038671+0800 OCTest[6107:261238] FatherClass 的 load 方法调用了
-2021-05-19 12:53:11.039148+0800 OCTest[6107:261238] SubClass 的 load 方法调用了
-2021-05-19 12:53:11.039231+0800 OCTest[6107:261238] ++++++ >>> SubClass Category 的 load 方法调用了
-2021-05-19 12:53:11.039354+0800 OCTest[6107:261238] -----》FatherClass Category的 load 方法调用了
-
-```
-
-&emsp; 这才是正确的调用顺序，先**调用父类load方法->子类load方法->子类类别load方法->父类类别方法**。
-
-
-
-
-<br/>
-
-
-**initialize:**
-
-- **描述：**
-	- 在这个类接收第一条消息之前调用,是系统调用不需要调用 **[super initialize]**，否则父类的initialize会被多次执行 。
-	- Runtime在一个程序中每一个类的一个程序中发送一个初始化一次，或是从它继承的任何类中，都是在程序中发送第一条消息。（因此，当该类不使用时，该方法可能永远不会被调用。）运行时发送一个线程安全的方式初始化消息。父类的调用一定在子类之前。
-
-- **调用特点**
-	- 父类的initialize方法会比子类先执行；
-	- 当子类未实现initialize方法时,会调用父类initialize方法;
-	- 当子类实现initialize方法时,父类、子类的initialize方法都会执行，但是父类先执行;
-
-	```
-	2021-05-19 19:36:02.439298+0800 OCTest[12800:544647] FatherClass 的 initialize 方法调用了
-	2021-05-19 19:36:02.439464+0800 OCTest[12800:544647] SubClass 的 initialize 方法调用了
-	```
-
-	- 当有父类、父类Categore、子类、子类Category都实现了initialize时，先调用父类Categore -> 子类Category。也就是有Category的先执行里面的方法。
-	- 当有多个Category都实现了initialize方法,会覆盖类中的方法,只执行一个(会执行Compile Sources 列表中最后一个Category 的initialize方法)
-
-
-<br/>
-
-- **情况下使用:**
-	- load
-		- 由于调用load方法时的环境很不安全，我们应该尽量减少load方法的逻辑。另一个原因是load方法是线程安全的，它内部使用了锁，所以我们应该避免线程阻塞在load方法中
-		- load很常见的一个使用场景,交换两个方法的实现
-
-		```
-		//摘自MJRefresh
-		+ (void)load
-		{
-		    [self exchangeInstanceMethod1:@selector(reloadData) method2:@selector(mj_reloadData)];
-		    [self exchangeInstanceMethod1:@selector(reloadRowsAtIndexPaths:withRowAnimation:) method2:@selector(mj_reloadRowsAtIndexPaths:withRowAnimation:)];
-		    [self exchangeInstanceMethod1:@selector(deleteRowsAtIndexPaths:withRowAnimation:) method2:@selector(mj_deleteRowsAtIndexPaths:withRowAnimation:)];
-		    [self exchangeInstanceMethod1:@selector(insertRowsAtIndexPaths:withRowAnimation:) method2:@selector(mj_insertRowsAtIndexPaths:withRowAnimation:)];
-		    [self exchangeInstanceMethod1:@selector(reloadSections:withRowAnimation:) method2:@selector(mj_reloadSections:withRowAnimation:)];
-		    [self exchangeInstanceMethod1:@selector(deleteSections:withRowAnimation:) method2:@selector(mj_deleteSections:withRowAnimation:)];
-		    [self exchangeInstanceMethod1:@selector(insertSections:withRowAnimation:) method2:@selector(mj_insertSections:withRowAnimation:)];
-		}
-		
-		+ (void)exchangeInstanceMethod1:(SEL)method1 method2:(SEL)method2
-		{
-		    method_exchangeImplementations(class_getInstanceMethod(self, method1), class_getInstanceMethod(self, method2));
-		}
-		
-		
-		```
-		
-
-<br/>
-
-- **+initialize**
-	-  initialize方法主要用来对一些不方便在编译期初始化的对象进行赋值。比如:NSMutableArray这种类型的实例化依赖于runtime的消息发送，所以显然无法在编译器初始化：
-		```
-			
-		// In Person.m
-		// int类型可以在编译期赋值
-		static int someNumber = 0; 
-		static NSMutableArray *someArray;
-		+ (void)initialize {
-		    if (self == [Person class]) {
-		        // 不方便编译期复制的对象在这里赋值
-		        someArray = [[NSMutableArray alloc] init];
-		    }
-		}
-		
-		```
 
 
 
@@ -4373,6 +4247,152 @@ objc_object::sidetable_retainCount()
 
 
 答：成员变量的具体值存放在实例对象（instance对象）；对象方法，协议，属性，成员变量信息存放在类对象（class对象）；类方法信息存放在元类对象（meta-class对象）。
+
+
+<br/>
+<br/>
+
+
+> <h2 id="load和initialize区别">load和initialize区别</h2>
+
+- **调用顺序**
+	- 以main为分界，load方法在main函数之前执行，initialize在main函数之后执行
+
+- **相同点**
+	- load和initialize会被自动调用,建议不要手动调用它们。
+	
+	- 子类实现了load和initialize的话，会隐式调用父类的load和initialize方法
+	
+	- load和initialize方法内部使用了锁，因此它们是线程安全的。
+	
+- **不同点**
+	- 子类中没有实现load方法的话，会调用父类的load方法(**亲自写代码证实了**)；而子类如果没有实现initialize方法的话，也会自动调用父类的initialize方法。
+	
+	- 当类被引用进项目的时候就会执行load函数(在main函数开始执行之前）,与这个类是否被用到无关,每个类的load函数只会自动调用一次.由于load函数是系统自动加载的，因此不需要调用父类的load函数，否则父类的load函数会多次执行。
+	
+	- initialize在第一次给某个类发送消息时调用（比如实例化一个对象），并且只会调用一次，是懒加载模式，如果这个类一直没有使用，就不会调用到initialize方法。
+
+
+<br/>
+
+**load**
+
+&emsp; 提问：当有FatherClass、FatherClass (fatherCategory)、SubClass、SubClass (subCategory)四个类，当它们都实现了load方法时，它们的调用顺序是怎么样的(得物(毒)面试提问)？
+
+自己实际操作了一下，当我们在load方法中，加入了这段代码`[super load]`会出现下面的打印，调用顺序如下：
+
+```
+2021-05-19 12:21:01.565405+0800 OCTest[5522:237002] FatherClass 的 load 方法调用了
+2021-05-19 12:21:01.565927+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
+2021-05-19 12:21:01.566003+0800 OCTest[5522:237002] SubClass 的 load 方法调用了
+2021-05-19 12:21:01.566087+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
+2021-05-19 12:21:01.566152+0800 OCTest[5522:237002] ++++++ >>> SubClass Category 的 load 方法调用了
+2021-05-19 12:21:01.566205+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
+
+```
+
+
+当我们在load方法中去除`[super load]`方法时是以下打印：
+
+```
+2021-05-19 12:53:11.038671+0800 OCTest[6107:261238] FatherClass 的 load 方法调用了
+2021-05-19 12:53:11.039148+0800 OCTest[6107:261238] SubClass 的 load 方法调用了
+2021-05-19 12:53:11.039231+0800 OCTest[6107:261238] ++++++ >>> SubClass Category 的 load 方法调用了
+2021-05-19 12:53:11.039354+0800 OCTest[6107:261238] -----》FatherClass Category的 load 方法调用了
+
+```
+
+&emsp; 这才是正确的调用顺序，先**调用父类load方法->子类load方法->子类类别load方法->父类类别方法**。
+
+
+
+
+<br/>
+
+
+**initialize:**
+
+- **描述：**
+	- 在这个类接收第一条消息之前调用,是系统调用不需要调用 **[super initialize]**，否则父类的initialize会被多次执行 。
+	- Runtime在一个程序中每一个类的一个程序中发送一个初始化一次，或是从它继承的任何类中，都是在程序中发送第一条消息。（因此，当该类不使用时，该方法可能永远不会被调用。）运行时发送一个线程安全的方式初始化消息。父类的调用一定在子类之前。
+
+- **调用特点**
+	- 父类的initialize方法会比子类先执行；
+	- 当子类未实现initialize方法时,会调用父类initialize方法;
+	- 当子类实现initialize方法时,父类、子类的initialize方法都会执行，但是父类先执行;
+
+	```
+	2021-05-19 19:36:02.439298+0800 OCTest[12800:544647] FatherClass 的 initialize 方法调用了
+	2021-05-19 19:36:02.439464+0800 OCTest[12800:544647] SubClass 的 initialize 方法调用了
+	```
+
+	- 当有父类、父类Categore、子类、子类Category都实现了initialize时，先调用父类Categore -> 子类Category。也就是有Category的先执行里面的方法。
+	- 当有多个Category都实现了initialize方法,**会覆盖类中的方法,只执行一个(会执行Compile Sources 列表中最后一个Category 的initialize方法)**
+
+
+<br/>
+
+- **情况下使用:**
+	- load
+		- 由于调用load方法时的环境很不安全，我们应该尽量减少load方法的逻辑。另一个原因是load方法是线程安全的，它内部使用了锁，所以我们应该避免线程阻塞在load方法中
+		- load很常见的一个使用场景,交换两个方法的实现
+
+```
+//摘自MJRefresh
++ (void)load
+{
+	[self exchangeInstanceMethod1:@selector(reloadData) method2:@selector(mj_reloadData)];
+	[self exchangeInstanceMethod1:@selector(reloadRowsAtIndexPaths:withRowAnimation:) method2:@selector(mj_reloadRowsAtIndexPaths:withRowAnimation:)];
+	[self exchangeInstanceMethod1:@selector(deleteRowsAtIndexPaths:withRowAnimation:) method2:@selector(mj_deleteRowsAtIndexPaths:withRowAnimation:)];
+	[self exchangeInstanceMethod1:@selector(insertRowsAtIndexPaths:withRowAnimation:) method2:@selector(mj_insertRowsAtIndexPaths:withRowAnimation:)];
+	[self exchangeInstanceMethod1:@selector(reloadSections:withRowAnimation:) method2:@selector(mj_reloadSections:withRowAnimation:)];
+	[self exchangeInstanceMethod1:@selector(deleteSections:withRowAnimation:) method2:@selector(mj_deleteSections:withRowAnimation:)];
+	[self exchangeInstanceMethod1:@selector(insertSections:withRowAnimation:) method2:@selector(mj_insertSections:withRowAnimation:)];
+}
+
++ (void)exchangeInstanceMethod1:(SEL)method1 method2:(SEL)method2
+{
+	method_exchangeImplementations(class_getInstanceMethod(self, method1), class_getInstanceMethod(self, method2));
+}
+```
+		
+
+<br/>
+
+- **+initialize**
+	-  initialize方法主要用来对一些不方便在编译期初始化的对象进行赋值。比如:NSMutableArray这种类型的实例化依赖于runtime的消息发送，所以显然无法在编译器初始化：
+
+```
+	
+// In Person.m
+// int类型可以在编译期赋值
+static int someNumber = 0; 
+static NSMutableArray *someArray;
++ (void)initialize {
+	if (self == [Person class]) {
+		// 不方便编译期复制的对象在这里赋值
+		someArray = [[NSMutableArray alloc] init];
+	}
+}
+```
+
+
+
+
+<br/><br/>
+
+> <h3 id='load和initialize是谁调用的?走的都是消息转发吗?'>load和initialize是谁调用的?走的都是消息转发吗?</h3>
+
+- **load方法:**
+	- 在main函数之前是系统自动调用时,是直接通过函数地址;
+	
+	- main函数之后是若是自己调用的,走的是消息机制用objc_msgsend函数调用
+
+
+<br/>
+
+- **initialize**
+	- 调用方式：消息机制objc_msgSend函数调用。
 
 
 
