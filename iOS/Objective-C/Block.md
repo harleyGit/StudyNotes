@@ -870,13 +870,13 @@ static struct IMAGE_INFO { unsigned version; unsigned flag; } _OBJC_IMAGE_INFO =
 
 &emsp; 在 ARC 中否添加 __block ，block 中的 auto 变量都会被从栈上 copy 到堆上。
 
-**__block 修饰符：**
-- __block 可以用于解决 block 内部无法修改 auto 变量值的问题
-- __block 不能修饰全局变量、静态、变量（static)
+- **__block 修饰符：**
+	- __block 可以用于解决 block 内部无法修改 auto 变量值的问题
+	- __block 不能修饰全局变量、静态、变量（static)
 编译器会将 __block 变量包装成一个对象
 
 
-![ios_pd0_4.jpeg](./../../Pictures/ios_pd0_4.jpeg)
+![ios_pd0_4.png](./../../Pictures/ios_pd0_4.png)
 
 <br/>
 
