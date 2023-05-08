@@ -17,6 +17,7 @@
 		- [删除链表的倒数第 N 个结点](#删除链表的倒数第N个结点)
 	- [**栈与队列**](#栈与队列)
 		- [有效的括号](#有效的括号)
+		- [合并两个有序链表](#合并两个有序链表)
 	- [两数之和](#两数之和)
 	- [两数相加](#两数相加)
 	- [无重复字符的最长子串](#无重复字符的最长子串)
@@ -989,6 +990,127 @@ Log:
 	使用一个N记录总共的节点数,然后当它等于正数第(N-n)个时进行返回,采用递归.我是这样想的.然后用一个节点记录上一个节点,这样就可以了!
 
 
+
+<br/><br/>
+
+> <h2 id='合并两个有序链表'>合并两个有序链表</h2>
+
+将两个升序链表合并为一个新的 升序 链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。  
+
+示例 1：
+
+![c0_66.jpg](./../Pictures/c0_66.jpg)
+
+
+
+```
+输入：l1 = [1,2,4], l2 = [1,3,4]
+输出：[1,1,2,3,4,4]
+```
+
+示例 2：
+
+```
+输入：l1 = [], l2 = []
+输出：[]
+```
+
+示例 3：
+
+```
+输入：l1 = [], l2 = [0]
+输出：[0]
+```
+
+
+
+
+```
+struct ListNode* mergeTwoLists(struct ListNode* list1, struct ListNode* list2){
+    struct ListNode *tmp = (struct ListNode*)malloc(sizeof(struct ListNode));
+    tmp->next = NULL;
+    tmp->val = 0;
+    struct ListNode *head = tmp;
+
+    while(list1 && list2){
+        if(list1->val < list2->val){
+            tmp->next = list1;
+            list1 = list1->next;
+            tmp = tmp->next;
+        }else{
+            tmp->next = list2;
+            list2 = list2->next;
+            tmp=tmp->next;
+        }
+    }
+    tmp->next = list1 ? list1 : list2;
+
+    return head->next;
+}
+
+
+
+///调用
++ (void)testMergeTwoLists {
+    
+    int list[]={1, 2, 4};
+    int list1[]={1, 3, 4};
+    int listLength = sizeof(list)/sizeof(int);
+    int list1Length =sizeof(list1)/sizeof(int);;
+    
+    struct ListNode *head = (struct ListNode*)malloc(sizeof(struct ListNode));
+    head->val = list[0];
+    head->next = NULL;
+    
+    struct ListNode* node = head;
+    node->next = NULL;
+    
+    for (int i = 1; i < listLength; i ++) {
+        struct ListNode* addNode = (struct ListNode*)malloc(sizeof(struct ListNode));
+        addNode->val = list[i];
+        addNode->next = NULL;
+        
+        node->next = addNode;
+        node = addNode;
+    }
+    
+    
+    struct ListNode *head1 = (struct ListNode*)malloc(sizeof(struct ListNode));
+    head1->val = list1[0];
+    head1->next = NULL;
+    
+    struct ListNode* node1 = head1;
+    node1->next = NULL;
+    
+    for (int i = 1; i < list1Length; i ++) {
+        struct ListNode* addNode = (struct ListNode*)malloc(sizeof(struct ListNode));
+        addNode->val = list1[i];
+        addNode->next = NULL;
+        
+        node1->next = addNode;
+        node1 = addNode;
+    }
+    
+    
+    
+   struct ListNode* resultNode = mergeTwoLists(head, head1);
+    while (resultNode) {
+        println("%d", resultNode->val);
+        resultNode=resultNode->next;
+    }
+}
+```
+
+Log:
+
+```
+🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 1
+🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 1
+🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 2
+🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 3
+🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 4
+🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 4
+```
 
 
 
