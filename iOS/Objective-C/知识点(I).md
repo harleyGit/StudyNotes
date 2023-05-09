@@ -36,6 +36,7 @@
 	- [如何用GCD同步若干个异步调用](#如何用GCD同步若干个异步调用)
 	- [dispatch_once安全的原因](#dispatch_once安全的原因)
 	- [锁分为哪几类?说一下](#锁分为哪几类?说一下)
+	- [dispatch_after时间准确吗(杭州灵伴科技)](#dispatch_after时间准确吗)
 - [**性能优化**](#性能优化)
 	- [性能优化总结](#性能优化总结)
 	- [循环引用解决](#循环引用解决)
@@ -64,7 +65,6 @@
 	- [文件存储优化](#文件存储优化)
 	- [Crash优化](#Crash优化)
 		- [你知道哪些类蔟?他们有什么有缺点?(大厂)](#你知道哪些类蔟?他们有什么有缺点?)
-		- [Runtime可以做什么?(大厂)](#Runtime可以做什么)
 		- [不使用三方SDK如何收集Crash堆栈信息?(大厂)](#不使用三方SDK如何收集Crash堆栈信息?)
 		- [有没有方法检测到异常后不让程序闪退?(大厂)](#有没有方法检测到异常后不让程序闪退?)
 		- [NSSetUncaughtExceptionHandler底层原理(大厂)](#NSSetUncaughtExceptionHandler底层原理)
@@ -73,6 +73,7 @@
 	- [单例类](#单例类)
 	- [协议代理](#协议代理)
 	- [KVC和KVO](#KVC和KVO)
+		- 	[KVO的原理](#KVO的原理)
 - [**底层**](#底层)
 	- [Runtime](#Runtime)
 		- [Runtime可以做什么?(大厂)](#Runtime可以做什么?)
@@ -118,7 +119,6 @@
 		- [block都会发生循环引用吗](#block都会发生循环引用吗)
 			- [系统UIView的动画Block](#系统UIView的动画Block)
 			- 	[通知+block](#通知+block)
-	- [KVO的原理](#KVO的原理)
 	- [APNS底层原理](#APNS底层原理)
 	- [NSDictionary、NSArray原理](#NSDictionaryNSArray原理)
 	- [self和super实现的原理](#self和super实现的原理)
@@ -1133,9 +1133,19 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 <br/>
 <br/>
 
-> <h2 id = ""></h2>
+> <h2 id = "dispatch_after时间准确吗">dispatch_after时间准确吗(杭州灵伴科技)</h2>
 
 
+指定时间（如3秒后），执行某个任务。
+
+```
+dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    
+    NSLog(@"执行任务");
+});
+```
+
+注意：dispatch_after函数并不是延迟对应时间后立即执行block块中的操作，而是将任务追加到对应队列中，考虑到队列阻塞等情况，所以这个任务从加入队列到真正执行的时间是不准确的。
 
 
 <br/>
@@ -1157,6 +1167,9 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 ># <h1 id = "性能优化"> [性能优化](https://www.jianshu.com/p/3ad7880e3667) </h1>
 
 [包体积优化总览](https://juejin.cn/post/7185079396678991928/)
+
+WHC_Scan:  Mac工具, 删除项目没有使用的类减少打包体积;
+
 
 <br/>
 
@@ -2940,18 +2953,8 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 <br/>
 
 
-><h3 id='Runtime可以做什么'>[Runtime可以做什么?](#Runtime可以做什么?)</h3>
 
-
-
-
-
-<br/>
-<br/>
-
-
-
-><h3 id='不使用三方SDK如何收集Crash堆栈信息?'>不使用三方SDK如何收集Crash堆栈信息?(大厂)</h3>
+><h3 id='不使用三方SDK如何收集Crash堆栈信息?'>不使用三方SDK如何收集Crash堆栈信息</h3>
 
 
 
@@ -3034,8 +3037,114 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 
 
+<br/>
+<br/>
 
 
+>## <h3 id="KVO的原理"> [KVO的原理](https://www.jianshu.com/p/e59bb8f59302) </h3>
+
+- **基本原理：**
+	- 	当观察某对象 A 时，KVO 机制动态创建一个对象A当前类的子类，并为这个新的子类重写了被观察属性 keyPath 的 setter 方法。setter 方法随后负责通知观察对象属性的改变状况。
+
+<br/>
+
+- **深入剖析原理：**
+
+- Apple 使用了 isa 混写（isa-swizzling）来实现 KVO 。当观察对象A时，KVO机制动态创建一个新的名为：NSKVONotifying_A 的新类，该类继承自对象A的本类，且 KVO 为 NSKVONotifying_A 重写观察属性的 setter 方法，setter 方法会负责在调用原 setter 方法之前和之后，通知所有观察对象属性值的更改情况。
+（备注： isa 混写（isa-swizzling）isa：is a kind of ； swizzling：混合，搅合；）
+
+- ①NSKVONotifying_A 类剖析：在这个过程，被观察对象的 isa 指针从指向原来的 A 类，被 KVO 机制修改为指向系统新创建的子类 NSKVONotifying_A 类，来实现当前类属性值改变的监听；
+
+	- 所以当我们从应用层面上看来，完全没有意识到有新的类出现，这是系统“隐瞒”了对 KVO 的底层实现过程，让我们误以为还是原来的类。但是此时如果我们创建一个新的名为“NSKVONotifying_A”的类，就会发现系统运行到注册 KVO 的那段代码时程序就崩溃，因为系统在注册监听的时候动态创建了名为 NSKVONotifying_A 的中间类，并指向这个中间类了。
+	- （isa 指针的作用：每个对象都有 isa 指针，指向该对象的类，它告诉 Runtime 系统这个对象的类是什么。所以对象注册为观察者时，isa 指针指向新子类，那么这个被观察的对象就神奇地变成新子类的对象（或实例）了。） 因而在该对象上对 setter 的调用就会调用已重写的 setter，从而激活键值通知机制。
+	
+	- 我猜，这也是 KVO 回调机制，为什么都俗称KVO技术为黑魔法的原因之一吧：内部神秘、外观简洁。
+
+- ②子类setter方法剖析：KVO 的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用 2 个方法：
+被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；之后， observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的 setter 方法这种继承方式的注入是在运行时而不是编译时实现的。
+KVO 为子类的观察者属性重写调用存取方法的工作原理在代码中相当于：
+
+
+```
+-(void)setName:(NSString *)newName{
+    [self willChangeValueForKey:@"name"];    //KVO 在调用存取方法之前总调用
+    [super setValue:newName forKey:@"name"]; //调用父类的存取方法
+    [self didChangeValueForKey:@"name"];     //KVO 在调用存取方法之后总调用
+}
+```
+
+
+**嘿侍面试提问：**	当使用KVO时，一个类的实例使用kvo，它的属性值改变了，那它的另一个实例变量属性值会变吗？
+
+比如它有2个实例变量分别是A，B，若是A加的属性添加监听而B没有添加监听，则A的属性值可以改变B的不变。
+
+若2者都添加爱了监听，则属性值都会改变。
+
+
+<br/>
+
+注意：观察者是谁，就在谁里面写观察者方法
+
+```
+//观察者是self
+[self.myObject addObserver:self
+                       forKeyPath:@"num"
+                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
+                          context:nil];
+                          
+                          
+
+//观察键值方法                          
+-(void)observeValueForKeyPath:(NSString *)keyPath
+                     ofObject:(id)object
+                       change:(NSDictionary<NSString *,id> *)change
+                      context:(void *)context {}
+```
+
+
+
+
+<br/>
+storehub提问：NSNotification的class方法指向谁？
+
+错误答案：指向了**NSKVONotifying_MyKVOModel**，这说明你根本就没有理解class方法如何使用的。
+
+```
+#import <objc/message.h>
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 初始化待观察类对象
+    self.myObject2 = [[MyKVOModel alloc]init];
+    self.myObject2.num = 2;
+    
+    [self.myObject2 addObserver:self
+                       forKeyPath:@"num"
+                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
+                          context:nil];
+                          
+    NSLog(@"%@", [self.myObject2 class]);
+	//[obj class]返回类对象本身
+	NSLog(@"---->>>2: %@", [self.myObject2 class]);
+	
+	//object_getClass(obj)返回类对象中的isa指向的元类对象，即指向元类对象
+	NSLog(@"---->>>3: %s", object_getClassName(self.myObject2));
+	NSLog(@"---->>>4: %@", object_getClass(self.myObject2));
+}
+
+```
+
+打印结果：
+
+```
+2021-05-27 12:31:41.461998+0800 KVO演示[5668:218909] MyKVOModel
+2021-05-27 12:31:43.766168+0800 KVO演示[5668:218909] ---->>>2: MyKVOModel
+2021-05-27 12:31:49.794671+0800 KVO演示[5668:218909] ---->>>3: NSKVONotifying_MyKVOModel
+2021-05-27 12:31:50.925324+0800 KVO演示[5668:218909] ---->>>4: NSKVONotifying_MyKVOModel
+
+```
 
 
 
@@ -3063,6 +3172,8 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 - Method swizzle
 - 动态添加方法、属性;
 - 可以获取类的成员变量和属性
+- [页面埋点](https://www.cnblogs.com/EchoHG/p/8647761.html)
+- [单元测试检测埋点的plist文件配置](https://www.cnblogs.com/EchoHG/p/8647761.html)
 
 
 
@@ -4747,117 +4858,6 @@ dispatch_group_async(self.operationGroup, self.serialQueue, ^{
 
 &emsp;&emsp; [**GNUstep是GUN计划的项目之一**](https://www.jianshu.com/p/14bf1456dc25)，它将Cocoa的OC库重新开源实现了一遍，并且开源出来了。虽然GNUstep不是苹果官方的源码，是GNU计划写的，但是还是具有一定参考价值的。
 [GNUstep源码下载地址](http://www.gnustep.org/resources/downloads.php)
-
-
-
-<br/>
-<br/>
-
-
->## <h2 id="KVO的原理"> [KVO的原理](https://www.jianshu.com/p/e59bb8f59302) </h2>
-
-- **基本原理：**
-	- 	当观察某对象 A 时，KVO 机制动态创建一个对象A当前类的子类，并为这个新的子类重写了被观察属性 keyPath 的 setter 方法。setter 方法随后负责通知观察对象属性的改变状况。
-
-<br/>
-
-- **深入剖析原理：**
-
-- Apple 使用了 isa 混写（isa-swizzling）来实现 KVO 。当观察对象A时，KVO机制动态创建一个新的名为：NSKVONotifying_A 的新类，该类继承自对象A的本类，且 KVO 为 NSKVONotifying_A 重写观察属性的 setter 方法，setter 方法会负责在调用原 setter 方法之前和之后，通知所有观察对象属性值的更改情况。
-（备注： isa 混写（isa-swizzling）isa：is a kind of ； swizzling：混合，搅合；）
-
-- ①NSKVONotifying_A 类剖析：在这个过程，被观察对象的 isa 指针从指向原来的 A 类，被 KVO 机制修改为指向系统新创建的子类 NSKVONotifying_A 类，来实现当前类属性值改变的监听；
-
-	- 所以当我们从应用层面上看来，完全没有意识到有新的类出现，这是系统“隐瞒”了对 KVO 的底层实现过程，让我们误以为还是原来的类。但是此时如果我们创建一个新的名为“NSKVONotifying_A”的类，就会发现系统运行到注册 KVO 的那段代码时程序就崩溃，因为系统在注册监听的时候动态创建了名为 NSKVONotifying_A 的中间类，并指向这个中间类了。
-	- （isa 指针的作用：每个对象都有 isa 指针，指向该对象的类，它告诉 Runtime 系统这个对象的类是什么。所以对象注册为观察者时，isa 指针指向新子类，那么这个被观察的对象就神奇地变成新子类的对象（或实例）了。） 因而在该对象上对 setter 的调用就会调用已重写的 setter，从而激活键值通知机制。
-	
-	- 我猜，这也是 KVO 回调机制，为什么都俗称KVO技术为黑魔法的原因之一吧：内部神秘、外观简洁。
-
-- ②子类setter方法剖析：KVO 的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用 2 个方法：
-被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；之后， observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的 setter 方法这种继承方式的注入是在运行时而不是编译时实现的。
-KVO 为子类的观察者属性重写调用存取方法的工作原理在代码中相当于：
-
-
-```
--(void)setName:(NSString *)newName{
-    [self willChangeValueForKey:@"name"];    //KVO 在调用存取方法之前总调用
-    [super setValue:newName forKey:@"name"]; //调用父类的存取方法
-    [self didChangeValueForKey:@"name"];     //KVO 在调用存取方法之后总调用
-}
-```
-
-
-**嘿侍面试提问：**	当使用KVO时，一个类的实例使用kvo，它的属性值改变了，那它的另一个实例变量属性值会变吗？
-
-比如它有2个实例变量分别是A，B，若是A加的属性添加监听而B没有添加监听，则A的属性值可以改变B的不变。
-
-若2者都添加爱了监听，则属性值都会改变。
-
-
-<br/>
-
-注意：观察者是谁，就在谁里面写观察者方法
-
-```
-//观察者是self
-[self.myObject addObserver:self
-                       forKeyPath:@"num"
-                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
-                          context:nil];
-                          
-                          
-
-//观察键值方法                          
--(void)observeValueForKeyPath:(NSString *)keyPath
-                     ofObject:(id)object
-                       change:(NSDictionary<NSString *,id> *)change
-                      context:(void *)context {}
-```
-
-
-
-
-<br/>
-storehub提问：NSNotification的class方法指向谁？
-
-错误答案：指向了**NSKVONotifying_MyKVOModel**，这说明你根本就没有理解class方法如何使用的。
-
-```
-#import <objc/message.h>
-
-
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    
-    // 初始化待观察类对象
-    self.myObject2 = [[MyKVOModel alloc]init];
-    self.myObject2.num = 2;
-    
-    [self.myObject2 addObserver:self
-                       forKeyPath:@"num"
-                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
-                          context:nil];
-                          
-    NSLog(@"%@", [self.myObject2 class]);
-	//[obj class]返回类对象本身
-	NSLog(@"---->>>2: %@", [self.myObject2 class]);
-	
-	//object_getClass(obj)返回类对象中的isa指向的元类对象，即指向元类对象
-	NSLog(@"---->>>3: %s", object_getClassName(self.myObject2));
-	NSLog(@"---->>>4: %@", object_getClass(self.myObject2));
-}
-
-```
-
-打印结果：
-
-```
-2021-05-27 12:31:41.461998+0800 KVO演示[5668:218909] MyKVOModel
-2021-05-27 12:31:43.766168+0800 KVO演示[5668:218909] ---->>>2: MyKVOModel
-2021-05-27 12:31:49.794671+0800 KVO演示[5668:218909] ---->>>3: NSKVONotifying_MyKVOModel
-2021-05-27 12:31:50.925324+0800 KVO演示[5668:218909] ---->>>4: NSKVONotifying_MyKVOModel
-
-```
 
 
 

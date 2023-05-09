@@ -12,6 +12,7 @@
 	- [**递归回溯**](#递归回溯)
 		- [斐波那契数列](#斐波那契数列)
 		- [电话号码的字母组合](#电话号码的字母组合)
+		- [括号生成](#括号生成)
 	- [**链表**](#链表)
 		- [2个队列实现一个栈(七猫)](#2个队列实现一个栈)
 		- [删除链表的倒数第 N 个结点](#删除链表的倒数第N个结点)
@@ -486,6 +487,67 @@ char ** letterCombinations(char * digits, int* returnSize){
 
 
 
+<br/><br/>
+
+
+> <h2 id='括号生成'>括号生成</h2>
+
+
+数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且 有效的 括号组合。
+
+ 
+![c0_70.png](./../Pictures/c0_70.png)
+
+
+示例 1：
+
+```
+输入：n = 3
+输出：["((()))","(()())","(())()","()(())","()()()"]
+```
+
+示例 2：
+
+```
+输入：n = 1
+输出：["()"]
+```
+
+
+```
+//递归回溯求解，注意减枝
+#define MAX_SIZE 1430
+void generate(int left, int right, int n, char *str, int index, char **result, int *returnSize) {
+  if (left == n && right == n) {  //左右括号都用完
+    result[(*returnSize)] =  (char*)calloc((2 * n + 1), sizeof(char));
+    strcpy(result[(*returnSize)++], str);
+    return;
+  }
+
+  if (left < n) {  //当左括号没用完时
+    str[index] = '(';
+    generate(left + 1, right, n, str, index + 1, result, returnSize);
+  }
+  if (left > right && right < n) {  //右括号数量必须小于左括号，否则一定不合法，且右括号没有用完
+    str[index] = ')';
+    generate(left, right + 1, n, str, index + 1, result, returnSize);
+  }
+}
+
+char **generateParenthesis(int n, int *returnSize) {
+  char *str = (char*)calloc((2 * n + 1), sizeof(char));
+  char **result = (char **)malloc(sizeof(char *) * MAX_SIZE);
+  *returnSize = 0;
+  generate(0, 0, n, str, 0, result, returnSize);
+  return result;
+}
+```
+
+
+**log:**
+
+```
+```
 
 
 <br/>
