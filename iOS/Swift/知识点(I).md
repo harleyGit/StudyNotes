@@ -12,7 +12,7 @@
 > <h2 id=""></h2>
 - [**Swift基础**](#Swift基础)
 	- [Swift相对于OC的优缺点](#Swift相对于OC的优缺点)
-	- [Swift的缺省基类](#Swift的缺省基类)
+	- [缺省基类](#缺省基类)
 	- [Swift和OC区别](#Swift和OC区别)
 	- [Swift和OC混编注意事项](#Swift和OC混编注意事项)
 	- [面向协议编程](#面向协议编程)
@@ -1762,9 +1762,9 @@ map方法存在于Mapper类中, 定义如下:
 func map(JSON: [String: Any]) -> M? {
 	let map = Map(JSON: JSON)
 	if let klass = M.self as? Mappable.Type {
-  	if var obj = klass.init(map: map) as? M {
-    	obj.mapping(map: map)
-    	return obj
+	  	if var obj = klass.init(map: map) as? M {
+	    	obj.mapping(map: map)
+	    	return obj
   		}
 	}
 	return nil
@@ -1793,27 +1793,6 @@ private func valueFor(_ keyPathComponents: ArraySlice<String>, dict: [String: An
     		return valueFor(tail, array: arr)
   		} else {
     		return (obj != nil, obj)
-  		}
-	}
-
-	return (false, nil)
-}
-
-private func valueFor(_ keyPathComponents: ArraySlice<String>, array: [Any]) -> (Bool, Any?) {
-	guard !keyPathComponents.isEmpty else { return (false, nil) }
-
-	if let keyPath = keyPathComponents.first, let index = Int(keyPath), index >= 0 && index < array.count {
-  		let obj = array[index]
-  		if obj is NSNull {
-    		return (true, nil)
-  		} else if keyPathComponents.count > 1, let dict = obj as? [String: Any] {
-    		let tail = keyPathComponents.dropFirst()
-    		return valueFor(tail, dict: dict)
-  		} else if keyPathComponents.count > 1, let arr = obj as? [Any] {
-    		let tail = keyPathComponents.dropFirst()
-    		return valueFor(tail, array: arr)
-  		} else {
-    		return (true, obj)
   		}
 	}
 
