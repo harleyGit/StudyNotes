@@ -1765,7 +1765,7 @@ func map(JSON: [String: Any]) -> M? {
 	  	if var obj = klass.init(map: map) as? M {
 	    	obj.mapping(map: map)
 	    	return obj
-  		}
+	  		}
 	}
 	return nil
 }

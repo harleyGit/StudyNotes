@@ -25,6 +25,8 @@
 	- [数据本地持久化](#数据本地持久化)
 	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？](#使用copy关键字为什么)
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
+		- [向nil发送消息会Crash吗(四喵)](#向nil发送消息会Crash吗)
+		- [对nil发送消息,返回值是什么](#对nil发送消息,返回值是什么)
 - **多线程**
 	- [什么叫串行队列?并行队列?同步执行?异步执行?](#什么叫串行队列?并行队列?同步执行?异步执行?)
 	- [线程的挂起&恢复](#线程的挂起&恢复)
@@ -111,7 +113,8 @@
 		- [sel和IMP是什么?二者关系如何](#sel和IMP是什么，二者关系如何)
 		- [分类Category](#分类Category)
 			- [category作用是什么?](#category作用是什么?)
-			- [Asssociate关联的对象在什么时候释放](#Asssociate关联的对象在什么时候释放)
+			- [Asssociate关联的对象在什么时候释放(四喵)](#Asssociate关联的对象在什么时候释放)
+			- [category申明属性为什么没有实现(四喵)](#category申明属性为什么没有实现)
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
 			- [block内如何修改block外部变量](#block内如何修改block外部变量)
@@ -124,6 +127,7 @@
 	- [self和super实现的原理](#self和super实现的原理)
 	- [ARC原理是什么](#ARC原理是什么)
 	- [内存管理](#内存管理)
+		- [MRC如何释放对象的(四喵)](#MRC如何释放对象的)
 		- [一个objc对象如何进行内存布局?](#一个objc对象如何进行内存布局)
 		- [isa指针包含了什么（货拉拉面试）](#isa指针包含了什么)
 		- [weak原理（货拉拉）](#weak原理)
@@ -529,7 +533,7 @@ atomic表示，我TM也很冤啊！！！！
 
 <br/>
 
-> <h3 id="pod instal和pod update区别">**pod install**和**pod update**区别
+> <h3 id="pod instal和pod update区别">pod instal和pod update区别
 </h3>
 
 ![<br/>](./../../Pictures/ios_pd4.jpg)
@@ -737,6 +741,70 @@ NSLog(@"%@", dictionary); // 输出2个key-value,NSDictionary也是以nil结尾
 
 
 
+<br/><br/>
+
+
+> <h3 id='向nil发送消息会Crash吗'>向nil发送消息会Crash吗</h3>
+
+
+- 首先，OC中向nil发消息，程序是不会崩溃的。
+
+&emsp; 因为OC的函数调用都是通过objc_msgSend进行消息发送来实现的，相对于C和C++来说，对于空指针的操作会引起Crash的问题，而objc_msgSend会通过判断self来决定是否发送消息，如果self为nil，**那么会将selector也设置为空**，直接返回，所以不会出现问题。
+
+
+<br/>
+
+- 视方法返回值，向nil发消息可能会返回nil(返回值为对象)、0（返回值为一些基础数据类型）或0X0（返回值为id）等。
+
+&emsp; 但是对[NSNull null]对象发送消息时，是会crash的，因为这个NSNull类只有一个null方法。
+
+&emsp; 当然，如果一个对象已经被释放了（引用计数为0了），那么这个时候再去调用方法肯定是会Crash的，[因为这个时候这个对象就是一个野指针（指向僵尸对象（对象的引用计数为0，指针指向的内存已经不可用）的指针）了，安全的做法是释放后将对象重新置为nil，使它成为一个空指针，大家可以在关闭ARC后手动release对象验证一下。](https://www.jianshu.com/p/11dca953f962)
+
+
+```
+Student *stu = [[Student alloc] init];
+
+[stu setAge:10];
+
+[stu release];
+
+[stu setAge:10];//会崩溃,是因为stu已经被释放了,成为了野指针
+```
+
+
+
+
+<br/><br/>
+
+> <h2 id='对nil发送消息,返回值是什么'>对nil发送消息,返回值是什么</h2>
+
+向nil发送消息 
+
+在Objective-C中向nil发送消息是完全有效的——只是在运行时不会有任何作用。Cocoa中的几种模式就利用到了这一点。发向nil的消息的返回值也可以是有效的: 
+
+- 如果一个方法返回值是一个对象，那么发送给nil的消息将返回0(nil)。例如：Person * motherInlaw = [ aPerson spouse] mother]; 如果spouse对象为nil，那么发送给nil的消息mother也将返回nil。 
+
+- 如果方法返回值为指针类型，其指针大小为小于或者等于sizeof(void*)，float，double，long double 或者long long的整型标量，发送给nil的消息将返回0。 
+
+- 如果方法返回值为结构体，正如在《Mac OS X ABI 函数调用指南》，发送给nil的消息将返回0。结构体中各个字段的值将都是0。其他的结构体数据类型将不是用0填充的。 
+
+- 如果方法的返回值不是上述提到的几种情况，那么发送给nil的消息的返回值将是未定义的。
+
+
+
+<br/>
+
+
+拓展: (四喵)若是向参数为blcok函数的传入为nil,会怎么样?
+
+我的回答:因为传入block为空,所以block不会执行
+
+
+回答是错的,结果为app直接crash掉了!所以需要你判断blcok是否为空,否则就不要执行blcok内的内容!
+
+验证:
+
+![ios_oc2_49.png](./../../Pictures/ios_oc2_49.png)
 
 
 
@@ -4661,12 +4729,38 @@ static NSMutableArray *someArray;
 
 > <h4 id="Asssociate关联的对象在什么时候释放">Asssociate关联的对象在什么时候释放</h4>
 
+四喵: 关联对象需要手动释放吗?
+
+不需要,自动释放的!请看下面的图:
+
 
 流程图如下:
 
 ![ios_oc1_93.jpeg](./../../Pictures/ios_oc1_93.jpeg)
 
 需要更深入的理解,可以对照runtime源码进行了解
+
+
+
+>## <h4 id="category申明属性为什么没有实现">[category申明属性为什么没有实现](https://blog.csdn.net/u012409247/article/details/80206229)</h4>
+
+
+当我们在一个Person类申明一个属性的时候，系统会自动生成带“_”的成员变量和该变量的setter和getter方法。也就是说，**属性相当于一个成员变量加getter和setter方法。**
+
+但是我们申明一个Person(son)分类height属性时,我们发现类里并没有添加带“_”的成员变量，也没有实现setter和getter方法，只是在属性列表里添加了height属性。并且此时如果在控制器里调用self.height，程序运行时会报错，显示找不到该方法。
+
+即使我们在分类中实现了setter和getter方法，也仍然没有添加带“_”的成员变量，也就是说，在setter和getter方法里仍然不能直接访问以下划线开头的成员变量，因为在分类里用@property声明属性时系统并没有添加以“_”开头的成员变量。此时要达到添加的目的可以使用运行时的关联对象.
+
+
+<br/>
+
+**总结:**
+	
+&emsp; 在分类里使用@property声明属性，只是将该属性添加到该类的属性列表，并声明了setter和getter方法，但是没有生成相应的成员变量，也没有实现setter和getter方法。所以说分类不能添加属性。但是在分类里使用@property声明属性后，又实现了setter和getter方法，那么在这个类以外可以正常通过点语法给该属性赋值和取值。就是说，在分类里使用@property声明属性，又实现了setter和getter方法后，可以认为给这个类添加上了属性。
+
+
+
+
 
 
 
@@ -5052,6 +5146,52 @@ objc Runtime开源代码对- (Class)class方法的实现:
 <br/>
 
 >## <h2 id="内存管理">[内存管理](https://github.com/harleyGit/StudyNotes/blob/master/底层/内存管理.md)</h2>
+
+
+
+<br/><br/>
+
+
+> <h3 id='MRC如何释放对象的'>MRC如何释放对象的</h3>
+
+Foundation对象是Objective-C对象，使用Objective-C语言实现；而Core Foundation对象是C对象，使用C语言实现。两者之间可以通过__bridge、__bridge_transfer、__bridge_retained等关键字转换（桥接）。
+
+Foundation对象和Core Foundation对象更重要的区别是ARC下的内存管理问题。
+
+在非ARC(MRC)下两者都需要开发者手动管理内存，没有区别。
+
+但在ARC下，系统只会自动管理Foundation对象的释放，而不支持对Core Foundation对象的管理。
+
+**因此，在ARC下两者进行转换后，必须要确定转换后的对象是由开发者手动管理，还是由ARC系统继续管理，否则可能导致内存泄漏问题**
+
+
+ARC只支持管理 Objective-C 对象, 不支持 Core Foundation 对象。Core Foundation 对象必须使用CFRetain和CFRelease来进行内存管理。
+
+
+在MRC自己管理:
+
+```
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        // 1. 创建两个对象
+        Person *p = [[Person alloc] init];
+        Room *r = [[Room alloc] init];
+        r.no = 888;
+
+        // 2. 将房间 r 赋值给玩家 p
+        p.room = r; // [p setRoom:r]
+        [r release];    // 释放房间 r
+
+        // 3. 再次使用房间 r
+        p.room = r;
+        [r release];    // 释放房间 r
+        [p release];    // 释放玩家 p
+    }
+    return 0;
+}
+```
+
+
 
 
 

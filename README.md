@@ -166,7 +166,6 @@
 * [**OC资料**](./iOS/Objective-C/OC资料.md)
 * [**‌知识体系**](./iOS/Objective-C/知识体系.md)
 *	[**类**](./iOS/Objective-C/类.md)
-*	[**消息转发**](./iOS/Objective-C/消息转发.md)
 *	[**App启动**](./iOS/Objective-C/App启动.md)
 *	[**App优化**](./iOS/Objective-C/App优化.md)
 *	[**App发布**](./iOS/Objective-C/App发布.md)
