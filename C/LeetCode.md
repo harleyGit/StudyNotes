@@ -14,8 +14,10 @@
 		- [电话号码的字母组合](#电话号码的字母组合)
 		- [括号生成](#括号生成)
 	- [**链表**](#链表)
+		- [推导树的遍历(富途)](#推导树的遍历(富途))
 		- [2个队列实现一个栈(七猫)](#2个队列实现一个栈)
 		- [删除链表的倒数第 N 个结点](#删除链表的倒数第N个结点)
+		- [合并K个升序链表(有段不太明白)](#合并K个升序链表)
 	- [**栈与队列**](#栈与队列)
 		- [有效的括号](#有效的括号)
 		- [合并两个有序链表](#合并两个有序链表)
@@ -583,6 +585,50 @@ char ** generateParenthesis(int n, int* returnSize){
 
 <br/><br/>
 
+>## <h2 id='推导树的遍历'>[推导树的遍历(富途)](http://b23.tv/cBRRZJI)</h2>
+
+![c0_71.png](./../Pictures/c0_71.png)
+
+![c0_72.png](./../Pictures/c0_72.png)
+
+
+<br/>
+
+- **出题1:**
+	- 	前序遍历:ABDHKECFIGJ
+	- 	中序遍历:HKDBEAIFCGJ
+	
+	求给出后续遍历的序列?
+	
+	
+	这个可以看下《大话数据结构》中的,有详解!
+	
+	答案:KHDEBIFJGCA
+	
+	
+	<br/>
+
+
+
+- **出题2:**
+	- 	中序遍历:ABCDEF
+	- 	后序遍历:CBAEDF
+
+	
+	求给出前续遍历的序列?
+	
+	
+这个可以看下《大话数据结构》中的,有详解!
+
+		
+答案:CBEFDA
+
+
+
+
+
+<br/><br/>
+
 > <h2 id='2个队列实现一个栈'>2个队列实现一个栈</h2>
 
 **思路:**
@@ -1073,6 +1119,140 @@ Log:
 
 我的思路:
 	使用一个N记录总共的节点数,然后当它等于正数第(N-n)个时进行返回,采用递归.我是这样想的.然后用一个节点记录上一个节点,这样就可以了!
+
+
+
+
+
+<br/><br/>
+
+
+> <h2 id='合并K个升序链表'>合并 K 个升序链表</h2>
+
+
+给你一个链表数组，每个链表都已经按升序排列。
+
+请你将所有链表合并到一个升序链表中，返回合并后的链表。
+
+
+示例 1：
+
+```
+输入：lists = [[1,4,5],[1,3,4],[2,6]]
+输出：[1,1,2,3,4,4,5,6]
+解释：链表数组如下：
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+将它们合并到一个有序链表中得到。
+1->1->2->3->4->4->5->6
+```
+
+示例 2：
+
+```
+输入：lists = []
+输出：[]
+```
+
+示例 3：
+
+```
+输入：lists = [[]]
+输出：[]
+```
+
+
+<br/>
+
+
+**思路:**
+
+如果对快速排序或者归并排序有了解的同学代码也许一眼就能看明白，有点参考他们的思想
+
+程序主题思想还是递归，归并或者快速排序的思想复杂度为nlgn级别，
+
+因为是递归，如果嵌套十分深入的话，还是需要一点堆栈的空间的
+
+mergeTwoLists 这个函数可以不看，是之前做题已经实现的程序，。直接拿来用就可以了
+
+核心代码不过 _mergeKLists(...) 函数里面的十行有余
+
+如果有bug,请指正
+
+
+```
+struct ListNode *_twoListMerge(struct ListNode *l1, struct ListNode *l2){
+    
+    struct ListNode head;
+    head.next = l1;
+    l1 = &head;
+    struct ListNode *q,*p;
+    
+    if (!l1) {
+        return l2;
+    }
+    
+    if (!l2) {
+        return l1;
+    }
+    
+    while (l2) {
+        q = l1->next;
+        p = l2 ->next;
+        
+        
+        if (!l1->next) {
+            l1->next = l2;
+            break;
+        }
+        
+        /*这段代码错误的,为什么不能替换下面的
+        if (q->val <= l2->val) {
+            l2->next = q->next;
+            q->next = l2;
+    
+            l2 = p;
+        }
+    
+        l1 = q;
+         */
+        
+        if (q->val >= l2->val) {
+            l1->next = l2;
+            l2->next = q;
+            l2 = p;
+        }
+        
+        l1 = l1->next;
+    }
+    
+    return head.next;
+}
+
+struct ListNode *_mergeKLists(struct ListNode** lists, int listsSize){
+    
+    if (listsSize == 0) {
+        return NULL;
+    }else if(listsSize == 1){
+        return lists[0];//*lists[listsSize] 报错为什么
+    }else if(listsSize == 2){
+        return _twoListMerge(lists[0], lists[1]);
+    }
+    
+    struct ListNode *l1 = _mergeKLists(&lists[0], (listsSize+1)/2);
+    struct ListNode *l2 = _mergeKLists(&lists[(listsSize+1)/2], listsSize-(listsSize+1)/2);
+    
+    return _twoListMerge(l1, l2);
+}
+
+struct ListNode* mergeKLists(struct ListNode** lists, int listsSize){
+    return _mergeKLists(lists, listsSize);
+}
+```
+
 
 
 
