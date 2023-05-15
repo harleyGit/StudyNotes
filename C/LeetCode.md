@@ -29,7 +29,7 @@
 	- [正则表达式匹配](#正则表达式匹配)
 	- [盛最多水的容器](#盛最多水的容器)
 	- [三数之和](#三数之和)
-	- 
+	- [下一个排列](#下一个排列)
 - **参考资料**
 	- [**leetcode 热题100**](https://leetcode-cn.com/problem-list/2cktkvj/)
 	- [C语言(菜鸟教程)](https://www.runoob.com/cprogramming/c-tutorial.html)
@@ -2709,12 +2709,123 @@ int maxArea(int* height, int heightSize){
 <br/>
 
 
-> <h2 id=""></h2>
+> <h2 id="下一个排列">下一个排列</h2>
+
+
+整数数组的一个 排列  就是将其所有成员以序列或线性顺序排列。
+
+例如，arr = [1,2,3] ，以下这些都可以视作 arr 的排列：[1,2,3]、[1,3,2]、[3,1,2]、[2,3,1] 。
+
+整数数组的 下一个排列 是指其整数的下一个字典序更大的排列。更正式地，如果数组的所有排列根据其字典顺序从小到大排列在一个容器中，那么数组的 下一个排列 就是在这个有序容器中排在它后面的那个排列。如果不存在下一个更大的排列，那么这个数组必须重排为字典序最小的排列（即，其元素按升序排列）。
+
+例如，arr = [1,2,3] 的下一个排列是 [1,3,2] 。
+
+类似地，arr = [2,3,1] 的下一个排列是 [3,1,2] 。
+
+而 arr = [3,2,1] 的下一个排列是 [1,2,3] ，因为 [3,2,1] 不存在一个字典序更大的排列。
+
+给你一个整数数组 nums ，找出 nums 的下一个排列。
+
+必须 原地 修改，只允许使用额外常数空间。
+
+ 
+
+示例 1：
+
+```
+输入：nums = [1,2,3]
+输出：[1,3,2]
+```
+
+示例 2：
+
+```
+输入：nums = [3,2,1]
+输出：[1,2,3]
+```
+
+示例 3：
+
+```
+输入：nums = [1,1,5]
+输出：[1,5,1]
+```
+
+
+<br/>
+
+思路图:
+
+![c0_73.png](./../Pictures/c0_73.png)
+
+
+<br/>
+
+
+```
+//比较
+int cmp(void* a, void* b){
+    return *(int *)a  - *(int *)b;
+}
+//交换
+void swap(int *a, int *b){
+    int tmp = *b;
+    *b = *a;
+    *a = tmp;
+}
+//颠倒顺序
+void reverse(int *array, int size, int start){
+    int end = size -1;
+    while(start < end) {
+        swap(&array[start], &array[end]);
+       
+        start++;
+        end--;
+    }
+}
 
 
 
+void nextPermutation(int* nums, int numsSize){
+    int cur = numsSize - 2;
+    while(cur>=0 && nums[cur]>=nums[cur+1]){//nums[cur]>=nums[cur+1] 倒数第一和倒数第二个数做对比,
+        //若是符合这个条件说明末尾是降序排列,后面只需要颠倒顺序即可,就可以做到升序排列了
+        cur--;
+    }
+
+    if(cur < 0){//若是升序排列: cur = -1;
+        qsort(nums, numsSize, sizeof(int), cmp);
+    }else {
+        //cur是从后面比较,找到第一个前面大于后面的数字的索引序列
+        int pos = numsSize -1;
+        while(nums[pos] <= nums[cur]){
+            pos--;
+        }
+        //从后往前找,找到比在索引序列cur还大一点的数组元素,进行交换
+        swap(&nums[pos], &nums[cur]);
+        reverse(nums, numsSize, cur+1);//颠倒顺序做到末尾升序排列,因为排序是从cur+1开始的
+    }
+}
 
 
+//调用
++ (void)testNextPermutation{
+    
+    int nums[] = {4, 2, 5, 3, 2, 1, 0};
+//    int nums[] = {4, 3, 2, 1, 0};//升序排列
+    
+    int size = sizeof(nums)/sizeof(int);
+    nextPermutation(nums, size);
+    
+    printArr(nums, size);
+}
+```
+
+**Log:**
+
+```
+🌷🌹 21:04:45 [125行] +[HGTestAlgorithm testNextPermutation]=> 04 03 00 01 02 02 05 
+```
 
 
 <br/>
