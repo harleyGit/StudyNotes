@@ -12,6 +12,9 @@
 		- [Instruments](#Instruments)
 			- [自定义Instruments工具](#自定义Instruments工具)
 		- [线上性能监控](#线上性能监控)
+			- [1.CPU 使用率的线上监控方法](#1.CPU使用率的线上监控方法)
+			- [2.FPS 线上监控方法](#2.FPS线上监控方法)
+			- [3.内存使用量的线上监控方法](#3.内存使用量的线上监控方法)
 - [**内存优化**](#内存优化)
 	- [**野指针**](#野指针)
 	- [**僵尸对象**](#僵尸对象)
@@ -652,7 +655,8 @@ Analysis Core 收集和处理数据的过程，可以大致分为以下这三步
 <br/>
 
 
-**1.CPU 使用率的线上监控方法**
+> <h3 id='1.CPU使用率的线上监控方法'>1.CPU 使用率的线上监控方法</h3>
+
 
 App 作为进程运行起来后会有多个线程，每个线程对 CPU 的使用率不同。各个线程对 CPU 使用率的总和，就是当前 App 对 CPU 的使用率。明白了这一点以后，我们也就摸清楚了对 CPU 使用率进行线上监控的思路。
 
@@ -714,9 +718,14 @@ struct thread_basic_info {
 <br/>
 <br/>
 
-- **2.FPS 线上监控方法**
+
+
+> <h3 id='2.FPS线上监控方法'>2.FPS 线上监控方法</h3>
+
 
 FPS 是指图像连续在显示设备上出现的频率。FPS 低，表示 App 不够流畅，还需要进行优化。
+
+
 
 ```
 - (void)start {
@@ -742,11 +751,28 @@ FPS 是指图像连续在显示设备上出现的频率。FPS 低，表示 App �
 ```
 
 
+
+
+&emsp; CADisplayLink 是一个和屏幕刷新率一致的定时器（但实际实现原理更复杂，和 NSTimer 并不一样，其内部实际是操作了一个 Source）。如果在两次屏幕刷新之间执行了一个长任务，那其中就会有一帧被跳过去（和 NSTimer 相似），造成界面卡顿的感觉。在快速滑动 TableView 时，即使一帧的卡顿也会让用户有所察觉。Facebook 开源的 AsyncDisplayLink 就是为了解决界面卡顿的问题，其内部也用到了 Run Loop。下面我们首先看一下 CADisplayLink 的文档。
+
+
+
+<br/>
+
+
+&emsp; CADisplayLink运行在主线程RunLoop之中，RunLoop中所管理的任务的调度时机受任务**所处的RunLoopMode和CPU的繁忙程度所影响**。
+
+&emsp;在第二个原因中受文件IO、解压图片的影响，RunLoop 自然无法保证CADisplayLink被调用的次数达到每秒60次，这里的调用频率正是我们的FPS指示器中所显示FPS。
+
+&emsp;而在第一个原因中主要瓶颈在于GPU，即使RunLoop能保持每秒60次调用CADisplayLink，也无法说明此时的屏幕刷新率能达到60FPS（Core Animation通过与OpenGl打交道控制GPU进行屏幕绘制），也正因为这样FPS指示器显示55+的FPS，但Instrument中的Core Animation FPS 却很低。
+
+小结：通过对iOS中屏幕绘制过程的分析，了解到基于CADisplayLink实现的FPS指示器无法完全检测出当前Core Animation性能情况，因为它只能检测出当前RunLoop的帧率。不过这个帧率可以对某些性能问题给出参考，但要真正定位到准确的性能问题所在，最好还是通过**Instrument**来确认。
+
+
 <br/>
 <br/>
 
-- **3.内存使用量的线上监控方法**
-
+> <h3 id='3.内存使用量的线上监控方法'>3.内存使用量的线上监控方法</h3>
 
 通常情况下，我们在获取 iOS 应用内存使用量时，都是使用 task_basic_info 里的 resident_size 字段信息。但是，我们发现这样获得的内存使用量和 Instruments 里看到的相差很大。后来，在 2018 WWDC Session 416 iOS Memory Deep Dive中，苹果公司介绍说 phys_footprint 才是实际使用的物理内存。
 

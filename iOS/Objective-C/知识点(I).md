@@ -3,6 +3,7 @@
 - [**Flutter知识点**](./../../Flutter知识点.md)
 - [**基础算法知识**](https://hit-alibaba.github.io/interview/)
 - [**博客园**](https://i.cnblogs.com/posts)
+- [JLRHX](https://github.com/bestswifter/blog/blob/master/articles/bat-offer.md)
 
 <br/>
 
@@ -35,6 +36,7 @@
 		- [全局队列-CPU空闲](#全局队列-CPU空闲)
 		- [自建队列-CPU繁忙](#自建队列-CPU繁忙)
 		- [自建队列-CPU空闲](#自建队列-CPU空闲)
+		- [线程最大开到多少合适(飞猪)](#线程最大开到多少合适)
 	- [如何用GCD同步若干个异步调用](#如何用GCD同步若干个异步调用)
 	- [dispatch_once安全的原因](#dispatch_once安全的原因)
 	- [锁分为哪几类?说一下](#锁分为哪几类?说一下)
@@ -115,6 +117,7 @@
 			- [category作用是什么?](#category作用是什么?)
 			- [Asssociate关联的对象在什么时候释放(四喵)](#Asssociate关联的对象在什么时候释放)
 			- [category申明属性为什么没有实现(四喵)](#category申明属性为什么没有实现)
+			- [交换方法为什么不在initialize而在load方法中](#交换方法为什么不在initialize而在load方法中)
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
 			- [block内如何修改block外部变量](#block内如何修改block外部变量)
@@ -1152,6 +1155,11 @@ GCD 的全局队列会自动将线程数量限制在一个比较合理的数量
 
 
 
+<br/><br/>
+
+> <h2 id='线程最大开到多少合适'>线程最大开到多少合适</h2>
+
+[子线程数最多开到64个,否则会就会导致主线程卡顿,这是根据微信团队的Matrix库得出来的.](./App优化##子线程监控退火算法)
 
 
 
@@ -4759,6 +4767,17 @@ static NSMutableArray *someArray;
 &emsp; 在分类里使用@property声明属性，只是将该属性添加到该类的属性列表，并声明了setter和getter方法，但是没有生成相应的成员变量，也没有实现setter和getter方法。所以说分类不能添加属性。但是在分类里使用@property声明属性后，又实现了setter和getter方法，那么在这个类以外可以正常通过点语法给该属性赋值和取值。就是说，在分类里使用@property声明属性，又实现了setter和getter方法后，可以认为给这个类添加上了属性。
 
 
+
+
+<br/><br/>
+
+
+># <h4 id='交换方法为什么不在initialize而在load方法中'>交换方法为什么不在initialize而在load方法中</h4>
+
+
+因为若是在父类initialize方法中进行方法交换,可能会因为多个子类第一次初始化多导致多次调用initialize.
+
+即使在父类中使用initialize中使用dispatch_once_token方法保证只调用一次,但是若是再父类initialize方法进行了父类的A1和B1方法交换,然后在子类initialize进行继承父类A1和C1交换,这样会导致是B1和C1交换,导致不安全!详细解释请看[load和initialize](https://blog.csdn.net/shengpeng3344/article/details/105594478)
 
 
 

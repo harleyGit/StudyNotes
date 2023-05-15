@@ -78,9 +78,9 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
 
 - **`Main_Dispatch_Queue事件：`** GCD中dispatch到main queue的block会被dispatch到main loop执行.
 
-- **`Timer事件：`**延迟的NSObject PerformSelector，延迟的dispatch_after，timer事件。
+- **`Timer事件：`** 延迟的NSObject PerformSelector，延迟的dispatch_after，timer事件。
 
-- **`Source0事件：`**处理如UIEvent，CFSocket这类事件。需要手动触发。触摸事件(首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 [**SpringBoard**](https://www.cnblogs.com/Mike-Fighting/p/5410900.html) 接收。SpringBoard 只接收按键【锁屏/静音等】，触摸，加速，接近传感器等几种 Event，随后用 [mach port](https://www.jianshu.com/p/284b1777586c) 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，回调函数就是` __IOHIDEventSystemClientQueueCallback()`并调用 _UIApplicationHandleEventQueue()进行应用内部的分发。）其实是Source1接收系统事件后在回调 __IOHIDEventSystemClientQueueCallback() 内触发的 Source0，Source0 再触发的 _UIApplicationHandleEventQueue()。source0一定是要唤醒runloop及时响应并执行的，如果runloop此时在休眠等待系统的 mach_msg事件，那么就会通过source1来唤醒runloop执行。
+- **`Source0事件：`** 处理如UIEvent，CFSocket这类事件。需要手动触发。触摸事件(首先由 IOKit.framework 生成一个 IOHIDEvent 事件并由 [**SpringBoard**](https://www.cnblogs.com/Mike-Fighting/p/5410900.html) 接收。SpringBoard 只接收按键【锁屏/静音等】，触摸，加速，接近传感器等几种 Event，随后用 [mach port](https://www.jianshu.com/p/284b1777586c) 转发给需要的App进程。随后苹果注册的那个 Source1 就会触发回调，回调函数就是` __IOHIDEventSystemClientQueueCallback()`并调用 _UIApplicationHandleEventQueue()进行应用内部的分发。）其实是Source1接收系统事件后在回调 __IOHIDEventSystemClientQueueCallback() 内触发的 Source0，Source0 再触发的 _UIApplicationHandleEventQueue()。source0一定是要唤醒runloop及时响应并执行的，如果runloop此时在休眠等待系统的 mach_msg事件，那么就会通过source1来唤醒runloop执行。
 
 - **`Source1事件：`**处理系统内核的mach_msg事件。（推测CADisplayLink也是这里触发）。
 
@@ -114,15 +114,13 @@ do {
      // 处理消息，从代码中也可以看出，唤醒runloop的三种方式。
      if (wakeUpPort == timerPort) { //方式1: timer源唤醒
           __CFRunLoopDoTimers();
-     }
-     else if (wakeUpPort == mainDispatchQueuePort) {//方式二：主线程队列任务唤醒
+     }else if (wakeUpPort == mainDispatchQueuePort) {//方式二：主线程队列任务唤醒
           //GCD当调用dispatch_async(dispatch_get_main_queue(),block)时，
 libDispatch会向主线程的runloop发送mach_msg消息唤醒runloop，
 并在这里执行。这里仅限于执行dispatch到主线程的任务，
 dispatch到其他线程的仍然是libDispatch来处理。
           __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()
-     }
-     else { //方式三：source1唤醒
+     }else { //方式三：source1唤醒
           __CFRunLoopDoSource1();  //CADisplayLink是source1的mach_msg触发？
      }
      __CFRunLoopDoBlocks(); //!!!:这里又执行一次do blocks操作
@@ -284,7 +282,10 @@ int main(void) {
 
 <br/>
 
-![主线程和子线程Runloop区别](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/SoftwareTest/Pictures/ios_oc91.png)
+
+
+
+![主线程和子线程Runloop区别](./../../Pictures/ios_oc1_102.png)
 
 
 
