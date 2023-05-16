@@ -420,8 +420,8 @@ struct __CFRunLoop {
 
 <br/>
 
-|:--|:--|:--|
 | 类型 | 变量名 | 用处 |
+|:--|:--|:--|
 | CFRuntimeBase | _base | 应该是 Core Foundation 对象都需要的东西 |
 | pthread_mutex_t | _lock | 一个 mutex，根据注释，是用来锁对于 mode 的访问的。对其操作由 __CFRunLoopLockInit、__CFRunLoopLock 和 __CFRunLoopUnlock 函数封装 |
 | __CFPort | _wakeUpPort | __CFPort 实际上就是 mach_port_t。根据注释，这是用来唤醒 run loop 的 mach port，被 CFRunLoopWakeUp 函数使用 |
@@ -526,9 +526,8 @@ struct __CFRunLoopMode {
 
 <br/>
 
-
-|:--| :--| :--|
 |  类型  |   变量名  |  用处  |
+|:--| :--| :--|
 |  CFRuntimeBase  |   _base  |  应该是 Core Foundation 对象都需要的东西  |
 |  pthread_mutex_t  |   _lock  |  一个 mutex，锁 mode 里的各种操作。根据注释，需要 run loop 的锁先锁上才能锁这个锁。同样也有两个函数 __CFRunLoopModeLock 和 __CFRunLoopModeUnlock 对其操作进行了简单封装  |
 |  CFStringRef  |   _name  |  当然是名字啦  |
