@@ -373,12 +373,7 @@ while(1){
 <br/>
 
 
-><h3 id=''>tableView加载图片优化</h3>
-
-
-
-
-
+><h3 id='tableView加载图片优化'>tableView加载图片优化</h3>
 
 <br/>
 <br/>
@@ -422,10 +417,11 @@ struct __CFRunLoop {
 
 ```
 
+
 <br/>
 
 |:--|:--|:--|
-| **类型** | **变量名** | **用处** |
+| 类型 | 变量名 | 用处 |
 | CFRuntimeBase | _base | 应该是 Core Foundation 对象都需要的东西 |
 | pthread_mutex_t | _lock | 一个 mutex，根据注释，是用来锁对于 mode 的访问的。对其操作由 __CFRunLoopLockInit、__CFRunLoopLock 和 __CFRunLoopUnlock 函数封装 |
 | __CFPort | _wakeUpPort | __CFPort 实际上就是 mach_port_t。根据注释，这是用来唤醒 run loop 的 mach port，被 CFRunLoopWakeUp 函数使用 |
@@ -527,8 +523,12 @@ struct __CFRunLoopMode {
 
 &emsp; **USE_DISPATCH_SOURCE_FOR_TIMERS** 这个宏的值为 1，也就是说有使用 GCD 来实现 timer，当然 USE_MK_TIMER_TOO 这个宏的值也是 1，表示也使用了更底层的 timer。
 
+
+<br/>
+
+
 |:--| :--| :--|
-|  **类型**  |   **变量名**  |  **用处**  |
+|  类型  |   变量名  |  用处  |
 |  CFRuntimeBase  |   _base  |  应该是 Core Foundation 对象都需要的东西  |
 |  pthread_mutex_t  |   _lock  |  一个 mutex，锁 mode 里的各种操作。根据注释，需要 run loop 的锁先锁上才能锁这个锁。同样也有两个函数 __CFRunLoopModeLock 和 __CFRunLoopModeUnlock 对其操作进行了简单封装  |
 |  CFStringRef  |   _name  |  当然是名字啦  |
