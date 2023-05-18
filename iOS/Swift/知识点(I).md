@@ -1,6 +1,6 @@
 - [**OC知识点(I)**](./../Objective-C/知识点(I).md)
 - [**React知识点**](./../../React/React知识点.md)
-- [**Flutter知识点**](./../../Flutter知识点.md)
+- [**Flutter知识点**](./../../Flutter/Flutter知识点.md)
 
 
 <br/>
@@ -604,6 +604,10 @@ bar(local) --> bar<T = Point>(local)
 
 **泛型类型在调用时总是能确定类型**
 
+这句话解释的本质是: 相比协议类型而言，泛型类型在调用时总是能确定类型，因此无需使用 **Existential Container**。在调用泛型方法时，只需要将 Value Witness Table/Protocol Witness Table 作为额外参数进行传递。
+
+<br/>
+
 - **协议使用场合：**
 	- 在函数、方法或者初始化器里作为形参类型或者返回类型
 	
@@ -654,6 +658,8 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 
 
 &emsp; 针对要将[泛型协议](http://chuquan.me/2021/09/25/swift-generic-protocol/)所约束的类型进行擦除，即 类型擦除 （Type Erase），从而骗过编译器，可以将**泛型协议封装成的具体类型**这个思路,也就是建立一个中间层!
+
+这个用法在RxSwift中用到的很多,可以看下!以后可以用到项目中,优化Code,很赞!
 
 <br/>
 

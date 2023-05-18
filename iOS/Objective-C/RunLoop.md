@@ -393,6 +393,14 @@ while(1){
 
 ><h2 id='Runloop数据结构'>Runloop数据结构</h2>
 
+<br/>
+
+><h2 id='CFRunLoopRef的结构体'>CFRunLoopRef的结构体</h2>
+
+&emsp;  `CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API，是线程安全的。
+
+**`CFRunLoop的结构`**
+
 ```
 typedef struct CF_BRIDGED_MUTABLE_TYPE(id) __CFRunLoop * CFRunLoopRef;
 
@@ -439,17 +447,8 @@ struct __CFRunLoop {
 | CFTypeRef | _counterpart | 给 Swift 用的玩意 |
 
 
-
 <br/>
 <br/>
-
-
-
-><h2 id='CFRunLoopRef的结构体'>CFRunLoopRef的结构体</h2>
-
-&emsp;  `CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API，是线程安全的。
-
-**`CFRunLoop的结构`**
 
 ```
 
@@ -811,47 +810,52 @@ static CFSpinLock_t loopsLock;
 CF_EXPORT CFRunLoopRef _CFRunLoopGet0(pthread_t t) {
     // 线程t为空则默认返回主线程runloop
     if (pthread_equal(t, kNilPthreadT)) {
-    t = pthread_main_thread_np();
+	    t = pthread_main_thread_np();
     }
     __CFLock(&loopsLock);
     if (!__CFRunLoops) {
         __CFUnlock(&loopsLock);
-    // 创建一个用于映射线程和runloop关系的字典
-    CFMutableDictionaryRef dict = CFDictionaryCreateMutable(kCFAllocatorSystemDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
-    // 主线程runloop
-    CFRunLoopRef mainLoop = __CFRunLoopCreate(pthread_main_thread_np());
-    // 保存main runloop，main_thread为key，main runloop为value
-    CFDictionarySetValue(dict, pthreadPointer(pthread_main_thread_np()), mainLoop);
-    if (!OSAtomicCompareAndSwapPtrBarrier(NULL, dict, (void * volatile *)&__CFRunLoops)) {
-        CFRelease(dict);
-    }
-    CFRelease(mainLoop);
-        __CFLock(&loopsLock);
-    }
-    // 当前线程作为 Key，从 __CFRunLoops 字典中获取 RunLoop 
-    CFRunLoopRef loop = (CFRunLoopRef)CFDictionaryGetValue(__CFRunLoops, pthreadPointer(t));
-    __CFUnlock(&loopsLock);
-    // 未查找到缓存则创建一个runloop兵缓存在字典中
-    if (!loop) {//如果字典中不存在
-    CFRunLoopRef newLoop = __CFRunLoopCreate(t);// ⚠️创建当前线程的 RunLoop
-        __CFLock(&loopsLock);
-    loop = (CFRunLoopRef)CFDictionaryGetValue(__CFRunLoops, pthreadPointer(t));
-    if (!loop) {
-        CFDictionarySetValue(__CFRunLoops, pthreadPointer(t), newLoop);// ⚠️保存到字典中
-        loop = newLoop;
-    }
-        // don't release run loops inside the loopsLock, because CFRunLoopDeallocate may end up taking it
-        __CFUnlock(&loopsLock);
-    CFRelease(newLoop);
-    }
-    if (pthread_equal(t, pthread_self())) {
-        _CFSetTSD(__CFTSDKeyRunLoop, (void *)loop, NULL);
-        if (0 == _CFGetTSD(__CFTSDKeyRunLoopCntr)) {
-            // 注册一个回调，当线程销毁时，销毁对应的RunLoop
-            _CFSetTSD(__CFTSDKeyRunLoopCntr, (void *)(PTHREAD_DESTRUCTOR_ITERATIONS-1), (void (*)(void *))__CFFinalizeRunLoop);
-        }
-    }
-    return loop;
+        
+		// 创建一个用于映射线程和runloop关系的字典
+		CFMutableDictionaryRef dict = CFDictionaryCreateMutable(kCFAllocatorSystemDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
+	
+		// 主线程runloop
+		CFRunLoopRef mainLoop = __CFRunLoopCreate(pthread_main_thread_np());
+	
+		// 保存main runloop，main_thread为key，main runloop为value
+		CFDictionarySetValue(dict, pthreadPointer(pthread_main_thread_np()), mainLoop);
+	
+		if (!OSAtomicCompareAndSwapPtrBarrier(NULL, dict, (void * volatile *)&__CFRunLoops)) {
+			CFRelease(dict);
+		}
+		CFRelease(mainLoop);
+			__CFLock(&loopsLock);
+		}
+		
+		// 当前线程作为 Key，从 __CFRunLoops 字典中获取 RunLoop 
+		CFRunLoopRef loop = (CFRunLoopRef)CFDictionaryGetValue(__CFRunLoops, pthreadPointer(t));
+		__CFUnlock(&loopsLock);
+		// 未查找到缓存则创建一个runloop兵缓存在字典中
+		if (!loop) {//如果字典中不存在
+		CFRunLoopRef newLoop = __CFRunLoopCreate(t);// ⚠️创建当前线程的 RunLoop
+		    __CFLock(&loopsLock);
+		loop = (CFRunLoopRef)CFDictionaryGetValue(__CFRunLoops, pthreadPointer(t));
+		if (!loop) {
+		    CFDictionarySetValue(__CFRunLoops, pthreadPointer(t), newLoop);// ⚠️保存到字典中
+		    loop = newLoop;
+		}
+		    // don't release run loops inside the loopsLock, because CFRunLoopDeallocate may end up taking it
+		    __CFUnlock(&loopsLock);
+		CFRelease(newLoop);
+		}
+		if (pthread_equal(t, pthread_self())) {
+		    _CFSetTSD(__CFTSDKeyRunLoop, (void *)loop, NULL);
+		    if (0 == _CFGetTSD(__CFTSDKeyRunLoopCntr)) {
+		        // 注册一个回调，当线程销毁时，销毁对应的RunLoop
+		        _CFSetTSD(__CFTSDKeyRunLoopCntr, (void *)(PTHREAD_DESTRUCTOR_ITERATIONS-1), (void (*)(void *))__CFFinalizeRunLoop);
+		    }
+		}
+		return loop;
 }
 
 CFRunLoopRefCFRunLoopGetMain(){

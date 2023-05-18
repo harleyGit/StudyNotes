@@ -1,6 +1,6 @@
 -  **[Swift知识点(I)](./../Swift/知识点(I).md)** 
 - [**React知识点**](./../../React/React知识点.md)
-- [**Flutter知识点**](./../../Flutter知识点.md)
+- [**Flutter知识点**](./../../Flutter/Flutter知识点.md)
 - [**基础算法知识**](https://hit-alibaba.github.io/interview/)
 - [**博客园**](https://i.cnblogs.com/posts)
 - [JLRHX](https://github.com/bestswifter/blog/blob/master/articles/bat-offer.md)
@@ -28,6 +28,14 @@
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
 		- [向nil发送消息会Crash吗(四喵)](#向nil发送消息会Crash吗)
 		- [对nil发送消息,返回值是什么](#对nil发送消息,返回值是什么)
+- [**NSNotificationCenter**](#NSNotificationCenter)
+	- [NSNotificationCenter通知中心是同步操作还是异步操作(Rokid)](#NSNotificationCenter通知中心是同步操作还是异步操作)
+	- [异步操作](#异步操作)
+	- [NSNotificationCenter接受消息和发送消息是在一个线程里吗？如何异步发送消息](#NSNotificationCenter接受消息和发送消息是在一个线程里吗？如何异步发送消息)
+	- [如何保证通知接收的线程在主线程](#如何保证通知接收的线程在主线程)
+	- [页面销毁时不移除通知会崩溃吗?](#页面销毁时不移除通知会崩溃吗?)
+	- [多次添加同一个通知会是什么结果？多次移除通知呢](#多次添加同一个通知会是什么结果？多次移除通知呢)
+	- [下面的方式能接收到通知吗？为什么](#下面的方式能接收到通知吗？为什么)
 - **多线程**
 	- [什么叫串行队列?并行队列?同步执行?异步执行?](#什么叫串行队列?并行队列?同步执行?异步执行?)
 	- [线程的挂起&恢复](#线程的挂起&恢复)
@@ -809,6 +817,235 @@ Student *stu = [[Student alloc] init];
 
 ![ios_oc2_49.png](./../../Pictures/ios_oc2_49.png)
 
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='NSNotificationCenter'>NSNotificationCenter</h1>
+
+
+<br/>
+
+
+> <h2 id='NSNotificationCenter通知中心是同步操作还是异步操作'>NSNotificationCenter通知中心是同步操作还是异步操作</h2>
+
+
+**同步发送.** 因为要调用消息转发.
+
+所谓异步，指的是非实时发送而是在合适的时机发送，并没有开启异步线程.
+
+<br/>
+
+**验证如下:**
+
+发送通知
+
+```
+- (void)sentValueBtnClick:(UIButton *)button{
+    NSLog(@"发送通知");
+    NSDictionary *dict = @{@"myValue":@"ZFJ通知传值"};
+    [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"KPassValue" object:nil userInfo:dict]];
+}
+```
+
+<br/>
+
+接收通知
+
+
+```
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    _textField.layer.borderColor = [UIColor redColor].CGColor;
+    _textField.layer.borderWidth = 1.0;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(passValue:) name:@"KPassValue" object:nil];
+}
+ 
+- (void)passValue:(NSNotification *)text{
+    NSString *valueStr = text.userInfo[@"myValue"];
+    NSLog(@"收到值：%@",valueStr);
+    sleep(3);
+    self.textField.text = valueStr;
+    NSLog(@"通知赋值完毕");
+}
+```
+
+打印结果：
+
+```
+NSNotification[8150:145628] 发送通知
+
+NSNotification[8150:145628] 收到值：ZFJ通知传值
+
+NSNotification[8150:145628] 通知赋值完毕
+```
+
+**案例分析**
+
+&emsp; 通过打印我们可以看出，当我们发送通知以后，观察者在接收到值以后，我们休眠3秒，程序才会继续往下执行，也就是说这个过程是同步的；我认为这里面设计为同步，是考虑到这一点，那就是一个通知可能有多个监听者，采用同步的方式能够保证所有的观察者都能够对通知做出相应，不会遗漏。
+
+
+<br/><br/>
+
+> <h2 id='异步操作'>异步操作</h2>
+
+
+
+
+看下面：
+
+发送通知：
+
+
+```
+- (void)sentValueBtnClick:(UIButton *)button{
+    NSLog(@"发送通知");
+    NSDictionary *dict = @{@"myValue":@"ZFJ通知传值"};
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"KPassValue" object:nil userInfo:dict]];
+    });
+}
+```
+
+接受通知：
+
+```
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    _textField.layer.borderColor = [UIColor redColor].CGColor;
+    _textField.layer.borderWidth = 1.0;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(passValue:) name:@"KPassValue" object:nil];
+}
+ 
+- (void)passValue:(NSNotification *)text{
+    NSString *valueStr = text.userInfo[@"myValue"];
+    NSLog(@"收到值：%@",valueStr);
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        sleep(3);
+        self.textField.text = valueStr;
+        NSLog(@"通知赋值完毕");
+    });
+}
+```
+
+我们发布通知在子线程里面发布，当然接收也要在子线程里面接收了。。。
+
+
+
+
+
+
+<br/><br/>
+
+> <h2 id='NSNotificationCenter接受消息和发送消息是在一个线程里吗？如何异步发送消息'>NSNotificationCenter接受消息和发送消息是在一个线程里吗？如何异步发送消息</h2>
+
+
+是的, 异步线程发送通知则响应函数也是在异步线程.
+
+异步发送通知可以开启异步线程发送即可.
+
+
+
+<br/><br/>
+
+> <h2 id='如何保证通知接收的线程在主线程'>如何保证通知接收的线程在主线程</h2>
+
+
+如果想在主线程响应异步通知的话可以用如下两种方式
+
+1.系统接受通知的API指定队列
+
+```
+- (id <NSObject>)addObserverForName:(nullable NSNotificationName)name object:(nullable id)obj queue:(nullable NSOperationQueue *)queue usingBlock:(void (^)(NSNotification *note))block
+```
+
+2.NSMachPort的方式 通过在主线程的runloop中添加machPort，设置这个port的delegate，通过这个Port其他线程可以跟主线程通信，在这个port的代理回调中执行的代码肯定在主线程中运行，所以，在这里调用NSNotificationCenter发送通知即可
+
+
+
+<br/><br/>
+
+> <h2 id='页面销毁时不移除通知会崩溃吗?'>页面销毁时不移除通知会崩溃吗?</h2>
+
+iOS9.0之前，会crash，原因：通知中心对观察者的引用是unsafe_unretained，导致当观察者释放的时候，观察者的指针值并不为nil，出现野指针.
+
+iOS9.0之后，不会crash，原因：通知中心对观察者的引用是weak。
+
+
+
+<br/><br/>
+
+> <h2 id='多次添加同一个通知会是什么结果？多次移除通知呢'>多次添加同一个通知会是什么结果？多次移除通知呢</h2>
+
+多次添加同一个通知，会导致发送一次这个通知的时候，响应多次通知回调。 多次移除通知不会产生crash
+
+
+
+<br/><br/>
+
+
+> <h2 id='下面的方式能接收到通知吗？为什么'>下面的方式能接收到通知吗？为什么</h2>
+
+```
+// 发送通知
+[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleNotification:) name:@"TestNotification" object:@1];
+
+// 接收通知
+[NSNotificationCenter.defaultCenter postNotificationName:@"TestNotification" object:nil];
+```
+
+
+**答案:** 不能
+
+
+原因如下:
+
+
+首先我们看下通知中心存储通知观察者的结构
+
+```
+// 根容器，NSNotificationCenter持有
+typedef struct NCTbl {
+  Observation  *wildcard;    /* 链表结构，保存既没有name也没有object的通知 */
+  GSIMapTable nameless;    /* 存储没有name但是有object的通知    */
+  GSIMapTable named;        /* 存储带有name的通知，不管有没有object    */
+    ...
+} NCTable;
+
+
+
+// Observation 存储观察者和响应结构体，基本的存储单元
+typedef	struct Obs {
+  id observer;    /* 观察者，接收通知的对象    */
+  SEL selector;    /* 响应方法        */
+  struct Obs *next;        /* Next item in linked list.    */
+  ...
+} Observation;
+````
+
+
+nameless与named的具体数据结构如下:
+
+![ios_oc1_103.png](./../../Pictures/ios_oc1_103.png)
+
+![ios_oc1_104.png](./../../Pictures/ios_oc1_104.png)
+
+
+
+当添加通知监听的时候，我们传入了name和object，所以，观察者的存储链表是这样的：
+
+```
+named表：key(name) : value->key(object) : value(Observation)
+```
+
+因此在发送通知的时候，如果只传入name而并没有传入object，是找不到Observation的，也就不能执行观察者回调.
 
 
 
