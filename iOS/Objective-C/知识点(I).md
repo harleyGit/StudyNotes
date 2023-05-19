@@ -23,6 +23,7 @@
 	- [NSCache详解](#NSCache详解)
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
+	- [静态库和动态库区别(同程旅行)](#静态库和动态库区别)
 	- [数据本地持久化](#数据本地持久化)
 	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？](#使用copy关键字为什么)
 	- [nil、Nil、NULL、NSNull区别](#几个空的区别)
@@ -87,6 +88,7 @@
 	- [KVC和KVO](#KVC和KVO)
 		- 	[KVO的原理](#KVO的原理)
 - [**底层**](#底层)
+	- [Mach-O文件有哪几部分组成(同程旅行)](#Mach-O文件有哪几部分组成)
 	- [Runtime](#Runtime)
 		- [Runtime可以做什么?(大厂)](#Runtime可以做什么?)
 		- [使用hook防崩溃](#使用hook防崩溃)
@@ -554,6 +556,14 @@ atomic表示，我TM也很冤啊！！！！
 - **pod update:**只有当你想要更新pod库的版本时才使用pod update；它不管Podfile.lock是否存在, 都会读取Podfile文件的的框架信息去下载安装，下载好之后, 再根据下载好的框架信息, 生成Podfile.lock文件
 
 当多人合作开发项目时，最开始把项目下载下来时最好都执行**`pod install`**，以后为了保持类库版本一致统一用**`pod update`**命令。
+
+
+
+<br/><br/>
+
+> <h2 id='静态库和动态库区别(同程旅行)'>静态库和动态库区别</h2>
+
+
 
 
 
@@ -3472,6 +3482,13 @@ storehub提问：NSNotification的class方法指向谁？
 
 ># <h1 id = "底层">底层</h1>
 
+<br/><br/>
+
+> <h2 id='Mach-O文件有哪几部分组成'>[Mach-O文件有哪几部分组成](./Mach-O格式.md#格式简介)</h2>
+
+
+
+<br/>
 <br/>
 
 ># <h0 id = "Runtime">Runtime</h0>

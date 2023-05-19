@@ -20,6 +20,7 @@
 	- [协议中使用泛型](#协议中使用泛型)
 	- [静态多态和动态多态区别](#静态多态和动态多态区别)
 	- [数据解析中范型和协议有什么区别呢？(爱乐奇)](#数据解析中范型和协议有什么区别呢?)
+	- [map和flatMap区别(同程旅行)](#map和flatMap区别)
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
 		- [逃逸闭包](#逃逸闭包)
@@ -71,7 +72,7 @@
 - [**底层**](#底层)
 	- [Objective-C和Swift底层使用2套不同机制](#Objective-C和Swift底层使用2套不同机制)
 	- [Swift动态性](#Swift动态性)
-	- [Swift派发方式](#Swift派发方式)
+	- [Swift派发方式(同程旅行)](#Swift派发方式)
 		- [派发效率](#派发效率)
 		- [方法可见性影响](#方法可见性影响)
 		- [KVO](#KVO)
@@ -661,7 +662,11 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 
 这个用法在RxSwift中用到的很多,可以看下!以后可以用到项目中,优化Code,很赞!
 
-<br/>
+
+
+<br/><br/>
+
+># <h2 id='map和flatMap区别'>[map和flatMap区别](./基础.md#map和flatMap区别)</h2>
 
 
 
@@ -2364,7 +2369,7 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 <br/>
 <br/>
 
-> <h3 id='Swift派发方式'>[Swift派发方式](./动态性.md#Swift派发方式)</h3>
+># <h3 id='Swift派发方式'>[Swift派发方式](./动态性.md#Swift派发方式)</h3>
 
 
 <br/>
