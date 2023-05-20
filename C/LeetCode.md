@@ -22,6 +22,7 @@
 	- [**栈与队列**](#栈与队列)
 		- [有效的括号](#有效的括号)
 		- [最长有效括号](#最长有效括号)
+		- [每日温度](#每日温度)
 	- [两数之和](#两数之和)
 	- [两数相加](#两数相加)
 	- [无重复字符的最长子串](#无重复字符的最长子串)
@@ -1656,6 +1657,132 @@ int longestValidParentheses(char * s){
 🌷🌹(May 19 2023:22:38:55 [137行] +[HGTestAlgorithm testLongestValidParentheses]) 最长有效括号值:4
 ```
 
+
+
+<br/><br/>
+
+> <h2 id='每日温度'>每日温度</h2>
+
+&emsp; 给定一个整数数组 temperatures ，表示每天的温度，返回一个数组 answer ，其中 answer[i] 是指对于第 i 天，下一个更高温度出现在几天后。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+ 
+
+示例 1:
+
+```
+输入: temperatures = [73,74,75,71,69,72,76,73]
+输出: [1,1,4,2,1,1,0,0]
+```
+
+示例 2:
+
+```
+输入: temperatures = [30,40,50,60]
+输出: [1,1,1,0]
+```
+
+示例 3:
+
+```
+输入: temperatures = [30,60,90]
+输出: [1,1,0]
+```
+
+
+
+<br/>
+<br/>
+
+
+一开始看题目的时候,压根不知道怎么回事! 若是在面试中遇到,还是直接投降吧!若是想了解,这也是一道不错的栈经典题目如下解析:
+
+
+题目解析：
+
+这道题目最 “难” 的一个点是题目的理解。
+
+给定列表 temperatures = [73, 74, 75, 71, 69, 72, 76, 73]，为啥输出就是 [1, 1, 4, 2, 1, 1, 0, 0] ？
+
+下面来一个个进行解释。
+
+对于输入 73，它需要 经过一天 才能等到温度的升高，也就是在第二天的时候，温度升高到 74 ，所以对应的结果是 1。
+
+对于输入 74，它需要 经过一天 才能等到温度的升高，也就是在第三天的时候，温度升高到 75 ，所以对应的结果是 1。
+
+对于输入 75，它经过 1 天后发现温度是 71，没有超过它，继续等，一直 等了四天，在第七天才等到温度的升高，温度升高到 76 ，所以对应的结果是 4 。
+
+对于输入 71，它经过 1 天后发现温度是 69，没有超过它，继续等，一直 等了两天，在第六天才等到温度的升高，温度升高到 72 ，所以对应的结果是 2 。
+
+对于输入 69，它 经过一天 后发现温度是 72，已经超过它，所以对应的结果是 1 。
+
+对于输入 72，它 经过一天 后发现温度是 76，已经超过它，所以对应的结果是 1 。
+
+对于输入 76，后续 没有温度 可以超过它，所以对应的结果是 0 。
+
+对于输入 73，后续 没有温度 可以超过它，所以对应的结果是 0 。
+
+
+<br/>
+
+
+**思路:**
+
+[leetCode官方讲解](https://leetcode.cn/problems/daily-temperatures/solution/mei-ri-wen-du-by-leetcode-solution/)
+
+
+<br/>
+
+**Code**
+
+```
+///每日温度
+int* dailyTemperatures(int* temperatures, int temperaturesSize, int* returnSize){
+    
+    int *stacks = (int *)malloc(sizeof(int)*temperaturesSize);
+    //在leetcode用malloc会导致案例出错,
+    //malloc和calloc区别是:malloc 和 calloc 之间的不同点是，malloc 不会设置内存为零，而 calloc 会设置分配的内存为零。
+    //int *ans = (int *)malloc(sizeof(int)* temperaturesSize);
+     int* ans = (int*)calloc(temperaturesSize, sizeof(int));
+    int top = 0;
+    *returnSize = temperaturesSize;
+
+    
+    for (int i = 0; i < temperaturesSize; i++) {
+        
+        while (top != 0 && temperatures[i] > temperatures[stacks[top-1]]) {//让栈顶元素和当前元素对比
+            ans[stacks[top-1]] = i - stacks[top-1];
+            stacks[top-1] = 0;
+            --top;
+        }
+        stacks[top++] = i;//存储序号
+    }
+    free(stacks);
+
+    return ans;
+}
+
+
+
+///调用
++ (void)testDailyTemperatures{
+    int temArray[] = {73,74,75,71,69,72,76,73};
+    int size = sizeof(temArray)/sizeof(int);
+    int returnSize = 0;
+    
+    int *array = dailyTemperatures(temArray, size, &returnSize);
+    
+    printArr(array, returnSize);
+}
+```
+
+
+<br/>
+
+Log:
+
+```
+🌷🌹 19:43:58 [149行] +[HGTestAlgorithm testDailyTemperatures]=> 01 01 04 02 01 01 00 00 
+```
 
 
 
