@@ -5,7 +5,9 @@
 - [**简介**](#简介)
 	- [**基本概念**](#基本概念)
 - [**类**](#类)
+	- [获取类变量](#获取类变量)
 	- [属性列表](#属性列表)
+		- [获得类的属性列表](#获得类的属性列表)
 	- [objc_object源码](#objc_object源码)
 	- [objc_class结构体](#objc_object源码)
 	- [Class(类)](#Class(类))
@@ -17,6 +19,7 @@
 	- [消息发送](#消息发送)
 - **资料**
 	- [class_method 参数](https://www.jianshu.com/p/e4237de0aedb)      
+	- [performSelector](https://www.jianshu.com/p/672c0d4f435a)
 	- 	[Runtime 详解 基础知识](https://www.jianshu.com/p/633e5d8386a8) 
 	- 	**[深入了解Category](https://tech.meituan.com/2015/03/03/diveintocategory.html)**
 	- 	[iOS runtime——函数/使用方法/使用场景/示例](https://blog.csdn.net/potato512/article/details/51106645)
@@ -99,6 +102,37 @@ object_getClass(id _Nullable obj)
 
 ```
 
+<br/><br/>
+
+> <h3 id='获取类变量'>获取类变量</h3>
+
+
+`class_copyIvarList(Class _Nullable cls, unsigned int * _Nullable outCount)`
+
+
+```
+
+    unsigned int icount = 0;
+    id classObject = objc_getClass([@"AppDelegate" UTF8String]);
+    Ivar *ivars = class_copyIvarList(classObject, &icount);
+    NSLog(@"AppDelegate %d 个成员变量", icount);
+    for (int i = 0; i < icount; i ++) {
+        NSString *ivarName = [NSString stringWithUTF8String:ivar_getName(ivars[i])];
+        NSLog(@"第 %d 个成员变量是：%@", i, ivarName);
+    }
+
+```
+
+输出：
+
+```
+2019-05-15 11:40:47.309695+0800 Genealogy[3423:49651] AppDelegate 1 个成员变量
+
+2019-05-15 11:40:55.189206+0800 Genealogy[3423:49651] 第 0 个成员变量是：_window
+```
+
+
+
 <br/>
 <br/>
 
@@ -117,6 +151,39 @@ const char *attrs = property_getAttributes(property);
 ```
 
 [property_getAttributes()](https://www.jianshu.com/p/cefa1da5e775)
+
+
+<br/><br/>
+
+> <h3 id='获得类的属性列表'>获得类的属性列表</h3>
+
+
+`class_copyPropertyList(Class _Nullable cls, unsigned int * _Nullable outCount)`
+
+```
+unsigned int icount = 0;
+id classObject = objc_getClass([@"AppDelegate" UTF8String]);
+objc_property_t *properties = class_copyPropertyList(classObject, &icount);
+NSLog(@"AppDelegate %d 个属性变量", icount);
+for (int i = 0; i < icount; i ++) {
+    objc_property_t property = properties[i];
+    
+    NSString *propertyName = [[NSString alloc] initWithCString:property_getName(property) encoding:NSUTF8StringEncoding];
+    NSLog(@"第 %d 个成员变量是：%@", i, propertyName);
+}
+```
+
+输出：
+
+```
+2019-05-15 14:36:34.108732+0800 Genealogy[6014:112910] AppDelegate 5 个属性变量
+2019-05-15 14:36:42.488907+0800 Genealogy[6014:112910] 第 0 个成员变量是：window
+2019-05-15 14:36:45.498659+0800 Genealogy[6014:112910] 第 1 个成员变量是：hash
+2019-05-15 14:36:45.499019+0800 Genealogy[6014:112910] 第 2 个成员变量是：superclass
+2019-05-15 14:36:45.499275+0800 Genealogy[6014:112910] 第 3 个成员变量是：description
+2019-05-15 14:36:45.499532+0800 Genealogy[6014:112910] 第 4 个成员变量是：debugDescription
+```
+
 
 
 
@@ -415,7 +482,8 @@ objc_setAssociatedObject(id _Nonnull object, const void * _Nonnull key, id _Null
 ***
 <br/>
 
-> <h1 id='消息转发机制'>消息转发机制</h1>
+># <h1 id='消息转发机制'>[消息转发机制](https://blog.csdn.net/wtdask/article/details/80613446)</h1>
+
 
 ![ios_oc2_26.png](./../../Pictures/ios_oc2_26.png)
 

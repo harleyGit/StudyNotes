@@ -4899,7 +4899,7 @@ static NSMutableArray *someArray;
 <br/>
 
 
->### <h3 id = "消息转发">[消息转发](#./类.md#消息转发)</h3>
+>### <h3 id = "消息转发">[消息转发](./类.md#消息转发)</h3>
 
 [Runtime的消息转发](https://blog.csdn.net/zhw521411/article/details/85617353)
 
