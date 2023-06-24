@@ -9,6 +9,8 @@
 	- [宏定义](#宏定义)
 		- [普通打印-println](#普通打印-println)
 		- [数组打印-printArr](#数组打印-printArr)
+	- [**查找**](#查找)
+		- [‌搜索旋转排序数组-2分查找](#‌搜索旋转排序数组-2分查找)
 	- [**递归回溯**](#递归回溯)
 		- [斐波那契数列](#斐波那契数列)
 		- [电话号码的字母组合](#电话号码的字母组合)
@@ -158,6 +160,146 @@ size_t length = s.size();
     }while(0)
 ```
 
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='查找'>查找</h1>
+
+
+<br/><br/>
+
+> <h2 id='‌搜索旋转排序数组-2分查找'>‌搜索旋转排序数组-2分查找</h2>
+
+
+整数数组 nums 按升序排列，数组中的值 互不相同 。
+
+在传递给函数之前，nums 在预先未知的某个下标 k（0 <= k < nums.length）上进行了 旋转，使数组变为 [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]（下标 从 0 开始 计数）。例如， [0,1,2,4,5,6,7] 在下标 3 处经旋转后可能变为 [4,5,6,7,0,1,2] 。
+
+给你 旋转后 的数组 nums 和一个整数 target ，如果 nums 中存在这个目标值 target ，则返回它的下标，否则返回 -1 。
+
+你必须设计一个时间复杂度为 O(log n) 的算法解决此问题。
+
+<br/>
+
+示例 1：
+
+```
+输入：nums = [4,5,6,7,0,1,2], target = 0
+输出：4
+```
+
+示例 2：
+
+```
+输入：nums = [4,5,6,7,0,1,2], target = 3
+输出：-1
+```
+
+示例 3：
+
+```
+输入：nums = [1], target = 0
+输出：-1
+```
+
+
+**一般解法**
+
+```
+nt search(int* nums, int numsSize, int target){//{4,5,6,7,0,1,2}
+    if(numsSize == 1 && nums[0] == target){
+        return 0;
+    }
+
+    int x = 0;
+    int ans = -1;
+
+    for(int i = 0; i < numsSize-1; i++){
+        if(nums[i+1]<nums[i]){
+            x++;
+        }
+        if(nums[i+1] == target){
+            ans = i+1;
+            break;
+        }
+
+        if(nums[i] == target){
+            ans = i;
+            break;
+        }
+    }
+
+    if(x>1){
+        ans = -1;
+    }
+
+    return ans;
+}
+
+
+
+///调用
++(void)testSearchArray {
+    
+    int array[] = {4,5,6,7,0,1,2};
+    int target = 0;
+    //int target = 3;
+    
+//    int array[] = {1};
+//    int target = 0;
+    
+    int length = sizeof(array)/sizeof(int);
+    int index = search(array, length, target);
+    
+    println("目标值是: %d", index);
+}
+```
+
+Log:
+
+```
+🌷🌹(Jun 24 2023:22:56:39 [141行] +[HGTestAlgorithm testSearchArray]) 目标值是: 4
+```
+
+<br/>
+
+**2分查找:**
+
+```
+int search(int* nums, int numsSize, int target){
+    int low = 0, high = numsSize - 1, mid = numsSize - 1;   
+
+    while(nums[0] > nums[numsSize-1] && low < high){    //若数组为旋转后的则找出断点
+        mid = (low + high) / 2;
+        if(nums[mid] > nums[low])
+            low = mid;
+        else
+            high = mid;
+    } 
+    if(target >= nums[0])                               //目标值大于第一个值，说明目标值在断点左侧，反之在右侧
+        low = 0, high = mid;
+    else
+        low = mid + 1, high = numsSize - 1;            
+    mid = (low + high) / 2;
+    while(low <= high){                                 //寻找目标值
+        mid = (low + high) / 2;
+        if(nums[mid] == target)
+            return mid;
+        else if(nums[mid] < target)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+
+    return -1;                                          //无目标元素
+}
+
+```
 
 
 <br/>
