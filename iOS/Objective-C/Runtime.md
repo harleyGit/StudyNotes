@@ -17,6 +17,7 @@
 	- [AssociatedObject关联对象](#AssociatedObject关联对象)
 - [**消息转发机制**](#消息转发机制)
 	- [消息发送](#消息发送)
+		- [methodForSelector](#methodForSelector)
 - **资料**
 	- [class_method 参数](https://www.jianshu.com/p/e4237de0aedb)      
 	- [performSelector](https://www.jianshu.com/p/672c0d4f435a)
@@ -795,6 +796,144 @@ MessageSend.m 文件
 
 objc_msgSend(array, @selector(insertObject:atIndex:), foo, 5);
 ```
+
+
+<br/><br/>
+
+> <h3 id='methodForSelector'>methodForSelector</h3>
+
+这个方法可以根据一个SEL，得到该方法的IMP（函数指针,即函数实现地址）
+
+简单测试下:
+
+```
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    IMP imp = [self methodForSelector:@selector(sayHi)];
+    imp();
+
+}
+- (void)sayHi {
+    NSLog(@"hello world");
+}
+```
+
+Log:
+
+```
+MethodForSelector[755:215807] hello world
+```
+
+需要注意的是- (IMP)methodForSelector:(SEL)aSelector参数aSelector即使是私有方法，即在.h文件中没有暴露接口也会调用成功.
+
+<br/>
+<br/>
+
+
+复杂的一点来:
+
+**ViewController.h文件**
+
+```
+#import <UIKit/UIKit.h>
+
+@interface HGWeiBoController : HGBaseController
+
+@end
+
+@interface YTest : NSObject
+
+- (void)runtime1Test:(BOOL)can;
+
+@end
+
+```
+
+<br/>
+
+**HGWeiBoController.h文件**
+
+```
+#import <UIKit/UIKit.h>
+
+@interface HGWeiBoController : HGBaseController
+
+@end
+
+@interface YTest : NSObject
+
+- (void)runtime1Test:(BOOL)can;
+
+@end
+```
+
+<br/>
+
+**HGWeiBoController.m文件**
+
+```
+@implementation HGWeiBoController
+
+///点击
+[_testBtn addTarget:self action:@selector(test) forControlEvents:UIControlEventTouchUpInside];
+
+-(void)testmethodForSelector:(id)sender {
+    NSLog(@"---->> %@",sender);
+}
+
+-(void)test {
+    YTest *xsqObj = [YTest new];
+    [xsqObj runtime1Test:false];
+    
+    //绕过晚绑定，自己获取函数指针
+    void (*function)(id, SEL,BOOL) = (void(*)(id, SEL,BOOL))[xsqObj methodForSelector:@selector(runtime1Test:)];
+    //    NSObject *obj = [NSObject new];
+    function(self, @selector(testmethodForSelector:),YES);
+}
+
+
+@end
+
+
+
+
+@implementation YTest
+
+- (void)runtime1Test:(BOOL)can
+{
+    NSLog(@"self: %@", [self class]);
+    NSLog(@"_cmd: %@", NSStringFromSelector(_cmd));
+    NSLog(@"---------------------- %d",can);
+    NSLog(@"----------------------");
+    if (![self isKindOfClass:[YTest class]])
+    {
+        [self performSelector:_cmd withObject:@"taibangle" afterDelay:5.0f];
+    }
+    
+}
+
+@end
+```
+
+Log:
+
+```
+2023-06-21 15:21:06.050691+0800 MLC[38857:5604424] ---->> taibangle
+2023-06-21 15:21:07.389772+0800 MLC[38857:5604424] self: YTest
+2023-06-21 15:21:07.390052+0800 MLC[38857:5604424] _cmd: runtime1Test:
+2023-06-21 15:21:07.390155+0800 MLC[38857:5604424] ---------------------- 0
+2023-06-21 15:21:07.390246+0800 MLC[38857:5604424] ----------------------
+
+
+///使用HGWeiBoController调用了YTest的runtime1Test方法
+2023-06-21 15:21:07.390358+0800 MLC[38857:5604424] self: HGWeiBoController
+2023-06-21 15:21:07.390496+0800 MLC[38857:5604424] _cmd: testmethodForSelector:
+2023-06-21 15:21:07.390589+0800 MLC[38857:5604424] ---------------------- 1
+2023-06-21 15:21:07.390676+0800 MLC[38857:5604424] ----------------------
+2023-06-21 15:21:12.392251+0800 MLC[38857:5604424] ---->> taibangle
+```
+
+
 
 
 
