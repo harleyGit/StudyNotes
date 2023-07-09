@@ -25,6 +25,8 @@
 		- [有效的括号](#有效的括号)
 		- [最长有效括号](#最长有效括号)
 		- [每日温度](#每日温度)
+	- [**查找**](#查找)
+		- [在排序数组中查找元素的第一个和最后一个位置-2分查找](#在排序数组中查找元素的第一个和最后一个位置-2分查找)
 	- [两数之和](#两数之和)
 	- [两数相加](#两数相加)
 	- [无重复字符的最长子串](#无重复字符的最长子串)
@@ -1925,6 +1927,149 @@ Log:
 ```
 🌷🌹 19:43:58 [149行] +[HGTestAlgorithm testDailyTemperatures]=> 01 01 04 02 01 01 00 00 
 ```
+
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='查找'>查找</h1>
+
+
+<br/><br/>
+
+> <h2 id='在排序数组中查找元素的第一个和最后一个位置-2分查找'>在排序数组中查找元素的第一个和最后一个位置-2分查找</h2>
+
+给你一个按照非递减顺序排列的整数数组 nums，和一个目标值 target。请你找出给定目标值在数组中的开始位置和结束位置。
+
+如果数组中不存在目标值 target，返回 [-1, -1]。
+
+你必须设计并实现时间复杂度为 O(log n) 的算法解决此问题。
+
+ 
+
+示例 1：
+
+```
+输入：nums = [5,7,7,8,8,10], target = 8
+输出：[3,4]
+```
+
+示例 2：
+
+```
+输入：nums = [5,7,7,8,8,10], target = 6
+输出：[-1,-1]
+```
+
+
+示例 3：
+
+```
+输入：nums = [], target = 0
+输出：[-1,-1]
+```
+
+
+<br/>
+
+**解题思路:**
+
+![c0_78.png](./../Pictures/c0_78.png)
+![c0_79.png](./../Pictures/c0_79.png)
+![c0_80.png](./../Pictures/c0_80.png)
+![c0_81.png](./../Pictures/c0_81.png)
+![c0_82.png](./../Pictures/c0_82.png)
+
+
+<br/>
+
+**代码:**
+
+```
+int* searchRange(int* nums, int numsSize, int target, int* returnSize){
+
+    *returnSize = 2;
+    int *targetNums = (int *)malloc(sizeof(int)*2);
+    if(!nums || numsSize == 0){
+        targetNums[0] = -1;
+        targetNums[1] = -1;
+        
+        return targetNums;
+    }
+
+    int min = 0;
+    int max = numsSize -1;
+
+    while (min < max){
+        int mid = (min + max)/2;
+        if(nums[mid]>=target){
+            max = mid;
+        }else {
+            min = mid+1;
+        }
+    }
+
+    if(nums[max] != target){
+        targetNums[0] = -1;
+        targetNums[1] = -1;
+        return targetNums;
+    }
+    int start = max;
+
+
+    max = numsSize -1;
+    while(min < max){
+        int mid = (min + max + 1)/2;
+        if(nums[mid] <= target){
+            min = mid;
+        }else {
+            max = mid - 1;
+        }
+    }
+
+    
+    targetNums[0]= start;
+    targetNums[1] = max;
+    
+    return targetNums;
+}
+
+
+
+
+
+///测试代码
++ (void)testSearchRange {
+    int array [] = {5,7,7,8,8,10};
+    int target = 8;
+    
+    
+//    int array [] = {5,7,7,8,8,10};
+//    int target = 6;
+
+//    int array [] = {};
+//    int target = 0;
+    
+    int length = sizeof(array)/sizeof(int);
+    int returnSize = 2;
+    int *indexArr = searchRange(array, length, target, &returnSize);
+    
+    printArr(indexArr, 2);
+}
+```
+
+
+
+Log:
+
+```
+🌷🌹 23:01:16 [137行] +[HGTestAlgorithm testSearchRange]=> 03 04 
+```
+
 
 
 
