@@ -2001,11 +2001,11 @@ int* searchRange(int* nums, int numsSize, int target, int* returnSize){
         return targetNums;
     }
 
-		//二分范围
+    //二分范围
     int min = 0;
     int max = numsSize -1;
 
-    while (min < max){
+    while (min < max){//查找元素的开始位置
         int mid = (min + max)/2;
         if(nums[mid]>=target){
             max = mid;
@@ -2014,16 +2014,19 @@ int* searchRange(int* nums, int numsSize, int target, int* returnSize){
         }
     }
 
-    if(nums[max] != target){
+    if(nums[max] != target){//查找失败
         targetNums[0] = -1;
         targetNums[1] = -1;
         return targetNums;
     }
+    
+    
     int start = max;
 
-
+    //二分范围
+    min = 0;
     max = numsSize -1;
-    while(min < max){
+    while(min < max){//查找元素的结束位置
         int mid = (min + max + 1)/2;
         if(nums[mid] <= target){
             min = mid;
@@ -2038,6 +2041,7 @@ int* searchRange(int* nums, int numsSize, int target, int* returnSize){
     
     return targetNums;
 }
+
 
 
 
