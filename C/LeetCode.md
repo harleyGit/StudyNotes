@@ -2001,6 +2001,7 @@ int* searchRange(int* nums, int numsSize, int target, int* returnSize){
         return targetNums;
     }
 
+		//二分范围
     int min = 0;
     int max = numsSize -1;
 
