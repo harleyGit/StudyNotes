@@ -636,6 +636,9 @@ $ git pull --rebase
 
 > <h2 id='忽略文件配置'>忽略文件配置</h2>
 
+[OC忽略文件配置](https://github.com/github/gitignore/blob/main/Objective-C.gitignore)
+
+[Swift忽略文件配置](https://github.com/github/gitignore/blob/main/Swift.gitignore)
 
 ```
 # .ignore不起作用解决方案
@@ -645,19 +648,19 @@ $ git pull --rebase
 
 
 # iOS 忽略文件
-*~
 .DS_Store
+*~
 *.xcworkspace
 xcuserdata
-*.lock
-Pods
-*.xcuserstate
-#用户界面文件
-UserInterfaceState.xcuserstate
-#断点文件
+build
+bundle
 **/xcdebugger/Breakpoints_v2.xcbkptlist
-
-
+*.xcuserstate
+DerivedData
+#CocoaPods
+Pods
+Podfile.lock
+#**/project.pbxproj
 
 
 # Flutter忽略文件
@@ -734,6 +737,11 @@ svc-keyfile.json
 **/ios/Flutter/.last_build_id
 
 
+#RN忽略
+yarn.lock
+
+
+
 # Egret游戏 忽略文件
 /Lobby/bin-release
 /Lobby/bin-debug
@@ -745,8 +753,50 @@ svc-keyfile.json
 /Lobby/template/runtime/native_require.js
 /Lobby/index.html
 
+
+
+jsconfig.json
 ```
 
+
+
+<br/>
+
+- **iOS文件意义:**
+
+<br/>
+
+- **不能忽略:** [**/project.pbxproj](https://www.kancloud.cn/melissashu/ios/524100): 这个文件不能忽略,因为这个文件是用来描述iOS项目中文件结构和配置的,找不到就会打不开项目.若想使项目能运行,只能一步一步的配置,之前吃过大亏
+
+<br/>
+
+- **忽略:** *.xcuserdata和project.xcworkspace :和用户有关的何以忽略
+
+<br/>
+
+**忽略:** .xcuserstate
+
+&emsp; xcuserstate文件是从Xcode中生成的，并保存在你的项目包中，以记住你最后打开的文件，任何组文件夹的打开状态，打开的选项卡，以及任何其他你的项目可能需要记住的用户设置。出于修订控制的目的，您应该忽略它们，或者尽可能将它们去掉。
+
+- **比如:**
+	- UserInterfaceState.xcuserstate是Xcode中保存的用户操作的GUI状态，如窗口位置，打开的标签页，在项目检查等展开的节点、 简单地调整大小的Xcode窗口将这个文件来改变和修改您的源代码控制系统进行标记。
+
+
+<br/>
+
+**忽略:** **/xcdebugger/Breakpoints_v2.xcbkptlist: 断点文件忽略配置;
+
+
+<br/>
+
+**忽略:** [DerivedData:](https://www.cnblogs.com/zhanggui/p/11171642.html)Derived Data是一个文件夹，它默认情况下位于：~/Library/Developer/Xcode/DerivedData。它是Xcode存储各种中间构建结果、生成索引等的位置。
+
+&emsp; 清理该文件夹有个小缺点：清理之后构建首次构建项目的时候可能会增加构建时间。但是这不影响正常使用。而且还可以回收更多自由的空间内存。
+
+
+
+<br/>
+<br/>
 <br/>
 
 问题: UserInterfaceState.xcuserstate 文件添加进忽略文件,还是无法消除.
