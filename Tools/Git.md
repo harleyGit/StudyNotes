@@ -659,7 +659,7 @@ bundle
 DerivedData
 #CocoaPods
 Pods
-Podfile.lock
+*.lock
 #**/project.pbxproj
 
 

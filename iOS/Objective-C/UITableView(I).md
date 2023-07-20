@@ -128,6 +128,9 @@ b. 没有中间的间距和头部间距（要想有的重写UITableViewCell 、U
 
 - **`UITableViewStyleGroup`**
 
+![ios_oc1_109_22](./../Pictures/ios_oc1_109_22.png)
+
+
 在tableview的代理方法：返回组的头／尾视图中设置具体高度时，开头结尾总是默认有一段距离，并且如果设置她们中的某个距离为0，则无效。
 
 **处理方法:**

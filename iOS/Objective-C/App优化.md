@@ -53,7 +53,7 @@
 
 &emsp; 这四点是能够让卡顿监控系统在对 App 性能损耗很小的情况下，更好地监控到线上 App 卡顿情况的四个细节.matrix-iOS 卡顿监控系统的主要代码在 WCBlockMonitorMgr.mm文件中.
 
-
+![ios_oc1_109_21](./../Pictures/ios_oc1_109_21.png)
 
 <br/>
 <br/>
