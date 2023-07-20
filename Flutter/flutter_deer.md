@@ -3,8 +3,10 @@
 > <h2 id=''></h2>
 - [**方法**](#方法)
 	- [addPostFrameCallback](#addPostFrameCallback)
+	- [函数作为参数](#函数作为参数)
 - **参考资料**
 	- [**flutter_deer**](https://github.com/simplezhli/flutter_deer)
+	- [Flutter web真机测试](https://juejin.cn/post/7091184835842015268)
 	- [Deer](https://weilu.blog.csdn.net/article/details/90546727)项目知识点集合
 
 
@@ -49,6 +51,51 @@ Typically references to inherited widgets should occur in widget build() methods
 ``` 
 
 &emsp;  导致这类问题的场景很多，但是大体解决思路就是上述的[办法](https://weilu.blog.csdn.net/article/details/94849020)。
+
+
+
+<br/><br/>
+
+> <h2 id='函数作为参数'>函数作为参数</h2>
+
+
+- 1.在调用页面，声明一个作为参数的函数tap
+
+```
+tap(int i){
+    print('选择了....'+i.toString());
+}
+```
+
+
+<br/>
+
+- 2、声明自定义的函数,设置形参,点击调用参数
+
+```
+InkWell formateItem( Function(int) tapAction){
+  child: Container(),
+  onTap: () {
+      tapAction(1688);
+    }
+}
+```
+
+<br/>
+
+- 3、调用，将tapAction传入
+
+```
+formateItem(tap)
+```
+
+<br/>
+
+- 4、打印
+
+```
+Flutter: 选择了 1688
+```
 
 
 

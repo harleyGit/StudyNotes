@@ -101,14 +101,14 @@
 
 <br/>
 
-> <h2 id='如何与iOS和Android通信'>如何与iOS和Android通信</h2>
+>## <h2 id='如何与iOS和Android通信'>[如何与iOS和Android通信](https://juejin.cn/post/7012903456830652453)</h2>
 
 
 - **Flutter 通过 PlatformChannel 与原生进行交互，其中 PlatformChannel 分为三种：**
 
 	- BasicMessageChannel：用于传递字符串和半结构化的信息。
 	
-	- MethodChannel：用于传递方法调用。Flutter主动调用Native的方法，并获取相应的返回值。
+	- [MethodChannel](https://juejin.cn/post/7012905714418974728/)：用于传递方法调用。Flutter主动调用Native的方法，并获取相应的返回值。
 	
 	- EventChannel：用于数据流（event streams）的通信。
 
@@ -653,6 +653,10 @@ class _ScreenState extends State<Screen> {
 
 &emsp; Widget会被inflate（填充）到Element，并由Element管理底层渲染树。Widget并不会直接管理状态及渲染,而是通过State这个对象来管理状态。
 
+Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏幕显示,并且我们能看到的是ElementTree;
+
+<br/>
+
 &emsp; Flutter创建Element的可见树，相对于Widget来说，是可变的，通常界面开发中，我们不用直接操作Element,而是由框架层实现内部逻辑。
 
 &emsp; 比如一个UI视图树中，可能包含有多个TextWidget(Widget被使用多次)，但是放在内部视图树的视角，这些TextWidget都是填充到一个个独立的Element中。
@@ -706,7 +710,6 @@ class _ScreenState extends State<Screen> {
 &emsp; Flutter 引擎需要把我们写的 Widget 树的信息都渲染到界面上，这样人眼才能看到，跟渲染有关的当然有一颗渲染树 RenderObject tree，这是第二颗树，渲染树节点叫做 RenderObject，这个节点里面处理布局、绘制相关的事情。这两个树的节点并不是一一对应的关系，有些 Widget是要显示的，有些 Widget ，比如那些继承自 StatelessWidget & StatefulWidget 的 Widget 只是将其他 Widget 做一个组合，这些 Widget 本身并不需要显示，因此在 RenderObject 树上并没有相对应的节点
 
 
-<br/>
 
 三棵树如下图所示:
 
@@ -737,6 +740,8 @@ class _ScreenState extends State<Screen> {
 
 &emsp; 把widget中绘制的部分給分离出来形成了element树.这个主要是在widget中的绘制方法 **Widget build(BuildContext context)**,业务相关的不用管它.
 
+
+<br/>
 
 
 <br/>
@@ -831,6 +836,23 @@ class _ScreenState extends State<Screen> {
 &emsp; 在生命周期内，该类Widget所持有的数据可能会发生变化，这样的数据被称为State，这些拥有动态内部数据的Widget被称为StatefulWidget。比如复选框、Button等。State会与Context相关联，并且此关联是永久性的，State对象将永远不会改变其Context，即使可以在树结构周围移动，也仍将与该context相关联。
 
 &emsp; 当state与context关联时，state被视为已挂载。StatefulWidget由两部分组成，在初始化时必须要在createState()时初始化一个与之相关的State对象。
+
+
+
+<br/>
+
+[BuildContext深入理解,这个需要多看几遍,一遍看的有点迷糊](https://juejin.cn/post/6844903777565147150)
+
+[BuildContext,顾名思义，Build（构建Widget） Context（应用上下文），就是构建Widget中的应用上下文。](https://juejin.cn/post/6844903763656835086)
+
+所以BuildContext只出现在两个地方：
+
+- StatelessWidget.build 方法中：创建StatelessWidget的build方法
+State对象中：一个是创建StatefulWidget的State对象的build方法中，另一个是State的成员变量
+
+- BuildContext实际是Element,BuildContext是为了阻止直接对Element操作而抽象出来的，所以BuildContext是Element的抽象类，所有Element都继承自BuildContext。
+
+每一个Widget都有一个BuildContext。BuildContext是Widget在Widget树中位置的句柄。
 
 
 
