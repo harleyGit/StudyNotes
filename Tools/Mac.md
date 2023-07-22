@@ -286,8 +286,9 @@ Xcode编译项目缓存垃圾的目录：
 - 真机/模拟器运行项目非常慢的解决方法
 
 ```
-
-删除 ~/Library/Developer/Xcode/iOS DeviceSupport/该目录下，所有文件夹;
+//每次把一个设备接入电脑进行真机调试之前，电脑会对设备建立索引，也在此文件夹下生成对该设备系统的支持文件。于是这里存在了一堆对旧版本iOS设备支持的文件。
+//而我最近基本只对iOS9.3的设备进行真机调试。于是删除了所有低于9.3的文件夹
+~/Library/Developer/Xcode/iOS DeviceSupport/
 
 
 选择Xcode --> Window-->Devices and Simulators，找到真机设备，鼠标右键选择unpair the device
@@ -307,6 +308,51 @@ Command+shift+G 在Finder中，删除项目运行时产生的文件
 /Users/harleyhuang/Library/Developer/Xcode/DerivedData
 ```
 亲测，删除了3个项目文件。清了3.3G的内存
+
+
+
+<br/>
+
+- 每次打包App的dSYM等数据就保存在这里，把一些没用的版本删了。如果是上线了的版本还是保留吧
+
+```
+ ~/Library/Developer/Xcode/Archives/
+```
+
+
+<br/>
+
+- 同上，把没用的删了
+
+```
+ ~/Library/Developer/Xcode/Products/
+```
+
+
+<br/>
+
+- 这里保存了playground的项目缓存，全删了
+
+```
+~/Library/Developer/XCPGDevices/
+```
+
+
+<br/>
+
+另外，Xcode12占用空间过大的解决方法
+iOS.simruntime日常使用删不得，tvOS.simruntime， watchOS.simruntime ，大部分开发者接触不到，可直接删除，可以减少12g
+
+文件路径：
+
+
+```
+Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS.simruntime
+
+Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS.simruntim
+```
+
+
 
 <br/>
 <br/>
@@ -726,12 +772,15 @@ $ du -hd 5 |grep -n '\dG' |sort
 
 ```
 //该目录下的内容是Xcode在编译过程中产生的中间件，并且文件还特别大，在编译完成后能够被删除
+//这个文件夹中保存的是Xcode的缓存文件，曾经在Xcode跑过的所有项目的索引、build的信息等都会保存在这里。
+//删除后在下次打开项目编译的时候将会重新生成。由于这里包含了大量已经没用的项目的信息又懒得去筛选，于是把整个文件夹里面都删了
 ~/Library/Developer/Xcode/DerivedData
 
 
 //该目录下的内容是Xcode在做模拟器调试时生成的模拟器的数据，如果模拟器不再使用也可以删除
 ~/Library/Developer/CoreSimulator/Devices/
 ```
+
 [Xcode 空间的清理](https://www.jianshu.com/p/7b39a31c312d)
 
 [清理内存空间](https://www.jianshu.com/p/8fac91ff3453)
