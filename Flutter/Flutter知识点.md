@@ -962,6 +962,8 @@ Flutter中使用最普遍的数据库软件包如下：
 
 - 在 Flutter 中有两种处理异步操作的方式 Future 和 Stream，Future 用于处理单个异步操作，Stream 用来处理连续的异步操作。
 
+- [Future是异步操作,是不必立马等返回结果,而是有返回结果时再返回!](https://blog.csdn.net/chuyouyinghe/article/details/120356181)在主线程中执行Future还是会卡主线程的
+
 - Stream 和 Feature 不同的地方是 Stream 可以接收多个异步结果，而Feature 只有一个。
 
 - Stream 和 Future 是 Dart 异步处理的核心 API。Future 表示稍后获得的一个数据，所有异步的操作的返回值都用 Future来表示。但是Future只能表示一次异步获得的数据。而Stream表示多次异步获得的数据。比如界面上的按钮可能会被用户点击多次，所以按钮上的点击事件（onClick）就是一个Stream。简单地说，Future将返回一个值，而Stream将返回多次值。Dart中统一使用Stream处理异步事件流。Stream和一般的集合类似，都是一组数据，只不过一个是异步推送，一个是同步拉取。
@@ -1044,9 +1046,9 @@ Stream有两种订阅模式：**单订阅(single) 和 多订阅（broadcast）**
 > <h2 id='Future和Isolate有什么区别'>Future和Isolate有什么区别</h2>
 
 
-- future是异步编程，调用本身立即返回，并在稍后的某个时候执行完成时再获得返回结果。在普通代码中可以使用await 等待一个异步调用结束。
+- future是异步编程，调用本身后不是立即返回，并在稍后的某个时候执行完成时再获得返回结果。在普通代码中可以使用await 等待一个异步调用结束。
 
-- isolate是并发编程，Dartm有并发时的共享状态，所有Dart代码都在isolate中运行，包括最初的main()。
+- isolate是并发编程，Dart有并发时的共享状态，所有Dart代码都在isolate中运行，包括最初的main()。
 	
 	- 每个isolate都有它自己的堆内存，意味着其中所有内存数据，包括全局数据，都仅对该isolate可见，它们之间的通信只能通过传递消息的机制完成，消息则通过端口(port)收发。
 	
@@ -1133,23 +1135,6 @@ Future sendReceive(SendPort sendPort, String url) {
 }
 ```
 
-
-
-
-<br/>
-<br/>
-
-
-
-
-> <h3 id='Future和Isolate有什么区别'>Future和Isolate有什么区别？</h3>
-
-
-- future是异步编程，调用本身立即返回，并在稍后的某个时候执行完成时再获得返回结果。在普通代码中可以使用await 等待一个异步调用结束。
-
-- isolate是并发编程，Dartm有并发时的共享状态，所有Dart代码都在isolate中运行，包括最初的main()。
-
-- 每个isolate都有它自己的堆内存，意味着其中所有内存数据，包括全局数据，都仅对该isolate可见，它们之间的通信只能通过传递消息的机制完成，消息则通过端口(port)收发。isolate只是一个概念，具体取决于如何实现，比如在Dart VM中一个isolate可能会是一个线程，在Web中可能会是一个Web Worker。
 
 
 
