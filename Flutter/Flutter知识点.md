@@ -506,7 +506,7 @@ class mixinsX2 extends implA with X{
 
 
 
-> <h2 id='widget有几种key'>widget有几种key</h2>
+># <h2 id='widget有几种key'>[widget有几种key](https://space.bilibili.com/589533168/channel/seriesdetail?sid=381997)</h2>
 
 
 ![flutter1_2.png](./../Pictures/flutter1_2.png)
@@ -521,6 +521,39 @@ class mixinsX2 extends implA with X{
 
 
 &emsp; 在flutter中，每个widget都是被唯一标识的。这个唯一标识在build或rendering阶段由框架定义。该标识对应于可选的Key参数，如果省略，Flutter将会自动生成一个。
+
+
+<br/>
+
+&emsp; 当然key对于有状态的组件有意义,对与无状态的组件没有意义,这是为什呢?
+
+&emsp; 这是因为widget只是一种配置,不会改变,加不加key它都不会改变.widget对应的renderObject是其要渲染到屏幕上的实例,每一个renderObject组成了一颗树,每一个renderObject都带着一个state.这个state对应状态的改变,key标识着一个widget用来区分的.若是都相同key或者没有key在同一级别相同组件类型是无法区分的.
+
+&emsp; 在区分时,同一级别是先区分widge类型,比如若都是Text则再区分key.若不是同一类型的,则区分key意义不大
+
+&emsp; 在LocalKey中是用在同级别中的,比如如下的树🀄️,我用一个json字典表示:
+
+```
+{
+	A:{
+		a1,
+		a2,
+		a3,
+	},
+	B,
+	C,
+}
+```
+
+&emsp; a1, a2, a3 表示同一级别相同类型的,若是不加key当对他们3者设置不同的颜色,然后在对它进行调转颜色可能颜色变了,里面的文本不变(我记得不太清了),是因为比较是发现都是同一类型的,key都相同(因为没有设值,认为都统一),所以这个时候设置key.
+
+
+<br/>
+
+
+而针对GlobyKey它可以游走于不同级别的组件,比如他在A、B、C中的任意一个或者是其子组件中的一个.通过这个GlobyKey我们可以获取到其状态组件的widget、state、context.通过这个context可以拿到其大小,但是这个GlobKey有点耗性能,建议少用!除此之外用这个Globy通过设置Row或者Clomun可以巧妙达到横竖屏幕的作用
+
+
 
 
 <br/>
