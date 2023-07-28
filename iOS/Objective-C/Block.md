@@ -675,13 +675,13 @@ __weak typeof(self) weakSelf = self;
 
 ```
 //第二种解决方案：__block
-    __block ViewController *weakSelf = self;    //重新拷贝一份：weakSelf
-    //weakSelf(被self捕捉了) - self(捕捉了相应的block) - block(捕捉了weakSelf) --weakSelf(若是把weakSelf置为nil，block就不会持有weakSelf)
-    self.block = ^{
-        NSLog(@"%@", weakSelf.name);    //临时变量被持有,捕获在这个内存区域
-        weakSelf = nil;
-    };
-    self.block();
+__block ViewController *weakSelf = self;    //重新拷贝一份：weakSelf
+//weakSelf(被self捕捉了) - self(捕捉了相应的block) - block(捕捉了weakSelf) --weakSelf(若是把weakSelf置为nil，block就不会持有weakSelf)
+self.block = ^{
+    NSLog(@"%@", weakSelf.name);    //临时变量被持有,捕获在这个内存区域
+    weakSelf = nil;
+};
+self.block();
 ```
 
 <br/>
@@ -697,11 +697,11 @@ __weak typeof(self) weakSelf = self;
 typedef void(^KCBlock)(ViewController *);
 
 //第三种方式：去想：为什么会产生循环引用
-    //self -- block -- self
-    self.block = ^(ViewController *vc) {//传入一个self，变成一个临时变量持有，当出了这个作用域后就会释放
-        NSLog(@"%@", vc.name);
-    };
-    self.block(self);
+//self -- block -- self
+self.block = ^(ViewController *vc) {//传入一个self，变成一个临时变量持有，当出了这个作用域后就会释放
+    NSLog(@"%@", vc.name);
+};
+self.block(self);
 
 ```
 
@@ -718,26 +718,30 @@ typedef void(^KCBlock)(ViewController *);
 <br/>
 
 ```
-    __block int a = 10; //此时a存放在栈区域
-    NSLog(@"前   =   %p", &a);
-    void (^block)(void) = ^{
-        a ++;
-        NSLog(@"中   =   %p", &a);
-        NSLog(@"welcome to block %d", a);
-    };
-    block();
-    NSLog(@"后   =   %p", &a);
-
+__block int a = 10; //此时a存放在栈区域
+NSLog(@"前   =   %p", &a);
+void (^block)(void) = ^{
+    a ++;
+    NSLog(@"中   =   %p", &a);
+    NSLog(@"welcome to block %d", a);
+};
+block();
+NSLog(@"后   =   %p", &a);
 ```
 
 打印结果：
 
-`2019-02-28 18:03:54.337567+0800 Test[10932:362482] 前   =   0x7ffeed6c09b8`
-`2019-02-28 18:03:54.337783+0800 Test[10932:362482] 中   =   0x600001138ef8`
-`2019-02-28 18:03:54.337951+0800 Test[10932:362482] welcome to block 11`
-`2019-02-28 18:03:54.338088+0800 Test[10932:362482] 后   =   0x600001138ef8`
+```
+2019-02-28 18:03:54.337567+0800 Test[10932:362482] 前   =   0x7ffeed6c09b8
 
-分析:`前`中的a打印来自于栈，站之后被block捕捉，a的地址发生了变化。中 后 中的a被拷贝进入了堆地址中了。
+2019-02-28 18:03:54.337783+0800 Test[10932:362482] 中   =   0x600001138ef8
+
+2019-02-28 18:03:54.337951+0800 Test[10932:362482] welcome to block 11
+
+2019-02-28 18:03:54.338088+0800 Test[10932:362482] 后   =   0x600001138ef8
+```
+
+分析:`前`中的a打印来自于栈，栈之后被block捕捉，a的地址发生了变化。中、后的a被拷贝进入了堆地址中了。
 
 <br/>
 <br/>
@@ -828,6 +832,8 @@ struct __main_block_impl_0 {
     Desc = desc;// des 指针
   }
 };
+
+
 static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
 	//__cself是传进来的参数也就是block自身，那么__cself->age也就是block结构体的成员变量a。这里的int age 进行了值拷贝
   int age = __cself->age; // bound by copy
@@ -841,6 +847,8 @@ static struct __main_block_desc_0 {
   size_t reserved;
   size_t Block_size;
 } __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+
+
 int main(int argc, char * argv[]) {
     NSString * appDelegateClassName;
     /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool; 

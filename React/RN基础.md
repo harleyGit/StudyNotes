@@ -7,16 +7,19 @@
 	- [原生模块给JS发送消息](#原生模块给JS发送消息)
 	- [RCT_EXPORT_MODULE](#RCT_EXPORT_MODULE)
 	- [RN调用原生](#RN调用原生)
-		- 
 - [**语法基础**](#语法基础)
 	- [样式声明](#样式声明)
 	- [弹性布局](#弹性布局)
+	- [DeviceEventEmitter 实现发送和监听消息](#DeviceEventEmitter实现发送和监听消息)
 - [**组件**](#组件)
 	- [3大平台组件对比](#3大平台组件对比)
 - [**架构原理**](#架构原理)
 	- [线程模型](#线程模型)
 	- [启动过程](#启动过程)
 	- [新旧架构对比](#新旧架构对比)
+- **[项目知识点](#项目知识点)**
+	- [LTJS](#联通加速)
+		- [DeviceEventEmitter 实现发送和监听消息](#DeviceEventEmitter实现发送和监听消息)
 
 
 
@@ -150,6 +153,85 @@ npm run ios-start
 <br/>
 
 我们就可以使用上述的宏将iOS中的类作为模块导出来给rn使用!
+
+
+```
+// Test.h文件
+#import <Foundation/Foundation.h>
+#import <React/RCTBridgeModule.h>
+// 遵循RCTBridgeModule
+@interface Test : NSObject <RCTBridgeModule>
+@end
+
+// Test.m文件
+#import "Test.h"
+@implementation Test
+/// 导出一个模块，括号内是可选的，若不填，默认为类名
+RCT_EXPORT_MODULE(Test);
+/// 导出一个普通的异步方法，
+RCT_EXPORT_METHOD(test:(NSString *)name) {
+  NSLog(@"%@",name);
+}
+/// 导出一个支持Promise的异步方法
+RCT_EXPORT_METHOD(testPromise:(NSString *)name
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+  resolve(@"success");
+}
+/// 导出一个同步方法
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSString *, testSync:(NSString *)name) {
+  return [[NSString alloc]initWithFormat:@"hello %@", name];
+}
+
+// 设置悬浮球
+RCT_EXPORT_METHOD(setAccFloatBallVisibility:(BOOL)visible
+                  accessToken:(NSString *)token
+                  memberInfo:(NSDictionary *)memberInfo
+                  gameData:(NSString *)gameData
+                  sceneAppData:(NSString *)sceneAppData
+                  showDashboard:(BOOL)showDashboard){
+    //最好将其放入主线程中,因为RN调用可能返回在子线程中
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[FloatManager manager] setAccFloatBallVisibility:visible accessToken:token memberInfo:memberInfo gameData:[JSONUtil jsonObject:gameData] sceneAppData:[JSONUtil jsonObject:sceneAppData] showDashboard:showDashboard];
+    });
+}
+
+
+/// 导出常量供RN使用
+- (NSDictionary *)constantsToExport {
+  return @{@"testConstant": @"constant"};
+}
+@end
+
+```
+
+
+RN端如何使用？
+
+
+**导入NativeModules模块**
+
+NativeModules.原生导出的模块名.方法名进行调用，如NativeModules.Test.test("sync");（方法名默认是第一个冒号之前的内容）
+
+```
+js复制代码/// 导入模块
+import {NativeModules} from 'react-native';
+// 调用异步的方法
+NativeModules.Test.test("sync");
+// 使用await调用支持Promise的方法
+let res = await NativeModules.Test.testPromise('promise');
+console.log(res)
+/// 调用同步的方法
+let syncRes = NativeModules.Test.testSync('sync');
+console.log(syncRes);
+```
+
+[**why？**](https://juejin.cn/post/6965082621801955364)
+
+- 为什么RCT_EXPORT_METHOD参数中有了RCTPromiseResolveBlock和RCTPromiseRejectBlock在JS调用的时候就支持Promise了？
+- Test类是什么时候实例化的？
+- RN端的NativeModules是什么？NativeModules.Test又是什么?
+- 总之一个疑问，为什么我在原生导出一下，在RN里就能用js调用，这里面到底经历了什么？
 
 
 
@@ -344,7 +426,65 @@ const startGetNetworkSpeetTestInfo =()=>{
 
 
 
+<br/>
 
+***
+<br/><br/>
+
+> <h1 id='项目知识点'>项目知识点</h1>
+
+
+
+<br/><br/>
+
+> <h2 id='联通加速'>LTJS</h2>
+
+<br/><br/>
+
+> <h3 id='DeviceEventEmitter实现发送和监听消息'>DeviceEventEmitter实现发送和监听消息</h3>
+
+
+移动端开发过程中，页面间信息传递是常见的应用场景。
+
+注册、发送消息方式如下：
+
+```
+DeviceEventEmitter.emit('自定义名称',发送数据);
+```
+
+<br/>
+
+消息监听方式如下：
+
+```
+DeviceEventEmitter.addListener('名称',(events) ={使用数据events});
+```
+
+例如，在A页面注册和发送消息：
+
+```
+import {DeviceEventEmitter} from 'react-native';
+let param = {taobaoBind:false,walletSum:0.00,couponNum:0}
+DeviceEventEmitter.emit('meeting_receive’,param);  //发送消息，并携带param参数
+```
+
+
+<br/>
+
+然后，B页面监听消息，执行动作：
+
+```
+componentDidMount() {   
+	//页面加载完毕，开启监听消息
+   this.eventMeetingReceive =DeviceEventEmitter.addListener('meeting_receive', 
+   		(events) =>{this.setState({walletSum : events.walletSum});});
+}
+
+componentWillUnmount() {   
+	//当页面销毁时，移除事件的监听
+	this.eventMeetingReceive.remove();
+}
+```
 
 
 
