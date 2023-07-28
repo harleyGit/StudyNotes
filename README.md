@@ -664,8 +664,8 @@
 - **图片链接到影片**
 
 
-![](./../Pictures/bf0_0.png)
-![](./../Pictures/bf0_1.jpg)
+![](./Pictures/bf0_0.png)
+![](./Pictures/bf0_1.jpg)
 
 
 
