@@ -79,7 +79,7 @@
 
 > <h1 id='纲目'>纲目</h1>
 - [**Git提交规范**](#Git提交规范)
-- [**C语言**](#C语言)
+- [**C语言**](#CLanguage)
 - [**iOS开发**](#iOS开发)
 	- [**Objective-C**](#Objective-C)
 	- [**Swift**](#Swift)
@@ -113,7 +113,7 @@
 <br/>
 ￼
 
->#  <h1 id = 'C语言'>C语言</h1>
+>#  <h1 id = '#CLanguage'>C语言</h1>
 
 ><h2 id=''> C</h2>
 *	[**基础**](./C/C基础.md)
@@ -641,23 +641,6 @@
 </dl>
 
 <br/>
-
-- **图片链接到影片**
-
-</a>
-	<a href='https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121' target='_blank'>
-	<img src='./../Pictures/bf0_0.png' alt='死神' width='260' height='333' border='30'>
-</a>
-
-
-<div style="display:inline-block">
-	<img src='./../Pictures/bf0_0.png' alt='Mac桌面图片' width='960' height='540' border='30'>
-  <img src="./../Pictures/bf0_1.jpg" alt="image2">
-</div>
-
-
-
-
 <br/>
 
 - **字体颜色测试**
@@ -673,6 +656,16 @@
 # gray
 
 ```
+
+
+
+<br/>
+
+- **图片链接到影片**
+
+
+![](./../Pictures/bf0_0.png)
+![](./../Pictures/bf0_1.jpg)
 
 
 
