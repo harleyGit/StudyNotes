@@ -650,10 +650,10 @@
 </a>
 
 
-<div style="display:inline-block">
+
 	<img src='./../Pictures/bf0_0.png' alt='Mac桌面图片' width='960' height='540' border='30'>
   <img src="./../Pictures/bf0_1.jpg" alt="image2">
-</div>
+
 
 
 
