@@ -1,4 +1,4 @@
-> <h1 id = "常用">常用</h1>
+> <h1 id = '常用'>常用</h1>
 
 <br/>
 
@@ -77,7 +77,7 @@
 <br/>
 
 
-> <h1 id="纲目">纲目</h1>
+> <h1 id='纲目'>纲目</h1>
 - [**Git提交规范**](#Git提交规范)
 - [**C语言**](#C语言)
 - [**iOS开发**](#iOS开发)
@@ -113,7 +113,7 @@
 <br/>
 ￼
 
->#  <h1 id = "C语言">C语言</h1>
+>#  <h1 id = 'C语言'>C语言</h1>
 
 ><h2 id=''> C</h2>
 *	[**基础**](./C/C基础.md)
@@ -125,7 +125,7 @@
 <br/>
 <br/>
 
->## <h2 id = "C++">[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
+>## <h2 id = 'C++'>[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
 *	[**基础**](./C/基础.md)
 *	[作用域](./C/作用域.md)
 *	[基础语法](./C/基础语法.html)
@@ -153,7 +153,7 @@
 
 
 
-># <h1 id = "iOS开发">[iOS开发](https://github.com/apple)</h1>
+># <h1 id = 'iOS开发'>[iOS开发](https://github.com/apple)</h1>
 
 <br/>
 
@@ -162,7 +162,7 @@
 <br/>
 <br/>
 
-> <h2 id = "Objective-C">Objective-C</h2>
+> <h2 id = 'Objective-C'>Objective-C</h2>
 * [**OC资料**](./iOS/Objective-C/OC资料.md)
 * [**‌知识体系**](./iOS/Objective-C/知识体系.md)
 *	[**类**](./iOS/Objective-C/类.md)
@@ -258,7 +258,7 @@
 <br/>
 
 	       
->## <h2 id = "Swift">[**Swift**](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
+>## <h2 id = 'Swift'>[**Swift**](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
 * [**资料集**](./iOS/Swift/资料集.md)
 * [**基础**](./iOS/Swift/基础.md)
 * [**关键字**](./iOS/Swift/关键字.md)
@@ -281,7 +281,7 @@
 
 
 	       
-> <h2 id = "ProjectDesc">ProjectDesc</h2>
+> <h2 id = 'ProjectDesc'>ProjectDesc</h2>
 * [XKProject](./iOS/ProjectDesc/XKProject.md)
 * [**Desc(I)**](./iOS/ProjectDesc/Desc(I).md)
 * [**Desc(II)**](./iOS/ProjectDesc/Desc(II).md)
@@ -297,7 +297,7 @@
 <br/>
 
 
-> <h1 id = "Go">Go</h1>
+> <h1 id = 'Go'>Go</h1>
 - [语法](./Go/语法.md)
 - [语法(II)](./Go/语法(II).md)
 
@@ -308,7 +308,7 @@
 <br/>
 
 
-> <h1 id = "Flutter">Flutter</h1>
+> <h1 id = 'Flutter'>Flutter</h1>
 *	[**资料集**](./Flutter/资料集.md)
 *	[**类**](./Flutter/类.md)
 *	[**组件**](./Flutter/组件.md)
@@ -335,7 +335,7 @@
 <br/>
 
 
-> <h1 id = "JavaScript">JavaScript</h1>
+> <h1 id = 'JavaScript'>JavaScript</h1>
 - [**基础(I)‌**](./JavaScript/基础(I).md)
 - [**字体自适应**](./JavaScript/字体自适应.md)
 
@@ -348,7 +348,7 @@
 <br/>
 
 
-> <h1 id = "React">React</h1>
+> <h1 id = 'React'>React</h1>
 - [**资料集**](./React/资料集.md)
 - [**Node**](./React/Node.md)
 - [**基础(I)**](./React/基础(I).md)
@@ -374,7 +374,7 @@
 <br/>
 
 
-> <h1 id = "CSS">CSS</h1>
+> <h1 id = 'CSS'>CSS</h1>
 - [布局](./CSS/布局.md)
 
 
@@ -384,7 +384,7 @@
 ***
 <br/>
 
-> <h1 id = "EgretEngine">Egret Engine</h1>
+> <h1 id = 'EgretEngine'>Egret Engine</h1>
 * [位图使用](./EgretEngine/位图使用.md)
 * [配置](./EgretEngine/ee配置.md)
 * [项目伊始](./EgretEngine/ee项目伊始.md)
@@ -398,7 +398,7 @@
 <br/>
 
 
-> <h1 id = "软件测试">软件测试</h1>
+> <h1 id = '软件测试'>软件测试</h1>
 -  	[**测试笔记(I)**](./SoftwareTest/SoftTest/测试笔记(I).md)
 
 
@@ -409,7 +409,7 @@
 ***
 <br/>
 
-> <h1 id = "动画/绘图">动画/绘图</h1>
+> <h1 id = '动画/绘图'>动画/绘图</h1>
 *	[离屏渲染](./AnimationDraw/离屏渲染.md)
 *	[线条绘制(I)](./AnimationDraw/线条绘制(I).md)
 *	[图片绘制(I)](./AnimationDraw/图片绘制(I).md)
@@ -427,7 +427,7 @@
 ***
 <br/>
 
-> <h1 id = "类库">类库</h1>
+> <h1 id = '类库'>类库</h1>
 *	[阿里云(I)](./ClassLibrary/阿里云(I).md)
 *	[个人库](./ClassLibrary/个人库.md)
 *	[极光推送](./ClassLibrary/极光推送.md)
@@ -486,7 +486,7 @@
 
 
 
-> <h1 id = "数据存储">数据存储 </h1>
+> <h1 id = '数据存储'>数据存储 </h1>
 *	[数据持久化](./DataStorage/数据持久化.md)
 *	[相册和视频处理(I)](./DataStorage/相册和视频处理(I).md)
 *	[CoreData(I)](./DataStorage/CoreData(I).md)
@@ -501,7 +501,7 @@
 
 
 
-> <h1 id = "Network">Network</h1>
+> <h1 id = 'Network'>Network</h1>
 *	[**数据解析**](./Network/数据解析.md)
 *	[**网络安全(I)**](./Network/网络安全(I).md)
 *	[**网络安全(II)**](./Network/网络安全(II).md)
@@ -521,7 +521,7 @@
 ***
 <br/>
 
-> <h1 id = "工具">工具</h1>
+> <h1 id = '工具'>工具</h1>
 - [SourceTree](./Tools/SourceTree.md)
 * [CocoaPods](./Tools/CocoaPods.md)
 * [快捷键](./Tools/快捷键.md)
@@ -548,7 +548,7 @@
 
 
 
-> <h1 id = "读书笔记">读书笔记</h1>
+> <h1 id = '读书笔记'>读书笔记</h1>
 * 金融投资	
 	*	[**金融理财(I)**](./ReadNotes/金融理财(I).md)
 	*	[**金融理财(II)**](./ReadNotes/金融理财(II).md)
@@ -577,7 +577,7 @@
 
 
 
-> <h1 id = "优秀资料">优秀资料</h1>
+> <h1 id = '优秀资料'>优秀资料</h1>
 - **资源**
 	- [**脚本之家电子书PDF下载**](https://www.jb51.net/books/)
 	- [**Jiumo文档搜索引擎**](https://www.jiumodiary.com)
@@ -612,7 +612,7 @@
 
 
 
-> <h1 id = "优秀文章">优秀文章</h1>
+> <h1 id = '优秀文章'>优秀文章</h1>
 -	[iOS 底层安全分析(李斌同学)](https://juejin.im/user/3438928103236920/posts)
 -	[Flutter 基础知识](http://www.xmamiga.com/3428/)
 - 	[Cooci 老师博客(潭州课堂)](https://www.jianshu.com/u/5981a4f71db5)
@@ -626,7 +626,7 @@
 <br/>
 
 
-> <h1 id = "参考资料">参考资料</h1>
+> <h1 id = '参考资料'>参考资料</h1>
 
 * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
@@ -645,20 +645,22 @@
 - **图片链接到影片**
 
 </a>
-	<a href="https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121" target="_blank">
-	<img src="https://pic.17qq.com/uploads/plokohonlv.jpeg" alt="死神" width="260" height="333" border="30">
-</a>
-
-</a>
-	<img src="./Pictures/desktop2.tiff" alt="Mac桌面图片" width="960" height="540" border="30">
+	<a href='https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121' target='_blank'>
+	<img src='./../Pictures/bf0_0.png' alt='死神' width='260' height='333' border='30'>
 </a>
 
 
-[![死神 BLEACH-w150](https://pic.17qq.com/uploads/plokohonlv.jpeg)](https://www.bilibili.com/video/BV1ux411Z797?from=search&seid=12561028895783817121)
+<div style="display:inline-block">
+	<img src='./../Pictures/bf0_0.png' alt='Mac桌面图片' width='960' height='540' border='30'>
+  <img src="./../Pictures/bf0_1.jpg" alt="image2">
+</div>
+
+
+
 
 <br/>
 
-* **字体颜色测试**
+- **字体颜色测试**
 
 ```diff
 
