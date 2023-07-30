@@ -340,6 +340,8 @@ int main(void) {
    
     //停止Runloop
     //任务执行完以后,要对其进行销毁释放资源 [NSRunLoop currentRunLoop].getCFRunLoop 等价于 CFRunLoopGetCurrent()
+    //疑问: 为什么这里不用 [NSRunLoop currentRunLoop].getCFRunLoop
+    // 解答:这是因为[NSRunLoop currentRunLoop].getCFRunLoop 线程不安全,而Core Foundation的C语言API是安全的,因为里面加了锁了
     CFRunLoopStop(CFRunLoopGetCurrent());
     
     //停止强引用
