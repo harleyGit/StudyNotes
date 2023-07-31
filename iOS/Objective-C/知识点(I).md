@@ -4464,6 +4464,13 @@ isa中不同的位域代表不同的含义。
 	- 如果为1，那么引用计数会存储在一个叫SideTable的类的属性中
 
 
+
+<br/>
+
+![ios_oc1_113_0.png](./../../Pictures/ios_oc1_113_0.png)
+
+
+
 <br/>
 <br/>
 
@@ -4479,7 +4486,7 @@ objc_object::retain()
 {
     assert(!isTaggedPointer());
  
-    if (fastpath(!ISA()->hasCustomRR())) {
+    if (fastpath(!ISA()->hasCustomRR())) {//一般不会走这,因为这是判断是否你自定义copy或者retain实现的
         //在ARC中直接调用
         return rootRetain();
     }
