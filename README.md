@@ -203,7 +203,7 @@
 * [Video(I)](./iOS/Objective-C/Video(I).md)
 * [单元测试(I)](./iOS/Objective-C/单元测试(I).md)
 * [语法精练(I)](./iOS/Objective-C/语法精练(I).md)
-* [WKWebView(I)](./iOS/WKWebView(I).md)
+* [WKWebView](./iOS/WKWebView.md)
 * [**GUI框架**](./iOS/Objective-C/GUI框架.md)
 	* [UIButton](./iOS/Objective-C/UIButton.md)
 	* [UICollectionView](./iOS/Objective-C/UICollectionView.md)
@@ -592,7 +592,7 @@
 -	[**Git教程**](https://bingohuang.gitbooks.io/progit2/content/01-introduction/sections/about-version-control.html)
 -	[**极客方舟**](https://zhuanlan.zhihu.com/p/82986496)
 -	[**算法网**](http://ddrv.cn)
--	[**看云[iBook]**](https://www.kancloud.cn/explore)
+-	[**看云iBook**](https://www.kancloud.cn/explore)
 -	[**计算机语言教程**](http://codingdict.com/tutorials)
 -	[**易百教程**](https://www.yiibai.com)
 -	[**OC代码转Swift代码**](https://swiftify.com/home)
@@ -664,7 +664,7 @@
 - **图片链接到影片**
 
 
-![](./Pictures/bf0_0.png)
+![](./Pictures/bf0_0x.png)
 ![](./Pictures/bf0_1.jpg)
 
 
