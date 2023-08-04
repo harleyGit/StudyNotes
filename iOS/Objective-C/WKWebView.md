@@ -422,6 +422,9 @@ self.webview.navigationDelegate = self;
 
 ># <h2 id='加载优化白屏'>[加载优化白屏](https://juejin.cn/post/6887161842406260744)</h2>
 
+
+[**代码Demo-有问题可以自己解决,只是给个思路**](https://github.com/harleyGit/MLC/tree/develop/Demo%E6%A1%88%E4%BE%8B/ZXYWebView-%E7%99%BD%E5%B1%8F%E5%8A%A0%E8%BD%BD%E4%BC%98%E5%8C%96)
+
 优化之路包括前端和客户端，常规的前端和后端的性能优化已有前辈们总结过最佳实践，主要的是：
 
 ```
