@@ -20,6 +20,9 @@
 - **[项目知识点](#项目知识点)**
 	- [LTJS](#联通加速)
 		- [DeviceEventEmitter 实现发送和监听消息](#DeviceEventEmitter实现发送和监听消息)
+- **资料**
+	- [iOS原生主动调RN之RCTEventEmitter](https://www.jianshu.com/p/7973a2b91f24)
+	- [Flutter 核心概念详解： Widget、State、Context 及 InheritedWidget(掘金)](https://juejin.cn/post/6844903784187953165#heading-10)
 
 
 

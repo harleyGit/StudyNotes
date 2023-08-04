@@ -44,9 +44,9 @@
 - [**AFHTTPSessionManager**](#AFHTTPSessionManager)
 - [**AFURLRequestSerialization**](#AFURLRequestSerialization)
 - [多路复用](#多路复用)
-- [**参考资料:**](#)
-	- [OC中的NSURLSession-
-一叶知秋0830(掘金)](https://juejin.cn/post/6844903971824500743)
+- **资料**
+	- [深度理解NSURLProtocol-默许中间人攻击(掘金)](https://juejin.cn/post/6844904079458566152)
+	- [OC中的NSURLSession-叶知秋0830(掘金)](https://juejin.cn/post/6844903971824500743)
 	- [ **AFNetworking到底做了什么？(二)**](https://www.jianshu.com/p/f32bd79233da)
 	- [**AFNetWorking 3.0之前设置请求头**](https://www.jianshu.com/p/45c722f726fd)
 	- [**请求头的配置用来完成HTTP Basic Auth的鉴权**](https://blog.csdn.net/deft_mkjing/article/details/51900737)

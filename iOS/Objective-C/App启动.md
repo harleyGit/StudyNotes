@@ -17,7 +17,8 @@
 	- [代理方法](#代理方法)
 	- [方向设置](#方向设置)
 - 	[**UIViewController生命周期**](UIViewController生命周期)
-- 	[**资料**]()
+- **资料**
+	- [深入理解iOS App的启动过程](https://blog.csdn.net/Hello_Hwc/article/details/78317863)
 	- [**iOS强制横屏和竖屏**](https://blog.csdn.net/ghl2318560278/article/details/51579814)
 	- [**UIApplication sharedapplication用法总结**](https://blog.csdn.net/huang2009303513/article/details/39501225)
 	- [**使用系统打开**](https://blog.csdn.net/potato512/article/details/43968375)
