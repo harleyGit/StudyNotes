@@ -91,7 +91,7 @@
 >## <h2 id='HTTP状态码'>[HTTP 状态码](https://github.com/ChenYilong/iOSDevelopmentTips/blob/master/Tips/HTTP状态码汇总.md)</h2>
 
 
-![ios_oc1_113_1](./../../Pictures/ios_oc1_113_1.png)
+![ios_oc1_113_7](./../../Pictures/ios_oc1_113_7.png)
 
 
 
