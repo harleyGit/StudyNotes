@@ -90,6 +90,11 @@
 
 >## <h2 id='HTTP状态码'>[HTTP 状态码](https://github.com/ChenYilong/iOSDevelopmentTips/blob/master/Tips/HTTP状态码汇总.md)</h2>
 
+
+![ios_oc1_113_1](./../../Pictures/ios_oc1_113_1.png)
+
+
+
 当我们对一个URL地址做请求开发时,往往可以看到服务器返还给我们的一些状态码,比如:[**200, 404, 500, 301等**](https://www.runoob.com/http/http-status-codes.html),其义分别如下:
 - 200 - 请求成功
 - 301 - 资源（网页等）被永久转移到其它URL

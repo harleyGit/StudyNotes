@@ -3561,6 +3561,21 @@ storehub提问：NSNotification的class方法指向谁？
 
 
 
+
+<br/>
+Runloop监测卡顿部分代码,逻辑教育的,😄哈哈:
+
+![ios_oc1_113_3](./../../Pictures/ios_oc1_113_3.png)
+![ios_oc1_113_4](./../../Pictures/ios_oc1_113_4.png)
+![ios_oc1_113_5](./../../Pictures/ios_oc1_113_5.png)
+![ios_oc1_113_6](./../../Pictures/ios_oc1_113_6.png)
+
+
+
+
+<br/>
+<br/>
+
 - **保持线程保活:**
 
 ![ios_oc2_30.png](./../../Pictures/ios_oc2_30.png)
