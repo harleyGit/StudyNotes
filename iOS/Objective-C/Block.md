@@ -136,6 +136,52 @@ OC 函数中的局部变量在栈中存放。
 
 
 
+<br/>
+<br/>
+
+典型几个变量在代码中的表示:
+
+![ios_oc1_113_1.png](./../../Pictures/ios_oc1_113_1.png)
+
+
+
+示例:
+
+```
+@implementation MCBlock
+
+// 全局变量
+int global_var = 4;
+
+// 静态全局变量
+static int static_global_var = 5;
+
+- (void)method
+{
+    // 基本数据类型的局部变量
+    int var = 1;
+    
+    // 局部静态变量
+    static int static_var = 2;
+    
+    // 对象类型的局部变量
+    __unsafe_unretained id unsafe_obj = nil;
+    __strong id strong_obj = nil;
+    
+    void (^MYBlock)(void) = ^{
+        NSLog(@"1:%d",global_var);
+        NSLog(@"2:%d",static_global_var);
+        NSLog(@"3:%d",var);
+        NSLog(@"4:%d",static_var);
+        NSLog(@"5:%@",unsafe_obj);
+        NSLog(@"6:%@",strong_obj);
+    };
+    MYBlock();
+}
+
+@end
+```
+
 
 <br/>
 <br/>
