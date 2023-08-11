@@ -29,6 +29,7 @@
 	- [下载命令工具](#下载命令工具)
 		- [you-get命令工具](#you-get) 
 		- [youtube-dl命令工具](#youtube-dl)
+		- [FFmpeg下载m3u8站mp4](#FFmpeg下载m3u8站mp4)
 - [**iPhone纯色图片**](#纯色图片)
 - [**电子产品**](#电子产品)
 	- [iPad](#iPad)
@@ -952,6 +953,78 @@ Options:
 
 
 
+<br/><br/>
+
+> <h2 id='FFmpeg下载m3u8站mp4'>FFmpeg下载m3u8站mp4</h2>
+
+
+
+- ❖ **安装homebrew**
+
+1. 打开终端，输入
+
+```
+ruby -e"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+按enter
+
+
+<br/>
+
+2. 安装完成后（等全部命令执行完成之后），在终端输入
+
+```
+brew
+```
+
+<br/>
+<br/>
+
+- **❖安装ffmpeg**
+
+1.使用homebrew安装ffmpeg，在终端输入
+
+这个ffmpeg有点大,下载安装的时候最好在终端挂上代理,进行安装:
+
+```
+brew install ffmpeg
+```
+
+按enter
+
+<br/>
+
+2. 安装完成后（等全部命令执行完成之后），在终端输入
+
+```
+brew info ffmpeg
+```
+
+验证成功与否，如果有如下信息则安装成功
+
+
+![tool0_0](./../Pictures/tool0_0.png)
+
+
+<br/>
+<br/>
+
+
+- **❖ 下载转化m3u8到mp4**
+
+（6☛）1.打开终端，输入
+
+```
+//cd 某个文件夹路径
+cd /User/xx
+
+//ffmpeg -i '视频地址' ./输出的文件名.mp4
+ffmpeg -i 'https://video.twimg.com/amplify_video/1689197552615444480/pl/oZLnz_7Q9bvFaHBMxll.m3u8?tag=14&container=fmp4' ./xx.mp4
+```
+
+
+（7☛）2.等待下载完成，就可以在下载文件夹看到下载并且转化好的mp4格式视频
 
 
 
