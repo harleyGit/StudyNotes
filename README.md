@@ -1,17 +1,17 @@
 ># <h1 id='目录'>目录</h1>
 - [**Git提交规范**](#git提交规范)
 	- [模块图片相对路径](#模块图片相对路径)
-- [**C语言**](#c-Language)
-- [**iOS开发**](#iOS开发)
-	- [**Objective-C**](#objective-C)
+- [**C语言**](#c-language)
+- [**iOS开发**](#ios开发)
+	- [**Objective-C**](#objective-c)
 	- [**Swift**](#swift)
-	- [**ProjectDesc**](#projectDesc)
+	- [**ProjectDesc**](#project-desc)
 - [**Go**](#go)
 - [**Flutter**](#flutter)
-- [**JavaScript**](#javaScript)
+- [**JavaScript**](#java-script)
 - [**React**](#react)
 - [**CSS**](#css)
-- [**Egret Engine**](#egretEngine)
+- [**Egret Engine**](#egret-engine)
 - [**软件测试**](#软件测试)
 - [**底层**](#底层)
 - [**动画/绘图**](#动画/绘图)
@@ -69,9 +69,9 @@
 <br/>
 ￼
 
->#  <h1 id = '#c-Language'>C语言</h1>
+>#  <h1 id = 'c-language'>C语言</h1>
 
-><h2 id=''> C</h2>
+><h2 id='c'> C</h2>
 *	[**基础**](./C/C基础.md)
 *	[**指针**](./C/C指针.md)
 *	[**数据结构**](./C/数据结构.md)
@@ -109,7 +109,7 @@
 
 
 
-># <h1 id = 'iOS开发'>[iOS开发](https://github.com/apple)</h1>
+># <h1 id = 'ios开发'>[iOS开发](https://github.com/apple)</h1>
 
 <br/>
 
@@ -118,7 +118,7 @@
 <br/>
 <br/>
 
-> <h2 id = 'objective-C'>objective-C</h2>
+> <h2 id = 'objective-c'>Objective-C</h2>
 * [**OC资料**](./iOS/Objective-C/OC资料.md)
 * [**‌知识体系**](./iOS/Objective-C/知识体系.md)
 *	[**类**](./iOS/Objective-C/类.md)
@@ -237,7 +237,7 @@
 
 
 	       
-> <h2 id = 'projectDesc'>ProjectDesc</h2>
+> <h2 id = 'project-desc'>ProjectDesc</h2>
 * [XKProject](./iOS/ProjectDesc/XKProject.md)
 * [**Desc(I)**](./iOS/ProjectDesc/Desc(I).md)
 * [**Desc(II)**](./iOS/ProjectDesc/Desc(II).md)
@@ -291,7 +291,7 @@
 <br/>
 
 
-> <h1 id = 'javaScript'>JavaScript</h1>
+> <h1 id = 'java-script'>JavaScript</h1>
 - [**基础(I)‌**](./JavaScript/基础(I).md)
 - [**字体自适应**](./JavaScript/字体自适应.md)
 
@@ -340,7 +340,7 @@
 ***
 <br/>
 
-> <h1 id = 'egretEngine'>Egret Engine</h1>
+> <h1 id = 'egret-engine'>Egret Engine</h1>
 * [位图使用](./EgretEngine/位图使用.md)
 * [配置](./EgretEngine/ee配置.md)
 * [项目伊始](./EgretEngine/ee项目伊始.md)
@@ -634,7 +634,7 @@
 <br/>
 <br/>
 
-> <h2 id = 'markdown语法测试'>Markdown语法测试</h2>
+># <h2 id = 'markdown语法测试'>[Markdown语法测试](https://www.zybuluo.com/mdeditor?url=https://www.zybuluo.com/static/editor/md-help.markdown#cmd-markdown-%E9%AB%98%E9%98%B6%E8%AF%AD%E6%B3%95%E6%89%8B%E5%86%8C)</h2>
 
 * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
@@ -674,6 +674,30 @@
 
 ![](./Pictures/bf0_0x.png)
 ![](./Pictures/bf0_1.jpg)
+
+
+<br/><br/>
+
+># <h2 id='甘特图'>[甘特图](https://www.zybuluo.com/mdeditor?url=https://www.zybuluo.com/static/editor/md-help.markdown#cmd-markdown-%E7%AE%80%E6%98%8E%E8%AF%AD%E6%B3%95%E6%89%8B%E5%86%8C)</h2>
+
+甘特图内在思想简单。基本是一条线条图，横轴表示时间，纵轴表示活动（项目），线条表示在整个期间上计划和实际的活动完成情况。它直观地表明任务计划在什么时候进行，及实际进展与计划要求的对比。
+
+```gantt
+    title 项目开发流程
+    section 项目确定
+        需求分析       :a1, 2016-06-22, 3d
+        可行性报告     :after a1, 5d
+        概念验证       : 5d
+    section 项目实施
+        概要设计      :2016-07-05  , 5d
+        详细设计      :2016-07-08, 10d
+        编码          :2016-07-15, 10d
+        测试          :2016-07-22, 5d
+    section 发布验收
+        发布: 2d
+        验收: 3d
+```
+
 
 
 
