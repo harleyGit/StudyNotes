@@ -1,8 +1,42 @@
-> <h1 id = '常用'>常用</h1>
+># <h1 id='目录'>目录</h1>
+- [**Git提交规范**](#git提交规范)
+	- [模块图片相对路径](#模块图片相对路径)
+- [**C语言**](#c-Language)
+- [**iOS开发**](#iOS开发)
+	- [**Objective-C**](#objective-C)
+	- [**Swift**](#swift)
+	- [**ProjectDesc**](#projectDesc)
+- [**Go**](#go)
+- [**Flutter**](#flutter)
+- [**JavaScript**](#javaScript)
+- [**React**](#react)
+- [**CSS**](#css)
+- [**Egret Engine**](#egretEngine)
+- [**软件测试**](#软件测试)
+- [**底层**](#底层)
+- [**动画/绘图**](#动画/绘图)
+- [**加密**](#加密)
+- [**类库**](#类库)
+- [**多线程**](#多线程)
+- [**数据存储**](#数据存储)
+- [**Network**](#network)
+- [**数据结构**](#数据结构)
+- [**工具**](#工具)
+- [**读书笔记**](#读书笔记)
+- [**优秀资料**](#优秀资料)
+- [**优秀文章**](#优秀文章)
+- [**常用**](#常用)
+
 
 <br/>
+<br/>
+<br/>
 
-> ## **Git提交规范**
+***
+<br/>
+
+> <h1 id='git提交规范'>Git提交规范</h1>
+
 
 ```
 - fix: 修复改bug;
@@ -27,84 +61,6 @@
 ⌃ -> Control
 ```
 
-<br/>
-<br/>
-
-> <h2 id='模块图片相对路径'>模块图片相对路径</h2>
-
-- **iOS**
-	- Objective-C
-	- Swift
-
-```
-![](./../../Pictures/)
-```
-
-- **其他文件夹**
-
-```
-![](./../Pictures/)
-```
-
-- **标题**
-
-```
-<br/>
-
-***
-<br/>
-<br/>
-
-># <h1 id=''></h1>
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-<br/>
-<br/>
-
-> <h3 id=''></h3>
-```
-
-
-<br/>
-<br/>
-
-***
-<br/>
-
-
-> <h1 id='纲目'>纲目</h1>
-- [**Git提交规范**](#Git提交规范)
-- [**C语言**](#CLanguage)
-- [**iOS开发**](#iOS开发)
-	- [**Objective-C**](#Objective-C)
-	- [**Swift**](#Swift)
-	- [**ProjectDesc**](#ProjectDesc)
-- [**Go**](#Go)
-- [**Flutter**](#Flutter)
-- [**JavaScript**](#JavaScript)
-- [**React**](#React)
-- [**CSS**](#CSS)
-- [**Egret Engine**](#EgretEngine)
-- [**软件测试**](#软件测试)
-- [**底层**](#底层)
-- [**动画/绘图**](#动画/绘图)
-- [**加密**](#加密)
-- [**类库**](#类库)
-- [**多线程**](#多线程)
-- [**数据存储**](#数据存储)
-- [**Network**](#Network)
-- [**数据结构**](#数据结构)
-- [**工具**](#工具)
-- [**读书笔记**](#读书笔记)
-- [**优秀资料**](#优秀资料)
-- [**优秀文章**](#优秀文章)
-- [**参考资料**](#参考资料)
-
 
 
 <br/>
@@ -113,7 +69,7 @@
 <br/>
 ￼
 
->#  <h1 id = '#CLanguage'>C语言</h1>
+>#  <h1 id = '#c-Language'>C语言</h1>
 
 ><h2 id=''> C</h2>
 *	[**基础**](./C/C基础.md)
@@ -125,7 +81,7 @@
 <br/>
 <br/>
 
->## <h2 id = 'C++'>[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
+>## <h2 id = 'c++'>[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
 *	[**基础**](./C/基础.md)
 *	[作用域](./C/作用域.md)
 *	[基础语法](./C/基础语法.html)
@@ -162,7 +118,7 @@
 <br/>
 <br/>
 
-> <h2 id = 'Objective-C'>Objective-C</h2>
+> <h2 id = 'objective-C'>objective-C</h2>
 * [**OC资料**](./iOS/Objective-C/OC资料.md)
 * [**‌知识体系**](./iOS/Objective-C/知识体系.md)
 *	[**类**](./iOS/Objective-C/类.md)
@@ -258,7 +214,7 @@
 <br/>
 
 	       
->## <h2 id = 'Swift'>[**Swift**](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
+>## <h2 id = 'swift'>[**Swift**](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
 * [**资料集**](./iOS/Swift/资料集.md)
 * [**基础**](./iOS/Swift/基础.md)
 * [**关键字**](./iOS/Swift/关键字.md)
@@ -281,7 +237,7 @@
 
 
 	       
-> <h2 id = 'ProjectDesc'>ProjectDesc</h2>
+> <h2 id = 'projectDesc'>ProjectDesc</h2>
 * [XKProject](./iOS/ProjectDesc/XKProject.md)
 * [**Desc(I)**](./iOS/ProjectDesc/Desc(I).md)
 * [**Desc(II)**](./iOS/ProjectDesc/Desc(II).md)
@@ -297,7 +253,7 @@
 <br/>
 
 
-> <h1 id = 'Go'>Go</h1>
+> <h1 id = 'go'>Go</h1>
 - [语法](./Go/语法.md)
 - [语法(II)](./Go/语法(II).md)
 
@@ -308,7 +264,7 @@
 <br/>
 
 
-> <h1 id = 'Flutter'>Flutter</h1>
+> <h1 id = 'flutter'>Flutter</h1>
 *	[**资料集**](./Flutter/资料集.md)
 *	[**类**](./Flutter/类.md)
 *	[**组件**](./Flutter/组件.md)
@@ -335,7 +291,7 @@
 <br/>
 
 
-> <h1 id = 'JavaScript'>JavaScript</h1>
+> <h1 id = 'javaScript'>JavaScript</h1>
 - [**基础(I)‌**](./JavaScript/基础(I).md)
 - [**字体自适应**](./JavaScript/字体自适应.md)
 
@@ -348,7 +304,7 @@
 <br/>
 
 
-> <h1 id = 'React'>React</h1>
+> <h1 id = 'react'>React</h1>
 - [**资料集**](./React/资料集.md)
 - [**Node**](./React/Node.md)
 - [**基础(I)**](./React/基础(I).md)
@@ -374,7 +330,7 @@
 <br/>
 
 
-> <h1 id = 'CSS'>CSS</h1>
+> <h1 id = 'css'>CSS</h1>
 - [布局](./CSS/布局.md)
 
 
@@ -384,7 +340,7 @@
 ***
 <br/>
 
-> <h1 id = 'EgretEngine'>Egret Engine</h1>
+> <h1 id = 'egretEngine'>Egret Engine</h1>
 * [位图使用](./EgretEngine/位图使用.md)
 * [配置](./EgretEngine/ee配置.md)
 * [项目伊始](./EgretEngine/ee项目伊始.md)
@@ -501,7 +457,7 @@
 
 
 
-> <h1 id = 'Network'>Network</h1>
+> <h1 id = 'network'>Network</h1>
 *	[**数据解析**](./Network/数据解析.md)
 *	[**网络安全(I)**](./Network/网络安全(I).md)
 *	[**网络安全(II)**](./Network/网络安全(II).md)
@@ -620,13 +576,65 @@
 -	[官员同事Blog](https://zhangdinghao.cn)
 
 
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='常用'>常用</h1>
+
+
+<br/>
+<br/>
+
+> <h2 id='模块图片相对路径'>模块图片相对路径</h2>
+
+- **iOS**
+	- Objective-C
+	- Swift
+
+```
+![](./../../Pictures/)
+```
+
+- **其他文件夹**
+
+```
+![](./../Pictures/)
+```
+
+- **标题**
+
+```
 <br/>
 
 ***
 <br/>
+<br/>
+
+># <h1 id=''></h1>
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
 
 
-> <h1 id = '参考资料'>参考资料</h1>
+<br/>
+<br/>
+
+> <h3 id=''></h3>
+```
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id = 'markdown语法测试'>Markdown语法测试</h2>
 
 * [GitHub Markdown 语法说明](https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md#p)
 
