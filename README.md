@@ -5,7 +5,6 @@
 - [**iOS开发**](#ios开发)
 	- [**Objective-C**](#objective-c)
 	- [**Swift**](#swift)
-	- [**ProjectDesc**](#project-desc)
 - [**Go**](#go)
 - [**Flutter**](#flutter)
 - [**JavaScript**](#java-script)
@@ -229,21 +228,6 @@
 * **底层**
 	* [动态性](./iOS/Swift/动态性.md)
 - [**‌**](./iOS/Swift/知识点(I).md)
-
-
-<br/>
-<br/>
-<br/>
-
-
-	       
-> <h2 id = 'project-desc'>ProjectDesc</h2>
-* [XKProject](./iOS/ProjectDesc/XKProject.md)
-* [**Desc(I)**](./iOS/ProjectDesc/Desc(I).md)
-* [**Desc(II)**](./iOS/ProjectDesc/Desc(II).md)
-* [**项目实战优化**](https://www.jianshu.com/u/751ece4bc422)
-* [FlutterInterview](./iOS/ProjectDesc/FlutterInterview.md)
-* [**‌**](./iOS/ProjectDesc/Swift知识点(I).md)
 
 
 
