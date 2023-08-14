@@ -8,6 +8,7 @@
 - [**组件库**](#组件库)
 	- [Dio网络库](#Dio网络库)
 		- [扩展拦截器类](#扩展拦截器类)
+	- [fluro路由组件](#fluro路由组件)
 	- 	[flutter_ume调试工具](#flutter_ume调试工具)
 	- [common_utils-工具库](#common_utils-工具库)
 	- [keyboard_actions处理键盘事件](#keyboard_actions处理键盘事件)
@@ -127,6 +128,28 @@ Flutter: 选择了 1688
 <br/><br/>
 
 ># <h2 id='Dio网络库'>[Dio网络库](https://github.com/cfug/dio/blob/main/README-ZH.md)</h2>
+
+
+
+
+<br/><br/>
+
+> <h2 id='fluro路由组件'>fluro路由组件</h2>
+
+
+使用:
+
+```
+FluroRouter().navigateTo(context, path,
+  replace: replace,
+  clearStack: clearStack,
+  transition: TransitionType.native,//原生形式
+  routeSettings: RouteSettings(
+    arguments: arguments,
+  ),
+);
+```
+
 
 
 <br/><br/>
