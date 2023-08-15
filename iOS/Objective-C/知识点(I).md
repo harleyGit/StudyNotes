@@ -86,7 +86,8 @@
 	- [单例类](#单例类)
 	- [协议代理](#协议代理)
 	- [KVC和KVO](#KVC和KVO)
-		- 	[KVO的原理](#KVO的原理)
+		- [KVO的原理](#KVO的原理)
+		- [kvo、delegate、Notification3者比较区别](#kvo、delegate、Notification3者比较区别)
 - [**底层**](#底层)
 	- [Mach-O文件有哪几部分组成(同程旅行)](#Mach-O文件有哪几部分组成)
 	- [Runtime](#Runtime)
@@ -3391,11 +3392,24 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 	- 我猜，这也是 KVO 回调机制，为什么都俗称KVO技术为黑魔法的原因之一吧：内部神秘、外观简洁。
 
 - ②子类setter方法剖析：KVO 的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用 2 个方法：
-被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；之后， observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的 setter 方法这种继承方式的注入是在运行时而不是编译时实现的。
+	- 被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；
+	- 当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；
+	- 之后， observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的 setter 方法这种继承方式的注入是在运行时而不是编译时实现的。
+
+
+<br/>
+
 KVO 为子类的观察者属性重写调用存取方法的工作原理在代码中相当于：
 
 
 ```
+//手动通过下面的方法关闭kvo
++ (BOOL)automaticallyNotifiesObserversForKey:(NSString *)key {
+	return NO;
+}
+
+// 这时若是直接self.name = @"1111"; 是没有办法触发kvo观察属性方法的
+// 但是我们可以重写setName方法,加入willChangeValueForKey和didChangeValueForKey方法,这样就可以触发了
 -(void)setName:(NSString *)newName{
     [self willChangeValueForKey:@"name"];    //KVO 在调用存取方法之前总调用
     [super setValue:newName forKey:@"name"]; //调用父类的存取方法
@@ -3403,6 +3417,29 @@ KVO 为子类的观察者属性重写调用存取方法的工作原理在代码�
 }
 ```
 
+<br/>
+
+Kvo其实也可以对成员变量进行值改变的观察,但是当我们这么设置时:
+
+```
+[self.myObject addObserver:self
+                       forKeyPath:@"varibaleName "
+                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
+                          context:nil];
+
+//varibaleName是成员变量
+//当我们这样设置时,并不会触发观察者方法
+self.varibaleName = @"sss";
+
+//我们可以调用setValue:forKey,进行设值.这样就可以触发观察者方法了
+[self setValue:@"sss" forKey:@"varibaleName "];
+```
+
+&emsp; 因为我们可以通过查看GNU(可以作为参照)代码中看到,在setValue:forKey、willChangeValueForKey:、didChangeValueForKey: 方法中才能触发kvo属性观察者方法.而且在setValue:forKey方法中还有一个类似通知的方法再调用observeValueForKeyPath方法达到属性观察的功能(这是看的学习视频了解的)
+
+
+<br/>
+<br/>
 
 **嘿侍面试提问：**	当使用KVO时，一个类的实例使用kvo，它的属性值改变了，那它的另一个实例变量属性值会变吗？
 
@@ -3475,6 +3512,20 @@ storehub提问：NSNotification的class方法指向谁？
 2021-05-27 12:31:50.925324+0800 KVO演示[5668:218909] ---->>>4: NSKVONotifying_MyKVOModel
 
 ```
+
+
+
+<br/><br/>
+
+
+> <h2 id='kvo、delegate、Notification3者比较区别'>kvo、delegate、Notification3者比较区别</h2>
+
+
+![ios_oc1_113_32](./../../Pictures/ios_oc1_113_32.png)
+
+KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容易监测出来!
+
+
 
 
 
