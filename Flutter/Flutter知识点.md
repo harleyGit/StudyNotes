@@ -2,8 +2,9 @@
 - [**Swift知识点(I)**](./../iOS/Swift/知识点(I).md)
 - [**React知识点**](./../React/React知识点.md)
 
+<br/><br/><br/>
 
-> <h2 id=''></h2>
+># <h2 id=''>[《Flutter实战·第二版》](https://book.flutterchina.club/)</h2>
 - [**原生**](#原生)
 	- [如何与iOS和Android通信](#如何与iOS和Android通信)
 - [**类**](#类)
@@ -14,7 +15,7 @@
 		- [mixin怎么指定异常类型](#mixin怎么指定异常类型)
 - [**Widget组件**](#Widget组件)
 	- 状态
-		- createState方法什么时候调用?state里为什么可以直接获取到widget对象?
+		- [createState方法什么时候调用?state里为什么可以直接获取到widget对象?](#createState方法什么时候调用?state里为什么可以直接获取到widget对象?)
 	- [StatefulWidget生命周期](#StatefulWidget生命周期)
 	- widget频繁更改创建是否会影响性能?复用和更新机制是怎么样的?
 	- [widget有几种key](#widget有几种key)
@@ -24,7 +25,7 @@
 		- [2).Element](#2_Element)
 		- [3).RenderObject](#3_RenderObject)
 		- [4).三者关系如何](#4_三者关系如何?)
-		- widget和Element什么关系?是一一对应的吗?
+		- [widget和Element什么关系?是一一对应的吗?](#widget和Element什么关系?是一一对应的吗?)
 	- [哪三棵树?](#哪三棵树?)
 	- [Widget、State、Context的核心概念和是为了解决什么问题?](#WidgetStateContext的核心概念和是为了解决什么问题)
 	- [简述StatelessWidget和StatefulWidget两种状态组件类](#简述StatelessWidget和StatefulWidget两种状态组件类)
@@ -482,6 +483,40 @@ class mixinsX2 extends implA with X{
 - 首先，widget 拥有着不同的生命周期： 整个生命周期内它是不可变的，且只能够存活到被修改的时候。一旦 widget 实例或者它的状态发生了改变， Flutter 框架就会创建一个新的由 Widget 实例构造而成的树状结构。
 - 而在 iOS 里，修改一个视图并不会导致它重新创建实例，它作为一个可变对象，只会绘制一次，只有调用 setNeedsDisplay() 之后才会发生重绘。
 
+
+
+
+<br/><br/>
+
+> <h2 id='createState方法什么时候调用?state里为什么可以直接获取到widget对象?'>createState方法什么时候调用?state里为什么可以直接获取到widget对象?</h2>
+
+
+
+<br/>
+
+
+**问2:state里为什么可以直接获取到widget对象?**
+
+因为widget是state的一个属性,你说它能不能获取到! 问这个问题,说明你的基础很差啊!
+
+<br/>
+
+来!来!给你科普一下:
+
+
+- **State 中有两个常用属性：**
+
+	- widget，它表示与该 State 实例关联的 widget 实例，由Flutter 框架动态设置。
+		- 注意，这种关联并非永久的，因为在应用生命周期中，UI树上的某一个节点的 widget 实例在重新构建时可能会变化，
+		- 但State实例只会在第一次插入到树中时被创建，当在重新构建时，如果 widget 被修改了，Flutter 框架会动态设置State. widget 为新的 widget 实例。
+	
+	- context。StatefulWidget对应的 BuildContext，作用同StatelessWidget 的BuildContext。
+
+
+
+
+
+<br/>
 <br/>
 
 
@@ -761,11 +796,71 @@ Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏
 
 
 
+<br/><br/>
+
+
+> <h2 id='widget和Element什么关系?是一一对应的吗?'>widget和Element什么关系?是一一对应的吗?</h2>
+
+**widget和element是一一对应的**,若知为何,请往下看:
+
+
+<br/>
+
+Widget 只是描述一个UI元素的配置信息，那么真正的布局、绘制是由谁来完成的呢？
+
+- **Flutter 框架的处理流程是这样的：**
+
+	- 根据 Widget 树生成一个 Element 树，Element 树中的节点都继承自 Element 类。
+	- 根据 Element 树生成 Render 树（渲染树），渲染树中的节点都继承自RenderObject 类。
+	- 根据渲染树生成 Layer 树，然后上屏显示，Layer 树中的节点都继承自 Layer 类。
+
+所以从这个流程来看,实际上是4棵树:widget树、element🌲、render🌲、layer🌲.
+
+<br/>
+
+真正的布局和渲染逻辑在 Render 树中，Element 是 Widget 和 RenderObject 的粘合剂，可以理解为一个中间代理。我们通过一个例子来说明，假设有如下 Widget 树：
+
+```
+Container( // 一个容器 widget
+  color: Colors.blue, // 设置容器背景色
+  child: Row( // 可以将子widget沿水平方向排列
+    children: [
+      Image.network('https://www.example.com/1.png'), // 显示图片的 widget
+      const Text('A'),
+    ],
+  ),
+);
+```
+
+
+注意，如果 Container 设置了背景色，Container 内部会创建一个新的 ColoredBox 来填充背景，相关逻辑如下：
+
+```
+if (color != null)
+  current = ColoredBox(color: color!, child: current);
+```
+
+
+<br/>
+
+而 Image 内部会通过 RawImage 来渲染图片、Text 内部会通过 RichText 来渲染文本，所以最终的 Widget树、Element 树、渲染树结构如下图所示：
+
+![flutter1_80_2.png](./../Pictures/flutter1_80_2.png)
+
+
+
+- **这里需要注意：**
+
+	- 1.三棵树中，Widget 和 Element 是一一对应的，但并不和 RenderObject 一一对应。比如 StatelessWidget 和 StatefulWidget 都没有对应的 RenderObject。
+	- 2.渲染树在上屏前会生成一棵 Layer 树，
+
+
+
+
 <br/>
 <br/>
 
 > <h2 id='哪三棵树?'>哪三棵树?</h2>
-
 
 - widget树;
 - element树(不包含业务,只管绘制);
@@ -869,8 +964,6 @@ Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏
 &emsp; 在生命周期内，该类Widget所持有的数据可能会发生变化，这样的数据被称为State，这些拥有动态内部数据的Widget被称为StatefulWidget。比如复选框、Button等。State会与Context相关联，并且此关联是永久性的，State对象将永远不会改变其Context，即使可以在树结构周围移动，也仍将与该context相关联。
 
 &emsp; 当state与context关联时，state被视为已挂载。StatefulWidget由两部分组成，在初始化时必须要在createState()时初始化一个与之相关的State对象。
-
-
 
 <br/>
 
