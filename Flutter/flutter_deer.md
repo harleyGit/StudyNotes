@@ -5,10 +5,14 @@
 	- [addPostFrameCallback](#addPostFrameCallback)
 	- [showGeneralDialog](#showGeneralDialog)
 	- [函数作为参数](#函数作为参数)
+	- [Theme](#Theme)
+- [**工具类**](#工具类)
+	- [图片工具](#图片工具)
 - [**组件库**](#组件库)
 	- [Dio网络库](#Dio网络库)
 		- [扩展拦截器类](#扩展拦截器类)
 	- [fluro路由组件](#fluro路由组件)
+	- [cached_network_image-图片加载](#cached_network_image-图片加载)
 	- 	[flutter_ume调试工具](#flutter_ume调试工具)
 	- [common_utils-工具库](#common_utils-工具库)
 	- [keyboard_actions处理键盘事件](#keyboard_actions处理键盘事件)
@@ -116,6 +120,66 @@ Flutter: 选择了 1688
 
 
 
+
+<br/><br/>
+
+
+> <h2 id='Theme'>Theme</h2>
+
+主题统一颜色和字体风格
+
+使用:
+
+```
+extension ThemeExtension on BuildContext {
+  bool get isDark => ThemeUtils.isDark(this);
+  //Theme 主题: https://flutter.cn/docs/cookbook/design/themes
+  Color get backgroundColor => Theme.of(this).scaffoldBackgroundColor;
+  Color get dialogBackgroundColor => Theme.of(this).canvasColor;
+}
+```
+
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='工具类'>工具类</h1>
+
+
+<br/><br/>
+
+> <h2 id='图片工具'>图片工具</h2>
+
+[**AssetImage:**](https://doc.flutterchina.club/assets-and-images/) 加载图片;
+
+获取图片:
+
+```
+new AssetImage('graphics/background.png'),
+```
+
+
+<br/>
+
+网络图片加载:
+
+[CachedNetworkImageProvider](#cached_network_image-图片加载)加载网络图片
+
+```
+static ImageProvider getImageProvider(String? imageUrl, {String holderImg = 'none'}) {
+    if (TextUtil.isEmpty(imageUrl)) {//判断是否为空
+      return AssetImage(getImgPath(holderImg));
+    }
+    //网络图片加载:https://blog.csdn.net/qq_33224517/article/details/118079879
+    return CachedNetworkImageProvider(imageUrl!);
+  }
+```
+
+
 <br/>
 
 ***
@@ -217,7 +281,28 @@ Dio addInterceptors(Dio dio) {
 
 <br/><br/>
 
-> <h3 id=''></h3>
+> <h3 id='cached_network_image-图片加载'>cached_network_image-图片加载</h3>
+
+```
+//添加占位图
+CachedNetworkImage(
+	imageUrl: "http://via.placeholder.com/350x150",
+	placeholder: (context, url) => CircularProgressIndicator(),
+	errorWidget: (context, url, error) => Icon(Icons.error),
+),
+   
+   
+     
+//进度条展示
+CachedNetworkImage(
+    imageUrl: "http://via.placeholder.com/350x150",
+    progressIndicatorBuilder: (context, url, downloadProgress) => 
+            CircularProgressIndicator(value: downloadProgress.progress),
+    errorWidget: (context, url, error) => Icon(Icons.error),
+),
+```
+
+
 
 
 
