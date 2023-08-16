@@ -4,6 +4,7 @@
 - [**方法**](#方法)
 	- [addPostFrameCallback](#addPostFrameCallback)
 	- [showGeneralDialog](#showGeneralDialog)
+	- [dependOnInheritedWidgetOfExactType](#dependOnInheritedWidgetOfExactType)
 	- [函数作为参数](#函数作为参数)
 	- [Theme](#Theme)
 - [**工具类**](#工具类)
@@ -73,6 +74,18 @@ Typically references to inherited widgets should occur in widget build() methods
 ># <h2 id='showGeneralDialog'>[showGeneralDialog](https://blog.csdn.net/Calvin_zhou/article/details/115768013)</h2>
 
 展示弹窗
+
+
+
+
+<br/><br/>
+
+
+> <h2 id='dependOnInheritedWidgetOfExactType'> dependOnInheritedWidgetOfExactType </h2>
+
+
+BuildContext.dependOnInheritedWidgetOfExactType:该方法用于在 widget 树上获取离当前 widget 最近的一个父级InheritedWidget
+
 
 
 <br/><br/>
