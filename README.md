@@ -60,6 +60,28 @@
 ⌃ -> Control
 ```
 
+```
+向上/下/左/右滑动网页：上下左右方向键
+大幅度滑动网页：方向键+ option 键
+向下滑动一整页：空格键
+向上滑动一整页：shift +空格键
+显示所有网页标签页：command + shift + 键
+切换到下一个标签页：control + tab 键 / command + shift + ] 键
+切换到上一个标签页：control + shift + tab 键 / shift + command + [ 键
+移动到网页的左上角：command + 向上箭头
+移动到网页的左下角：command + 向下箭头
+关闭除了某个标签之外的其他所有标签页： 按住 option 键并点击该网页标签的关闭按钮
+打开上一个被关闭的网页：command + shift + T 键
+退出全屏： 按左上角 esc 键
+下载一个链接文件： 点击链接的同时按住 option 键
+改变网页字体大小：command + ➕（增大字体），command + ➖（减小字体）
+恢复默认字体大小：command + 数字 0 键
+跳转到地址栏：command + L 键
+打开一个新的标签页：command + T 键
+重载当前网页：command + R 键
+停止载入网页：command + . 键
+```
+
 
 
 <br/>

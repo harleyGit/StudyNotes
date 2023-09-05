@@ -35,6 +35,7 @@
 	- [打Tag](#打Tag)
 - [**分支种类**](#分支种类)
 - [**Git安装**](#Git安装)
+	- [github使用token作为密码](#github使用token作为密码)
 - [Gitee配置](#Gitee配置)
 - **错误解决**
 	- [please used a personal access token instead](#tokeninstead) 
@@ -1381,6 +1382,54 @@ Hi harleyGit! You've successfully authenticated, but GitHub does not provide she
 ```
 
 Git 安装完成!
+
+
+
+<br/><br/>
+
+> <h2 id='github使用token作为密码'>github使用token作为密码</h2>
+
+当使用github的登录密码进行登录的时候发现无法登录,会在终端出现如下错误提示:
+
+```
+remote: Support for password authentication was removed on August 13, 2021.
+remote: Please see https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#cloning-with-https-urls for information on currently recommended modes of authentication.
+fatal: Authentication failed for 'https://github.com/harleyGit/MLC.git/'
+```
+
+这是因为github为了安全,使用token值来作为密码,这个步骤设置如下:
+
+![tool0_3](./../Pictures/tool0_3.png)
+
+![tool0_4](./../Pictures/tool0_4.png)
+
+![tool0_2](./../Pictures/tool0_2.png)
+
+<br/>
+
+**步骤四：**
+
+&emsp; 点击进入之后，会出现如下界面。这里Note里填写的就是要为这个账户名建立token。Expiration意思就是这个token的生效期，这里可以随便选择，为自己建可以选择无限制。然后下面的一大框，指的是此token用户拥有的权限，当然你可以全部选择。我选择了：
+
+```
+repo
+admin:public_key
+admin:repo_hook
+delete_repo
+```
+
+
+<br/>
+
+**步骤五：**
+
+&emsp; 选完之后拉到下面，点击按钮Generate token。之后会生成一段字符串，复制下来，放在你的笔记本上，一定要记住哦。不然又得重新生成了。之后上传代码到github就可以用了。
+
+```
+Username for 'https://github.com': harleyGit
+Password for 'https://harleyGit@github.com':  复制的token值
+
+```
 
 
 

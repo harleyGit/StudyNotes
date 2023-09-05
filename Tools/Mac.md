@@ -4,6 +4,7 @@
 - [**硬件**](#硬件)
 	- [移动硬盘](#移动硬盘)
 	- [显示器](#显示器)
+		- [桌面壁纸](#桌面壁纸)
 - [**配置**](#配置)
 	- [解决source保存配置](#解决source保存配置)
 	- [软链接](#软链接)
@@ -132,6 +133,14 @@
 >## <h2 id='显示器'>[显示器](https://zhuanlan.zhihu.com/p/85232724)</h2>
 
 [显示器选购指南](https://zhuanlan.zhihu.com/p/85232724)
+
+
+<br/><br/>
+
+> <h2 id='桌面壁纸'>桌面壁纸</h2>
+
+
+[Blockadelabs根据自己的创意设计,AI生成你指定风格的壁纸](https://www.blockadelabs.com/?_gl=1*1nbsw5q*_ga*NzczOTc1NTQ1LjE2OTM1NjA0OTI.*_ga_YQXS5JLFDH*MTY5Mzc5NTAxMC4zLjAuMTY5Mzc5NTAxMC42MC4wLjA),前几张是免费的,后面是需要收费的.小帅同学推荐的.还不错!
 
 
 
