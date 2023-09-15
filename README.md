@@ -496,6 +496,7 @@
 	 * [Codemagic 持续部署 Flutter 应用](https://coldstone.fun/post/2020/02/03/flutter-cicd/)
 * [Android 模拟器 For Mac](./Tools/Android-模拟器-For-Mac.md)
 * [JAVA 和 Android 配置](./Tools/JAVA-和-Android-配置.md)
+* [Chat-GPT指令](https://www.explainthis.io/zh-hans/chatgpt)
 
 
 

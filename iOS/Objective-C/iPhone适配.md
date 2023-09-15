@@ -2,6 +2,8 @@
 - **全面屏和非全面屏显示**
 - **判断横竖屏**
 - **contentOffset、contentInset**
+- **参考**
+	- [iPhone14系列设计尺寸、设备分辨率](https://blog.zhheo.com/p/18188988.html)
 
 
 
