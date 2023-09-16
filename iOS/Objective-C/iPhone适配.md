@@ -1,7 +1,9 @@
-- **iPhone机型屏幕尺寸**
-- **全面屏和非全面屏显示**
-- **判断横竖屏**
-- **contentOffset、contentInset**
+- [**iPhone机型屏幕尺寸**](#iPhone机型屏幕尺寸)
+- [**全面屏和非全面屏显示**](#全面屏和非全面屏显示)
+- [**判断横竖屏**](#判断横竖屏)
+- [**基本布局属性**](#基本布局属性) 
+	- [contentSize](#contentSize)
+	- [**contentOffset、contentInset**](#ontentOffset、contentInset)
 - **参考**
 	- [iPhone14系列设计尺寸、设备分辨率](https://blog.zhheo.com/p/18188988.html)
 
@@ -15,8 +17,7 @@
 
 
 
-
-> iPhone机型屏幕尺寸
+> <h1 id='iPhone机型屏幕尺寸'>iPhone机型屏幕尺寸</h1>
 
 | 手机型号 | 屏幕尺寸 | 物理尺寸(逻辑分辨率pt) | 像素尺寸分辨率(px) | 倍图 |
 |:--|:--|:--|:--|:--|
@@ -78,7 +79,9 @@
 ***
 <br/>
 
-# 全面屏和非全面屏显示
+
+> <h1 id='全面屏和非全面屏显示'>全面屏和非全面屏显示</h1>
+
 
 - 非全面屏状态栏（iPhoneX 之前机型导航栏） 
 
@@ -310,7 +313,7 @@ if (@available(iOS 11.0, *)) {
 <br/>
 
 
--	UI 在不同尺寸上适配
+>	<h1 id='UI在不同尺寸上适配'>UI在不同尺寸上适配</h1>
 
 ```
 
@@ -422,7 +425,8 @@ awakeFromNib方法里面手动设置下控件字体
 ***
 <br/>
 
-># 判断横竖屏
+> <h1 id='判断横竖屏'>判断横竖屏</h1>
+ 
 
 &emsp;  UIInterfaceOrientation是iOS8之后使用的设备方向属性，在之前可以使用statusBarOrientation来设置和获取设备朝向。
 
@@ -472,8 +476,14 @@ UIInterfaceOrientationLandscapeRight
 ***
 <br/>
 
-># 
-**`contentSize`**
+ > <h1 id='基本布局属性'>基本布局属性</h1>
+
+<br/><br/>
+
+> <h2 id='contentSize'>contentSize</h2>
+
+ 
+**``**
 
 &emsp;  `contentSize`是 `UIScrollView` 和其继承于 `UIScrollView` 的子控件的属性，`contentSize` 是确定 `UIScrollView上contentView` 宽`(contentSize.width)` 和高 `(conteSize.height)` 的属性。
 
@@ -483,12 +493,11 @@ UIInterfaceOrientationLandscapeRight
 
 
 
-<br/>
+<br/><br/>
 
-***
-<br/>
+> <h2 id='contentOffset、contentInset'>contentOffset、contentInset</h2>
 
-># contentOffset、contentInset
+
 
 **`contentOffset`**
 
