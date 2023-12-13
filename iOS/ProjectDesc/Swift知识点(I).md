@@ -3,6 +3,8 @@
 - [@propertyWrapper](#@propertyWrapper)
 - [Task使用](#task使用)
 - [**解包**](#解包)
+- [**UITableView**](#UITableView)
+	- [contentSize、contentInset和contentOffset区别及相互关系](#contentSize、contentInset和contentOffset区别及相互关系)
 
 
 
@@ -245,6 +247,42 @@ var dataModel: MineDataModel! = nil
 这样的设计主要是为了方便使用，但需要谨慎使用。确保在访问 dataModel 之前，它已经被正确初始化。否则，如果在访问时它仍然为 nil，将导致运行时崩溃。
 
 如果有可能，你可以考虑使用普通的可选类型 var dataModel: MineDataModel? 并在使用之前明确地进行解包，这样可以更加安全。
+
+<br/>
+
+***
+
+<br/><br/>
+
+> <h1 id='UITableView'>UITableView</h1>
+
+<br/><br/>
+
+> <h2 id='contentSize、contentInset和contentOffset区别及相互关系'>contentSize、contentInset和contentOffset区别及相互关系</h2>
+
+[区别](https://blog.csdn.net/zyzxrj/article/details/74006774)
+
+在UIScorllView、UITableView、UICollectionView3大滑动组件的角度来讲,这3个属性对于掌握这3个组件很重要
+
+- **frame:** 是当前UIScorllView、UITableView、UICollectionView能给用户看到的区域,比如(0, 0, 414, 856)就是我们能在手机屏幕看到的视图大小
+
+
+- **contentSize:** 表示的是内容实际展示的效果,若是它的值小于frame.size那么它就不能滚动,否则就可以滚动.
+	- 当contentSize大于frame.size时,比如:contentSize=(0, 0, 414, 1000), frame = (0, 0, 414, 856),当我们滑动到大于frame宽度和高度时,UIScorllView、UITableView、UICollectionView有弹性回弹的效果.否则是没有的
+	- 我们通过Xcode的图层是可以看到超出手机屏幕外还是能看到其他组件的
+
+
+- **contentInset:** 这个怎么说呢? 
+	- 我们看下它的swift的初始化:contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+	- 学过HTML的都知道一个标签都有外边距margin、内边距padding.那contentInset就像当于UIScorllView、UITableView、UICollectionView的contentSize相当于frame在padding的上、下、左、右距离
+
+
+- **contentOffset:** 是当前视图滑动的距离,比如向左、向右之类的
+
+
+
+
+
 
 
 
