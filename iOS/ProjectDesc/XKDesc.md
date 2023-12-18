@@ -13,15 +13,31 @@
 		- [应用](#应用)
 - [**三方库**](#三方库)
 	- [调试解决](#调试解决) 
-		- [断点打印为null](#断点打印为null) 
+		- [断点打印为null](#断点打印为null)
+	- [MJExtension](#MJExtension) 
+		- [JSON数据中包含一个对象](#JSON数据中包含一个对象)
 	- [ReactObj](#ReactObj) 
 		- [类](#类)
 		- [属性](#属性)
 		- [方法](#方法)
 	- [FMDB](#FMDB)
+- [**问题**](#问题)
+	- [导航栏返回按钮图片颜色无法修改](#导航栏返回按钮图片颜色无法修改)
+
+https://github.com/CaamDau/CaamDau?tab=readme-ov-file#InputBox%E8%BE%93%E5%85%A5%E6%A1%86%E6%89%A9%E5%B1%95%E7%BB%84%E4%BB%B6
+
+https://github.com/CMlinksuccess/PullDownListSwift.git
 
 
+```
+解决问题: try 如何使用
+await 如何使用,关于并发的
 
+为什么用 try await结合使用,可以解决什么? 若是有返回值,怎么解决?
+
+async throws -> DataResult?为什用 return try await (sss) 作为返回结果后,类型为  async throws -> 返回结果类型,为啥
+
+```
 
 <br/>
 
@@ -335,13 +351,50 @@ NSLog(@"🍊 <<<<< 执行 doNext 方法，请求信息：%@,  处理网络请求
 
 > <h1 id='调试解决'>调试解决</h1>
 
-> <h2 id=''>断点打印为null</h2>
+> <h2 id='断点打印为null'>断点打印为null</h2>
 
 按照下图的提示进行解决：
 
 ![修改符号表]((./../../Pictures/projectDesc0.png)
 
 ![环境配置]((./../../Pictures/projectDesc1.png)
+
+
+
+
+<br/><br/>
+
+> <h2 id='MJExtension'>MJExtension</h2>
+
+
+<br/><br/>
+
+> <h2 id='JSON数据中包含一个对象'>JSON数据中包含一个对象</h2>
+
+```
+{
+	@"data":@"lsjlg",
+	@"title":@"阿拉斯加的老公",
+	@"content":{
+			@"sex":@"哪呢",
+			@"name":@"1212r",
+		},
+}
+```
+
+这个时候需要对content映射一个对象,如下:
+
+```
+@implementation PopupSignInModel
+
++ (NSDictionary *)mj_objectClassInArray {
+    return @{
+        @"content" : [Content Model class]
+    };
+}
+
+@end
+```
 
 
 
@@ -961,6 +1014,30 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 ```
 
 &emsp; 这种方式能解决不依赖于数据库返回的结果的情况，如果对返回结果有依赖，就需要考虑UI上的体验了，如加一个UIActivityIndicatorView。
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='问题'>问题</h1>
+
+<br/><br/>
+
+> <h2 id='导航栏返回按钮图片颜色无法修改'>导航栏返回按钮图片颜色无法修改</h2>
+
+```
+func setDefaultBackItemForNavigationBar() {
+        ///let backImage = UIImage(named: "navi_back_icon")?.withRenderingMode(.alwaysOriginal)
+        ///需要向上述修改,否则图片为白色但是还是为蓝色,需要加上.withRenderingMode(.alwaysOriginal),保持原彩展示
+        let backImage = UIImage(named: "navi_back_icon")
+        
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: backImage, style: .plain, target: self, action: #selector(backAction))
+}
+    
+```
+
 
 
 
