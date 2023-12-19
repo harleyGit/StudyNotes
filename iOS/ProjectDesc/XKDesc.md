@@ -26,6 +26,8 @@
 - **资料**
 	- [Swift组件参考](https://github.com/CaamDau/CaamDau?tab=readme-ov-file#InputBox%E8%BE%93%E5%85%A5%E6%A1%86%E6%89%A9%E5%B1%95%E7%BB%84%E4%BB%B6)
 	- [PullDownListSwift](https://github.com/CMlinksuccess/PullDownListSwift.git)
+- [**废弃效果**](#废弃效果)
+	- [镂空文字](#镂空文字)
 
 
 
@@ -1056,6 +1058,79 @@ func setDefaultBackItemForNavigationBar() {
 <br/>
 
 > <h2 id=''></h2>
+
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='废弃效果'>废弃效果</h1>
+
+
+<br/><br/>
+
+> <h2 id='镂空文字'>镂空文字</h2>
+
+效果:
+
+![ios_oc1_113_33.jpg](./../../Pictures/ios_oc1_113_33.jpg)
+
+**代码**
+
+```
+// 镂空矩形
+CGRect holeRect = CGRectMake(200, 200 + 16, 300, 40);
+// 矩形路径
+UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:0];
+// 镂空矩形的圆角
+UIBezierPath *holePath = [UIBezierPath bezierPathWithRoundedRect:holeRect cornerRadius:8.0];
+[path appendPath:holePath];
+[path setUsesEvenOddFillRule:YES];
+
+// 创建一个CAShapeLayer，将路径设置为其遮罩
+CAShapeLayer *maskLayer = [CAShapeLayer layer];
+maskLayer.path = path.CGPath;
+maskLayer.fillRule = kCAFillRuleEvenOdd;
+// 将CAShapeLayer作为高斯模糊视图的mask
+blurView.layer.mask = maskLayer;
+
+// 添加一点模糊效果
+UIVisualEffectView *effView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleLight]];
+effView.frame = holeRect;
+effView.layer.cornerRadius = 8.0;
+effView.clipsToBounds = YES;
+[self addSubview:effView];
+
+// 创建一个UILabel
+UILabel *scoreLab = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 216, 24)];
+scoreLab.center = effView.center;
+scoreLab.textAlignment = NSTextAlignmentCenter;
+[self addSubview:scoreLab];
+// 创建富文本字符串
+NSString *text = @"100K";
+NSMutableAttributedString *attributedText = [[NSMutableAttributedString alloc] initWithString:text];
+// 数值样式
+NSRange socreRange = [text rangeOfString:@"100"];
+NSDictionary *largeFontAttributes = @{
+    NSFontAttributeName: [UIFont fontWithName:[KmetaConant getFontHanBld] size:20],
+    NSForegroundColorAttributeName: [UIColor whiteColor]
+};
+[attributedText setAttributes:largeFontAttributes range:socreRange];
+
+
+// 单位样式
+NSDictionary *smallFontAttributes = @{
+    NSFontAttributeName: [UIFont fontWithName:[KmetaConant getFontHanBld] size:12],
+    NSForegroundColorAttributeName: [UIColor whiteColor]
+};
+[attributedText setAttributes:smallFontAttributes range:NSMakeRange(socreRange.length, @"K".length)];
+// 将富文本字符串应用到UILabel上
+scoreLab.attributedText = attributedText;
+```
+
 
 
 
