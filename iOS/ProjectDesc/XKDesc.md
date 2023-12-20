@@ -21,6 +21,7 @@
 		- [属性](#属性)
 		- [方法](#方法)
 	- [FMDB](#FMDB)
+		- [dispatch_queue_set_specific使用](#dispatch_queue_set_specific使用)
 - [**问题**](#问题)
 	- [导航栏返回按钮图片颜色无法修改](#导航栏返回按钮图片颜色无法修改)
 - **资料**
@@ -28,6 +29,9 @@
 	- [PullDownListSwift](https://github.com/CMlinksuccess/PullDownListSwift.git)
 	- [弹出框](https://github.com/CoderLinLee/PopView)
 	- [护眼模式开发](https://www.jianshu.com/p/188b64828ddb)
+	- [弹幕上滑渐隐效果](https://www.hangge.com/blog/cache/detail_1778.html)
+		- [渐变图层](https://blog.csdn.net/Hierarch_Lee/article/details/48337879)
+	- [SF Symbols 内置图标库](https://swiftcafe.io/post/sf-symbol)
 - [**废弃效果**](#废弃效果)
 	- [镂空文字](#镂空文字)
 
@@ -1018,6 +1022,95 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 ```
 
 &emsp; 这种方式能解决不依赖于数据库返回的结果的情况，如果对返回结果有依赖，就需要考虑UI上的体验了，如加一个UIActivityIndicatorView。
+
+
+<br/><br/>
+
+> <h3 id='dispatch_queue_set_specific使用'>dispatch_queue_set_specific使用</h3>
+
+&emsp; dispatch_queue_set_specific 是 GCD（Grand Central Dispatch）中的一个函数，用于在一个特定的 dispatch queue 上设置一个自定义的键值对。这个函数的主要用途是在多线程环境中关联和检索特定于队列的数据。
+
+&emsp; 在多线程编程中，有时候我们希望在一个 dispatch queue 上执行的任务能够访问或传递一些特定的数据，而不会影响到其他队列。dispatch_queue_set_specific 允许我们将特定的数据与队列关联起来。
+
+
+<br/>
+
+那什么是**特定数据**? 我如何获取? 如何使用呢?
+
+<br/>
+
+&emsp; "特定数据" 指的是你在使用 GCD（Grand Central Dispatch）的时候，可以关联到一个特定的队列（dispatch queue）上的任意自定义数据。这样，在队列上执行的任务可以访问或传递一些额外的信息。这个信息可以是任何你希望在队列上使用的数据，比如状态、配置信息、或者其他上下文相关的数据。
+
+&emsp; 在网络请求的场景下，你可以使用特定数据来传递一些关于网络请求的上下文信息，比如请求的标识符、请求参数等。这样，在队列上执行的任务就可以根据这些信息来处理网络请求的结果。
+
+**代码案例:**
+
+```
+#import <Foundation/Foundation.h>
+
+static void *kNetworkRequestKey = &kNetworkRequestKey;
+
+@interface NetworkRequest : NSObject
+@property (nonatomic, strong) NSURL *url;
+@property (nonatomic, copy) void (^completionHandler)(NSData *data, NSError *error);
+@end
+
+@implementation NetworkRequest
+@end
+
+void PerformNetworkRequest(NetworkRequest *request) {
+    // 在队列上执行网络请求
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // 模拟网络请求
+        NSData *responseData = [NSData dataWithContentsOfURL:request.url];
+
+        // 执行完成回调
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (request.completionHandler) {
+                request.completionHandler(responseData, nil);
+            }
+        });
+    });
+}
+
+void SetNetworkRequestSpecificData(NetworkRequest *request) {
+    // 获取当前队列
+    dispatch_queue_t currentQueue = dispatch_get_current_queue();
+
+    // 在队列上设置特定数据
+    dispatch_queue_set_specific(currentQueue, kNetworkRequestKey, (__bridge_retained void *)request, NULL);
+
+    // 在队列上执行任务
+    dispatch_async(currentQueue, ^{
+        // 获取特定数据
+        NetworkRequest *currentRequest = (__bridge NetworkRequest *)dispatch_get_specific(kNetworkRequestKey);
+
+        // 执行网络请求
+        PerformNetworkRequest(currentRequest);
+    });
+}
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        // 创建网络请求
+        NetworkRequest *request = [[NetworkRequest alloc] init];
+        request.url = [NSURL URLWithString:@"https://www.example.com"];
+        request.completionHandler = ^(NSData *data, NSError *error) {
+            NSLog(@"Network request completed with data: %@", data);
+        };
+
+        // 设置特定数据并执行网络请求
+        SetNetworkRequestSpecificData(request);
+
+        // 主线程等待，以保证异步任务完成
+        dispatch_main();
+    }
+    return 0;
+}
+
+```
+
+在这个示例中，我们定义了一个 NetworkRequest 类来表示一个网络请求。在 SetNetworkRequestSpecificData 函数中，我们将网络请求对象关联到当前队列的特定数据中，然后在队列上执行任务，该任务可以通过 dispatch_get_specific 获取特定数据，然后执行网络请求。这样，网络请求的上下文信息就能够传递到异步执行的任务中。
 
 
 <br/>

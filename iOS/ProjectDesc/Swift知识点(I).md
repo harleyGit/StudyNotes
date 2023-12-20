@@ -3,8 +3,12 @@
 - [@propertyWrapper](#@propertyWrapper)
 - [Task使用](#task使用)
 - [**解包**](#解包)
+- [**数组**](#数组)
+	- [合并](#合并)
 - [**UITableView**](#UITableView)
 	- [contentSize、contentInset和contentOffset区别及相互关系](#contentSize、contentInset和contentOffset区别及相互关系)
+- [**类库**](#类库)
+	- [Alamofire](#Alamofire)
 - **资料**
 	- [Swift组件Demo](https://github.com/pro648/BasicDemos-iOS.git)
 
@@ -250,6 +254,36 @@ var dataModel: MineDataModel! = nil
 
 如果有可能，你可以考虑使用普通的可选类型 var dataModel: MineDataModel? 并在使用之前明确地进行解包，这样可以更加安全。
 
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='数组'>数组</h1>
+
+<br/><br/>
+
+> <h2 id='合并'>合并</h2>
+
+&emsp; merge 方法的第二个参数是一个闭包，用于决定当有重复的元素时如何选择保留。在你提到的语句 { (_, new) in new } 中，这是一个闭包的写法，用于指定当有重复元素时选择保留新元素。
+
+&emsp; 具体来说，这个闭包的参数是两个元素，分别是已存在于目标数组中的元素和要合并的新元素。这里使用了通配符 _ 表示不使用已存在的元素，而 new 表示要合并的新元素。闭包的返回值表示在有重复元素时选择保留的是新元素。
+
+```
+var array1 = ["apple", "orange", "banana"]
+let array2 = ["orange", "grape", "kiwi"]
+
+// 使用merge方法和自定义合并规则将array2合并到array1中
+array1.merge(array2) { (_, new) in new }
+
+print(array1)
+```
+
+
+&emsp; 在这个例子中，array1 和 array2 包含一些相同的元素（"orange"）。使用 { (_, new) in new } 这个闭包，表示当有重复元素时选择保留新元素。因此，"orange" 这个元素会被从 array2 中合并到 array1 中。最终的输出将包含所有不同的元素。
+
+
 <br/>
 
 ***
@@ -284,7 +318,49 @@ var dataModel: MineDataModel! = nil
 
 
 
+<br/>
 
+***
+
+<br/><br/>> <h1 id='类库'>类库</h1>
+
+<br/><br/>
+
+> <h2 id='Alamofire'>Alamofire</h2>
+
+ParameterEncoding什么用法? **URLEncoding.default**、**JSONEncoding.default** 有啥区别
+
+<br/>
+
+在 Alamofire 中，ParameterEncoding 是一个枚举类型，用于表示将参数编码为 HTTP 请求的不同方式。URLEncoding.default 和 JSONEncoding.default 是其中两种常用的编码方式，分别用于 URL 编码和 JSON 编码。
+
+<br/>
+
+**URLEncoding.default:**
+
+这种编码方式适用于将参数附加到 URL 中，通常用于 GET 请求。参数会以键值对的形式出现在 URL 的查询字符串中，以符号 "?" 开头，并使用 "&" 连接。
+例如，将 { "key": "value" } 编码为 URL 的查询字符串为 ?key=value。
+
+<br/>
+
+**JSONEncoding.default:**
+
+这种编码方式适用于将参数放置在请求的 HTTP 主体中，通常用于 POST 请求。参数会被序列化为 JSON 格式，并作为请求的主体内容发送。
+例如，将 { "key": "value" } 编码为 JSON 格式为 {"key":"value"}，并作为请求的主体内容。
+示例代码：
+
+```
+import Alamofire
+
+let parameters: [String: Any] = ["key": "value"]
+
+// 使用URLEncoding.default将参数编码为URL查询字符串
+let urlEncodedRequest = try! URLEncoding.default.encode(URLRequest(url: URL(string: "https://example.com")!), with: parameters)
+
+// 使用JSONEncoding.default将参数编码为JSON格式，并作为请求的主体内容
+let jsonEncodedRequest = try! JSONEncoding.default.encode(URLRequest(url: URL(string: "https://example.com")!), with: parameters)
+```
+在上述代码中，urlEncodedRequest 是使用 URLEncoding.default 编码的请求，而 jsonEncodedRequest 是使用 JSONEncoding.default 编码的请求。这两种编码方式适用于不同的请求场景，根据实际需求选择合适的方式。
 
 
 
