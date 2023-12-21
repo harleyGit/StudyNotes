@@ -26,12 +26,17 @@
 	- [导航栏返回按钮图片颜色无法修改](#导航栏返回按钮图片颜色无法修改)
 - **资料**
 	- [Swift组件参考](https://github.com/CaamDau/CaamDau?tab=readme-ov-file#InputBox%E8%BE%93%E5%85%A5%E6%A1%86%E6%89%A9%E5%B1%95%E7%BB%84%E4%BB%B6)
+	- [动画组件Demo](https://github.com/NShunjian/IOSProject)
 	- [PullDownListSwift](https://github.com/CMlinksuccess/PullDownListSwift.git)
 	- [弹出框](https://github.com/CoderLinLee/PopView)
 	- [护眼模式开发](https://www.jianshu.com/p/188b64828ddb)
 	- [弹幕上滑渐隐效果](https://www.hangge.com/blog/cache/detail_1778.html)
 		- [渐变图层](https://blog.csdn.net/Hierarch_Lee/article/details/48337879)
 	- [SF Symbols 内置图标库](https://swiftcafe.io/post/sf-symbol)
+	- [微信登录资料](https://zhuanlan.zhihu.com/p/264322463)
+		- [iOS微信授权登录中Universal Link(通用链接)的配置](https://www.jianshu.com/p/ca0faca9e9d5)
+		- [Universal Link 前端部署采坑记](https://cloud.tencent.com/developer/article/1110375)
+		- [Universal Links(通用链接)详解](https://www.jianshu.com/p/f1c97d0d0d22)
 - [**废弃效果**](#废弃效果)
 	- [镂空文字](#镂空文字)
 
