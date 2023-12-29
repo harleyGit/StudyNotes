@@ -1,6 +1,8 @@
-># <h2 id=''>[Swift教程](https://nintendoboy.gitbooks.io/swift-study-note-v2/content/cai_zhi_he_ji_he_ti.html)</h2>
+># <h2 id=''>[Swift教程](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)</h2>
 - [ swift 语法糖 ？ ！的本质]( #swift语法糖的本质)
 - [@propertyWrapper](#@propertyWrapper)
+- [**工具类**](#工具类)
+	- [空数值处理](#空数值处理)
 - [Task使用](#task使用)
 - [**解包**](#解包)
 - [**数组**](#数组)
@@ -10,6 +12,7 @@
 - [**类库**](#类库)
 	- [Alamofire](#Alamofire)
 - **资料**
+	- [**Swift学习笔记**](https://nintendoboy.gitbooks.io/swift-study-note-v2/content/)
 	- [Swift组件Demo](https://github.com/pro648/BasicDemos-iOS.git)
 
 
@@ -45,6 +48,49 @@ optional 是一个包含了nil 和普通类型的枚举，确保使用者在变�
 
 ```
 
+
+
+<br/>
+
+***
+
+<br/><br/>
+
+> <h1 id='工具类'>工具类</h1>
+
+<br/><br/>
+
+> <h2 id='空数值处理'>空数值处理</h2>
+通过为 Numeric 协议添加一个扩展来实现这个功能。以下是一个将数字转换为
+
+```
+extension Numeric {
+    func handleOptionValue() -> String {
+        let number = self
+        // 如果数字等于零或者为空，返回空字符串
+        guard number is Int || number is Double || number is Float else {
+            return ""
+        }
+
+        // 使用字符串初始化数字
+        let strValue = String(describing: number)
+        // 如果字符串表示的是零或者为空，返回空字符串，否则返回字符串本身
+        return strValue == "0" || strValue.isEmpty ? "" : strValue
+    }
+}
+
+
+// 示例用法
+let number1: Int = 42
+let number2: Double = 0.0
+let number3: Float = 0.0
+let number4: Int? = nil
+
+print(number1.stringValueOrEmpty()) // 输出: "42"
+print(number2.stringValueOrEmpty()) // 输出: ""
+print(number3.stringValueOrEmpty()) // 输出: ""
+print(number4.stringValueOrEmpty()) // 输出: ""
+```
 
 <br/><br/>
 
