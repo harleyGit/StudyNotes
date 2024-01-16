@@ -240,6 +240,36 @@ Label自适应宽度
 
 
 
+<br/>
+<br/>
+
+提问:UIScrollView的属性
+
+```
+self.panGestureRecognizer.delaysTouchesBegan = YES;
+```
+
+**设置有什么意义?如何理解:**
+
+
+UIScrollView 是 iOS 中常用的滚动视图类，用于显示可滚动内容，例如文本、图像等。在你提到的代码中，涉及到 panGestureRecognizer 的属性设置。让我们一一解释这段代码：
+
+- 1.self.panGestureRecognizer：
+
+	- panGestureRecognizer 是 UIScrollView 内置的一个 UIPanGestureRecognizer 实例，用于捕捉用户的滑动手势（pan gesture）。
+
+- 2.delaysTouchesBegan：
+
+	- delaysTouchesBegan 是 UIPanGestureRecognizer 类的一个属性。
+当 delaysTouchesBegan 被设置为 YES 时，意味着手势识别器会延迟发送 touchesBegan 事件，直到确认用户确实意图进行拖动手势。这可以避免与其他手势的冲突，例如轻击手势（tap gesture）。
+
+- 3.self.panGestureRecognizer.delaysTouchesBegan = YES;：
+
+	- 这一行代码将 delaysTouchesBegan 设置为 YES，表示在滑动手势开始时，会延迟发送 touchesBegan 事件，直到确认用户确实意图进行拖动手势。
+
+
+&emsp; 这个设置通常用于解决某些情况下的手势冲突，确保滑动手势能够被正确地识别和处理，而不会受到其他手势的干扰。例如，如果你在一个包含滚动视图的视图中同时使用了其他手势，这个设置可能有助于确保滑动手势的正常工作。
+
 
 
 <br/>
@@ -459,6 +489,42 @@ self.copyedString: 123456, 0x107b2bff0
 		- 在ARC(自动引用计数)时，block是存在堆区（heap）的。
 		- block的修饰符可以用storng、copy、retain进行修饰，但是要注意在MRC环境不要用retain
 
+<br/>
+
+&emsp; 在MRC(手动管理引用计数)详细解读:
+
+当使用 retain 属性修饰一个 block 时，在 MRC（手动引用计数）环境下，block 会被复制到堆上。这是因为 retain 属性会增加对象的引用计数，而 block 在栈上创建时，为了确保 block 在其作用域之外仍然有效，需要将其复制到堆上。
+
+下面是一个使用 retain 属性修饰 block 的示例：
+
+```
+objective
+Copy code
+@interface YourClass : NSObject
+
+@property (retain) void (^yourBlock)(void);
+
+@end
+
+@implementation YourClass
+
+- (void)dealloc {
+    [_yourBlock release]; // 在 dealloc 方法中需要手动释放
+    [super dealloc];
+}
+
+@end
+```
+
+在这个示例中，yourBlock 属性被声明为 retain 属性。当你设置 yourBlock 属性时，block 会被复制到堆上，同时引用计数会增加。在对象销毁时，你需要手动调用 release 来减少 block 的引用计数，确保内存被正确释放。
+
+需要注意的是，在现代的开发中，推荐使用 ARC（自动引用计数）来自动管理内存，避免了手动引用计数的复杂性。在 ARC 中，一般使用 strong 属性修饰 block，而不再使用 retain。
+
+
+
+
+
+
 
 
 <br/>
@@ -667,6 +733,21 @@ atomic表示，我TM也很冤啊！！！！
 # endif
 #endif
 ```
+
+<br/>
+
+- 1.`ifndef nil` ：这一行检查是否之前已经定义了 nil。如果没有定义，才会继续执行以下代码块。这个检查确保宏仅在 nil 之前没有被定义时才会被定义。
+
+-2.`#if __has_feature(cxx_nullptr)`：这一行检查编译器是否支持C++11中的 nullptr 特性。使用 __has_feature 宏可以判断编译器是否支持某一特性。如果编译器支持 nullptr，说明它能够使用C++11的特性。
+
+- 3.`#define nil nullptr`：如果编译器支持 nullptr，则将 nil 定义为 nullptr。这符合现代C++实践，其中 nullptr 用于表示空指针，而不再使用较旧的 NULL 或 0。
+
+- 4.`#else`：如果编译器不支持 nullptr，则执行这个代码块。
+
+&emsp; `#define nil __DARWIN_NULL`：在不支持 nullptr 的情况下，将 nil 定义为 `__DARWIN_NULL`。`__DARWIN_NUL`L 是一个表示空指针的常量，通常在macOS或iOS的SDK头文件中定义。
+
+- 5.`#endif`：标记条件编译块的结束。
+
 在Objective-C中用于id类型的对象
 
 ```
@@ -676,6 +757,10 @@ id object      = nil;
 ```
 
 <br/>
+
+
+
+
 
 2).Nil 指向一个类的指针为空 定义如下：
 
