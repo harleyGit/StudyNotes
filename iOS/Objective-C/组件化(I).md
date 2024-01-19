@@ -11,6 +11,7 @@
 			- [问题解决](#问题解决)
 			- [443时间超时](#443时间超时)
 			- [更新发布](#更新发布)
+			- [podspec文件解析](#podspec文件解析)
 - **参考资料**
 	- [](https://juejin.cn/post/6921970988796248077) 
 	- [CocoaPods私有库的创建和版本更新](https://www.jianshu.com/p/51b0aed5db2a)
@@ -240,7 +241,7 @@ $ pod lib create HGLibrary
 //移动到Example目录下
 $ cd /Users/harleyhuang/Desktop/HGLibrary/HGLibrary/Example
 
-//安装CocoaPods项目
+//安装CocoaPods项目, 每次加入了新的文件后需要pod install把刚才新建的类文件加入到pod库
 $ pod install --no-repo-update
 ```
 
@@ -296,9 +297,10 @@ $ cd /Users/harleyhuang/Desktop/HGLibrary
 <br/>
 
 - **7.验证本地spec文件**
+在编辑好.podspec文件内容的前提下，使用如下命令先本地检查一下podspec是否合法
 
 ```
-$ pod lib lint
+$ pod lib lint --verbose
 ```
 
 
@@ -353,27 +355,30 @@ $ git push origin master
 
 ```
 
-
-<br/>
-
-- **8.验证远程spec文件**
+若是 git push origin master 失败,这是因为本地和远程没有建立联系,则可以:
 
 ```
-$ pod spec lint 
-# 如果验证错误 可以使用下面的命令
-$ pod lib lint --allow-warnings --use-libraries
+$ git remote add origin https://github.com/harleyGit/xxxx.git
 ```
-
-
 
 
 <br/>
 
-- **9.发布tag 0.0.1版本，移动到该项目文件下执行git的相关命令**
+- **8.发布tag 0.0.1版本，移动到该项目文件下执行git的相关命令**
 
-打开github网站，在远程创建一个索引库：
+```
+$ git tag 0.1.0
+$ git push --tags
+
+* [new tag] 0.1.0 -> 0.1.0
+```
+
+
+若是想建立一个索引库可以打开github网站，在远程创建一个索引库：
 
 ![远程创建索引库](./../../Pictures/ios_oc13.png)
+
+若是不想建也可以
 
 
 远程索引库地址加入repo
@@ -388,6 +393,21 @@ $ pod repo add HGIndexLibraryRepo https://github.com/harleyGit/HGIndexLibraryRep
 在终端下的运行结果,此时索引库已经制作完成,可以进行创建组件工程了
     
 ![索引库加入repo](./../../Pictures/ios_oc14.png)
+
+
+
+<br/>
+
+- **9.验证远程spec文件**
+
+```
+$ pod spec lint 
+# 如果验证错误 可以使用下面的命令
+$ pod lib lint --allow-warnings --use-libraries
+```
+
+
+
 
 
 <br/>
@@ -406,7 +426,25 @@ $ pod repo push HGIndexLibraryRepo HGLibrary.podspec
 
 ![索引库完成](./../../Pictures/ios_oc18.png)
 
+<br/>
 
+```
+//注册 CocoaPods 账户
+pod trunk register xx@qq.com 'harley'
+
+//登录 CocoaPods 账户
+pod trunk login
+
+//默认推送到 CocoaPods 仓库： 在验证和登录后，可以执行以下命令将库推送到 CocoaPods 仓库：
+pod trunk push HGLIbrary.podspec --verbose
+````
+
+
+.成功后，就可以pod search到我们提交的库了,如果搜不到我们的pod库。就先执行如下命令
+
+```
+rm ~/Library/Caches/CocoaPods/search_index.json
+```
 
 **成功之后, 我们的组件及索引就已经完成了,下面集成到主工程中！**
 
@@ -641,6 +679,319 @@ cd /Users/xxx/Documents/GitLab/Ccrm/Ccrm-iOS
 
 pod install
 ```
+
+
+<br/><br/>
+
+
+> <h3 id='podspec文件解析'>podspec文件解析</h3>
+
+- **1、s.source_files**
+
+&emsp; s.source_files 用于指定哪些文件是库的源代码文件。这个配置告诉 CocoaPods 在将你的库集成到用户项目中时，应该包括哪些源代码文件。这样可以确保用户在导入你的库时能够访问到库中的所有类和方法。
+
+&emsp; 具体地说，s.source_files 是一个通配符模式，用于匹配库中的源文件,如下:
+
+```
+s.source_files  = "Classes/**/*.{h,m}"
+```
+
+&emsp; 这表示包括 Classes 文件夹中的所有 .h 和 .m 文件。通配符 ** 表示递归匹配子文件夹。
+
+&emsp; 通过正确配置 s.source_files，确保 CocoaPods 在集成你的库时包含了所有必要的源代码文件，使得用户能够轻松地导入你的库并使用其中的类和方法。
+
+<br/>
+
+&emsp; 在**AFNetworking.h**有这样 `s.source_files = 'AFNetworking/AFNetworking.h`的配置表明只包括了一个头文件，即 AFNetworking.h，而不包括其他源文件。
+
+&emsp; 这样的配置通常适用于那些只需要用户导入一个头文件就能使用整个库的情况。例如，在这个例子中，用户只需要导入 AFNetworking/AFNetworking.h 就可以使用 AFNetworking 库的所有功能，而不需要手动导入其他文件。
+
+
+<br/>
+<br/>
+
+
+- **2、public_header_files**
+
+&emsp; public_header_files 用于指定哪些头文件应该被包含在库的公共接口中，以便用户在使用库时能够访问这些头文件。这对于确保用户只能访问你希望他们使用的公共 API 非常重要。
+
+```
+Pod::Spec.new do |s|
+  # 其他配置...
+
+  s.source_files  = "Classes/**/*.{h,m}"
+
+  # public_header_files 指定了公共头文件的路径
+  s.public_header_files = "Classes/**/*.h"
+end
+
+```
+
+v在这个例子中，s.public_header_files 指定了在 Classes 文件夹中的所有 .h 文件都应该被包含在公共接口中。这样，用户在导入你的库时，就可以直接使用这些头文件中声明的类和方法。
+
+&emsp; 如果你的库的头文件不在统一的文件夹中，你可以适当调整 public_header_files 的路径模式以匹配你的文件结构。例如，如果你的头文件散布在不同的文件夹中，你可以使用多个通配符：
+
+```
+s.public_header_files = ["Classes/Folder1/**/*.h", "Classes/Folder2/**/*.h"]
+```
+
+&emsp; **请注意，public_header_files 中的路径模式**是相对于 .podspec 文件所在的目录的。确保设置的路径正确，以便 CocoaPods 能够正确地包含这些头文件。
+
+<br/>
+
+**拓展:** 若是没有public_header_files 那么用户在使用库时能访问哪些头文件?
+
+如果在 CocoaPods 的 .podspec 文件中没有指定 public_header_files，默认情况下，所有在 s.source_files 中包含的头文件都可以被用户访问。这包括在库的 .h 文件中声明的所有类和方法。
+
+
+<br/>
+<br/>
+
+- **3、prefix_header_file**
+
+&emsp; 在 CocoaPods 的 .podspec 文件中，prefix_header_file 用于指定一个预处理头文件，该文件中的内容会被添加到每个源文件的开头。这使得你可以在整个库中共享一些通用的定义、宏或导入语句。
+
+下面是一个简单的例子，说明如何使用 prefix_header_file：
+
+
+```
+Pod::Spec.new do |s|
+  # 其他配置...
+
+  s.source_files  = "Classes/**/*.{h,m}"
+
+  # prefix_header_file 指定了预处理头文件的路径
+  s.prefix_header_file = "Classes/YourLibraryPrefixHeader.h"
+end
+
+```
+
+&emsp; 在这个例子中，s.prefix_header_file 指定了一个名为 YourLibraryPrefixHeader.h 的预处理头文件。这个文件中的内容会在编译库中的每个源文件之前被插入。
+
+&emsp; YourLibraryPrefixHeader.h 文件的内容可以包括一些通用的宏定义、导入语句，或者其他你希望在整个库中共享的内容：
+
+```
+// YourLibraryPrefixHeader.h
+
+#ifndef YourLibraryPrefixHeader_h
+#define YourLibraryPrefixHeader_h
+
+// 定义一些通用的宏
+#define YOUR_LIBRARY_VERSION 1.0.0
+
+// 导入一些通用的头文件
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+#endif /* YourLibraryPrefixHeader_h */
+
+```
+
+<br/>
+<br/>
+
+- **4、ios.deployment_target**
+
+&emsp; deployment_target 是在 CocoaPods 中用于指定目标部署版本（deployment target）的一个配置项。目标部署版本表示你的库或应用程序要支持的最低操作系统版本。
+
+&emsp; 在 CocoaPods 的 .podspec 文件中，你可以通过设置 deployment_target 来定义你的库或应用程序所支持的最低 iOS 或 macOS 版本。这对于确保你的代码能够在特定版本的操作系统上正常运行是很重要的。
+
+```
+s.platform = :ios, '9.0'
+s.deployment_target = '9.0'
+```
+
+&emsp; 在这个例子中，platform 设置了支持的平台为 iOS，最低版本为 9.0。然后，deployment_target 指定了具体的 iOS 部署目标版本，也是 9.0。这表示你的库或应用程序要求运行在 iOS 9.0 及以上的设备上。
+
+
+
+
+<br/>
+<br/>
+
+- **5、s.resource**
+
+
+&emsp;在 CocoaPods 的 .podspec 文件中，s.resource 用于指定你的库或应用程序包含的资源文件。资源文件可以包括图片、字体、xib 文件、HTML 文件等，它们在应用程序中使用，而不是直接编译成代码。
+
+&emsp;resources 用于将这些资源文件包含在生成的 CocoaPods 二进制文件中，以便用户在使用你的库时可以直接访问这些资源。这在创建包含资源的库时非常有用。
+
+```
+s.resource = 'Assets/*.png'
+```
+
+&emsp;在这个例子中，s.resource 指定了一个通配符模式，用于包含 Assets 目录中的所有 .png 文件。这些文件将被包含在生成的 CocoaPods 二进制文件中，用户可以直接访问这些资源。
+
+&emsp; 注意：资源文件的路径是相对于 .podspec 文件所在目录的相对路径。确保指定的路径是正确的相对路径，并且资源文件确实存在于该路径中。
+
+
+
+
+<br/>
+<br/>
+
+- **6、s.requires_arc**
+
+&emsp; 在 CocoaPods 的 .podspec 文件中，s.requires_arc 用于指定你的库是否需要 ARC（Automatic Reference Counting）。ARC 是一种自动内存管理机制，它由编译器负责自动插入和移除 Objective-C 代码中的内存管理方法，使得开发者不再需要手动管理引用计数。
+
+&emsp; 如果你的库中的源文件使用了 ARC，你应该将 s.requires_arc 设置为 true。如果你的库中的源文件不使用 ARC，那么设置为 false。
+
+```
+s.requires_arc = true
+```
+
+
+
+<br/>
+<br/>
+
+- **7、s.static_framework**
+
+&emsp; static_framework 是在 CocoaPods 1.11.0 版本引入的一个新特性。它用于指定是否生成一个静态 framework。
+
+&emsp; 在 CocoaPods 中，默认情况下，当你创建一个 Pod 库时，CocoaPods 会生成一个动态 framework（.framework）。动态 framework 允许在应用程序运行时动态加载库，而静态 framework 则在编译时将库的代码和依赖关系静态链接到应用程序中。
+
+&emsp; 使用 s.static_framework 你可以控制生成的 Pod 是否作为静态 framework。这个属性接受一个布尔值，如果设置为 true，则生成静态 framework；如果设置为 false，则生成默认的动态 framework。
+
+```
+s.static_framework = true
+```
+
+在这个示例中，s.static_framework 被设置为 true，表示生成静态 framework。
+
+使用静态 framework 的优势包括：
+
+不依赖于动态库： 静态 framework 将库的代码静态链接到应用程序中，无需依赖动态库。
+
+简化发布： 将静态 framework 作为单一的二进制文件发布，方便用户集成。
+
+减少运行时加载时间： 不需要在运行时加载动态库，可能会减少应用程序启动时间。
+
+但同时也有一些注意事项和缺点，例如静态 framework 在包含大量代码时可能会导致应用程序体积增加，而且无法动态更新库版本。
+
+在使用 static_framework 之前，请确保你了解静态和动态 framework 的区别，并明确你的需求和偏好。
+
+<br/>
+
+**拓展: 如何将这个静态库集成到项目中呢?**
+
+在 CocoaPods 中使用 static_framework 创建静态库后，你可以通过以下步骤找到并导出这个库，然后集成到主工程中：
+
+- a.找到生成的静态库： 在你的 Pod 项目的 Pods 目录下，可以找到生成的静态库。通常路径是 Pods/Target Support Files/Pods-YourTargetName。在这个目录下，你可以找到一个名为 libYourLibraryName.a 的文件，这就是生成的静态库。
+
+- b.导出静态库： 将 libYourLibraryName.a 文件拷贝到一个你方便管理的目录中，例如一个新建的文件夹。
+
+- c.导出头文件： 在你的 Pod 项目中，你的静态库的头文件应该被包含在 Pods/Headers/Public/YourLibraryName 目录下。你需要将这个目录的内容一并导出。
+
+- d.集成到主工程中： 将导出的静态库和头文件集成到你的主工程中。
+
+	- 将 libYourLibraryName.a 添加到主工程的 "Build Phases" -> "Link Binary With Libraries" 中。
+
+	- 将导出的头文件目录添加到主工程的 "Build Settings" -> "Header Search Paths" 中。
+
+	- 在主工程的代码中通过 #import 导入你的库的头文件即可开始使用。
+
+
+- **注意事项：**
+
+	- 确保导出的静态库和头文件的版本和配置与你的主工程匹配。
+
+	- 在导入静态库的过程中，可能需要调整主工程的构建设置，确保正确链接并使用静态库中的符号。
+
+<br/>
+<br/>
+
+- **8、s.resource**
+
+&emsp; 在 CocoaPods 的 Podspec 文件中，s.resource 用于指定你的库或应用程序包含的资源文件。资源文件可以包括图片、字体、xib 文件、HTML 文件等，这些文件不是直接编译成代码，而是在运行时需要被加载或使用。
+
+&emsp; 使用 s.resource 可以告诉 CocoaPods 库的使用者，在集成你的库时还需要包含一些资源文件。这样，当其他项目使用你的库时，这些资源文件会被正确地添加到项目中。
+
+```
+s.resource = 'Assets/*.png', 'Assets/*.json'
+```
+
+在这个示例中，s.resource 设置了两个通配符模式，用于包含 Assets 目录下的所有 .png 和 .json 文件。这些文件将会被包含在生成的 CocoaPods 二进制文件中，用户可以直接访问这些资源。
+
+确保正确设置 s.resource 是很重要的，以确保在集成你的库时，相关的资源文件也被正确地添加到项目中。
+
+
+
+
+<br/>
+<br/>
+
+- **9、**
+
+&emsp; 在 CocoaPods 的 Podspec 文件中，s.dependency 用于指定你的库依赖的其他 CocoaPods 库。这是用于声明你的库需要依赖哪些其他库的配置项。
+
+&emsp; 使用 s.dependency 可以告诉 CocoaPods 在安装你的库时，同时安装指定的其他库。这对于构建有依赖关系的项目是非常有用的，因为它确保了依赖库的正确版本被安装。
+
+```
+s.dependency 'Alamofire', '~> 5.0'
+```
+
+
+&emsp; 在这个示例中，s.dependency 指定了你的库依赖于 Alamofire 库，并且版本应该在 5.0 版本及以上，但不包括下一个主版本。这样，在安装你的库时，CocoaPods 会自动安装 Alamofire 作为依赖项。
+
+&emsp; 如果你的库有多个依赖，你可以在 s.dependencies 数组中指定多个依赖项：
+
+```
+s.dependencies = ['Alamofire', '~> 5.0', 'SwiftyJSON', '~> 4.0']
+```
+
+<br/>
+<br/>
+
+- **10、s.frameworks**
+
+&emsp; 在 CocoaPods 的 Podspec 文件中，s.frameworks 用于指定你的库或应用程序依赖的系统框架。系统框架是由操作系统提供的共享库，包含了一些常见的功能和工具，例如 UIKit、Foundation、CoreData 等。
+
+&emsp; 使用 s.frameworks 可以告诉 CocoaPods 在集成你的库时，需要链接哪些系统框架。这是很重要的，因为你的库可能使用了某些系统框架提供的功能，而这些框架需要在链接时被引入。
+
+```
+s.frameworks = 'UIKit', 'Foundation', 'CoreData'
+```
+
+&emsp; 在这个示例中，s.frameworks 指定了你的库依赖于 UIKit、Foundation 和 CoreData 这三个系统框架。在使用 CocoaPods 安装你的库时，这些框架会被添加到项目的链接阶段。
+
+&emsp; 虽然在某些情况下你可能不需要手动指定系统框架，但通常来说，特定的库可能需要链接一些系统框架以确保其正常运行。如果你的库使用了某些系统框架，最好还是指定这些框架，以确保用户在使用你的库时不会遇到链接错误。
+
+
+
+<br/>
+<br/>
+
+- **11、s.subspec 'Serialization' do |ss|**
+
+```
+s.subspec 'Serialization' do |ss|
+  ss.source_files = 'AFNetworking/AFURL{Request,Response}Serialization.{h,m}'
+end
+
+```
+
+
+- `s.subspec 'Serialization'`：定义了一个名为 'Serialization' 的子规格。
+
+- `do |ss| ... end`：这是一个代码块，用于配置子规格的属性。
+
+- `ss.source_files`：配置了子规格包含的源文件。在这里，使用了一个包含花括号的通配符模式 `'AFNetworking/AFURL{Request,Response}Serialization.{h,m}'`。
+
+- `'AFNetworking/AFURL{Request,Response}Serialization.{h,m}'`：这个通配符模式匹配了两个文件：`AFURLRequestSerialization.h、AFURLResponseSerialization.h `和它们的对应 .m 文件。
+
+- 因此，这个子规格 'Serialization' 表示在主规格的基础上，你可以选择只包含关于 URL 请求和响应序列化的部分功能。用户可以通过在 Podfile 中指定子规格的方式，只引入他们需要的功能模块，而不是整个库。
+
+
+
+
+
+
+
+
+
+
+
 
 
 <br/>

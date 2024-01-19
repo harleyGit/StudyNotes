@@ -619,13 +619,15 @@ atomic表示，我TM也很冤啊！！！！
 > <h3 id="pod instal和pod update区别">pod instal和pod update区别
 </h3>
 
-![<br/>](./../../Pictures/ios_pd4.jpg)
+<br/>
 
-- **pod install:**执行该命令时，如果Podfile.lock文件存在, 则直接从此文件中读取框架信息并且它会只下载Podfile.lock文件中指定的版本安装。对于不在Podfile.lock文件中的pod库，pod install命令会搜索这个pod库在Podfile文件中指定的版本来安装；如果Podfile.lock不存在, 则会读取Podfile文件内的框架信息，然后执行下载并且根据下载好的框架信息, 生成Podfile.lock文件。
+![ios_pd4.jpg](./../../Pictures/ios_pd4.jpg)
 
-- **pod update:**只有当你想要更新pod库的版本时才使用pod update；它不管Podfile.lock是否存在, 都会读取Podfile文件的的框架信息去下载安装，下载好之后, 再根据下载好的框架信息, 生成Podfile.lock文件
+- **pod install:** 执行该命令时，如果Podfile.lock文件存在, 则直接从此文件中读取框架信息并且它会只下载Podfile.lock文件中指定的版本安装。对于不在Podfile.lock文件中的pod库，pod install命令会搜索这个pod库在Podfile文件中指定的版本来安装；如果Podfile.lock不存在, 则会读取Podfile文件内的框架信息，然后执行下载并且根据下载好的框架信息, 生成Podfile.lock文件。
 
-当多人合作开发项目时，最开始把项目下载下来时最好都执行**`pod install`**，以后为了保持类库版本一致统一用**`pod update`**命令。
+- **pod update:** 只有当你想要更新pod库的版本时才使用pod update；它不管Podfile.lock是否存在, 都会读取Podfile文件的的框架信息去下载安装，下载好之后, 再根据下载好的框架信息, 生成Podfile.lock文件
+
+&emsp; 当多人合作开发项目时，最开始把项目下载下来时最好都执行**`pod install`**，以后为了保持类库版本一致统一用**`pod update`**命令。
 
 
 
@@ -997,9 +999,6 @@ NSNotification[8150:145628] 通知赋值完毕
 
 > <h2 id='异步操作'>异步操作</h2>
 
-
-
-
 看下面：
 
 发送通知：
@@ -1150,6 +1149,36 @@ named表：key(name) : value->key(object) : value(Observation)
 
 因此在发送通知的时候，如果只传入name而并没有传入object，是找不到Observation的，也就不能执行观察者回调.
 
+
+<br/>
+<br/>?
+
+拓展:若是在发送和接收时都没有添加object这个参数? 还能发送通知吗? 若是可以,为什么?若是不可以,又是为什么? 
+
+
+&emsp; 在NSNotification的底层结构体中，object是通知的发送者，当你发送通知时提供了object参数，实际上就是在NSNotification结构体中的object属性中存储了发送通知的对象。如果在添加观察者时指定了object参数，通知观察者只有在接收到的通知中的object与在添加观察者时指定的object相匹配时才会执行相应的操作。
+
+&emsp; 假设在发送和接收通知时都没有添加object参数，即NSNotification结构体中的object属性为nil，可以发送通知，但是观察者将接收到所有指定通知名称的通知，而无论发送者是否为特定对象。
+
+
+<br/>
+
+为什么可以发送通知呢？
+
+&emsp; NSNotification结构体中的object属性是可选的，即它可以为nil。当你调用post(name:object:userInfo:)发送通知时，如果没有提供object参数，底层机制会将NSNotification结构体中的object属性设为nil，表示通知没有特定的发送者。
+
+
+<br/>
+
+为什么可以接收通知呢？
+
+&emsp; 在添加观察者时，如果你没有指定object参数，观察者将接收到所有指定通知名称的通知，而不管通知的发送者是谁。这是因为观察者没有对发送者进行筛选，它将接收所有符合通知名称条件的通知。
+
+**总结：**
+
+&emsp; 如果在发送和接收通知时都没有添加object参数，通知可以正常发送和接收。
+
+&emsp; 如果在添加观察者时指定了object参数，而在发送通知时没有提供相应的object参数，观察者将无法正确匹配通知，因为NSNotification结构体中的object属性与在添加观察者时指定的不同。
 
 
 <br/>
@@ -1562,6 +1591,72 @@ dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), 
 ```
 
 注意：dispatch_after函数并不是延迟对应时间后立即执行block块中的操作，而是将任务追加到对应队列中，考虑到队列阻塞等情况，所以这个任务从加入队列到真正执行的时间是不准确的。
+
+<br/>
+
+拓展: 有时间绝对精确的嘛? 若是有? 有哪些? 若是没有? 还有哪些对时间进行准确计时的?
+
+没有时间绝精确的
+
+计算时间的还有CADisplayLink、NSTimer、dispatch_source_t这些.他们的用法如下:
+
+<br/>
+
+- **CADisplayLink** 是一个与屏幕刷新率同步的定时器，通常用于进行与界面刷新相关的操作。它的回调方法会在每一帧刷新时被调用，可以利用这个特性来实现比较精确的时间控制。
+
+```
+// 在初始化时创建 CADisplayLink
+CADisplayLink *displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(update:)];
+[displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+
+// 回调方法
+- (void)update:(CADisplayLink *)displayLink {
+    // 在这里执行需要精确控制的操作
+}
+
+```
+
+
+<br/>
+
+
+- **NSTimer** 是一种定时器，可以用于在指定时间间隔后执行某个方法。虽然 NSTimer 的精确性受到运行循环的影响，但在一些场景下仍可以提供足够的精度。
+
+```
+// 创建 NSTimer
+NSTimer *timer = [NSTimer timerWithTimeInterval:0.1 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
+[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+
+// 定时器回调方法
+- (void)timerFired:(NSTimer *)timer {
+    // 在这里执行需要精确控制的操作
+}
+```
+
+
+<br/>
+
+
+- **dispatch_source_t：**
+
+&emsp; GCD 提供了 dispatch_source_t，可用于创建定时器。与 NSTimer 不同，dispatch_source_t 的精度较高，并且不受运行循环的约束。
+
+```
+// 创建 dispatch_source_t 定时器
+dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
+dispatch_source_set_event_handler(timer, ^{
+    // 在这里执行需要精确控制的操作
+});
+dispatch_resume(timer);
+```
+
+这些方法都可以提供一定程度上的时间精确性，但在实际应用中，需要根据具体的场景和需求选择合适的方案。CADisplayLink 在动画和渲染方面非常适用，NSTimer 适用于相对低频率的定时任务，而 dispatch_source_t 则提供了较高的精确度。
+
+
+
+总结:实际使用中，总是受到系统负载、调度器的影响，以及其他并发任务的执行情况。所以说的时间精确性,是没有绝对的.
+
 
 
 <br/>
