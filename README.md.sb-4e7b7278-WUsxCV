@@ -416,6 +416,7 @@
 	*	[HandyJSON(I)](./ClassLibrary/HandyJSON(I).md)
 	*	[SwiftyJSON(I)](./ClassLibrary/SwiftyJSON(I).md)
 	*	[JSONModel(I)](./ClassLibrary/JSONModel(I).md)
+	*	[MJExtension(I)](./ClassLibrary/MJExtension(I).md)
 *	响应式SDK
 	*	[ReactiveCocoa](./ClassLibrary/ReactCocoa.md)
 	*	[ReactiveCocoa(I)](./ClassLibrary/ReactiveCocoa(I).html)

@@ -15,6 +15,8 @@
 - **参考资料**
 	- [](https://juejin.cn/post/6921970988796248077) 
 	- [CocoaPods私有库的创建和版本更新](https://www.jianshu.com/p/51b0aed5db2a)
+	- [自建 iOS 静态库并用 pod 管理](https://juejin.cn/post/6844903578071482382)
+	- [在自己的私有服务器上创建Git仓库](https://www.cnblogs.com/LeeGof/p/6635522.html)
 
 
 
