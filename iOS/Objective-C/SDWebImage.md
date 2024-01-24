@@ -1,14 +1,19 @@
-- **图片渲染过程**
-- **SDWebImage的UML图**
-- **下载顺序枚举**
-- **缓存文件清除机制**
-- **图片格式**
-- **MD5获取文件名**
-- [**SDWebImage知识点精讲**](http://cloverkim.com/SDWebImage-interview-question.html)
-- **[从零开始打造一个iOS图片加载框架](https://juejin.im/post/6844903807667666951)**
-- [**iOS 中图片的解压缩**](http://www.cocoachina.com/ios/20170227/18784.html)
-- [**SDWebImage 4.x版本源码分析**](https://www.jianshu.com/p/ae5c107d2b76)
-- [**从sd_setImageWithURL:方法谈SDWebImage （二)**](https://www.jianshu.com/p/2d96280aa841)
+> <h1 id=''></h1>
+- [**图片渲染过程**](#图片渲染过程)
+- [**SDWebImage的UML图**](#SDWebImage的UML图)
+- [**下载顺序枚举**](#下载顺序枚举)
+- [**缓存文件清除机制**](#缓存文件清除机制)
+- [**图片格式**](#图片格式)
+- [**MD5获取文件名**](#MD5获取文件名)
+- **资料**
+	- [**SDWebImage 图片解压和压缩**](https://www.jianshu.com/p/dfa47380fc05)
+	- [**SDWebImage 源码解析**](http://cloverkim.com/SDWebImage-source-code-analysis-1.html)
+	- [**SDWebImage相关面试题**](http://cloverkim.com/SDWebImage-interview-question.html)
+	- [**SDWebImage知识点精讲**](http://cloverkim.com/SDWebImage-interview-question.html)
+	- **[从零开始打造一个iOS图片加载框架](https://juejin.im/post/6844903807667666951)**
+	- [**iOS 中图片的解压缩**](http://www.cocoachina.com/ios/20170227/18784.html)
+	- [**SDWebImage 4.x版本源码分析**](https://www.jianshu.com/p/ae5c107d2b76)
+	- [**从sd_setImageWithURL:方法谈SDWebImage （二)**](https://www.jianshu.com/p/2d96280aa841)
 
 
 
@@ -18,7 +23,13 @@
 <br/>
 
 
->#  图片渲染过程
+<br/>
+
+***
+
+<br/><br/>
+
+> <h1 id='图片渲染过程'>图片渲染过程</h1>
 
 - 图片文件只有在确认要显示时,CPU才会对齐进行解压缩.因为解压是非常消耗性能的事情.解压过的图片就不会重复解压,会缓存起来；
 - 图片渲染到屏幕的过程:
@@ -52,7 +63,8 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 <br/>
 
 
-># SDWebImage的UML图
+> <h1 id='SDWebImage的UML图'>SDWebImage的UML图</h1>
+
 
 <br/>
 
@@ -135,7 +147,7 @@ SDWebImageDownloaderOperation        负责单个图片下载的操作由它来�
 <br/>
 
 
-># 下载顺序枚举
+> <h1 id='下载顺序枚举'>下载顺序枚举</h1>
 
 <br/>
 
@@ -164,7 +176,8 @@ typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
 ***
 <br/>
 
-># 缓存文件清除机制
+> <h1 id='缓存文件清除机制'>缓存文件清除机制</h1>
+
 - 先清除已超过最大缓存时间的缓存文件；
 - 保存文件的大小；
 - 判断设置的上限，进行第二轮的清除；
@@ -177,8 +190,7 @@ typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
 <br/>
 
 
-
-># 图片格式
+> <h1 id='图片格式'>图片格式</h1>
 
 -  png: 无损压缩，解压缩性能高；
 -  jpg：压缩比很高；
@@ -259,7 +271,8 @@ typedef NS_ENUM(NSInteger, SDImageFormat) {
 ***
 <br/>
 
-># `MD5获取文件名`
+> <h1 id='MD5获取文件名'>MD5获取文件名</h1>
+
 
 ```
 
