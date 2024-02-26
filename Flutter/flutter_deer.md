@@ -438,6 +438,73 @@ FluroRouter().navigateTo(context, path,
 ```
 
 
+<br/>
+
+<br/><br/>
+
+> <h2 id='FluroRouter'>FluroRouter</h2>
+
+
+
+- **FluroRouter 的详细说明：**
+
+	- 路由定义： FluroRouter 允许你定义应用程序中的不同路由，每个路由可以与一个特定的页面或者视图关联。
+	
+	- 路由参数传递： 你可以使用 FluroRouter 将参数传递给不同的路由。这些参数可以包含在路由中，以便在目标页面中使用。
+	
+	- 路由跳转： FluroRouter 提供了方法用于执行路由跳转。这使得在应用程序中进行页面切换变得更加简单。
+	
+	- 路由拦截： 你可以使用 FluroRouter 实现路由拦截，例如在路由跳转之前执行一些逻辑，或者在路由跳转完成后执行一些操作。
+	
+	- RESTful 风格的路由： fluro 支持 RESTful 风格的路由，使得定义和使用路由更加灵活和符合约定。
+
+
+
+以下是一个简单的示例，演示了如何在 Flutter 中使用 FluroRouter：
+
+
+```
+import 'package:fluro/fluro.dart';
+import 'package:flutter/material.dart';
+
+void main() {
+  // 创建 FluroRouter 实例
+  final FluroRouter router = FluroRouter();
+
+  // 定义路由
+  router.define(
+    '/home',
+    handler: Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) {
+        return HomeScreen();
+      },
+    ),
+  );
+
+  // 定义带参数的路由
+  router.define(
+    '/profile/:id',
+    handler: Handler(
+      handlerFunc: (BuildContext context, Map<String, dynamic> params) {
+        String userId = params['id'][0];
+        return ProfileScreen(userId: userId);
+      },
+    ),
+  );
+
+  // 在 MaterialApp 中使用 FluroRouter
+  runApp(
+    MaterialApp(
+      onGenerateRoute: router.generator,
+      // other MaterialApp configuration...
+    ),
+  );
+}
+```
+
+&emsp; 在上述例子中，我们首先创建了一个 FluroRouter 的实例，并使用 define 方法定义了两个路由，分别是 /home 和 /profile/:id。然后，在 MaterialApp 中使用了这个 FluroRouter 的实例。
+
+&emsp; 在这个简单的示例中，FluroRouter 负责管理应用程序的路由，以及根据路由信息生成相应的页面。在实际应用中，你可能会使用 FluroRouter 来组织和管理整个应用的路由体系。
 
 <br/><br/>
 
