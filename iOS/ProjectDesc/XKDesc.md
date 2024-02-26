@@ -737,15 +737,24 @@ RACBehaviorSubject *subject = [RACBehaviorSubject subject];
 
 >#### <h4 id='createSignal'>+ (RACSignal *)createSignal:(RACDisposable * (^)(id<RACSubscriber> subscriber))didSubscribe</h4>
 
+
 ```
 - (void) testMethod4 {
-    //创建信号
+    /**
+	    当信号被订阅时，block 中的代码会执行，发送数据或事件给订阅者。在这个例子中，信号只发送了一个值 @"1"，然后立即完成
+	    
+		    使用 createSignal 方法创建一个信号。这个方法接受一个 block 作为参数，该 block 在信号订阅时会被执行。subscriber 参数是一个用于向信号发送事件的订阅者对象
+    */
     RACSignal *singalA = [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
         //发送信号
         [subscriber sendNext:@"1"];
+        //通过 subscriber 向信号发送 sendNext 事件，携带的值是 @(2)。这表示信号成功发送了一个值
         [subscriber sendNext:@(2)];
+        //通过 subscriber 向信号发送 sendCompleted 事件，表示信号已经完成，不再有后续事件
         [subscriber sendCompleted];
         
+        
+        //return nil; 由于 createSignal 方法的返回值是 RACDisposable 类型，这里返回 nil 表示不需要进行手动资源管理，而由 ReactiveCocoa 框架来管理
         return [RACDisposable disposableWithBlock:^{
             NSLog(@"------this is RACDisposable---------");
         }];
@@ -767,6 +776,58 @@ RACBehaviorSubject *subject = [RACBehaviorSubject subject];
 
 ```
 
+
+
+<br/>
+
+**发送一个网络请求实战:**
+
+```
+#import "ReactiveCocoa.h"
+
+// 假设有一个网络请求的方法，返回一个 RACSignal
+- (RACSignal *)fetchDataFromServer {
+    // 返回一个信号，该信号在网络请求完成后发送请求结果
+    return [RACSignal createSignal:^RACDisposable * _Nullable(id<RACSubscriber>  _Nonnull subscriber) {
+        // 模拟网络请求，这里使用 GCD 来模拟异步操作
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            // 假设这里是真实的网络请求代码，这里简单模拟一个结果
+            NSString *resultData = @"Data from server";
+            
+            // 发送请求结果给订阅者
+            [subscriber sendNext:resultData];
+            
+            // 发送完成事件，表示网络请求结束
+            [subscriber sendCompleted];
+        });
+        
+        // 返回 nil，不需要手动管理资源
+        return nil;
+    }];
+}
+
+// 在某个地方调用网络请求并处理结果
+- (void)requestDataAndUpdateUI {
+    // 调用网络请求方法
+    RACSignal *networkSignal = [self fetchDataFromServer];
+    
+    // 订阅信号，处理请求结果
+    [networkSignal subscribeNext:^(NSString *result) {
+        // 在这里处理网络请求成功后的结果，例如更新界面
+        NSLog(@"Received result from server: %@", result);
+    } error:^(NSError *error) {
+        // 在这里处理网络请求失败的情况
+        NSLog(@"Error during network request: %@", error);
+    } completed:^{
+        // 在这里处理网络请求完成的情况，这里可以做一些清理工作
+        NSLog(@"Network request completed");
+    }];
+}
+
+```
+
+
+&emsp; fetchDataFromServer 方法模拟了一个异步的网络请求，并返回一个 RACSignal，代表这个网络请求。requestDataAndUpdateUI 方法调用了这个网络请求，并使用 ReactiveCocoa 的 subscribeNext:error:completed: 方法订阅了这个信号，以处理网络请求的结果。当网络请求成功时，会执行 subscribeNext 里的 block，更新界面或进行其他操作。如果发生错误，会执行 error 里的 block，如果请求完成，会执行 completed 里的 block。这样的方式使得处理异步操作变得更加清晰和易于管理。
 
 <br/>
 <br/>

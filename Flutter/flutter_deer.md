@@ -6,12 +6,19 @@
 	- [showGeneralDialog](#showGeneralDialog)
 	- [dependOnInheritedWidgetOfExactType](#dependOnInheritedWidgetOfExactType)
 	- [函数作为参数](#函数作为参数)
-	- [Theme](#Theme)
+		- [函数回掉](#函数回掉)
+- [**Theme**](#Theme)
+- [**Stream流**](#Stream流)
+	- [Stream.fromFuture](#Stream.fromFuture)
+	- [asBroadcastStream方法](#asBroadcastStream方法)
+- [**打印**](#打印)
+	- [debugPrint](#debugPrint)
 - [**工具类**](#工具类)
 	- [图片工具](#图片工具)
 - [**组件库**](#组件库)
 	- [Dio网络库](#Dio网络库)
 		- [扩展拦截器类](#扩展拦截器类)
+		- [CancelToken](#CancelToken)
 	- [fluro路由组件](#fluro路由组件)
 	- [cached_network_image-图片加载](#cached_network_image-图片加载)
 	- 	[flutter_ume调试工具](#flutter_ume调试工具)
@@ -133,11 +140,45 @@ Flutter: 选择了 1688
 
 
 
-
 <br/><br/>
 
+> <h2 id='函数回掉'>函数回掉</h2>
 
-> <h2 id='Theme'>Theme</h2>
+&emsp; 使用 typedef 关键字定义一个回调函数类型，然后将这个类型用作一个函数的参数类型。这允许你传递一个符合指定类型的函数作为参数，实现回调的机制。
+
+```
+typedef NetSuccessCallback<T> = void Function(T data);
+
+void fetchData(NetSuccessCallback<String> onSuccess) {
+  // 模拟异步操作
+  Future.delayed(Duration(seconds: 2), () {
+    String result = 'Data from network';
+    onSuccess(result); // 调用回调函数，并传递数据
+  });
+}
+
+void main() {
+  // 调用fetchData，并传递回调函数
+  fetchData((data) {
+    print('Network request successful: $data');
+  });
+}
+```
+
+&emsp; NetSuccessCallback 被定义为一个接受泛型类型 T 的回调函数类型。然后，fetchData 函数接受一个类型为 NetSuccessCallback<String> 的回调函数作为参数。在 fetchData 内部，当异步操作完成时，会调用传递进来的回调函数，并传递数据。
+
+&emsp; 在 main 函数中，我们调用了 fetchData 并传递了一个匿名函数作为回调函数。这个匿名函数打印了成功获取的数据。
+
+&emsp; 这样，通过 typedef 和泛型，你可以定义灵活的回调函数类型，并在需要时传递相应类型的回调函数。
+
+
+<br/>
+
+***
+<br/>
+
+
+> <h1 id='Theme'>Theme</h1>
 
 主题统一颜色和字体风格
 
@@ -151,6 +192,175 @@ extension ThemeExtension on BuildContext {
   Color get dialogBackgroundColor => Theme.of(this).canvasColor;
 }
 ```
+
+
+
+<br/>
+
+***
+<br/>
+
+> <h1 id='Stream流'>Stream流</h1>
+
+
+- **Stream 是一个重要的概念，用于处理异步事件。以下是一些关键概念和用途：**
+
+	- 异步事件序列： Stream 表示的是一个异步事件序列，可以包含多个事件，这些事件不一定是同时发生的。
+	
+	- 事件处理： 开发者可以通过监听 Stream 来捕获和处理事件。监听器（Listener）通过注册回调函数，可以在事件到达时执行相应的操作。
+	
+	- 非阻塞： 使用 Stream 的优势之一是非阻塞式的事件处理。当一个事件到达时，系统不会等待事件处理完毕，而是继续执行其他任务。
+	
+	- 异步编程： Stream 在处理异步编程任务时非常有用，比如从网络获取数据、文件I/O、定时器等。
+	
+	- 在Flutter中，许多操作都返回 Stream 对象，比如网络请求、用户输入、定时器等。使用 Stream 可以更灵活地响应这些异步事件。例如，你可以使用 StreamBuilder 在Flutter中构建UI，根据 Stream 中的事件动态更新用户界面。
+
+
+简单例子:
+
+```
+import 'dart:async';
+
+void main() {
+  // 创建一个定时器，每秒发送一个事件
+  Stream<int> timerStream = Stream.periodic(Duration(seconds: 1), (count) => count);
+
+  // 监听Stream的事件
+  timerStream.listen((count) {
+    print('Timer count: $count');
+  });
+}
+
+```
+
+&emsp; Stream.periodic 创建了一个定时器，每秒产生一个事件，然后通过 listen 监听这个 Stream，在每个事件到达时输出计数信息
+
+
+
+
+<br/>
+<br/>
+
+
+<br/><br/>
+
+> <h2 id='Stream.fromFuture'>Stream.fromFuture</h2>
+
+Stream.fromFuture 是一个用于创建 Stream 对象的方法，该方法从一个 Future 对象中生成一个单一事件的 Stream。它允许你将一个异步操作（Future）转换为一个可以监听的事件流（Stream）
+
+
+```
+import 'dart:async';
+
+void main() {
+  // 创建一个Future对象，模拟异步操作
+  Future<String> fetchData() async {
+    await Future.delayed(Duration(seconds: 2));
+    return 'Data from Future';
+  }
+
+  // 使用Stream.fromFuture创建Stream
+  Stream<String> dataStream = Stream.fromFuture(fetchData());
+
+  // 监听Stream的事件
+  dataStream.listen((data) {
+    print('Received data: $data');
+  }, onDone: () {
+    print('Stream closed');
+  }, onError: (error) {
+    print('Error: $error');
+  });
+}
+
+```
+
+&emsp; 在上面的例子中，fetchData 是一个异步函数，返回一个 Future<String>。然后，使用 Stream.fromFuture 创建一个 Stream<String> 对象，该流将在 Future 完成时发出一个事件，事件的数据即为 Future 的结果。
+
+&emsp; 接着，我们通过 listen 方法来监听 dataStream 的事件。当 Future 完成时，会触发 onData 回调，打印接收到的数据。如果发生错误，将触发 onError 回调。最后，当流关闭时，会触发 onDone 回调。
+
+&emsp; 这是一个简单的例子，实际中你可能会在UI层中使用 StreamBuilder 或者其他方法来更方便地处理 Stream
+
+
+<br/><br/>
+
+> <h3 id='asBroadcastStream方法'>asBroadcastStream方法</h3>
+
+ Stream 的 .asBroadcastStream() 方法用于将一个单订阅（single-subscription）的 Stream 转换为广播（broadcast）的 Stream。广播流可以被多个监听器（listeners）订阅，而不是单个订阅
+
+&emsp; 一旦通过 .asBroadcastStream() 转换为广播流，你可以使用 .listen 方法来添加多个监听器 
+
+```
+import 'dart:async';
+
+void main() {
+  // 创建一个单订阅的Stream
+  Stream<int> singleSubscriptionStream = Stream.fromIterable([1, 2, 3, 4, 5]);
+
+  // 将单订阅的Stream转换为广播Stream
+  Stream<int> broadcastStream = singleSubscriptionStream.asBroadcastStream();
+
+  // 第一个监听器
+  broadcastStream.listen(
+    (data) => print('Listener 1 received data: $data'),
+    onDone: () => print('Listener 1 done'),
+  );
+
+  // 第二个监听器
+  broadcastStream.listen(
+    (data) => print('Listener 2 received data: $data'),
+    onDone: () => print('Listener 2 done'),
+  );
+}
+
+```
+
+&emsp; 在上面的例子中，singleSubscriptionStream 是一个单订阅的 Stream，然后通过 .asBroadcastStream() 方法将其转换为广播流 broadcastStream。
+
+&emsp; 接着，我们添加了两个监听器，分别通过 .listen 方法监听 broadcastStream。这样，两个监听器都可以独立地接收来自 broadcastStream 的事件。当事件触发时，两个监听器的回调函数都会执行。
+
+&emsp; 需要注意的是，使用广播流时要确保适当管理监听器，以避免内存泄漏。当不再需要监听器时，最好使用 cancel 或者 onDone 回调来取消订阅。
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='打印'>打印</h1>
+
+
+<br/><br/>
+
+> <h2 id='debugPrint'>debugPrint</h2>
+
+
+&emsp; debugPrint 是 Flutter 提供的用于打印调试信息的函数。它是 print 函数的一种替代，但在开发环境下提供更多的调试信息
+
+
+**debugPrint 的说明：**
+
+- 调试信息： debugPrint 用于打印调试信息，这对于识别代码中的问题非常有用。
+
+- 多平台支持： debugPrint 在 Flutter 中是一个跨平台的函数，可以在 iOS、Android 等平台上使用。它会根据平台的不同选择合适的输出方式。
+
+- 可配置性： debugPrint 允许你配置一些参数，例如是否在 release 模式下禁用打印、是否输出时间戳等。这样可以更灵活地适应不同的开发场景。
+
+- 在实际使用中，你可以使用 debugPrint 来输出变量的值、对象的内容、错误信息等，以便更好地了解应用程序的运行状态。例如：
+
+```
+try {
+  // 一些可能抛出异常的代码
+} catch (error) {
+  debugPrint("An error occurred: ${error.toString()}");
+}
+
+```
+
+虽然 debugPrint 在开发环境下提供更多的信息，但在发布版本中，它会被自动替换为 print 函数，以减小应用程序的体积。因此，你可以放心在开发中使用 debugPrint 进行调试，而不必担心在发布版本中产生额外的负担。
+
+<br/>
+
 
 
 
@@ -233,6 +443,13 @@ FluroRouter().navigateTo(context, path,
 
 > <h3 id='扩展拦截器类'>扩展拦截器类</h3>
 
+&emsp; 在 Dart 和 Flutter 中，拦截器（Interceptor）通常与网络请求库一起使用，用于在请求发出和响应返回之间插入一些逻辑。这些逻辑可能包括添加请求头、记录日志、处理错误等。一个常见的 Dart 网络请求库是 Dio，下面我会通过 Dio 中的拦截器来说明。
+
+&emsp;Dio 中的拦截器是通过实现 Interceptor 接口来创建的。这个接口包含了两个方法：onRequest 和 onResponse，分别用于在发出请求和收到响应时执行相关逻辑。
+
+
+<br/>
+
 我们可以创建一个拦截器类来覆盖onRequest、onError、onResponse方法。
 
 ```
@@ -289,6 +506,133 @@ Dio addInterceptors(Dio dio) {
   dio.interceptors.add(AppInterceptors());
 }
 ```
+
+<br/>
+<br/>
+
+**案例Demo**
+
+
+```
+import 'package:dio/dio.dart';
+
+void main() async {
+  // 创建 Dio 实例
+  Dio dio = Dio();
+
+  // 添加一个请求拦截器
+  dio.interceptors.add(MyRequestInterceptor());
+
+  // 添加一个响应拦截器
+  dio.interceptors.add(MyResponseInterceptor());
+
+  // 发起网络请求
+  try {
+    Response response = await dio.get('https://api.example.com/data');
+    print(response.data);
+  } catch (e) {
+    print('Error: $e');
+  }
+}
+
+// 自定义请求拦截器
+class MyRequestInterceptor extends Interceptor {
+  @override
+  onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    // 在请求发出之前执行的逻辑
+    print('Request Interceptor: ${options.uri}');
+    handler.next(options); // 继续请求
+  }
+}
+
+// 自定义响应拦截器
+class MyResponseInterceptor extends Interceptor {
+  @override
+  onResponse(Response response, ResponseInterceptorHandler handler) async {
+    // 在收到响应之后执行的逻辑
+    print('Response Interceptor: ${response.requestOptions.uri}');
+    handler.next(response); // 继续处理响应
+  }
+}
+```
+
+
+&emsp; 在上述示例中，我们创建了一个 Dio 实例，并添加了两个拦截器：MyRequestInterceptor 和 MyResponseInterceptor。这两个拦截器分别在请求发起前和收到响应后执行一些逻辑。
+
+&emsp; 拦截器提供了一种有效的方式，允许我们在网络请求的不同阶段插入自定义的逻辑，以便更好地控制和管理网络请求过程中的行为。
+
+
+
+
+<br/><br/>
+
+> <h2 id='CancelToken'>CancelToken</h2>
+
+&emsp; CancelToken 通常与异步任务和取消相关的库（例如 dio 等）一起使用，用于在需要时取消异步操作。CancelToken 包含一个用于取消异步任务的令牌，以及一些与取消相关的方法，如 isCancel。
+
+- CancelToken 中的 isCancel 方法用于检查是否已取消相应的异步任务。让我们来详细解释一下：
+
+	- 	1.CancelToken 介绍： CancelToken 是由 Dart 异步任务取消库提供的一部分。它允许你在进行异步任务时注册取消回调，并在需要时取消任务。这对于处理网络请求、定时器或其他可能需要被中断的异步任务非常有用。
+	
+	- 	2.isCancel 方法： isCancel 是 CancelToken 类中的一个方法。它用于检查当前的令牌是否已经被取消。方法的定义如下：
+
+```
+bool isCancel(dynamic e) {
+  // Implementation details
+}
+```
+
+isCancel 方法接受一个参数 e，通常是捕获到的异常对象。它会检查该异常对象是否与取消相关，如果是取消异常，则返回 true；否则返回 false。这是用于在处理异步任务时检查是否应该取消任务的便捷方法。
+
+
+- 3.使用 CancelToken： 通常，在发起异步任务之前，你会创建一个 CancelToken 对象，并将其传递给异步任务。当需要取消任务时，你可以调用 cancel 方法，这将触发与该令牌相关的所有回调。在异步任务中，你可以使用 isCancel 方法检查是否应该取消任务。
+
+```
+import 'dart:async';
+
+void main() {
+  // 创建 CancelToken 对象
+  CancelToken cancelToken = CancelToken();
+
+  // 模拟异步任务
+  Future<void> asyncTask(CancelToken token) async {
+    try {
+      // 在异步任务中使用 isCancel 方法检查是否已取消
+      if (token.isCancel()) {
+        print('Task is cancelled');
+        return;
+      }
+
+      // 模拟异步操作
+      await Future.delayed(Duration(seconds: 2));
+
+      // 在异步任务中再次检查是否已取消
+      if (token.isCancel()) {
+        print('Task is cancelled');
+        return;
+      }
+
+      // 完成异步任务
+      print('Task completed');
+    } catch (e) {
+      // 处理异常
+      if (token.isCancel(e)) {
+        print('Task is cancelled');
+      } else {
+        print('Error: $e');
+      }
+    }
+  }
+
+  // 启动异步任务
+  asyncTask(cancelToken);
+
+  // 在需要的时候取消任务
+  cancelToken.cancel();
+}
+```
+
+&emsp; isCancel 方法用于在异步任务中检查是否已取消任务。请注意，在取消时，可能会抛出 CancelException 或其他与取消相关的异常，isCancel 方法用于检查异常是否与取消有关。
 
 
 

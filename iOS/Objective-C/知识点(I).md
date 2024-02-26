@@ -19,6 +19,7 @@
 	- [适配器、响应元是什么](#适配器响应元是什么)
 	- [热更新](#热更新)
 	- [NSString的属性copy和strong区别](#NSString的属性copy和strong区别)
+	- [NSMutableSet和NSMutableArray区别](#NSMutableSet和NSMutableArray区别)
 	- [retain和strong区别](#retain和strong区别)
 	- [NSCache详解](#NSCache详解)
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
@@ -475,6 +476,41 @@ self.copyedString: 123456, 0x107b2bff0
 
 
 类似的[NSArray和NSMutableArray](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray.md#%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D)和这个差不多.
+
+
+
+<br/><br/>
+
+> <h2 id='NSMutableSet和NSMutableArray区别'>NSMutableSet和NSMutableArray区别</h2>
+
+
+NSMutableSet 和 NSMutableArray 都是可变的集合类型，但它们在设计和使用上有一些关键的区别，因此在选择使用时需要根据具体的需求。
+
+- **NSMutableSet:**
+	- 无序且唯一： NSMutableSet 存储的元素是无序的，并且是唯一的，相同的元素只会出现一次。
+	- 查找速度快： 由于使用哈希表实现，NSMutableSet 具有很快的查找速度。
+	- 集合操作： 提供了集合操作（如并集、交集、差集等），适合处理集合间的逻辑运算。
+	- 不关心顺序： 当你不关心元素的顺序，而且需要快速检查元素是否存在时，可以选择 NSMutableSet。
+
+
+<br/>
+
+- **NSMutableArray:**
+	- 有序： NSMutableArray 中的元素是有序的，按照插入的顺序排列。
+	- 快速按索引访问： 如果你需要快速按索引访问元素，NSMutableArray 更为适用。
+	- 可重复： NSMutableArray 允许元素重复，相同的元素可以存在多次。
+	- 支持栈和队列操作： 可以方便地进行栈和队列的操作，例如通过 addObject: 和 removeLastObject 来实现栈的操作，通过 addObject: 和 removeObjectAtIndex: 来实现队列的操作。
+
+<br/>
+
+
+- **如何选择：**
+	- 是否关心元素的顺序： 如果需要按照特定的顺序存储元素，或者需要频繁按索引访问元素，选择 NSMutableArray。如果不关心元素的顺序，而且想要快速检查元素是否存在，选择 NSMutableSet。
+	- 是否需要集合运算： 如果需要对集合进行逻辑运算（如并集、交集、差集等），选择 NSMutableSet。
+	- 是否允许元素重复： 如果需要允许元素重复，选择 NSMutableArray。
+	- 在实际开发中，根据具体的场景和需求选择合适的集合类型。有时候，你的应用可能会同时使用 NSMutableSet 和 NSMutableArray 来满足不同的需求。
+
+
 
 <br/>
 <br/>
