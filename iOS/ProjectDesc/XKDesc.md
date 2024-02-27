@@ -4,11 +4,16 @@
 > <h2 id=''></h2>
 - [**编译指令**](#编译指令)
 	- [弃用方法的警告和使用](#弃用方法的警告和使用)
+- [**运行时**](#运行时)
+	- [ffi_type](#ffi_type)
 - [**文件模块**](#文件模块)
 	- [支付模块](#支付模块)
 	- [一键登录模块](#一键登录模块)
 	- [路由导航](#路由导航)
 	- [网页](#网页) 
+		- [JSContext](#JSContext)
+			- [获取上下文currentContext](#获取上下文currentContext)
+			- [方法callWithArguments:](#方法callWithArguments:)
 		- [WebViewController](#HybridWebViewController)
 		- [应用](#应用)
 - [**三方库**](#三方库)
@@ -72,6 +77,57 @@ async throws -> DataResult?为什用 return try await (sss) 作为返回结果�
 
 
 
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='运行时'>运行时</h1>
+
+
+<br/><br/>
+
+> <h2 id='ffi_type'>ffi_type</h2>
+
+&emsp; ffi_type 是 libffi（Foreign Function Interface）库中的一个结构体，用于描述数据类型的信息，特别是在跨越编程语言边界调用函数时，帮助进行参数和返回值的类型映射。
+
+&emsp; 在 C 语言中，ffi_type 的定义如下：
+
+```
+typedef struct {
+    size_t size;
+    unsigned short alignment;
+    unsigned short type;
+    ffi_type **elements;
+} ffi_type;
+
+```
+
+
+&emsp; 这个结构体的各个字段含义如下：
+
+- size: 数据类型的大小（以字节为单位）。
+- alignment: 数据类型的对齐方式。
+- type: 数据类型的标识，指示了该类型是基本类型还是结构体等。
+- elements: 如果类型是结构体，elements 字段表示结构体成员的类型。
+
+<br/>
+
+&emsp; 下面是一些可能的 ffi_type 类型值：
+
+- FFI_TYPE_VOID: 用于表示 void 类型。
+- FFI_TYPE_INT, FFI_TYPE_UINT: 整数类型。
+- FFI_TYPE_FLOAT, FFI_TYPE_DOUBLE: 浮点数类型。
+- FFI_TYPE_POINTER: 指针类型。
+- FFI_TYPE_STRUCT: 结构体类型。
+
+
+<br/><br/>
+
+&emsp; ffi_type 主要用于在 libffi 中进行动态函数调用时，定义函数参数和返回值的类型。它使得能够在运行时动态地创建函数调用帧，将参数传递给函数并从函数中获取返回值。这对于在 C 语言中动态地调用其他语言的函数或者在其他语言中调用 C 函数非常有用，尤其是在跨语言的 FFI 场景中。
+
+&emsp; 需要注意的是，虽然 ffi_type 可以直接使用，但在实际使用时，通常会通过 libffi 提供的函数来创建和操作 ffi_type 对象。这些函数包括 ffi_type_alloc、ffi_type_pointer、ffi_type_void 等。在具体使用 libffi 时，可以参考 libffi 的文档和示例。
+
 
 
 <br/>
@@ -134,8 +190,181 @@ async throws -> DataResult?为什用 return try await (sss) 作为返回结果�
 
 > <h2 id='网页'>网页</h2>
 
+
+<br/><br/>
+
+> <h3 id='JSContext'>JSContext</h3>
+
+&emsp; JSContext 是 JavaScriptCore 框架提供的一个类，用于在Objective-C和JavaScript之间建立通信桥梁。这个框架是苹果的WebKit中的一部分，允许你在iOS和macOS应用中执行和交互JavaScript代码。以下是关于 JSContext 的一些详细信息：
+
+
+**1.创建 JSContext 对象：**
+
+可以使用[[JSContext alloc] init]来创建一个JSContext对象。
+
+```
+JSContext *context = [[JSContext alloc] init];
+```
+
 <br/>
 
+
+**2.执行 JavaScript 代码：**
+
+使用 evaluateScript: 方法执行 JavaScript 代码。
+
+```
+JSValue *result = [context evaluateScript:@"2 + 2"];
+NSLog(@"Result: %@", [result toString]);
+```
+
+
+<br/>
+
+**3.从 Objective-C 传递数据到 JavaScript：**
+
+使用 setObject:forKeyedSubscript: 方法，可以将 Objective-C 对象传递给 JavaScript。
+
+```
+context[@"myVariable"] = @"Hello, JavaScript!";
+
+```
+
+<br/>
+
+**4.从 JavaScript 传递数据到 Objective-C：**
+
+使用 setExceptionHandler: 方法，可以捕捉 JavaScript 中的异常，并在 Objective-C 中进行处理。
+
+```
+context.exceptionHandler = ^(JSContext *context, JSValue *exception) {
+    NSLog(@"JavaScript Exception: %@", exception);
+};
+```
+
+
+<br/>
+
+
+**5.与 JavaScript 函数交互：**
+
+将 Objective-C 的方法暴露给 JavaScript，并在 JavaScript 中调用这些方法。
+
+```
+context[@"myFunction"] = ^(NSString *message) {
+    NSLog(@"Message from JavaScript: %@", message);
+};
+```
+
+在 JavaScript 中调用：
+
+```
+myFunction("Hello from JavaScript!");
+```
+
+
+<br/>
+
+**6.用 JSValue 处理 JavaScript 值：**
+
+JSValue 是 JavaScriptCore 中用于处理 JavaScript 值的 Objective-C 对象。可以将其用于读取和写入 JavaScript 变量，调用 JavaScript 函数等。
+
+```
+JSValue *value = [context evaluateScript:@"myVariable"];
+NSLog(@"Value from JavaScript: %@", [value toString]);
+
+```
+
+
+
+
+<br/><br/>
+
+> <h2 id='获取上下文currentContext'>获取上下文currentContext</h2>
+
+&emsp; **[JSContext currentContext]** 是 JavaScriptCore 框架中的一个方法，用于获取当前正在执行的 JavaScript 代码的上下文（context）。这个方法返回一个 JSContext 对象，该对象代表了当前正在执行 JavaScript 代码的上下文环境。
+
+&emsp; 在 JavaScriptCore 中，JavaScript 代码通常在一个上下文中执行。[JSContext currentContext] 允许你在 Objective-C 代码中获取到当前 JavaScript 执行的上下文，从而进行与 JavaScript 代码的交互。
+
+&emsp; 以下是一个简单的例子，演示了如何使用 [JSContext currentContext] 获取当前上下文：
+
+
+```
+#import <JavaScriptCore/JavaScriptCore.h>
+
+// 创建一个 JSContext 对象
+JSContext *context = [[JSContext alloc] init];
+
+// 在当前上下文中执行 JavaScript 代码
+[context evaluateScript:@"var x = 10;"];
+
+// 获取当前上下文
+JSContext *currentContext = [JSContext currentContext];
+
+// 从当前上下文中获取 JavaScript 变量的值
+JSValue *result = [currentContext evaluateScript:@"x"];
+NSLog(@"Value of x from current context: %@", [result toString]);
+```
+
+
+&emsp;在这个例子中，首先创建了一个 JSContext 对象，然后在该上下文中执行了一段 JavaScript 代码。接着，使用 [JSContext currentContext] 获取到当前上下文，并通过该上下文获取了 JavaScript 变量 x 的值。
+
+&emsp;请注意，使用 [JSContext currentContext] 需要在 JavaScript 代码执行的上下文范围内。如果没有正在执行的 JavaScript 代码，或者 JavaScript 代码执行的上下文已经被销毁，那么调用 [JSContext currentContext] 可能返回 nil。因此，确保在适当的时机使用这个方法，以避免潜在的问题。
+
+
+<br/><br/>
+
+> <h3 id='方法callWithArguments:'>方法callWithArguments:</h3>
+
+在 JavaScriptCore 框架中，callWithArguments: 是 JSValue 类的一个方法，用于调用 JavaScript 函数并传递参数。JSValue 是 JavaScriptCore 框架中用于表示 JavaScript 值的 Objective-C 对象。
+
+下面是一个简单的例子，演示了如何使用 callWithArguments: 方法调用 JavaScript 函数并传递参数：
+
+```
+#import <JavaScriptCore/JavaScriptCore.h>
+
+int main() {
+    @autoreleasepool {
+        // 创建一个 JSContext 对象
+        JSContext *context = [[JSContext alloc] init];
+
+        // 定义一个 JavaScript 函数
+        [context evaluateScript:@"function add(x, y) { return x + y; }"];
+
+        // 获取函数并调用
+        JSValue *addFunction = context[@"add"];
+        
+        if ([addFunction isObject] && ![addFunction isUndefined]) {
+            // 传递参数并调用函数
+            JSValue *result = [addFunction callWithArguments:@[@2, @3]];
+
+            // 输出结果
+            NSLog(@"Result of add function: %@", [result toString]);
+        } else {
+            NSLog(@"add function not found");
+        }
+    }
+    return 0;
+}
+```
+
+
+在这个例子中，首先创建了一个 JSContext 对象，并在该上下文中定义了一个名为 add 的 JavaScript 函数。然后，通过 context[@"add"] 获取到这个函数，并使用 callWithArguments: 方法传递参数调用了它。
+
+需要注意的是，callWithArguments: 方法的参数是一个 NSArray，包含了要传递给 JavaScript 函数的参数。在这个例子中，@2 和 @3 是两个 NSNumber 对象，它们作为参数传递给 JavaScript 函数。
+
+<br/>
+
+
+<br/>
+
+
+
+
+
+
+<br/>
+<br/>
 
 > <h3 id='HybridWebViewController'>WebViewController</h3>
 

@@ -11,6 +11,7 @@
 - [**Stream流**](#Stream流)
 	- [Stream.fromFuture](#Stream.fromFuture)
 	- [asBroadcastStream方法](#asBroadcastStream方法)
+- [**应用状态恢复RestorationMixin**](#应用状态恢复RestorationMixin)
 - [**打印**](#打印)
 	- [debugPrint](#debugPrint)
 - [**工具类**](#工具类)
@@ -319,6 +320,100 @@ void main() {
 &emsp; 接着，我们添加了两个监听器，分别通过 .listen 方法监听 broadcastStream。这样，两个监听器都可以独立地接收来自 broadcastStream 的事件。当事件触发时，两个监听器的回调函数都会执行。
 
 &emsp; 需要注意的是，使用广播流时要确保适当管理监听器，以避免内存泄漏。当不再需要监听器时，最好使用 cancel 或者 onDone 回调来取消订阅。
+
+
+
+<br/>
+
+***
+<br/><br/>
+> <h1 id='应用状态恢复RestorationMixin'>应用状态恢复RestorationMixin</h1>
+
+```
+/**
+ * 通过将 RestorationMixin 添加到 _HomeState，你可以利用 Flutter 的状态保存和恢复功能，以便在应用程序重新启动时恢复 widget 的状态。
+ * 这对于保留用户界面的滚动位置、文本字段内容等非常有用
+ * 
+ *  with RestorationMixin： 这表示 _HomeState 类使用了 RestorationMixin mixin。with 关键字用于在 Dart 中混合 mixin，它允许一个类获取另一个类的功能，而不需要继承整个类层次结构。
+*/
+class _HomeState extends State<Home> with RestorationMixin{
+
+	. . . 
+	. . 
+	.
+}
+```
+
+
+<br/>
+
+&emsp; RestorationMixin 是 Flutter 中的一个 mixin，用于支持应用程序的状态恢复（state restoration）。它提供了一种简单的方法，使您的 Flutter 应用程序能够在发生中断（例如应用程序被销毁并重新创建）时保留其状态。
+
+&emsp; 当用户通过切换应用程序、旋转设备或通过其他手段导致应用程序重新启动时，RestorationMixin 允许应用程序尽可能地恢复到之前的状态，以提供更好的用户体验。
+
+&emsp; 以下是一些关键的概念和方法，以更详细地说明 RestorationMixin 的使用：
+
+**1.状态标识符（RestorationId）**： 使用 restorationId 属性为要保留其状态的组件分配唯一的标识符。这个标识符在整个应用程序中必须是唯一的。
+
+```
+class MyStatefulWidget extends StatefulWidget with RestorationMixin {
+  @override
+  String get restorationId => 'my_stateful_widget';
+
+  // ...
+}
+```
+
+
+<br/>
+
+**2.状态保存和恢复**： 使用 registerForRestoration 方法将状态保存和恢复函数注册到组件中。这些函数定义了在状态保存和恢复期间执行的操作。
+
+
+```
+@override
+void registerForRestoration(RestorationManager manager, String restorationId) {
+  manager.registerForRestoration(this, restorationId);
+}
+
+@override
+void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+  // 在此处恢复状态
+}
+
+@override
+void saveState(RestorationBucket? oldBucket) {
+  // 在此处保存状态
+}
+
+```
+
+在 restoreState 中，您可以从 oldBucket 中提取以前保存的状态。在 saveState 中，您可以将当前状态保存到 oldBucket
+
+
+<br/>
+
+3.**RestorationScope：** 在应用程序的根级别创建一个 RestorationScope，以便管理整个应用程序的状态。
+
+RestorationMixin 在整个 widget 树中查找 
+
+RestorationScope，以确保状态保存和恢复的一致性。
+
+
+```
+void main() {
+  runApp(
+    RestorationScope(
+      restorationId: 'root_restoration_scope',
+      child: MyApp(),
+    ),
+  );
+}
+
+```
+
+这是一个简单的示例，用于说明 RestorationMixin 的基本概念。要使用它，您可能需要更深入地了解 Flutter 的状态管理和组件生命周期。有关更详细的信息，请查看 Flutter 官方文档中关于 RestorationMixin 的内容。
+
 
 
 
