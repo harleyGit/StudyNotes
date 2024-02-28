@@ -1,6 +1,8 @@
 
 
 > <h2 id=''></h2>
+- [**关键字**](#关键字)
+	- [late](#late)
 - [**方法**](#方法)
 	- [addPostFrameCallback](#addPostFrameCallback)
 	- [showGeneralDialog](#showGeneralDialog)
@@ -8,10 +10,13 @@
 	- [函数作为参数](#函数作为参数)
 		- [函数回掉](#函数回掉)
 - [**Theme**](#Theme)
+- [**ChangeNotifierProvider**](#ChangeNotifierProvider)
 - [**Stream流**](#Stream流)
 	- [Stream.fromFuture](#Stream.fromFuture)
 	- [asBroadcastStream方法](#asBroadcastStream方法)
 - [**应用状态恢复RestorationMixin**](#应用状态恢复RestorationMixin)
+	- [RestorableInt详解](#RestorableInt详解)
+- [**PageController()**](#PageController())
 - [**打印**](#打印)
 	- [debugPrint](#debugPrint)
 - [**工具类**](#工具类)
@@ -38,7 +43,48 @@
 <br/>
 
 ***
+<br/><br/>
+
+> <h1 id='关键字'>关键字</h1>
+
+
+<br/><br/>
+
+> <h2 id='late'>late</h2>
+
+late关键字是Dart语言中的一个特性，它用于标记一个变量的延迟初始化。当你使用late关键字修饰一个变量时，Dart编译器会允许你推迟该变量的初始化，直到该变量首次被访问。这在一些情况下很有用，例如在构造函数中初始化变量可能不方便或不可行的情况下。
+
+```
+class Example {
+  late String lateInitializedString; // 声明一个延迟初始化的字符串变量
+
+  Example() {
+    // 在构造函数中无法立即初始化变量
+    // 但是可以在稍后的代码中初始化
+    lateInitializedString = 'Initialized later';
+  }
+
+  void printString() {
+    print(lateInitializedString);
+  }
+}
+
+void main() {
+  var example = Example();
+  example.printString(); // 输出：Initialized later
+}
+```
+
+在上面的例子中，lateInitializedString是一个延迟初始化的字符串变量。在构造函数中，它没有被立即初始化，但是在稍后的代码中进行了初始化。late关键字告诉编译器，虽然变量没有被立即初始化，但在首次访问时将会被初始化。
+
+
+请注意，如果在访问late变量之前尝试访问它，或者在初始化之前访问它，会导致运行时错误。因此，使用late时要确保在访问变量之前进行初始化。
+
+
 <br/>
+
+***
+<br/><br/>
 
 
 > <h1 id='方法'>方法</h1>
@@ -173,10 +219,13 @@ void main() {
 &emsp; 这样，通过 typedef 和泛型，你可以定义灵活的回调函数类型，并在需要时传递相应类型的回调函数。
 
 
+
 <br/>
 
 ***
-<br/>
+<br/><br/>
+
+
 
 
 > <h1 id='Theme'>Theme</h1>
@@ -196,10 +245,256 @@ extension ThemeExtension on BuildContext {
 
 
 
+
+
+
 <br/>
 
 ***
+<br/><br/>
+
+> <h1 id='ChangeNotifierProvider'>ChangeNotifierProvider</h1>
+
+
+```
+class HomeProvider extends RestorableInt {
+  //HomeProvider的构造函数通过super(0)调用了父类RestorableInt的构造函数，将初始值设置为0。这是RestorableInt的一种使用方式，它可以用于保存和还原整数类型的状态。
+  HomeProvider() : super(0);
+}
+ 
+ HomeProvider provider = HomeProvider();
+
+ChangeNotifierProvider<HomeProvider>(
+      create: (_) => provider,
+);
+```
+
+- 1.创建 HomeProvider 实例： 在这段代码的开头，创建了一个 HomeProvider 类的实例，并将其命名为 provider。这个实例是一个用于保存和还原整数状态的RestorableInt子类，初始值为0。
+
+- 2.ChangeNotifierProvider： ChangeNotifierProvider 是 provider 包中的一个类，用于将 ChangeNotifier（包括其子类）引入到 Flutter 的 Provider 架构中，使其能够在小部件树中共享状态。
+
+- 3.create 参数： 在 ChangeNotifierProvider 中，通过 create 参数提供一个回调函数，该回调函数负责创建和返回要提供的 ChangeNotifier 的实例。在这里，使用匿名函数 _（代表不使用传入的 BuildContext）来返回之前创建的 HomeProvider 实例。
+
+- 4.用途和特殊性： 使用 ChangeNotifierProvider 的主要目的是在 Flutter 应用程序中管理状态，并在需要时通知侦听器。HomeProvider 继承自 RestorableInt，这意味着它可以与 RestorationMixin 一起使用，以便在整个应用程序的不同部分之间保存和还原状态。
+
+
+&emsp; 总体来说，ChangeNotifierProvider 在提供 HomeProvider 实例时，允许在小部件树中共享状态，并且当 HomeProvider 的状态发生变化时，相关的小部件能够得到通知并重新构建。这种方式是一种在 Flutter 中管理状态的常见模式。
+
+
 <br/>
+
+案例Demo:
+
+```
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// 定义一个 ChangeNotifier 类
+class CounterNotifier extends ChangeNotifier {
+  int _count = 0;
+
+  int get count => _count;
+
+  // 定义一个方法，用于增加计数器值
+  void increment() {
+    _count++;
+    // 通知侦听器，状态发生变化
+    notifyListeners();
+  }
+}
+
+void main() {
+  runApp(
+    // 使用 ChangeNotifierProvider 包裹 MyApp
+    ChangeNotifierProvider(
+      create: (_) => CounterNotifier(), // 创建 CounterNotifier 实例
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // 从 Provider 中获取 CounterNotifier 实例
+    CounterNotifier counterNotifier = Provider.of<CounterNotifier>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Counter Example'),
+      ),
+      body: Center(
+        // 使用 Consumer 包裹需要依赖状态的小部件
+        child: Consumer<CounterNotifier>(
+          builder: (context, counter, child) {
+            return Text(
+              'Count: ${counter.count}',
+              style: TextStyle(fontSize: 24),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // 调用 CounterNotifier 中的方法来增加计数器值
+          counterNotifier.increment();
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+```
+
+**详解:**
+
+- 1.定义 CounterNotifier 类： 这是一个继承自 ChangeNotifier 的类，其中包含一个计数器值 _count 和一个方法 increment() 用于增加计数器值。
+
+- 2.main 函数： 在 main 函数中，我们使用 ChangeNotifierProvider 包裹 MyApp，并通过 create 参数创建一个 CounterNotifier 的实例。这样，CounterNotifier 的实例就能够在整个应用程序中共享了。
+
+- 3.MyHomePage 小部件： 在 MyHomePage 中，我们使用 Consumer 小部件包裹了需要依赖状态的部分。在这里，我们依赖于 CounterNotifier 的实例，然后在 builder 回调中根据 CounterNotifier 中的状态构建 UI。
+
+- 4.floatingActionButton： 点击悬浮按钮会调用 counterNotifier.increment() 方法来增加计数器值。由于我们在 increment 方法中调用了 notifyListeners()，Consumer 中的 UI 就会被通知进行更新。
+
+<br/>
+
+&emsp; 这样，通过使用 ChangeNotifierProvider 和 Consumer，我们实现了一个简单的计数器应用程序，其中计数器的状态能够在整个应用程序中共享，并且 UI 在状态发生变化时能够自动更新。
+
+
+<br/>
+<br/>
+
+**疑问1:** 如何通过`CounterNotifier counterNotifier = Provider.of<CounterNotifier>(context);`
+就可以获取runApp中创建的CounterNotifier()实例,如何做到的?
+
+
+**回答:** Provider.of获取实例： 在小部件树的某个地方，你可以使用Provider.of<CounterNotifier>(context)来获取CounterNotifier的实例。这是通过Flutter上下文context向上查找小部件树中最近的ChangeNotifierProvider，并返回其提供的CounterNotifier实例
+
+
+<br/>
+<br/>
+
+
+**疑问1.1:** 怎么确定通过Flutter上下文context向上查找小部件树中最近的ChangeNotifierProvider就是我们要找的那个? 若是期间有其他的ChangeNotifierProvider实例该怎么办?如何处理
+
+&emsp; 当你使用Provider.of<T>(context)时，Flutter会从给定的BuildContext开始，向上查找小部件树，以找到最近的ChangeNotifierProvider<T>。这是通过InheritedWidget的机制来实现的。ChangeNotifierProvider是InheritedWidget的一个子类，它将ChangeNotifier提供给小部件树，并通过BuildContext的inheritFromWidgetOfExactType方法来查找。
+
+&emsp; 如果在小部件树中有多个ChangeNotifierProvider<T>实例，Provider.of<T>(context)将返回最近的那个。这是因为inheritFromWidgetOfExactType方法会从当前BuildContext开始，向上查找并返回最近的匹配类型的InheritedWidget。
+
+示例代码：
+
+```
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<CounterNotifier>(
+      create: (_) => CounterNotifier(),
+      child: MaterialApp(
+        home: MyHomePage(),
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // 获取最近的ChangeNotifierProvider<CounterNotifier>实例
+    CounterNotifier counterNotifier = Provider.of<CounterNotifier>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Provider Example'),
+      ),
+      body: Center(
+        child: Text('Counter Value: ${counterNotifier.counter}'),
+      ),
+    );
+  }
+}
+```
+
+&emsp; 在这个例子中，MyHomePage小部件通过Provider.of<CounterNotifier>(context)获取最近的ChangeNotifierProvider<CounterNotifier>实例。如果在小部件树中有多个ChangeNotifierProvider<CounterNotifier>实例，它将获取到最近的那个。
+
+&emsp; 如果在小部件树中存在多个相同类型的ChangeNotifierProvider，并且你想要访问不同的实例，你可以使用Provider.of<CounterNotifier>(context, listen: false)，这样就不会订阅更新。这样，即使有多个相同类型的ChangeNotifierProvider，它将返回最近的那个实例而不会导致订阅。
+
+
+<br/>
+<br/>
+
+
+**疑问1.2**: 可以通过某个标识符来找到我要的那个CounterNotifier实例对象吗? 如何做
+
+在使用 ChangeNotifierProvider 的时候，你可以通过给 ChangeNotifierProvider 提供一个独一无二的标识符 key 来创建一个具有唯一标识的实例。这样，在使用 Provider.of<T>(context) 时，你可以使用 key 来确保获取到你想要的特定实例。
+
+
+```
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<CounterNotifier>(
+          key: UniqueKey(), // 使用 UniqueKey() 创建唯一的 key
+          create: (_) => CounterNotifier(),
+        ),
+        // 可以添加其他 ChangeNotifierProvider 或其他 Provider
+      ],
+      child: MaterialApp(
+        home: MyHomePage(),
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // 使用 key 来获取特定的 CounterNotifier 实例
+    CounterNotifier counterNotifier = Provider.of<CounterNotifier>(
+      context,
+      listen: false,
+      key: UniqueKey(), // 使用相同的 UniqueKey
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Provider Example'),
+      ),
+      body: Center(
+        child: Text('Counter Value: ${counterNotifier.counter}'),
+      ),
+    );
+  }
+}
+
+```
+
+&emsp; 在这个例子中，ChangeNotifierProvider<CounterNotifier> 的实例通过 UniqueKey() 创建了一个唯一的 key。在 Provider.of<CounterNotifier>(context, key: UniqueKey()) 中，使用相同的 UniqueKey 来获取具有相同标识符的特定 CounterNotifier 实例。
+
+&emsp; 请注意，key 的唯一性是由 UniqueKey 提供的，你也可以使用其他方式来确保唯一性。如果你有其他的标识符需要使用，你也可以使用自定义的标识符。
+
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/><br/>
 
 > <h1 id='Stream流'>Stream流</h1>
 
@@ -415,6 +710,201 @@ void main() {
 这是一个简单的示例，用于说明 RestorationMixin 的基本概念。要使用它，您可能需要更深入地了解 Flutter 的状态管理和组件生命周期。有关更详细的信息，请查看 Flutter 官方文档中关于 RestorationMixin 的内容。
 
 
+
+<br/><br/>
+
+> <h2 id='RestorableInt详解'>RestorableInt详解</h2>
+
+
+&emsp; 在Flutter中，RestorableInt是用于恢复状态的一个类，通常用于保持和还原整数类型的状态。它是RestorableProperty的一个子类，RestorableProperty是用于保存和还原状态的基础类。RestorableInt用于在小部件树中的不同位置传递和保存整数值，并且能够在小部件树重建时保持其值。
+
+以下是RestorableInt的主要特性和使用方法：
+
+**1.创建和初始化：** 可以通过RestorableInt的构造函数创建一个实例，并在构造函数中指定初始值。例如：
+
+```
+RestorableInt myRestorableInt = RestorableInt(0);
+```
+
+
+**2.获取和设置值：** 通过value属性可以获取和设置RestorableInt的当前值。
+
+```
+int currentValue = myRestorableInt.value;
+myRestorableInt.value = 42;
+```
+
+
+**3.保存和恢复状态：** RestorableInt会自动参与Flutter的状态保存和恢复机制。当小部件树需要保存其状态时，Flutter会调用saveState方法来获取当前状态，并在需要恢复状态时调用restoreState方法
+
+
+```
+import 'package:flutter/widgets.dart';
+
+class HomeProvider extends RestorableInt {
+	//HomeProvider的构造函数通过super(0)调用了父类RestorableInt的构造函数，将初始值设置为0。
+	//这是RestorableInt的一种使用方式，它可以用于保存和还原整数类型的状态。
+	HomeProvider() : super(0);
+}
+```
+
+
+<br/>
+
+**使用：** 一旦你创建了HomeProvider的实例，你就可以在你的Flutter小部件树中使用它来保存和恢复整数状态。例如：
+
+```
+class MyApp extends StatelessWidget {
+  final HomeProvider homeProvider = HomeProvider();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: RestorationScope(
+        restorationId: 'app',
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('RestorableInt Example'),
+          ),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Counter Value: ${homeProvider.value}'),
+                ElevatedButton(
+                  onPressed: () {
+                    // Increment the counter
+                    homeProvider.value += 1;
+                  },
+                  child: Text('Increment'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+```
+
+
+在这个例子中，homeProvider实例被用于保存和恢复计数器的值。每次点击“Increment”按钮时，计数器的值会增加，并且这个值会在应用程序重启或其他状态变化时得以保留
+
+
+
+<br/>
+
+在RestorationMixin中的使用:
+
+```
+class MyRestorableWidget extends StatefulWidget with RestorationMixin {
+  @override
+  String get restorationId => 'myRestorableWidget';
+
+  final RestorableInt counter = RestorableInt(0);
+
+  @override
+  void restoreState(RestorationBucket oldBucket, bool initialRestore) {
+    // 恢复状态
+    registerForRestoration(counter, 'counter');
+  }
+
+  @override
+  void saveState(RestorationBucket bucket, bool saveImmediately) {
+    // 保存状态
+    counter.saveState();
+  }
+}
+```
+
+
+&emsp; 在上面的示例中，MyRestorableWidget 混入了 RestorationMixin，并通过重写 restorationId 属性来为该小部件指定一个唯一的标识符。在 restoreState 方法中，通过调用 registerForRestoration 方法来注册需要保存和还原的状态对象。
+
+
+&emsp; 总体来说，RestorableInt 用于具体的状态值的保存和还原，而 RestorationMixin 则用于在小部件中启用整个状态保存和还原机制。在实际的应用程序中，它们通常一起使用，以便管理和维护整个应用程序的状态。
+
+
+
+
+
+
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='PageController()'>PageController()</h1>
+
+
+&emsp; PageController 是 Flutter 中用于控制 PageView 的控制器类。PageView 是一个可以滑动切换页面的组件，PageController 用于管理和控制页面切换的行为。
+
+以下是一个简单的示例，演示如何使用 PageController：
+
+```
+PageController _pageController = PageController();
+
+Widget build(BuildContext context) {
+  return PageView(
+    controller: _pageController,
+    children: [
+      // 页面1
+      Container(color: Colors.blue),
+      
+      // 页面2
+      Container(color: Colors.green),
+      
+      // 页面3
+      Container(color: Colors.red),
+    ],
+  );
+}
+
+
+@override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+```
+
+
+
+在这个例子中：
+
+- 创建了一个 PageController 实例 _pageController。
+
+- 在 PageView 中使用了这个控制器。
+
+- children 列表中包含了三个页面，每个页面都是一个简单的彩色容器。
+
+- 通过 PageController，你可以实现以下一些功能：
+
+- 手动控制页面切换： 使用 jumpTo 或 animateTo 方法可以手动切换到指定的页面。
+
+- 监听页面变化： 通过 addListener 可以监听页面的变化，例如滑动到了哪一页。
+
+- 获取当前页面： 使用 page 属性可以获取当前页面的索引。
+
+
+
+<br/>
+
+**释放资源:**
+
+在Flutter中，如果你使用了PageController，特别是在StatefulWidget的dispose方法中手动调用了dispose方法来释放 _pageController，这是一个良好的实践。
+
+在dispose方法中调用_pageController.dispose()是为了确保在小部件销毁时，PageController所使用的资源（例如，动画控制器、监听器等）被适当地释放，从而防止内存泄漏。
+
+当你使用PageController时，如果不手动调用dispose，则可能会导致资源泄漏，尤其是在小部件被销毁或不再需要的情况下。在dispose方法中调用dispose是一种良好的做法，以确保释放相关资源。
+
+<br/>
+
+&emsp; 这使得 PageController 成为管理 PageView 中页面切换的重要工具。
 
 
 <br/>
