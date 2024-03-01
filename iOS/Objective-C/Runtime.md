@@ -263,7 +263,37 @@ struct objc_class {
 
 > &emsp;  `struct objc_classs` 结构体里存放的数据称为`元数据(metadata)`，结构体内包含了isa、super_class(指向父类的指针)、属性(name[类的名字]、version[版本]、info、instance_size[实例大小])、ivars(实例变量列表)、methodLists(方法列表)、cache(缓存)、protocols(遵守的协议列表)。
 
-&emsp;  这些信息就足够创建一个实例了，该结构体的第一个成员变量也是isa指针，这就说明了`Class`本身其实也是一个对象，我们称之为`类对象`，`类对象`在编译期产生用于创建`实例对象`，是`单例`。
+&emsp;  这些信息就足够创建一个实例了，该结构体的第一个成员变量也是isa指针，这就说明了`Class`本身其实也是一个对象，我们称之为`类对象`，`类对象`在编译期产生用于创建`实例对象`。
+
+&emsp;  类对象在编译时创建，每个类在运行时都有一个对应的类对象。类对象是 Objective-C 运行时的一个概念，与实例化的对象和单例不直接相关。单例是一种设计模式,对单例的操作实际上还是对实例对象的操作。
+
+实例（对象）在内存中的存放通常是在堆（heap）上。在Objective-C和其他面向对象的语言中，对象通常是动态分配的，而堆是用于动态分配内存的区域。
+
+- **alloc** 负责在堆上分配一块内存，但这块内存的内容（即实例变量的具体值）并不会被初始化。这就是为什么在使用alloc创建一个新对象后，通常会紧接着调用init方法，以确保对象的内存得到正确的初始化。
+
+
+<br/>
+
+- **init:** 用于初始化对象，它可以执行各种操作，包括给实例变量赋初值、设置默认属性等。在许多情况下，init方法会把对象的内存初始化为零值（即所有实例变量都被设置为零或nil）。但并不是所有的init方法都会清除内存，具体行为取决于类的实现。
+
+	- 如果在init方法中没有显式地对实例变量进行初始化，那么它们的初始值将是不确定的，可能包含之前分配给该内存块的旧数据。这时，对于包含敏感信息的数据，开发者可能需要显式地将内存块清零
+
+举个例子，如果一个类的init方法中有对实例变量进行手动的初始化，那么就不一定会将整个内存清零。例如：
+
+```
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        // 手动初始化实例变量
+        _myProperty = 42;
+    }
+    return self;
+}
+```
+
+在这个例子中，_myProperty 被手动初始化为 42，而没有对整个内存块进行清零。
+
+
 
 
 <br/>
@@ -292,42 +322,71 @@ struct objc_class {
 
 &emsp; Meta Class（元类） 就是一个类对象所属的 类。一个对象所属的类叫做 类对象，而一个类对象所属的类就叫做 元类。
 
- 
+
+<br/>
+<br/><br/>
+
+> <h2 id='类之间的关系'> **类之间的关系:** </h2>
+
+
+&emsp; 元类（Metaclass）的isa指针指向的是元类自身，而不是它所对应的类的元类。元类形成了一个层级结构，其中根元类（Root Metaclass）的isa指针指向自身，形成了一个封闭的环。
+
+&emsp; 具体来说，对于一个类（Class A）而言，它的元类（MetaClass A）的isa指针指向根元类（Root Metaclass）。而根元类的isa指针则指向自身。
+
+- **下面是更准确的描述：**
+	- 一个类的元类的isa指针： 指向根元类（Root Metaclass）。
+	- 根元类的isa指针： 指向自身，形成一个封闭的环。
 
 <br/>
 <br/>
 
-
-> <h2 id='Method(方法)'>Method(方法)</h2>
-
-
-
-
-```
-struct objc_method {
-    SEL _Nonnull method_name   //方法的名字
-    char * _Nullable method_types    //参数的类型
-    IMP _Nonnull method_imp	//就是函数的地址
-} 
-
-```
-
-
-
-<br/>
+&emsp; 在Objective-C中，每个类都有一个与之关联的元类（Metaclass），而元类本身也是一个类。根元类（Root Metaclass）指的是所有元类的根，它实际上是NSObject类的元类。
 
 &emsp;  `类对象`中的`元数据`存储的都是如何创建一个实例的相关信息，那么`类对象`和`类方法`应该从哪里创建呢？就是从isa指针指向的结构体创建，`类对象`的isa指针指向的我们称之为`元类(metaclass)`，元类中保存了创建类对象以及类方法所需的所有信息，因此如简单字符串创建整个结构应该如下图所示:
-
-类之间的关系:
 
 ![ios_oc2_21.png](./../../Pictures/ios_oc2_21.png)
 
 
+```
+NSString *str = @“Hello World”;
+```
+
+str的isa指针指向NSString,那NSString的isa指针指向谁?
+
+NSString的supperClass指向谁?
+
+<br/>
+
+**回答你的具体问题：**
+
+&emsp; 在你的例子中，当你创建一个NSString类的实例时，这个实例的isa指针指向NSString类对象。然后，NSString类对象的isa指针指向NSObject类的元类，即根元类。
+
+- **具体流程如下：**
+
+- NSString类的实例 str 的isa指针指向 NSString类对象。
+- NSString类对象的isa指针指向 NSObject类的元类（根元类）。
+
+所以，根元类指的是NSObject类的元类。
+
+
+
+<br/>
 
 
 &emsp;  通过上图我们可以清晰的看出来一个`实例对象`也就是`struct objc_object结构体`它的isa指针指向`类对象`，`类对象`的isa指针指向了`元类`，`super_class指针`指向了父类的`类对象`，而元类的`super_class指针`指向了父类的`元类`，那元类的isa指针又指向了什么？为了更清晰的表达直接使用一个大神画的图。
 
 ![ios_oc2_22.png](./../../Pictures/ios_oc2_22.png)
+
+
+在 Objective-C 中，元类（metaclass）的 isa 指针最终指向根元类。在这个层次结构中，NSObject 类的元类是整个类和元类层次结构的根元类。所以，确切地说：
+
+- NSObject 的元类指向根元类。
+- 根元类的 isa 指针也指向 NSObject 类的元类。
+
+
+&emsp; 这形成了一个封闭的环，确保整个类和元类的层次结构有一个共同的根元类。因此，根元类的 isa 指针最终指向 NSObject 类的元类。
+
+<br/>
 
 
 
@@ -444,6 +503,30 @@ NS_ASSUME_NONNULL_END
 
 当你给对象发送消息时，消息是在寻找这个对象的类的方法列表;
 当你给类发消息时，消息是在寻找这个类的元类的方法列表。
+
+
+
+
+
+ 
+
+<br/>
+<br/>
+
+
+> <h2 id='Method(方法)'>Method(方法)</h2>
+
+
+
+
+```
+struct objc_method {
+    SEL _Nonnull method_name   //方法的名字
+    char * _Nullable method_types    //参数的类型
+    IMP _Nonnull method_imp	//就是函数的地址
+} 
+
+```
 
 
 
