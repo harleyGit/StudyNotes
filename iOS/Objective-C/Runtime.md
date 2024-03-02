@@ -348,10 +348,19 @@ struct objc_class {
 
 ![ios_oc2_21.png](./../../Pictures/ios_oc2_21.png)
 
-
 ```
 NSString *str = @“Hello World”;
 ```
+
+<br/>
+
+**用图举一个例子:**
+
+![ios_oc1_113_34.webp](./../../Pictures/ios_oc1_113_34.webp)
+
+
+<br/>
+<br/>
 
 str的isa指针指向NSString,那NSString的isa指针指向谁?
 
@@ -378,6 +387,14 @@ NSString的supperClass指向谁?
 &emsp;  通过上图我们可以清晰的看出来一个`实例对象`也就是`struct objc_object结构体`它的isa指针指向`类对象`，`类对象`的isa指针指向了`元类`，`super_class指针`指向了父类的`类对象`，而元类的`super_class指针`指向了父类的`元类`，那元类的isa指针又指向了什么？为了更清晰的表达直接使用一个大神画的图。
 
 ![ios_oc2_22.png](./../../Pictures/ios_oc2_22.png)
+
+<br/>
+
+**用这个图举一个清晰例子:**
+
+![ios_oc1_113_35.webp](./../../Pictures/ios_oc1_113_35.webp)
+
+
 
 
 在 Objective-C 中，元类（metaclass）的 isa 指针最终指向根元类。在这个层次结构中，NSObject 类的元类是整个类和元类层次结构的根元类。所以，确切地说：
@@ -729,6 +746,15 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 - 元类（metaclass）主要用于存储类方法的实现，但在查找类方法时，并不是直接通过 isa 指针查找元类。相反，类对象中有一个指向对应元类的 isa 指针，所以在查找类方法时，实际上是通过类对象的 isa 指针沿着类对象的继承链向上查找元类的。
 
 &emsp; 总体而言，类方法的查找是通过类对象及其继承链中的元类来进行的
+
+<br/>
+
+**其实上面简单的说就是给类对象发送消息(调用类方法),其流程简短来说:**
+
+- 根据类对象的isA指针去元对象中查找，如果找到了就执行
+- 如果没有找到就去父元对象中查找
+- 如果如果没有找到就一直往上查找，直到根类（NSOject）
+- 如果都没有找到就报错
 
 
 
