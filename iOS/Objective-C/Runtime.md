@@ -13,8 +13,10 @@
 	- [Class(类)](#Class(类))
 	- [Object(对象)](#Object(对象))
 	- [Meta Class(元类)](#MetaClass(元类))
+		- [类之间的关系](#类之间的关系)
 	- [Method(方法)](#Method(方法))
 	- [AssociatedObject关联对象](#AssociatedObject关联对象)
+		- [方法选择器@selector](#方法选择器@selector)
 - [**消息转发机制**](#消息转发机制)
 	- [消息发送](#消息发送)
 		- [methodForSelector](#methodForSelector)
@@ -326,7 +328,7 @@ struct objc_class {
 <br/>
 <br/><br/>
 
-> <h2 id='类之间的关系'> **类之间的关系:** </h2>
+> <h2 id='类之间的关系'> 类之间的关系 </h2>
 
 
 &emsp; 元类（Metaclass）的isa指针指向的是元类自身，而不是它所对应的类的元类。元类形成了一个层级结构，其中根元类（Root Metaclass）的isa指针指向自身，形成了一个封闭的环。
@@ -395,7 +397,7 @@ NSString的supperClass指向谁?
 
 -  实例对象的isa指向类对象，当调用对象方法，通过实例对象的isa 找到类对象,最终找到对对象方法进行调用;
 -  类对象的isa指向元类，调用类方法，通过类对象中的isa找到元类，最终找到元类中的类方法进行调用;
--  当子类的对象要调用`父类的对象方法`，先通过子类的isa找到父类的class 然后通过superClass找到,父类的class 最后找到消息进行调用。
+-  当子类的对象要调用`父类的对象方法`，先通过子类的isa找到父类(子类的元类), 然后通过superClass指针找到父元类,父元类最后找到消息进行调用。
 
 ```
 
@@ -537,6 +539,16 @@ struct objc_method {
 
 > <h2 id='AssociatedObject关联对象'>AssociatedObject关联对象</h2>
 
+[**AssociatedObject 完全解析**](https://www.jianshu.com/p/79479a09a8c0)
+
+[**基本用法**](https://www.jianshu.com/p/6f1343c7be26)
+
+[**demo**](https://www.jianshu.com/p/52a28d59ef10)
+
+[**Runtime探索**](https://www.jianshu.com/u/2de707c93dc4)
+
+<br/>
+<br/>
 
 简介：关联是指把两个对象相互关联起来,使得其中的一个对象作为另外一个对象的一部分。一般用在分类中，因为在分类中是不可以再次申明定义一个属性变量的，这时可以用关联属性。
 
@@ -546,16 +558,94 @@ objc_getAssociatedObject(id _Nonnull object, const void * _Nonnull key);
 objc_setAssociatedObject(id _Nonnull object, const void * _Nonnull key, id _Nullable value, objc_AssociationPolicy policy);
 ```
 
-[AssociatedObject 完全解析](https://www.jianshu.com/p/79479a09a8c0)
 
-[基本用法](https://www.jianshu.com/p/6f1343c7be26)
+<br/>
 
-[demo](https://www.jianshu.com/p/52a28d59ef10)
+```
+#import "DKObject+Category.h"
+#import <objc/runtime.h>
 
-[Runtime探索](https://www.jianshu.com/u/2de707c93dc4)
+@implementation DKObject (Category)
+
+- (NSString *)categoryProperty {
+    return objc_getAssociatedObject(self, _cmd);
+}
+
+- (void)setCategoryProperty:(NSString *)categoryProperty {
+	//@selector(categoryProperty)实际上是获取categoryProperty属性的getter方法的选择器
+	objc_setAssociatedObject(self, @selector(categoryProperty), categoryProperty, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+@end
+```
+
+&emsp; **@selector(categoryProperty)** 也就是参数中的 key，其实可以使用静态指针 `static void *` 类型的参数来代替，不过在这里，笔者强烈推荐使用 `@selector(categoryProperty)` 作为 key 传入。因为这种方法省略了声明参数的代码，并且能很好地保证 key 的唯一性。
 
 
+<br/>
 
+<br/><br/>
+
+> <h2 id='方法选择器@selector'>方法选择器@selector</h2>
+
+
+&emsp; 方法选择器（Method Selector）**@selector()** 不管程序是第一次还是第二次启动，@selector(name) 都会返回相同的选择器值;
+
+用于表示方法名的一种数据类型。它是一个在编译时创建的指针，指向方法的名称。选择器是一种轻量级的对象，用于在运行时进行方法的查找和调用。
+
+方法选择器的主要用途包括：
+
+消息传递： 通过选择器，可以向对象发送消息，让对象执行特定的方法。
+运行时方法调用： 在运行时，你可以使用选择器来调用对象的方法，这为动态调用提供了一种机制。
+获取方法信息： 选择器也可以用于获取方法的信息，如方法的参数类型、返回类型等。
+下面是一个简单的示例，演示如何使用方法选择器：
+
+```
+#import <Foundation/Foundation.h>
+
+@interface MyClass : NSObject
+
+- (void)methodA;
+- (void)methodB;
+
+@end
+
+@implementation MyClass
+
+- (void)methodA {
+    NSLog(@"Executing methodA");
+}
+
+- (void)methodB {
+    NSLog(@"Executing methodB");
+}
+
+@end
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        // 创建类的实例
+        MyClass *myObject = [[MyClass alloc] init];
+        
+        // 获取方法选择器
+        SEL methodSelectorA = @selector(methodA);
+        SEL methodSelectorB = @selector(methodB);
+        
+        // 使用选择器调用方法
+        [myObject performSelector:methodSelectorA];
+        [myObject performSelector:methodSelectorB];
+        
+        // 获取方法信息
+        Method methodA = class_getInstanceMethod([myObject class], methodSelectorA);
+        const char *methodNameA = sel_getName(methodSelectorA);
+        const char *methodReturnTypeA = method_getTypeEncoding(methodA);
+        
+        NSLog(@"Method A: Name = %s, Return Type = %s", methodNameA, methodReturnTypeA);
+    }
+    return 0;
+}
+
+```
 
 
 
@@ -593,7 +683,7 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 
 <br/>
 
-**`运行时阶段：`**消息接受者 recever 寻找对应的 selector。
+**运行时阶段：** 消息接受者 recever 寻找对应的 selector。
 
 > &emsp;  通过 recevier 的 isa 指针 找到 recevier 的 Class（类）；
 
@@ -601,10 +691,11 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 
 > &emsp;  如果在 cache（方法缓存） 中没有找到对应的 IMP（方法实现） 的话，就继续在 Class（类） 的 method list（方法列表） 中找对应的 selector，如果找到，填充到 cache（方法缓存） 中，并返回 selector；
 
-> &emsp;  如果在 Class（类） 中没有找到这个 selector，就继续在它的 superClass（父类）中寻找；
-一旦找到对应的 selector，直接执行 recever 对应 selector 方法实现的 IMP（方法实现）。
+> &emsp;  如果在 Class（类） 中没有找到这个 selector，就继续在它的 superClass（父类）中寻找,沿着这个类的继承链一直向上查找，直到找到为止。这个过程一直持续到根类（通常是NSObject），查找就会停止。
 
-> &emsp;  若找不到对应的 selector，消息被转发或者临时向 recever 添加这个 selector 对应的实现方法，否则就会发生崩溃。
+>一旦找到对应的 selector，直接执行 recever 对应 selector 方法实现的 IMP（方法实现）。
+
+> &emsp;  如果在整个继承链上都找不到对应方法的实现，消息被转发或者临时向 recever 添加这个 selector 对应的实现方法，否则就会发生崩溃。
 
 消息转发示意图:
 
@@ -612,6 +703,37 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 
 
 
+<br/>
+
+**疑问1:如果在整个继承链上都找不到方法的实现，那么系统会继续查找元类（metaclass）的方法实现吗? 也就是说先查找继承链方法,再通过isa查找元类方法吗?是这样的吗**
+
+&emsp; 在 Objective-C 中，当对象调用方法时，系统会首先在对象的类及其父类中查找方法实现，而不会直接在元类（metaclass）中查找.**记住:不会在元类中进行查找‼️**
+
+&emsp; 在这个过程中，系统并没有直接查找元类中的方法实现。元类主要用于存储类方法（类的静态方法）的实现，而不是实例方法。
+
+&emsp; 所以，综上所述，在 Objective-C 中，实例方法的查找是通过类的继承链来进行的，而不是直接查找元类。元类主要用于存储类方法的实现，这些方法是与类本身关联的，而不是与类的实例对象关联的。
+
+
+<br/>
+
+**疑问2:若是类调用类方法,会先去继承链查找然后在通过isa指针找到元类,然后一直找到根元类吗?**
+
+
+&emsp; 在 Objective-C 中，当类调用类方法时，会首先在类本身及其父类的类对象（class object）中查找方法的实现，而不是直接通过 isa 指针查找元类。
+
+&emsp; 具体的查找过程如下：
+
+- 在当前类对象中查找： 系统首先在类对象中（class object）查找是否有对应类方法的实现。
+- 沿着继承链向上查找： 如果在当前类对象中找不到对应类方法，系统会沿着该类的继承链向上查找，依次检查父类的类对象，父类的父类的类对象，一直到根类的类对象。
+- 找到或者到达根类： 当找到具有相应类方法实现的类对象，或者到达继承链的根类的类对象（通常是元类），查找就会停止。
+- 元类（metaclass）主要用于存储类方法的实现，但在查找类方法时，并不是直接通过 isa 指针查找元类。相反，类对象中有一个指向对应元类的 isa 指针，所以在查找类方法时，实际上是通过类对象的 isa 指针沿着类对象的继承链向上查找元类的。
+
+&emsp; 总体而言，类方法的查找是通过类对象及其继承链中的元类来进行的
+
+
+
+
+<br/>
 <br/>
 
 创建一个MessageSend类
@@ -648,7 +770,7 @@ crash 错误：
 ```
 2019-11-17 11:20:08.972291+0800 HGSWB[49471:2551396] -[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0
 
-2019-11-17 11:20:09.047606+0800 HGSWB[49471:2551396] *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '-[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0'
+2019-11-17 11:20:09.047606+0800 HGSWB[49471:2551396] Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '-[MessageSend sendMessage:]: unrecognized selector sent to instance 0x600000e042d0'
 ```
 
 <br/>
@@ -676,7 +798,7 @@ void dynamicMethodIMP11(id self, SEL _cmd, NSString *msg) {
     *@param        参数
     * @return      如果添加方法成功返回 YES，否则返回 NO
     */
-    //lass_addMethod(Class _Nullable cls, SEL _Nonnull name, IMP _Nonnull imp, const char * _Nullable types)
+    //class_addMethod(Class _Nullable cls, SEL _Nonnull name, IMP _Nonnull imp, const char * _Nullable types)
     if (sel == @selector(sendMessage:)) {
         
         return class_addMethod([self class], sel, (IMP)dynamicMethodIMP11, "v@:");
@@ -766,7 +888,7 @@ MessageSend.m 文件
 
 &emsp;  如果经过消息动态解析、消息接受者重定向，Runtime 系统还是找不到相应的方法实现而无法响应消息，Runtime 系统会利用 `methodSignatureForSelector: `方法获取函数的参数和返回值类型。
 
-&emsp;  如果 `methodSignatureForSelector: `返回了一个 `NSMethodSignature` 对象（函数签名），Runtime 系统就会创建一个 `NSInvocation` 对象，并通过 `forwardInvocation: `消息通知当前对象，给予此次消息发送最后一次寻找 IMP 的机会。
+&emsp;  如果 `methodSignatureForSelector: `返回了一个 `NSMethodSignature` 对象（函数签名），Runtime 系统就会创建一个 `NSInvocation` 对象，并通过 `forwardInvocation: (翻译:转发调用)`消息通知当前对象，给予此次消息发送最后一次寻找 IMP 的机会。
 如果` -methodSignatureForSelector:` 返回 nil。则 Runtime 系统会发出 `-doesNotRecognizeSelector: `消息，程序也就崩溃了。
 
 ```
