@@ -14,11 +14,19 @@
 	- [mixin](#mixin)
 		- [mixin怎么指定异常类型](#mixin怎么指定异常类型)
 - [**Widget组件**](#Widget组件)
-	- 状态
+	- [状态](#状态)
 		- [createState方法什么时候调用?state里为什么可以直接获取到widget对象?](#createState方法什么时候调用?state里为什么可以直接获取到widget对象?)
+			- [widget和state的关联是永久的吗](#widget和state的关联是永久的吗)
+			- [新widget的创建对旧widget的影响,和state的联系](#新widget的创建对旧widget的影响,和state的联系)
+			- [新widget关联到旧的state如何处理](#新widget关联到旧的state如何处理)
 	- [StatefulWidget生命周期](#StatefulWidget生命周期)
+		- [state所在树与其他2个树的联系](#state所在树与其他2个树的联系)
+		- [依赖对象发生什么变化调用didChangeDependencies方法](#依赖对象发生什么变化调用didChangeDependencies方法)
+		- [State对象依赖的InheritedWidget发生变化时调用详解读](#State对象依赖的InheritedWidget发生变化时调用详解读)
+		- [Builder组件详解](#Builder组件详解)
 	- widget频繁更改创建是否会影响性能?复用和更新机制是怎么样的?
 	- [widget有几种key](#widget有几种key)
+		- [GlobyKey获取widget、state、context](#GlobyKey获取widget、state、context)
 		- [什么时候用key](#什么时候用key)
 	- [什么是 Widgets、RenderObjects 和 Elements？](#什么是WidgetRenderObjects和Elements)
 		- [1).Widget](#1_Widget)
@@ -835,6 +843,13 @@ class mixinsX2 extends implA with X{
 - 而在 iOS 里，修改一个视图并不会导致它重新创建实例，它作为一个可变对象，只会绘制一次，只有调用 setNeedsDisplay() 之后才会发生重绘。
 
 
+<br/><br/>
+
+
+> <h2 id='状态'>状态</h2>
+
+
+
 
 
 <br/><br/>
@@ -857,12 +872,88 @@ class mixinsX2 extends implA with X{
 
 - **State 中有两个常用属性：**
 
-	- widget，它表示与该 State 实例关联的 widget 实例，由Flutter 框架动态设置。
+	- **widget:** 它表示与该 State 实例关联的 widget 实例，由Flutter 框架动态设置。
 		- 注意，这种关联并非永久的，因为在应用生命周期中，UI树上的某一个节点的 widget 实例在重新构建时可能会变化，
 		- 但State实例只会在第一次插入到树中时被创建，当在重新构建时，如果 widget 被修改了，Flutter 框架会动态设置State. widget 为新的 widget 实例。
+		- 用途： 表示当前关联的StatefulWidget对象;
+		- 例子： 你可以通过widget属性访问与当前State对象关联的StatefulWidget的属性
 	
-	- context。StatefulWidget对应的 BuildContext，作用同StatelessWidget 的BuildContext。
+	- **context:** StatefulWidget对应的 BuildContext，作用同StatelessWidget 的BuildContext;
+		- 用途： 表示BuildContext对象，提供了关于控件在树中位置的信息;
+		- 例子： 在许多方法中，你需要使用context对象执行一些操作，如获取主题、定位父级控件等;
 
+	- **mounted：**
+		- 用途： 表示当前的State对象是否已经插入到控件树中。
+		- 例子： 可以使用mounted属性检查State对象是否仍然有效，防止在控件被移除后访问已经被释放的State。
+
+
+<br/>
+<br/>
+
+<br/><br/>
+
+> <h2 id='widget和state的关联是永久的吗'>widget和state的关联是永久的吗</h2>
+
+
+**疑问1:** widget和state的关联是永久的吗? 若不是为什么? 
+
+&emsp; 不，Widget和State的关联并不是永久的。在Flutter中，Widget表示的是控件的配置信息，而State表示的是控件的状态和可变数据。一个Widget可以有一个或多个关联的State对象，但是这种关联是有生命周期的。
+
+&emsp; 当你创建一个StatefulWidget时，Flutter框架会调用createState方法，这个方法会返回一个State对象，然后将这个State对象与相应的Widget关联起来。这个关联过程发生在控件被插入到控件树时。当控件从控件树中被移除时，相应的State对象会被销毁，这也就意味着Widget和State的关联并不是永久的。
+
+&emsp; 原因主要是为了优化内存使用和提高性能。如果Widget和State的关联是永久的，那么当大量的控件被创建并插入到控件树中时，它们关联的State对象也会一直存在，占用大量内存。通过在不需要时销毁State对象，Flutter可以更好地管理内存，确保只有当前可见的控件及其状态被保留在内存中。
+
+&emsp;这也是为什么在Flutter中，我们通常将可变的状态信息放在State中，而将不变的配置信息放在Widget中，以便在State对象被销毁时不丢失重要的数据。
+
+
+
+<br/>
+<br/>
+
+
+<br/><br/>
+
+> <h2 id='新widget的创建对旧widget的影响,和state的联系'>新widget的创建对旧widget的影响,和state的联系</h2>
+
+
+**疑问2:** 当widget创建时state会与这个widget进行关联,当widget重新构建时和修改配置时,这个旧的widget会销毁还是复用? 那之前与旧的关联的state是销毁还是如何处理?
+
+&emsp; 在Flutter中，与旧的Widget关联的State对象不会被直接销毁，而是可能会被重新关联到新的Widget实例上。Flutter框架在执行build方法时会比较新旧Widget树的差异，然后决定是否创建新的State对象或者复用旧的State对象。
+
+&emsp; **如果新旧Widget实例的运行时类型相同**，Flutter通常会尝试将旧的State对象与新的Widget实例进行关联，而不是销毁和重新创建一个新的State对象。这种情况下，didUpdateWidget生命周期方法会被调用，允许State对象适应新的Widget实例。这样做是为了尽量保留一些不变的状态，避免不必要的重新创建和初始化，以提高性能。
+
+&emsp; 但是，**如果新旧Widget实例的类型不同**（例如，它们的类型不是相同的runtimeType），那么旧的State对象可能会被销毁，而新的State对象会与新的Widget实例关联。
+
+&emsp; 总的来说，State对象可能会被重新关联到新的Widget实例上，而不是直接销毁。这种复用机制有助于在UI更新时保留一些状态，减少不必要的重建开销。
+
+
+<br/>
+<br/>
+
+<br/><br/>
+
+> <h2 id='新widget关联到旧的state如何处理'>新widget关联到旧的state如何处理</h2>
+
+
+**疑问3:** 新widget关联到旧的state是Flutter自动处理吗? 在哪个方法呢
+
+
+&emsp; 是的，新的 Widget 关联到旧的 State 是由 Flutter 框架自动处理的。这个过程发生在 State 对象的 didUpdateWidget 生命周期方法中。当新的 Widget 实例被传递给 build 方法时，Flutter 框架会调用 didUpdateWidget 方法，以通知 State 对象发生了变化。
+
+&emsp; 在 didUpdateWidget 方法中，你可以比较新旧 Widget 实例的一些属性，并根据需要更新 State 对象的状态。这个方法的签名如下：
+
+
+```
+void didUpdateWidget(covariant T oldWidget) {
+  // 在这里处理新旧 Widget 之间的差异
+  super.didUpdateWidget(oldWidget);
+}
+```
+
+
+&emsp; 在这个方法中，oldWidget 参数表示旧的 Widget 实例。你可以通过比较 oldWidget 和 widget 属性来了解新旧 Widget 实例之间的差异，并相应地更新 State 对象的状态。
+
+&emsp; 这种自动处理的机制使得在 UI 变化时能够在保持性能的同时，让开发者有机会处理一些状态的更新逻辑。
 
 
 
@@ -875,15 +966,421 @@ class mixinsX2 extends implA with X{
 
 ![flutter1_3.png](./../Pictures/flutter1_3.png)
 
-- initState()：Widget 初始化当前 State，在当前方法中是不能获取到 Context 的，如想获取，可以试试 Future.delayed()
 
-- didChangeDependencies()：在 initState() 后调用， State对象依赖关系发生变化的时候也会调用。
+- **createState：**
+	- 作用： 用于创建与 StatefulWidget 关联的 State 对象。
+	- 调用时机： 当创建新的 StatefulWidget 时，会调用这个方法一次
 
-- deactivate()：当 State 被暂时从视图树中移除时会调用这个方法，页面切换时也会调用该方法，和Android里的 onPause 差不多。
+<br/>
 
-- dispose()：Widget 销毁时调用。
+- **initState()**：Widget 初始化当前 State，在当前方法中是不能获取到 Context 的.如想获取，可以试试 Future.delayed().
+	- 作用： 在 State 对象被插入到树中时调用，用于初始化状态。
+	- 调用时机： 在 createState 返回的 State 对象被插入到控件树中时调用，通常在这里执行一些初始化操作，例如订阅数据、设置初始状态等。
 
-- didUpdateWidget：Widget 状态发生变化的时候调用。
+<br/>
+
+- **didChangeDependencies()：**
+	- 作用： 在 initState 之后调用，在 State 对象依赖的对象发生变化时调用。
+	- 调用时机： 当 State 对象依赖的 InheritedWidget 发生变化时调用。
+
+<br/>
+
+- **build：**
+	- 作用： 构建控件的UI表示，返回一个 Widget。
+	- 调用时机： 在 initState 和 didChangeDependencies 之后，以及每次调用 setState 后都会调用。
+
+<br/>
+
+- **deactivate()：** 当 State 被暂时从视图树中移除时会调用这个方法，页面切换时也会调用该方法，和Android里的 onPause 差不多。
+	- 作用： 当 State 对象从树中移除时调用，通常在这里释放一些资源。
+	- 调用时机： 当控件从控件树中被移除时调用，例如切换页面。
+
+<br/>
+
+- **dispose()：** Widget 销毁时调用。
+	- 作用： 在 State 对象被永久从树中移除时调用，通常在这里释放一些资源。
+	- 调用时机： 当 State 对象永久从控件树中被移除时调用，例如页面销毁时。
+dart
+
+<br/>
+
+- **didUpdateWidget**：Widget 状态发生变化的时候调用。
+	- 作用： 在 Widget 配置发生变化时调用，可以比较新旧 Widget 的属性，执行相应的更新操作。
+	- 调用时机： 在 build 方法之后，如果新旧 Widget 不同，会调用这个方法。
+dart
+
+<br/>
+
+- **setState：**
+	- 作用： 用于通知框架，State 对象的状态发生了变化，需要重新构建UI。
+	- 调用时机： 在 State 对象中调用 setState 方法时。
+
+
+
+
+
+<br/><br/>
+
+> <h2 id='state所在树与其他2个树的联系'>state所在树与其他2个树的联系</h2>
+
+
+**疑问1:** 将State 对象被插入到树中时调用`initState()`方法,这个树与其他2棵树有什么区别和联系吗?
+
+- **2棵树概念:**
+	- widget树：
+		- 概念： Widget树是由Widget对象构成的层次结构，它描述了应用程序的UI布局和外观。
+		- 作用： Widget树是静态的，用于描述界面的结构。每个Widget都可以包含其他Widget，形成一个嵌套的结构。这个树表示了UI的层次结构和组织方式。
+		
+	- Element树：
+		- 概念： Element树是由Element对象构成的层次结构，它对应于Widget树的实际渲染层次。
+		- 作用： Element树是动态的，与Widget树相对应。当Widget树中的某个Widget发生变化时，相应的Element树会进行更新。Element负责实际的渲染、布局和管理状态。Element树实现了对Widget树的优化，只构建和更新实际显示的部分，以提高性能。
+
+
+**Widget树和Element树的区别：**
+
+&emsp;  Widget树是静态的，用于描述应用程序的UI结构；而Element树是动态的，用于实际的渲染和布局。Widget树和Element树是相互对应的，但Element树更加底层，负责实际的渲染和状态管理。
+
+
+<br/>
+
+回到我的问题:
+
+**State对象什么时候插入到树中？**
+
+&emsp; 当一个StatefulWidget被插入到Widget树中时，相应的State对象被创建并与这个Widget关联。这个插入过程通常发生在Widget树中的一个父级Widget调用build方法时，而该方法中包含了对子Widget的构建。当新的Widget被创建并插入到Widget树时，相应的State对象也被创建。
+
+<br/>
+
+**这个树指的是什么树？**
+
+&emsp; 在这里，"树"通常指的是Widget树。Widget树表示了Flutter应用程序的UI层次结构，由各种嵌套的Widget对象组成。
+
+
+<br/>
+
+**这个控件树与其他2棵树有什么区别和联系吗？**
+
+&emsp; Widget树和Element树的区别： Widget树是静态的，用于描述应用程序的UI结构；而Element树是动态的，用于实际的渲染和布局。Widget树和Element树是相互对应的，但Element树更加底层，负责实际的渲染和状态管理。
+
+
+
+
+<br/><br/>
+
+> <h2 id='依赖对象发生什么变化调用didChangeDependencies方法'>依赖对象发生什么变化调用didChangeDependencies方法</h2>
+
+
+&emsp; didChangeDependencies()方法是State生命周期中的一个回调，当依赖的对象发生变化时会被调用。在Flutter中，依赖的对象通常指的是BuildContext。
+
+&emsp; BuildContext表示了控件树中的位置信息，包含了一些关于控件树结构的元数据。而它的变化通常指的是在控件树中发生了结构性的变化，例如父级Widget的重建、新的路由页面的推入等。
+
+&emsp; 当State对象依赖的BuildContext发生变化时，didChangeDependencies()方法就会被触发。
+
+
+```
+import 'package:flutter/material.dart';
+
+class ExampleWidget extends StatefulWidget {
+  @override
+  _ExampleWidgetState createState() => _ExampleWidgetState();
+}
+
+class _ExampleWidgetState extends State<ExampleWidget> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // 当BuildContext发生变化时，此方法会被调用(在这里处理依赖对象变化时的逻辑)
+    print("Dependencies have changed");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Example Widget'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('This is an example widget.'),
+            ElevatedButton(
+              onPressed: () {
+                // 在按钮点击时，推入新的路由页面
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => NewPage(),
+                  ),
+                );
+              },
+              child: Text('Push to New Page'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class NewPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('New Page'),
+      ),
+      body: Center(
+        child: Text('This is a new page.'),
+      ),
+    );
+  }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: ExampleWidget(),
+  ));
+}
+```
+
+&emsp; 在上面的例子中，didChangeDependencies()方法被重写。当从ExampleWidget页面切换到NewPage页面时，它会被调用，因为此时BuildContext发生了变化。你可以在这个方法中执行一些逻辑，例如获取最新的依赖信息或执行与全局状态相关的更新。
+
+&emsp; didChangeDependencies()这个方法会在State对象被插入到树中，并且在依赖的BuildContext对象发生变化时被调用。一种常见的情况是，当BuildContext所在的位置发生变化，例如父级Widget被重新构建，didChangeDependencies()就会被调用。
+
+
+&emsp; 在这个例子中有一个包含两个页面的简单Flutter应用。初始页面是ExampleWidget，当用户点击按钮时，会推入一个新的页面NewPage。每当从一个页面切换到另一个页面时，都会发生BuildContext的变化，因为每个页面都有不同的BuildContext。
+
+
+<br/>
+
+&emsp; 上面依赖对象BuildContext的变化指的是Navigator将新页面推入导航堆栈时，它引入了一组新的小部件，因此为该页面创建了一个新的BuildContext。小部件树结构的这种变化会触发相应State对象中的didChangeDependencies()方法。
+
+
+
+&emsp; 在提供的示例中，当用户点击按钮时，触发Navigator.of(context).push(...)方法，将一个新页面（NewPage）推入导航堆栈。这个操作为NewPage的小部件创建了一个新的BuildContext。因此，由于小部件树的结构发生了变化，与_ExampleWidgetState相关联的BuildContext发生了变化，导致调用了_ExampleWidgetState中的didChangeDependencies()方法。
+
+
+<br/><br/>
+
+
+> <h2 id='State对象依赖的InheritedWidget发生变化时调用详解读'>State象依赖的InheritedWidget发生变化时调用详解读</h2>
+
+**在 didChangeDependencies中 `State 对象依赖的 InheritedWidget 发生变化时调用?` 什么意思? 可以详细说下吗? 可以举一个完整详细的例子代码吗?**
+
+
+在 Flutter 中，当 State 对象依赖的 InheritedWidget 发生变化时，会触发 didChangeDependencies() 方法的调用。这意味着 InheritedWidget 提供的共享数据发生了变化，而依赖这些数据的 State 对象需要执行一些操作以适应这些变化。
+
+下面是一个例子，演示了如何在 didChangeDependencies() 中响应 InheritedWidget 的变化：
+
+```
+import 'package:flutter/material.dart';
+
+// 定义一个 InheritedWidget
+class CounterInheritedWidget extends InheritedWidget {
+  final int counter;
+  final VoidCallback? onCounterChange;
+
+  CounterInheritedWidget({
+    required this.counter,
+    required Widget child,
+    this.onCounterChange,
+  }) : super(child: child);
+
+  // 通过该方法获取最近的 Widget 树中的 CounterInheritedWidget 实例
+  static CounterInheritedWidget of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<CounterInheritedWidget>()!;
+  }
+
+  @override
+  bool updateShouldNotify(covariant CounterInheritedWidget oldWidget) {
+    return oldWidget.counter != counter;
+  }
+
+  // 用于更新计数器的方法
+  void updateCounter(int newCounter) {
+    if (onCounterChange != null) {
+      onCounterChange!();
+    }
+  }
+}
+
+class ExampleWidget extends StatefulWidget {
+  @override
+  _ExampleWidgetState createState() => _ExampleWidgetState();
+}
+
+class _ExampleWidgetState extends State<ExampleWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Example Widget'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('This is an example widget.'),
+            // 使用 CounterInheritedWidget 来获取和显示计数器的值
+            Builder(
+              builder: (context) {
+                final counterInheritedWidget =
+                    CounterInheritedWidget.of(context);
+                return Text(
+                  'Counter value from InheritedWidget: ${counterInheritedWidget.counter}',
+                );
+              },
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // 模拟更新计数器的值
+                final counterInheritedWidget =
+                    CounterInheritedWidget.of(context);
+                counterInheritedWidget.updateCounter(
+                    counterInheritedWidget.counter + 1);
+              },
+              child: Text('Increment Counter'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void main() {
+  runApp(
+    // 使用 CounterInheritedWidget 包裹整个应用
+    CounterInheritedWidget(
+      counter: 42,
+      onCounterChange: () {
+        // 这里可以执行在计数器变化时的逻辑
+        print('Counter changed!');
+      },
+      child: MaterialApp(
+        home: ExampleWidget(),
+      ),
+    ),
+  );
+}
+
+```
+
+&emsp; 在这个例子中，我们创建了 CounterInheritedWidget，用于传递和更新计数器的值。ExampleWidget 中的 Text 小部件通过 CounterInheritedWidget.of(context) 获取最近的 CounterInheritedWidget 实例，并显示计数器的值。点击按钮时，通过 CounterInheritedWidget 的 updateCounter 方法模拟更新计数器的值。这时，didChangeDependencies() 就会被调用，你可以在这个方法中执行相应的逻辑。
+
+
+<br/>
+
+**疑问1:当CounterInheritedWidget的counter改变时, _ExampleWidgetState 的build 方法中的组件Text的显示值会改变,那ExmpleWidget会销毁然后重新构建吗**
+
+
+&emsp; 在上述的例子中，当 CounterInheritedWidget 的 counter 改变时，_ExampleWidgetState 中的 build 方法会重新执行，但 ExampleWidget 本身不会销毁和重新构建。这是因为 ExampleWidget 是一个 StatefulWidget，而其对应的 State 对象 _ExampleWidgetState 中的 build 方法会被调用，而不是 ExampleWidget 本身。
+
+&emsp; 当 CounterInheritedWidget 中的 counter 发生变化时，CounterInheritedWidget 会通知依赖它的子孙节点进行更新。在这里，Builder 包裹的 Text 小部件是依赖 CounterInheritedWidget 的，因此 Builder 中的 build 方法会被重新执行，显示新的计数器值。
+
+**总结一下：**
+
+- CounterInheritedWidget 中的 updateShouldNotify 返回 true 时，依赖它的子孙节点会被通知更新。
+- 在 ExampleWidget 中，通过 Builder 包裹的 Text 小部件是依赖 CounterInheritedWidget 的。
+- 当 CounterInheritedWidget 的 counter 改变时，Builder 中的 build 方法会被重新执行，显示新的计数器值。
+- ExampleWidget 本身不会被销毁和重新构建，只有与 CounterInheritedWidget 直接关联的 State 对象 _ExampleWidgetState 中的 build 方法会被调用。
+
+
+
+<br/><br/>
+
+
+> <h2 id='Builder组件详解'>Builder组件详解</h2>
+
+
+对上述代码进行片段摘抄:
+```
+class _ExampleWidgetState extends State<ExampleWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Example Widget'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('This is an example widget.'),
+            // 使用 CounterInheritedWidget 来获取和显示计数器的值
+            Builder(
+              builder: (context) {
+                final counterInheritedWidget =
+                    CounterInheritedWidget.of(context);
+                return Text(
+                  'Counter value from InheritedWidget: ${counterInheritedWidget.counter}',
+                );
+              },
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // 模拟更新计数器的值
+                //class CounterInheritedWidget extends InheritedWidget {}
+                final counterInheritedWidget =
+                    CounterInheritedWidget.of(context);
+                counterInheritedWidget.updateCounter(
+                    counterInheritedWidget.counter + 1);
+              },
+              child: Text('Increment Counter'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+````
+
+<br/>
+
+在代码中会出现:
+
+```
+Builder(
+	builder: (context) {
+			return Text('你好!!!!');
+		}
+);
+```
+
+这个Builder是干嘛的?有什么用?还有哪些构造参数分别有什么用?
+
+这个builder: (context) {}中的context指的是什么?
+
+
+<br/>
+
+
+&emsp; Builder 是 Flutter 中的一个小部件，它的主要作用是创建一个新的 BuildContext，以便在子树中使用。通常，Builder 会用来创建一个新的作用域，以解决某些特定情况下，需要使用不同的 BuildContext 的问题。
+
+&emsp; 在上述的代码中，Builder 主要用于获取一个新的 BuildContext，以便在其中使用 CounterInheritedWidget.of(context) 获取最近的 CounterInheritedWidget 实例。这样做的目的是为了在 Text 小部件中获取 CounterInheritedWidget 的数据而不是在 ExampleWidget 直接获取。这确保了在依赖发生变化时，只有 Text 小部件会被重新构建，而不是整个 ExampleWidget。
+
+
+&emsp; Builder 的构造函数签名如下：
+
+```
+Builder({
+  Key? key,
+  required WidgetBuilder builder,
+})
+```
+
+- **其中：**
+	- key： 用于标识小部件的可选键。
+	- builder： 一个必须的回调函数，它接受一个 BuildContext 参数，返回一个 Widget。这个函数定义了 Builder 小部件的子树。
+
+
+&emsp; 在 builder 方法中的 context 指的是由 Builder 创建的新的 BuildContext。这个新的 BuildContext 是在构建小部件树时传递给 builder 方法的，它是一个具有新的作用域的 BuildContext 实例。在这里，context 主要用于获取 CounterInheritedWidget 实例，以便在子树中使用共享的计数器值。
+
+
+
 
 
 <br/>
@@ -896,6 +1393,10 @@ class mixinsX2 extends implA with X{
 
 
 ![flutter1_2.png](./../Pictures/flutter1_2.png)
+
+<br/>
+<br/>
+
 
 
 - **主要有2种类型的Key：**
@@ -934,10 +1435,92 @@ class mixinsX2 extends implA with X{
 &emsp; a1, a2, a3 表示同一级别相同类型的,若是不加key当对他们3者设置不同的颜色,然后在对它进行调转颜色可能颜色变了,里面的文本不变(我记得不太清了),是因为比较是发现都是同一类型的,key都相同(因为没有设值,认为都统一),所以这个时候设置key.
 
 
+<br/><br/><br/>
+
+> <h2 id='GlobyKey获取widget、state、context'>GlobyKey获取widget、state、context</h2>
+
+&emsp; 而针对GlobyKey它可以游走于不同级别的组件,比如他在A、B、C中的任意一个或者是其子组件中的一个.通过这个GlobyKey我们可以获取到其状态组件的widget、state、context.通过这个context可以拿到其大小,但是这个GlobKey有点耗性能,建议少用!除此之外用这个Globy通过设置Row或者Clomun可以巧妙达到横竖屏幕的作用.
+
 <br/>
 
+**1.通过 Key 获取 Widget 和 State**
 
-而针对GlobyKey它可以游走于不同级别的组件,比如他在A、B、C中的任意一个或者是其子组件中的一个.通过这个GlobyKey我们可以获取到其状态组件的widget、state、context.通过这个context可以拿到其大小,但是这个GlobKey有点耗性能,建议少用!除此之外用这个Globy通过设置Row或者Clomun可以巧妙达到横竖屏幕的作用
+```
+import 'package:flutter/material.dart';
+
+class MyWidget extends StatefulWidget {
+  final Key? myKey;
+
+  MyWidget({Key? key, this.myKey}) : super(key: key);
+
+  @override
+  _MyWidgetState createState() => _MyWidgetState();
+}
+
+class _MyWidgetState extends State<MyWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Text('My Widget State'),
+    );
+  }
+}
+
+void main() {
+  GlobalKey<_MyWidgetState> myKey = GlobalKey<_MyWidgetState>();
+
+  runApp(
+    MaterialApp(
+      home: Scaffold(
+        body: Column(
+          children: [
+            MyWidget(key: myKey),
+            ElevatedButton(
+              onPressed: () {
+                // 通过 GlobalKey 获取 Widget
+                MyWidget? widgetByKey = myKey.currentWidget;
+
+                // 通过 GlobalKey 获取 State
+                _MyWidgetState? stateByKey = myKey.currentState;
+
+                // 输出 Widget 和 State 信息
+                print('Widget by Key: $widgetByKey');
+                print('State by Key: $stateByKey');
+              },
+              child: Text('Get Widget and State by Key'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+```
+
+&emsp; 通过 GlobalKey 来创建一个 Key，并将其传递给 MyWidget。然后，通过 myKey.currentWidget 可以获取与该 key 关联的 Widget 对象，通过 myKey.currentState 可以获取与该 key 关联的 State 对象
+
+
+<br/>
+<br/>
+
+**2.Key 获取 BuildContext**
+
+在 Flutter 中，通常情况下是通过 BuildContext 直接传递上下文的，而不是通过 Key。 BuildContext 表示的是在小部件树中的位置和作用域，而 Key 主要用于标识和检索特定的小部件或状态。
+
+```
+GlobalKey<_MyWidgetState> myKey = GlobalKey<_MyWidgetState>();
+// 通过 Key 获取 BuildContext
+BuildContext? contextByKey = myKey?.currentContext;
+
+// 输出 BuildContext 信息
+print('Context by Key: $contextByKey');
+
+// 通过 BuildContext 可以做一些操作，例如获取 Theme
+ThemeData? theme = Theme.of(context);
+print('Theme data: $theme');
+```
+
+
 
 
 
