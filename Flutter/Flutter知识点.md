@@ -107,22 +107,373 @@
 
 - **Flutter 通过 PlatformChannel 与原生进行交互，其中 PlatformChannel 分为三种：**
 
-	- BasicMessageChannel：用于传递字符串和半结构化的信息。
+	- 1).BasicMessageChannel：用于传递字符串和半结构化的信息。
+		- 使用场景： 适用于简单的、双向的消息传递场景，可以传递任意数据类型。
+		- 传递方式： 通过 send 方法发送消息，并通过 Dart 的 setMessageHandler 方法设置消息处理器。可以用于双向通信，Dart 可以向原生发送消息，同时也能接收来自原生的消息。
+		- 例子： 用于传递简单的文本消息或其他数据，适合于没有明确的方法调用和回调的场景。
+
+<br/>
+在 Flutter 中：
+
+```
+// main.dart
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final BasicMessageChannel<String> messageChannel =
+      BasicMessageChannel<String>('example_channel', StringCodec());
+
+  String nativeResponse = 'Waiting for native response...';
+
+  Future<void> _sendMessageToNative() async {
+    try {
+      final String reply = await messageChannel.send('Hello from Dart!');
+      setState(() {
+        nativeResponse = reply;
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        nativeResponse = 'Error: ${e.message}';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('BasicMessageChannel Example'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Native Response:',
+            ),
+            Text(
+              '$nativeResponse',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _sendMessageToNative,
+              child: Text('Send Message to Native'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+```	
+
+Swift 中的原生代码：
+
+```
+// AppDelegate.swift
+
+import UIKit
+import Flutter
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    let messageChannel = FlutterBasicMessageChannel(name: "example_channel", binaryMessenger: controller.binaryMessenger)
+
+    messageChannel.setMessageHandler { (message, reply) in
+      // 处理来自 Dart 代码的消息
+      print("Received message from Dart: \(message ?? "")")
+
+      // 回复消息给 Dart 代码
+      reply("Reply from Swift!")
+    }
+
+    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+
+```
 	
-	- [MethodChannel](https://juejin.cn/post/7012905714418974728/)：用于传递方法调用。Flutter主动调用Native的方法，并获取相应的返回值。
+<br/>
+<br/>
 	
-	- EventChannel：用于数据流（event streams）的通信。
+- 2).[MethodChannel](https://juejin.cn/post/7012905714418974728/)：用于传递方法调用。Flutter主动调用原生代码的方法，并获取相应的返回值。
+	- 使用场景： 适用于进行方法调用和获取返回值的场景。主要用于单向通信，Dart 调用原生方法，获取原生返回值。
+	- 传递方式： 使用 invokeMethod 方法调用原生方法，并通过原生代码中的 setMethodCallHandler 方法设置方法处理器，用于处理 Dart 传递过来的方法调用。
+	- 例子： 用于执行特定的原生方法，例如获取设备信息、执行原生的计算逻辑等。
 
 <br/>
 
+创建一个MethodChannel用于在Flutter和iOS之间传递数据，触发方法的调用，然后获取结果。
 
-- **有三种 PlatformChannel 种类，适用于不同的场景：**
+**Flutter端示例代码：**
 
-- MethodChannel:以方法的模式使用 PlatformChannel
+```
+// main.dart
 
-- EventChannel: 以事件的模式使用 PlatformChannel
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-- BasicMessageChannel:可以在 BasicMessageChannel 上方便的进行自定义扩展，主要用于个性化的扩展。
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  static const platform = const MethodChannel('example_channel');
+
+  String nativeResponse = 'Waiting for native response...';
+
+  Future<void> _callNativeMethod() async {
+    try {
+	  //使用 MethodChannel 来调用原生 iOS 代码中名为 'getNativeResponse' 的方法
+      final String result = await platform.invokeMethod('getNativeResponse');
+      setState(() {
+        nativeResponse = result;
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        nativeResponse = 'Error: ${e.message}';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('MethodChannel Example'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Native Response:',
+            ),
+            Text(
+              '$nativeResponse',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _callNativeMethod,
+              child: Text('Call Native Method'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+**iOS端示例代码（Swift）：**
+
+```
+// AppDelegate.swift
+
+import UIKit
+import Flutter
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    let channel = FlutterMethodChannel(name: "example_channel", binaryMessenger: controller.binaryMessenger)
+	
+	//通过 channel.setMethodCallHandler 来监听 Flutter 发来的请求，并执行相应的原生逻辑，最后通过 result 返回结果给 Flutter
+    channel.setMethodCallHandler { (call, result) in
+      if call.method == "getNativeResponse" {
+        // 在这里执行原生代码逻辑，例如返回一个字符串
+        result("Hello from native Swift code!")
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
+    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+```
+
+	
+<br/>
+<br/>
+
+
+
+- 3).EventChannel：用于在Flutter和原生代码之间传递事件流。例如，你可以使用EventChannel实现数据的实时更新。
+
+**Dart 中：**
+
+```
+// main.dart
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  static const eventChannel = const EventChannel('example_event_channel');
+  StreamSubscription<dynamic> _eventSubscription;
+
+  String eventMessage = 'Waiting for events...';
+
+  void _startListening() {
+    _eventSubscription = eventChannel.receiveBroadcastStream().listen((event) {
+      setState(() {
+        eventMessage = 'Received event: $event';
+      });
+    });
+  }
+
+  void _stopListening() {
+    _eventSubscription.cancel();
+    setState(() {
+      eventMessage = 'Event listening stopped.';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('EventChannel Example'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Event Message:',
+            ),
+            Text(
+              '$eventMessage',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _startListening,
+              child: Text('Start Listening'),
+            ),
+            ElevatedButton(
+              onPressed: _stopListening,
+              child: Text('Stop Listening'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+
+Swift 中的原生代码：
+
+```
+// AppDelegate.swift
+
+import UIKit
+import Flutter
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    let eventChannel = FlutterEventChannel(name: "example_event_channel", binaryMessenger: controller.binaryMessenger)
+
+	//置一个 StreamHandler 来处理事件流的监听和取消监听
+    eventChannel.setStreamHandler(StreamHandler())
+
+    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+
+class StreamHandler: NSObject, FlutterStreamHandler {
+  var eventStream: FlutterEventSink?
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    // 在这里设置事件流的回调
+    eventStream = events
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    // 在这里处理取消监听的逻辑
+    eventStream = nil
+    return nil
+  }
+}
+
+```
+
 
 <br/>
 <br/>
