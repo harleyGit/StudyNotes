@@ -73,7 +73,7 @@
 		- [FutureProvider](#FutureProvider)
 		- [ListenableProvider](#ListenableProvider)
 - [**设计模式**](#设计模式)
-	- [响应式编程的三元素](#响应式编程的三元素)
+	- [管道流-响应式编程](#管道流-响应式编程)
 	- [Bloc和MVVM](#Bloc和MVVM)
 		- [Bloc模式](#Bloc模式)
 		- [MVVM模式](#MVVM模式)
@@ -2871,71 +2871,24 @@ class MyHomePage extends StatelessWidget {
 &emsp; 运行这个应用，你将看到一个简单的计数器应用，每次点击按钮都会增加计数器的值。ListenableProvider 用于管理实现了 Listenable 接口的状态对象，并在状态发生变化时通知相关的监听者进行更新。
 
 
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
 
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h1 id='设计模式'>设计模式</h1>
 
 <br/>
 
-> <h2 id='响应式编程的三元素'>响应式编程的三元素</h2>
+> <h2 id='管道流-响应式编程'>管道流-响应式编程</h2>
+
+
+&emsp; **StreamController** 是 Dart 中用于创建和管理 Dart 流（stream）的类。流是一系列异步事件的序列，可以用于处理异步操作，例如处理用户输入、网络请求或其他非同步事件。
+
+
+<br/>
 
 - **三元素**
 	- StreamController：数据流管道
@@ -2945,14 +2898,52 @@ class MyHomePage extends StatelessWidget {
 
 <br/>
 
-- 首先在 StreamControlState 里实现 StreamController
 
-- StreamSink 通过 _streamController.sink 获取;
+- **步骤**
 
-- Stream 通过 _streamController.stream 获取
+	- 首先在 StreamControlState 里实现 StreamController
+	
+	- StreamSink 通过 _streamController.sink 获取;
+	
+	- Stream 通过 _streamController.stream 获取
 
 
-<br/>
+**代码:**
+
+```
+import 'dart:async';
+
+void main() {
+  // 创建一个 StreamController，用于处理整数类型的事件
+  var controller = StreamController<int>();
+
+  // 获取 StreamSink，用于将事件添加到流中
+  var sink = controller.sink;
+
+  // 监听流事件
+  var subscription = controller.stream.listen((data) {
+    print('Received data: $data');
+  });
+
+  // 使用 StreamSink 添加事件到流中
+  sink.add(1);
+  sink.add(2);
+  sink.add(3);
+
+  // 关闭 StreamSink，表示没有更多的事件将被添加
+  sink.close();
+
+  // 关闭 StreamSubscription
+  subscription.cancel();
+}
+```
+
+**总结:** 通过 sink 来添加事件到流中。sink 提供了一个类似于 add 的方法，即 sink.add(event)。使用 sink.add 和 sink.close 是为了更清晰地表示我们正在操作 StreamController 的输入端，向流中添加事件。
+
+&emsp; 需要注意的是，当你关闭 sink 时，它也会关闭相应的 stream，这意味着不再允许往流中添加新的事件。在实际应用中，使用 sink 主要是为了在更复杂的异步处理中提供更多的控制和灵活性。
+
+
+<br/><br/>
 
 &emsp; 然后就可以通过 _sink 发送消息，在 _stream 处接受消息，这里你肯定会比较迷惑，发送一个消息，为什么搞的这么麻烦？
 
@@ -2975,7 +2966,11 @@ class MyHomePage extends StatelessWidget {
 
 **1.Bloc图**
 
-![flutter1_5.png](./../Pictures/flutter1_5.png)
+![flutter1_5.png](./../Pictures/
+
+flutter1_5.png)
+
+
 
 BLoC模式由来自Google的Paolo Soares和Cong Hui设计，并在2018年DartConf期间（2018年1月23日至24日）首次展示。
 
