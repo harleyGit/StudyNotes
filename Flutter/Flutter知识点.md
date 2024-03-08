@@ -39,7 +39,14 @@
 	- [简述StatelessWidget和StatefulWidget两种状态组件类](#简述StatelessWidget和StatefulWidget两种状态组件类)
 	- [为什么Navigator可以实现无需上下文路由导航？](#为什么Navigator可以实现无需上下文路由导航)
 	- [main()和runApp()函数在flutter的作用分别是什么？有什么关系吗？](#main和runApp函数在flutter的作用分别是什么有什么关系吗)
-- [线程](#线程)
+- [**数据**](#数据)
+	- [使用哪几种流行的数据库软件包？](#使用哪几种流行的数据库软件包)
+	- [Firebase数据库用途](#Firebase数据库用途)
+		- [实时同步的实时应用程序](#实时同步的实时应用程序)
+		- [用户身份验证与数据关联](#用户身份验证与数据关联)
+		- [应用程序配置和设置](#应用程序配置和设置)
+		- [时分析和监控](#时分析和监控)
+- [**线程**](#线程)
 	- [Dart多任务如何并行的？](#Dart多任务如何并行的)
 	- [Stream与Future是什么关系](#Stream与Future是什么关系)
 		- [Stream](#Stream)
@@ -51,8 +58,6 @@
 		- [Future和Isolate有什么区别？](#Future和Isolate有什么区别)
 		- [简述Flutter的线程管理模型](#简述Flutter的线程管理模型)
 	- [await for 如何使用?](#awaitfor如何使用)
-- [**数据**](#数据)
-	- [使用哪几种流行的数据库软件包？](#使用哪几种流行的数据库软件包)
 - [**底层**](#底层)
 	- [Flutter是怎么完成组件渲染的](#Flutter是怎么完成组件渲染的)
 	- [简单解释下FrameWork层和Engine层](#简单解释下FrameWork层和Engine层)
@@ -1655,8 +1660,9 @@ class _ScreenState extends State<Screen> {
 
 &emsp; Widget会被inflate（填充）到Element，并由Element管理底层渲染树。Widget并不会直接管理状态及渲染,而是通过State这个对象来管理状态。
 
-Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏幕显示,并且我们能看到的是ElementTree;
+&emsp; Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏幕显示,并且我们能看到的是ElementTree;
 
+<br/>
 <br/>
 
 &emsp; Flutter创建Element的可见树，相对于Widget来说，是可变的，通常界面开发中，我们不用直接操作Element,而是由框架层实现内部逻辑。
@@ -1666,12 +1672,22 @@ Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏
 &emsp; Element会持有renderObject和widget的实例。记住，Widget 只是一个配置，RenderObject 负责管理布局、绘制等操作。
 
 <br/>
+<br/>
+
 
 &emsp; 在第一次创建 Widget 的时候，会对应创建一个 Element， 然后将该元素插入树中。如果之后 Widget 发生了变化，则将其与旧的 Widget 进行比较，并且相应地更新 Element。重要的是，Element 不会被重建，只是更新而已。
 
-&emsp; Widget 仅用于存储渲染所需要的信息。
+- **Widget:** 
+	- 仅用于存储渲染配置所需要的信息;
+	- Widget是用户界面的一部分,并且是不可变的。
 
-&emsp; Widget是用户界面的一部分,并且是不可变的。
+<br/>
+
+- **RenderObject:** 
+	- 负责管理布局、绘制等操作;
+
+
+<br/>
 
 &emsp; 我们平时用 Widget使用声明式的形式写出来的界面，可以理解为 Widget 树，这是要介绍的第一棵树。
 
@@ -1684,9 +1700,7 @@ Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏
 > <h3 id='2_Element'>2).Element</h3>
 
 
-&emsp; Element 才是这颗巨大的控件树上的实体。
-
-&emsp; Element是在树中特定位置Widget的实例。
+- **Element:** Element 是 widget 树中的一个节点，是由框架创建和管理的。每个 Element 与一个 widget 相关联，负责管理该 widget 的生命周期、状态以及子树的构建和更新。虽然 Element 与 BuildContext 有一些关联，但它们并不是一对一的关系。
 
 &emsp; Widget 树是非常不稳定的，动不动就执行build方法，一旦调用 build 方法意味着这个 Widget 依赖的所有其他 Widget 都会重新创建，如果 Flutter 直接解析 Widget树，将其转化为 RenderObject 树来直接进行渲染，那么将会是一个非常消耗性能的过程，那对应的肯定有一个东西来消化这些变化中的不便，来做cache。
 
@@ -1726,8 +1740,6 @@ Widget并不是我们屏幕上显示的,它只是一个配置信息!真正在屏
  
 
 > <h3 id='4_三者关系如何?'>4).三者关系如何?</h3>
-
-
 
 
 <br/><br/>
@@ -1782,12 +1794,76 @@ if (color != null)
 ![flutter1_80_2.png](./../Pictures/flutter1_80_2.png)
 
 
+<br/><br/>
+
 
 - **这里需要注意：**
 
 	- 1.三棵树中，Widget 和 Element 是一一对应的，但并不和 RenderObject 一一对应。比如 StatelessWidget 和 StatefulWidget 都没有对应的 RenderObject。
 	- 2.渲染树在上屏前会生成一棵 Layer 树，
 
+<br/><br/>
+
+**疑问:** BuildContext与Element的联系,为什么需要BuildContext?
+
+
+&emsp; 在Flutter中，BuildContext是一个重要的概念，它用于表示widget在渲染树中的位置，并提供了一种获取相关信息的途径。BuildContext与Element有密切的联系，因为每个BuildContext都对应一个Element，并通过Element来管理与之关联的Widget。
+
+- **联系：**
+
+- BuildContext与Element的关系：每个BuildContext都有一个对应的Element。当一个Widget被插入到渲染树中时，它会被包装在一个Element中，而该Element负责管理与之相关联的Widget。BuildContext实际上是通过Element来创建和管理的。
+
+- 为什么需要BuildContext：
+	- 位置标识：BuildContext用于标识widget在渲染树中的位置。它提供了一种唯一的方式来访问widget在树中的位置，这对于在树中导航、查找其他widget或执行一些与位置相关的操作是非常重要的。
+	- 获取Theme和MediaQuery等信息：通过BuildContext，我们可以访问Theme、MediaQuery等，以便根据应用程序的全局状态或屏幕尺寸进行调整。这使得widget能够适应不同的环境。
+	- 构建子树：BuildContext是在build方法中传递给widget的，通过它，widget可以构建其子树。BuildContext的子树会随着Element的创建而创建，并在需要时进行重建。
+
+```
+import 'package:flutter/material.dart';
+
+class MyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // 通过BuildContext获取Theme
+    ThemeData theme = Theme.of(context);
+
+    return Container(
+      color: theme.primaryColor,
+      child: Builder(
+        builder: (BuildContext childContext) {
+          // 通过BuildContext构建子树
+          return Text('Hello, Flutter!', style: TextStyle(color: theme.accentColor));
+        },
+      ),
+    );
+  }
+}
+
+void main() {
+  runApp(
+    MaterialApp(
+      home: Scaffold(
+        body: MyWidget(),
+      ),
+    ),
+  );
+}
+
+```
+
+在这个例子中，BuildContext被用于获取Theme的信息，并且通过BuildContext构建了子树。这突显了BuildContext的作用，即在构建widget时提供上下文信息，使得widget能够适应其在渲染树中的位置和应用程序的全局状态。
+
+
+
+<br/><br/>
+
+**疑问:**  当一个Widget被插入到渲染树中时，它会被包装在一个Element中什么意思
+
+&emsp; 当一个 Widget 被插入到 Flutter 渲染树中时，它实际上是通过创建一个相应的 Element 来管理的。Element 是 Flutter 框架中的一个核心类，它表示渲染树中的一个可管理单元，负责构建和更新与之关联的 Widget。
+
+&emsp; 在 Flutter 中，Element 通过 BuildContext 与 Widget 进行连接。每个 Element 对应一个 Widget，而 BuildContext 是提供给 Widget 的一个描述 Widget 在树中位置的对象。当 Widget 被插入到渲染树中时，它的 Element 会被创建，同时 BuildContext 会被分配给该 Widget。
+
+&emsp; 简而言之，一个 Widget 被插入到渲染树中，实际上就是它被包装在一个 Element 中，而这个 Element 就是负责管理这个 Widget 的实体。这个 Element 会在需要时负责构建、更新和维护与之关联的 Widget。这种方式使得 Flutter 框架能够更有效地管理渲染树，支持高效的布局和更新机制。
 
 
 
@@ -1836,45 +1912,6 @@ if (color != null)
 &emsp; 当 State 与 Context 关联时，State 被视为已挂载。
 
 **重点**：State 对象 与 context 相关联，就意味着该 State 对象是不（直接）访问另一个 context！
-
-
-
-
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
 
 
 <br/>
@@ -1928,9 +1965,70 @@ State对象中：一个是创建StatefulWidget的State对象的build方法中，
 
 &emsp; Navigator是在Flutter中负责管理维护页面堆栈的导航器。MaterialApp在需要的时候，会自动为我们创建Navigator。
 
-&emsp; Navigator.of(context)，会使用context来向上遍历Element树，找到MaterialApp提供的NavigatorState再调用其push/pop方法完成导航操作。
+&emsp; `Navigator.of(context)` 通过传递一个BuildContext来查找到查找到最近的Navigator，然后获取其对应的NavigatorState，从而进行导航操作。这是因为Navigator是一种基于树结构的导航管理器，BuildContext包含了构建元素树的上下文信息，可以用于向上遍历树找到最近的Navigator。
 
-&emsp; 所以如果在MaterialApp的navigatorKey属性内设置好一个Key就可以直接使用这个Key来进行路由导航，无需上下文。
+
+<br/>
+
+&emsp; 以下是通过BuildContext找到最近的NavigatorState的简单示例：
+
+
+```
+void navigate(BuildContext context) {
+  NavigatorState navigator = Navigator.of(context);
+  navigator.push(MaterialPageRoute(builder: (BuildContext context) {
+    return SecondScreen();
+  }));
+}
+```
+
+上述代码中，Navigator.of(context)会在当前BuildContext所在的元素树中向上查找，直到找到最近的Navigator。然后，可以通过获取其对应的NavigatorState，执行导航操作，比如使用push方法跳转到新的页面。
+
+<br/><br/>
+
+
+**疑问:** 所以如果在MaterialApp的navigatorKey属性内设置好一个Key就可以直接使用这个Key来进行路由导航，无需上下文。这是为什么?
+
+这是因为在Flutter中，每个Navigator都可以通过设置一个GlobalKey<NavigatorState>来唯一标识，这个key可以通过GlobalKey的方式在整个应用程序中找到对应的NavigatorState。这就是为什么你可以使用Navigator的key属性来访问其对应的NavigatorState。
+
+```
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() {
+  runApp(
+    MaterialApp(
+      navigatorKey: navigatorKey, // 设置Navigator的GlobalKey
+      home: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            // 通过key获取NavigatorState进行导航
+            navigatorKey.currentState!.push(MaterialPageRoute(builder: (BuildContext context) {
+              return SecondScreen();
+            }));
+          },
+          child: Text('Navigate to Second Screen'),
+        ),
+      ),
+    );
+  }
+}
+```
+
+&emsp; navigatorKey是GlobalKey<NavigatorState>类型，它通过MaterialApp的navigatorKey属性进行设置。然后，通过navigatorKey.currentState可以获取到对应的NavigatorState，从而进行导航操作。
+
+
+
+
+
 
 
 <br/>
@@ -1975,24 +2073,101 @@ Flutter中使用最普遍的数据库软件包如下：
 
 
 
-> <h2 id=''></h2>
+> <h2 id='Firebase数据库用途'>Firebase数据库用途</h2>
 
+Firebase数据库是Google提供的一种云数据库服务，用于存储和同步应用程序的数据。它是一种 NoSQL 数据库，具有实时同步的特性，适用于移动应用和 Web 应用。
 
 
 <br/>
 <br/>
 
 
+> <h2 id='实时同步的实时应用程序'>实时同步的实时应用程序</h2>
 
-> <h2 id=''></h2>
+&emsp;  Firebase 数据库提供实时数据库同步，允许应用程序中的多个用户实时共享和更新数据。这对于需要实时反馈和协同工作的应用程序非常有用。
+
+```
+// Flutter 中使用 Firebase 数据库的简单示例
+final databaseReference = FirebaseDatabase.instance.reference();
+
+// 写入数据
+databaseReference.child('messages').push().set({
+  'text': 'Hello, Firebase!',
+  'timestamp': ServerValue.timestamp,
+});
+
+// 读取数据
+databaseReference.child('messages').onChildAdded.listen((Event event) {
+  print('New message: ${event.snapshot.value}');
+});
+```
+
+
+<br/><br/>
+
+> <h2 id='用户身份验证与数据关联'>用户身份验证与数据关联</h2>
+
+ Firebase 数据库可以与 Firebase 身份验证集成，帮助将用户身份与其数据关联。这使得只有特定用户能够访问和修改其个人数据。
+ 
+ ```
+ // 与 Firebase 身份验证结合使用的示例
+final user = FirebaseAuth.instance.currentUser;
+final userReference = databaseReference.child('users').child(user.uid);
+
+// 写入用户相关数据
+userReference.set({
+  'username': 'john_doe',
+  'email': 'john@example.com',
+  // 其他用户信息
+});
+
+// 读取用户相关数据
+userReference.once().then((DataSnapshot snapshot) {
+  print('User data: ${snapshot.value}');
+});
+```
+
+
+<br/><br/>
+
+> <h2 id='应用程序配置和设置'>应用程序配置和设置</h2>
+
+ 将应用程序的配置信息和设置存储在 Firebase 数据库中，可以方便地进行动态更新，而不需要重新发布应用程序。
+ 
+ ```
+ // 存储和读取应用程序配置的示例
+final configReference = databaseReference.child('config');
+
+// 写入配置数据
+configReference.set({
+  'feature_enabled': true,
+  'max_items': 100,
+  // 其他配置项
+});
+
+// 读取配置数据
+configReference.once().then((DataSnapshot snapshot) {
+  print('App config: ${snapshot.value}');
+});
+```
+
+
+
+<br/><br/>
+
+> <h2 id='实时分析和监控'>实时分析和监控</h2>
+
+
+Firebase 数据库的实时性质使其非常适合实时监控和分析应用程序的数据。开发者可以使用 Firebase 控制台监视数据库中的更改，了解用户行为和应用程序性能。
+
+这只是 Firebase 数据库的一些用途示例，它还提供了更多功能，如离线支持、安全规则配置等。Firebase 数据库可以为开发者提供一个强大而灵活的云数据库解决方案
 
 
 
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h1 id='线程'>线程</h1>
@@ -2063,9 +2238,7 @@ Stream有两种订阅模式：**单订阅(single) 和 多订阅（broadcast）**
 &emsp; 但 Stream 可以通过 transform() 方法（返回另一个 Stream）进行连续调用。通过 Stream.asBroadcastStream() 可以将一个单订阅模式的 Stream 转换成一个多订阅模式的 Stream，isBroadcast 属性可以判断当前 Stream 所处的模式。
 
 
-<br/>
-<br/>
-
+<br/><br/>
 
 
 > <h3 id='Future'>Future</h3>
@@ -2078,29 +2251,7 @@ Stream有两种订阅模式：**单订阅(single) 和 多订阅（broadcast）**
 	- 而我们也可以通过使用 Future.microtask 方法来向 「微任务队列」中插入一个任务，这样就会提高他执行的效率。因为在 Dart 每一个 isolate 当中，执行优先级为 ： Main > MicroTask > EventQueue
 
 
-
-<br/>
-<br/>
-
-
-
-> <h3 id=''></h3>
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h3 id=''></h3>
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 
 
 > <h2 id='Future和Isolate有什么区别'>Future和Isolate有什么区别</h2>
@@ -2130,8 +2281,6 @@ Stream有两种订阅模式：**单订阅(single) 和 多订阅（broadcast）**
 &emsp; isolate中的代码是按顺序执行的，任何Dart程序的并发都是运行多个isolate的结果。
 
 &emsp; 因为Dart没有共享内存的并发，没有竞争的可能性所以不需要锁，也就不用担心死锁的问题
-
-
 
 
 
@@ -2646,8 +2795,7 @@ Flutter的绘制流程如下图所示:
 ![flutter1_11.png](./../Pictures/flutter1_11.png)
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -2840,51 +2988,6 @@ class PageBloc {
 
 
 
-
-
-
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-
-
 <br/>
 
 ***
@@ -2974,25 +3077,6 @@ class PageBloc {
 &emsp; BlocListenerTree 是一个 Widget，用于将多个 BlockListener 合成一个 Widget。
 
 
-
-<br/>
-<br/>
-
-
-
-> <h3 id=''></h3>
-
-
-<br/>
-<br/>
-
-
-
-> <h3 id=''></h3>
-
-
-
-
 <br/>
 <br/>
 
@@ -3033,8 +3117,7 @@ Redux 使用流程图:
 - Store 是用来存取状态的，当 Store 接收到从 Reducer 传过来的最新状态后，便会用最新的状态去刷新 View。
 
 
-
-<br/>
+<br/><br/>
 
 
 Action、Middleware、Reducer、Store 的角色和作用分别是：
@@ -3355,5 +3438,124 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 
 
 > <h2 id=''></h2>
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+> <h2 id=''></h2>
+
+<br/>
+<br/>
+
+
+
+> <h3 id=''></h3>
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h3 id=''></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+
+
+<br/>
+<br/>
+
+
+
+> <h2 id=''></h2>
+
+<br/>
+<br/>
+
+
+
+> <h3 id=''></h3>
+
+
+<br/>
+<br/>
+
+
+
+> <h3 id=''></h3>
+
+
 
 

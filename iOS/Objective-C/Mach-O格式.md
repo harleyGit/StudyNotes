@@ -4,7 +4,13 @@
 	- [header](#header)
 	- [查看Mach-o命令](#查看Mach-o命令)
 - [**App加载流程**](#App加载流程)
+	- [程序加载的原理](#程序加载的原理)
+	- [App的加载流程](#App的加载流程)
 	- [动态加载器](#动态加载器)
+		- [dyld是什么](#dyld是什么)
+		- [加载程序的过程](#加载程序的过程)
+		- [dyld的工作是什么](#dyld的工作是什么)
+		- [iOS的动态加载器什么时候调用?](#iOS的动态加载器什么时候调用)
 - **资料**
 	- Objective-C runtime机制(前传)——Mach-O格式[](https://blog.csdn.net/u013378438/article/details/80353267?spm=1001.2014.3001.5502)
 	- runtime机制(前传2)——Mach-O格式和runtime [](https://blog.csdn.net/u013378438/article/details/80431465?spm=1001.2014.3001.5502)
@@ -239,7 +245,21 @@ $ otool -l /usr/bin/file
 
 > <h1 id='App加载流程'>App加载流程</h1>
 
-<br/>
+<br/><br/>
+
+> <h2 id='程序加载的原理'>程序加载的原理</h2>
+
+
+&emsp; 系统内核将可执行文件从磁盘中加载到内存中，内存中的二进制文件，我们称之为image镜像文件。之后，系统会加载动态链接器dyld。dyld只会负责动态库的加载，主程序也会作为镜像形式被dyld管理起来。
+
+&emsp; dyld从可执行文件的依赖开始，递归加载所有以来的动态库。无论是动态链还是APP本身的可执行文件，它们都是image镜像，而每个APP都是以image为单位进行加载的。
+
+
+<br/><br/><br/>
+
+
+> <h2 id='App的加载流程'>App的加载流程</h2>
+
 
 **App的加载流程:**
 
@@ -269,8 +289,67 @@ $ otool -l /usr/bin/file
 
 > <h2 id='动态加载器'>动态加载器</h2>
 
+
+<br/><br/>
+
+> <h2 id='dyld是什么'>dyld是什么</h2>
+
+- dyld：动态链接器，加载所有的库和可执行文件
+- libdyld.dylib：给我们的程序提供在Runtime期间能使用动态连接功能
+
+
+<br/><br/>
+
+> <h2 id='加载程序的过程'>加载程序的过程</h2>
+
+- 调用fork函数，创建一个process（进程）调用execve或其衍生函数，在该进程上加载，执行我们的Mach-O文件
+- 将文件加载到内存
+- 开始分析Mach-O中的mach_header，以确认它时有效的Mach-O文件
+- 验证通过，根据mach_header解析load commands。根据解析结果，将程序各个部分加载到指定的地址空间，同时设置保护标记
+- 从LC_LOAD_DYLINKEN中加载dyld
+- dyld开始工作
+
+
+
+
+
+<br/><br/>
+
+> <h2 id='dyld的工作是什么'>dyld的工作是什么</h2>
+
+
+- 执行自身初始化配置加载环境LC_DYLD_INFO_ONLY
+- 加载当前程序链接的所有动态库到指定的内存中LC_LOAD_DYLIB
+- 搜索所有的动态库，绑定需要在调用程序之前用的符号（非懒加载符号）LC_DYSYMTAB
+- 在间接符号表（indirect symbol table）中，将需要绑定的导入符号真是地址替换LC_DYSYMTAB
+- 向程序提供在Runtime时使用dyld的接口函数（存在libdyld.dylib中，由LC_LOAD_DYLIB提供）
+- 配置Runtime，执行所有动态库。image中使用的全局构造函数
+- dyld调用程序入口函数，开始执行程序LC_MAIN
+
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id='iOS的动态加载器什么时候调用'>iOS的动态加载器什么时候调用</h2>
+
+- **load方法 -> C++构造函数 -> main函数**
+
+&emsp; main函数为程序入口，但load方法和C++构造函数的执行时机比main函数更早，它们时被谁调用的？ 在load方法中设置断点，查看函数调用栈
+
+可以发现应用启动时的初始方法，由dyld中的_dyld_start开始的。
+
+
+![ios_oc1_113_43.png](./../../Pictures/ios_oc1_113_43.png)
+
+
+<br/><br/>
+
 **疑问:** iOS的动态加载器什么时候调用? 这个_dyld_start方法有什么用?
 
+
+<br/>
 
 
 &emsp; iOS中的动态加载器（dyld，Dynamic Linker）**在应用程序启动时被调用**，它负责处理可执行文件和动态共享库（dylib）的加载、链接和初始化。

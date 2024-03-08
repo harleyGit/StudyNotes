@@ -130,6 +130,7 @@
 			- [Asssociate关联的对象在什么时候释放(四喵)](#Asssociate关联的对象在什么时候释放)
 			- [category申明属性为什么没有实现(四喵)](#category申明属性为什么没有实现)
 			- [交换方法为什么不在initialize而在load方法中](#交换方法为什么不在initialize而在load方法中)
+			- [在类的+load方法中，可以调用分类方法吗？](#在类的+load方法中，可以调用分类方法吗？)
 	- [Block深入探究](#Block深入探究)
 		- [blokc分类](#blokc分类)
 			- [block内如何修改block外部变量](#block内如何修改block外部变量)
@@ -5330,6 +5331,14 @@ static NSMutableArray *someArray;
 即使在父类中使用initialize中使用dispatch_once_token方法保证只调用一次,但是若是再父类initialize方法进行了父类的A1和B1方法交换,然后在子类initialize进行继承父类A1和C1交换,这样会导致是B1和C1交换,导致不安全!详细解释请看[load和initialize](https://blog.csdn.net/shengpeng3344/article/details/105594478)
 
 
+
+
+<br/><br/>
+
+> <h2 id='在类的+load方法中，可以调用分类方法吗？'>在类的+load方法中，可以调用分类方法吗？</h2>
+
+
+[因为在load方法被调用前](https://blog.csdn.net/u013378438/article/details/80605871?spm=1001.2014.3001.5502)，Category已经完成了附加到class上的流程,所以可以调用.
 
 
 
