@@ -1739,10 +1739,10 @@ class _ScreenState extends State<Screen> {
 
  
 
-> <h3 id='4_三者关系如何?'>[4).三者关系如何?](https://juejin.cn/post/6860611787331469319)</h3>
+># <h3 id='4_三者关系如何?'>[4).三者关系如何?](https://juejin.cn/post/6860611787331469319)</h3>
 
 
-[**解答:**](./组件基础.md#Element与Widget和renderObject的联系)
+[**解答:** Element与Widget和renderObject的联系](./组件基础.md#Element与Widget和renderObject的联系)
 
 
 
