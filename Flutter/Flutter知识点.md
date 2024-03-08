@@ -66,6 +66,12 @@
 	- [热重载](#热重载)
 	- [Provider原理解析](#Provider原理解析)
 	- [Provider种类](#Provider种类)
+		- [基础Provider](#基础Provider)
+		- [ValueListenableProvider](#ValueListenableProvider)
+		- [ChangeNotifierProvider](#ChangeNotifierProvider)
+		- [StreamProvider](#StreamProvider)
+		- [FutureProvider](#FutureProvider)
+		- [ListenableProvider](#ListenableProvider)
 - [**设计模式**](#设计模式)
 	- [响应式编程的三元素](#响应式编程的三元素)
 	- [Bloc和MVVM](#Bloc和MVVM)
@@ -2682,20 +2688,95 @@ Flutter的绘制流程如下图所示:
 
 > <h2 id='Provider种类'>Provider种类</h2>
 
-- **可以通过各种不同的provider来应对具体的需求:**
 
-	- Provider 最基础的provider,它会获取一个值并将它暴露出来
-	
-	- ListenableProvider 用来暴露可监听的对象，该provider将会监听对象的改变以便及时更新组件状态
-	
-	- ChangeNotifierProvider ListerableProvider依托于ChangeNotifier的一个实现，它将会在需要的时候自动调用ChangeNotifier.dispose方法
-	
-	- ValueListenableProvider 监听一个可被监听的值，并且只暴露ValueListenable.value方法
-	
-	- StreamProvider 监听一个流，并且暴露出其最近发送的值
-	
-	- FutureProvider 接受一个Future作为参数，在这个Future完成的时候更新依赖
+&emsp; 下面的这些Provider可以根据应用的具体需求选择使用，一般情况下，ChangeNotifierProvider是最常用的一种，特别适用于小到中等规模的应用。在使用时，通常将Provider包裹在MaterialApp的home属性或Builder中，确保Provider在整个应用中可用。
 
+
+<br/><br/>
+
+> <h2 id='基础Provider'>基础Provider</h2>
+
+- 通用的提供者，可以提供任何类型的数据;
+- 使用create回调来提供初始值或创建对象;
+- 示例:
+
+```
+Provider<int>(
+  create: (context) => 42,
+  child: MyApp(),
+)
+```
+
+
+<br/><br/>
+
+> <h2 id='ValueListenableProvider'>ValueListenableProvider</h2>
+
+
+- 使用ValueListenable作为状态的提供者，当ValueListenable的值发生变化时，通知依赖进行更新;
+-  监听一个可被监听的值，并且只暴露ValueListenable.value方法
+- 适用于一些需要监听值变化的场景。
+- 示例:
+
+```
+ValueListenableProvider<int>(
+  create: (context) => ValueNotifier<int>(42),
+  child: MyApp(),
+)
+```
+
+
+<br/><br/>
+
+> <h2 id='ChangeNotifierProvider'>ChangeNotifierProvider</h2>
+
+- 使用ChangeNotifier作为状态的提供者，当数据发生变化时，通知依赖进行更新。
+- ListerableProvider依托于ChangeNotifier的一个实现，它将会在需要的时候自动调用ChangeNotifier.dispose方法
+- 用于简单的状态管理，适用于小规模的应用。
+- 示例代码：
+
+```
+ChangeNotifierProvider(
+  create: (context) => MyModel(),
+  child: MyApp(),
+)
+```
+
+
+<br/><br/>
+
+> <h2 id='StreamProvider'>StreamProvider</h2>
+
+- StreamProvider 监听一个流，并且暴露出其最近发送的值;
+- 使用Stream作为状态的提供者，当Stream有新数据时，通知依赖进行更新。
+- 适用于异步操作，如网络请求。
+- 示例代码：
+
+```
+StreamProvider<int>(
+  create: (context) => myStreamController.stream,
+  initialData: 42,
+  child: MyApp(),
+)
+```
+
+
+<br/><br/>
+
+> <h2 id='FutureProvider'>FutureProvider</h2>
+
+- FutureProvider 接受一个Future作为参数，在这个Future完成的时候更新依赖;
+- 当Future完成时，通知依赖进行更新。
+- 示例代码：
+
+
+```
+FutureProvider<int>(
+  create: (context) => fetchData(),
+  initialData: 42,
+  child: MyApp(),
+)
+```
 
 
 
@@ -2704,9 +2785,90 @@ Flutter的绘制流程如下图所示:
 
 
 
-> <h2 id=''></h2>
+> <h2 id='ListenableProvider'>ListenableProvider</h2>
 
 
+&emsp; ListenableProvider 是 Provider 库提供的一种特殊类型的提供者，用于管理实现了 Listenable 接口的对象的状态。Listenable 是 Flutter 中表示可监听变化的对象的接口，当对象的状态发生变化时，它会通知监听者进行更新。
+
+以下是一个使用 ListenableProvider 的简单例子，假设我们有一个 Counter 类，它实现了 Listenable 接口：
+
+```
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class Counter extends ChangeNotifier {
+  int _count = 0;
+
+  int get count => _count;
+
+  void increment() {
+    _count++;
+    notifyListeners(); // 通知监听者有变化
+  }
+}
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: ListenableProvider<Counter>(
+        create: (context) => Counter(),
+        child: MyHomePage(),
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Counter App'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Counter Value:',
+              style: TextStyle(fontSize: 18),
+            ),
+            Consumer<Counter>(
+              builder: (context, counter, child) {
+                return Text(
+                  '${counter.count}',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // 获取 Counter 实例并调用 increment 方法
+          Provider.of<Counter>(context, listen: false).increment();
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+```
+
+在这个例子中：
+
+- 我们有一个 Counter 类，它继承了 ChangeNotifier 并实现了 Listenable 接口，具有可监听的能力。
+- MyApp 中使用了 ListenableProvider，并提供了一个 Counter 的实例，以便在应用中共享和管理它的状态。
+- MyHomePage 中通过 Consumer 将 Counter 的值显示在 UI 中，并在按钮点击时调用 increment 方法。
+
+&emsp; 运行这个应用，你将看到一个简单的计数器应用，每次点击按钮都会增加计数器的值。ListenableProvider 用于管理实现了 Listenable 接口的状态对象，并在状态发生变化时通知相关的监听者进行更新。
 
 
 <br/>
