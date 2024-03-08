@@ -2966,9 +2966,7 @@ void main() {
 
 **1.Bloc图**
 
-![flutter1_5.png](./../Pictures/
-
-flutter1_5.png)
+![flutter1_5.png](./../Pictures/flutter1_5.png)
 
 
 
