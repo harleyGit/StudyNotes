@@ -17,6 +17,7 @@
 - [**应用状态恢复RestorationMixin**](#应用状态恢复RestorationMixin)
 	- [RestorableInt详解](#RestorableInt详解)
 - [**PageController()**](#PageController())
+- [**通知ChangeNotifier**](#通知ChangeNotifier)
 - [**打印**](#打印)
 	- [debugPrint](#debugPrint)
 - [**工具类**](#工具类)
@@ -906,6 +907,106 @@ Widget build(BuildContext context) {
 
 &emsp; 这使得 PageController 成为管理 PageView 中页面切换的重要工具。
 
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='通知ChangeNotifier'>通知ChangeNotifier</h1>
+
+ChangeNotifier 是 Flutter 中提供的用于实现观察者模式的基类。它是 dart:ui 包中的一部分，用于在数据发生变化时通知监听器。通常，ChangeNotifier 与 Provider 和 Consumer 一起使用，以在 Flutter 应用程序中进行状态管理。
+
+
+<br/>
+
+**以下是关于 ChangeNotifier 的详细解释：**
+
+- 观察者模式： ChangeNotifier 实现了观察者模式，其中数据对象（主题）维护一组依赖于它的对象（观察者）列表。当数据对象的状态发生变化时，它会通知所有观察者。
+
+- 成为可变的对象： ChangeNotifier 的子类可以成为可变的对象，即具有可以更改的状态。当状态发生变化时，调用 notifyListeners 方法通知所有注册的观察者。
+
+- 使用步骤： 为了使用 ChangeNotifier，你需要创建一个继承自 ChangeNotifier 的类，该类将保存状态，并提供一些方法来更改状态。当状态发生变化时，调用 notifyListeners 方法通知所有监听器。
+
+- 与 Provider 和 Consumer 一起使用： ChangeNotifier 通常与 Provider 和 Consumer 一起使用，以在 Flutter 应用程序中进行状态管理。Provider 提供 ChangeNotifier 的实例，而 Consumer 在状态发生变化时重新构建相关部分的 UI。
+
+下面是一个简单的示例，演示如何使用 ChangeNotifier：
+
+
+```
+import 'package:flutter/material.dart';
+
+// 创建一个继承自 ChangeNotifier 的类
+class CounterNotifier extends ChangeNotifier {
+  int _counter = 0;
+
+  // 提供获取 counter 值的方法
+  int get counter => _counter;
+
+  // 提供增加 counter 的方法
+  void increment() {
+    _counter++;
+    // 通知所有监听器（观察者）状态已发生变化
+    notifyListeners();
+  }
+}
+
+void main() {
+  runApp(
+    // 使用 ChangeNotifierProvider 提供 CounterNotifier 实例
+    MaterialApp(
+      home: ChangeNotifierProvider(
+        create: (context) => CounterNotifier(),
+        child: MyHomePage(),
+      ),
+    ),
+  );
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // 使用 Consumer 监听 CounterNotifier 的变化
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('ChangeNotifier Example'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            // 使用 Consumer 获取 CounterNotifier 的值
+            Consumer<CounterNotifier>(
+              builder: (context, counter, child) {
+                return Text(
+                  'Counter: ${counter.counter}',
+                  style: TextStyle(fontSize: 20),
+                );
+              },
+            ),
+            SizedBox(height: 20),
+            // 使用 Consumer 调用 CounterNotifier 的方法
+            Consumer<CounterNotifier>(
+              builder: (context, counter, child) {
+                return ElevatedButton(
+                  onPressed: () {
+                    // 调用 CounterNotifier 的方法
+                    counter.increment();
+                  },
+                  child: Text('Increment Counter'),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+在这个示例中，CounterNotifier 继承自 ChangeNotifier，它有一个 counter 属性和一个 increment 方法。在 main 函数中，使用 ChangeNotifierProvider 提供 CounterNotifier 的实例，并在 MyHomePage 中使用 Consumer 来监听和更新 UI。每当调用 increment 方法时，notifyListeners 通知所有监听器，从而触发相关部分的 UI 重新构建。这是一种在 Flutter 中进行状态管理的常见模式。
 
 <br/>
 
