@@ -5,6 +5,7 @@
 		- [保活线程](#保活线程)
 		- [让crash的app回光返照](#让crash的app回光返照)
 		- [tableView加载图片优化](#tableView加载图片优化)
+			- [异步加载图片](#异步加载图片)
 		- [Async Test Case](#AsyncTestCase)
 	- [Runloop数据结构](#Runloop数据结构)
 	- [CFRunLoopRef的结构体](#CFRunLoopRef的结构体)
@@ -28,6 +29,7 @@
 	- [卡顿原因](#卡顿原因)
 	- [Runloop6种状态](#Runloop6种状态)
 	- [监测卡顿](#监测卡顿)
+	- [看门狗WatchDog](#看门狗WatchDog)
 - [**NSTimer**](#NSTimer)
 - [**参考资料**](#参考资料)
 	- [ **线程保活**](https://cloud.tencent.com/developer/article/1615137)
@@ -382,6 +384,46 @@ while(1){
 
 
 ><h3 id='tableView加载图片优化'>tableView加载图片优化</h3>
+
+
+
+<br/><br/>
+
+> <h2 id='异步加载图片'>异步加载图片</h2>
+
+
+```
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    MyTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MyCell" forIndexPath:indexPath];
+    
+    // 异步加载图片
+    [self loadAsyncImageForCell:cell atIndexPath:indexPath];
+    
+    return cell;
+}
+
+#pragma mark - Image Loading
+
+- (void)loadAsyncImageForCell:(MyTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
+    // 利用Runloop进行异步加载图片
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSString *imageURLString = self.imageURLs[indexPath.row];
+        NSURL *imageURL = [NSURL URLWithString:imageURLString];
+        NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+        UIImage *image = [UIImage imageWithData:imageData];
+        
+        // 更新UI在主线程上
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // 检查cell是否可见，避免重用时更新了错误的cell
+            if ([self.tableView.indexPathsForVisibleRows containsObject:indexPath]) {
+                cell.imageView.image = image;
+                [cell setNeedsLayout];
+            }
+        });
+    });
+}
+```
+
 
 <br/>
 <br/>
@@ -1943,29 +1985,127 @@ runLoopObserver = CFRunLoopObserverCreate(kCFAllocatorDefault,kCFRunLoopAllActiv
 &emsp; 一旦发现进入睡眠前的 kCFRunLoopBeforeSources 状态，或者唤醒后的状态 kCFRunLoopAfterWaiting，在设置的时间阈值内一直没有变化，即可判定为卡顿。接下来，我们就可以 dump 出堆栈的信息，从而进一步分析出具体是哪个方法的执行时间过长。
 
 
-开启一个子线程监控的代码如下：
+
 
 ```
-//创建子线程监控
-dispatch_async(dispatch_get_global_queue(0, 0), ^{
-    //子线程开启一个持续的 loop 用来进行监控
-    while (YES) {
-        long semaphoreWait = dispatch_semaphore_wait(dispatchSemaphore, dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC));
-        if (semaphoreWait != 0) {
-            if (!runLoopObserver) {
-                timeoutCount = 0;
-                dispatchSemaphore = 0;
-                runLoopActivity = 0;
-                return;
+#import "PerformanceMonitor.h"
+#import <CrashReporter/CrashReporter.h>
+
+@interface PerformanceMonitor ()
+{
+    int timeoutCount;
+    CFRunLoopObserverRef observer;
+    
+    @public
+    dispatch_semaphore_t semaphore;
+    CFRunLoopActivity activity;
+}
+@end
+
+@implementation PerformanceMonitor
+
++ (instancetype)sharedInstance
+{
+    static id instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+    });
+    return instance;
+}
+
+static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+{
+    PerformanceMonitor *moniotr = (__bridge PerformanceMonitor*)info;
+    
+    //记录状态值
+    moniotr->activity = activity;
+    
+    //发送信号
+    dispatch_semaphore_t semaphore = moniotr->semaphore;
+    dispatch_semaphore_signal(semaphore);
+}
+
+- (void)stop
+{
+    if (!observer)
+        return;
+    
+    CFRunLoopRemoveObserver(CFRunLoopGetMain(), observer, kCFRunLoopCommonModes);
+    CFRelease(observer);
+    observer = NULL;
+}
+
+- (void)start
+{
+    if (observer)
+        return;
+    
+    // 信号
+    semaphore = dispatch_semaphore_create(0);
+    
+    // 注册RunLoop状态观察, 设置Run Loop observer的运行环境
+    CFRunLoopObserverContext context = {0,(__bridge void*)self,NULL,NULL};
+    
+    /*
+     创建Run loop observer对象
+     第一个参数用于分配该observer对象的内存
+     第二个参数用以设置该observer所要关注的的事件，详见回调函数myRunLoopObserver中注释
+     第三个参数用于标识该observer是在第一次进入run loop时执行还是每次进入run loop处理时均执行
+     第四个参数用于设置该observer的优先级
+     第五个参数用于设置该observer的回调函数
+     第六个参数用于设置该observer的运行环境
+     */
+    observer = CFRunLoopObserverCreate(kCFAllocatorDefault,
+                                       kCFRunLoopAllActivities,
+                                       YES,
+                                       0,
+                                       &runLoopObserverCallBack,
+                                       &context);
+    //将新建的observer加入到当前的thread的runLoop， CFRunLoopGetMain()获得主线程对应的runloop
+    CFRunLoopAddObserver(CFRunLoopGetMain(), observer, kCFRunLoopCommonModes);
+    
+    // 在子线程监控时长(开启一个子线程监控)
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        while (YES)
+        {
+            //假定连续5次超时50ms认为卡顿(当然也包含了单次超时250ms)
+            long st = dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, 50*NSEC_PER_MSEC));
+            if (st != 0)
+            {
+                if (!observer)
+                {
+                    timeoutCount = 0;
+                    semaphore = 0;
+                    activity = 0;
+                    return;
+                }
+                
+                
+                //activiety 是即将处理 source 和 即将 sleep
+                if (activity==kCFRunLoopBeforeSources || activity==kCFRunLoopAfterWaiting)
+                {
+                    if (++timeoutCount < 5)
+                        continue;
+                    //处理卡顿信息上传到服务器
+                    PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeBSD
+                                                                                       symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll];
+                    PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
+                    
+                    NSData *data = [crashReporter generateLiveReport];
+                    PLCrashReport *reporter = [[PLCrashReport alloc] initWithData:data error:NULL];
+                    NSString *report = [PLCrashReportTextFormatter stringValueForCrashReport:reporter
+                                                                              withTextFormat:PLCrashReportTextFormatiOS];
+                    //将字符串上传到服务器
+                    NSLog(@"------------\n%@\n------------", report);
+                }
             }
-            //BeforeSources 和 AfterWaiting 这两个状态能够检测到是否卡顿
-            if (runLoopActivity == kCFRunLoopBeforeSources || runLoopActivity == kCFRunLoopAfterWaiting) {
-                //将堆栈信息上报服务器的代码放到这里
-            } //end activity
-        }// end semaphore wait
-        timeoutCount = 0;
-    }// end while
-});
+            timeoutCount = 0;
+        }
+    });
+}
+
+@end
 ```
 
 代码中的 NSEC_PER_SEC，代表的是触发卡顿的时间阈值，单位是秒。可以看到，我们把这个阈值设置成了 3 秒。那么，这个 3 秒的阈值是从何而来呢？这样设置合理吗？
@@ -2107,6 +2247,89 @@ int32_t __CFRunLoopRun()
     
     // 通知即将退出runloop
     __CFRunLoopDoObservers(CFRunLoopExit);
+}
+```
+
+
+
+<br/><br/>
+
+> <h2 id='看门狗WatchDog'>看门狗WatchDog</h2>
+
+&emsp; iOS底层的看门狗机制通常是由系统内核（kernel）来实现的，它用于监控应用程序的运行状态，确保应用程序在一定时间内能够正常响应，防止应用程序陷入无响应状态。
+
+&emsp; 在iOS中，系统为每个应用程序分配了一个主线程（main thread），该线程负责处理用户界面和一些关键事件。如果主线程长时间没有响应，系统就会认为应用程序可能出现了问题，为了防止应用程序对系统的影响，系统会触发看门狗机制，终止应用程序的运行。
+
+&emsp; 具体来说，iOS底层的看门狗机制的实现可以涉及到一些系统级的定时器和监控机制。系统会定期检查每个应用程序的主线程是否在规定的时间内完成了一些关键操作，例如处理用户输入、更新UI等。如果主线程在规定的时间内没有完成这些操作，系统就会认为应用程序可能出现了问题，然后触发看门狗机制，导致应用程序被终止。
+
+&emsp; 一般情况下，WatchDog机制通过在主线程上设置定时器并定期检查应用程序的运行状态来实现。以下是一个简单的示例，演示了如何在iOS中使用GCD（Grand Central Dispatch）创建一个简单的WatchDog机制，模拟在规定时间内完成任务，否则触发WatchDog机制。
+
+```
+import UIKit
+
+class ViewController: UIViewController {
+
+    var taskCompleted = false
+    let taskLock = NSLock()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // 模拟一个需要在规定时间内完成的任务
+        simulateTaskToBeCompletedWithinTime()
+
+        // 设置WatchDog定时器，与任务相关联
+        setupWatchDogTimer()
+    }
+
+    func simulateTaskToBeCompletedWithinTime() {
+        // 模拟一个需要在规定时间内完成的任务
+        DispatchQueue.global().async {
+            // 模拟耗时任务
+            sleep(5)
+
+            // 标记任务完成
+            self.taskLock.lock()
+            self.taskCompleted = true
+            self.taskLock.unlock()
+
+            print("Task completed successfully!")
+        }
+    }
+
+    func setupWatchDogTimer() {
+        // 设置WatchDog定时器，如果任务没有在规定时间内完成，就触发WatchDog机制
+        let watchdogTimer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
+
+        // 设置WatchDog的触发时间，这里设置为3秒，与任务执行时间不一致，用于演示WatchDog的触发
+        let watchdogInterval: DispatchTimeInterval = .seconds(3)
+        watchdogTimer.schedule(deadline: .now() + watchdogInterval, repeating: .never)
+
+        // 设置WatchDog触发事件
+        watchdogTimer.setEventHandler { [weak self] in
+            // 检查任务是否已经完成
+            guard let self = self else { return }
+
+            self.taskLock.lock()
+            let taskCompleted = self.taskCompleted
+            self.taskLock.unlock()
+
+            // 如果任务未完成，则触发WatchDog机制
+            if !taskCompleted {
+                self.handleWatchDogTriggered()
+            }
+        }
+
+        // 启动WatchDog定时器
+        watchdogTimer.resume()
+    }
+
+    func handleWatchDogTriggered() {
+        print("WatchDog triggered: Task took too long to complete!")
+
+        // 在这里可以执行强制终止应用程序的操作，例如使用exit(0)
+        exit(0)
+    }
 }
 ```
 
