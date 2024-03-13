@@ -88,6 +88,15 @@
 		- [值类型和引用类型支持什么派发方式](#值类型和引用类型支持什么派发方式)
 		- [Swfit中的@Objc和dynamic的原理(Versh面试)](#Swfit中的@Objc和dynamic的原理)
 		- [@Objc和Dynamic的使用(Storehub)](#@Objc和Dynamic的使用)
+		- [Swift Runtime的关键功能](#SwiftRuntime的关键功能)
+			- [动态类型转换](#动态类型转换)
+			- [泛型实例化](#泛型实例化)
+			- [协议一致性注册](#协议一致性注册)
+		- [Swift结构体存放的位置](#Swift结构体存放的位置)
+			- [结构体装箱和案例](#结构体装箱和案例)
+				- [结构体装箱到NSValue](#结构体装箱到NSValue)
+				- [结构体装箱到Any类型](#结构体装箱到Any类型)
+				- [装箱到自定义类型](#装箱到自定义类型)
 		- [OC调用Swift类型,找不到方法?](#OC调用Swift类型,找不到方法?)
 	- [存在容器由组成(Existential Container)](#存在容器由组成)
 	- [Virtual Table和Protocol Witness Table区别](#VirtualTable和ProtocolWitnessTable区别)
@@ -95,6 +104,10 @@
 		- [Value Buffer](#ValueBuffer)
 		- [Value Witness Table](#ValueWitnessTable)
 - [**前端**](#前端)
+	- [输入URL到加载过程发生了什么](#输入URL到加载过程发生了什么)
+	- [302和301的区别](#302和301的区别)
+	- [重定向原因](#重定向原因)
+	- [什么时候进行301或者302跳转](#什么时候进行301或者302跳转)
 - **参考资料**
 	- [Swfit开源代码](https://github.com/apple)
 	- [道长基础知识](https://www.jianshu.com/p/07c9c6464f83) 
@@ -2435,6 +2448,10 @@ let result = addTwoNumbers(5, 7)  // Swift会推断result为Int类型
 		- 当结构体作为类（class）的一个属性时，这个结构体会随着类实例一起存放在堆上。
 		
 		- 使用var关键字在函数内部声明一个结构体实例并超出其作用域时，如果该实例作为逃逸闭包（escaping closure）的捕获列表的一部分，Swift 会将其放入堆中以确保其生命周期能够跨越闭包执行的范围。
+			- 上面的意思是:wift创建一个struct默认被存储于栈区。当编译器侦测到结构体变量被一个函数闭合的时候，此时这个结构体将存储在堆上.**这个函数闭合是什么意思?**
+				- 在Swift中，当一个函数内部引用了一个结构体变量，并将其传递给一个闭包（或者说将结构体变量作为闭包的参数或捕获到闭包内部），编译器会使用引用语义，将这个结构体实例从栈上移动到堆上，以确保在闭包执行时能够正确捕获和访问这个结构体的实例。
+				
+				- 这种情况下，结构体实例不再被存储在栈上，而是在堆上分配内存，并且在闭包执行完成后，会被自动释放（即销毁内存），这是通过 Swift 的自动引用计数（ARC）机制来管理的。
 		
 		- 使用Box<T>或AnyObject等间接类型将结构体包装起来时，它们会被存储在堆上，因为这些间接类型本质上是引用类型。
 
@@ -2562,7 +2579,7 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 	
 	- 从OC的运行时特性可知，所有的运行时方法都依赖TypeEncoding，也就是method_getTypeEncoding返回的结果，他指定了方法的参数类型以及在函数调用时参数入栈所要的内存空间，没有这个标识就无法动态的压入参数，而一些Swift特有的类型无法映射到OC的类型,也无法用OC的typeEncoding表示，就没法通过runtime获取;
 	
-	- 除了继承自NSObject的类之外，继承自Swift根类 **`Object类`** 也能开启其动态性，其开启方式是**在属性或方法前加上@objc和dynamic。
+	- 除了继承自NSObject的类之外，继承自Swift根类 **`Object类`** 也能开启其动态性，其开启方式是 **在属性或方法前加上@objc和dynamic**。
 		
 		- @objc是用来将Swift的API导出给Objective-C和Objective-C runtime使用的，如果你的类继承自Objective-C的类（如NSObject）将会自动被编译器插入@objc标识。
 		
@@ -2570,19 +2587,12 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 		
 		- 在Swift中，所有类的根类是 Object，它是一个空协议。这个 Object 类允许Swift的类型体系中的所有类都共享一些通用的行为。
 
-
-[静态派发与动态派发(iOS成长指北-掘金)](https://juejin.cn/post/6954157785542049805)
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 ># <h3 id='Swift派发方式'>[Swift派发方式](./动态性.md#Swift派发方式)</h3>
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h4 id='派发效率'>派发效率</h4>
 
@@ -2590,15 +2600,13 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 派发效率从高到低为： **直接派发 > Table 派发 > Message 派发**
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h4 id='方法可见性影响'>方法可见性影响</h4>
 
 &emsp; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h4 id='KVO'>KVO</h4>
 
@@ -2606,9 +2614,7 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 
 
-<br/>
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h4 id='值类型和引用类型支持什么派发方式'>值类型和引用类型支持什么派发方式</h4>
@@ -2641,8 +2647,7 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h4 id="@Objc和Dynamic的使用">@Objc和Dynamic的使用</h4>
@@ -2650,16 +2655,220 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 [Swift动态性](https://juejin.cn/post/6888989886280368141)
 
 
-&emsp; Swift Runtime system主要包括动态类型转换，泛型实例化和协议一致性注册，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
+**@objc 关键字：**
 
-&emsp; Swift中的方法派发分为静态派发和动态派发，与Objective-C的消息派发机制不同，静态派发会在编译时确定方法的实现，并且以内联的方式对方法进行优化，指定函数被调用的指针；其中Swift结构体被分配在堆区，其函数默认是静态派发模式，以及使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+- @objc 关键字用于标记一个 Swift 中的成员（属性、方法、类、协议等），以便它可以在 Objective-C 中访问。这通常用于需要与 Objective-C 代码进行交互的情况，例如，当你需要使用 Objective-C 的运行时特性或者在 Objective-C 中使用这些成员时。
 
-&emsp; 由于Swift为了性能，牺牲了它的动态性，使得我们在Swift层面上能做的事情很少。不过，由于Swift的类分为两种: 继承自NSObject的类以及默认继承自SwiftObject的类，既然Swift中有继承自NSObject的派生类，那么也就意味着OC的动态性也能在Swift里面应用
+```
+@objc class MyClass: NSObject {
+    @objc func myMethod() {
+        // 在 Objective-C 中可以调用该方法
+    }
+}
+```
+
+在上面的示例中，MyClass 和 myMethod() 都用 @objc 标记，这使得它们可以在 Objective-C 中访问
+
+
+<br/><br/>
+
+**dynamic 关键字：**
+
+- dynamic 关键字用于告诉编译器将成员的调用动态派发，而不是静态派发。这通常用于在运行时动态派发方法调用，以提供更灵活的行为，例如使用 Key-Value Observing（KVO）或者通过运行时动态修改方法的行为等情况。
+
+```
+class MyClass: NSObject {
+    dynamic func myMethod() {
+        // 方法实现
+    }
+}
+```
+
+&emsp; 使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
+
+
+<br/><br/>
+
+> <h2 id='SwiftRuntime的关键功能'>Swift Runtime的关键功能</h2>
+
+&emsp; Swift Runtime system关键功能主要包括**动态类型转换**，**泛型实例化**和**协议一致性注册**，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
+
+&emsp; Swift Runtime系统是一套支撑Swift语言特性的底层基础设施，确保Swift程序能够在运行时正确有效地执行。
+
+
+<br/><br/>
+
+> <h2 id='动态类型转换'>动态类型转换</h2>
+
+在Swift中，尽管语言设计更偏向于静态类型安全，但在某些情况下仍然存在动态类型检查的需求。例如，使用is和as?（条件转换）以及as!（强制转换）进行类型转换。这些操作会在运行时验证对象是否属于特定类型或子类型，并可能完成类型之间的转换。
+
+```
+class Animal {}
+class Dog: Animal {}
+
+let anyAnimal: Animal = Dog()
+if let doggy = anyAnimal as? Dog {
+    // doggy 是 Dog 类型的实例
+}
+```
+
+<br/><br/>
+
+> <h2 id='泛型实例化'>泛型实例化</h2>
+
+泛型允许定义可以处理多种类型的数据结构或函数。在Swift中，每个泛型类型的实例都有其自己的类型信息记录在运行时元数据中。例如，当我们创建一个泛型Array时：
+
+```
+struct Box<T> {
+    var item: T
+}
+
+let integerBox = Box(item: 42)
+let stringBox = Box(item: "Hello")
+
+// 运行时会分别为整数类型和字符串类型创建独立的Box实例元数据
+```
+
+
+<br/><br/>
+
+> <h2 id='协议一致性注册'>协议一致性注册</h2>
+
+Swift运行时维护了一个类型与其遵循的协议之间的映射关系表。当一个类型声明遵循某个协议时，Swift编译器会在运行时为该类型注册它所符合的协议信息。这样，在需要检查一个对象是否遵循某个协议或使用协议相关的方法、属性时，运行时能够正确地进行一致性检查和调用。
+
+```
+protocol Printable {
+    func description() -> String
+}
+
+struct Person: Printable {
+    var name: String
+    func description() -> String {
+        return "Person named \(name)"
+    }
+}
+
+let person = Person(name: "Alice")
+// 运行时知道Person类型遵循Printable协议，因此可以安全地调用description()
+print(person.description())
+```
+
+Swift Runtime系统保证了这些高级语言特性在实际运行时得以有效实现和管理，提供了类型安全性的同时也保持了一定程度的灵活性。
+
+
+<br/><br/>
+
+> <h2 id='Swift结构体存放的位置'>Swift结构体存放的位置</h2>
+
+
+**疑问1:** Swift中的结构体存放在什么位置?
+
+在 Swift 中，结构体（struct）是值类型，它们通常会被分配在栈上,尤其是在它们作为局部变量或作为其他结构体/枚举成员时。与类不同，结构体实例的内存分配和释放是在编译时处理的，而不是在运行时进行的。
+
+当你创建一个结构体实例时，编译器会在栈上为该实例分配内存。这个内存空间大小取决于结构体中属性的数量和类型。然后，这个结构体实例的值被存储在这块分配的内存中。
+
+由于结构体是值类型，当你传递或者赋值一个结构体实例时，实际上是将整个结构体的值进行了复制。这意味着在传递参数或者赋值时，实际上是复制了整个结构体的内存内容。这也是为什么结构体通常适用于较小的数据结构，因为复制的开销会随着结构体大小的增加而增加。
+
+然而，**当struct作为某个类（class）的属性时**，或者当结构体实例被装箱（boxed）进一个引用类型容器（如AnyObject或NSValue）中，这时结构体会存储在堆区。即使在这种情况下，结构体本身的内存布局仍然保持连续性，即其属性依然会按照声明顺序在堆上连续分配内存。
+
+另外需要注意的是，Swift 中的编译器会进行一些优化，例如在某些情况下，可以避免不必要的复制操作，提高性能。但总体来说，结构体的内存分配是在栈上进行的，并且它们的值是被存储在这块分配的内存中的。
+
+
+<br/><br/>
+
+> <h2 id='结构体装箱和案例'>结构体装箱和案例</h2>
+
+
+**疑问2:** 什么叫装箱? 包含哪几种情况?
+
+
+**简介:**
+
+当结构体实例被装箱（boxed）进一个引用类型容器（如 AnyObject 或 NSValue）中时，意味着这个结构体实例被封装到一个引用类型对象中。这个过程称为装箱。
+
+在 Swift 中，结构体是值类型，而引用类型（如类）是引用类型。值类型在被传递或者赋值时会发生复制，而引用类型则是共享内存。因此，为了将值类型转换为引用类型，需要进行装箱操作，即将值类型包装到一个引用类型对象中，以便它能够被存储在引用类型容器中，例如 AnyObject 或 NSValue。
+
+
+<br/><br/><br/>
+
+> <h2 id='结构体装箱到NSValue'>结构体装箱到NSValue</h2>
+
+
+将结构体实例装箱到 NSValue 中：
+
+```
+import Foundation
+
+// 定义一个结构体
+struct Point {
+    var x: Int
+    var y: Int
+}
+
+// 创建一个Point结构体实例
+let point = Point(x: 10, y: 20)
+
+// 将Point结构体实例装箱到NSValue中
+let boxedPoint = NSValue(nonretainedObject: point)
+
+// 打印装箱后的NSValue对象
+print(boxedPoint)
+```
+
+在这个示例中，我们首先定义了一个简单的结构体 Point，它具有两个整型属性 x 和 y。然后，我们创建了一个 Point 的实例 point。接下来，我们使用 NSValue 的构造函数将 point 装箱到 boxedPoint 中。最后，我们打印了装箱后的 boxedPoint 对象。
+
+需要注意的是，装箱操作会增加一些额外的开销，因为它涉及到创建一个引用类型对象，并将值类型的数据复制到该对象中。因此，尽管装箱提供了一种在引用类型容器中存储值类型的方式，但应该谨慎使用，以避免不必要的性能开销。
+
+
+<br/><br/>
+
+> <h2 id='结构体装箱到Any类型'>结构体装箱到Any类型</h2>
+
+**使用 Any 类型：** 当你将一个结构体实例赋值给 Any 类型变量或者将其作为函数的参数传递时，Swift 会进行装箱操作。因为 Any 类型是一个类型擦除（type erasure）的容器，它可以存储任意类型的值，但实际上内部是通过引用来管理的。
+
+```
+// 定义一个结构体
+struct Point {
+    var x: Int
+    var y: Int
+}
+
+// 创建一个Point结构体实例
+let point = Point(x: 10, y: 20)
+
+// 将Point结构体实例装箱到Any类型中
+let anyValue: Any = point
+```
 
 
 
-<br/>
-<br/>
+<br/><br/>
+
+> <h2 id='装箱到自定义类型'>装箱到自定义类型</h2>
+
+
+**使用自定义的引用类型包装器：** 有时候，你可能会定义自己的引用类型包装器来封装值类型。这种情况下，当你将结构体实例传递给或者赋值给这个自定义包装器类型时，也会发生装箱操作。
+
+
+```
+// 定义一个自定义的引用类型包装器
+class Wrapper<T> {
+    var value: T
+    init(value: T) {
+        self.value = value
+    }
+}
+
+// 创建一个Point结构体实例
+let point = Point(x: 10, y: 20)
+
+// 将Point结构体实例装箱到自定义的Wrapper类型中
+let wrappedPoint = Wrapper(value: point)
+```
+
+
+
+<br/><br/>
 
 > <h4 id='OC调用Swift类型,找不到方法?'>OC调用Swift类型,找不到方法?</h4>
 
@@ -2760,7 +2969,6 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 
 在 OOP 中，基于继承关系的多态是通过 Virtual Table 实现的；在 POP 中，没有继承关系，因为无法使用 Virtual Table 实现基于协议的多态，取而代之的是 Protocol Witness Table。
 
-
 <br/>
 
 - Virtual Table和Protocol Witness Table 的区别，我的理解是：
@@ -2772,10 +2980,11 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 
 ![ios_swift0_3.png](./../../Pictures/ios_swift0_3.png)
 
+
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 > <h1 id='前端'>前端</h1>
@@ -2783,6 +2992,10 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 >### <h3 id='输入URL到加载过程发生了什么'>[输入URL到加载过程发生了什么](https://segmentfault.com/a/1190000006879700)</h3>
 
 [从输入 URL 到页面展示到底发生了什么？看完吊打面试官！](https://zhuanlan.zhihu.com/p/133906695)
+
+<br/><br/><br/>
+
+><h2 id='302和301的区别'>302和301的区别</h2>
 
 - 302和301的区别?以及原理
 
@@ -2794,7 +3007,10 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 
 &emsp; 302表示旧地址A的资源还在（仍然可以访问），这个重定向只是临时地从旧地址A跳转到地址B，搜索引擎会抓取新的内容而保存旧的网址。SEO302好于301
 
-<br/>
+<br/><br/>
+
+
+><h2 id='重定向原因'>重定向原因</h2>
 
 > - 重定向原因：
 
@@ -2804,7 +3020,11 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 - 这种情况下，如果不做重定向，则用户收藏夹或搜索引擎数据库中旧地址只能让访问客户得到一个404页面错误信息，访问流量白白丧失；再者某些注册了多个域名的网站，也需要通过重定向让访问这些域名的用户自动跳转到主站点等。
 
 
-<br/>
+
+<br/><br/>
+
+
+><h2 id='什么时候进行301或者302跳转'>什么时候进行301或者302跳转</h2>
 
 >- 什么时候进行301或者302跳转呢？
 
@@ -2818,32 +3038,10 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 
 
 
-<br/>
-<br/>
-
-
-><h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-><h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-
-><h2 id=''></h2>
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 ><h2 id=''></h2>
@@ -2855,7 +3053,7 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 > <h1 id=''></h1>
@@ -2879,7 +3077,7 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 > <h1 id=''></h1>
@@ -2890,7 +3088,7 @@ Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对�
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 > <h1 id=''></h1>
