@@ -27,6 +27,7 @@
 		- [扩展拦截器类](#扩展拦截器类)
 		- [CancelToken](#CancelToken)
 	- [fluro路由组件](#fluro路由组件)
+	- [FluroRouter路由](#FluroRouter路由)
 	- [cached_network_image-图片加载](#cached_network_image-图片加载)
 	- 	[flutter_ume调试工具](#flutter_ume调试工具)
 	- [common_utils-工具库](#common_utils-工具库)
@@ -1124,13 +1125,9 @@ FluroRouter().navigateTo(context, path,
 ```
 
 
-<br/>
+<br/><br/><br/>
 
-<br/><br/>
-
-> <h2 id='FluroRouter'>FluroRouter</h2>
-
-
+> <h2 id='FluroRouter路由'>FluroRouter路由</h2>
 
 - **FluroRouter 的详细说明：**
 

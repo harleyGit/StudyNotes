@@ -98,11 +98,14 @@
 				- [结构体装箱到Any类型](#结构体装箱到Any类型)
 				- [装箱到自定义类型](#装箱到自定义类型)
 		- [OC调用Swift类型,找不到方法?](#OC调用Swift类型,找不到方法?)
-	- [存在容器由组成(Existential Container)](#存在容器由组成)
-	- [Virtual Table和Protocol Witness Table区别](#VirtualTable和ProtocolWitnessTable区别)
-	- [Existential Container 5个内存单元](#ExistentialContainer5个内存单元)
-		- [Value Buffer](#ValueBuffer)
-		- [Value Witness Table](#ValueWitnessTable)
+	- [**存在容器**](#存在容器)
+		- [存在容器简介](#存在容器简介)
+		- [存在容器在内存的位置](#存在容器在内存的位置)
+		- [存在容器由组成(Existential Container)](#存在容器由组成)
+			- [Virtual Table和Protocol Witness Table区别](#VirtualTable和ProtocolWitnessTable区别)
+		- [Existential Container 5个内存单元](#ExistentialContainer5个内存单元)
+			- [Value Buffer](#ValueBuffer)
+			- [Value Witness Table](#ValueWitnessTable)
 - [**前端**](#前端)
 	- [输入URL到加载过程发生了什么](#输入URL到加载过程发生了什么)
 	- [302和301的区别](#302和301的区别)
@@ -2890,17 +2893,69 @@ let wrappedPoint = Wrapper(value: point)
 
 
 
+<br/><br/><br/>
 
+> <h2 id='存在容器'>存在容器</h2>
+
+```
+class ClassA {
+
+}
+
+let aaa = ClassA()
+```
+
+**aaa 这个指针存放在内存什么位置?**
 
 <br/>
-<br/>
-<br/>
+
+在 Swift 中，变量 aaa 是一个指向 ClassA 类型的实例的引用，而实例通常存储在堆上。因此，aaa 这个指针（或引用）本身存放在栈上，而它指向的实际对象存放在堆上。
+
+简而言之：
+
+- aaa 这个指针（引用）本身存放在栈上，因为它是一个局部变量或全局变量。
+- ClassA 类型的实例存放在堆上，因为它是一个引用类型的对象。
 
 
+<br/><br/>
+
+> <h2 id='存在容器简介'>存在容器简介</h2>
+
+**Existential Container（存在容器）简介:**
+
+Existential Container（存在容器）是一种用于存储符合协议的对象的数据结构。它是 Swift 中实现协议和泛型的关键机制之一。
+
+Existential Container 用于存储任意类型的对象，只要它们符合某个特定的协议。这种存储方式使得可以在一个容器中存储不同类型的对象，只要它们都符合相同的协议。
+
+Existential Container 内部包含了对对象的引用以及一些元数据，用于运行时确定对象的类型和协议的实现。它通过类型擦除的方式隐藏了对象的真实类型，从而实现了协议的抽象和动态派发。
+
+- **包含的内容:** 
+	- 对象的引用：Existential Container 中会存储指向对象实例的引用。
+	
+	- 类型元数据：Existential Container 中包含了一些用于运行时确定对象类型和协议实现的元数据，比如对象的实际类型和协议的类型信息。
+
+<br/>
+
+通过 Existential Container，Swift 能够实现协议的抽象和泛型的功能，同时保持类型安全和性能。这种存储机制使得 Swift 中的协议和泛型更加强大和灵活。
+
+
+<br/><br/>
+
+> <h2 id='存在容器在内存的位置'>存在容器在内存的位置</h2>
+
+Existential Container（存在容器）在**内存中通常存放在堆上**。这是因为 Existential Container 通常包含引用类型的对象，而引用类型的对象在 Swift 中通常都是在堆上分配内存的。
+
+因此，存在容器中存储的引用指向堆上实际对象的内存地址。这确保了对象的生命周期可以由引用计数管理，并且可以正确地处理对象的所有权和内存管理。
+
+值得注意的是，存在容器中的引用是指向实际对象的，而不是 Value Buffer（值缓冲区）。Value Buffer 是用于存储值类型对象的内存区域，而对于引用类型的对象，它们的实例通常存储在堆上，而不是在容器的 Value Buffer 中。
+
+因此，存在容器本身通常会被分配在堆上，而其中存储的引用指向实际对象的堆上内存地址。
+
+<br/><br/>
 
 >## <h2 id='存在容器组成'>[存在容器组成](https://blog.csdn.net/preyer2011/article/details/129052530)</h2>
 
-- Value Buffer 占 3 个字的长度，如果符合协议的对象是值类型且小于等于 3 个字，则直接放入 ValueBuffer 中，如果对象是引用类型或者大于 3 个字的值类型，则将对象放在堆上，在 ValueBuffer 中保存一个指向堆上对象的引用。
+- **Vlue Buffer（值缓冲区）:** 占 3 个字节的长度，如果符合协议的对象是值类型且小于等于 3 个字节，则直接放入 ValueBuffer 中.如果值类型对象大于 3 个字节，则将对象放在堆上，在 ValueBuffer 中保存一个指向堆上对象的引用。
 
 - 一个指向 值目击表（Value Witness Table, VWT） 的指针，用来创建、拷贝和销毁值，表中保存了创建、拷贝、销毁等函数的地址，其中创建、销毁函数的地址仅在当对象分配在堆上时才会有。
 
@@ -2913,18 +2968,37 @@ let wrappedPoint = Wrapper(value: point)
 [为什么你需要使用泛型而不是 protocol](https://www.6hu.cc/archives/30535.html)
 
 
-<br/>
-<br/>
-<br/>
+<br/><br/>
+
+**疑问1:** 对于Value Buffer缓冲区是在堆还是栈上呢?
+
+Value Buffer（值缓冲区）通常会存储在栈上或者堆上，具体取决于对象的大小和存储位置。在 Swift 中，如果值类型对象小于等于 3 个字节，它通常会直接存储在 Value Buffer 中，而 Value Buffer 会被存储在栈上。这样做可以提高内存访问的效率，因为栈上的内存访问通常比堆上的内存访问更快。
+
+然而，如果值类型对象的大小超过了 3 个字节，或者在某些情况下需要动态分配内存（比如值类型对象被捕获在闭包中时），则对象会被分配在堆上。在这种情况下，Value Buffer 将会包含一个指向堆上对象的引用，而堆上的对象实际数据会被存储在另外的内存区域中。
+
+综上所述，Value Buffer 可能存储在栈上或堆上，取决于对象的大小和存储位置。
+
+<br/><br/>
+
+**疑问2:** 遵守协议Protocol的引用类型对象,它在存在容器中的Value Buffer存储吗? 若是存储是怎样存储的?
+
+对于遵守协议的引用类型对象，在存在容器中通常不会有 Value Buffer 存在。Value Buffer 主要用于存储值类型对象的实际数据，而不是引用类型对象。
+
+在存在容器中，引用类型对象的引用通常会存储在堆上(也就是说存在容器本身分配在堆上)。这意味着存在容器会包含一个指向堆上存储的对象实例的引用。在 Swift 中，引用类型的对象（例如类的实例）通常是在堆上分配内存的，而不是在栈上。因此，在存在容器中存储的引用会指向堆上的对象实例。
+
+存在容器主要用于存储引用类型对象的引用，以及一些元数据和 Witness Table。其中，元数据用于运行时确定对象的类型和协议的实现，而 Witness Table 则用于动态派发。这些部分共同组成了存在容器，在 Swift 中用于支持协议的抽象和动态派发。
+
+因此，对于遵守协议的引用类型对象，在存在容器中不会存储 Value Buffer。相反，它会存储对实际对象的引用，以及一些元数据和 Witness Table。
+
+
+
+<br/><br/><br/>
 
 
 > <h2 id='VirtualTable和ProtocolWitnessTable区别'>Virtual Table和Protocol Witness Table区别</h2>
 
 
-
-<br/>
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='ExistentialContainer5个内存单元'>Existential Container 5个内存单元</h2>
@@ -2939,14 +3013,12 @@ Existential Container 类型占据 5 个内存单元（也称 词，Word）。�
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h4 id='Value Buffer'>Value Buffer</h4>
-Value Buffer
 
-Value Buffer 占据 3 个词，存储的可能是值，也可能是指针。对于 Small Value（存储空间小于等于 Value Buffer），可以直接内联存储在 Value Buffer 中。对于 Large Value（存储空间大于 Value Buffer），则会在堆区分配内存进行存储，Value Buffer 只存储对应的指针。如下图所示。
+Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。对于 Small Value（存储空间小于等于 Value Buffer），可以直接内联存储在 Value Buffer 中。对于 Large Value（存储空间大于 Value Buffer），则会在堆区分配内存进行存储，Value Buffer 只存储对应的指针。如下图所示。
 
 
 ![ios_swift0_0.png](./../../Pictures/ios_swift0_0.png)
