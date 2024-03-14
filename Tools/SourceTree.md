@@ -1,26 +1,34 @@
 
-
-- [**查看提交记录**](#查看提交记录)
--  [**提交**](#提交)
--  [**rebase变基**](#ebase变基)
-	- [单分支合并多次commit](#单分支合并多次commit)
-	- [一分支提交合并到另一分支上](#一分支提交合并到另一分支上)
-- [**git branch**](#gitbranch)
-- [**git checkout**](#gitcheckout)
-- **[Git 简易指南](https://www.bootcss.com/p/git-guide/)**
-- **[Git 参考手册](http://gitref.justjavac.com/index.html)**
-- **[Pro Git(中文版)](https://gitee.com/progit/)**
-- **[Git教程 廖雪峰](https://www.liaoxuefeng.com/wiki/896043488029600/896202815778784)**
-- [Git&GitLab](https://blog.csdn.net/csfreebird/article/category/1224512)
+> <h2 id=''></h2>
+- [**工作命令**](#工作命令)
+	- [**查看提交记录**](#查看提交记录)
+	-  [**提交**](#提交)
+	-  [**rebase变基**](#ebase变基)
+		- [单分支合并多次commit](#单分支合并多次commit)
+		- [一分支提交合并到另一分支上](#一分支提交合并到另一分支上)
+	- [**git branch**](#gitbranch)
+	- [**git checkout**](#gitcheckout)
+- [解决SourceTree弹窗要求输入密码](#解决SourceTree弹窗要求输入密码)
+- **资料**
+	- **[Git 简易指南](https://www.bootcss.com/p/git-guide/)**
+	- **[Git 参考手册](http://gitref.justjavac.com/index.html)**
+	- **[Pro Git(中文版)](https://gitee.com/progit/)**
+	- **[Git教程 廖雪峰](https://www.liaoxuefeng.com/wiki/896043488029600/896202815778784)**
+	- [Git&GitLab](https://blog.csdn.net/csfreebird/article/category/1224512)
 
 
 
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
-># <h1 id="查看提交记录">查看提交记录</h1>
+># <h1 id="工作命令">工作命令</h1>
+
+<br/><br/>
+
+> <h2 id='查看提交记录'>查看提交记录</h2>
+
 
 - 终端命令
   - `git log `:列出历史提交记录;
@@ -32,13 +40,10 @@
 ![简洁记录查看](https://upload-images.jianshu.io/upload_images/2959789-3199a538813e96d4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-<br/>
-
-***
-<br/>
+<br/><br/><br/>
 
 
-> <h1 id="提交">提交</h1>
+> <h2 id="提交">提交</h2>
 
 **` 提交规范`**
 - feat: 新功能
@@ -50,14 +55,14 @@
 - test: 增加修改测试用例
 - chore: 修改工具相关（包括但不限于文档、代码生成等）
 - deps: 升级依赖
+
 **`例如`**
 
 ```
 git commit -m 'fix:修复xxxbug'
 ```
 
-<br/>
-<br/>
+<br/><br/>
 
 - 第一次提交
 
@@ -72,8 +77,7 @@ Password for 'https://harelysoa@qq.com@gitee.com': [xxxxxx(密码)]
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 - 第二次提交
 
@@ -90,8 +94,7 @@ git push
 
 ![工作流](https://upload-images.jianshu.io/upload_images/2959789-9af4cd14dbe74644.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-<br/>
-<br/>
+<br/><br/>
 
 - 第三次提交
 
@@ -121,7 +124,7 @@ git commit -m "第三次提交"
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 > <h1 id="rebas变基">rebas变基</h1>
 
@@ -145,8 +148,7 @@ git commit -m "第三次提交"
 现在我们在master分支上添加了5次提交，我们的目标是把最后三个提交合并为一个提交：
 ![终端6次提交，第一次提交是master的初始化](https://upload-images.jianshu.io/upload_images/2959789-0b880e7f8d3c7bb5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-<br/>
-<br/>
+<br/><br/>
 
 变基命令：
 
@@ -208,8 +210,7 @@ git rebase -i HEAD~3
 ![变基完成](https://upload-images.jianshu.io/upload_images/2959789-6bffeca860a178c9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -224,12 +225,7 @@ git rebase -i HEAD~3
 ![完成变基后并进行了提交](https://upload-images.jianshu.io/upload_images/2959789-ff1350749daa4bad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id="一分支提交合并到另一分支上">一分支提交合并到另一分支上</h2>
@@ -302,41 +298,27 @@ git rebase -i HEAD~3
 ![这时变基彻底完成了](https://upload-images.jianshu.io/upload_images/2959789-ab311f74d3711220.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
+<br/><br/>
+
+> <h2 id="gitbranch">git branch</h2>
+
+① git branch用-a 参数，可以看到很多branch，包括远程的branch。
+
+```
+git branch -a
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/develop
+  remotes/origin/issue_193
+  remotes/origin/issue_210
+  remotes/origin/master
+```
 
 
 
+<br/><br/>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-> <h1 id="gitcheckout">git checkout</h1>
+> <h2 id="gitcheckout">git checkout</h2>
 
 **`解析：`**
 
@@ -352,25 +334,18 @@ Your branch is ahead of 'origin/master' by 1 commit.//意思是我本地仓库�
 
 ```
 
-<br/>
 
-***
-<br/>
 
->#  <h1 id="gitbranch">git branch</h1>
+<br/><br/>
 
-① git branch用-a 参数，可以看到很多branch，包括远程的branch。
+> <h2 id='解决SourceTree弹窗要求输入密码'>解决SourceTree弹窗要求输入密码</h2>
 
 ```
-git branch -a
-* master
-  remotes/origin/HEAD -> origin/master
-  remotes/origin/develop
-  remotes/origin/issue_193
-  remotes/origin/issue_210
-  remotes/origin/master
+Password required
+cd 你的工程目录路径
+git config credential.helper store
+git pull
 ```
-
 
 
 
