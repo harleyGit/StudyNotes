@@ -3,6 +3,7 @@
 - [**快捷键**](#快捷键)
 - [**💻终端命令**](#💻终端命令)
 	- [禁止系统更新](#禁止系统更新)
+		- [彻底禁止 macOS Catalina 自动更新，去除更新标记和通知](#彻底禁止macOSCatalina自动更新，去除更新标记和通知)
 	- [压缩文件带密码](#压缩文件带密码)
 	- [文件损坏问题解决](文件损坏问题解决)
 	- [关机](#关机)
@@ -170,6 +171,13 @@ sudo defaults write /Library/Preferences/com.apple.commerce.plist AutoUpdate -bo
 //这个命令重新启动 Dock 进程，以确保新的系统首选项生效
 killall Dock
 ``` 
+
+
+<br/><br/>
+
+
+>## <h2 id='彻底禁止macOSCatalina自动更新，去除更新标记和通知'>[彻底禁止 macOS Catalina 自动更新，去除更新标记和通知](https://sysin.org/blog/disable-macos-catalina-update/#3-屏蔽网络访问-2)</h2>
+
 
 
 <br/><br/>
