@@ -472,6 +472,7 @@
 
 
 > <h1 id = '读书笔记'>读书笔记</h1>
+- [**Github书籍**](https://github.com/HarborLibrary)
 * 金融投资	
 	*	[**金融理财(I)**](./ReadNotes/金融理财(I).md)
 	*	[**金融理财(II)**](./ReadNotes/金融理财(II).md)

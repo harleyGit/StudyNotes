@@ -1,9 +1,13 @@
-
-> <h2 id=''></h2>
+> <h1 id=''></h1>
 - [**Https 安全简介**](#Https安全简介)
+	- [部分证书类容](#部分证书类容)
+	- [https端口](#https端口)
+	- [https连接概要](#https连接概要)
 - [**CA证书生成**](#CA证书生成)
 	- [生成 CA 目录](#生成CA目录)
 	- [生成CSR文件](#生成CSR文件)
+	- [中间CA私钥生成](#中间CA私钥生成)
+	- [生成root CA配置文件](#生成rootCA配置文件)
 - [**根证书生成**](#根证书生成)
 - [**服务器SSL证书生成**](#服务器SSL证书生成)
 - [**HTTPS 原理解析**](https://juejin.im/entry/6844903506537611271)
@@ -19,26 +23,23 @@
 <br/>
 
 ***
-<b/>
+<b/><b/>
 
 
-
-># <h0 id='Https安全简介'>Https 安全简介</h0>
-
-
+> <h1 id='Https安全简介'>Https 安全简介</h1>
 
 **🔐加密套件的安全握手协商:**
 
 ![ios_oc2_8.png](./../../Pictures/ios_oc2_8.png)
 
-<br/>
+<br/><br/>
 
 使用上面获取密钥又一个问题,就是他们是明文传输和容易在被中间人获取随机数:
 
 ![ios_oc2_9.png](./../../Pictures/ios_oc2_9.png)
 
 
-<br/>
+<br/><br/>
 
 下面我们使用RSA非对称加密,我们使用加密后的套件列表. 然后服务器使用加密后的套件和公钥一起发送给浏览器,以后浏览器发送数据可以通过公钥加密发送给服务器.即使别人截取也破解不了.
 
@@ -46,8 +47,7 @@
 
 但是这就有一个问题就是中间有人架起中间服务器,这样就会导致数据还是会被泄密.
 
-<br/>
-<br/>
+<br/><br/>
 
 &emsp; 所以我们采用数字证书,请中间数字证书签发机构CA颁给我们一个证书,当然这个是收费的.
 
@@ -64,9 +64,7 @@
 
 - 服务器收到加密后的随机数pre-master,进行解密.结合随机数A、随机数B、随机数pre-master生成新的密钥,以后用这个密钥进行对称加密,传送数据
 
-<br/>
-
-部分证书类容:
+<br/><br/>> <h2 id='部分证书类容'>部分证书类容</h2>
 
 ![ios_oc2_12.png](./../../Pictures/ios_oc2_12.png)
 
@@ -78,12 +76,10 @@
 浏览器获取到CA的证书后,会用CA证书的hash函数计算证书明文得到信息摘要.然后利用浏览器内置的公钥对证书上的数字签名进行解密得到第二份摘要信息,然后对比,若一致,则证书是有效的.
 
 
+<br/><br/><br/>
 
+> <h2 id='https端口'>https端口</h2>
 
-
-
-
-<br/>
 
 -   http使用的端口是80；
 
@@ -111,8 +107,10 @@
 3. 浏览器从拿到的加密算法 解密decode()这段密文，然后浏览器进行展示。
 ```
 
-- https 连接概要：
 
+<br/><br/>> <h2 id='https连接概要'>https 连接概要</h2>
+
+- **https 连接概要**
 
 ```
 1. 浏览器提交支持的加密算法列表， hi 在吗；
@@ -132,7 +130,7 @@ TLS:(Transport Layer Security)为安全传输层协议，所以属于传输层;
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 ># <h1 id='CA证书生成'>CA证书生成</h1>
@@ -181,8 +179,12 @@ mkdir -p /Users/harleyhuang/Documents/Gitee/SSL/CA
 mkdir certs crl newcerts private
 ```
 
-![ certs、 crl、 newcerts、 private四个文件夹](https://upload-images.jianshu.io/upload_images/2959789-4dac1629dc4aee90.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ios_oc1_114_2.webp](./../../Pictures/ios_oc1_114_2.webp)
 
+certs、 crl、 newcerts、 private四个文件夹
+
+
+<br/>
 
 ```
 //chmod abc file: 文件使用权限
@@ -200,19 +202,53 @@ echo 1000 > serial
 
 ```
 
-![文件夹生成](https://upload-images.jianshu.io/upload_images/2959789-51b6cc921b7cb428.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ios_oc1_114_3.webp](./../../Pictures/ios_oc1_114_3.webp)
 
 
+<br/><br/>
+
+> <h2 id='中间CA私钥生成'>中间CA私钥</h2>
 
 
 -  创建中间CA的私钥，采用AES-256算法加密中间CA的私钥，中途会让我们输入加密密钥，最后修改中间CA的私钥访问权限
 
 ```
+/*
+* openssl 是一个开放源代码的密码学工具包，提供了加密和解密以及其他安全操作的功能
+
+* genrsa 是 OpenSSL 提供的一个子命令，用于生成 RSA 密钥对。
+
+* -aes256 选项指定了要使用 AES256 加密算法来保护生成的私钥文件。
+
+* -out private/cakey.pem 选项指定了生成的私钥文件的路径和名称。
+
+* 4096 指定了生成的 RSA 密钥的位数，这里是 4096 位。通常情况下，4096 位的 RSA 密钥提供了很高的安全性，适用于许多安全场景。
+
+* 执行此命令后，将会生成一个 4096 位的 RSA 私钥，并使用 AES256 算法加密存储在 private/cakey.pem 文件中
+*/
 openssl genrsa -aes256 -out private/cakey.pem 4096
+
 chmod 400 private/cakey.pem
 ```
 
-![cakey.pem 生成](https://upload-images.jianshu.io/upload_images/2959789-4b8e690fadc799bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ios_oc1_114_4.webp](./../../Pictures/ios_oc1_114_4.webp)
+
+**cakey.pem 生成**
+
+<br/>
+
+**疑问:** cakey.pem是什么文件?
+
+cakey.pem 文件通常是一个包含密钥（私钥）的文件，用于证书颁发机构（CA）的操作。通常情况下，“CA” 指的是证书颁发机构，负责颁发数字证书，以验证个体或实体的身份。这些证书用于加密通信和建立安全连接。
+
+在这种情况下，cakey.pem 文件很可能包含了 CA 的私钥，因为生成私钥的 OpenSSL 命令中使用了 cakey.pem 作为输出文件的名称。私钥对在证书颁发机构的操作中至关重要，因为它们用于对证书进行签名，确保证书的真实性和完整性。
+
+一般来说，cakey.pem 文件的名称中的 ".pem" 扩展名表明它采用了 PEM（Privacy Enhanced Mail）格式，这是一种常见的用于存储证书和密钥的格式，它使用基于 Base64 编码的 ASCII 文本。
+
+
+<br/><br/>
+
+> <h2 id='生成rootCA配置文件'>生成root CA配置文件</h2>
 
 
 -  中间CA要向root CA申请公钥证书，就要首先产生一个CSR（证书签名请求，Certificate Signing Request都有作用）格式的请求文件，将其发送给root CA后等待其对中间CA的审查。
@@ -222,10 +258,10 @@ chmod 400 private/cakey.pem
 &emsp;  创建并编辑intermediate_CA.cnf,若是demoCA中没有rootCA.cnf文件夹可以去`/System/Library/OpenSSL/openssl.cnf `进行拷贝一份：
 
 ```
+//cp file1.txt file2.txt: 将将文件 file1.txt 复制到当前目录下并命名为 file2.txt
 cp /Users/harleyhuang/Documents/Gitee/SSL/demoCA/rootCA.cnf /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA/intermediateCA.cnf
 
-
-cd cd /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA
+cd /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA
 
 vim intermediateCA.cnf
 //编辑
@@ -233,31 +269,71 @@ vim intermediateCA.cnf
 [ CA_default ]
 dir                = /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA
 ```
+
 今后我们每次使用中间CA创建新的证书时，以`”-config /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA/intermediateCA.cnf“` 的形式告诉OpenSSL中间CA的信息。
 
 `intermediateCA.cnf.cnf`默认申请的有效期是365天，如果想要修改这个时长，可以在`[ CA_default ]的"default_days"`字段进行修改。
 
+
 <br/>
-<br/>
+
+**疑问:** openssl.cnf  是什么文件? 有什么用?
+
+
+&emps; openssl.cnf 是 OpenSSL 的配置文件。OpenSSL 是一个开源的密码学工具包，用于实现安全通信、加密和解密数据等操作。openssl.cnf 文件包含了 OpenSSL 工具的默认配置信息，可以用于指定各种参数和选项，以定制 OpenSSL 工具的行为。
+
+&emps; **openssl.cnf 文件的作用包括但不限于：**
+
+- 设置默认参数和选项：openssl.cnf 中定义了一些默认值，例如加密算法、密钥长度、证书属性等，这些可以在使用 OpenSSL 工具时作为默认值。
+- 配置证书颁发机构（CA）：对于证书颁发机构的操作，可以在 openssl.cnf 中配置相关参数，如证书的有效期、默认的签名算法等。
+- 指定密钥和证书存储位置：openssl.cnf 可以指定默认的密钥和证书存储位置，以便 OpenSSL 工具在需要时能够找到这些文件。
+- 设置加密算法和密码学参数：可以在 openssl.cnf 中指定加密算法的参数，如密码长度、散列算法等。
+- 配置 SSL/TLS 协议参数：openssl.cnf 中包含了 SSL/TLS 协议的相关配置，如支持的协议版本、密码套件等。
+
+&emps; 总之，openssl.cnf 文件允许用户对 OpenSSL 工具的行为进行自定义和配置，使其适应特定的使用场景和安全需求。
+
+
+
+<br/><br/>
 
 
 > <h2 id='生成CSR文件'>生成CSR文件</h2>
 
+使用OpenSSL 命令用于生成一个证书签名请求 (CSR)，并将其保存到 cacsr.pem 文件中.
 
 ```
 cd /Users/harleyhuang/Documents/Gitee/SSL/intermediateCA
 
+
+
+/*
+* req：这是 OpenSSL 工具的一个子命令，用于处理证书请求 (CSR)
+
+* -config intermediateCA.cnf：此选项指定了要使用的 OpenSSL 配置文件，即 intermediateCA.cnf。
+  这个配置文件包含了生成 CSR 所需的参数，比如证书的属性、签名算法等信息。通过指定配置文件，可以定制 CSR 的生成过程。
+
+* -sha256：此选项指定了使用 SHA-256 哈希算法来生成 CSR 的摘要。
+SHA-256 是一种安全性更高的哈希算法，用于生成证书请求的摘要，以确保请求的完整性和安全性。
+
+* -new：此选项指示 OpenSSL 创建一个新的证书签名请求 (CSR)。
+
+* -key private/cakey.pem：此选项指定了用于生成 CSR 的私钥文件的路径和名称。在这里，private/cakey.pem 是之前生成的 CA 私钥文件的路径
+
+* -out cacsr.pem：此选项指定了生成的证书签名请求 (CSR) 的输出文件路径和名称。在这里，cacsr.pem 是要保存 CSR 的文件名
+*/
 openssl req -config intermediateCA.cnf -sha256 -new -key private/cakey.pem -out cacsr.pem
 ```
 
-![cacsr.pem 生成](https://upload-images.jianshu.io/upload_images/2959789-2c47280475e446ad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ios_oc1_114_5.webp](./../../Pictures/ios_oc1_114_5.webp)
+
+**cacsr.pem 生成**
 
 
 &emsp;  随后系统会要求我们输入中间CA的私钥密码，设置中间CA的一些身份信息等等，注意`”Organization Name“`一项一定要与root CA时设置的相同。
 
-&emsp;  正确输入中间CA的身份信息后我们就得到了中间CA的CSR。
+&emsp; 正确输入中间CA的身份信息后我们就得到了中间CA的CSR。
 
-&emsp;  接下来我们用root CA同意中间CA的请求，因为我们将使用root CA的私钥签名中间CA的证书，这时系统会要求我们输入root CA的私钥密码，选择签名证书如下：
+&emsp; 接下来我们用root CA同意中间CA的请求，因为我们将使用root CA的私钥签名中间CA的证书，这时系统会要求我们输入root CA的私钥密码，选择签名证书如下：
 
 ```
 cd /Users/harleyhuang/Documents/Gitee/SSL/demoCA 
