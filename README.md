@@ -99,7 +99,7 @@
 <br/><br/>
 
 >## <h2 id = 'c++'>[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
-*	[**基础**](./C/基础.md)
+*	[**基础**](./C/C2基础.md)
 *	[作用域](./C/作用域.md)
 *	[基础语法](./C/基础语法.html)
 *	[运算符](./C/C2运算符.md)

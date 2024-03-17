@@ -1434,7 +1434,7 @@ struct ListNode* mergeKLists(struct ListNode** lists, int listsSize){
 ```
 
 
-
+<br/><br/>
 
 ```
 struct ListNode* mergeTwoLists(struct ListNode* list1, struct ListNode* list2){
@@ -1521,6 +1521,77 @@ Log:
 🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 3
 🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 4
 🌷🌹(May  8 2023:21:02:27 [154行] +[HGTestAlgorithm testMergeTwoLists]) 4
+```
+
+
+<br/><br/>
+
+[**递归法:**](https://www.bilibili.com/video/BV1xa411A76q?p=4&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+// 定义链表节点结构体
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};
+
+// 函数声明
+struct ListNode* mergeTwoLists(struct ListNode* l1, struct ListNode* l2);
+
+// 主函数
+int main() {
+    // 创建示例链表 l1: 1->2->4
+    struct ListNode* l1 = (struct ListNode*)malloc(sizeof(struct ListNode));
+    l1->val = 1;
+    l1->next = (struct ListNode*)malloc(sizeof(struct ListNode));
+    l1->next->val = 2;
+    l1->next->next = (struct ListNode*)malloc(sizeof(struct ListNode));
+    l1->next->next->val = 4;
+    l1->next->next->next = NULL;
+
+    // 创建示例链表 l2: 1->3->4
+    struct ListNode* l2 = (struct ListNode*)malloc(sizeof(struct ListNode));
+    l2->val = 1;
+    l2->next = (struct ListNode*)malloc(sizeof(struct ListNode));
+    l2->next->val = 3;
+    l2->next->next = (struct ListNode*)malloc(sizeof(struct ListNode));
+    l2->next->next->val = 4;
+    l2->next->next->next = NULL;
+
+    // 调用函数合并两个链表
+    struct ListNode* mergedList = mergeTwoLists(l1, l2);
+
+    // 输出合并后的链表
+    printf("Merged List: ");
+    while (mergedList != NULL) {
+        printf("%d ", mergedList->val);
+        mergedList = mergedList->next;
+    }
+    printf("\n");
+
+    return 0;
+}
+
+// 合并两个升序链表的函数
+struct ListNode* mergeTwoLists(struct ListNode* l1, struct ListNode* l2) {
+    // 边界情况处理
+    if (l1 == NULL)
+        return l2;
+    if (l2 == NULL)
+        return l1;
+
+    // 递归合并
+    if (l1->val < l2->val) {
+        l1->next = mergeTwoLists(l1->next, l2);
+        return l1;
+    } else {
+        l2->next = mergeTwoLists(l1, l2->next);
+        return l2;
+    }
+}
 ```
 
 

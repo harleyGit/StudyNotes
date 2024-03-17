@@ -2253,7 +2253,34 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 
 - dispatch_semaphore_create(long value); 利用给定的输出时创建一个新的可计数的信号量
 
+<br/>
+
 - dispatch_semaphore_wait(dispatch_semaphore_t dsema, dispatch_time_t timeout); 如果信号量大于 0 ，信号量减 1 ，执行程序。否则等待信号量
+	- timeout:超过了指定的 timeout 时间，此时函数也会立即返回，不会阻塞
+
+```
+dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+
+dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    // 在这里执行一些异步任务
+    
+    // 任务完成后发送信号量
+    dispatch_semaphore_signal(semaphore);
+});
+
+// 等待信号量，设置超时时间为5秒
+dispatch_time_t timeout = dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC);
+long result = dispatch_semaphore_wait(semaphore, timeout);
+if (result == 0) {
+    NSLog(@"任务执行成功");
+} else {
+    NSLog(@"任务执行超时");
+}
+```
+
+在这个示例中，一个异步任务在后台执行，然后在主线程中等待这个任务完成，最长等待时间为5秒。dispatch_semaphore_wait 函数将阻塞主线程，直到异步任务完成或者超时。
+
+<br/>
 
 - dispatch_semaphore_signal(dispatch_semaphore_t dsema); 增加信号量
 
