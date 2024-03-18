@@ -93,6 +93,7 @@
 			- [泛型实例化](#泛型实例化)
 			- [协议一致性注册](#协议一致性注册)
 		- [Swift结构体存放的位置](#Swift结构体存放的位置)
+			- [结构体装箱后的内存变化](#结构体装箱后的内存变化)
 			- [结构体装箱和案例](#结构体装箱和案例)
 				- [结构体装箱到NSValue](#结构体装箱到NSValue)
 				- [结构体装箱到Any类型](#结构体装箱到Any类型)
@@ -224,10 +225,7 @@ Swift是由苹果公司开发的编程语言，主要用于开发iOS、macOS和w
 [Swift源码解析之弱引用](http://www.manongjc.com/article/64837.html)
 
 
-<br/>
-<br/>
-<br/>
-
+<br/><br/><br/>
 
 
 > <h2 id = "Swift和OC区别">Swift和OC区别</h2>
@@ -1073,8 +1071,7 @@ print(address(of: &p2)) // 0x104d6a310
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 >## <h1 id="值类型和引用类型">[值类型和引用类型](https://juejin.cn/post/6844904000794394637)</h1>
 
@@ -1097,12 +1094,11 @@ print(address(of: &p2)) // 0x104d6a310
 
 **一般Swift值类型在栈上分配。 引用类型在堆上分配。**
 
-**比如:** 
+- **比如:** 
 	- 结构体和类的区别: 定义结构体类型时其成员可以没有初始值。如果使用这种格式定义一个类，编译器是会报错的，他会提醒你这个类没有被初始化。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h3 id='什么时候使用值类型什么时候使用引用类型'>[什么时候使用值类型?什么时候使用引用类型?](https://juejin.cn/post/6844904000794394637)</h3>
 &emsp; 关于在新建一个类型时如何选择到底是使用值类型还是引用类型的问题其实在理解了两者之间的区别后是非常简单的，在这苹果官方已经做出了非常明确的指示（以下内容引自苹果官方文档）：
@@ -1119,14 +1115,7 @@ print(address(of: &p2)) // 0x104d6a310
 	
 	- 你希望有创建一个共享的、可变对象的时候
 
-
-
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 
 
 > <h3 id='什么时候值类型会发生装箱'>什么时候值类型会发生装箱</h3>
@@ -1183,9 +1172,7 @@ func foo(x: inout Int) {
 
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id="关键字">关键字</h2>
@@ -1762,6 +1749,8 @@ let ability = Mapper<Ability>().map(JSONString: json)
 
 那么 **'<-'** 这么奇怪的符号，它又是啥意思呢？
 
+<br/>
+
 去看源码，发现这个符号是这个库自定义的一个操作符，在Operators.swift里如下：
 
 ```
@@ -1770,9 +1759,12 @@ infix operator <-
 /// Object of Basic type
 public func <- <T>(left: inout T, right: Map) {
 	switch right.mappingType {
+	// 当 mappingType 的值为 .fromJSON 并且键存在时执行以下代码块。
 	case .fromJSON where right.isKeyPresent:
+		// 调用 FromJSON.basicType 方法，将 JSON 数据转换为基本类型，并将结果赋值给目标对象 left
 		FromJSON.basicType(&left, object: right.value())
 	case .toJSON:
+		//表示将目标对象中的数据序列化为 JSON 格式，并将结果存储在 right 中
 		left >>> right
 	default: ()
 	}
@@ -1797,8 +1789,12 @@ map方法存在于Mapper类中, 定义如下:
 
 func map(JSON: [String: Any]) -> M? {
 	let map = Map(JSON: JSON)
-	if let klass = M.self as? Mappable.Type {
+	if let klass = M.self as? Mappable.Type {// 使用 Swift 的反射机制，检查类型 M 是否符合 Mappable 协议，即该类型是否可以进行映射操作。
+	
+		//如果类型 M 符合 Mappable 协议，那么通过调用 klass.init(map: map) 创建了一个对象，并尝试将其转换为类型 M。
+		//如果对象创建成功，则执行以下代码块
 	  	if var obj = klass.init(map: map) as? M {
+		  	//将 map 对象中的数据映射到该对象上
 	    	obj.mapping(map: map)
 	    	return obj
 	  		}
@@ -1810,10 +1806,13 @@ func map(JSON: [String: Any]) -> M? {
 
 可以看到，在map的方法中，我们最后会调用Mappable协议中定义的mapping方法，来对json数据做出转化。
 
+<br/>
+
 最后再看一下Map这个类，这个类主要用来处理找到key所对应的value。处理方式如下:
 
-
 ```
+//ArraySlice<String> 是 Swift 中的一种特殊类型，它表示了一个数组的切片（Slice），即原数组的一个连续的子序列
+// 数组切片是一个轻量级的数据结构，它们只是对原始数组的引用，并没有实际拥有数组中的元素。切片允许你在不复制数组元素的情况下对数组进行切割、操作和传递，从而提高了性能和内存效率。
 private func valueFor(_ keyPathComponents: ArraySlice<String>, dict: [String: Any]) -> (Bool, Any?) {
 	guard !keyPathComponents.isEmpty else { return (false, nil) }
 
@@ -1844,12 +1843,7 @@ private func valueFor(_ keyPathComponents: ArraySlice<String>, dict: [String: An
 但是这个只能解析一些最简单的类型，其他的像enum之类的，还需要做一些自定义的转化。主要的数据转化都在Operators文件夹中。
 
 
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 
 
 > <h2 id="SwiftJSON">SwiftJSON</h2>
@@ -1928,6 +1922,8 @@ public init(parseJSON jsonString: String)
 
 [iOS组件化实践](https://www.jianshu.com/p/510ee1290ab4)
 
+[iOS组件化-之搭建基于AFNetworking的网络请求框架](https://www.jianshu.com/p/b99520518f2f)
+
 
 <br/>
 
@@ -1946,12 +1942,10 @@ public init(parseJSON jsonString: String)
 
 
 
-
-
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 > <h1 id="安全">安全</h1>
 
@@ -1963,7 +1957,7 @@ public init(parseJSON jsonString: String)
 
 - 使用场景：
 
-&emsp; MD5常用在密码加密中，一般为了保证用户密码的安全，在数据库中存储的都是用户的密码经过MD5加密后的值，在客户端用户输入密码后，也会使用MD5进行加密，这样即使用户的网络被窃听，窃听者依然无法拿到用户的原始密码，并且即使用户数据库被盗，没有存储明文的密码对用户来说也多了一层安全保障。
+&emsp; MD5常用在密码加密中，一般为了保证用户密码的安全，在数据库中存储的都是用户的密码经过MD5签名后的值，在客户端用户输入密码后，也会使用MD5进行签名，这样即使用户的网络被窃听，窃听者依然无法拿到用户的原始密码，并且即使用户数据库被盗，没有存储明文的密码对用户来说也多了一层安全保障。
 
 &emsp;MD5签名技术还常用于防止信息的篡改。使用MD5可以对进行进行签名，接收者拿到信息后只要重新计算签名和原始签名进行对比，即可知道数据信息是否中途被篡改了。
 
@@ -1985,6 +1979,8 @@ OC实现MD5加密：
 	
 	const char *cStr = [str UTF8String];//指针不能变，cStr指针变量本身可以变化
 	
+	//一个名为result的数组，类型为unsigned char，数组的大小为16个元素。
+	//每个元素的大小是一个字节（8位），因此这个数组实际上是16个字节长
 	unsigned char result[16];//这里可以CC_MD5_DIGEST_LENGTH宏代替16，这里不明白为什么写16后面我有解释的！
 	
 	CC_MD5(cStr, (unsigned int)strlen(cStr), result);
@@ -2020,10 +2016,7 @@ OC实现MD5加密：
 所以以上就是char[16]和%02x的来历。
 
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id="防止反编译">如何防止反编译？</h2>
@@ -2068,31 +2061,21 @@ NSData *baseData = [[NSData alloc] initWithBase64EncodedData:base64Data options:
 <br/>
 
 - **URL编码加密**
-对程序中出现的URL进行编码加密，防止URL被静态分析
+对程序中出现的URL进行编码加密，防止URL被静态分析.在这个示例中，原始字符串是 "Hello World!"，经过编码后，空格将被转换成 %20，因此编码后的字符串是 "Hello%20World!"。
+
 ARC模式下,编码
 
 ```
-+ (NSString *)encodeToPercentEscapeString: (NSString *) input
-
-{
-    
-    NSString *outputStr =
-    
-    (__bridge NSString *)CFURLCreateStringByAddingPercentEscapes(
-                                                                 
-                                                                 NULL, /* allocator */
-                                                                 
-                                                                 (__bridge CFStringRef)input,
-                                                                 
-                                                                 NULL, /* charactersToLeaveUnescaped */
-                                                                 
-                                                                 (CFStringRef)@"!*'();:@&=+$,/?%#[]",
-                                                                 
-                                                                 kCFStringEncodingUTF8);
-    
-    return outputStr;
-    
-}
+//用于 URL 编码的函数，可以帮助你处理 URL 中的特殊字符
+NSString *originalString = @"Hello World!";
+CFStringRef encodedString = CFURLCreateStringByAddingPercentEscapes(
+                                kCFAllocatorDefault,
+                                (__bridge CFStringRef)input,
+                                NULL,
+                                CFSTR(":/?#[]@!$&'()*+,;="),
+                                kCFStringEncodingUTF8
+                            );
+NSLog(@"Encoded string: %@", (NSString *)encodedString);
 ```
 
 解码
@@ -2153,7 +2136,7 @@ NSLog(@"password2:%@", password);
 
 
 
-创建shell脚本：
+创建shell脚本(用来混淆代码生成代码名的)：
 
 ```
 TABLENAME=symbols
@@ -2214,7 +2197,7 @@ refreshAction
 生成对应的转义之后的无序字符串
 
 
-![<br/>](https://user-gold-cdn.xitu.io/2018/1/11/160e332699f100d4?imageView2/0/w/1280/h/960/ignore-error/1)
+![11](https://user-gold-cdn.xitu.io/2018/1/11/160e332699f100d4?imageView2/0/w/1280/h/960/ignore-error/1)
 
 
 
@@ -2235,7 +2218,7 @@ refreshAction
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 > <h1 id="多线程">多线程</h1>
 
@@ -2802,6 +2785,20 @@ Swift Runtime系统保证了这些高级语言特性在实际运行时得以有�
 然而，**当struct作为某个类（class）的属性时**，或者当结构体实例被装箱（boxed）进一个引用类型容器（如AnyObject或NSValue）中，这时结构体会存储在堆区。即使在这种情况下，结构体本身的内存布局仍然保持连续性，即其属性依然会按照声明顺序在堆上连续分配内存。
 
 另外需要注意的是，Swift 中的编译器会进行一些优化，例如在某些情况下，可以避免不必要的复制操作，提高性能。但总体来说，结构体的内存分配是在栈上进行的，并且它们的值是被存储在这块分配的内存中的。
+
+<br/><br/>
+
+> <h2 id='结构体装箱后的内存变化'>结构体装箱后的内存变化</h2>
+
+在 Swift 中，结构体通常被存储在栈上，而不是堆上。这意味着当结构体作为参数传递给函数、方法或者闭包时，它们会被装箱（boxed），**即被包装到一个堆分配的对象中**，而不是直接复制到栈上。
+
+当结构体被装箱时，它们的内存布局会发生变化。具体来说，原始结构体的实例会被存储在堆上的一个引用计数的容器对象中，而不是直接在栈上。这个容器对象包含了指向原始结构体数据的指针，以及其他管理内存和引用计数的数据。
+
+由于结构体被装箱后存储在堆上，它们的内存布局会变得更加复杂，可能会增加一些额外的开销。此外，由于涉及到堆分配和引用计数管理，装箱操作可能会引入一些性能开销。
+
+需要注意的是，并非所有情况下都会发生结构体的装箱。只有当结构体被传递给函数、方法或闭包时，且它们不是被标记为 @inlinable 或 @inlinable 的时候，才会发生装箱。如果结构体被内联优化，则不会发生装箱，它们仍然会保持在栈上。
+
+总之，结构体的装箱会引入一些内存布局的变化和性能开销，但这种影响通常是微不足道的，除非在性能敏感的场景下使用。
 
 
 <br/><br/>

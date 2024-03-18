@@ -70,10 +70,13 @@
 > <h1 id='RxSwift'>RxSwift</h1>
 
 
-- **RxSwift：** 它只是基于 Swift 语言的 Rx 标准实现接口库，所以 RxSwift 里不包含任何 Cocoa 或者 UI方面的类。
+- **RxSwift：** 它只是基于 Swift 语言的 **Rx( ReactiveX)标准** 实现接口库，所以 RxSwift 里不包含任何 Cocoa 或者 UI方面的类。
+	- ReactiveX 是一种编程范式，用于处理异步数据流和事件流。它提供了一系列操作符和工具，使得处理数据流和事件流变得简单、高效和直观。
+	- ReactiveX 最初由 Microsoft 在 .NET 平台上开发，后来被移植到其他语言和平台，包括 Java（RxJava）、JavaScript（RxJS）、C++（RxCpp）等。Rx 标准定义了一系列操作符和模式，用于处理异步数据流，并提供了一种响应式的编程模型
+
+<br/>
+
 - **RxCocoa：** 是基于 RxSwift针对于 iOS开发的一个库，它通过 Extension 的方法给原生的比如 UI 控件添加了 Rx 的特性，使得我们更容易订阅和响应这些控件的事件。
-
-
 
 ![ios_swift_00.jpg](./../../Pictures/ios_swift_00.jpg)
 
@@ -158,8 +161,7 @@ Observable<String>.create { observer -> Disposable in
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='Observer(观察者)'>Observer(观察者)</h2>
@@ -184,8 +186,7 @@ protocol ObserverType {
 - 热：序列创建时就开始发射值（感觉是Observable）。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -199,15 +200,14 @@ protocol ObserverType {
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='Observable的核心函数'>Observable的核心函数</h2>
 
 
 a. `subscribe` 订阅操作, `Observable `和 `Observer` 通过订阅建立联系,
-`Observable` 好比水源， `Observer` 好比水龙头(永远开着的水龙头)， 订阅的过程就是在`Observable` 和 `Observer` 之间建立管道， 一旦建立管道即是永久性的，只要水源有谁， 水龙头就会有水;
+`Observable` 好比水源， `Observer` 好比水龙头(永远开着的水龙头)， 订阅的过程就是在`Observable` 和 `Observer` 之间建立管道， 一旦建立管道即是永久性的，只要水源有水， 水龙头就会有水;
 
 b.  `run` 对用户不可见，隐藏了大量的实现细节， 这个函数就是建立水管的过程;
 
@@ -221,8 +221,7 @@ public func asObservable() -> Observable<Element> {
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='ObservableType协议扩展'>ObservableType协议扩展</h2>
@@ -245,33 +244,23 @@ extension ObservableType {
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='Observer继承体系'>Observer继承体系</h2>
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='订阅序列流程'>订阅、序列流程</h2>
 
 
-
-
-
-
-
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/>
 
 
 > <h1 id='Observable(可观察序列)'>Observable(可观察序列)</h1>
@@ -294,8 +283,7 @@ extension ObservableType {
 - 适应各种需求变化
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='响应式'>响应式</h2>
@@ -304,23 +292,22 @@ extension ObservableType {
  
 概念：**`对象对某一数据流变化做出响应的这种编码方式称为响应式。`**
 
-<br/>
-<br/>
+<br/><br/>
 
 
 &emsp; ` Observable` 如果你使用过 RAC ，它如同 Signal 一样。RxSwift 中关键点就是在于如何把普通的数据或者事件变成可观察的，这样当某些数据或事件有变化的时候就会通知它的订阅者。
 
 `Observable(可观察序列)`是可以发送序列的
 
-<br/>
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id='Observable类'>Observable类</h2>
 
 - **Observable<T>**
 	* **`Observable<T>`**   这个类就是 Rx 框架的基础，我们可以称它为可观察序列。它的作用就是可以异步地产生一系列的 Event（事件），即一个 Observable<T> 对象会随着时间推移不定期地发出 event(element : T) 这样一个东西。
+	
 	*   而且这些 Event 还可以携带数据，它的泛型 <T> 就是用来指定这个 Event 携带的数据的类型。
+	
 	*   有了可观察序列，我们还需要有一个 Observer（订阅者）来订阅它，这样这个订阅者才能收到 Observable<T> 不时发出的 Event。
 
 
@@ -350,17 +337,40 @@ public class Observable<Element> : ObservableType {
 <br/>
 
 - Observable实现了一个协议ObservableType，而且ObservableType协议继承自ObservableConvertibleType协议，所以在Observable中实现了两个协议方法：subscribe和asObservable。
+
 - subscribe方法没有具体实现的逻辑，需要子类去实现。
+
 - asObservable方法返回的是self，看似用处不大，其实不是这样的。asObservable是非常有用的，如果一类是Observable的子类，我们可以直接返回self，如果不是Observable的子类，我们可以通过重写这个协议方法来返回一个Observable对象，这样保证了协议的一致性。在使用的时候我们可以直接写类似self.asObservable().subscribe(observer)这样的代码，有利于保持代码的简洁性，是良好的封装性的体现。所以我觉得这个设计非常的好，在我们日常开发中也可以借鉴。
+
 - _ = Resources.incrementTotal()和_ = Resources.decrementTotal()这两行代码其实是RxSwift内部实现的一个引用计数。这部分内容我会在后面的文章中再详解。
+
 - Observable子类非常多，感兴趣可以看下,主要区别在于对subscribe方法的实现不一样。
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='AnonymousObservableSink'>AnonymousObservableSink</h2>
+
+AnonymousObservableSink 是一个用于创建自定义 Observable 序列的工具类。它允许你手动创建 Observable 序列，以便更灵活地控制序列的行为和数据流。
+
+<br/>
+
+**详细解释如下：**
+
+- 创建自定义 Observable 序列
+AnonymousObservableSink 允许你根据特定需求创建自定义的 Observable 序列。你可以在内部定义序列的行为、产生的事件类型以及事件的发送时机等。
+
+- 控制数据流
+通过 AnonymousObservableSink，你可以更灵活地控制数据流。你可以手动指定序列的行为，例如何时发送事件、发送何种类型的事件以及如何处理错误。
+
+- 自定义序列操作符
+你可以使用 AnonymousObservableSink 创建自定义的序列操作符，以便对序列进行自定义的操作和转换。这使得你可以根据特定的业务逻辑创建特定的序列操作符，以适应不同的场景和需求。
+
+- 功能扩展和定制
+通过 AnonymousObservableSink，你可以对 Observable 序列的功能进行扩展和定制。你可以根据项目的需求创建特定的序列，以便更好地满足业务逻辑的要求。
+
+总之，AnonymousObservableSink 提供了一种灵活、可定制的方式来创建和控制 Observable 序列，使得你可以更好地适应不同的数据流处理需求。
 
 ```
 final private class AnonymousObservableSink<Observer: ObserverType>: Sink<Observer>, ObserverType {
@@ -398,56 +408,63 @@ final private class AnonymousObservableSink<Observer: ObserverType>: Sink<Observ
     }
 
     func run(_ parent: Parent) -> Disposable {
-        //parent 就是上面传过来的AnonymousObservable对象 //_subscribeHandler就是之前create函数的闭包 //在这个方法中把self转换成AnyObserver对象，也就是把AnonymousObservableSink对象转换成AnyObserver对象
+        //parent 就是上面传过来的AnonymousObservable对象 
+        //_subscribeHandler就是之前create函数的闭包 
+        //在这个方法中把self转换成AnyObserver对象，也就是把AnonymousObservableSink对象转换成AnyObserver对象
         parent.subscribeHandler(AnyObserver(self))
     }
 }
 ```
 
 - AnonymousObservableSink是Sink的子类，AnonymousObservableSink本身遵守ObseverType协议，与此同时实现了run方法;
+
 - AnonymousObservableSink是Observer和Observable的衔接的桥梁，也可以理解成管道。它存储了_observer和销毁者_cancel。通过sink就可以完成从Observable到Obsever的转变。
+
 - 在run方法中的这行代码parent._subscribeHandler(AnyObserver(self))，其中parent是一个AnonymousObservable对象。_subscribeHandler这个block调用，代码会执行到创建序列时的block。然后会调用发送信号的代码obserber.onNext("发送信号")，然后代码会经过几个中间步骤会来到AnonymousObservableSink类的on方法。
 
 
-
-
-
-
-<br/>
 <br/>
 
-> <h2 id=''></h2>
+使用 AnonymousObservableSink 创建一个简单的定时序列：
+
+```
+import RxSwift
+
+// 创建一个定时观察者
+let customObservable = AnonymousObservableSink<Int> { observer in
+    // 每隔一秒发送一个事件给观察者
+    var count = 0
+    let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        observer.onNext(count)
+        count += 1
+        
+        // 如果计数达到 5，则发送完成事件并取消定时器
+        if count == 5 {
+            observer.onCompleted()
+            timer.invalidate()
+        }
+    }
+    
+    // 返回一个可清理的资源
+    return Disposables.create {
+        timer.invalidate()
+    }
+}
+
+// 订阅这个自定义序列
+customObservable.subscribe(onNext: { value in
+    print("Next value: \(value)")
+}, onCompleted: {
+    print("Sequence completed")
+}).disposed(by: DisposeBag())
+```
+
+在这个例子中，我们使用 AnonymousObservableSink 来创建了一个定时序列。在闭包内部，我们使用定时器每隔一秒向观察者发送一个递增的整数值。当计数器达到 5 时，我们发送了一个完成事件，并停止定时器。然后，我们订阅了这个自定义序列，打印出接收到的事件值，并在序列完成时打印出完成信息。
+
+这只是一个简单的例子，你可以根据自己的需求定义更复杂的自定义序列。使用 AnonymousObservableSink，你可以更灵活地控制序列的行为和数据流。
 
 
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='Event'>Event</h2>
@@ -478,16 +495,15 @@ public enum Event<Element> {
 * `completed` 事件表示 `Observable `发出的事件正常地结束了，跟 error 一样，一旦 `Observable` 发出了 `completed event`，则这个 Observable 就等于终止了，以后它再也不会发出 event 事件了;
 
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='创建数据源'>创建数据源</h2>
 
 那如何能够让某些数据或事件成为 Observable 呢？
 
-&emsp;  RxSwift 中提供很多种创建 Observable 创建方法。比如：`From`、`never`、`empty` 和 `create` 等。订阅者可以收到 3 个事件，`onNext`、`onError` 和 `onCompleted`，每个 Observable 都应该至少有一个 `onError `或` onCompleted` 事件，`onNext `表示它传给下一个接收者时的数据流。
+&emsp;  RxSwift 中提供很多种创建 Observable  序列的静态方法。
+
+比如：`From`、`never`、`empty` 和 `create` 等。订阅者可以收到 3 个事件，`onNext`、`onError` 和 `onCompleted`，每个 Observable 都应该至少有一个 `onError `或` onCompleted` 事件，`onNext `表示它传给下一个接收者时的数据流。
 
 ```
 func createObserver() {
@@ -519,8 +535,7 @@ Completed 完成！！
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 点击`②`中的`subscribe`方法，来到其源码：
@@ -1866,13 +1881,63 @@ extension HGRegisterController: UITableViewDelegate {
 
 
 
-<br/>
-<br/>
+<br/><br/><br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
+
+
+<br/><br/>
+
+> <h2 id=''></h2><br/>
 
 
 
 > <h2 id=''></h2>
 
 
+<br/><br/>
 
+> <h2 id=''></h2>
+
+
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
+
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
+
+
+<br/><br/>
+
+> <h2 id=''></h2>
 
