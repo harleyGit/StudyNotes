@@ -6000,13 +6000,12 @@ union isa_t {
 | has_sidetable_rc | 是否需要用到外挂引用计数，当对象引用技术大于 10 则需要借用该变量存储进位 | 1 | 43 |
 | extra_rc | 该对象的引用计数值，实际上是引用计数值减 1。 如果对象的引用计数为10，那么 extra_rc 为 9。如果引用计数大于 10 则需要使用 has_sidetable_rc | 19 | 44 ~ 63 |
 
-<br/>
-<br/>
 
 
+<br/><br/>
 
 
->### <h3 id="weak原理">[weak原理](http://www.cocoachina.com/articles/18962)</h3>
+> <h3 id="weak原理">weak原理</h3>
 
 
 **介绍：**
@@ -6488,10 +6487,8 @@ case ReloadRevalidatingCacheData // Unimplemented
 	- TCP保证数据正确性，UDP可能丢包，TCP保证数据顺序，UDP不保证
 
 
+<br/><br/>
 
-
-<br/>
-<br/>
 
 > <h2 id="Socket通信">Socket通信</h2>
 
@@ -6512,11 +6509,11 @@ case ReloadRevalidatingCacheData // Unimplemented
 &emsp; 下面我简单解释下这个协议，因为一开始我自己也不是很理解。这个协议是指我们在发送的数据包头部开辟一个4个字节长度的空间，用来存储服务号转换成的二进制数据。（将1转换成二进制数据存储进去占4个字节长度），然后再将数据包长度转换成二进制数据并存储到后面开辟的4个字节中（这里需要注意下如果数据要进行加密传输，这里的长度应是加密后的长度），最后将数据数据包转换成二进制数据添加到后面，组成一个完整的数据包也就是封包。这里一定要按协议规定的顺序不然服务器解析不了。
 
 
-&emsp; **字段定义：**
-- **粘包：**
-	- 指TCP协议中，发送方发送的若干包数据到接收方接收时粘成一包，从接收缓冲区看，后一包数据的头紧接着前一包数据的尾。
-	
-	- TCP是面向字节流的协议，就是没有界限的一串数据，本没有“包”的概念，“粘包”和“拆包”一说是为了有助于形象地理解这两种现象。
+- **字段定义：**
+	- **粘包：**
+		- 指TCP协议中，发送方发送的若干包数据到接收方接收时粘成一包，从接收缓冲区看，后一包数据的头紧接着前一包数据的尾。
+		
+		- TCP是面向字节流的协议，就是没有界限的一串数据，本没有“包”的概念，“粘包”和“拆包”一说是为了有助于形象地理解这两种现象。
 
 
 <br/>
@@ -6557,8 +6554,8 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 <br/>
 
+**Netty对粘包和拆包问题的处理:**
 
-**Netty对粘包和拆包问题的处理**
 - Netty对解决粘包和拆包的方案做了抽象，提供了一些解码器（Decoder）来解决粘包和拆包的问题。如：
 	- LineBasedFrameDecoder：以行为单位进行数据包的解码；
 	- DelimiterBasedFrameDecoder：以特殊的符号作为分隔来进行数据包的解码；
@@ -6568,7 +6565,7 @@ case ReloadRevalidatingCacheData // Unimplemented
 
 <br/>
 
-**总结：**TCP协议粘包拆包问题是因为TCP协议数据传输是基于字节流的，它不包含消息、数据包等概念，需要应用层协议自己设计消息的边界，即消息帧（Message Framing）。如果应用层协议没有使用基于长度或者基于终结符息边界等方式进行处理，则会导致多个消息的粘包和拆包。
+**总结：** TCP协议粘包拆包问题是因为TCP协议数据传输是基于字节流的，它不包含消息、数据包等概念，需要应用层协议自己设计消息的边界，即消息帧（Message Framing）。如果应用层协议没有使用基于长度或者基于终结符息边界等方式进行处理，则会导致多个消息的粘包和拆包。
 
 <br/>
 
@@ -6713,20 +6710,24 @@ hook系统函数，一个faceBook写的三方框架
 <br/>
 
 静态库优点：
->- 模块化，分工合作
+>
+- 模块化，分工合作
 - 避免少量改动经常导致大量的重复编译连接
 - 也可以重用，注意不是共享使用
 
+<br/>
 
 动态库优点：
 
->- 可以将最终可执行文件体积缩小
+>
+- 可以将最终可执行文件体积缩小
 - 多个应用程序共享内存中得同一份库文件，节省资源
 - 可以不重新编译连接可执行程序的前提下，更新动态库文件达到更新应用程序的目的。
 - 将整个应用程序分模块，团队合作，进行分工，影响比较小。
 
 
 <br/>
+
 格式区别：
 >静态库：.a和.framework (windows:.lib , linux: .a)
 
@@ -6735,8 +6736,7 @@ hook系统函数，一个faceBook写的三方框架
 注意：两者都有framework的格式，但是当你创建一个framework文件时，系统默认是动态库的格式，如果想做成静态库，需要在buildSetting中将Mach-O Type选项设置为Static Library就行了！
 
 
-<br/>
-<br/>
+<br/><br/>
 
 - <h2 id = "库引用错误解析">库引用错误解析</h2>
 
@@ -6755,15 +6755,13 @@ Class XXX is implemented in both XXX and XXX. One of the two will be used. Which
 在 framework 的 Build Settings > Other Linker Flags 添加 -undefined dynamic_lookup。必须保证 host 工程编译出的二进制文件中包含这些符号。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id = "MJRefresh">**MJRefresh**<h3>
 
 - MJRefresh使用时有什么问题？有哪些需要注意的？
 
-&emsp;
-**事项1：**在很多情况下，如果endRefreshing 先执行  reloadData后执行 会出现indexPath.row不准确（值为4）这时候你的数组中很有可能不到四个成员，这时候就会造成数组越界。
+&emsp; **事项1：** 在很多情况下，如果endRefreshing 先执行  reloadData后执行 会出现indexPath.row不准确（值为4）这时候你的数组中很有可能不到四个成员，这时候就会造成数组越界。
 
 所以一定要先执行reloadData 方法 再执行endRefreshing方法
 
@@ -6778,7 +6776,7 @@ Class XXX is implemented in both XXX and XXX. One of the two will be used. Which
 
 <br/>
 
-**事项2：**使用上拉加载更多， 当数据加载完调用`[ableView.mj_footer endRefreshingWithNoMoreData]`方法显示已经全部加载完毕这个方法，一定要放在`[tableView.mj_footer endRefreshing];`停止加载方法的后面，不然`[ableView.mj_footer endRefreshingWithNoMoreData]`这个方法会失效。
+**事项2：** 使用上拉加载更多， 当数据加载完调用`[ableView.mj_footer endRefreshingWithNoMoreData]`方法显示已经全部加载完毕这个方法，一定要放在`[tableView.mj_footer endRefreshing];`停止加载方法的后面，不然`[tableView.mj_footer endRefreshingWithNoMoreData]`这个方法会失效。
 
 ```
 [Request requestGET:parameter view:nil urlPre:CourseCenterURL funItem:HuFuncItem_DiscoverCourseLibraryList success:^(NSDictionary *dic) {
@@ -6807,8 +6805,7 @@ Class XXX is implemented in both XXX and XXX. One of the two will be used. Which
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > 
 JSONModel 如何处理数据的？那个怎么对属性进行赋值的？
