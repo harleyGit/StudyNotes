@@ -662,6 +662,19 @@ char ** letterCombinations(char * digits, int* returnSize){
 ```
 
 
+
+<br/>
+
+**递归:**
+
+![c0_0.1.png](./../Pictures/c0_0.1.png)
+
+满足的条件:
+
+![c0_0.2.png](./../Pictures/c0_0.2.png)
+
+
+
 ```
 void generateBracket(int open, int close, int n, char **result, int *bracketsize, char *str, int index){
     if (open == n && close == n) { //左右括号都用完
