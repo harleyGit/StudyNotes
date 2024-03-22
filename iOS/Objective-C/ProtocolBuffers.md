@@ -1,6 +1,8 @@
 > <h1 id=''></h1>
 - [**简介**](#简介)
 	- [Protobuf与JSON格式比较](#Protobuf与JSON格式比较)
+		- [优势](#优势)
+		- [劣势](#劣势)
 - [**使用**](#使用)
 	- [安装](#安装)
 	- [步骤](#步骤)
@@ -20,6 +22,10 @@ Protocol Buffers（简称Protobuf）是一种轻量、高效、可扩展的序�
 <br/><br/><br/>
 
 > <h2 id='Protobuf与JSON格式比较'>Protobuf与JSON格式比较</h2>
+
+<br/><br/><br/>
+
+> <h2 id='优势'>优势</h2>
 
 **Protobuf与JSON相比具有的优势:**
 
@@ -59,6 +65,30 @@ Protocol Buffers 是跨平台、跨语言的，支持多种编程语言。这意
 &emsp; JSON 具有更好的可读性和可调试性，更适合在开发过程中查看和调试数据。因此，选择使用 Protocol Buffers 还是 JSON 取决于您的具体需求和应用场景。
 
 &emsp; 如果您对性能和数据传输效率有较高要求，或者需要在不同系统和语言之间进行数据交换，那么使用 Protocol Buffers 可能更合适。而如果您更注重可读性和可调试性，或者只需要处理少量数据，那么 JSON 可能更适合您的需求。
+
+
+<br/><br/><br/>
+
+> <h2 id='劣势'>劣势</h2>
+
+
+
+**使用ProtocolBuffer的劣势:**
+
+- 可能会造成 APP 的包体积增大，通过 Google 提供的脚本生成的 Model，会非常“庞大”，Model 一多，包体积也就会跟着变大。
+
+- 如果 Model 过多，可能导致 APP 打包后的体积骤增，但 IM 服务所使用的 Model 非常少，比如在 ChatKit-OC 中只用到了一个 Protobuf 的 Model：Message对象，对包体积的影响微乎其微。
+
+- 在使用过程中要合理地权衡包体积以及传输效率的问题，据说去哪儿网，就曾经为了减少包体积，进而减少了 Protobuf 的使用。
+
+
+<br/><br/>
+
+**使用 ProtocolBuffer 减少 Payload**
+
+- 滴滴打车40%；
+
+- 携程之前分享过，说是采用新的Protocol Buffer数据格式+Gzip压缩后的Payload大小降低了15%-45%。数据序列化耗时下降了80%-90%。
 
 
 <br/><br/>

@@ -154,6 +154,7 @@
 		- [objc使用什么机制管理对象内存](#objc使用什么机制管理对象内存)
 - [**网络**](#网络)
 	- [网络层又哪些优化策略](#网络层又哪些优化策略)
+	- [如何做到IPV4过渡到IPV6的兼容(上海海笛数字出版科技)](#如何做到IPV4过渡到IPV6的兼容)
 	- [HTTPS握手流程?为什么密钥的传递使用非对称加密?双向认证了解吗](#HTTPS握手流程?为什么密钥的传递使用非对称加密?双向认证了解吗)
 	- [NSURLSession与RunLoop的联系](#NSURLSession与RunLoop的联系)
 	- [网络性能优化](#网络性能优化)
@@ -6209,8 +6210,7 @@ objc_release(prev);
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='网络层又哪些优化策略'>网络层又哪些优化策略</h2>
@@ -6218,10 +6218,12 @@ objc_release(prev);
 ![ios_oc2_38.png](./../../Pictures/ios_oc2_38.png)
 
 
+<br/><br/><br/>
 
-<br/>
-<br/>
+># <h2 id='如何做到IPV4过渡到IPV6的兼'>[如何做到IPV4过渡到IPV6的兼容](./网络通信.md/#IPV4兼容IPV6)</h2>
 
+
+<br/><br/>
 
 > <h2 id="NSURLSession与RunLoop的联系">NSURLSession与RunLoop的联系</h2>
 
