@@ -11,6 +11,13 @@
 	- [查看电池容量](#查看电池容量)
 	- [视频下载](#视频下载)
 - [**硬件**](#硬件)
+	- [查看iPhone日志](#查看iPhone日志)
+		- [电池信息](#电池信息)
+			- [电池真实容量](#电池真实容量)
+			- [电循环次数](#电循环次数)
+			- [电池的健康度指标](#电池的健康度指标)
+			- [电池的最大容量百分比](#电池的最大容量百分比)
+			- [是否为原厂电池](#是否为原厂电池)
 	- [移动硬盘](#移动硬盘)
 	- [Key3Pro键盘](#Key3Pro键盘)
 	- [显示器](#显示器)
@@ -266,10 +273,270 @@ curl -o  02.mp4 https://video.twimg.com/ext_tw_video/1708438851633750016/pu/vid/
 <br/><br/>
 
 
-> <h1 id='硬件'>硬件</h2>
+> <h1 id='硬件'>硬件</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id='查看iPhone日志'>查看iPhone日志</h2>
+
+
+**1.导出日志文件**
+
+iPhone打开[设置] --> [隐私权]--> [分析与改进功能]--> [分析与改进]--> [分析数据]
+
+这时候你会看到一个列表,这就是iPhone在运行时产生的日志数据.如下:
+
+![tool.0.0.1.png](./../Pictures/tool.0.0.1.png)
+
+
+<br/><br/>
+
+
+**2.找到类似log-aggregated-2024-03-24-080027.ips文件,将其分享到微信里,然后用Mac的其他编辑文档进行打开,比如:Xcode打开:**
+
+
+![tool.0.0.2.png](./../Pictures/tool.0.0.2.png)
+
+<br/>
+
+"log-aggregated-xx.ips" 文件通常是系统或应用程序生成的日志文件，其中包含有关系统或特定应用程序的详细信息。所以你可以通过关键字搜索查到你想要的一些日志信息.
+
+
+
+<br/><br/><br/>
+
+> <h2 id='电池信息'>电池信息</h2>
+
+**电池循环次数**
+
+```
+<key>com.apple.ioreport.BatteryCycleCount</key>
+		<integer>927</integer>
+```
 
 
 <br/>
+
+**了解电池当前正在接收的充电电流**
+
+```
+<key>com.apple.ioreport.BatteryChargeCurrent</key>
+		<integer>3931</integer>
+```
+
+<br/><br/><br/>
+
+> <h2 id='电池真实容量'>电池真实容量</h2>
+
+表示电池的最大充电容量（Full Charge Capacity），其值为 3226。(指的是电池实际容量, 这个值反映了电池的物理容量，即电池能够储存的总电量)
+
+```
+<key>com.apple.ioreport.BatteryMaxFCC</key>
+		<integer>3226</integer>
+```
+
+<br/>
+
+表示电池的最大包电压（Maximum Pack Voltage），其值为 4450
+```
+<key>com.apple.ioreport.BatteryMaxPackVoltage</key>
+		<integer>4450</integer>
+```		
+
+<br/>
+		
+表示电池的最大充电量（Maximum Qmax），其值为 3257。(则表示电池的最大充电量。这个值可能受到充电系统或电池管理系统的限制，它反映了电池允许充电到的最高值，即充电过程中所能接受的最大电量。这个值可能会略低于电池的最大容量，因为电池充电时通常会考虑一些安全因素，如防止过充。)
+```
+<key>com.apple.ioreport.BatteryMaxQmax</key>
+		<integer>3257</integer>
+```
+
+
+<br/>
+
+**总结:** 因此，虽然这两个指标都与电池的能量存储相关，但它们关注的是不同的方面：一个(`com.apple.ioreport.BatteryMaxFCC`)关注电池的物理容量，另一个关注电池(`com.apple.ioreport.BatteryMaxQmax`)允许充电到的最高容量。
+
+
+<br/>
+
+
+**表示电池的最小充电容量，其值为 1328。这表示电池在过去某个时间段内达到的最低充电容量。**
+
+```
+<key>com.apple.ioreport.BatteryMinFCC</key>
+		<integer>1328</integer>
+```
+
+<br/>
+
+表示电池的最小包电压，其值为 2537。这是电池在过去某个时间段内达到的最低电压。
+
+``` 
+<key>com.apple.ioreport.BatteryMinPackVoltage</key> 
+		<integer>2537</integer>
+```
+
+<br/>
+
+表示电池的最小充电量，其值为 2754。这是电池在过去某个时间段内达到的最低充电量。
+
+```
+<key>com.apple.ioreport.BatteryMinQMax</key>
+		<integer>2754</integer>
+```
+
+
+<br/> 
+
+表示电池达到的最低温度，其值为 22 摄氏度。这是电池在过去某个时间段内达到的最低温度。
+
+```
+<key>com.apple.ioreport.BatteryMinTemp</key>
+		<integer>22</integer>
+``` 
+
+<br/> 
+
+表示电池的标称充电容量，其值为 2373。这是电池在制造时被设计为能够容纳的电荷量。
+
+```
+<key>com.apple.ioreport.BatteryNominalChargeCapacity</key>		
+<integer>2373</integer>
+```
+ 
+<br/> 
+ 
+是指电池的化学加权阻抗，其值为 83。化学加权阻抗是电池的一个特性，反映了电池在不同状态下的内部阻力
+
+ ```
+ <key>com.apple.power.battery.ChemicalWeightedRa</key>
+		<integer>83</integer>
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='电循环次数'>电循环次数</h2>
+
+
+表示电池的充放电循环次数，其值为 1。这个值告诉您电池已经被充放电多少次		
+```
+<key>com.apple.power.battery.CycleCount</key>
+<integer>1</integer>
+```
+
+<br/>
+
+表示电池在最后一次达到最大充电量时的充放电循环次数，其值为 2。这个值告诉您电池在最后一次充电过程中完成了多少个完整的充放电循环
+
+```
+<key>com.apple.power.battery.CycleCountLastQmax</key>
+		<integer>2</integer>
+```		
+	
+<br/><br/><br/>
+
+> <h2 id='电池的健康度指标'>电池的健康度指标</h2>
+
+	
+表示电池的健康度指标，其值为 83。这个指标可能代表了电池的健康状态，数值越高通常表示电池越健康
+
+```
+<key>com.apple.power.battery.BatteryHealthMetric</key>
+	<integer>83</integer>
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='电池的最大容量百分比'>电池的最大容量百分比</h2>
+	
+表示电池的最大容量百分比，其值为 104。这个值通常表示电池当前的最大容量相对于其设计容量的百分比。值为 100% 或更高可能表示电池的健康状态很好，而值低于 100% 则表示电池的容量已经下降。		
+
+```
+<key>com.apple.power.battery.MaximumCapacityPercent</key>
+		<integer>104</integer>
+```		
+
+
+<br/>
+
+表示电池的最大充电容量（Full Charge Capacity），其值为 3142。这个值表示电池能够容纳的最大电荷量。(表示电池的最大充电容量（Full Charge Capacity），其值为 3142。这个值表示电池在充满电状态下能够容纳的最大电荷量。因此，这个指标反映了电池的实际容量。)
+
+```
+<key>com.apple.power.battery.MaximumFCC</key>
+<integer>3142</integer>
+```
+	
+<br/>
+	
+表示电池的最大充电量，其值为 3170。这个值表示电池在充电时所能达到的最大充电量。
+
+```
+<key>com.apple.power.battery.MaximumQmax</key>
+<integer>3170</integer>
+```
+
+<br/>
+
+表示电池的最小充电容量，其值为 3018。这个值表示电池在过去某个时间段内达到的最低充电容量
+
+```
+<key>com.apple.power.battery.MinimumFCC</key>
+<integer>3018</integer>
+```
+
+<br/>
+
+表示电池的最大规范充电容量，其值为 3124
+```
+<key>com.apple.power.battery.NCCMax</key>
+<integer>3124</integer>
+```
+
+<br/>
+
+表示电池的最小规范充电容量，其值为 3052
+
+```
+<key>com.apple.power.battery.NCCMin</key>
+<integer>3052</integer>
+```
+
+<br/>
+
+表示电池的标称充电容量，其值为 3650。这个值通常表示电池制造商标识的电池容量，单位为毫安时(表示电池的标称充电容量。这个值通常表示电池制造商标识的电池容量，即电池在理想条件下能够容纳的电荷量。实际容量可能会略有偏差，因为电池的容量会随着时间、充放电循环次数和环境条件等因素而有所变化。但是，标称充电容量仍然是一个重要的参考值，用于评估电池的性能和规格)
+
+```
+<key>com.apple.power.battery.NominalChargeCapacity</key>
+<integer>3650</integer>
+```
+
+
+<br/><br/><br/>
+
+> <h2 id=''>是否为原厂电池</h2>
+
+
+```
+<key>com.apple.power.battery.OriginalBattery</key>：
+```
+表示电池是否为原厂电池，其值为 0。值为 0 可能表示这不是原厂电池
+
+<br/>
+
+电池池数据通信重置次数，其值为 32。这个指标记录了电池数据通信重置的次数(这个指标记录了电池数据通信重置的次数。在正常情况下，这个值不应该频繁地增加。如果这个值在短时间内增加了很多次，可能表示电池的数据通信遇到了问题，或者有人对电池进行了修改或重置。这可能会影响电池的性能或健康状况。因此，对于电池数据通信重置次数的异常增加，可能需要进一步调查和评估)
+
+```
+<key>com.apple.power.battery.ResetDataComms</key>
+<integer>32</integer>
+```
+
+
+
+
+<br/><br/><br/>
 
 >## <h2 id='移动硬盘'>[移动硬盘](https://www.escapelife.site/posts/72cd88cb.html)</h2>
 
