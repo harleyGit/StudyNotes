@@ -149,6 +149,9 @@
 		- [weak原理（货拉拉）](#weak原理)
 		- [内存销毁时间表&步骤](#内存销毁时间表&步骤)
 		- [Category属性放在哪(货拉拉)](#Category属性放在哪)
+		- [Category的加载处理过程是什么](#Category的加载处理过程是什么)
+		- [Category为什么不能添加成员变量](#Category为什么不能添加成员变量)
+		- [Category类别关于load方法知识点](#Category类别关于load方法知识点)
 		- [能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?](#能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?)
 		- [Xcode构建过程](#Xcode构建过程)
 		- [objc使用什么机制管理对象内存](#objc使用什么机制管理对象内存)
@@ -3745,33 +3748,25 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 
 
 
-
-
-
-
-
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 ># <h1 id = "底层">底层</h1>
 
 <br/><br/>
 
-> <h2 id='Mach-O文件有哪几部分组成'>[Mach-O文件有哪几部分组成](./Mach-O格式.md#格式简介)</h2>
+># <h2 id='Mach-O文件有哪几部分组成'>[Mach-O文件有哪几部分组成](./Mach-O格式.md#格式简介)</h2>
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 ># <h0 id = "Runtime">Runtime</h0>
 
 
-<br/>
-
+<br/><br/>
 
 ># <h3 id = "Runtime可以做什么?">Runtime可以做什么?</h3>
 
@@ -3783,8 +3778,7 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 ># <h3 id = "使用hook防崩溃">使用hook防崩溃</h3>
@@ -4968,8 +4962,7 @@ objc_object::sidetable_retainCount()
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id="类库没有导入">类库没有导入</h2>
@@ -4981,16 +4974,12 @@ objc_object::sidetable_retainCount()
 [参考:Framework 框架需要引入工程里面类](https://cloud.tencent.com/developer/article/1331432)
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='类'>类</h2>
 
-
-<br/>
-<br/>
-
+<br/><br/>
 
 > <h2 id='一个NSObject对象占用多少内存？'>一个NSObject对象占用多少内存？</h2>
 
@@ -4998,14 +4987,14 @@ objc_object::sidetable_retainCount()
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='对象的isa指针指向哪里？'>对象的isa指针指向哪里？</h2>
 
 答：instance对象的`isa`指针指向class对象，class对象的`isa`指针指向meta-class对象，meta-class对象的`isa`指针指向基类的meta-class对象，基类自己的`isa`指针指向自己。
 
+<br/><br/>
 
 > <h2 id='类信息存放在哪里？'>类信息存放在哪里？</h2>
 
@@ -5013,9 +5002,7 @@ objc_object::sidetable_retainCount()
 答：成员变量的具体值存放在实例对象（instance对象）；对象方法，协议，属性，成员变量信息存放在类对象（class对象）；类方法信息存放在元类对象（meta-class对象）。
 
 
-<br/>
-<br/>
-
+<br/><br/>
 
 > <h2 id="load和initialize区别">load和initialize区别</h2>
 
@@ -5069,9 +5056,8 @@ objc_object::sidetable_retainCount()
 &emsp; 这才是正确的调用顺序，先**调用父类load方法->子类load方法->子类类别load方法->父类类别方法**。
 
 
+<br/><br/><br/>
 
-
-<br/>
 
 
 **initialize:**
@@ -5147,44 +5133,52 @@ static NSMutableArray *someArray;
 
 > <h3 id='load和initialize是谁调用的?走的都是消息转发吗?'>load和initialize是谁调用的?走的都是消息转发吗?</h3>
 
-- **load方法:**
+- **load方法调用方式:**
 	- 在main函数之前是系统自动调用时,是直接通过函数地址;
 	
 	- main函数之后是若是自己调用的,走的是消息机制用objc_msgsend函数调用
 
+<br/>
+
+- **load方法调用时刻:**
+	- load是runtime加载类、分类的时候调用（只会调用1次）
+
+
+<br/><br/>
+
+- **initialize方法调用方式:**
+	- 消息机制objc_msgSend函数调用。
 
 <br/>
 
-- **initialize**
-	- 调用方式：消息机制objc_msgSend函数调用。
+- **initialize方法调用时刻:**
+	- initialize是类第一次接收到消息的时候调用，每一个类只会initialize一次（父类的initialize方法可能会被调用多次）
 
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 
 
 > <h2 id='load和initialize哪个先调用'>load和initialize哪个先调用</h2>
 
 - load方的调用
-
 	- load方法是在dyld完成调用，是在main函数之前调用的
+	
 	- load方法的调用顺序是父类 -> 子类 -> 分类
+	
 	- 多个类和多个分类的调用顺序都是以编译顺序为主，可以在build Phases中调整
 
+<br/>
 
 - initialize方法的调用
-
 	- initialize在第一次消息发送的时候调用(类第一次调用方法和实例第一次调用方法调用的时候)。所以load先于initialize调用。
+	
 	- 调用initialize时，会优先调用父类，再子类
 
+<br/><br/>
 
 - C++构造函数
-
 	- 如果C++构造方法写在objc中，系统会通过static_init()方法直接调用，此时的顺序为：C++ -> +load -> main
+	
 	- 如果写在main或者自己的代码中，则调用顺序是为：+load -> C++ -> main
 
 可以对照下[app启动优化加载顺序](#启动优化)
@@ -5192,9 +5186,17 @@ static NSMutableArray *someArray;
 参考: [C++写在objc和Main函数或者自己代码中,可以体会下](https://juejin.cn/post/7067067303497564173)
 
 
+<br/><br/>
 
-<br/>
-<br/>
+
+**疑问: load和initialize方法的调用顺序是怎么样的呢?**
+
+&emsp; 先调用类的load方法，先编译那个类，就先调用load。在调用load之前会先调用父类的load方法。分类中load方法不会覆盖本类的load方法，先编译的分类优先调用load方法。
+
+&emsp; initialize先初始化父类，之后再初始化子类。如果子类没有实现+initialize，会调用父类的+initialize（所以父类的+initialize可能会被调用多次），如果分类实现了+initialize，就覆盖类本身的+initialize调用。
+
+
+<br/><br/><br/>
 
 
 >### <h3 id = "消息转发">[消息转发](./类.md#消息转发)</h3>
@@ -6053,12 +6055,14 @@ union isa_t {
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 >## <h3 id="Category属性放在哪">[Category属性放在哪](https://www.jianshu.com/p/bc4678829397)</h3>
 
+在程序运行的时候，runtime会将Category的数据合并到类信息中（类对象、元类对象中）
+
+<br/><br/>
 
 Category的实现原理或者本质 ？
 
@@ -6066,50 +6070,92 @@ Category的实现原理或者本质 ？
 
     在程序运行的时候，runtime会将Category的数据合并到类信息中（类对象、元类对象中）
 
-    分类的实现原理是将category中的方法，属性，协议数据放在category_t结构体中，然后将结构体内的方法列表拷贝到类对象的方法列表中。 
+    类别的实现原理是将category中的方法，属性，协议数据放在category_t结构体中，然后将结构体内的方法列表拷贝到类对象的方法列表中。 
 
-3.Category的加载处理过程是什么？
+<br/><br/><br/>
 
-   通过Runtime加载某个类的所有Category数据
+> <h2 id='Category的加载处理过程是什么'>Category的加载处理过程是什么</h2>
 
-    把所有Category的方法、属性、协议数据，合并到一个大数组中
+- 通过Runtime加载某个类的所有Category数据;
 
-    后面参与编译的Category数据，会在数组的前面
+- 把所有Category的方法、属性、协议数据，合并到一个大数组中
 
-    将合并后的分类数据（方法、属性、协议），插入到类原来数据的前面
+- 后面参与编译的Category数据，会在数组的前面
 
-可以理解为：
+- 将合并后的分类数据（方法、属性、协议），插入到类原来数据的前面
 
-    把 category 的实例方法、协议以及属性添加到类上。
+<br/>
 
-    把 category 的类方法和协议添加到类的 metaclass 上。
+- **可以理解为：**
+
+	- 把 category 的实例方法、协议以及属性添加到类上。
+	
+	- 把 category 的类方法和协议添加到类的 metaclass 上。
 
 其中需要注意的是：
 
-category 的方法没有「完全替换掉」原来类已经有的方法，也就是说如果 category 和原来类都有 methodA，那么 category 附加完成之后，类的方法列表里会有两个 methodA。
+category 的方法没有 **「完全替换掉」** 原来类已经有的方法，也就是说如果 category 和原来类都有 methodA，那么 category 附加完成之后，类的方法列表里会有两个 methodA。
 
 category 的方法被放到了新方法列表的前面，而原来类的方法被放到了新方法列表的后面，这也就是我们平常所说的category 的方法会「覆盖」掉原来类的同名方法，这是因为运行时在查找方法的时候是顺着方法列表的顺序查找的，它只要一找到对应名字的方法，就会返回，不会管后面可能还有一样名字的方法。
 
-4.Category为什么不能添加成员变量?
+<br/><br/><br/>
 
-Category 可以给类增加方法和属性，但是并不会自动生成成员变量及set/get方法。因为category_t结构体中并不存在成员变量。我们知道成员变量是存放在实例对象中的，并且编译的那一刻就已经决定好了。而分类是在运行时才去加载的。那么我们就无法再程序运行时将分类的成员变量中添加到实例对象的结构体中。因此分类中不可以添加成员变量。
+> <h2 id='Category为什么不能添加成员变量'>Category为什么不能添加成员变量?</h2>
+
+Category 可以给类增加方法和属性，但是并不会自动生成成员变量及set/get方法。 **因为category_t结构体中并不存在成员变量。我们知道成员变量是存放在实例对象中的，并且编译的那一刻就已经决定好了。** 而**分类是在运行时才去加载的**。那么我们就无法再程序运行时将分类的成员变量中添加到实例对象的结构体中。因此分类中不可以添加成员变量。
 
 在 Objective-C 提供的 runtime 函数中，确实有一个 class_addIvar() 函数用于给类添加成员变量，
 
-大概的意思说，这个函数只能在“构建一个类的过程中”调用。当编译类的时候，编译器生成了一个实例变量内存布局 ivar layout，来告诉运行时去那里访问类的实例变量们，一旦完成类定义，就不能再添加成员变量了。经过编译的类在程序启动后就被 runtime 加载，没有机会调用 addIvar。程序在运行时动态构建的类需要在调用 objc_registerClassPair 之后才可以被使用，同样没有机会再添加成员变量。
+大概的意思说，这个函数只能在“构建一个类的过程中”调用。当编译类的时候，编译器生成了一个实例变量内存布局 ivar layout，来告诉运行时去哪里访问类的实例变量们，一旦完成类定义，就不能再添加成员变量了。
 
-不能为一个类动态的添加成员变量，可以给类动态增加方法和属性。因为方法和属性并不“属于”类实例，而成员变量“属于”类实例。我们所说的“类实例”概念，指的是一块内存区域，包含了isa指针和所有的成员变量。所以假如允许动态修改类成员变量布局，已经创建出的类实例就不符合类定义了，变成了无效对象。但方法定义是在objc_class中管理的，不管如何增删类方法，都不影响类实例的内存布局，已经创建出的类实例仍然可正常使用。
+经过编译的类在程序启动后就被 runtime 加载，没有机会调用 addIvar。程序在运行时动态构建的类需要在调用 objc_registerClassPair 之后才可以被使用，同样没有机会再添加成员变量。
+
+**不能为一个类别动态的添加成员变量，可以给类别动态增加方法和属性。因为方法和属性并不“属于”类实例，而成员变量“属于”类实例。** 我们所说的“类实例”概念，指的是一块内存区域，包含了isa指针和所有的成员变量。所以假如允许动态修改类成员变量布局，已经创建出的类实例就不符合类定义了，变成了无效对象。但方法定义是在objc_class中管理的，不管如何增删类方法，都不影响类实例的内存布局，已经创建出的类实例仍然可正常使用。
+
+
+<br/><br/><br/>
+
+
+> <h2 id='Category类别关于load方法知识点'>Category类别关于load方法知识点</h2>
+
+
+**1.Category中有load方法吗？load方法是什么时候调用的？load 方法能继承吗？**
+
+在类和 category 中都可以有 +load方法;
+
+load方法在程序启动装载类信息的时候就会调用;
+
+load方法可以继承。调用子类的load方法之前，会先调用父类的load方法.
+
+<br/><br/>
+
+**2.在类的 +load方法调用的时候，我们可以调用 category 中声明的方法么？**
+
+可以调用，因为附加 category 到类的工作会先于 +load方法的执行。
+
+
+<br/><br/>
+
+
+**3.这么些个+load方法，调用顺序是咋样的呢？**
+
++load的执行顺序是先类，后 category，而 category 的+load 执行顺序是根据编译顺序决定的。虽然对于 +load的执行顺序是这样，但是对于「覆盖」掉的方法，则会先找到最后一个编译的 category 里的对应方法。
+
+子类的+load方法会在它的所有父类的+load方法之后执行，而分类的+load方法会在它的主类的+load方法之后执行，但是不同的类之间的+load方法的调用顺序是不确定的，在Compile Sources中，文件的引入的先后顺序决定不同的类之间的+load方法的调用顺序。
+
+注意：+load方法调用时，如果调用别的类的方法，且该方法依赖于那个类的load方法进行初始化设置，那么必须确保那个类的+load方法已经调用了，比如在Other类中调用Child类里面的方法，则打印出的字符串就为null。
+
+![ios0.0.13.webp](./../../Pictures/ios0.0.13.webp)
 
 
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?'>能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量?</h3>
 
 - 不能向编译后得到的类中增加实例变量；
+
 - 能向运行时创建的类中添加实例变量；
 
 <br/>
@@ -6121,9 +6167,7 @@ Category 可以给类增加方法和属性，但是并不会自动生成成员�
 &emsp; 运行时创建的类是可以添加实例变量，调用 class_addIvar 函数。但是得在调用 objc_allocateClassPair 之后，objc_registerClassPair 之前，原因同上。
 
 
-<br/>
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='Xcode构建过程'>Xcode构建过程</h3>
@@ -6157,33 +6201,43 @@ Category 可以给类增加方法和属性，但是并不会自动生成成员�
 - 通过 retainCount 的机制来决定对象是否需要释放。
 - release 对象的各种情况如下：
 
-
 <br/>
 
 - **1.对象成员变量**
 
-&emsp; 这个对象 dealloc 时候，成员变量 objc_storeStrong(&ivar,nil) release
+&emsp; 这个对象 dealloc 时候，成员变量 
+
+```
+//objc_storeStrong 是一个宏，用于将一个新的对象赋值给一个 strong 修饰符修饰的变量或实例变量，并处理内存管理，遵循 ARC（Automatic Reference Counting）规则。
+//在这里，nil 被分配给了 ivar，意味着将实例变量的引用指针置为 nil，即不再引用任何对象。
+objc_storeStrong(&ivar,nil) 
+```
+
+release(释放)
+
+<br/>
 
 - **2.局部变量变量的释放 分情况：**
 
-	- 2.1strong obj变量，出了作用域{}，就  objc_storeStrong(obj,nil) release 对象；
+	- 2.1strong obj变量，出了作用域{}，就  objc_storeStrong(obj,nil), release 对象；
 
 ```
 void
 objc_storeStrong(id *location, id obj)
 {
 
-id prev = *location;
-if (obj == prev) {
-   return;
-}
-objc_retain(obj);
-*location = obj;
-objc_release(prev);
+	id prev = *location;
+	if (obj == prev) {
+	   return;
+	}
+	objc_retain(obj);
+	*location = obj;
+	objc_release(prev);
 }
 ```
 
-- 2.1weak obj变量，出了作用域，objc_destroyWeak 将变量（obj）的地址从weak表中删除。；
+- 2.1weak obj变量，出了作用域，objc_destroyWeak 将变量（obj）的地址从weak表中删除；
+	- 解读: objc_destroyWeak 函数是 Objective-C 运行时中的一个函数，用于从 weak 引用表中删除一个变量的地址。Objective-C 的 ARC（Automatic Reference Counting）内存管理机制中，当一个对象被弱引用时，它会被添加到一个称为 weak 引用表的数据结构中。当对象被释放后，所有的弱引用都应该被清除，以避免出现野指针引用。
 
 - 2.2 autorelease obj变量，交给 autoreleasePool对象管理， 
 	- （1）主动使用 @autoreleasepool{}，出了 {} 对象release 

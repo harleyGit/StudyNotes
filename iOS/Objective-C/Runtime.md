@@ -19,6 +19,7 @@
 	- [Method(方法)](#Method(方法))
 	- [AssociatedObject关联对象](#AssociatedObject关联对象)
 		- [方法选择器@selector](#方法选择器@selector)
+- [**Hook函数**](#Hook函数)
 - [**消息转发机制**](#消息转发机制)
 	- [消息发送](#消息发送)
 		- [methodForSelector](#methodForSelector)
@@ -855,13 +856,37 @@ int main(int argc, const char * argv[]) {
 ```
 
 
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id='Hook函数'>Hook函数</h1>
+
+```
+SEL originalSelector = @selector(viewWillAppear:);
+SEL swizzledSelector = @selector(swiz_viewWillAppear:);
+[WHookUtility swizzlingInClass:[self class] originalSelector:originalSelector swizzledSelector:swizzledSelector];
+
+- (void)swiz_viewWillAppear:(BOOL)animated {
+     //插入需要执行的代码
+     NSLog(@"我在viewWillAppear执行前偷偷插入了一段代码");
+     
+     //不能干扰原来的代码流程，插入代码结束后要让本来该执行的代码继续执行
+     [self swiz_viewWillAppear:animated];
+ }
+```
+
+<br/>
+
+**疑问:** 为什么在
 
 
 
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 ># <h1 id='消息转发机制'>[消息转发机制](https://blog.csdn.net/wtdask/article/details/80613446)</h1>
 

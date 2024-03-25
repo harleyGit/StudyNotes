@@ -1953,7 +1953,7 @@ typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) {
 
 ><h2 id='监测卡顿'>监测卡顿</h2>
 
-**导致卡顿问题的几种原因：**
+- **导致卡顿问题的几种原因：**
 	- 复杂 UI 、图文混排的绘制量过大；
 	- 在主线程上做网络同步请求；
 	- 在主线程做大量的 IO 操作；
@@ -2045,6 +2045,19 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     semaphore = dispatch_semaphore_create(0);
     
     // 注册RunLoop状态观察, 设置Run Loop observer的运行环境
+    /** 配置一个 CFRunLoopObserverContext 结构体，用于设置 Run Loop Observer 的上下文信息，确保在使用时正确地管理相关对象的内存
+     
+     version：这是一个整数，用于指定 CFRunLoopObserverContext 结构体的版本号。通常情况下，你可以将其设置为 0。在这个例子中，它被设置为 0。
+     
+     info：这是一个指针，用于指向一个你希望在 Run Loop Observer 中使用的自定义数据结构或对象。在这里，通过 (__bridge void *)(self) 将 Objective-C 对象 self 转换为一个 void 类型的指针，然后存储在 info 中。这样做是为了在 Run Loop Observer 回调函数中能够访问到当前对象的信息。
+     
+     retain：这是一个函数指针，指向一个用于增加引用计数的函数。在这里，&CFRetain 是一个函数指针，指向 Core Foundation 的 CFRetain 函数，用于增加引用计数。这意味着当 Run Loop Observer 中的 info 被传递给你的回调函数时，它的引用计数会被增加，以防止在使用期间被释放。
+     
+     release：这是一个函数指针，指向一个用于减少引用计数的函数。在这里，&CFRelease 是一个函数指针，指向 Core Foundation 的 CFRelease 函数，用于减少引用计数。这意味着当 Run Loop Observer 中的 info 不再被需要时，其引用计数会被减少，以便在不再需要时释放相关资源。
+     retain 和 release 函数用于确保 info 在合适的时候进行内存管理，以防止内存泄漏。
+     
+     最后一个成员变量 NULL 是一个预留字段，通常不需要设置，因为它在这个例子中没有被使用到。
+     */
     CFRunLoopObserverContext context = {0,(__bridge void*)self,NULL,NULL};
     
     /*
