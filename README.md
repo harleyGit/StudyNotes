@@ -481,6 +481,7 @@
 
 > <h1 id = '读书笔记'>读书笔记</h1>
 - [**Github书籍**](https://github.com/HarborLibrary)
+- [**收藏的一些经典的电子书(ebook) （约10万本）**](https://github.com/kska32/ebooks/tree/master/docs)
 * 金融投资	
 	*	[**金融理财(I)**](./ReadNotes/金融理财(I).md)
 	*	[**金融理财(II)**](./ReadNotes/金融理财(II).md)

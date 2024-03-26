@@ -5712,22 +5712,16 @@ objc Runtime开源代码对- (Class)class方法的实现:
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="ARC原理是什么">[ARC原理是什么](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/ARC原理.md)</h2>
 
 &emsp; ARC 是 iOS 中管理引用计数的技术，帮助 iOS 实现垃圾自动回收，具体实现的原理是由编译器进行管理的，同时运行时库协助编译器辅助完成。主要涉及到 Clang （LLVM 编译器） 和 objc4 运行时库。
 
 
+<br/><br/>
 
-
-
-<br/>
-<br/>
-
->## <h2 id="内存管理">[内存管理](https://github.com/harleyGit/StudyNotes/blob/master/底层/内存管理.md)</h2>
-
+>## <h2 id="内存管理">[内存管理](./内存管理.md)</h2>
 
 
 <br/><br/>
@@ -5735,7 +5729,9 @@ objc Runtime开源代码对- (Class)class方法的实现:
 
 > <h3 id='MRC如何释放对象的'>MRC如何释放对象的</h3>
 
-Foundation对象是Objective-C对象，使用Objective-C语言实现；而Core Foundation对象是C对象，使用C语言实现。两者之间可以通过__bridge、__bridge_transfer、__bridge_retained等关键字转换（桥接）。
+Foundation对象是Objective-C对象，使用Objective-C语言实现；
+
+而Core Foundation对象是C对象，使用C语言实现。两者之间可以通过__bridge、__bridge_transfer、__bridge_retained等关键字转换（桥接）。
 
 Foundation对象和Core Foundation对象更重要的区别是ARC下的内存管理问题。
 
@@ -5772,12 +5768,7 @@ int main(int argc, const char * argv[]) {
 }
 ```
 
-
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h3 id="一个objc对象如何进行内存布局">一个objc对象如何进行内存布局?</h3>
 
@@ -5810,7 +5801,7 @@ int main(int argc, const char * argv[]) {
 
 - 根对象就是NSObject，它的superclass指针指向nil
 - 类对象既然称为对象，那它也是一个实例。类对象中也有一个isa指针指向它的元类(meta class)，即类对象是元类的实例。元类内部存放的是类方法列表，根元类的isa指针指向自己，superclass指针指向NSObject类。
-- 类对象 是放在**数据段(数据区)**上的, 和全局变量放在一个地方. 这也就是为什么: **同一个类对象的不同实例对象,的isa指针是一样的**.
+- 类对象 是放在**数据段(数据区)** 上的, 和全局变量放在一个地方. 这也就是为什么: **同一个类对象的不同实例对象,的isa指针是一样的**.
 - 实例对象存放在堆中
 
 
@@ -5820,19 +5811,35 @@ int main(int argc, const char * argv[]) {
 [内存5大分区](./内存管理.md#内存分区)
 
 
-<br/>
-<br/>
-
+<br/><br/>
 
 
 >### <h3 id="isa指针包含了什么">[isa指针包含了什么](https://juejin.cn/post/6844904134286524429#heading-2)</h3>
 
 在控制台输出obj的数据结构，排在第一位的就是isa的地址。
 
-![<br/>](./../../Pictures/ios_pd14.jpeg)
+![ios_pd14.jpeg](./../../Pictures/ios_pd14.jpeg)
+
 
 &emsp; 若对象继承自NSObject，NSObject在底层的实现是结构体objc_object，里面只有一个isa成员变量，那么对象的首地址指向的第一块就是isa所在。
 
+
+<br/>
+
+**疑问:** `x/4gx`指令,有什么用? 用来做什么的?
+
+`x/4gx` 指令是用于打印内存中的内容，并以十六进制格式显示。具体解释如下：
+
+- x：表示以十六进制格式打印内存中的内容。
+- /4：表示打印连续 4 个内存单元的内容。
+- gx：表示以十六进制格式打印内存中的内容，并以四字节为一个分组进行打印。
+
+&emsp; 这个命令常用于调试时查看内存中的数据内容，特别是在需要查看大块内存或者特定内存地址处的数据时。通过这个命令，可以直接在控制台中查看内存中的内容，而不必通过其他手段来获取。
+
+&emsp; 例如，如果你有一个指针 ptr 指向某个内存地址，你可以使用 x/4gx ptr 命令来查看该地址开始的连续 4 个内存单元的内容，并以十六进制格式显示。
+
+
+<br/><br/>
 
 从源码里面看isa是Class类型：
 
@@ -5853,9 +5860,9 @@ typedef struct objc_object *id;
 ```
 
 
-&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。
+<br/><br/>
 
-&emsp; 此外还有的成员变量就是 **`superclass、cache、bits、data`** ，在 **`objc-runtime-new.h`** 文件中，这是最新的:
+&emsp; `objc_object`的成员变量有 **`superclass、cache、bits、data`** ，在 **`objc-runtime-new.h`** 文件中，下面是 **objc_class结构体** 最新版:
 
 ```
 struct objc_class : objc_object {
@@ -5900,6 +5907,8 @@ struct objc_class : objc_object {
 
 ```
 
+&emsp; 可以看到objc_class继承自objc_object，那么里面就应该有一个isa。
+
 
 <br/>
 
@@ -5909,7 +5918,20 @@ struct objc_class : objc_object {
 
 在runtime的源码文件**objc-object.h**,可以看到这个C++方法：**objc_object::initIsa**
 
-![<br/>](./../../Pictures/ios_pd15.png)
+![ios_pd15.png](./../../Pictures/ios_pd15.png)
+
+在上图的结构体中,有几点说明下:
+
+```
+//newisa 是一个isa_t 类型的局部变量，通过 isa_t 类型的变量声明方式定义,用于存储一个新的类信息
+isa_t newisa(0); // 创建一个新的 isa_t 变量，并初始化为 0
+
+newisa.bits = ISA_MAGIC_VALUE; // 设置 isa_t 变量的 bits 字段为 ISA_MAGIC_VALUE，表示一个特定的标识
+
+newisa.has_cxx_dtor = hascxxDtor; // 设置 isa_t 变量的 has_cxx_dtor 标志位，表示是否具有 C++ 析构函数
+```
+
+<br/><br/>
 
 点击isa_t,发现其是个联合体，接下来看**ISA_BITFIELD**
 
@@ -6013,7 +6035,68 @@ union isa_t {
 
 **介绍：**
 
-&emsp;&emsp;  Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址数组。更多人的人只是知道weak是弱引用，所引用对象的计数器不会加一，并在引用对象被释放的时候自动被设置为nil，通常用于解决循环引用问题。
+&emsp;  Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。[weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址数组。](./基础.md#梳理流程图)更多人的人只是知道weak是弱引用，所引用对象的计数器不会加一，并在引用对象被释放的时候自动被设置为nil，通常用于解决循环引用问题。
+
+<br/>
+
+**疑问1:** `Runtime维护了一个weak表`这个表述准确吗?
+
+这个表述基本是准确的，但是需要做一些补充和解释。
+
+在 Objective-C 的 Runtime 中，确实有一个称为 weak 表（weak table）的结构，用于管理和维护 weak 引用。weak 表的作用是在运行时跟踪对象的弱引用，以便在对象释放时正确地处理这些弱引用，避免出现野指针的情况。
+
+解读这个表述，可以理解为：
+
+- Runtime 维护了一个数据结构，即 weak 表。
+
+- 这个 weak 表用于存储和跟踪对象的弱引用信息。
+
+- 当对象被释放时，Runtime 会自动在 weak 表中查找并清理对该对象的弱引用，以确保不会出现野指针和悬空引用的情况。
+
+&emsp; 需要补充说明的是，weak 表实际上是一个 hash 表或者类似的数据结构，其中的键是对象的地址，值是弱引用指针。当对象被释放时，Runtime 会遍历 weak 表中的条目，并清理那些指向已释放对象的弱引用。这样做可以确保在访问弱引用时不会引发野指针异常。
+
+
+<br/>
+
+**疑问2:** 这个weak表是谁在管理,如何取到这个weak表?
+
+在 Objective-C Runtime 中，weak 表是由 Runtime 系统来管理的，而不是由开发者直接管理。Runtime 系统会在内部维护这个表，负责管理对象的弱引用。当开发者使用 weak 关键字声明一个对象的弱引用时，实际上是告诉 Runtime 系统在对应的 weak 表中进行相关的操作。
+
+要获取 weak 表的指针或者访问 weak 表，开发者通常不需要直接操作 weak 表，因为 Runtime 系统已经封装了一些 API 来处理弱引用。开发者只需要使用 weak 关键字来声明对象的弱引用即可，Runtime 系统会在后台自动处理。
+
+具体地说，当开发者使用 weak 关键字声明一个对象的弱引用时，编译器会生成对应的 Runtime 调用，将该对象的地址添加到 weak 表中。当对象被释放时，Runtime 系统会自动在 weak 表中查找并清理对该对象的弱引用。这些操作都是由 Runtime 系统来管理和执行的，开发者不需要直接操作 weak 表。
+
+如果开发者确实需要访问 weak 表，可以通过 Runtime API 提供的相关函数来实现，但这通常是在底层或者调试需要的情况下才会使用，一般开发者不需要关心和操作 weak 表。
+
+
+<br/>
+
+**疑问3:** 这个weak是什么? 完整的底层数据结构是什么?
+
+我之前一直以为是sideTable这个数据结构,后来发现与上面描述的不一样.所以问了下ChatGPT.发现这个weak表其实是 **weak_table_t**
+
+**所以weak表的简化版定义如下:**
+
+```
+struct weak_entry_t {
+    uintptr_t referent;
+    id __unsafe_unretained *weak_referrer;
+    struct weak_entry_t *next;
+};
+
+struct weak_table_t {
+    struct weak_entry_t *buckets[WEAK_TABLE_SIZE];
+    // 其他成员和方法...
+};
+
+```
+
+在这个假设的定义中，weak_entry_t 结构体表示 weak 表中的一个条目，其中包含了一个弱引用的目标对象的地址 referent，以及一个指向弱引用的引用者对象的指针 weak_referrer。next 字段用于构建链表，用于处理哈希冲突。而 weak_table_t 结构体则是整个 weak 表的结构，其中包含了一个哈希表 buckets 数组，用于存储 weak_entry_t 结构体的指针。
+
+需要注意的是，**这只是一个假设的结构体定义，实际的 Runtime 实现可能会更加复杂，并且具体的结构体定义可能会因 Runtime 版本而有所不同。** 因此，要理解 weak 表的底层结构，最好的方法是查阅相关的 Runtime 源代码。
+
+
+<br/><br/>
 
 
 - weak 的实现原理可以概括一下三步：
@@ -6057,8 +6140,7 @@ union isa_t {
 
 <br/><br/>
 
-
->## <h3 id="Category属性放在哪">[Category属性放在哪](https://www.jianshu.com/p/bc4678829397)</h3>
+> <h3 id="Category属性放在哪">Category属性放在哪</h3>
 
 在程序运行的时候，runtime会将Category的数据合并到类信息中（类对象、元类对象中）
 
