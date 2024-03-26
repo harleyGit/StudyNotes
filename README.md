@@ -169,7 +169,6 @@
 * [远程推送(US)](./iOS/Objective-C/远程推送(US).md)
 * [坐标系(I)](./iOS/Objective-C/坐标系(I).md)
 * [NSTimer(I)](./iOS/Objective-C/NSTimer(I).md)
-* [Runtime(I)](./iOS/Objective-C/Runtime(I).md)
 * [Video(I)](./iOS/Objective-C/Video(I).md)
 * [单元测试(I)](./iOS/Objective-C/单元测试(I).md)
 * [语法精练(I)](./iOS/Objective-C/语法精练(I).md)

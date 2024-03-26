@@ -3856,8 +3856,7 @@ Runloop监测卡顿部分代码,逻辑教育的,😄哈哈:
 
 Fps、屏幕刷新率59.94/s(这是和别人的一个区分点,一般人说是60hz/s)、ping、runloop
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='保活线程后,如何关闭?'>保活线程后,如何关闭?</h3>
@@ -3894,11 +3893,12 @@ self.thread = nil;
 
 
 
-
+<br/><br/><br/>
 
 > <h3 id ="Runloop底层原理">Runloop底层原理</h3>
 [Runloop详解](https://imlifengfeng.github.io/article/487/)
 
+<br/>
 
 [**Runloop底层原理**](https://juejin.cn/post/6844903604965523464#heading-11)，[**CFRunLoop开源代码**](http://opensource.apple.com/source/CF/CF-855.17/)
 
@@ -3916,8 +3916,10 @@ void CFRunLoopRun(void) {	/* DOES CALLOUT */
 
 ```
 
+<br/>
 
 &emsp; 我们发现RunLoop确实是do while通过判断result的值实现的。因此，我们可以把RunLoop看成一个死循环。如果没有RunLoop，UIApplicationMain函数执行完毕之后将直接返回，也就没有程序持续运行一说了。
+
 执行顺序的伪代码：
 
 ```
@@ -3934,8 +3936,9 @@ int32_t __CFRunLoopRun()
         __CFRunLoopDoObservers(kCFRunLoopBeforeSources);
         
         // 处理非延迟的主线程调用
+        //负责执行运行循环中注册的各种任务和回调函数，保证应用程序的事件处理和异步操作能够按照预期进行
         __CFRunLoopDoBlocks();
-        // 处理Source0事件
+        // 该函数的作用是在 RunLoop 的事件循环中处理 source0事件，也就是处理事件源为基于事件触发的事件。这样可以确保及时地响应用户输入、定时器触发等事件，保证应用程序的流畅运行和用户体验。
         __CFRunLoopDoSource0();
         
         if (sourceHandledThisLoop) {
@@ -3989,12 +3992,18 @@ int32_t __CFRunLoopRun()
 
 ```
 
+**RunLoop的运行过程/内部实现流程图:**
+
+![ios0.0.15.png](./../../Pictures/ios0.0.15.png)
+
+
+
+<br/>
 
 [**Runloop面试题分析**](https://www.neroxie.com/2019/07/26/RunLoop面试题分析/)
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id="延迟执行performSelecter相关方法是怎样被执行的在子线程中也是一样的吗">延迟执行performSelecter相关方法是怎样被执行的？在子线程中也是一样的吗？</h3>
@@ -4007,12 +4016,7 @@ int32_t __CFRunLoopRun()
 
 
 
-
-
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h3 id="Runloop有几种运行状态">Runloop有几种运行状态</h3>
 
@@ -4087,16 +4091,28 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 输出结果：
 
-![输出结果 <br/>](./../../Pictures/ios_pd8.png)
+![ios_pd8.png](./../../Pictures/ios_pd8.png)
 
 
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 >### <h3 id ="runloop与自动释放池关系什么时侯释放">[RunLoop](./RunLoop.md)与自动释放池关系，什么时侯释放?</h3>
 
+
+- **RunLoop与自动释放池的关系：**
+	- 在 iOS 中，RunLoop 的每一次循环迭代都会创建一个自动释放池，并在循环结束时释放这个自动释放池。
+	
+	- 这意味着，RunLoop 的每次循环迭代都会在内部创建一个自动释放池，并在循环结束时清理其中的对象。
+	
+	- 在RunLoop处理事件的过程中，可能会创建大量的临时对象（比如临时字符串、临时数组等），这些对象会被加入到当前自动释放池中。
+	
+	- 当RunLoop的一次迭代结束时，自动释放池会被释放，其中的所有对象都会被销毁，从而释放内存。
+	
+	- 这种机制保证了在RunLoop的每次循环迭代中，临时对象不会累积过多，有效地控制了内存的使用。
+
+&emsp; 综上所述，RunLoop和自动释放池之间的关系在于RunLoop的每次循环迭代都会创建一个自动释放池，并在循环结束时释放其中的对象，从而保证了内存的有效管理和释放。
+
+<br/>
 
 - **分两种情况：手动干预释放和系统自动释放**
 	- 手动干预释放就是指定autoreleasepool,当前作用域大括号结束就立即释放
@@ -4124,8 +4140,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 &emsp; UIKit通过RunLoopObserver在RunLoop两次Sleep间对AutoreleasePool进行pop和push,将这次Loop中产生的Autorelease对象释放。
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='UIKit中Runloop什么时候进入休眠'>UIKit中Runloop什么时候进入休眠？</h3>
@@ -4140,7 +4155,7 @@ Runloop是通过观察者CFRunLoopObserverRef来监听RunLoop的状态改变：
 
 ```
 
-&emsp; 这里[NSString stringWithFormat:@”齐滇大圣”];创建对象时这个对象的引用计数为 1 。当使用局部变量 string 指向这个对象时，这个对象的引用计数 +1 ，变成了 2 。而当 viewDidLoad 方法返回时，局部变量 string 被回收，指向了 nil 。因此，其所指向对象的引用计数 -1 ，变成了 1 。
+&emsp; 这里`[NSString stringWithFormat:@”齐滇大圣”];`创建对象时这个对象的引用计数为 1 。当使用局部变量 string 指向这个对象时，这个对象的引用计数 +1 ，变成了 2 。而当` viewDidLoad `方法返回时，局部变量 string 被回收，指向了 nil 。因此，其所指向对象的引用计数 -1 ，变成了 1 。
 
 &emsp; 然后我们的这个对象是一个autorelease的实例，是被系统自动添加到了当前的 autoreleasepool 中的。所以会当Runloop一次迭代结束即将进入休眠的时候autoreleasepool drain对象引用计数 -1，对象释放。
 
@@ -4215,6 +4230,8 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 
 ![ios_oc2_35.png](./../../Pictures/ios_oc2_35.png)
 
+[Runloop学习链接](https://blog.csdn.net/hherima/article/details/51746125)
+
 <br/>
 
 提问：Runloop在线程中有哪些用法？
@@ -4225,8 +4242,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 主线程的Runloop默认的 RunloopMode 是 NSDefaultRunLoopMode。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -6105,11 +6121,9 @@ struct weak_table_t {
 
 	- 2)、添加引用时：objc_initWeak函数会调用 objc_storeWeak() 函数， objc_storeWeak() 的作用是更新指针指向，创建对应的弱引用表。
 
-	- 3)、释放时，调用clearDeallocating函数。clearDeallocating函数首先根据对象地址获取所有weak指针地址的数组，然后遍历这个数组把其中的数据设为nil，最后把这个entry从weak表中删除，最后清理对象的记录。
+	- 3)、释放时，调用clearDeallocating函数。clearDeallocating函数首[先根据对象地址获取所有weak指针地址的数组，然后遍历这个数组把其中的数据设为nil，最后把这个entry从weak表中删除，最后清理对象的记录。](./基础.md#对象释放时其weak指针如何自动设置为nil)
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 >## <h3 id="内存销毁时间表&步骤">内存销毁时间表&步骤</h3>
 
