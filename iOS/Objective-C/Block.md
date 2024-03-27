@@ -103,11 +103,10 @@ OC 函数中的局部变量在栈中存放。
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 > <h1 id='Block分类'>Block 分类</h1>
-
 
 <br/>
 
@@ -134,16 +133,13 @@ OC 函数中的局部变量在栈中存放。
 
 	- 全局变量保存在内存的全局（静态）存储区中，可多次改变值，无赋值时为nil。
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 **典型几个变量在代码中的表示:**
 
 ![ios_oc1_113_1.PNG](./../../Pictures/ios_oc1_113_1.PNG)
 
-
+<br/>
 
 示例:
 
@@ -183,57 +179,137 @@ static int static_global_var = 5;
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
+&emsp; 同样的全局block (NSGlobalBlock): 位于全局区，它既不捕获任何局部变量，同时可以安全地使用静态变量和全局变量.
 
-&emsp; 同样的全局block (NSGlobalBlock): 位于全局区，在block内部不使用外部变量，或者只使用静态变量和全局变量
-
-<br/>
-<br/>
+<br/><br/>
 
 - NSGlobalBlock(全局block)： block在静态区。
 
+**案例:**
+
+**.h文件**
+
 ```
-//这里不使用外部变量，所以是NSGlobalBlock。
-void (^block)(void) = ^{
-						NSLog(@"welcome to block");
-					};//匿名block代码块的定义
-    
-block();
+// MyGlobals.h
+
+// 声明一个全局Block类型
+typedef void (^MyGlobalBlock)(void);
+
+// 定义并初始化一个全局Block实例
+extern MyGlobalBlock globalBlock;
+
+// 声明全局变量
+extern NSString * const GlobalString;
+extern NSInteger GlobalInteger;
+
+@interface MyGlobals : NSObject
+
+@end
+```
+
+<br/>
+
+**.m文件**
+
+```
+// MyGlobals.m
+
+#import "MyGlobals.h"
+
+// 实现全局Block实例
+MyGlobalBlock globalBlock = ^{
+    // 使用全局变量
+    NSLog(@"Global String: %@", GlobalString);
+    NSLog(@"Global Integer: %ld", GlobalInteger);
+
+    // 使用静态变量
+    static NSUInteger localCounter = 0;
+    localCounter++;
+    NSLog(@"Local Counter: %lu", localCounter);
+};
+
+// 定义全局变量
+NSString * const GlobalString = @"Hello, World!";
+NSInteger GlobalInteger = 42;
+
+@implementation MyGlobals
+
+@end
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='堆block'>堆block</h2>
 
-&emsp; 堆block (NSMallocBlock): 位于堆区，在block内部使用变量或者oc属性，并且赋值给强引用或者Copy修饰的变量
+&emsp; **堆block (NSMallocBlock):** 位于堆区，在block内部使用变量或者oc属性，并且赋值给强引用或者Copy修饰的变量
 
--  NSMallocBlock:  堆block；
 
 ```
-//使用了局部变量
-// 其实在这里隐去使用__strong的使用,这个表示的是强引用,可表示为:void (^ __strong block)(void )
-int a = 10;
-void (^block)(void) = ^{
-    NSLog(@"welcome to block %d", a);
-};//匿名block代码块的定义
+// ViewController.h
+@interface ViewController : UIViewController
+
+@property (nonatomic, strong) void (^blockProperty)(void); // 强引用的Block属性
+
+@end
+
+
+
+
+
+// ViewController.m
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    // 局部变量定义
+    int localInt = 42;
+    NSString *localString = @"Stack Block";
+
+    // 定义一个栈Block，捕获局部变量
+    void (^stackBlock)(void) = ^{
+        NSLog(@"Local Int: %d", localInt);
+        NSLog(@"Local String: %@", localString);
+    };
     
-block();
+    // 试图将栈Block赋值给不同类型的变量
+    __strong void (^strongBlock)(void) = stackBlock; // 强引用变量
+    __weak void (^weakBlock)(void) = stackBlock; // 弱引用变量
+    void (^__attribute__((objc_precise_lifetime)) preciseLifetimeBlock)(void) = stackBlock; // 精确生命周期变量
+
+
+    // 将栈Block复制到堆上，得到一个NSMallocBlock
+    void (^heapBlock)(void) = [stackBlock copy];// 使用copy修饰符
+    // 将堆Block赋值给Block属性
+    self.blockProperty = heapBlock;
+}
 ```
 
-若访问了相应的内存空间，访问了外部的变量并且捕获了外部变量或者属性后，由全局block变为堆block。
+**详解解读上述几种情况:**
+
+- **不能赋值给强引用变量：** 在上述代码中，strongBlock是一个强引用变量。如果直接将栈Block赋值给强引用变量，一旦离开其创建的作用域（例如，viewDidLoad方法结束时），栈Block所依赖的局部变量（如localInt和localString）会被销毁，而强引用的strongBlock变量依然存在。此时，strongBlock指向的Block已经失效，尝试执行它会导致未定义的行为或崩溃。为了避免这种情况，强引用的Block变量应指向已复制到堆上的Block（即NSMallocBlock）。
 
 
 <br/>
+
+- **可以赋值给弱引用变量：** weakBlock是一个弱引用变量。将栈Block赋值给弱引用变量是安全的，因为弱引用不会阻止Block及其捕获的变量被销毁。当栈Block超出作用域时，weakBlock将自动变为nil，从而避免了后续对无效Block的访问。
+
 <br/>
+
+- **可以赋值给精确生命周期变量：** preciseLifetimeBlock使用了`__attribute__((objc_precise_lifetime))`注解，表示编译器应确保此变量的生命周期与栈Block的生命周期精确匹配。在这种情况下，虽然变量本身是强引用，但编译器会确保栈Block在其作用域结束前不会被提前释放。这种用法仅限于局部变量，并且需要编译器支持，确保了在作用域内的安全使用，但不会延长栈Block的生命周期。
+
+<br/>
+
+- **赋值给Block属性：** 最后，我们将复制到堆上的Block（即heapBlock）赋值给blockProperty属性。此时，blockProperty持有堆Block的强引用，即使离开viewDidLoad方法的作用域，堆Block及其捕获的变量也不会被销毁，可以在ViewController实例的生命周期内安全使用
+
+
+<br/><br/>
 
 > <h2 id='栈block'>栈block</h2>
 
-&emsp; 栈block (NSStackBlock): 位于栈区，与MallocBlock一样，可以在内部使用局部变量或者oc属性。但是不能赋值给强引用或者copy修饰的变量。
+&emsp; **栈block (NSStackBlock):** 位于栈区，与MallocBlock一样，可以在**内部使用局部变量或者OC属性**。但是不能赋值给强引用或者copy修饰的变量。
 
 -  NSStackBlock(栈block)
 
@@ -262,13 +338,12 @@ NSLog(@"%@", block);
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 > <h1 id='使用'>使用</h1>
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='block作为属性变量'>block作为属性变量</h2>
 
@@ -645,46 +720,16 @@ self.fcblock(@"-------->> fcblock");
 
 
 
-
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id=''></h2>
-
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id=''></h2>
-
-
-
-
-
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 > <h1 id='Block循环引用'>Block循环引用</h1>
 
 
 <br/>
+
 > <h2 id='循环引用出现'>循环引用出现</h2>
 
 **循环引用出现**
@@ -709,12 +754,9 @@ typedef void(^KCBlock)(void);
  }
 ```
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='__weak解决'>__weak解决</h2>
-
-
 
 ```
 //第一种解决方案:weakSelf  + weak - Strong -dance  强弱共舞
@@ -728,8 +770,7 @@ __weak typeof(self) weakSelf = self;
 
 ```
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='__block解决'>__block解决</h2>
 
@@ -745,13 +786,13 @@ self.block = ^{
 self.block();
 ```
 
-<br/>
+
+<br/><br/><br/>
 
 
 > <h2 id='参数解决blcok'>参数解决blcok</h2>
 
 <br/>
-
 
 ```
 //在ViewController.m中定义
@@ -771,10 +812,9 @@ self.block(self);
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 > <h1 id='Block底层原理'>Block 底层原理</h1>
-
 
 <br/>
 
@@ -810,8 +850,8 @@ NSLog(@"后   =   %p", &a);
 
 	- 以**0x6结尾的是在堆区**,**0x7结尾的是在栈区**,当我们在调试打断点查看线程的时候若是看到线程显示的**thread1,则说明是在主线程**.
 
-<br/>
-<br/>
+
+<br/><br/><br/>
 
 
 > <h2 id='block内如何修改block外部变量'>block内如何修改block外部变量</h2>
@@ -847,6 +887,8 @@ int main(int argc, char * argv[]) {
 }
 ```
 
+<br/>
+
 终端编译如下:
 
 ```
@@ -855,20 +897,38 @@ cd /Users/harleyhuang/Desktop
 xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc /Users/harleyhuang/Desktop/Test/Test/main.m 
 ```
 
+<br/>
+
 在编译后的C++文件main.cpp中有75456行代码截取如下代码片段:
 
 ```
-
 struct __NSConstantStringImpl {
-  int *isa;
-  int flags;
-  char *str;
+  int *isa; //指向对象的类，对于常量字符串，这里指向一个特殊的类指针__CFConstantStringClassReference，表明这是一个常量字符串对象
+  int flags; //保留字段，用于存储字符串的一些属性标志，如是否是Unicode编码等
+  char *str; // 字符串内容的指针，指向一个以空字符（\0）结尾的C字符串。这个指针指向的实际内存区域存储了字符串的字符数据
 #if _WIN64
-  long long length;
+  long long length; // 字符串的长度（包括结束的空字符'\0'）。根据平台的不同，使用long long（在Windows 64位平台上）或long（在其他平台或32位Windows上）来存储长度值
 #else
   long length;
 #endif
 };
+
+/**
+static __NSConstantStringImpl __NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0: 定义一个静态的__NSConstantStringImpl结构体实例，并为其赋予一个特定的符号名称，该名称通常包含路径、临时文件名等信息，以确保全局唯一。
+
+__attribute__ ((section ("__DATA, __cfstring"))): 这是一个GCC编译器扩展的属性，指示编译器将这个结构体实例放入特定的二进制文件段（section）。在这里，将其放入__DATA段下的__cfstring子段，这是专门为常量字符串预留的存储区域
+
+
+初始化列表 {__CFConstantStringClassReference,0x000007c8,"age is %@",9}:
+
+__CFConstantStringClassReference: 设置isa字段，指向常量字符串类。
+
+0x000007c8: 设置flags字段，具体的含义取决于Objective-C运行时对常量字符串的实现细节，此处为特定的标志值。
+
+"age is %@": 设置str字段，指向一个C字符串，内容为age is %@，这是字符串的实际文本内容。
+
+9: 设置length字段，表示字符串的长度为9个字符（包括结束的空字符'\0'）。
+*/
 static __NSConstantStringImpl __NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0 __attribute__ ((section ("__DATA, __cfstring"))) = {__CFConstantStringClassReference,0x000007c8,"age is %@",9};
 
 
@@ -903,10 +963,24 @@ struct __main_block_impl_0 {
 
 static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
 	//__cself是传进来的参数也就是block自身，那么__cself->age也就是block结构体的成员变量a。这里的int age 进行了值拷贝
-  int age = __cself->age; // bound by copy
+	int age = __cself->age; // bound by copy
 
-            NSLog((NSString *)&__NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0, ((NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend)(objc_getClass("NSNumber"), sel_registerName("numberWithInt:"), (int)(age)));
-        }
+	/** 这段代码定义了一个Block的实现，其中捕获了外部变量age的值，并在Block执行时通过Objective-C的消息发送机制创建一个NSNumber对象来封装这个值，最后使用NSLog输出包含该年龄值的日志消息
+	
+		1. (NSString *)&__NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0: 这是一个指向常量字符串对象的指针。由于实际字符串内容未在代码中显示，推测它可能是一个编译器生成的临时字符串常量，用于作为NSLog的格式字符串。在实际应用中，这通常会是一个明确的字符串字面量，如@"Age: %d"
+		
+		2. objc_getClass("NSNumber"): 调用objc_getClass函数获取名为NSNumber的类对象。NSNumber是Foundation框架中的一个类，用于封装各种基本数据类型为对象
+		
+		3. sel_registerName("numberWithInt:"): 调用sel_registerName函数注册一个选择子（selector），其名称为numberWithInt:。这是一个Objective-C方法名，对应于NSNumber类的一个实例方法，用于创建一个包含整数值的NSNumber对象。
+		
+		4. (NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend: 将objc_msgSend函数强制转换为一个接受三个参数（类对象、选择子、整数）并返回NSNumber *类型的函数指针。objc_msgSend是Objective-C的消息发送机制的核心，用于动态地调用对象的方法。
+		
+		5. ((NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend)(objc_getClass("NSNumber"), sel_registerName("numberWithInt:"), (int)(age)): 使用转换后的objc_msgSend函数指针，以NSNumber类对象、numberWithInt:选择子和Block内部的age变量（已转换为int类型）为参数，动态调用NSNumber的numberWithInt:方法，创建并返回一个包含age值的NSNumber对象
+		
+		最终，NSLog函数接收上述生成的NSNumber对象作为第二个参数（日志消息的格式化参数），以及一个隐藏的格式字符串（第一个参数），将年龄值格式化并输出到控制台。
+	*/
+	NSLog((NSString *)&__NSConstantStringImpl__var_folders_kq_ktxysb456mdfwgcymsy809zh0000gn_T_main_fc6810_mi_0, ((NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend)(objc_getClass("NSNumber"), sel_registerName("numberWithInt:"), (int)(age)));
+}
 
 //__main_block_desc_0_DATA是__main_block_desc_0的变量,并声明定义好了
 //sizeof(struct __main_block_impl_0) 获取__main_block_impl_0结构体的大小
@@ -922,11 +996,36 @@ int main(int argc, char * argv[]) {
         appDelegateClassName = NSStringFromClass(((Class (*)(id, SEL))(void *)objc_msgSend)((id)objc_getClass("AppDelegate"), sel_registerName("class")));
 
         int age = 10;
-        //block变量生成是调用了__main_block_impl_0的初始化方法
-        //第一个参数传入的是静态无返回值的方法__main_block_func_0
-        //第二个参数传入的是__main_block_desc_0的结构体变量地址
-        //第三个参数传入的是age变量,这个是值传递
+        
+        /** 定义Block变量:
+			        这段代码整体的作用是创建一个CYLBlock类型的变量block，其值是通过调用__main_block_impl_0构造函数初始化的Block结构体实例的地址，并进行了适当的类型转换以匹配CYLBlock的定义。
+			        
+				 1. CYLBlock: 这是定义的Block类型，但具体类型没有在给出的代码片段中展示。通常情况下，CYLBlock应该是一个符合Block签名的typedef，例如typedef void (^CYLBlock)(void);，表示这是一个无参数、无返回值的Block。
+				 
+				 2. __main_block_impl_0: 这是之前解释过的Block实现结构体。它包含Block的函数指针（即__main_block_func_0）、描述信息指针（即__main_block_desc_0_DATA）以及其他可能捕获的变量（如这里的age）。__main_block_impl_0的构造函数接受这些参数并初始化一个Block结构体实例
+				 
+				 3. &__main_block_func_0: 获取__main_block_func_0函数的地址，这是Block的实现函数
+				 
+				 4. &__main_block_desc_0_DATA: 获取Block描述符结构体的地址。Block描述符包含了关于Block的一些元数据，如大小、拷贝/销毁函数指针等
+				 
+				 5. age: 外部变量age的值，将被Block捕获
+				 
+				 6. ((void (*)())...): 强制类型转换，将__main_block_impl_0结构体实例的地址转换为一个指向无参数、无返回值函数的指针（void (*)()）。这是因为Block本质上可以被视为一个函数指针，尽管在Objective-C中它们通常以Block类型进行操作
+        
+        */
         CYLBlock block = ((void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA, age));
+        
+        /** 调用Block:
+				    这段代码首先通过构造__main_block_impl_0结构体实例并进行类型转换，定义了一个CYLBlock类型的变量block。然后，通过访问Block结构体的FuncPtr成员并调用它，执行了Block所代表的代码逻辑。在这个过程中，被捕获的变量age的值将参与到Block的执行中
+				        
+				1. ((__block_impl *)block): 将block变量（已经是一个函数指针）再次强制转换回__block_impl *类型，即Block结构体指针。这样就可以访问Block结构体的成员。
+				
+				2. ->FuncPtr: 访问Block结构体的FuncPtr成员，它指向Block的实现函数（即__main_block_func_0）
+				
+				3. ((void (*)(__block_impl *))...): 类型转换，将FuncPtr成员（一个函数指针）转换为接受__block_impl *类型参数、无返回值的函数指针
+				
+				4. 最终的表达式((...))((__block_impl *)block)调用经过类型转换后的函数指针，传入block作为参数。实际上，这就是对Block的调用，执行其内部的代码逻辑（即__main_block_func_0函数）
+        */
         ((void (*)(__block_impl *))((__block_impl *)block)->FuncPtr)((__block_impl *)block);
     }
     return UIApplicationMain(argc, argv, __null, appDelegateClassName);
@@ -939,8 +1038,7 @@ static struct IMAGE_INFO { unsigned version; unsigned flag; } _OBJC_IMAGE_INFO =
 &emsp; 根据编译后的C++代码可以看到age在外面已经定义了,传入block内的结构体函数中的age是值传递,若是在block内部结构体函数中改变age,其外部的age值也不会改变的.
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h5 id='block内部使用全局变量'>block内部使用全局变量</h5>

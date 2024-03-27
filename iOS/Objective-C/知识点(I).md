@@ -5,10 +5,10 @@
 - [**博客园**](https://i.cnblogs.com/posts)
 - [JLRHX](https://github.com/bestswifter/blog/blob/master/articles/bat-offer.md)
 
-<br/>
+<br/><br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 > <h2 id=""></h2>
 - [**线上面试控制平台**](https://www.showmebug.com/pads)
@@ -121,6 +121,7 @@
 		- [对象的isa指针指向哪里？](#对象的isa指针指向哪里？)
 		- [类信息存放在哪里？](#类信息存放在哪里？)
 		- [load和initialize区别](#load和initialize区别)
+			- [load在子类、子类的类别、类别中的加载顺序](#load在子类、子类的类别、类别中的加载顺序)
 			- [load和initialize是谁调用的?走的都是消息转发吗?(富途牛牛)](#load和initialize是谁调用的?走的都是消息转发吗?)
 		- [load和initialize哪个先调用](#load和initialize哪个先调用)
 		- [消息转发](#消息转发)
@@ -975,7 +976,6 @@ Student *stu = [[Student alloc] init];
 
 <br/>
 
-
 > <h2 id='NSNotificationCenter通知中心是同步操作还是异步操作'>NSNotificationCenter通知中心是同步操作还是异步操作</h2>
 
 
@@ -1036,7 +1036,7 @@ NSNotification[8150:145628] 通知赋值完毕
 &emsp; 通过打印我们可以看出，当我们发送通知以后，观察者在接收到值以后，我们休眠3秒，程序才会继续往下执行，也就是说这个过程是同步的；我认为这里面设计为同步，是考虑到这一点，那就是一个通知可能有多个监听者，采用同步的方式能够保证所有的观察者都能够对通知做出相应，不会遗漏。
 
 
-<br/><br/>
+<br/><br/><br/>
 
 > <h2 id='异步操作'>异步操作</h2>
 
@@ -1081,11 +1081,7 @@ NSNotification[8150:145628] 通知赋值完毕
 我们发布通知在子线程里面发布，当然接收也要在子线程里面接收了。。。
 
 
-
-
-
-
-<br/><br/>
+<br/><br/><br/>
 
 > <h2 id='NSNotificationCenter接受消息和发送消息是在一个线程里吗？如何异步发送消息'>NSNotificationCenter接受消息和发送消息是在一个线程里吗？如何异步发送消息</h2>
 
@@ -1094,9 +1090,7 @@ NSNotification[8150:145628] 通知赋值完毕
 
 异步发送通知可以开启异步线程发送即可.
 
-
-
-<br/><br/>
+<br/><br/><br/>
 
 > <h2 id='如何保证通知接收的线程在主线程'>如何保证通知接收的线程在主线程</h2>
 
@@ -1112,8 +1106,7 @@ NSNotification[8150:145628] 通知赋值完毕
 2.NSMachPort的方式 通过在主线程的runloop中添加machPort，设置这个port的delegate，通过这个Port其他线程可以跟主线程通信，在这个port的代理回调中执行的代码肯定在主线程中运行，所以，在这里调用NSNotificationCenter发送通知即可
 
 
-
-<br/><br/>
+<br/><br/><br/>
 
 > <h2 id='页面销毁时不移除通知会崩溃吗?'>页面销毁时不移除通知会崩溃吗?</h2>
 
@@ -1122,8 +1115,8 @@ iOS9.0之前，会crash，原因：通知中心对观察者的引用是unsafe_un
 iOS9.0之后，不会crash，原因：通知中心对观察者的引用是weak。
 
 
+<br/><br/><br/>
 
-<br/><br/>
 
 > <h2 id='多次添加同一个通知会是什么结果？多次移除通知呢'>多次添加同一个通知会是什么结果？多次移除通知呢</h2>
 
@@ -1131,7 +1124,7 @@ iOS9.0之后，不会crash，原因：通知中心对观察者的引用是weak�
 
 
 
-<br/><br/>
+<br/><br/><br/>
 
 
 > <h2 id='下面的方式能接收到通知吗？为什么'>下面的方式能接收到通知吗？为什么</h2>
@@ -1147,9 +1140,9 @@ iOS9.0之后，不会crash，原因：通知中心对观察者的引用是weak�
 
 **答案:** 不能
 
+<br/>
 
 原因如下:
-
 
 首先我们看下通知中心存储通知观察者的结构
 
@@ -1191,8 +1184,7 @@ named表：key(name) : value->key(object) : value(Observation)
 因此在发送通知的时候，如果只传入name而并没有传入object，是找不到Observation的，也就不能执行观察者回调.
 
 
-<br/>
-<br/>?
+<br/><br/>
 
 拓展:若是在发送和接收时都没有添加object这个参数? 还能发送通知吗? 若是可以,为什么?若是不可以,又是为什么? 
 
@@ -1202,7 +1194,7 @@ named表：key(name) : value->key(object) : value(Observation)
 &emsp; 假设在发送和接收通知时都没有添加object参数，即NSNotification结构体中的object属性为nil，可以发送通知，但是观察者将接收到所有指定通知名称的通知，而无论发送者是否为特定对象。
 
 
-<br/>
+<br/><br/>
 
 为什么可以发送通知呢？
 
@@ -1225,11 +1217,12 @@ named表：key(name) : value->key(object) : value(Observation)
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 > <h1 id='多线程'>多线程</h1>
 
+<br/>
 
 > <h2 id='什么叫串行队列?并行队列?同步执行?异步执行?'>什么叫串行队列?并行队列?同步执行?异步执行?</h2>
 
@@ -1248,32 +1241,43 @@ named表：key(name) : value->key(object) : value(Observation)
 
 
 
-<br/>
+<br/><br/>
 
 
-**拓展:**
+**拓展:** 主队列是在main函数之前创建还是之后创建?
 
-主队列是在main函数之前创建还是之后创建?
-
-&emsp; 主队列是在main函数之前就创建了,这个可以打断点看到!这个主队列的名字是:coma.apple.main-thread.这个可以打断点看到,也可以去苹果线程的源码去搜索到这个线程名字
-
-
-
+&emsp; 主队列是在main函数之前就创建了,这个可以打断点看到!这个主队列的名字是:`coma.apple.main-thread`.这个可以打断点看到,也可以去苹果线程的源码去搜索到这个线程名字.
 
 <br/>
-<br/>
+
+**了解下,具体流程是这样的:** iOS中的主队列（Main Queue）是在main()函数执行之前由操作系统创建的。主队列与应用程序的主线程（Main Thread）密切相关，它是与主线程关联的串行 dispatch queue，负责处理与界面更新、事件响应等相关的任务。主队列的存在是主线程功能的一部分，而主线程是操作系统在应用程序启动时创建的。
+
+**具体过程如下：**
+
+- 1.操作系统启动应用程序：当用户点击应用程序图标或系统触发应用程序启动时，操作系统会为应用程序创建一个新的进程，并在该进程中创建主线程。主线程的生命周期与整个应用程序的生命周期相吻合。
+
+- 2.主线程初始化：主线程创建后，操作系统会为其设置好运行环境，包括但不限于加载动态链接库、初始化运行时环境（如 Objective-C runtime）、创建主线程的消息循环（Event Loop）等。主队列作为与主线程关联的dispatch queue，也是在这个阶段创建的。
+
+- 3.调用main()函数：当主线程的初始化工作完成后，操作系统会调用应用程序的入口函数main()。对于iOS应用来说，通常main()函数的内容相当简洁，主要负责启动UIKit（或AppKit）框架的运行循环，进一步启动应用程序的主线程事件循环。此时，主队列已经存在并且可以处理任务。
+
+
+<br/><br/>
 
 
 > <h2 id='线程的挂起&恢复'>线程的挂起&恢复</h2>
 
 [susspend & resume](./多线程.md#线程暂停&恢复)
 
-<br/>
-<br/>
+
+<br/><br/><br/>
+
 
 > <h2 id='最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?'>最多能开到多少线程?线程维持到多少合适?CPU核数越多,线程越多吗?(飞猪)</h2>
 
 **下面是用iPhone8真机,iOS13.1进行测试的**
+
+
+<br/><br/><br/>
 
 
 > <h3 id='全局队列-CPU繁忙'>全局队列-CPU繁忙</h3>
@@ -1361,8 +1365,7 @@ named表：key(name) : value->key(object) : value(Observation)
 经过测试,创建的线程数量是:**6** . 当然这个数值也不是固定的,之前测试的是 **5**.
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='全局队列-CPU空闲'>全局队列-CPU 空闲</h3>
@@ -1420,8 +1423,7 @@ named表：key(name) : value->key(object) : value(Observation)
 
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='自建队列-CPU繁忙'>自建队列-CPU繁忙</h3>
@@ -1467,6 +1469,7 @@ named表：key(name) : value->key(object) : value(Observation)
 ```
 
 
+<br/>
 截取打印:
 
 ```
@@ -1490,8 +1493,7 @@ named表：key(name) : value->key(object) : value(Observation)
 
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='自建队列-CPU空闲'>自建队列-CPU空闲</h3>
@@ -1557,6 +1559,7 @@ named表：key(name) : value->key(object) : value(Observation)
 
 
 <br/>
+
 GCD 的全局队列会自动将线程数量限制在一个比较合理的数量。与之相比，自建队列创建的线程数量会偏大。
 
 考虑到线程数量过大会导致 CPU 调度成本上涨。
@@ -1565,19 +1568,14 @@ GCD 的全局队列会自动将线程数量限制在一个比较合理的数量
 
 
 
-<br/><br/>
+<br/><br/><br/>
 
 > <h2 id='线程最大开到多少合适'>线程最大开到多少合适</h2>
 
 [子线程数最多开到64个,否则会就会导致主线程卡顿,这是根据微信团队的Matrix库得出来的.](./App优化##子线程监控退火算法)
 
 
-
-
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h2 id='如何用GCD同步若干个异步调用'>如何用GCD同步若干个异步调用？</h2>
@@ -1600,24 +1598,19 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 ># <h2 id='dispatch_once安全的原因'>[dispatch_once安全的原因](./多线程.md#dispatch_once)</h2>
 
 
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 ># <h2 id = "锁分为哪几类?说一下">[锁分为哪几类?说一下](./多线程.md#锁分类)</h2>
 
 
+<br/><br/><br/>
 
-<br/>
-<br/>
 
 > <h2 id = "dispatch_after时间准确吗">dispatch_after时间准确吗(杭州灵伴科技)</h2>
 
@@ -1641,7 +1634,7 @@ dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), 
 
 计算时间的还有CADisplayLink、NSTimer、dispatch_source_t这些.他们的用法如下:
 
-<br/>
+<br/><br/>
 
 - **CADisplayLink** 是一个与屏幕刷新率同步的定时器，通常用于进行与界面刷新相关的操作。它的回调方法会在每一帧刷新时被调用，可以利用这个特性来实现比较精确的时间控制。
 
@@ -1658,7 +1651,7 @@ CADisplayLink *displayLink = [CADisplayLink displayLinkWithTarget:self selector:
 ```
 
 
-<br/>
+<br/><br/>
 
 
 - **NSTimer** 是一种定时器，可以用于在指定时间间隔后执行某个方法。虽然 NSTimer 的精确性受到运行循环的影响，但在一些场景下仍可以提供足够的精度。
@@ -1675,7 +1668,7 @@ NSTimer *timer = [NSTimer timerWithTimeInterval:0.1 target:self selector:@select
 ```
 
 
-<br/>
+<br/><br/>
 
 
 - **dispatch_source_t：**
@@ -1701,18 +1694,9 @@ dispatch_resume(timer);
 
 
 <br/>
-<br/>
-
-> <h2 id = ""></h2>
-
-
-
-
-<br/>
 
 ***
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 
@@ -1723,28 +1707,20 @@ dispatch_resume(timer);
 WHC_Scan:  Mac工具, 删除项目没有使用的类减少打包体积;
 
 
-<br/>
+<br/><br/><br/>
 
 >## <h2 id = "性能优化总结"> [**性能优化总结**](https://juejin.cn/post/6844903590138478600) </h2>
 
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id = "循环引用解决">循环引用解决</h2>
 
 [♻️解决循环引用框架：FBRetainCycleDetector](https://draveness.me/retain-cycle1/)
 
 
-
-
-
-
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h3 id = "NSTimer循环引用解决">NSTimer循环引用解决？</h1>
 
@@ -1756,7 +1732,6 @@ NSTimer循环引用的解决方法，目前有以下几种
 
 
 <br/>
-
 
 **方法一：** 类方法
 
@@ -1814,21 +1789,20 @@ _timer = [NSTimer jq_scheduledTimerWithTimeInterval:5.0
 [类方法和实例方法及self和super](#self和super实现的原理)
 
 
-<br/>
+<br/><br/>
 
 提问2: 使用Block都会发生循环引用吗？
 
 [不一定，看这里](#block都会发生循环引用吗)
 
 
-
-<br/>
+<br/><br/>
 
 
 **方法二：** 用GCD的dispatch_timer方法替代NSTimer来进行计时
 
 
-<br/>
+<br/><br/>
 
 **方法三：** weakProxy示例
 
@@ -1902,8 +1876,7 @@ NS_ASSUME_NONNULL_END
 ```
 
 
-
-<br/>
+<br/><br/><br/>
 
 > <h3 id = "NSTimer计时不准确怎么办">NSTimer计时不准确怎么办？</h1>
 
@@ -1912,7 +1885,11 @@ NS_ASSUME_NONNULL_END
 
 &emsp; GCD的定时器不依赖于runloop，而是和内核挂钩的，会比较准时，定时器的接口设计(使用GCDTimer作为定时器，它是基于硬件时间的，相对来说更精准一点).
 
-接口定义：
+但是若说GCD绝对精确也是不对的,因为GCD定时器触发的任务默认在全局并发队列的后台线程执行，这有助于避免阻塞主线程，确保UI流畅，并且不会受主线程复杂任务的影响，从而提高定时任务执行的稳定性。但是还受系统负载与资源竞争,若是负载过大还是会影响精度的.
+
+<br/>
+
+**接口定义：**
 
 ```
 + (NSString *)execTask:(void(^)(void))task
@@ -2020,9 +1997,7 @@ dispatch_semaphore_t semaphore_;
 ```
 
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id="图片优化">图片优化</h2>
 
@@ -2051,8 +2026,7 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
 
 而图片的解压缩是一个非常消耗 CPU 资源的工作，如果我们有大量的图片需要展示到列表中，将会大大拖慢系统的响应速度，降低运行帧率。这就是 UIImageView 的一个性能瓶颈。
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id = "图片的处理">图片的处理</h2>
 
@@ -2132,7 +2106,7 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
 ```
 
 
-<br/>
+<br/><br/><br/>
 
 - <h3 id="图片格式判断">图片格式判断</h3>
 
@@ -2171,9 +2145,7 @@ UIImageView 显示图片，也有类似的过程。实际上，一张图片从�
 ```
 
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h2 id="ImageIO图片缩放">ImageIO图片缩放</h2>
@@ -2203,8 +2175,7 @@ func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> 
 ```
 
 
-
-<br/>
+<br/><br/>
 
 - **OC实现**
 
@@ -2272,9 +2243,7 @@ func downsample(imageAt imageURL: URL, to pointSize: CGSize, scale: CGFloat) -> 
 ```
 
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id="图片上传">图片上传</h2>
 
@@ -2400,9 +2369,7 @@ NSData的length是bytes格式需要进行除以1024进行单位转换,格式判�
 对于非常大的图片和视频请看[网络优化(I)](https://github.com/harleyGit/StudyNotes/blob/master/Optimization/网络优化(I).md)中的**上传优化**。
 
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 >## <h2 id ="界面保持流畅">[界面保持流畅](https://xilankong.github.io/ios性能优化/2017/10/29/iOS如何保持界面流畅.html)</h2>
 
@@ -2482,7 +2449,7 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 ![<br/>](./../../Pictures/ios_oc0.png)
 
 
-<br/>
+<br/><br/>
 
 - Color Spaces and Bitmap Layout（颜色空间和位图格式）
 
@@ -2508,8 +2475,7 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 ```
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h2 id = "UI卡顿优化">UI卡顿优化</h2>
@@ -2575,9 +2541,7 @@ SDWebImage的使用:
 
 ```
 
-
-
-<br/>
+<br/><br/>
 
 - **GPU优化**
 	- 尽量避免短时间内大量图片的显示，尽可能将多张图片合成一张进行显示
@@ -2607,7 +2571,7 @@ SDWebImage的使用:
 
 
 	
-<br/>
+<br/><br/>
 
 
 - [**卡顿监测**](https://juejin.cn/post/6844904004053368846#heading-6)
@@ -2617,7 +2581,7 @@ SDWebImage的使用:
 
 
 
-<br/><br/>
+<br/><br/><br/>
 
 
 > <h2 id='WKWebview白屏'>WKWebview白屏</h2>
@@ -2643,8 +2607,7 @@ SDWebImage的使用:
 }
 ```
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 >## <h2 id = "UITableView优化">UITableView优化</h2>
@@ -3024,7 +2987,7 @@ Out Of Memory: 内存不足
 
 - **OOM(Out Of Memory) 监控**
 
-	- 指 App 在前台因消耗内存过大导致被系统杀死，针对这类问题，我们需要记录发生 FOOM 时的调用栈、内存占用等信息，从而具体分析解决内存占用大的问题。
+	- 指 App 在前台因消耗内存过大导致被系统杀死，针对这类问题，我们需要记录发生 OOM 时的调用栈、内存占用等信息，从而具体分析解决内存占用大的问题。
 
 
 	- 流程是监控 App 生命周期内的内存增减，在收到内存警告时，记录内存信息，获取当前所有对象信息和内存占用值，并在合适的时机上传到服务器。目前比较出名的 OOM 监控框架有 Facebook 的 [**FBAllocationTracker**](https://github.com/facebookarchive/FBAllocationTracker) ，国内的有腾讯开源的[**OOMDetector**](https://github.com/Tencent/OOMDetector)。
@@ -5018,7 +4981,7 @@ objc_object::sidetable_retainCount()
 答：成员变量的具体值存放在实例对象（instance对象）；对象方法，协议，属性，成员变量信息存放在类对象（class对象）；类方法信息存放在元类对象（meta-class对象）。
 
 
-<br/><br/>
+<br/><br/><br/>
 
 > <h2 id="load和initialize区别">load和initialize区别</h2>
 
@@ -5040,36 +5003,57 @@ objc_object::sidetable_retainCount()
 	- initialize在第一次给某个类发送消息时调用（比如实例化一个对象），并且只会调用一次，是懒加载模式，如果这个类一直没有使用，就不会调用到initialize方法。
 
 
-<br/>
+<br/><br/><br/>
+
+> <h2 id='load在子类、子类的类别、类别中的加载顺序'>load在子类、子类的类别、类别中的加载顺序</h2>
+
 
 **load**
 
 &emsp; 提问：当有FatherClass、FatherClass (fatherCategory)、SubClass、SubClass (subCategory)四个类，当它们都实现了load方法时，它们的调用顺序是怎么样的(得物(毒)面试提问)？
 
-自己实际操作了一下，当我们在load方法中，加入了这段代码`[super load]`会出现下面的打印，调用顺序如下：
+自己实际操作了一下，当我们在子类类别、类别中的load方法中，分别都加入了这段代码`[super load]`会出现下面的打印，调用顺序如下：
 
 ```
 2021-05-19 12:21:01.565405+0800 OCTest[5522:237002] FatherClass 的 load 方法调用了
-2021-05-19 12:21:01.565927+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
-2021-05-19 12:21:01.566003+0800 OCTest[5522:237002] SubClass 的 load 方法调用了
-2021-05-19 12:21:01.566087+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
-2021-05-19 12:21:01.566152+0800 OCTest[5522:237002] ++++++ >>> SubClass Category 的 load 方法调用了
-2021-05-19 12:21:01.566205+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
 
+2021-05-19 12:21:01.565927+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
+
+2021-05-19 12:21:01.566003+0800 OCTest[5522:237002] SubClass 的 load 方法调用了
+
+2021-05-19 12:21:01.566087+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
+
+2021-05-19 12:21:01.566152+0800 OCTest[5522:237002] ++++++ >>> SubClass Category 的 load 方法调用了
+
+2021-05-19 12:21:01.566205+0800 OCTest[5522:237002] -----》FatherClass Category的 load 方法调用了
 ```
 
+<br/>
 
 当我们在load方法中去除`[super load]`方法时是以下打印：
 
 ```
 2021-05-19 12:53:11.038671+0800 OCTest[6107:261238] FatherClass 的 load 方法调用了
-2021-05-19 12:53:11.039148+0800 OCTest[6107:261238] SubClass 的 load 方法调用了
-2021-05-19 12:53:11.039231+0800 OCTest[6107:261238] ++++++ >>> SubClass Category 的 load 方法调用了
-2021-05-19 12:53:11.039354+0800 OCTest[6107:261238] -----》FatherClass Category的 load 方法调用了
 
+2021-05-19 12:53:11.039148+0800 OCTest[6107:261238] SubClass 的 load 方法调用了
+2
+021-05-19 12:53:11.039231+0800 OCTest[6107:261238] ++++++ >>> SubClass Category 的 load 方法调用了
+
+2021-05-19 12:53:11.039354+0800 OCTest[6107:261238] -----》FatherClass Category的 load 方法调用了
 ```
 
 &emsp; 这才是正确的调用顺序，先**调用父类load方法->子类load方法->子类类别load方法->父类类别方法**。
+
+<br/>
+
+**疑问:** 需要在`FatherClass(fatherCategory)`和`SubClass(subCategory)`中的load方法中添加[super load]吗?
+
+
+加载方法 `+ (void)load `是在运行时加载类的时候调用的，如果你在一个类别中实现了 `+ (void)load` 方法，它会在应用启动时自动调用，而不需要手动触发。在这种情况下，你不需要调用 `[super load]`，因为类别并不继承自父类。
+
+简而言之，在类别中的 `+ (void)load` 方法不需要调用 `[super load]`。
+
+但是如果你重写了一个类的 `+ (void)load`  方法，一般情况下都应该在其中调用 `[super load]`，以确保父类的 `+ (void)load `方法也被执行。这样可以保证在加载类时，父类的加载方法也会得到调用，从而保证整个类层次结构的初始化顺序是正确的。
 
 
 <br/><br/><br/>
@@ -5179,7 +5163,7 @@ static NSMutableArray *someArray;
 - load方的调用
 	- load方法是在dyld完成调用，是在main函数之前调用的
 	
-	- load方法的调用顺序是父类 -> 子类 -> 分类
+	- [load方法的调用顺序是父类 -> 子类 -> 子分类-父分类](#load在子类、子类的类别、类别中的加载顺序)
 	
 	- 多个类和多个分类的调用顺序都是以编译顺序为主，可以在build Phases中调整
 
@@ -5258,8 +5242,7 @@ static NSMutableArray *someArray;
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h3 id="分类Category">分类Category</h3>
@@ -5285,10 +5268,7 @@ static NSMutableArray *someArray;
 扩展是在编译的时候进行加载,category是在运行时的时候进行加载的
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 
 
 > <h4 id="category作用是什么?">category作用是什么?</h4>
@@ -5299,9 +5279,7 @@ static NSMutableArray *someArray;
 
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -5360,9 +5338,7 @@ static NSMutableArray *someArray;
 [因为在load方法被调用前](https://blog.csdn.net/u013378438/article/details/80605871?spm=1001.2014.3001.5502)，Category已经完成了附加到class上的流程,所以可以调用.
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id="Block深入探究">Block深入探究</h2>
@@ -5374,9 +5350,7 @@ static NSMutableArray *someArray;
 [blokc分类](./Block.md#Block分类)
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h4 id='block内如何修改block外部变量'>block内如何修改block外部变量</h4>
 
@@ -5405,8 +5379,7 @@ static NSMutableArray *someArray;
 	- 改外部变量必要条件之"将 auto 从栈 copy 到堆"
 	- 改外部变量必要条件之“将 auto 变量封装为结构体(对象)”
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 - <h3 id="block原理">block原理</h3>
 
@@ -5416,7 +5389,7 @@ static NSMutableArray *someArray;
 
 
 
-<br/>
+<br/><br/><br/>
 
 - <h3 id="block都会发生循环引用吗">block都会发生循环引用吗</h3>
 
@@ -5456,8 +5429,7 @@ static NSMutableArray *someArray;
 &emsp; AFN也有可能不会发生循环引用，是因为可能底层做了一些操作吧。
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h4 id='通知+block'>通知+block</h4>
 
@@ -5552,9 +5524,7 @@ dispatch_group_async(self.operationGroup, self.serialQueue, ^{
 
 
 
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h2 id="APNS底层原理">APNS如何通知的，底层如何处理？</h2>
@@ -5586,8 +5556,7 @@ dispatch_group_async(self.operationGroup, self.serialQueue, ^{
 [远程推送](./远程推送.md)
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id="NSDictionaryNSArray原理">NSDictionaryNSArray原理</h2>
 [NSDictionary原理](https://juejin.cn/post/6844903608954126344)
@@ -5650,8 +5619,7 @@ _offset 是在缓冲区里的数组的第一个元素索引
 &emsp; 最关键的部分是决定 realOffset 应该等于 fetchOffset（减去 0）还是 fetchOffset 减 _size。看着纯代码不一定能画出完美的图画，我们设想一下两个关于如何获取对象的例子。
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 >  <h2 id="self和super实现的原理">self和super实现的原理</h2>
 [self和super实现的原理](https://www.jianshu.com/p/7a9912c97fdb)
@@ -5728,9 +5696,9 @@ objc Runtime开源代码对- (Class)class方法的实现:
 
 
 
-<br/><br/>
+<br/><br/><br/>
 
->## <h2 id="ARC原理是什么">[ARC原理是什么](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/ARC原理.md)</h2>
+>## <h2 id="ARC原理是什么">[ARC原理是什么](./基础.md#自动引用计数)</h2>
 
 &emsp; ARC 是 iOS 中管理引用计数的技术，帮助 iOS 实现垃圾自动回收，具体实现的原理是由编译器进行管理的，同时运行时库协助编译器辅助完成。主要涉及到 Clang （LLVM 编译器） 和 objc4 运行时库。
 
