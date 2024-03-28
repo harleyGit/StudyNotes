@@ -1,16 +1,15 @@
 > <h2 id=''></h2>
 - [**Dio**](#Dio)
 	- [Get请求](#Get请求)
+	- [取消请求](#取消请求)
 - [Charles抓取Flutter网络请求](#Charles抓取Flutter网络请求)
 	- [开源接口网站](#开源接口网站)
 
 
-<br/>
-<br/>
+<br/><br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h1 id='Dio'>Dio</h1>
@@ -57,13 +56,59 @@
 
 
 
+<br/><br/><br/>
+
+> <h2 id='取消请求'>取消请求</h2>
+
+在 Flutter 中，CancelToken 是由 dio 库提供的，用于取消 Dio 发起的 HTTP 请求。Dio 是一个流行的 Flutter HTTP 客户端库，提供了丰富的功能和良好的性能。以下是关于 Dio 中 CancelToken 的详细说明及示例：
+
 <br/>
+
+**概述：**
+
+CancelToken 在 Dio 中的作用与 Axios 中类似，它允许在请求发出后主动取消该请求。通过创建一个 CancelToken 实例，并将其作为请求配置的一部分传递给 Dio 的请求方法（如 dio.get、dio.post 等）。当需要取消请求时，调用该 CancelToken 实例的 cancel 方法，这将中断正在进行的请求，并触发相应的错误回调。
+
+
 <br/>
 
-> <h2 id=''></h2>
+**DEMO:**
 
+```
+import 'package:dio/dio.dart';
 
+void main() async {
+  final dio = Dio();
+  final cancelToken = CancelToken();
 
+  // 发起请求，并传入 CancelToken
+  final responseFuture = dio.get(
+    'https://api.example.com/data',
+    cancelToken: cancelToken,
+  );
+
+  // 在某个条件满足时取消请求
+  Future.delayed(Duration(seconds: 2), () {
+    cancelToken.cancel('Request timed out after 2 seconds.');
+  });
+
+  try {
+    final response = await responseFuture;
+    print('Received response: ${response.data}');
+  } on DioError catch (e) {
+    if (e.type == DioErrorType.cancel) {
+      print('Request was canceled: ${e.message}');
+    } else {
+      print('Other error occurred: ${e.message}');
+    }
+  }
+}
+```
+**在这个示例中：**
+
+- 创建了一个 Dio 实例和一个 CancelToken。
+- 使用 dio.get 发起请求，并将 cancelToken 传给请求配置。
+- 使用 Future.delayed 在 2 秒后模拟一个取消请求的条件，调用 cancelToken.cancel 方法。
+- 在 try-catch 块中处理响应或捕获异常。如果捕获到的 DioError 类型为 cancel，则打印出请求被取消的消息。
 
 
 <br/>

@@ -12,6 +12,10 @@
 - [CupertinoPageTransitionsBuilder](#CupertinoPageTransitionsBuilder)
 - [RefreshConfiguration 刷新](#RefreshConfiguration刷新)
 - [MultiProvider状态管理](#MultiProvider状态管理)
+- [**库**](#库)
+	- [rxdart](#rxdart)
+	- **Dio**
+		- [取消请求](./Dio.md#取消请求)
 - **参考资料**
 	- **[Flutter生命周期（组件渲染）](https://juejin.im/post/6844903794879234061)**
 	- **[Flutter的生命周期(交互)](https://juejin.im/post/6844903794883444743)**
@@ -325,7 +329,7 @@ class _StatusDemoState extends State<StatusDemo> {
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 ># <h id='系统字体缩放'>系统字体缩放</h1>
@@ -362,7 +366,7 @@ const WillPopScope({
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 ># <h1 id='Scaffold、TabBar、底部导航'>[Scaffold、TabBar、底部导航](https://book.flutterchina.club/chapter5/material_scaffold.html)</h1>
 
@@ -422,7 +426,7 @@ AppBar({
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 ># <h1 id='PageView'>PageView</h1>
@@ -454,14 +458,10 @@ PageView({
 
 
 
-
-
-
-
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 ># <h1 id='文件储存'>文件储存</h1>
@@ -475,7 +475,7 @@ PageView({
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 ># <h1 id='CupertinoPageTransitionsBuilder'>CupertinoPageTransitionsBuilder</h1>
 
@@ -501,7 +501,7 @@ PageView({
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 ># <h1 id='RefreshConfiguration刷新'>[RefreshConfiguration 刷新](https://juejin.cn/post/6844903944573943821)</h1>
 
@@ -534,7 +534,7 @@ PageView({
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 
@@ -552,7 +552,91 @@ PageView({
 <br/>
 
 ***
+<br/><br/><br/>
+
+> <h1 id='库'>库</h1>
+
+<br/><br/><br/>
+
+> <h2 id='rxdart'>rxdart</h2>
+
+
+<br/><br/><br/>
+
+> <h2 id='BehaviorSubject'>BehaviorSubject</h2>
+
+BehaviorSubject 是 RxDart 库中的一种特殊类型的 Subject，它继承自 Subject 类并实现了 Observable 接口。BehaviorSubject 具有以下核心特点和使用方式：
+
+**主要特点：**
+
+- 1.**初始化时需要一个初始值：** 创建一个 BehaviorSubject 实例时，需要提供一个初始值。这个值会立即发送给所有已经订阅的观察者，并成为 BehaviorSubject 内部的当前值。
+
+- **2.保存并提供最新值：** BehaviorSubject 会始终保持一个当前值（latest value）。每当有新的订阅者加入时，它们会立即收到这个当前值，而不仅仅是从订阅时刻起的新值。这意味着即使在订阅之后 BehaviorSubject 发出了新值，新订阅者也能立即接收到这个最新的值。
+
+- **3.值的更新：** 通过调用 add 或 sink.add 方法向 BehaviorSubject 发送新的值。这会更新 BehaviorSubject 的内部状态，并触发所有已订阅的观察者收到这个新值。
+
+- **4.完成（Complete）与错误（Error）：** 同其他 Observables，BehaviorSubject 可以通过调用 close 或 sink.close 方法来标记数据流的完成，此时所有观察者会收到完成通知，之后不再接收任何值。同样，通过调用 addError 或 sink.addError 方法可以发送一个错误通知，观察者会收到错误对象并终止订阅。
+
 <br/>
+
+**使用场景：**
+
+- **1.状态管理：** 在 Flutter 应用中，BehaviorSubject 常用于实现组件的状态管理。它能保存组件的当前状态，并允许其他组件或服务订阅状态变化，即时获取最新的状态。
+
+- **2.数据同步：** 在多视图或组件间需要共享同一数据源，并确保新加入的组件能立即获得当前数据时，BehaviorSubject 是理想的选择。例如，一个实时更新的计数器，新打开的窗口或面板应显示当前的计数值，而非从零开始。
+
+- **3.路由参数传递：** 在单页应用（SPA）中，可以利用 BehaviorSubject 来传递路由参数，新激活的路由组件订阅后可以直接获取到当前的路由参数，无需关心数据的发送时机。
+
+<br/>
+
+**Demo:**
+
+```
+import 'package:rxdart/rxdart.dart';
+
+void main() {
+  // 创建一个 BehaviorSubject，指定初始值为 'Initial Value'
+  final BehaviorSubject<String> subject = BehaviorSubject.seeded('Initial Value');
+
+  // 订阅 BehaviorSubject
+  subject.stream.listen((value) {
+    print('Subscriber A received value: $value');
+  });
+
+  // 发送新值
+  subject.add('New Value');
+
+  // 新订阅者也会立即收到最近的值（这里是 'New Value'）
+  subject.stream.listen((value) {
+    print('Subscriber B received value: $value');
+  });
+
+  // 发送另一个新值
+  subject.add('Another New Value');
+
+  // 输出结果：
+  // Subscriber A received value: Initial Value
+  // Subscriber A received value: New Value
+  // Subscriber B received value: New Value
+  // Subscriber A received value: Another New Value
+  // Subscriber B received value: Another New Value
+}
+```
+
+**在这个例子中：**
+
+- 我们创建了一个 BehaviorSubject，初始值为 'Initial Value'。
+- 订阅者 A 首先订阅了 subject，立即收到了初始值。
+- 向 subject 发送 'New Value'，订阅者 A 收到了更新。
+- 订阅者 B 在 'New Value' 发送之后订阅，但它依然立即收到了 'New Value'，因为这是 BehaviorSubject 当前保存的最新值。
+- 再次向 subject 发送 'Another New Value'，两个订阅者都收到了这个更新。
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
 
 
 ># <h1 id=''></h1>
