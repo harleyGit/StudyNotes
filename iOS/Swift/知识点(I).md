@@ -22,6 +22,7 @@
 	- [数据解析中范型和协议有什么区别呢？(爱乐奇)](#数据解析中范型和协议有什么区别呢?)
 	- [map和flatMap区别(同程旅行)](#map和flatMap区别)
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
+	- [权限关键字(杭州腾展科技股份有限公司)](#权限关键字)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
 		- [逃逸闭包](#逃逸闭包)
 		- [非逃逸闭包](#非逃逸闭包)
@@ -619,8 +620,7 @@ bar(local) --> bar<T = Point>(local)
 - 在协议类型调用方法时，类型是 Existential Container，需要在方法内部进一步根据 pwt 进行方法索引。因此协议实现的是动态多态。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='数据解析中范型和协议有什么区别呢?'>数据解析中范型和协议有什么区别呢？</h2>
@@ -692,10 +692,7 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 ># <h2 id='map和flatMap区别'>[map和flatMap区别](./基础.md#map和flatMap区别)</h2>
 
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id="AnyAnyObjectAnyClass的区别">Any、AnyObject、AnyClass的区别</h2>
@@ -743,8 +740,15 @@ array
 &emsp; 顺便值得一提的是，只使用 Swift 类型而不转为 Cocoa 类型，对性能的提升是有所帮助的，所以我们应该尽可能地使用原生的类型。
 
 
-<br/>
-<br/>
+<br/><br/><br/>
+
+> <h2 id='权限关键字'>权限关键字</h2>
+
+[private、filePrivate、public、open](./关键字.md#访问权限关键字使用)
+
+
+
+<br/><br/>
 
 > <h2 id="逃逸闭包使用">逃逸闭包怎么使用，它的关键字@escaping什么时候使用</h2>
 

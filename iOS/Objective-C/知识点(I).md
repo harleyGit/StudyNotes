@@ -321,7 +321,7 @@ IAP支付的过程：
 解决方案：在paymentQueue:updatedTransactions:代理方法中获取到支付成功的回调，此时马上缓存订单信息（`包括支付凭证、订单号、用户id等；担心用户卸载app的，可以直接缓存到钥匙串`），然后再向服务端验证订单。若订单验证成功，则删除该项订单缓存；否则不做处理。另外，每次app启动的时候，可以延时几秒钟，去检测本地是否有未验证成功的苹果订单；如果有，就一个个重新验证。
 
 
-<br/>
+<br/><br/>
 
 
 **刷单：**
@@ -349,9 +349,7 @@ IAP支付的过程：
 
 
 
-
-
-<br/>
+<br/><br/><br/>
 
 > <h3 id ="适配器响应元是什么">适配器、响应元是什么？</h3>
 
@@ -386,16 +384,12 @@ IAP支付的过程：
 
 - **响应元**
 
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 >## <h2 id="热更新">[热更新](https://juejin.cn/post/6844904144411574285)</h2>
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id="NSString的属性copy和strong区别">NSString的属性copy和strong区别</h2>
 
@@ -484,8 +478,12 @@ self.copyedString: 123456, 0x107b2bff0
 类似的[NSArray和NSMutableArray](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray.md#%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D)和这个差不多.
 
 
+<br/><br/><br/>> <h2 id='字符串为什么用copy'>字符串为什么用copy</h2>
 
-<br/><br/>
+[copy的使用](./关键字.md#copy)
+
+
+<br/><br/><br/>
 
 > <h2 id='NSMutableSet和NSMutableArray区别'>NSMutableSet和NSMutableArray区别</h2>
 
@@ -518,8 +516,7 @@ NSMutableSet 和 NSMutableArray 都是可变的集合类型，但它们在设计
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -564,22 +561,13 @@ Copy code
 
 
 
-
-
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='NSCache详解'>NSCache详解</h2>
 
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 
