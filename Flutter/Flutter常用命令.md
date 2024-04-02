@@ -4,6 +4,12 @@
 	- [iOS真機打包運行](#iOS真機打包運行)
 	- [iOS14问题处理](#iOS14问题处理)
 - [**常用命令**](#常用命令)
+	- [运行程序](#运行程序)
+	- [运行在指定设备或模拟器上](#运行在指定设备或模拟器上)
+	- [以Release模式运行](#以Release模式运行)
+	- [运行在Chrome浏览器中（Web支持）](#运行在Chrome浏览器中（Web支持）)
+	- [启动模拟器](#启动模拟器)
+	- [热重载快捷键](#热重载快捷键)
 	- [模拟器调试](#模拟器调试)
 - [**前端环境配置**](#前端环境配置)
 - [**VSCode的使用**](#VSCode的使用)
@@ -383,8 +389,7 @@ zsh: command not found: flutter
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -392,11 +397,113 @@ zsh: command not found: flutter
 > <h1 id='常用命令'>常用命令</h1>
 
 ```
-//模拟器列表
-$ flutter emulators
+//创建一个新的Flutter项目
+flutter create
 
-//启动模拟器,只有启动模拟器才可以运行模拟器
-$ flutter emulators --launch <emulator id>
+//显示相关安装工具的信息
+flutter doctor
+
+//为当前项目运行Flutter驱动程序测试
+flutter drive
+
+//在Fushia上进行热重载
+flutter fuchsia_reload
+
+//在附加设备删除安装Flutter应用程序
+flutter install 
+
+//显示用于运行Flutter应用程序的日志输出
+flutter logs
+
+
+//从一个链接的设备截图
+flutter screenshot
+
+//停止在附加设备上的Flutter应用程序
+flutter stop
+
+//升级Flutter副本
+flutter upgrade
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='运行程序'>运行程序</h2>
+
+此命令会编译并部署 Flutter 应用到默认连接的设备或模拟器上。它支持热重载（Hot Reload），即在开发过程中，当您修改代码后，只需按键盘 r 键即可快速更新应用状态，无需重新启动整个应用
+
+```
+flutter run
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='运行在指定设备或模拟器上'>运行在指定设备或模拟器上</h2>
+
+要查看已连接的设备列表及其名称或ID，可以先执行：
+
+```
+flutter devices
+```
+
+
+<br/>
+
+使用 -d 选项后跟设备名称或ID来指定目标设备
+
+```
+flutter run -d <device-name-or-id>
+```
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id='以Release模式运行'>以Release模式运行</h2>
+
+这将编译并部署应用到设备上，但采用的是Release模式，这意味着代码会被优化，性能更好，但不支持热重载。通常用于最终测试或发布前的验证。
+
+
+```
+flutter run --release
+```
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id='运行在Chrome浏览器中（Web支持）'>运行在Chrome浏览器中（Web支持）</h2>
+
+如果您的 Flutter 项目支持 Web 平台，可以使用此命令将其部署到 Chrome 浏览器进行测试。
+
+```
+flutter run -d chrome
+```
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id='启动模拟器'>启动模拟器</h2>
+
+**列出可用的模拟器:**
+
+```
+flutter emulators
+```
+
+<br/>
+
+**启动特定名称的模拟器。需要确保模拟器已提前安装并配置好**
+
+```
+flutter emulators --launch <emulator-name>
+
 
 //启动安卓模拟器
 $ flutter emulators --launch Nexus_5X_API_28
@@ -419,51 +526,29 @@ $ flutter run -d emulator-5554
 
 //运行IOS真机
 $ flutter run -d 00008020-001838491169002E
-
-//运行模拟器过程中命令
-//热更新直接刷新
-$ r
-
-//热更新重启刷新
-$ R
-
-//退出运行模拟器
-$ q
-
-//创建一个新的Flutter项目
-create
-
-//显示相关安装工具的信息
-doctor
-
-//为当前项目运行Flutter驱动程序测试
-drive
-
-//在Fushia上进行热重载
-fuchsia_reload
-
-//在附加设备删除安装Flutter应用程序
-install 
-
-//显示用于运行Flutter应用程序的日志输出
-logs
-
-//在设备上运行Flutter应用程序
-run
-
-//从一个链接的设备截图
-screenshot
-
-//停止在附加设备上的Flutter应用程序
-stop
-
-//升级Flutter副本
-upgrade
 ```
 
 
-<br/>
-<br/>
+
+<br/><br/><br/>
+
+> <h2 id='热重载快捷键'>热重载快捷键</h2>
+
+在使用 flutter run 进入调试模式后，可以通过以下快捷键进行操作：
+
+- **r：** 触发热重载（Hot Reload），快速应用代码变更。
+
+- **R：** 触发全面重启（Full Restart），重新加载所有代码和资源。
+
+- **p：** 显示性能overlay，用于监控应用的帧率等性能指标。
+
+- **o：** 在多平台项目中，切换目标平台（如Android与iOS）。
+
+- **q：** 退出调试模式。
+
+
+
+<br/><br/>
 
 
 > <h2 id='模拟器调试'>模拟器调试</h2>
@@ -498,8 +583,7 @@ q
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h1 id='前端环境配置'>前端环境配置</h1>
@@ -542,7 +626,7 @@ yarn global add @vue/cli
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 > <h1 id='安装VisualStudioCode'>安装Visual Studio Code</h1>
 
@@ -607,7 +691,7 @@ Debug 模式调试
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 > <h1 id='Android的配置'>Android的配置</h1>
 

@@ -1,5 +1,5 @@
-- [**OC知识点(I)**](./../iOS/Objective-C/知识点(I).md)
-- [**Swift知识点(I)**](./../iOS/Swift/知识点(I).md)
+- [**OC知识点**](./../iOS/Objective-C/OC知识点.md)
+- [**Swift知识点**](./../iOS/Swift/Swift知识点.md)
 - [**React知识点**](./../React/React知识点.md)
 
 <br/><br/><br/>
@@ -39,6 +39,16 @@
 	- [简述StatelessWidget和StatefulWidget两种状态组件类](#简述StatelessWidget和StatefulWidget两种状态组件类)
 	- [为什么Navigator可以实现无需上下文路由导航？](#为什么Navigator可以实现无需上下文路由导航)
 	- [main()和runApp()函数在flutter的作用分别是什么？有什么关系吗？](#main和runApp函数在flutter的作用分别是什么有什么关系吗)
+- [**功能型组件**](#功能型组件)
+	- [Provider(众安保险科技)](#Provider)
+	- [Provider原理解析](#Provider原理解析)
+	- [Provider种类](#Provider种类)
+		- [基础Provider](#基础Provider)
+		- [ValueListenableProvider](#ValueListenableProvider)
+		- [ChangeNotifierProvider](#ChangeNotifierProvider)
+		- [StreamProvider](#StreamProvider)
+		- [FutureProvider](#FutureProvider)
+		- [ListenableProvider](#ListenableProvider)
 - [**数据**](#数据)
 	- [使用哪几种流行的数据库软件包？](#使用哪几种流行的数据库软件包)
 	- [Firebase数据库用途](#Firebase数据库用途)
@@ -64,14 +74,6 @@
 	- flutter绘制原理是什么?
 	- [简述Flutter的绘制流程](#简述Flutter的绘制流程)
 	- [热重载](#热重载)
-	- [Provider原理解析](#Provider原理解析)
-	- [Provider种类](#Provider种类)
-		- [基础Provider](#基础Provider)
-		- [ValueListenableProvider](#ValueListenableProvider)
-		- [ChangeNotifierProvider](#ChangeNotifierProvider)
-		- [StreamProvider](#StreamProvider)
-		- [FutureProvider](#FutureProvider)
-		- [ListenableProvider](#ListenableProvider)
 - [**设计模式**](#设计模式)
 	- [管道流-响应式编程](#管道流-响应式编程)
 	- [Bloc和MVVM](#Bloc和MVVM)
@@ -1028,9 +1030,41 @@ dart
 
 
 
-
-
 <br/><br/>
+
+**疑问:** 在deactive()方法中,什么情况下State从树中移除? 这个树指的是什么树?
+
+
+Flutter中提到的“树”通常是指Widget树、Element树和RenderObject树这三个核心概念，它们构成了Flutter应用的视图层次结构。当讨论State从“树”中移除时，这里所指的“树”主要是指Element树，因为State对象与StatefulWidget的State类紧密关联，而StatefulWidget及其State对象在Element树中对应一个StatefulElement节点。
+
+<br/>
+
+State从Element树中移除的情况通常发生在以下几种场景：
+
+- **父Widget卸载：** 当一个StatefulWidget的父Widget由于路由跳转、条件渲染（如if、Visibility控件）、列表项滚动移出屏幕等原因不再需要显示时，整个子树（包括该StatefulWidget及其对应的State）会被从Element树中移除。这通常发生在Widget树结构发生变化，导致部分Widget需要被销毁以释放资源。
+
+- **主动调用Navigator.pop()：** 如果StatefulWidget是导航栈中的一个页面（如通过MaterialPageRoute或CupertinoPageRoute推入的），当用户或代码通过Navigator.pop()方法返回上一页时，该页面对应的StatefulWidget及其State也会从Element树中移除。
+
+- **Widget重建：** 在某些情况下，即使StatefulWidget本身未被完全移除，但由于其父Widget重建而导致子树重建。这时，尽管StatefulWidget的类型和位置可能保持不变，但原有的State实例会被丢弃，框架会为新的StatefulWidget实例创建一个新的State。这种情况通常发生在父Widget依赖于一个可变状态（如InheritedWidget、ValueNotifier等）发生变化时，或者父Widget的build方法依赖于一个会频繁变动的变量。
+
+- **主动调用dispose()：** 在极少数情况下，开发者可能直接调用State.dispose()方法来显式地销毁State。这通常不推荐，除非有特殊原因需要立即释放资源，因为正常情况下State的生命周期由Flutter框架自动管理。
+
+<br/>
+
+当State从Element树中被移除时，会依次触发以下几个生命周期方法：
+
+- **deactivate()：** 当State对象从Element树中被暂时移除时调用。此时，State仍有可能被重新插入到树中，比如当包含此State的子树在树的不同位置间移动时。在此回调中，可以执行一些清理工作，但应避免释放长期持有的资源，因为State可能很快又被激活。
+
+- **dispose()：** 当State对象从Element树中被永久移除且不再需要时调用。这是State生命周期中的最后一个回调，通常在这里释放所有与State相关的资源，如关闭打开的流订阅、取消定时器、清除监听器等。一旦dispose()被调用，State对象将不再参与任何后续的构建过程。
+
+<br/>
+
+总的来说，State从Element树中移除的情况主要与Widget树的结构变化、路由管理、Widget重建等场景密切相关。在这些情况下，Flutter框架会确保正确地调用State的生命周期方法，以便开发者能够在适当的时候释放资源和执行必要的清理工作。
+
+
+
+
+<br/><br/><br/><br/>
 
 > <h2 id='state所在树与其他2个树的联系'>state所在树与其他2个树的联系</h2>
 
@@ -2040,12 +2074,7 @@ class MyApp extends StatelessWidget {
 
 
 
-
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 
@@ -2060,13 +2089,230 @@ class MyApp extends StatelessWidget {
 
 
 
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id='功能型组件'>功能型组件</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id='Provider'>Provider</h2>
+
+**众安保险问到:当有A组件,B组件,这时有一个C组件.在C组件如何维护A、B组件的通信,但是要求不会触发A组件、B组件的state状态改变?**
+
+这里其实就问到Provider的状态管理,可以用这个进行解决,[具体看这里](#组件基础.md#Provider)
+
+
+<br/><br/><br/>
+
+> <h2 id='Provider原理解析'>Provider原理解析</h2>
+
+&emsp; 打开源码，最先注意到的就是Provider类。 此Provider非标题中的Provider。此处的Provider 顾名思义，只是一个数据的提供者，他只是对InheritedWidget的一层封装，方便我们对数据的操作。
+
+- 继承自InheritedProvider
+- 需要指定一个泛型T
+- 一个普通构造器和一个命名构造器
+- 一个静态方法static T of<T>(BuildContext context, {bool listen = true})，返回指定泛型为T的对象
+
+
+
+<br/><br/>
+
+
+> <h2 id='Provider种类'>Provider种类</h2>
+
+
+&emsp; 下面的这些Provider可以根据应用的具体需求选择使用，一般情况下，ChangeNotifierProvider是最常用的一种，特别适用于小到中等规模的应用。在使用时，通常将Provider包裹在MaterialApp的home属性或Builder中，确保Provider在整个应用中可用。
+
+
+<br/><br/><br/>
+
+> <h2 id='基础Provider'>基础Provider</h2>
+
+- 通用的提供者，可以提供任何类型的数据;
+- 使用create回调来提供初始值或创建对象;
+- 示例:
+
+```
+Provider<int>(
+  create: (context) => 42,
+  child: MyApp(),
+)
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='ValueListenableProvider'>ValueListenableProvider</h2>
+
+
+- 使用ValueListenable作为状态的提供者，当ValueListenable的值发生变化时，通知依赖进行更新;
+-  监听一个可被监听的值，并且只暴露ValueListenable.value方法
+- 适用于一些需要监听值变化的场景。
+- 示例:
+
+```
+ValueListenableProvider<int>(
+  create: (context) => ValueNotifier<int>(42),
+  child: MyApp(),
+)
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='ChangeNotifierProvider'>ChangeNotifierProvider</h2>
+
+- 使用ChangeNotifier作为状态的提供者，当数据发生变化时，通知依赖进行更新。
+- ListerableProvider依托于ChangeNotifier的一个实现，它将会在需要的时候自动调用ChangeNotifier.dispose方法
+- 用于简单的状态管理，适用于小规模的应用。
+- 示例代码：
+
+```
+ChangeNotifierProvider(
+  create: (context) => MyModel(),
+  child: MyApp(),
+)
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='StreamProvider'>StreamProvider</h2>
+
+- StreamProvider 监听一个流，并且暴露出其最近发送的值;
+- 使用Stream作为状态的提供者，当Stream有新数据时，通知依赖进行更新。
+- 适用于异步操作，如网络请求。
+- 示例代码：
+
+```
+StreamProvider<int>(
+  create: (context) => myStreamController.stream,
+  initialData: 42,
+  child: MyApp(),
+)
+```
+
+
+<br/><br/><br/>
+
+> <h2 id='FutureProvider'>FutureProvider</h2>
+
+- FutureProvider 接受一个Future作为参数，在这个Future完成的时候更新依赖;
+- 当Future完成时，通知依赖进行更新。
+- 示例代码：
+
+
+```
+FutureProvider<int>(
+  create: (context) => fetchData(),
+  initialData: 42,
+  child: MyApp(),
+)
+```
+
+
+
+<br/><br/><br/>
+
+
+> <h2 id='ListenableProvider'>ListenableProvider</h2>
+
+
+&emsp; ListenableProvider 是 Provider 库提供的一种特殊类型的提供者，用于管理实现了 Listenable 接口的对象的状态。Listenable 是 Flutter 中表示可监听变化的对象的接口，当对象的状态发生变化时，它会通知监听者进行更新。
+
+以下是一个使用 ListenableProvider 的简单例子，假设我们有一个 Counter 类，它实现了 Listenable 接口：
+
+```
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class Counter extends ChangeNotifier {
+  int _count = 0;
+
+  int get count => _count;
+
+  void increment() {
+    _count++;
+    notifyListeners(); // 通知监听者有变化
+  }
+}
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: ListenableProvider<Counter>(
+        create: (context) => Counter(),
+        child: MyHomePage(),
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Counter App'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Counter Value:',
+              style: TextStyle(fontSize: 18),
+            ),
+            Consumer<Counter>(
+              builder: (context, counter, child) {
+                return Text(
+                  '${counter.count}',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // 获取 Counter 实例并调用 increment 方法
+          Provider.of<Counter>(context, listen: false).increment();
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+```
+
+在这个例子中：
+
+- 我们有一个 Counter 类，它继承了 ChangeNotifier 并实现了 Listenable 接口，具有可监听的能力。
+- MyApp 中使用了 ListenableProvider，并提供了一个 Counter 的实例，以便在应用中共享和管理它的状态。
+- MyHomePage 中通过 Consumer 将 Counter 的值显示在 UI 中，并在按钮点击时调用 increment 方法。
+
+&emsp; 运行这个应用，你将看到一个简单的计数器应用，每次点击按钮都会增加计数器的值。ListenableProvider 用于管理实现了 Listenable 接口的状态对象，并在状态发生变化时通知相关的监听者进行更新。
+
+
+
+
 
 
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h1 id='数据'>数据</h1>
@@ -2081,9 +2327,8 @@ Flutter中使用最普遍的数据库软件包如下：
 - sqflite数据库：它允许访问和操作SQLite数据库。
 - Firebase数据库：它将使你能够访问和操作云数据库。
 
-<br/>
-<br/>
 
+<br/><br/>
 
 
 > <h2 id='Firebase数据库用途'>Firebase数据库用途</h2>
@@ -2091,8 +2336,7 @@ Flutter中使用最普遍的数据库软件包如下：
 Firebase数据库是Google提供的一种云数据库服务，用于存储和同步应用程序的数据。它是一种 NoSQL 数据库，具有实时同步的特性，适用于移动应用和 Web 应用。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='实时同步的实时应用程序'>实时同步的实时应用程序</h2>
@@ -2665,214 +2909,7 @@ Flutter的绘制流程如下图所示:
 &emsp; 可以发现，热重载提高了调试 UI 的效率，非常适合写界面样式这样需要反复查看修改效果的场景。但由于其状态保存的机制所限，热重载本身也有一些无法支持的边界。
 
 
-<br/>
-<br/>
-
-
-
-> <h2 id='Provider原理解析'>Provider原理解析</h2>
-
-&emsp; 打开源码，最先注意到的就是Provider类。 此Provider非标题中的Provider。此处的Provider 顾名思义，只是一个数据的提供者，他只是对InheritedWidget的一层封装，方便我们对数据的操作。
-
-- 继承自InheritedProvider
-- 需要指定一个泛型T
-- 一个普通构造器和一个命名构造器
-- 一个静态方法static T of<T>(BuildContext context, {bool listen = true})，返回指定泛型为T的对象
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id='Provider种类'>Provider种类</h2>
-
-
-&emsp; 下面的这些Provider可以根据应用的具体需求选择使用，一般情况下，ChangeNotifierProvider是最常用的一种，特别适用于小到中等规模的应用。在使用时，通常将Provider包裹在MaterialApp的home属性或Builder中，确保Provider在整个应用中可用。
-
-
-<br/><br/>
-
-> <h2 id='基础Provider'>基础Provider</h2>
-
-- 通用的提供者，可以提供任何类型的数据;
-- 使用create回调来提供初始值或创建对象;
-- 示例:
-
-```
-Provider<int>(
-  create: (context) => 42,
-  child: MyApp(),
-)
-```
-
-
-<br/><br/>
-
-> <h2 id='ValueListenableProvider'>ValueListenableProvider</h2>
-
-
-- 使用ValueListenable作为状态的提供者，当ValueListenable的值发生变化时，通知依赖进行更新;
--  监听一个可被监听的值，并且只暴露ValueListenable.value方法
-- 适用于一些需要监听值变化的场景。
-- 示例:
-
-```
-ValueListenableProvider<int>(
-  create: (context) => ValueNotifier<int>(42),
-  child: MyApp(),
-)
-```
-
-
-<br/><br/>
-
-> <h2 id='ChangeNotifierProvider'>ChangeNotifierProvider</h2>
-
-- 使用ChangeNotifier作为状态的提供者，当数据发生变化时，通知依赖进行更新。
-- ListerableProvider依托于ChangeNotifier的一个实现，它将会在需要的时候自动调用ChangeNotifier.dispose方法
-- 用于简单的状态管理，适用于小规模的应用。
-- 示例代码：
-
-```
-ChangeNotifierProvider(
-  create: (context) => MyModel(),
-  child: MyApp(),
-)
-```
-
-
-<br/><br/>
-
-> <h2 id='StreamProvider'>StreamProvider</h2>
-
-- StreamProvider 监听一个流，并且暴露出其最近发送的值;
-- 使用Stream作为状态的提供者，当Stream有新数据时，通知依赖进行更新。
-- 适用于异步操作，如网络请求。
-- 示例代码：
-
-```
-StreamProvider<int>(
-  create: (context) => myStreamController.stream,
-  initialData: 42,
-  child: MyApp(),
-)
-```
-
-
-<br/><br/>
-
-> <h2 id='FutureProvider'>FutureProvider</h2>
-
-- FutureProvider 接受一个Future作为参数，在这个Future完成的时候更新依赖;
-- 当Future完成时，通知依赖进行更新。
-- 示例代码：
-
-
-```
-FutureProvider<int>(
-  create: (context) => fetchData(),
-  initialData: 42,
-  child: MyApp(),
-)
-```
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id='ListenableProvider'>ListenableProvider</h2>
-
-
-&emsp; ListenableProvider 是 Provider 库提供的一种特殊类型的提供者，用于管理实现了 Listenable 接口的对象的状态。Listenable 是 Flutter 中表示可监听变化的对象的接口，当对象的状态发生变化时，它会通知监听者进行更新。
-
-以下是一个使用 ListenableProvider 的简单例子，假设我们有一个 Counter 类，它实现了 Listenable 接口：
-
-```
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-class Counter extends ChangeNotifier {
-  int _count = 0;
-
-  int get count => _count;
-
-  void increment() {
-    _count++;
-    notifyListeners(); // 通知监听者有变化
-  }
-}
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: ListenableProvider<Counter>(
-        create: (context) => Counter(),
-        child: MyHomePage(),
-      ),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Counter App'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Counter Value:',
-              style: TextStyle(fontSize: 18),
-            ),
-            Consumer<Counter>(
-              builder: (context, counter, child) {
-                return Text(
-                  '${counter.count}',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // 获取 Counter 实例并调用 increment 方法
-          Provider.of<Counter>(context, listen: false).increment();
-        },
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-```
-
-在这个例子中：
-
-- 我们有一个 Counter 类，它继承了 ChangeNotifier 并实现了 Listenable 接口，具有可监听的能力。
-- MyApp 中使用了 ListenableProvider，并提供了一个 Counter 的实例，以便在应用中共享和管理它的状态。
-- MyHomePage 中通过 Consumer 将 Counter 的值显示在 UI 中，并在按钮点击时调用 increment 方法。
-
-&emsp; 运行这个应用，你将看到一个简单的计数器应用，每次点击按钮都会增加计数器的值。ListenableProvider 用于管理实现了 Listenable 接口的状态对象，并在状态发生变化时通知相关的监听者进行更新。
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/><br/>

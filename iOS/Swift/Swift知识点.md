@@ -6,7 +6,7 @@
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 > <h2 id=""></h2>
@@ -21,18 +21,21 @@
 	- [静态多态和动态多态区别](#静态多态和动态多态区别)
 	- [数据解析中范型和协议有什么区别呢？(爱乐奇)](#数据解析中范型和协议有什么区别呢?)
 	- [map和flatMap区别(同程旅行)](#map和flatMap区别)
+	- [Set集合与NSArray、Dictionary区别(杭州腾展科技股份有限公司)](#Set集合与NSArray、Dictionary区别)
+	- [实例对象数组去重有哪几种方法(杭州腾展科技股份有限公司)](#实例对象数组去重有哪几种方法)
 	- [Any、AnyObject、AnyClass的区别](#AnyAnyObjectAnyClass的区别)
-	- [权限关键字(杭州腾展科技股份有限公司)](#权限关键字)
 	- [逃逸闭包怎么使用，它的关键字@escaping什么时候使用](#逃逸闭包使用)
 		- [逃逸闭包](#逃逸闭包)
 		- [非逃逸闭包](#非逃逸闭包)
 		- [自动闭包](#自动闭包)
-	- [什么是写时复制(copy-on-write)](#什么是写时复制(copy-on-write))
+	- [什么是写时复制(copy-on-write)(杭州腾展科技股份有限公司)](#什么是写时复制(copy-on-write))
 	- [值类型和引用类型](#值类型和引用类型)
 		- [区别](#区别)
 		- [什么时候使用值类型?什么时候使用引用类型?(杭州灵伴科技)](#什么时候使用值类型什么时候使用引用类型)
 		- [什么时候值类型会发生装箱](#什么时候值类型会发生装箱)
 	- [关键字](#关键字)
+		- [private、filePrivate、public、open权限关键字(杭州腾展科技股份有限公司、北京寰宇科技[加密货币交易说])](#private、filePrivate、public、open权限关键字)
+		- [guard使用(北京寰宇科技[加密货币交易说])](#guard使用)
 		- [final修饰符](#final修饰符)
 		- [dynamic](#dynamic)
 		- [@objc/@nonobjc](#@objc/@nonobjc)
@@ -122,17 +125,12 @@
 <br/>
 
 ***
-<br/>
-
-
-
-
+<br/><br/><br/>
 
 > <h1 id = "Swift基础">Swift基础</h1>
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='Swift相对于OC的优缺点'>Swift相对于OC的优缺点</h2>
@@ -205,7 +203,7 @@
 Swift是由苹果公司开发的编程语言，主要用于开发iOS、macOS和watchOS等应用程序。虽然Swift也可以用于开发服务器端应用程序和其他平台上的应用程序，但是它在跨平台方面的支持相对较弱，这可能会限制它在一些情况下的使用。
 
 
-
+<br/>
 
 当然我们可以根据某一点进行回答,比如:
 
@@ -218,8 +216,7 @@ Swift是由苹果公司开发的编程语言，主要用于开发iOS、macOS和w
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id = "缺省基类">[缺省基类](https://struggleblog.com/2020/06/22/swift的缺省基类/)</h2>
 
@@ -240,8 +237,7 @@ Swift是由苹果公司开发的编程语言，主要用于开发iOS、macOS和w
 - swift注重面向协议编程、函数式编程、面向对象编程，OC注重面向对象编程；
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id = "Swift和OC混编注意事项">Swift和OC混编注意事项</h2>
 
@@ -692,6 +688,118 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 ># <h2 id='map和flatMap区别'>[map和flatMap区别](./基础.md#map和flatMap区别)</h2>
 
 
+
+<br/><br/><br/>
+
+
+> <h2 id='Set集合与NSArray、Dictionary区别'>Set集合与NSArray、Dictionary区别</h2>
+
+
+[Set集合与NSArray、Dictionary区别](./基础.md#Set集合与NSArray、Dictionary区别)
+
+
+<br/><br/><br/>
+
+> <h2 id='实例对象数组去重有哪几种方法'>实例对象数组去重有哪几种方法</h2>
+
+ **疑问:** 实例对象数组去重,比如:实例对象元素有一个属性id,通过这个id去重相同元素,有哪几种方法?
+ 
+ 
+ **1.使用 Set 进行去重：**  如果实例对象的 id 属性遵循 Hashable 协议，您可以先将数组转换为一个 Set，然后再转回数组。由于 Set 自动去除了重复元素，这样就实现了基于 id 去除重复的目的。这种方法简单直接，但需要注意的是，转换过程中会丢失原数组的顺序，且要求 id 能够正确实现 Hashable。
+ 
+ ```
+ struct MyObject: Hashable {
+    let id: String // 假设id是String类型，且已经遵循了Hashable协议
+    // 其他属性...
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(lhs: MyObject, rhs: MyObject) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+var objectsArray = [MyObject(id: "1", ...), MyObject(id: "2", ...), MyObject(id: "1", ...)]
+
+// 由于Set会根据MyObject的Hashable实现去重，因此需要确保id是唯一标识符
+let uniqueObjectsSet: Set<MyObject> = Set(objectsArray)
+
+// Set会自动去除重复元素，但顺序会被打乱
+let uniqueObjectsArray = Array(uniqueObjectsSet)
+
+// 若要保持原数组中首次出现的元素顺序，可以使用一个字典辅助
+var uniqueObjectsOrdered: [MyObject] = []
+var dictionaryOfObjects: [String: MyObject] = [:]
+for obj in objectsArray {
+    if dictionaryOfObjects[obj.id] == nil {
+        uniqueObjectsOrdered.append(obj)
+        dictionaryOfObjects[obj.id] = obj
+    }
+}
+```
+
+
+上面的代码中，MyObject遵循了Hashable协议，并正确实现了hash(into:)方法和==运算符，确保Set可以根据id进行去重。然后，我们创建了一个Set，其中包含了objectsArray中不重复的MyObject实例。若需要保持原数组中首次出现的元素顺序，可以使用一个字典记录每个id对应的首个对象，并最终将字典的值转换为数组。
+
+然而，如果只是想根据id去重，而不在乎其他属性，那么需要先将id收集到Set中，然后再结合原始数组重构不重复的对象数组，但这通常不是一个理想的解决方案，因为它破坏了原始对象的完整性(这句话的意思说先获取id数组,在根据实例对象数组进行遍历,性能有点低)。在实际场景中，通常还是按照上述方法，确保整个对象都是Hashable的，并根据整个对象去重。
+
+
+<br/>
+
+**遵循Hashable协议代码解读:**
+
+对于上述代码中MyObject遵循Hashable 协议并实现 hash(into:) 和 == 方法,这意味着在将 objectsArray 中的元素放入 Set 时，Swift 会调用这些方法来判断两个 MyObject 是否代表相同的元素。
+
+如果您已经在 MyObject 中正确实现了 hash(into:) 和 == 方法，使其基于 id 属性进行比较，那么 Set 会根据 id 去除重复的 MyObject 实例。换句话说，uniqueObjectsSet 中的元素将是 id 不重复的 MyObject 实例。
+
+接下来，将 uniqueObjectsSet 转换为数组 uniqueObjectsArray 时，得到的数组包含的是完整的 MyObject 实例，而不只是 id 数组。因此，uniqueObjectsArray 中的元素是去重后的 MyObject 实例，且它们的 id 属性各不相同。
+
+<br/><br/>
+
+
+**2.使用 Dictionary 进行去重：** 若 id 属性也是唯一标识符，可以利用 Dictionary 的键值对特性来达到去重目的。将 id 作为键，实例对象作为值，由于字典不允许键重复，所以最终字典中只会保留每个唯一 id 对应的一个对象。之后可将字典的值数组取出，得到去重后的结果。
+
+```
+var uniqueObjects = Dictionary(grouping: objectsArray, by: { $0.id }).values.map { $0.first! }
+```
+此处使用 grouping(_:by:) 方法将数组按 id 分组，得到一个字典，然后取字典的值（即每个 id 对应的对象组），最后使用 map 取每个组的第一个对象，得到去重后的数组。
+
+
+<br/><br/>
+
+**3.使用数组进行遍历移除**
+
+这个就不多说了,基本都会!也就是直接遍历了!
+
+
+<br/><br/>
+
+
+**4.使用 reduce 或 filter 结合 indexOf(where:)：** 如果要保持原数组顺序且不使用额外数据结构，可以结合 reduce 或 filter 与 indexOf(where:) 方法来实现。这里以 reduce 为例：
+
+```
+var uniqueObjects = objectsArray.reduce(into: []) { (result, object) in
+    if !result.contains(where: { $0.id == object.id }) {
+        result.append(object)
+    }
+}
+```
+
+此处使用 reduce 初始化一个新的空数组 result，在遍历过程中检查当前元素是否已存在于 result 中，如果不存在，则将其添加到 result 中。最后得到的 result 就是去重后的数组。
+
+
+
+
+ 
+ 
+ 
+ 
+
+
+
+
 <br/><br/>
 
 
@@ -740,18 +848,12 @@ array
 &emsp; 顺便值得一提的是，只使用 Swift 类型而不转为 Cocoa 类型，对性能的提升是有所帮助的，所以我们应该尽可能地使用原生的类型。
 
 
-<br/><br/><br/>
-
-> <h2 id='权限关键字'>权限关键字</h2>
-
-[private、filePrivate、public、open](./关键字.md#访问权限关键字使用)
-
-
 
 <br/><br/>
 
 > <h2 id="逃逸闭包使用">逃逸闭包怎么使用，它的关键字@escaping什么时候使用</h2>
 
+<br/>
 
 > <h3 id='逃逸闭包'>逃逸闭包</h3>
 
@@ -810,15 +912,10 @@ class ViewController: UIViewController {
 即逃逸闭包的生命周期长于函数，函数退出的时候，逃逸闭包的引用仍被其他对象持有，不会在函数结束时释放。
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h3 id='非逃逸闭包'>非逃逸闭包</h3>
-
-
-
-
 
 &emsp; **非逃逸闭包概念：** 一个接受闭包作为参数的函数， 闭包是在这个函数结束前内被调用。
 例如：
@@ -872,11 +969,7 @@ class ViewController: UIViewController {
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/><br/>
 
 
 > <h3 id='自动闭包'>自动闭包</h3>
@@ -920,15 +1013,7 @@ autoClosureFunction(1)
 
 
 
-<br/>
-<br/>
-
-
-> <h3 id=''></h3>
-
-
-<br/>
-<br/>
+<br/><br/><br/>
 
 > <h2 id="什么是写时复制(copy-on-write)">什么是写时复制(copy-on-write)</h2>
 
@@ -1176,12 +1261,27 @@ func foo(x: inout Int) {
 
 
 
-<br/><br/>
+<br/><br/><br/><br/>
 
 
 > <h2 id="关键字">关键字</h2>
 
 <br/>
+
+> <h2 id='private、filePrivate、public、open权限关键字'>private、filePrivate、public、open权限关键字</h2>
+
+
+[private、filePrivate、public、open](./关键字.md#访问权限关键字使用)
+
+
+<br/><br/><br/>
+
+> <h2 id='guard使用'>guard使用</h2>
+
+[guard关键字使用](./关键字.md#guard)
+
+
+<br/><br/><br/>
 
 > <h3 id="final修饰符">final修饰符</h3>
 
@@ -1199,11 +1299,7 @@ func foo(x: inout Int) {
 	- 而且 final 作用范围的方法，都不会被 export 到 OC runtime，也不会生成 selector
 
 
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h3 id='dynamic'>dynamic</h3>
 

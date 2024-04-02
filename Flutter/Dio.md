@@ -1,7 +1,7 @@
 > <h2 id=''></h2>
 - [**Dio**](#Dio)
 	- [Get请求](#Get请求)
-	- [取消请求](#取消请求)
+	- [取消请求CancelToken](#取消请求CancelToken)
 - [Charles抓取Flutter网络请求](#Charles抓取Flutter网络请求)
 	- [开源接口网站](#开源接口网站)
 
@@ -58,7 +58,7 @@
 
 <br/><br/><br/>
 
-> <h2 id='取消请求'>取消请求</h2>
+> <h2 id='取消请求CancelToken'>取消请求CancelToken</h2>
 
 在 Flutter 中，CancelToken 是由 dio 库提供的，用于取消 Dio 发起的 HTTP 请求。Dio 是一个流行的 Flutter HTTP 客户端库，提供了丰富的功能和良好的性能。以下是关于 Dio 中 CancelToken 的详细说明及示例：
 

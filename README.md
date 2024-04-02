@@ -274,8 +274,9 @@
 	*	[BRPlay](./Flutter/BRPlay.md)
 	*	[WMShare](./Flutter/WMShare.md)
 	*	[Dio](./Flutter/Dio.md)
+	*	[rxdart](./Flutter/rxdart.md)
 	*	[oktoast](./Flutter/oktoast.md)
-*	[**‌配置命令**](./Flutter/配置命令.md)
+*	[**‌Flutter常用命令**](./Flutter/Flutter常用命令.md)
 
 
 <br/>

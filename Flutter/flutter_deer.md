@@ -26,6 +26,8 @@
 	- [Dio网络库](#Dio网络库)
 		- [扩展拦截器类](#扩展拦截器类)
 		- [CancelToken](#CancelToken)
+	- [rxdart](#rxdart)
+		- [BehaviorSubject](#BehaviorSubject)
 	- [fluro路由组件](#fluro路由组件)
 	- [FluroRouter路由](#FluroRouter路由)
 	- [cached_network_image-图片加载](#cached_network_image-图片加载)
@@ -1318,72 +1320,22 @@ class MyResponseInterceptor extends Interceptor {
 
 > <h2 id='CancelToken'>CancelToken</h2>
 
-&emsp; CancelToken 通常与异步任务和取消相关的库（例如 dio 等）一起使用，用于在需要时取消异步操作。CancelToken 包含一个用于取消异步任务的令牌，以及一些与取消相关的方法，如 isCancel。
 
-- CancelToken 中的 isCancel 方法用于检查是否已取消相应的异步任务。让我们来详细解释一下：
-
-	- 	1.CancelToken 介绍： CancelToken 是由 Dart 异步任务取消库提供的一部分。它允许你在进行异步任务时注册取消回调，并在需要时取消任务。这对于处理网络请求、定时器或其他可能需要被中断的异步任务非常有用。
-	
-	- 	2.isCancel 方法： isCancel 是 CancelToken 类中的一个方法。它用于检查当前的令牌是否已经被取消。方法的定义如下：
-
-```
-bool isCancel(dynamic e) {
-  // Implementation details
-}
-```
-
-isCancel 方法接受一个参数 e，通常是捕获到的异常对象。它会检查该异常对象是否与取消相关，如果是取消异常，则返回 true；否则返回 false。这是用于在处理异步任务时检查是否应该取消任务的便捷方法。
+CancelToken使用[**‌看这里**](./Dio.md#取消请求CancelToken)
 
 
-- 3.使用 CancelToken： 通常，在发起异步任务之前，你会创建一个 CancelToken 对象，并将其传递给异步任务。当需要取消任务时，你可以调用 cancel 方法，这将触发与该令牌相关的所有回调。在异步任务中，你可以使用 isCancel 方法检查是否应该取消任务。
+<br/>
 
-```
-import 'dart:async';
+***
+<br/><br/><br/>
 
-void main() {
-  // 创建 CancelToken 对象
-  CancelToken cancelToken = CancelToken();
+> <h1 id='rxdart'>rxdart</h1>
 
-  // 模拟异步任务
-  Future<void> asyncTask(CancelToken token) async {
-    try {
-      // 在异步任务中使用 isCancel 方法检查是否已取消
-      if (token.isCancel()) {
-        print('Task is cancelled');
-        return;
-      }
+<br/><br/><br/>
 
-      // 模拟异步操作
-      await Future.delayed(Duration(seconds: 2));
+> <h2 id='BehaviorSubject'>BehaviorSubject</h2>
 
-      // 在异步任务中再次检查是否已取消
-      if (token.isCancel()) {
-        print('Task is cancelled');
-        return;
-      }
-
-      // 完成异步任务
-      print('Task completed');
-    } catch (e) {
-      // 处理异常
-      if (token.isCancel(e)) {
-        print('Task is cancelled');
-      } else {
-        print('Error: $e');
-      }
-    }
-  }
-
-  // 启动异步任务
-  asyncTask(cancelToken);
-
-  // 在需要的时候取消任务
-  cancelToken.cancel();
-}
-```
-
-&emsp; isCancel 方法用于在异步任务中检查是否已取消任务。请注意，在取消时，可能会抛出 CancelException 或其他与取消相关的异常，isCancel 方法用于检查异常是否与取消有关。
-
+[BehaviorSubject用法](./rxdart.md#用法)
 
 
 <br/><br/>
