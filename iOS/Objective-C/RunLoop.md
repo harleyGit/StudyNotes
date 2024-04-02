@@ -26,7 +26,6 @@
 		- [事件处理与输入事件](#事件处理与输入事件)
 		- [runUntilDate对事件输入源的影响](#runUntilDate对事件输入源的影响)
 - [**RunLoop使用**](#RunLoop使用)
-	- [卡顿原因](#卡顿原因)
 	- [Runloop6种状态](#Runloop6种状态)
 	- [监测卡顿](#监测卡顿)
 	- [看门狗WatchDog](#看门狗WatchDog)
@@ -1507,7 +1506,7 @@ cancelPreviousPerformRequestsWithTarget:selector:object:
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 
 
@@ -1584,12 +1583,64 @@ int main(void) {
 ![RunLoop 运行流程](https://upload-images.jianshu.io/upload_images/2959789-dfca2e040b3b6ee1.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 
 > <h2 id='RunLoop运行步骤'>RunLoop运行步骤</h2>
+
+
+```
+int32_t __CFRunLoopRun()
+{
+    // 通知即将进入runloop
+    __CFRunLoopDoObservers(KCFRunLoopEntry);
+    
+    do
+    {
+        // 通知将要处理timer和source
+        __CFRunLoopDoObservers(kCFRunLoopBeforeTimers);
+        __CFRunLoopDoObservers(kCFRunLoopBeforeSources);
+        
+        // 处理非延迟的主线程调用
+        __CFRunLoopDoBlocks();
+        // 处理UIEvent事件
+        __CFRunLoopDoSource0();
+        
+        // GCD dispatch main queue
+        CheckIfExistMessagesInMainDispatchQueue();
+        
+        // 即将进入休眠
+        __CFRunLoopDoObservers(kCFRunLoopBeforeWaiting);
+        
+        // 等待内核mach_msg事件
+        mach_port_t wakeUpPort = SleepAndWaitForWakingUpPorts();
+        
+        // Zzz...
+        
+        // 从等待中醒来
+        __CFRunLoopDoObservers(kCFRunLoopAfterWaiting);
+        
+        // 处理因timer的唤醒
+        if (wakeUpPort == timerPort)
+            __CFRunLoopDoTimers();
+        
+        // 处理异步方法唤醒,如dispatch_async
+        else if (wakeUpPort == mainDispatchQueuePort)
+            __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()
+            
+        // UI刷新,动画显示
+        else
+            __CFRunLoopDoSource1();
+        
+        // 再次确保是否有同步的方法需要调用
+        __CFRunLoopDoBlocks();
+        
+    } while (!stop && !timeout);
+    
+    // 通知即将退出runloop
+    __CFRunLoopDoObservers(CFRunLoopExit);
+}
+```
+
 
 <br/>
 
@@ -2180,8 +2231,7 @@ int main(int argc, char * argv[]) {
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 另一种方法是，直接用 PLCrashReporter这个开源的第三方库来获取堆栈信息。这种方法的特点是，能够定位到问题代码的具体位置，而且性能消耗也不大。所以，也是我推荐的获取堆栈信息的方法。
 
@@ -2202,70 +2252,33 @@ NSLog(@"lag happen, detail below: \n %@",lagReportString);
 从监控卡顿到收集卡顿问题信息的[完整代码](https://github.com/ming1016/DecoupleDemo/blob/master/DecoupleDemo/SMLagMonitor.m)
 
 
-
-
-<br/>
-<br/>
-
-
-**`CFRunLoop 监控卡顿流程`**
-
-```
-int32_t __CFRunLoopRun()
-{
-    // 通知即将进入runloop
-    __CFRunLoopDoObservers(KCFRunLoopEntry);
-    
-    do
-    {
-        // 通知将要处理timer和source
-        __CFRunLoopDoObservers(kCFRunLoopBeforeTimers);
-        __CFRunLoopDoObservers(kCFRunLoopBeforeSources);
-        
-        // 处理非延迟的主线程调用
-        __CFRunLoopDoBlocks();
-        // 处理UIEvent事件
-        __CFRunLoopDoSource0();
-        
-        // GCD dispatch main queue
-        CheckIfExistMessagesInMainDispatchQueue();
-        
-        // 即将进入休眠
-        __CFRunLoopDoObservers(kCFRunLoopBeforeWaiting);
-        
-        // 等待内核mach_msg事件
-        mach_port_t wakeUpPort = SleepAndWaitForWakingUpPorts();
-        
-        // Zzz...
-        
-        // 从等待中醒来
-        __CFRunLoopDoObservers(kCFRunLoopAfterWaiting);
-        
-        // 处理因timer的唤醒
-        if (wakeUpPort == timerPort)
-            __CFRunLoopDoTimers();
-        
-        // 处理异步方法唤醒,如dispatch_async
-        else if (wakeUpPort == mainDispatchQueuePort)
-            __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()
-            
-        // UI刷新,动画显示
-        else
-            __CFRunLoopDoSource1();
-        
-        // 再次确保是否有同步的方法需要调用
-        __CFRunLoopDoBlocks();
-        
-    } while (!stop && !timeout);
-    
-    // 通知即将退出runloop
-    __CFRunLoopDoObservers(CFRunLoopExit);
-}
-```
-
-
-
 <br/><br/>
+
+**疑问:** 在Runloop中为什么检测卡顿要检测kCFRunLoopBeforeSources和kCFRunLoopAfterWaiting状态?
+
+
+在iOS或macOS应用开发中，RunLoop（运行循环）是线程的基础组成部分，它管理着线程的生命周期和事件处理流程。检测卡顿的核心在于监控主线程是否及时地处理完事件并继续流转至下一个循环阶段，尤其是UI更新相关的事件。
+
+<br/>
+
+检测卡顿之所以选择监测kCFRunLoopBeforeSources和kCFRunLoopAfterWaiting这两个状态，**原因在于：**
+
+
+- **kCFRunLoopBeforeSources：**
+
+这个状态发生在RunLoop准备处理sources（源）事件之前。sources事件包括来自内核和其他线程的异步事件，如触屏事件、网络请求完成等。如果在这个阶段停留时间过长，可能意味着有大量事件等待处理，或者有某个事件处理阻塞了主线程。
+
+<br/>
+
+- **kCFRunLoopAfterWaiting：**
+
+这个状态发生在RunLoop从休眠状态唤醒后，即RunLoop刚刚结束了一个等待周期（可能是因为超时或者接收到一个事件）。如果RunLoop在等待状态和恢复处理之间耗时过长，那么可能是发生了长时间的阻塞操作，如CPU密集型计算、IO操作或者锁争抢等情况，这些都是造成卡顿的常见原因。
+
+
+通过测量这两个状态之间的耗时，可以有效地判断主线程是否出现了执行延迟，进而推测是否存在卡顿风险。若此段时间超出预期阈值，则很可能表明主线程正在经历性能瓶颈，应该对此时段内的执行情况进行进一步分析，找出可能的卡顿源头。这样一来，开发者就可以针对性地优化代码，避免长时间阻塞主线程，从而提升应用的流畅度和用户体验。
+
+
+<br/><br/><br/>
 
 > <h2 id='看门狗WatchDog'>看门狗WatchDog</h2>
 
