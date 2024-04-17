@@ -1,4 +1,4 @@
-- [**OC知识点(I)**](./../Objective-C/知识点(I).md)
+- [**OC知识点**](./../Objective-C/OC知识点.md)
 - [**React知识点**](./../../React/React知识点.md)
 - [**Flutter知识点**](./../../Flutter/Flutter知识点.md)
 
