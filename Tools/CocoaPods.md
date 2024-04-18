@@ -3,9 +3,19 @@
 	- [工作基本指令](#工作基本指令)
 	- [pod update 和 pod install](#podupdate和podinstall)
 - [**RVM安装**](#RVM安装)
+- [**安装Ruby**](#安装Ruby)
+	- [安装最新ruby](#安装最新ruby)
 - [**CocoaPosds**](#CocoaPosds)
 	- [**安装**](#安装) 
+		- [检测pod是否安装成功](#检测pod是否安装成功)
+			- [出错: Unable to xxx](#出错:Unabletoxxx)
+				- [在Intel芯片OS14.4错误:Unable to find a pod with name](#在Intel芯片OS14.4错误:Unabletofindapodwithname)
 	- [M1安装](#M1安装)
+	- [安装ruby](#安装ruby)
+		- [问题1:CFLAGS=-O3](#问题1:CFLAGS=-O3)
+		- [问题2:__rvm_make-j8](#问题2:__rvm_make-j8)
+			- [问题2.1:Intel系列OS14.4——__rvm_make-j8](#问题2.1:Intel系列OS14.4——__rvm_make-j8)
+		- [安装cocoapods(macOS10.11之后使用)](#安装cocoapods(macOS10.11之后使用))
 	- [**错误解决方案**](#错误解决方案)
 	- [**卸载CocoaPosds**](#卸载CocoaPosds)
 - **资料**
@@ -16,12 +26,11 @@
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 > <h1 id="使用">使用</h1>
 
 <br/>
-
 
 > <h2 id="工作基本指令">工作基本指令</h2>
 
@@ -64,7 +73,7 @@ pod repo update
 更新一下。
 
 
-<br/>
+<br/><br/><br/>
 
 > <h2 id ='podupdate和podinstall'>pod update 和 pod install</h2>
 
@@ -84,9 +93,7 @@ pod repo update
 终端输入：
 
 ```
-
 pod update 
-
 ```
 
 <br/>
@@ -96,11 +103,10 @@ pod update
 ![无法更新，错误提示](https://upload-images.jianshu.io/upload_images/2959789-9df1e959b994c491.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 **`解决方法`**
+
 <br/>
 
 终端输入：
-
-<br/>
 
 ```
 //pod repo update命名是用来更新本地cocoapods的spec资源配置信息
@@ -125,8 +131,7 @@ pod update
 然后再次在终端输入：`pod update`即可。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 - `pod deintegrate`
 
@@ -143,7 +148,7 @@ pod update
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 ># <h1 id = "RVM安装">RVM安装</h1>
 
@@ -156,37 +161,49 @@ pod update
 &emsp;`Ruby Version Manager`简称`RVM`,是一款非常好用的`ruby`版本管理以及安装工具
 
 **①查看是否安装RVM**
-`rvm -v`
 
 ```
+rvm -v
+
 //没有安装rvm
 zsh: command not found: rvm 
 ```
 
 **②安装RVM**
 
-`curl -L https://get.rvm.io | bash -s stable`
+```
+curl -L https://get.rvm.io | bash -s stable
+```
+
+<br/>
+
 检查RVM是否安装上了
 
-`rvm -v`
-
 ```
+rvm -v
+
 //没有安装上
 zsh: command not found: rvm
 ```
+
 这是因为没有从终端载入，这时可以这么做：
 
-`source ~/.rvm/scripts/rvm `
+```
+source ~/.rvm/scripts/rvm 
+```
 
 然后检查RVM的版本：
 
-`rvm -v`
+
 
 ```
+rvm -v
+
 rvm 1.29.9 (latest) by Michal Papis, Piotr Kuczynski, Wayne E. Seguin [https://rvm.io]
 ```
 这时说媒RVM已经安装上了，这时可以进行Ruby的安装了。
 
+<br/><br/>
 
 &emsp; 但有时像上述进行安装RVM可能一直失败，所有我们需要换另一种方式进行下载`离线下载`[官网离线下载](https://rvm.io/rvm/offline)，如下面：
 
@@ -211,16 +228,20 @@ $ source ~/.rvm/scripts/rvm
 
 
 <br/>
->②安装Ruby
 
+***
+<br/><br/><br/>
 
+> <h2 id='安装Ruby'>安装Ruby</h2>
+
+**②安装Ruby**
 
 <br/>
 
 **`更换镜像源`**
+
 -  ruby 默认的原地址是国外网络地址，通过下面命令查看当前的镜像:
 
-`gem sources -l`
 
 ```
 gem sources -l
@@ -229,23 +250,27 @@ gem sources -l
 https://rubygems.org/
 ```
 
--  移除当前镜像
+<br/>
 
-`gem sources --remove https://rubygems.org/`
+-  移除当前镜像
 
 ```
 gem sources --remove https://rubygems.org/
 https://rubygems.org/ removed from sources
 ```
 
--  添加国内的 ruby 镜像
 
-`gem sources -a https://gems.ruby-china.com`
+<br/>
+
+-  添加国内的 ruby 镜像
 
 ```
 gem sources -a https://gems.ruby-china.com
+
 https://gems.ruby-china.com added to sources
 ```
+
+<br/>
 
 -  再次查看当前镜像,发现已经替换成功
 
@@ -256,12 +281,19 @@ gem sources -l
 https://gems.ruby-china.com/
 ```
 
-<br/>
+
+<br/><br/><br/>
+
+> <h2 id='安装最新ruby'>安装最新ruby</h2>
+
 
 **`安装最新ruby`**
+
 -  查看Ruby已有的版本，安装最新的：
 
-`rvm list known`
+```
+rvm list known
+```
 
 ![Ruby的版本](https://upload-images.jianshu.io/upload_images/2959789-9c334a8624c135e6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -270,24 +302,28 @@ https://gems.ruby-china.com/
 `rvm install 2.7`
 
 &emsp;  在漫长的下载，编译过程，完成以后，Ruby, Ruby Gems 就安装好了。这期间若`Honebrew`没有安装，则在此过程中会进行自动安装。
+
 ![安装HomeBrew 失败](https://upload-images.jianshu.io/upload_images/2959789-1365b1d4b7c13293.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 -  即使`HomeBrew `没有安装好也可以安装CocoaPods(这是错的，必须安装否则无法安装Ruby)，检查Ruby是否安装好了(查看自己Mac的ruby源)：
-`ruby -v`
-```
+
+``` 
+ruby -v
+
 ruby 2.6.3p62 (2019-04-16 revision 67580) [universal.x86_64-darwin19]
 ```
+
 -	传说 CocoaPods 支持的 ruby 最低版本是2.2.2，如果自己电脑版本低于这个版本就升级 ruby ，上面显示我的电脑版本不需要升级，可以忽略下面的升级操作
 `sudo gem update --system`
 
 
-<br/>
+<br/> <br/>
 
 **`查询已经安装的ruby`**
 
-`rvm list`
-
 ```
+rvm list
+
 //提示rvm rubies还没有安装
 # No rvm rubies installed yet. Try 'rvm help install'.
 ```
@@ -298,9 +334,6 @@ ruby 2.6.3p62 (2019-04-16 revision 67580) [universal.x86_64-darwin19]
 rvm help install
 ```
 
-在终端输入
-
-`rvm help install`
 
 在输出的内容中找到下图的版本号，然后找到指定的版本号进行安装
 
@@ -308,11 +341,17 @@ rvm help install
 
 但是上图的版本号有点旧，我们可以用命令：
 
-`rvm list known`
+```
+rvm list known
+```
+
+<br/>
 
 查看版本号，然后选中一个版本号进行安装(这里我选择2.6.3版本)：
 
-`rvm install 2.6.3 --default`
+```
+rvm install 2.6.3 --default
+```
 
 会报下面的错误
 
@@ -320,22 +359,35 @@ rvm help install
 
 若出现如上问题说明Mac上没有安装Homebrew(若是安装了，这一步可以直接跳过) ,需要先安装：
 
-` ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+```
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
 在这里需要等待大概要2小时，可以看会剧比如：`海贼王、庆余年等`，安装成功后提示:
 
 ![安装成功提示](https://upload-images.jianshu.io/upload_images/2959789-2368f35b3b34d5d3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+<br/><br/>
+
 在终端输入：
 
-`brew help`
+```
+brew help
+```
 
 终端提示
 
 ![提示](https://upload-images.jianshu.io/upload_images/2959789-d09d056de35bc769.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+<br/><br/>
+
 强制退出终端，然后重新打开终端，输入：
 
-` rvm install 2.6.3`
+```
+rvm install 2.6.3
+```
+
+<br/>
 
 安装后，提示
 
@@ -346,9 +398,10 @@ Ruby was built without documentation, to build it run: rvm docs generate-ri
 
 终端输入：
 
-`rvm docs generate-ri`
-
 ```
+rvm docs generate-ri
+
+
 RVM version 1.29.9-next (master) is installed, yet version 1.29.9 (latest) is loaded.
 
 Please open a new shell or run one of the following commands:
@@ -360,25 +413,23 @@ Please open a new shell or run one of the following commands:
 
 按照提示重新打开一个Shell或者输入命令，这里输入命令：
 
-`rvm reload`
-
 ```
+rvm reload
+
+
 RVM reloaded!
 ```
 
 更新Ruby版本
 
-`rvm install 2.7.0-preview1`
+```
+rvm install 2.7.0-preview1
+```
 
 <br/>
-
-
-
-<br/>
-
 
 ***
-<br/>
+<br/><br/><br/>
 
 ># <h1 id = "CocoaPosds">CocoaPosds</h1>
 
@@ -404,24 +455,34 @@ Mac为 OS X 10.11以后系统的安装cocoapods 指令
 
 - 安装本地库
 
-`pod setup`
+```
+pod setup
+```
+
+<br/>
 
 - 查看 Cocoapods 版本
 
-`pod --version`
-
 ```
+pod --version
+
+
 1.9.0.beta.3
 ```
 
 
+<br/><br/>
+
 -  **对安装后的CocoaPods进行测试：**
 
 `pod search RxSwift` 或者 `pod install`,会出现：
+
 ![pod search 失败提示](https://upload-images.jianshu.io/upload_images/2959789-7a3f49197f6a92cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 ![pod install 失败提示](https://upload-images.jianshu.io/upload_images/2959789-88b40a784489d24b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+<br/> <br/>
 
 -  **查看repo**
 
@@ -444,8 +505,11 @@ trunk
 会发现有**`2 repo`**，针对于上面的 CDN 错误，我们要删除一个。更新使用`pod repo update `
 
 -  解决[!]CDN: 错误:
+
 在 podfile文件中添加source源:
 `source 'https://github.com/CocoaPods/Specs.git'`
+
+<br/> <br/>
 
 &emsp;  podfile文件中添加source源后，pod install和pod update可以正常操作，但是pod search有些库却不正常,此时可以在终端执行:
 `pod repo remove trunk`
@@ -453,9 +517,20 @@ trunk
 &emsp;  Trunk 是用来自己写了一些类库上传到CocoaPods，但是这里我暂时用不到所以用不到，说以删除了。若是以后用到，可以自己重新添加进行配置Trunk。要重新创建请看[这里](https://www.jianshu.com/p/2572935ee006)
 
 
+<br/><br/>
+
+> <h2 id='检测pod是否安装成功'>检测pod是否安装成功</h2>
+
+
 - **再次检测是否成功，终端输入**
 
-`pod search AFNetworking`
+```
+pod search AFNetworking
+```
+
+<br/><br/><br/>
+
+> <h2 id='出错:Unabletoxxx'>出错:Unable to xxx</h2>
 
 报错：
 
@@ -463,19 +538,98 @@ trunk
 [!] Unable to find a pod with name, author, summary, or description matching `AFNetworking`
 ```
 
--  不幸的事是又失败了，使出撒手锏
+<br/><br/>
 
-`git clone https://git.coding.net/CocoaPods/Specs.git ~/.cocoapods/repos/master`
+
+-  不幸的是又失败了，使出撒手锏
+
+```
+git clone https://git.coding.net/CocoaPods/Specs.git ~/.cocoapods/repos/master
+```
+
 这时候`pod serarch Snapkit` 事没问题了
+
+
+<br/><br/><br/>
+
+> <h2 id='在Intel芯片OS14.4错误:Unabletofindapodwithname'>在Intel芯片OS14.4错误:Unable to find a pod with name</h2>
+
+```
+pod repo remove master
+ 
+cd ~/.cocoapods/repos
+
+git clone --depth 1 https://github.com/CocoaPods/Specs.git master
+ 
+rm ~/Library/Caches/CocoaPods/search_index.json
+ 
+pod search MJ
+```
+
+注意上述要在良好的网络环境下才可以,否则会出错!如下:
+
+```
+[!] /usr/local/bin/git clone https://github.com/CocoaPods/Specs.git -- master
+
+正克隆到 'master'...
+错误：RPC 失败。curl 92 HTTP/2 stream 5 was not closed cleanly: CANCEL (err 8)
+错误：预期仍然需要 4915 个字节的正文
+fetch-pack: unexpected disconnect while reading sideband packet
+致命错误：过早的文件结束符（EOF）
+致命错误：fetch-pack：无效的 index-pack 输出
+```
+
+<br/>
+若是出现下面的错误:
+
+```
+正克隆到 'master'...
+remote: Enumerating objects: 1458219, done.
+remote: Counting objects: 100% (1458219/1458219), done.
+remote: Compressing objects: 100% (844228/844228), done.
+错误：RPC 失败。curl 92 HTTP/2 stream 5 was not closed cleanly: CANCEL (err 8)
+错误：预期仍然需要 6021 个字节的正文
+fetch-pack: unexpected disconnect while reading sideband packet
+致命错误：过早的文件结束符（EOF）
+致命错误：fetch-pack：无效的 index-pack 输出
+```
+
+**请执行:**
+
+```
+repos % git config --global http.version HTTP/1.1
+```
+
+然后再执行:
+
+```
+pod repo remove master
+ 
+cd ~/.cocoapods/repos
+
+git clone --depth 1 https://github.com/CocoaPods/Specs.git master
+ 
+rm ~/Library/Caches/CocoaPods/search_index.json
+ 
+pod search MJ
+```
+
+
+
+<br/><br/>
 
 
 -  终端输入安装出错
 
-`pod install`
+```
+pod install
+```
 
 如下错误：
 
-`[!] Unable to add a source with url [https://github.com/CocoaPods/Specs.git](https://link.zhihu.com/?target=https%3A//links.jianshu.com/go%3Fto%3Dhttps%253A%252F%252Fgithub.com%252FCocoaPods%252FSpecs.git) named master. You can try adding it manually in ~/.cocoapods/repos or via pod repo add `
+```
+[!] Unable to add a source with url [https://github.com/CocoaPods/Specs.git](https://link.zhihu.com/?target=https%3A//links.jianshu.com/go%3Fto%3Dhttps%253A%252F%252Fgithub.com%252FCocoaPods%252FSpecs.git) named master. You can try adding it manually in ~/.cocoapods/repos or via pod repo add 
+```
 
 在终端依次输入然后回车：
 
@@ -492,11 +646,7 @@ git clone https://github.com/CocoaPods/Specs.git master
 &emsp;  这时再次使用pod install 和 pod update ，如丝滑般流畅，就这破东西整了一天，记住不要轻易升级系统和新的版本Cocoapods否则后面的坑一个接着一个来。
 
 
-
-<br/>
-
-***
-<br/>
+<br/><br/><br/>
 
 
 
@@ -527,8 +677,6 @@ git clone https://github.com/CocoaPods/Specs.git master
 /bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
 ```
 
-
-
 ![国内源地址选择](./../Pictures/tool_pod4.png)
 
 
@@ -550,7 +698,9 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 更新 Homebrew
 
-`brew update`
+```
+brew update
+```
 
 <br/>
 
@@ -562,9 +712,7 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 
 
-<br/>
-
-
+<br/><br/><br/>
 
 在终端输入：
 
@@ -580,6 +728,8 @@ git clone https://github.com/CocoaPods/Specs.git master
 
 &emsp; 激动人心的时刻到了，终于下载了！但是要注意，在下载完后要注意 **Warning** 否则会导致意想不到的问题，一定按照其 **Warning** 提示进行操作。
 
+<br/> <br/>
+
 &emsp; 执行环境变量，添加 **Homebrew** 到 **/Users/zhoujiebing/.zprofile**文件的**PATH**中，执行下面命令即可:
 
 ```
@@ -591,23 +741,28 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 &emsp; 如果你不确定可以先试试命令brew help ,如果提示没有此命令,那就需要执行上面的两行命令了.执行了之后再次输入brew help 就会列出帮助信息了,那就说明你的homebrew安装好了,可以用了!
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
-> **安装ruby**
+> <h2 id='安装ruby'>安装ruby</h2>
 
 ```
 rvm install 3.0.0
 ```
 
 
-<br/>
+<br/><br/><br/><br/>
+
+> <h2 id='问题1:CFLAGS=-O3'>问题1:CFLAGS=-O3</h2>
+
 
 - **若出现问题1,没有Skip**
 
-`Error running ' CFLAGS=-O3 *****(一堆路径)`
-` please read /Users/harleyhuang/.rvm/log/1653793499_ruby-3.0.0/configure.log
-There has been an error while running configure. Halting the installation.`
+```
+Error running ' CFLAGS=-O3 *****(一堆路径)
+
+please read /Users/harleyhuang/.rvm/log/1653793499_ruby-3.0.0/configure.log
+There has been an error while running configure. Halting the installation.
+```
 
 解决:
 
@@ -627,7 +782,10 @@ rvm reinstall 3.0.0 --with-openssl-dir=`brew --prefix openssl`
 ```
 
 
-<br/>
+<br/><br/><br/>
+
+> <h2 id='问题2:__rvm_make-j8'>问题2:__rvm_make -j8</h2>
+
 
 - **若出现问题2,没有Skip**
 
@@ -702,6 +860,7 @@ rvm use 3.0.0 --default
 
 出现这个问题：`Requirements installation failed with status: 1.`
 
+<br/>
 
 解决：
 
@@ -723,9 +882,66 @@ ruby -v
 ```
 
 
-<br/><br/>
+<br/><br/><br/>
 
-> 安装cocoapods(macOS10.11之后使用)
+> <h2 id='问题2.1:Intel系列OS14.4——__rvm_make-j8'>问题2.1:Intel系列OS14.4——__rvm_make-j8</h2>
+
+执行完下面命令:
+
+```
+ brew --prefix openssl@3 
+ 
+ rvm install ruby-3.0.0 --with-openssl-dir=/usr/local/opt/openssl@3 
+```
+
+然后会出现如下终端提示错误:
+
+```
+Error running '__rvm_make -j8',
+please read /Users/dwd/.rvm/log/1713417672_ruby-3.0.0/make.log
+
+There has been an error while running make. Halting the installation.
+```
+
+
+然后后面搜索这个问题`x86_64 OS14.4 Certificates bundle '/usr/local/etc/openssl@1.1/cert.pem' is already up to date. Requirements installation successful. 解决 `找到了github的一个解决[RVM - Error running '__rvm_make -j8' while running rvm install 3.2.2 on MacOs #5367](https://github.com/rvm/rvm/issues/5365)的解决方法:
+
+```
+brew uninstall --ignore-dependencies openssl
+
+brew reinstall openssl@3
+
+rvm install ruby-3.2.2 --reconfigure --enable-yjit --with-openssl-dir=$(brew --prefix openssl@3)
+```
+
+但是还是会报错,如下:
+
+![tool.0.0.3.jpg](./../../Pictures/tool.0.0.3.jpg)
+
+但是将这个命令:
+
+```
+rvm install ruby-3.2.2 --reconfigure --enable-yjit --with-openssl-dir=$(brew --prefix openssl@3)
+```
+
+**替换成:**
+
+```
+rvm install 3.2.2 -C --with-openssl-dir=/opt/homebrew/opt/openssl@3.1
+```
+
+就可以了.
+
+
+
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id='安装cocoapods(macOS10.11之后使用)'>安装cocoapods(macOS10.11之后使用)</h2>
+
 
 ```
 // cocoapods 安装
@@ -788,7 +1004,7 @@ pod install --repo-update
 <br/>
 
 ***
-<br/>
+<br/><br/>
 
 ># <h2 id = "错误解决方案">错误解决方案</h2>
 
@@ -797,13 +1013,15 @@ pod install --repo-update
 
 - 错误：
 
-`/usr/local/lib/ruby/gems/2.7.0/gems/cocoapods-core-1.9.1/lib/cocoapods-core/source/metadata.rb:15:in `initialize': undefined method `with_indifferent_access' for false:FalseClass (NoMethodError)`
+```
+/usr/local/lib/ruby/gems/2.7.0/gems/cocoapods-core-1.9.1/lib/cocoapods-core/source/metadata.rb:15:in `initialize': undefined method `with_indifferent_access' for false:FalseClass (NoMethodError)
+```
 
 终端输入：
 
 ```
 $ sudo gem update cocoapods 
-$  rm -rf ~/.cocoapods/repos/trunk/
+$ rm -rf ~/.cocoapods/repos/trunk/
 ```
 
 
@@ -817,27 +1035,24 @@ pod repo list
 0 repos
 ```
 
-a. 先移除掉本地的master,在终端输入pod repo remove master;
-<br/>
-b. 再切换到：`cd ~/.cocoapods/repos`;
-<br/>
-c. `git clone --depth 1 https://github.com/CocoaPods/Specs.git master`,等待下载完毕；
-<br/>
-d. `rm ~/Library/Caches/CocoaPods/search_index.json
-`
-<br/>
-e. `pod search afnetworking`, 检测是否可以使用了；
+- a. 先移除掉本地的master,在终端输入pod repo remove master;
 
-<br/>
-<br/>
+- b. 再切换到：`cd ~/.cocoapods/repos`;
+
+- c. `git clone --depth 1 https://github.com/CocoaPods/Specs.git master`,等待下载完毕；
+
+- d. `rm ~/Library/Caches/CocoaPods/search_index.json`
+
+- e. `pod search afnetworking`, 检测是否可以使用了；
+
+<br/><br/>
 
 [解决方案参考]([https://www.cnblogs.com/shuilangyizu/p/10935728.html](https://www.cnblogs.com/shuilangyizu/p/10935728.html)
 )
 
 
 
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 - rvm系统路径出错
@@ -856,13 +1071,9 @@ e. `pod search afnetworking`, 检测是否可以使用了；
 
 <br/>
 
-![<br/>](./../Pictures/tool_pod2.png)
+![tool_pod2.png](./../Pictures/tool_pod2.png)
 
 在上图中执行`rvm -h`来查看rvm指令，上图只是截取的一部分。
-
-
-
-
 
 
 
@@ -871,7 +1082,7 @@ e. `pod search afnetworking`, 检测是否可以使用了；
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 
@@ -933,30 +1144,35 @@ sudo gem uninstall cocoapods-downloader
 
 或者使用脚本命令进行全部的删除：
 
-`sudo rm -rf /usr/local/bin/pod ; gem list | grep cocoapods | awk '{print $1}' | while read line; do sudo gem uninstall $line;done`
+```
+sudo rm -rf /usr/local/bin/pod ; gem list | grep cocoapods | awk '{print $1}' | while read line; do sudo gem uninstall $line;done
+```
 
 如下图：
 
 ![CocoaPods相关的东西](https://upload-images.jianshu.io/upload_images/2959789-2b4d3d8859ca5e83.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-<br/>
+<br/> <br/>
 
 **`第二种卸载方法：`**
 
 **①查找目前版本的pod路径**
 
-` which pod`
+```
+which pod
+```
 
 **②移除现有pod**
 
-`rm -rf /usr/local/bin/pod`
+```
+rm -rf /usr/local/bin/pod
+```
 
 
 &emsp; 这样CocoaPods 就卸载干净了。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
