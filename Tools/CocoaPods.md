@@ -640,11 +640,13 @@ There has been an error while running make. Halting the installation.
 
 ```
 
-&emsp, 在网上搜索`Error running '__rvm_make -j8'`,发现寥寥无几或者根本没有搜到.那就只能复制这个地址`/Users/harleyhuang/.rvm/log/1623324364_ruby-2.5.0/make.log`然后到Finder中Command+F+G搜索这个文件.打开这个文件后发现经常出现这几个问题:
+&emsp; 在网上搜索`Error running '__rvm_make -j8'`,发现寥寥无几或者根本没有搜到.那就只能复制这个地址`/Users/harleyhuang/.rvm/log/1623324364_ruby-2.5.0/make.log`然后到Finder中Command+F+G搜索这个文件.打开这个文件后发现经常出现这几个问题:
 
-`warning: no debug symbols in executable (-arch x86_64)`
+```
+warning: no debug symbols in executable (-arch x86_64)
 
-`readline.c:1904:37: error: use of undeclared identifier 'username_completion_function'; did you mean 'rl_username_completion_function'?
+
+readline.c:1904:37: error: use of undeclared identifier 'username_completion_function'; did you mean 'rl_username_completion_function'?
                                     rl_username_completion_function);
                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                     rl_username_completion_function
@@ -656,7 +658,7 @@ extern char *rl_username_completion_function PARAMS((const char *, int));
              ^
 compiling psych_parser.c
 1 error generated.
-`
+```
 
 
 然后想到可能是M1用的arm架构导致的,所以可以在命令前加入**`arch -arm64`**记忆区别:
@@ -721,8 +723,7 @@ ruby -v
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > 安装cocoapods(macOS10.11之后使用)
 
@@ -739,7 +740,8 @@ pod search snapkit
 
 有出错了!:
 
-```### Error LoadError - dlopen(/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle, 9): no suitable image found.  Did find:
+```
+### Error LoadError - dlopen(/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle, 9): no suitable image found.  Did find:
 	/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle: mach-o, but wrong architecture
 	/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle: mach-o, but wrong architecture - /Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/gems/3.0.0/gems/ffi-1.15.5/lib/ffi_c.bundle
 <internal:/Users/harleyhuang/.rvm/rubies/ruby-3.0.0/lib/ruby/3.0.0/rubygems/core_ext/kernel_require.rb>:85:in 'require'
