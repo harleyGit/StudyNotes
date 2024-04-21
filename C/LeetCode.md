@@ -15,6 +15,8 @@
 		- [斐波那契数列](#斐波那契数列)
 		- [电话号码的字母组合](#电话号码的字母组合)
 		- [括号生成](#括号生成)
+		- [两两交换链表中的节点](#两两交换链表中的节点)
+		- [K个一组翻转链表](#K个一组翻转链表)
 	- [**链表**](#链表)
 		- [推导二叉树的遍历(富途)](#推导二叉树的遍历)
 		- [2个队列实现一个栈(七猫)](#2个队列实现一个栈)
@@ -307,11 +309,10 @@ int search(int* nums, int numsSize, int target){
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/><br/>
 
 
-> <h1 id="递归回溯">递归回溯</h1>
+># <h1 id="递归回溯">[递归回溯](https://leetcode.cn/tag/recursion/problemset/)</h1>
 
 <br/>
 
@@ -732,6 +733,255 @@ char ** generateParenthesis(int n, int* returnSize){
 🌷🌹行:(())
 🌷🌹行:()()
 ```
+
+
+<br/><br/><br/>
+
+> <h2 id='两两交换链表中的节点'> 两两交换链表中的节点</h2>
+
+给你一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。你必须在不修改节点内部的值的情况下完成本题（即，只能进行节点交换）。
+
+ 
+
+示例 1：
+
+![c0_0.2.1.jpg](./../Pictures/c0_0.2.1.jpg)
+
+```
+输入：head = [1,2,3,4]
+输出：[2,1,4,3]
+```
+
+
+示例 2：
+
+```
+输入：head = []
+输出：[]
+```
+
+示例 3：
+
+```
+输入：head = [1]
+输出：[1]
+```
+ 
+
+
+<br/>
+
+```
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};
+
+// 创建新节点
+struct ListNode* createNode(int val) {
+    struct ListNode* newNode = (struct ListNode*)malloc(sizeof(struct ListNode));
+    newNode->val = val;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// 打印链表
+void printList(struct ListNode* head) {
+    while (head != NULL) {
+        printf("%d ", head->val);
+        head = head->next;
+    }
+    printf("\n");
+}
+
+/**
+ * 两两交换链表中的节点
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+struct ListNode* swapPairs(struct ListNode* head) {
+    // 如果链表为空或者只有一个节点，无需交换，直接返回头指针
+    if(head == NULL || head->next == NULL) {
+        return head;
+    }
+    
+    // 定义两个指针，分别指向当前节点和下一个节点
+    struct ListNode *current = head;
+    struct ListNode *next = current ->next;
+    
+    // 递归地对剩余链表进行两两交换
+    head = next;
+    current->next = swapPairs(next->next);
+    head->next = current;
+    
+    return next;
+}
+
+void testSwapPairs(void){
+    // 创建链表: 1 -> 2 -> 3 -> 4 -> 5
+    struct ListNode* head = createNode(1);
+    head->next = createNode(2);
+    head->next->next = createNode(3);
+    head->next->next->next = createNode(4);
+    head->next->next->next->next = createNode(5);
+    
+    printf("Original list: ");
+    printList(head);
+    
+    // 两两交换链表节点
+    head = swapPairs(head);
+    
+    printf("List after swapping pairs: ");
+    printList(head);
+}
+
+//调用
+testSwapPairs();
+```
+
+打印:
+
+```
+List after swapping pairs: 2 1 4 3 5 
+```
+
+
+
+<br/><br/><br/>
+
+> <h2 id='K个一组翻转链表'>K 个一组翻转链表</h2>
+
+给你链表的头节点 head ，每 k 个节点一组进行翻转，请你返回修改后的链表。
+
+k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+
+你不能只是单纯的改变节点内部的值，而是需要实际进行节点交换。
+
+
+示例 1：
+![c0_0.2.2.jpg](./../Pictures/c0_0.2.2.jpg)
+
+
+```
+输入：head = [1,2,3,4,5], k = 2
+输出：[2,1,4,3,5]
+```
+
+
+
+示例 2：
+
+![c0_0.2.3.jpg](./../Pictures/c0_0.2.3.jpg)
+
+
+```
+输入：head = [1,2,3,4,5], k = 3
+输出：[3,2,1,4,5]
+```
+
+
+```
+// 定义链表节点结构
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};
+
+/ 创建新节点
+struct ListNode* createNode(int val) {
+    struct ListNode* newNode = (struct ListNode*)malloc(sizeof(struct ListNode));
+    newNode->val = val;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// 打印链表
+void printList(struct ListNode* head) {
+    while (head != NULL) {
+        printf("%d ", head->val);
+        head = head->next;
+    }
+    printf("\n");
+}
+
+/// K 个一组翻转链表
+struct ListNode* reverseKGroup(struct ListNode* head, int k) {
+    if(head == NULL){
+        return head;
+    }
+    
+    struct ListNode *currentNode = head;
+    int nodeCount = 0;
+    
+    while(currentNode && nodeCount < k){//currentNode是否存在,节点数是否小于k
+        currentNode = currentNode->next;
+        ++nodeCount;
+    }//(当初错把排序也放在这里,岂不知若是不够k个也排序了)
+    
+    if(nodeCount < k){// 如果剩余节点个数少于K个，则不翻转，直接返回头指针
+        return head;
+    }
+    
+    nodeCount = 0; //计数重置为0
+    currentNode = head;//最近节点重置为头节点
+    struct ListNode *prevNode = NULL;//上一个节点
+    struct ListNode *nextNode = NULL;//下一个节点
+    while(nodeCount<k){//反转排序(使用头插法),因为currenNode始终有值,所以不需要判断为空
+        nextNode = currentNode->next;//当前节点的下一个节点
+        currentNode->next = prevNode;//用处1:反转后的最后一个节点next为NULL;用处2:头插法进行节点重排关键一步
+        prevNode = currentNode;//prevNode始终指向当前的节点
+        
+        currentNode = nextNode;//currentNode指向下一个节点
+        ++nodeCount;
+    }
+    
+    head->next = reverseKGroup(nextNode, k);
+    
+    
+    return prevNode;
+    
+}
+
+
+void testReverseKGroup(void){
+    // 创建链表: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+    struct ListNode* head = createNode(1);
+    head->next = createNode(2);
+    head->next->next = createNode(3);
+    head->next->next->next = createNode(4);
+    head->next->next->next->next = createNode(5);
+    head->next->next->next->next->next = createNode(6);
+    head->next->next->next->next->next->next = createNode(7);
+    head->next->next->next->next->next->next->next = createNode(8);
+    
+    printf("Original list: ");
+    printList(head);
+    
+    int k = 3; // 设定翻转的组大小为3
+    // K个一组翻转链表
+    head = reverseKGroup(head, k);
+    
+    printf("List after reversing every %d elements: ", k);
+    printList(head);
+}
+
+
+
+//调用 k为3
+testReverseKGroup()
+```
+
+打印:
+
+```
+
+Original list: 1 2 3 4 5 6 7 8 
+
+List after reversing every 3 elements: 3 2 1 6 5 4 7 8 
+```
+
 
 
 <br/>
