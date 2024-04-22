@@ -640,29 +640,57 @@ realpath /opt/homebrew/bin/doxygen
 	- 当xcode工具区打印的堆栈信息不全时，可以在控制台通过“bt”指令打印完整的堆栈信息
 
 
-<br/>
-<br/>
-<br/>
-<br/>
+<br/><br/><br/><br/>
 
 
 
 > <h2 id='快捷键0'>快捷键</h2>
 
+[Xcode常用快捷键](https://www.jianshu.com/p/b2ba6e29252c)
+
 - 代码格式对齐：选中要对齐的代码，然后快捷键 `Contorl + i`
+
 * 单行注释：`command + /`，即`⌘ + /`;
+
 * 注释文档：`command + Option + /`，即`⌘ + ⌥ + /`;
+	* 苹果解决xcode ghost,把插件屏蔽了,解决方法命令运行：  
+	
+```
+sudo /usr/libexec/xpccachectl
+```
+然后必须重启电脑后生效
+
+- 快速定位到当前编辑文件的导航区域（左侧的文件目录）：`command + shift + J`
+
+- 快速跳转到某一行:`command + L `
+
+- 快速打开某一个文件:  `command + shift + O`
+
+- 收起/展开方法代码块
+	- 收起:  `option + command + ←`
+	- 展开:  `option + command + →`
+
+- 上移一行and下移一行 :  `option + command + ]` ,  `option + command +[`
+
+- 光标上移一行和下移一行
+	- 上移一行：`control + N`
+	- 下移一行：`control + P`
+
+- .h文件与.m文件之间的快速切换:`  control + command + ↑ `,  `control + command + ↓`
+
+- 返回至上一次光标位置: `control + command + ←` ,  `control + command + →`
+
+- 快速查看当前class的方法:  `control + 6`
+
+
+
+
+
 - [**常用快捷键总结**](https://yanhooit.gitbooks.io/ios_study_note/content/xcodekuai_jie_jian.html)
 
 
 
-
-
-
-<br/>
-<br/>
-<br/>
-<br/>
+<br/><br/><br/><br/>
 
 
 > <h2 id='配置0'>配置</h2>
@@ -688,11 +716,8 @@ Command+点击
 ![z47](./../Pictures/z47.png)
 
 
-<br/>
-<br/>
-<br/>
-<br/>
 
+<br/><br/><br/>
 
 
 
