@@ -207,7 +207,6 @@
 	- [**Mach-O格式**](./iOS/Objective-C/Mach-O格式.md)
 - **错误总结**
 	- [上架错误](./iOS/Objective-C/上架错误.md)
-	- [审核被拒](./iOS/Objective-C/审核被拒.md)
 	- [Error](./iOS/Objective-C/Error.md)
 *	**类库**
 	*	[Linphone](./iOS/Objective-C/Linphone.md)
@@ -236,6 +235,7 @@
 * [**关键字**](./iOS/Swift/关键字.md)
 * [**UI组件**](./iOS/Swift/UI组件.md)
 * [**数据**](./iOS/Swift/数据.md)
+* [**隐私清单**](./iOS/Swift/隐私清单.md)
 * [包管理](./iOS/Swift/包管理.md)
 * [SwiftUI(I)](./iOS/Swift/SwiftUI(I).md)
 * [Swift-服务端](./iOS/Swift/Swift-服务端.md)

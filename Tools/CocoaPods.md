@@ -1,7 +1,8 @@
 > <h2 id=""></h2>
-- **使用**
+- [**使用**](#使用)
 	- [工作基本指令](#工作基本指令)
 	- [pod update 和 pod install](#podupdate和podinstall)
+	- [脚本命令](#脚本命令)
 - [**RVM安装**](#RVM安装)
 - [**安装Ruby**](#安装Ruby)
 	- [安装最新ruby](#安装最新ruby)
@@ -20,6 +21,7 @@
 	- [**卸载CocoaPosds**](#卸载CocoaPosds)
 - **资料**
 	- [CocoaPods使用指南](https://juejin.cn/post/7179231344147300412)
+	- [Cocoapods 使用](https://hanleylee.com/articles/usage-of-cocoapods/)
 
 
 
@@ -141,6 +143,54 @@ pod update
 
 2；然后到工程目录下面执行命令：pod deintegrate，就可以了，然后手动删除.xcworkspace，libPods.a，Podfile，Podfile.lock文件就好了。如果想要重装的话保留Podfile，再执行命令：pod install 就好了，很简单。
 
+
+
+<br/><br/><br/>
+
+> <h2 id='脚本命令'>脚本命令</h2>
+
+<br/><br/><br/>
+
+> <h2 id=''>拷贝隐私清单文件到指定Pod下的库文件内</h2>
+
+在Podfile文件夹中写下如下命令:
+
+```
+post_install do |installer|
+  flutter_post_install(installer)
+  
+  # 获取 Pods 项目文件的路径所在文件夹
+   pods_project_path = File.dirname(installer.pods_project.path);
+   
+   #隐私清单原有文件路径
+   Qiniu_privacy_path = './ThirdPodPrivacy/Qiniu/PrivacyInfo.xcprivacy'
+   #目标Qiniu库的Resources文件夹路径
+   Qiniu_privacy_target_path = pods_project_path + '/Qiniu/Resources/'
+   
+   #根据Qiniu_privacy_target_path文件路径创建Qiniu库下的Resources问件夹
+   FileUtils.mkdir_p(Qiniu_privacy_target_path)
+   #将Qiniu_privacy_path下的文件复制到Qiniu_privacy_target_path路径下
+   FileUtils.cp_r(Qiniu_privacy_path, Qiniu_privacy_target_path)
+   #打印 Pods 项目路径到控制台,File.dirname获取当前文件所在的文件夹
+   #puts "🍎 pods_project_path path: #{File.dirname(pods_project_path)}"
+   
+    
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '11.0'
+      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = "NO"
+    end
+  end
+end
+```
+
+然后在终端执行:
+
+```
+pod install
+```
 
 
 
