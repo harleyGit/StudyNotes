@@ -1,9 +1,14 @@
 
-># <h2 id=''>[《Flutter实战·第二版》](https://book.flutterchina.club/)</h2>
-- [**Dart基础**](#dart基础)
-	- [空安全](#空安全)
+># [《Flutter实战·第二版》](https://book.flutterchina.club/)</h2>
+># [Dart 编程语言概览](https://www.dartcn.com/guides/language/language-tour)
+
+- [**变量**](#变量)
+	- [dynamic和Object类型](#dynamic和Object类型)
+	- [Final 和 Const](#Final和Const)
+- [**内置内型**](#内置内型)
+	- [Set集合](#Set集合)
+- [空安全](#空安全)
 - [**关键字**](#关键字)
-	- [dynamic 和 Object](#dynamic和object)
 	- [@required](#@required)
 	- [mixin](#mixin)
 	- [with](#with)
@@ -16,14 +21,14 @@
 	- [命名可选参数&可选参数](#命名可选参数&可选参数)
 		- [命名可选参数](#命名可选参数)
 		- [可选参数](#可选参数)
-- [**`‌函数`**](#函数)
-	- 	[匿名方法](#匿名方法)
+- [**‌函数**](#函数)
+	- [函数作为参数](#函数作为参数)
+	- [匿名函数](#匿名函数)
 	- [箭头函数](#箭头函数)
 		- [条件表达式](#条件表达式)
-	- [函数作为参数](#函数作为参数)
 	- [有状态函数](#有状态函数)
-	- 	[自执行方法](#自执行方法)
-	- 	[闭包 ](#闭包) 
+		- [自执行方法](#自执行方法)
+		- [闭包](#闭包) 
 - [**抽象类**](#抽象类)
 	- [接口类](#接口类)
 - [**范型限制**](#范型限制)
@@ -36,6 +41,8 @@
 - **资料**
 	- [Flutter编程语言(官方)](https://www.dartcn.com/guides/get-started)
 	- [Dart 基础二：函数(ghroosk-掘金)](https://juejin.cn/post/6931340267324702733#heading-19)
+	- [Dart 语言基础入门篇](https://juejin.cn/post/6844904039394574344)
+
 
 
 
@@ -49,49 +56,12 @@
 ***
 <br/><br/><br/><br/><br/>
 
-> <h1 id='dart基础'>Dart基础</h1>
 
+> <h1 id='变量'>变量</h1>
 
-<br/><br/>
+<br/><br/><br/>
 
-># <h2 id='空安全'>[空安全](https://juejin.cn/post/6958965184631144478#heading-2)</h2>
-
-
-**基础使用**
-
-
-- **1.非空类型和可空类型**
-
-```
-void main() {
-  int a;
-  a = null; // 提示错误，因为 int a 表示 a 不能为空
-  print('a is $a.');
-}
-```
-
-这段代码通过 int 声明了变量 a 是一个非空变量，在执行 a = null 的时候报错。可以修改为 int? 类型，允许 a 为空：
-
-```
-void main() {
-  int? a; // 表示允许 a 为空
-  a = null; 
-  print('a is $a.');
-}
-```
-
-
-
-
-
-<br/>
-
-***
-<br/><br/>
-
-> <h1 id='关键字'>关键字</h1>
-
-
+> <h2 id='dynamic和Object类型'>dynamic和Object类型</h2>
 
 <br/><br/>
 
@@ -136,6 +106,145 @@ print(a.xx); // a是字符串，没有"xx"属性，编译时不会报错，运�
 ```
 
 
+<br/><br/><br/>
+
+> <h2 id='Final和Const'>Final 和 Const</h2>
+
+使用过程中从来不会被修改的变量， 可以使用 final 或 const, 而不是 var 或者其他类型， Final 变量的值只能被设置一次； Const 变量在编译时就已经固定 (Const 变量 是隐式 Final 的类型.) 最高级 final 变量或类变量在第一次使用时被初始化。
+
+<br/>
+
+>**提示：** 实例变量可以是 final 类型但不能是 const 类型。 必须在构造函数体执行之前初始化 final 实例变量 —— 在变量声明中，参数构造函数中或构造函数的初始化列表中进行初始化。
+
+
+<br/><br/>
+
+- **这2者没啥区别,有区别的是:**
+	- const在编译时直接替换为常量值;
+	- final变量在第一次使用时被初始化
+
+
+创建和设置一个 Final 变量：
+
+```
+final name = 'Bob'; // Without a type annotation
+final String nickname = 'Bobby';
+```
+
+final 不能被修改:
+
+```
+name = 'Alice'; // Error: 一个 final 变量只能被设置一次。
+```
+
+
+<br/><br/>
+
+如果您从未打算更改一个变量，那么使用 final 或 const，不是var，也不是一个类型。 一个 final 变量只能被设置一次 。被final或者const修饰的变量，变量类型可以省略，如：
+
+```
+
+
+//可以省略String这个类型声明
+final str = "hi world";
+
+//final String str = "hi world"; 
+
+const str1 = "hi world";
+//const String str1 = "hi world";
+```
+
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id='内置内型'>内置内型</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id='Set集合'>Set集合</h2>
+
+Set的语意和其他语言的是一样的，都是表示在容器中对象唯一。在Dart中，Set默认是LinkedHashSet实现，表示元素按添加先后顺序排序。
+
+声明Set对象：
+
+```
+var halogens = {'fluorine', 'chlorine', 'bromine', 'iodine', 'astatine'};
+```
+遍历Set，遍历除了上面提到的for...in，你还可以使用类似 Java 的 lambada 中的 forEach 形式：
+
+```
+halogens.add('bromine');
+halogens.add('astatine');
+halogens.forEach((el) => print(el));
+```
+输出结果：
+
+```
+fluorine
+chlorine
+bromine
+iodine
+astatine
+```
+
+除了容器的对象唯一特性之外，其他基本和List是差不多的。
+
+```
+// 添加类型声明：
+var elements = <String>{};
+
+var promoActive = true;
+// 动态添加元素
+final navSet = {'Home', 'Furniture', promoActive? 'About':'Outlet'};
+```
+
+
+
+
+<br/><br/>
+
+># <h2 id='空安全'>[空安全](https://juejin.cn/post/6958965184631144478#heading-2)</h2>
+
+
+**基础使用**
+
+
+- **1.非空类型和可空类型**
+
+```
+void main() {
+  int a;
+  a = null; // 提示错误，因为 int a 表示 a 不能为空
+  print('a is $a.');
+}
+```
+
+这段代码通过 int 声明了变量 a 是一个非空变量，在执行 a = null 的时候报错。可以修改为 int? 类型，允许 a 为空：
+
+```
+void main() {
+  int? a; // 表示允许 a 为空
+  a = null; 
+  print('a is $a.');
+}
+```
+
+
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+> <h1 id='关键字'>关键字</h1>
 
 
 <br/><br/>
@@ -328,27 +437,7 @@ fun c => by d
 &emsp; 因此，在这段代码中，d.a(); 执行时打印的是 fun a => by c，因为 C 类中的 a() 方法覆盖了 A 类中的同名方法。
 
 
-<br/><br/>
-
-
-> <h2 id='final和const'>final和const</h2>
-
-这2者没啥区别,有区别的是:
-- const在编译时直接替换为常量值;
-- final变量在第一次使用时被初始化
-
-如果您从未打算更改一个变量，那么使用 final 或 const，不是var，也不是一个类型。 一个 final 变量只能被设置一次 。被final或者const修饰的变量，变量类型可以省略，如：
-
-```
-//可以省略String这个类型声明
-final str = "hi world";
-//final String str = "hi world"; 
-const str1 = "hi world";
-//const String str1 = "hi world";
-```
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -635,51 +724,220 @@ getHttpUrl('example.com', '/index.html', 8080, 5);
 
 > <h1 id='函数'>函数</h1>
 
+
+<br/><br/><br/>
+
+> <h2 id='函数作为参数'>函数作为参数</h2>
+
+在 Dart 中，函数本身也是个对象，它对应的类型是Function，这意味着函数可以当做变量的值或者作为一个方法入传参数值。
+
+```
+void sayHello(var name){
+  print('hello, $name');
+}
+
+void callHello(Function func, var name){
+  func(name);
+}
+
+void main(){
+  // 函数变量
+  var helloFuc = sayHello;
+  // 调用函数
+  helloFuc('Girl');
+  // 函数参数
+  callHello(helloFuc,'Boy');
+}
+```
+
+输出：
+
+```
+hello, Girl
+hello, Boy
+```
+
+
+<br/> <br/>
+
+函数也是对象，并且有它的**类型 Function** ， 这也意味着函数可以被赋值给变量或者作为参数传递给其他函数。一个函数可以作为另一个函数的参数。 例如：
+
+```
+void printElement(int element) {
+  print(element);
+}
+var list = [1, 2, 3];
+// 将 printElement 函数作为参数传递。
+list.forEach(printElement);
+```
+
+**代码解读:**
+
+forEach 方法的签名是这样的：
+
+```
+void forEach(void f(E element))
+```
+
+&emsp; 这里，f 是一个接受单个参数的函数，参数类型为集合元素类型 E。当你调用 list.forEach(printElement) 时，printElement 函数就被传递给了 forEach 方法。
+
+&emsp; forEach 内部实现了遍历集合的逻辑，对于每个元素，它会调用传递进来的函数 f，将当前元素作为参数传递给这个函数。
+
+&emsp; 所以，虽然你在调用 forEach 的时候并没有显式传递参数，但 forEach 会在遍历集合时自动将每个元素作为参数传递给你提供的函数（在这里是 printElement 函数）。
+
+<br/><br/>
+
+在Java的回调函数中,如 View 的 onClickListener 需要定义一个接口，但在Dart中，我们可以直接指定一个回调方法给调用的方法，由调用的方法在合适的时机执行这个回调。
+
+```
+// 第一种调用者根本不确定 回调函数的返回值、参数是些什么
+void setListener(Function listener){
+    listener("Success");
+}
+// 第二种，返回值为void，参数为一个String的方法
+void setListener(void listener(String result)){
+    listener("Success");
+}
+
+//第三种：类型定义 将返回值为void，参数为一个String的方法定义为一个类型。
+typedef void Listener(String result)；
+  
+void setListener(Listener listener){
+  listener("Success");
+}
+```
+
+同样的我们可以将一个函数赋值给一个变量，例如：
+
+```
+var loudify = (msg) => '!!! ${msg.toUpperCase()} !!!';
+assert(loudify('hello') == '!!! HELLO !!!');
+```
+
+示例中使用了匿名函数。 
+
+
+
+
+<br/> <br/>
+
+**或者:**
+
+一个函数可以作为另一个函数的参数。 例如：
+
+```
+void printElement(int element) {
+  print(element);
+}
+
+var list = [1, 2, 3];
+
+// 将 printElement 函数作为参数传递。
+list.forEach(printElement);
+```
+
+同样可以将一个函数赋值给一个变量，例如：
+
+```
+var loudify = (msg) => '!!! ${msg.toUpperCase()} !!!';
+assert(loudify('hello') == '!!! HELLO !!!');
+```
+示例中使用了匿名函数。 
+
+
+<br/><br/>
+
+> <h2 id='匿名函数'>匿名函数</h2>
+
+多数函数是有名字的， 比如 **main()** 和 **printElement()**。 也可以创建没有名字的函数，这种函数被称为 匿名函数， 有时候也被称为 lambda 或者 closure 。 匿名函数可以赋值到一个变量中， 举个例子，在一个集合中可以添加或者删除一个匿名函数。
+
+匿名函数和命名函数看起来类似— 在括号之间可以定义一些参数或可选参数，参数使用逗号分割。
+
+后面大括号中的代码为函数体：
+
+```
+([[Type] param1[, …]]) {
+  codeBlock;
+};
+```
+
 <br/>
 
-> <h2 id='匿名方法'>匿名方法</h2>
-
-
 ```
-    ///匿名方法
-    var fn = (){
-      print("我是匿名方法");
-    };
-    fn();
+///匿名方法
+var fn = (){
+  print("我是匿名方法");
+};
+fn();
 
-    var printNum = (int n){
-      print("匿名方法带参数：($n+100)");
-    };
-    printNum(100);
+var printNum = (int n){
+  print("匿名方法带参数：($n+100)");
+};
+printNum(100);
+
+
+
+//定义了一个包含一个无类型参数 item 的匿名函数。 list 中的每个元素都会调用这个函数，打印元素位置和值的字符串
+var list = ['apples🍎', 'bananas', 'oranges'];
+list.forEach((item) {
+  print('${list.indexOf(item)}: $item');
+});
 ```
+
 打印：
 
-`flutter: 我是匿名方法`
+```
+flutter: 我是匿名方法
 
-`flutter: 匿名方法带参数：(100+100)`
+flutter: 匿名方法带参数：(100+100)
 
 
-<br/>
-<br/>
+0: apples🍎
+1: bananas
+2: oranges
+```
+
+
+<br/><br/>
 
 > <h2 id='箭头函数'>箭头函数</h2>
 
+对于只有一个表达式的简单函数，你还可以通过=>让函数变得更加简洁，=> expr在这里相当于{ return expr; } ，我们来看一下下面的语句：
+
 ```
-    ///箭头函数
-    List listStr = ["吕布", "貂蝉", "诸葛亮", "曹操", "司马懿"];
-    List listNum = [1, 3, 5, 8, 9, 12, 14, 18];
+String hello(var name ) => 'hello, $name';
+```
+相当于：
 
-    listStr.forEach((value){
-      print("$value");
-    });
-    //箭头后只有一行代码
-    listStr.forEach((value)=> print("---->> $value"));
-    listStr.forEach((value)=>{
-      print("++++++>> $value")
-    });
+```
+String hello(var name ){
+  return 'hello, $name';
+}
+```
 
-    var newListNum2 = listNum.map((value) => value > 2 ? value * 3 : value);
-    print(newListNum2);
+
+<br/> <br/>
+
+**或者如下:**
+
+
+```
+///箭头函数
+List listStr = ["吕布", "貂蝉", "诸葛亮", "曹操", "司马懿"];
+List listNum = [1, 3, 5, 8, 9, 12, 14, 18];
+
+listStr.forEach((value){
+  print("$value");
+});
+//箭头后只有一行代码
+listStr.forEach((value)=> print("---->> $value"));
+listStr.forEach((value)=>{
+  print("++++++>> $value")
+});
+
+var newListNum2 = listNum.map((value) => value > 2 ? value * 3 : value);
+print(newListNum2);
+
 ```
 
 打印：
@@ -703,7 +961,7 @@ flutter: ++++++>> 司马懿
 flutter: (1, 9, 15, 24, 27, 36, 42, 54)
 ```
 
-<br/>
+<br/><br/>
 
 如果函数中只有一句表达式，可以使用箭头语法简写语法：
 
@@ -720,9 +978,7 @@ bool isNoble(int atomicNumber) => _nobleGases[atomicNumber] != null;
 &emsp; 在Dart 中方法可以有两种类型的参数：**必需的（ required）** 和**可选的（optional）**， required 类型参数在参数最前面， 随后是 optional 类型参数。 命名的可选参数也可以标记为 “@ required” 。
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h3 id='条件表达式'>条件表达式</h3>
@@ -761,72 +1017,6 @@ var visibility = isPublic ? 'public' : 'private';
 String playerName(String name) => name ?? 'Guest';
 ```
 
-
-
-
-<br/><br/>
-
-> <h2 id='函数作为参数'>函数作为参数</h2>
-
-
-函数也是对象，并且有它的**类型 Function** ， 这也意味着函数可以被赋值给变量或者作为参数传递给其他函数。一个函数可以作为另一个函数的参数。 例如：
-
-```
-void printElement(int element) {
-  print(element);
-}
-var list = [1, 2, 3];
-// 将 printElement 函数作为参数传递。
-list.forEach(printElement);
-```
-
-
-
-**代码解读:**
-
-forEach 方法的签名是这样的：
-
-```
-void forEach(void f(E element))
-```
-
-&emsp; 这里，f 是一个接受单个参数的函数，参数类型为集合元素类型 E。当你调用 list.forEach(printElement) 时，printElement 函数就被传递给了 forEach 方法。
-
-&emsp; forEach 内部实现了遍历集合的逻辑，对于每个元素，它会调用传递进来的函数 f，将当前元素作为参数传递给这个函数。
-
-&emsp; 所以，虽然你在调用 forEach 的时候并没有显式传递参数，但 forEach 会在遍历集合时自动将每个元素作为参数传递给你提供的函数（在这里是 printElement 函数）。
-
-<br/>
-<br/>
-
-在Java的回调函数中,如 View 的 onClickListener 需要定义一个接口，但在Dart中，我们可以直接指定一个回调方法给调用的方法，由调用的方法在合适的时机执行这个回调。
-
-```
-// 第一种调用者根本不确定 回调函数的返回值、参数是些什么
-void setListener(Function listener){
-    listener("Success");
-}
-// 第二种，返回值为void，参数为一个String的方法
-void setListener(void listener(String result)){
-    listener("Success");
-}
-
-//第三种：类型定义 将返回值为void，参数为一个String的方法定义为一个类型。
-typedef void Listener(String result)；
-  
-void setListener(Listener listener){
-  listener("Success");
-}
-```
-
-同样的我们可以将一个函数赋值给一个变量，例如：
-
-```
-var loudify = (msg) => '!!! ${msg.toUpperCase()} !!!';
-assert(loudify('hello') == '!!! HELLO !!!');
-```
-
-示例中使用了匿名函数。 
 
 <br/><br/>
 
