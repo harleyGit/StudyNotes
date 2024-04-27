@@ -1,5 +1,5 @@
 
-># [《Flutter实战·第二版》](https://book.flutterchina.club/)</h2>
+># [Flutter实战·第二版](https://book.flutterchina.club/)</h2>
 ># [Dart 编程语言概览](https://www.dartcn.com/guides/language/language-tour)
 
 - [**变量**](#变量)
@@ -1873,6 +1873,77 @@ q Quit (terminate the application on the device).
 ```
 
 然后你就可以调试了
+
+
+<br/><br/><br/>
+
+
+> <h2 id='FlutterEngine'>FlutterEngine</h2>
+
+FlutterEngine是Flutter在原生平台（如iOS）上的核心运行环境，负责加载和执行Dart代码，以及处理与原生端的交互。
+
+
+```
+FBFlutterViewContainer *flutterContainer = [FBFlutterViewContainer new];
+/**
+setName:@"testFlutterpage" 设置了 Flutter 页面的名称为 "testFlutterpage"。可能用于标识或路由到特定的Flutter页面。
+
+uniqueId:nil 通常用于提供一个唯一的标识符，可能用于区分同一页面的不同实例。这里传入nil，可能意味着不使用或无需区分实例
+
+params:@{} 传递给 Flutter 页面的参数为空字典。
+
+opaque:true 表示 Flutter 页面是否是不透明的
+*/
+[flutterContainr setName:@"testFlutterpage" uniqueId:nil params:@{} opaque:true];
+
+//获取的registry将用于后续注册插件
+FlutterEngine *registry = flutterContainr.engine;
+
+/*
+通过registry调用registrarForPlugin:方法，获取与给定插件名称plugName相对应的registrar对象。registrar（注册器）是Flutter Engine提供的一个接口，用于原生端注册和管理Flutter插件。
+如果registry有效且plugName对应的有效插件已加载，这一步将返回一个可用的注册器
+*/
+id reg = [registry registrarForPlugin:@"plugName"]; 
+
+/*创建一个HSQFlutterPlugin实例（假设这是一个自定义的Flutter插件类），并通过调用其类方法registerPluginWithRegistrar:进行注册。
+传入的参数是上一步得到的reg（即registrar对象）。
+如果reg有效，这一步将会将插件注册到Flutter Engine中，使其能够响应来自Dart侧的调用。
+*/
+//@interface HSQFlutterPlugin : NSObject<FlutterPlugin>
+HSQFlutterPlugin *plug = [HSQFlutterPlugin registerPluginWithRegistrar:reg]; 
+
+/*
+给创建的HSQFlutterPlugin实例（plug）的handler属性赋值。handler通常是一个负责处理插件实际业务逻辑的对象。
+在这里，DWDFlutterPluginDefaultHandler.defaultHandler应该是某个预定义的默认处理器实例。
+由于不清楚DWDFlutterPluginDefaultHandler的具体实现，无法提供更多细节。
+如果defaultHandler是一个有效的处理器实例，这一行代码将设置插件的业务处理逻辑。
+*/
+plug.handler = DWDFlutterPluginDefaultHandler.defaultHandler; 
+
+/*
+将registry赋值给HSQFlutterPlugin实例的engine属性。
+通常，engine属性用于存储与该插件关联的FlutterEngine实例。
+这里将之前从flutterContainer获取的FlutterEngine赋值给插件，确保插件与正确的引擎关联。
+*/
+plug.engine = registry; 
+
+/*
+将reg赋值给HSQFlutterPlugin实例的registrar属性。
+同样，将之前获取的注册器赋值给插件，便于插件通过注册器与Flutter Engine进行交互。
+*/
+plug.registrar = reg;
+```
+
+<br/>
+
+- **上述代码作用总结:** 
+	- 创建了一个FBFlutterViewContainer实例，用于承载一个名为`“testFlutterpage”`的Flutter页面。
+	
+	- 接着，从该容器中获取关联的FlutterEngine实例，并利用该引擎注册一个名为HSQFlutterPlugin的插件。插件的业务处理逻辑通过`DWDFlutterPluginDefaultHandler.defaultHandler`设置，并将引擎和注册器分别赋值给插件的相应属性。
+	
+	- 整体来看，这段代码完成了Flutter页面的嵌入准备和自定义插件的注册，为后续在原生iOS应用中使用Flutter功能奠定了基础。需要注意的是，代码中`setName:uniqueId:params:opaque:`方法的uniqueId参数传入了nil，这可能需要根据实际需求进行调整。
+
+
 
 
 
