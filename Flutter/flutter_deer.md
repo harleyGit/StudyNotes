@@ -372,11 +372,10 @@ class MyHomePage extends StatelessWidget {
 
 <br/>
 
-&emsp; 这样，通过使用 ChangeNotifierProvider 和 Consumer，我们实现了一个简单的计数器应用程序，其中计数器的状态能够在整个应用程序中共享，并且 UI 在状态发生变化时能够自动更新。
+&emsp; 这样，通过使用 ChangeNotifierProvider 和 [**Consumer**](./flutter_deer.md#Consumer组件使用)，我们实现了一个简单的计数器应用程序，其中计数器的状态能够在整个应用程序中共享，并且 UI 在状态发生变化时能够自动更新。
 
 
-<br/>
-<br/>
+<br/><br/>
 
 **疑问1:** 如何通过`CounterNotifier counterNotifier = Provider.of<CounterNotifier>(context);`
 就可以获取runApp中创建的CounterNotifier()实例,如何做到的?
@@ -385,8 +384,7 @@ class MyHomePage extends StatelessWidget {
 **回答:** Provider.of获取实例： 在小部件树的某个地方，你可以使用Provider.of<CounterNotifier>(context)来获取CounterNotifier的实例。这是通过Flutter上下文context向上查找小部件树中最近的ChangeNotifierProvider，并返回其提供的CounterNotifier实例
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 **疑问1.1:** 怎么确定通过Flutter上下文context向上查找小部件树中最近的ChangeNotifierProvider就是我们要找的那个? 若是期间有其他的ChangeNotifierProvider实例该怎么办?如何处理
