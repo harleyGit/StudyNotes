@@ -2,6 +2,7 @@
 - [**使用**](#使用)
 	- [工作基本指令](#工作基本指令)
 	- [pod update 和 pod install](#podupdate和podinstall)
+		- [下载库失败：error: RPC failed; curl 18 transfer closed with outstanding read data remaining](#下载库失败：errorRPC)
 	- [脚本命令](#脚本命令)
 - [**RVM安装**](#RVM安装)
 - [**安装Ruby**](#安装Ruby)
@@ -142,6 +143,75 @@ pod update
 1；安装cocoapods-deintegrate命令: sudo gem install cocoapods-deintegrate
 
 2；然后到工程目录下面执行命令：pod deintegrate，就可以了，然后手动删除.xcworkspace，libPods.a，Podfile，Podfile.lock文件就好了。如果想要重装的话保留Podfile，再执行命令：pod install 就好了，很简单。
+
+
+
+<br/><br/><br/>
+
+
+> <h2 id='下载库失败：errorRPC'>下载库失败：error: RPC failed; curl 18 transfer closed with outstanding read data remaining</h2>
+
+**安装Firebase的子模块：**
+
+```
+pod 'Firebase/Crashlytics', '10.25.0'
+```
+
+在终端下载的时候出错，如下所示：
+
+```
+Installing Firebase 10.25.0 (was 9.1.0)
+
+[!] Error installing Firebase
+[!] /usr/bin/git clone https://github.com/firebase/firebase-ios-sdk.git /var/folders/2z/dxhnl1vd6jzdg_70q_2h00bh0000gn/T/d20240508-52861-n43mvb --template= --single-branch --depth 1 --branch CocoaPods-10.25.0
+
+Cloning into '/var/folders/2z/dxhnl1vd6jzdg_70q_2h00bh0000gn/T/d20240508-52861-n43mvb'...
+error: RPC failed; curl 18 transfer closed with outstanding read data remaining
+error: 4907 bytes of body are still expected
+fetch-pack: unexpected disconnect while reading sideband packet
+fatal: early EOF
+fatal: fetch-pack: invalid index-pack output
+```
+
+
+<br/> <br/>
+
+ **出现以上错误有以下原因:**
+
+- **1.缓存区溢出curl的postBuffer的默认值太小，需要增加缓存**
+
+使用git命令增大缓存（单位是b，524288000B也就500M左右）
+
+```
+git config --global http.postBuffer 524288000
+```
+
+使用`git config --list`查看是否生效
+
+此时重新克隆即可
+
+<br/>
+
+**2.🛜网络下载速度缓慢**
+
+修改下载速度
+
+```
+git config --global http.lowSpeedLimit 0
+git config --global http.lowSpeedTime 999999
+```
+
+<br/>
+
+**3.以上两种方式依旧无法clone下，尝试以浅层clone，然后更新远程库到本地**
+
+```
+git clone --depth=1 http://xxx.git
+git fetch --unshallow
+```
+
+
+
 
 
 
