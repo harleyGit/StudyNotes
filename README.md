@@ -140,7 +140,7 @@
 *	[**App启动**](./iOS/Objective-C/App启动.md)
 *	[**App优化**](./iOS/Objective-C/App优化.md)
 *	[**签名和发布**](./iOS/Objective-C/签名和发布.md)
-*	[**组件化(I)**](./iOS/Objective-C/组件化(I).md)
+*	[**组件化**](./iOS/Objective-C/组件化.md)
 *	[**静态库动态库**](./iOS/Objective-C/静态库动态库.md)
 *	[**动态化和热更新**](./iOS/Objective-C/动态化和热更新.md)
 *	[**链接器**](./iOS/Objective-C/链接器.md)
