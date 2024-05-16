@@ -19,12 +19,14 @@
 		- PublishSubject
 			- 状态绑定 
 - **Crash收集**
-- **[MVVM之从理论到实践](https://www.jianshu.com/p/1c1b6bc557ac)**
-	- [DemoCode](https://gitee.com/harelyio/work/tree/master/Project/MVVMReactive)
-- **[仿SDWebImage逻辑](https://gitee.com/harelyio/work/tree/master/Project/ImageLoadSDK)**
-- **[C++数据结构算法](https://gitee.com/harelyio/work/tree/master/Project/C2)**
-- **SwiftEOS**
-- [**开源库整理**](http://blogwenbo.com/2019/09/03/iOS优秀Swift开源库整理)
+- **资料**
+	- [用 Xcode Configuration 和 Scheme 配置项目环境（不同环境变量配置）](https://hanpanpan200.github.io/2019/02/28/set-env-via-xcconfig-and-scheme/)
+	- **[MVVM之从理论到实践](https://www.jianshu.com/p/1c1b6bc557ac)**
+		- [DemoCode](https://gitee.com/harelyio/work/tree/master/Project/MVVMReactive)
+	- **[仿SDWebImage逻辑](https://gitee.com/harelyio/work/tree/master/Project/ImageLoadSDK)**
+	- **[C++数据结构算法](https://gitee.com/harelyio/work/tree/master/Project/C2)**
+	- **SwiftEOS**
+	- [**开源库整理**](http://blogwenbo.com/2019/09/03/iOS优秀Swift开源库整理)
 
 
 
