@@ -4,10 +4,16 @@
 
 - [**变量**](#变量)
 	- [dynamic和Object类型](#dynamic和Object类型)
-	- [Final 和 Const](#Final和Const)
+	- [Final 和 Const](#Final和Const) 
+		- [const在=左边](#const在=左边)
+		- [const使用在=右边](#const使用在=右边)
 - [**内置内型**](#内置内型)
 	- [Set集合](#Set集合)
-- [空安全](#空安全)
+- [**运算符**](#运算符)
+	- [类型判定运算符as， is， 和 is!](#类型判定运算符as，is和is!)
+	- [赋值运算符](#赋值运算符)
+	- [按位和移位运算符](#按位和移位运算符)
+- [**空安全**](#空安全)
 - [**关键字**](#关键字)
 	- [@required](#@required)
 	- [mixin](#mixin)
@@ -50,11 +56,15 @@
 
 
 
+
 <br/>
 
 
 ***
 <br/><br/><br/><br/><br/>
+
+![flutter1_81_3.webp](./../Pictures/flutter1_81_3.webp)
+
 
 
 > <h1 id='变量'>变量</h1>
@@ -81,6 +91,8 @@ x = 1000;
 ```
 
 
+<br/>
+
 dynamic与Object不同的是dynamic声明的对象编译器会提供所有可能的组合，而Object声明的对象只能使用 Object 的属性与方法, 否则编译器会报错，如:
 
 ```
@@ -105,6 +117,44 @@ dynamic 的这个特点使得我们在使用它时需要格外注意，这很容
 print(a.xx); // a是字符串，没有"xx"属性，编译时不会报错，运行时会报错
 ```
 
+<br/>
+
+读了上面关于dynamic的举例和讲解，可能你还是云里雾里不知道啥意思吧？ 确实，感觉就是空话废话？ 下面我们**干货讲解：**
+
+```
+dynamic类型具有所有可能的属性和方法。Dart语言中函数方法都有dynamic类型作为函数的返回类型，函数的参数也都有dynamic类型。
+```
+
+上面的定义告诉我们，我们不会获得warning当我们调用dynamic变量的任何方法。其实dynamic不是实际的 type，而是类型检查开关，通过它定义的变量会关闭类型检查，这意味着 dynamic list= 3;  list.add();
+
+这段代码静态类型检查不会报错(dynamic不是在编译时确定类型的，而是在运行时)，但是运行时会crash，因为list并没有add（） 方法，一个变量被dynamic修饰，相当于告诉系统“相信我，我知道我自己在做什么”。所以在大多数情况下，不推荐直接使用它。
+
+```
+void main() {
+  dynamic name = '字符串';
+  print(name.runtimeType); //输出：String
+  name.add(); //静态类型检查不会报错,单在运行时会crash
+  dynamic year = 2020;
+  print(year.runtimeType); //输出：int
+}
+
+```
+
+<br/>
+
+但是用object定义变量时则会出现告警,object是Dart 对象的基类,你定义： object o =xxx ;时这个时候系统会认为o 是个对象，你可以调用o的toString()和hashCode()方法，但是如果你尝试调用o.add()时，静态类型检查会运行报错。
+
+```
+void main() {
+ dynamic list= 3;  
+ list.add(); // 不会报错
+ object object = 3；
+ object.add(); // 会报错
+}
+
+```
+
+
 
 <br/><br/><br/>
 
@@ -116,6 +166,33 @@ print(a.xx); // a是字符串，没有"xx"属性，编译时不会报错，运�
 
 >**提示：** 实例变量可以是 final 类型但不能是 const 类型。 必须在构造函数体执行之前初始化 final 实例变量 —— 在变量声明中，参数构造函数中或构造函数的初始化列表中进行初始化。
 
+
+final的要求就是 其声明的**变量在赋值之后就不再改变**，它并不要求变**量在编译时就已经确定**；
+
+- **final有两种场景：**
+
+	- 文件中的变量声明：必须在声明时赋值。
+	- 类的成员变量声明：可以在声明时赋值，也可以通过构造函数赋值语法糖`Class({this.a})`，或者初始化列表的方式赋值。
+
+```
+class TestWidget extends StatefulWidget{
+
+  final String name;
+  
+  final String url ="https://wwww.baidu.com"; // url 不能被修改:
+
+  TestWidget(this.name);
+
+  @override
+  State<StatefulWidget> createState() {
+    // TODO: implement createState
+    return null;
+  }
+}
+```
+
+
+如果需要在**编译时**就固定变量的值，可以使用 const 类型变量。Const 关键字不仅可以用于声明常量变量， 还可以用来创建常量值，以及声明创建常量值的构造函数。 如果 const 变量是类级别的，需要标记为 static const。 在这些地方可以使用在编译时就已经固定不变的值，字面量的数字和字符串， 固定的变量，或者是用于计算的固定数字。
 
 <br/><br/>
 
@@ -143,8 +220,6 @@ name = 'Alice'; // Error: 一个 final 变量只能被设置一次。
 如果您从未打算更改一个变量，那么使用 final 或 const，不是var，也不是一个类型。 一个 final 变量只能被设置一次 。被final或者const修饰的变量，变量类型可以省略，如：
 
 ```
-
-
 //可以省略String这个类型声明
 final str = "hi world";
 
@@ -154,6 +229,116 @@ const str1 = "hi world";
 //const String str1 = "hi world";
 ```
 
+
+<br/><br/><br/>
+
+> <h2 id="const在=左边">const在=左边</h2>
+
+当**const用在=左边**时，其作用是 声明变量，它要求 **必须在声明变量时赋值，一旦赋值就不允许修改，而声明值一定要是编译时常数**（它们必须由编译期就能被计算出来的数据创建，一个 const 的对象不能使用运行时才能确定的值），const在声明变量时可以省略变量的类型如var, int等。
+这里的关键点在于区分 什么是编译时常数，有以下几种场景：
+
+- **数值、字符串、其它的const变量**
+
+```
+void main() {
+  const a = 1;
+  const b = 'hello';
+  const c = a;
+}
+```
+
+
+<br/>
+
+- **表达式，表达式的所有值都是编译时可知的。**
+
+```
+void main() {
+  const a = 1;
+  const b = a > 1 ? 2 : 1;
+}
+```
+
+<br/>
+
+- **集合或对象。集合必须用const修饰，对象的构造函数必须用const修饰。**
+
+```
+void main() {
+  const a = const [1,2,3];
+  const b = ConstObject(2);
+  b.log();
+}
+class ConstObject {
+  
+  final value;
+  
+  const ConstObject(this.value);
+  
+  log() {
+    print(value);
+  }
+}
+```
+
+<br/><br/><br/>
+
+
+> <h2 id="const使用在=右边"> const使用在=右边 </h2>
+
+**当const用在=右边**，其作用是 **修饰值，它意味着对象的整个深度状态可以在编译时完全确定**，并且对象将被冻结并且完全不可变。如果你有一个 final 的集合字段，集合里面的内容是可以改变的。如果你有一个 const 的集合对象，集合里面的一切都是 const 的，都是不能改变的。
+一般用于修饰集合，它要求两点：
+
+- **集合的元素都必须是编译时常数。**
+
+
+```
+void main() {
+  var c = 2;
+  //ERROR, 集合元素必须是编译时常数。
+  var a = const [c,2,3];
+}
+```
+
+<br/>
+
+- **‌ 不允许对集合做任何改变**
+
+```
+void main() {
+  const a = const [1,2,3];
+  //ERROR, 不允许修改。
+  a[1] = 2;
+}
+```
+
+
+<br/>
+
+- **const 修饰类的构造函数**
+
+它们是规范化的，这点有些像字符串：对于一个 const 的 value，无论这个 value 被创建或者使用多少次，都是相同的；当const修饰类的构造函数时，它要求该类的所有成员都必须是final的。
+
+```
+class ConstObject {
+  
+  final value;
+  //ERROR, 必须是 final 变量。
+  int value2;
+  
+  const ConstObject(this.value);
+  
+  log() {
+    print(value);
+  }
+}
+
+main() {
+  var a = ConstObject();
+  var b = ConstObject();
+  print(a===b); // true
+}
+```
 
 
 <br/>
@@ -206,6 +391,30 @@ final navSet = {'Home', 'Furniture', promoActive? 'About':'Outlet'};
 
 
 
+<br/>
+
+***
+
+<br/><br/><br/>
+
+
+> <h1 id="运算符">运算符</h1>
+
+
+<br/><br/><br/>
+
+
+> <h2 id="类型判定运算符as，is和is!">类型判定运算符as，is和is!</h2>
+
+as， is， 和 is! 运算符用于在运行时处理类型检查：
+
+| Operator | Meaning |
+|:--|:--|
+| as | [Typecast (也被用于指定库前缀)](https://www.dartcn.com/guides/language/language-tour#%E6%8C%87%E5%AE%9A%E5%BA%93%E5%89%8D%E7%BC%80) |
+| is | True if the object has the specified type |
+| is！ | False if the object has the specified type |
+
+
 
 <br/><br/>
 
@@ -236,15 +445,129 @@ void main() {
 ```
 
 
+<br/>
+
+例如， `obj is Object` 总是 true。 但是只有 obj 实现了 T 的接口时， obj is T 才是 true。
+使用 as 运算符将对象强制转换为特定类型。 通常，可以认为是 is 类型判定后，被判定对象调用函数的一种缩写形式。 请考虑以下代码：
+
+```
+if (emp is Person) {
+  // Type check
+  emp.firstName = 'Bob';
+}
+使用 as 运算符进行缩写：
+(emp as Person).firstName = 'Bob';
+```
+
+
+> **提示：** 以上代码并不是等价的。 如果 emp 为 null 或者不是 Person 对象， 那么第一个 is 的示例，后面将不回执行； 第二个 as 的示例会抛出异常。
+
+
+<br/><br/><br/>
+
+># <h2 id="赋值运算符">[赋值运算符](https://juejin.cn/post/6928375103780552717#heading-27)</h2>
+
+使用 = 为变量赋值。 使用 ??= 运算符时，只有当被赋值的变量为 null 时才会赋值给它。
+
+```
+// 将值赋值给变量a
+a = value;
+// 如果b为空时，将变量赋值给b，否则，b的值保持不变。
+b ??= value;
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="按位和移位运算符">按位和移位运算符</h2>
+
+在 Dart 中，可以单独操作数字的某一位。 通常情况下整数类型使用按位和移位运算符来操作。
+
+| Operator | Meaning |
+|:--|:--|
+| & | AND |
+| ｜ | OR |
+| ^ | XOR |
+| ~_expr_ | Unary bitwise complement (0s become 1s; 1s become 0s) |
+| << | 左移位 |
+| >> | 右移位 |
+
+
+下面是关于按位和移位运算符的示例：
+
+```
+final value = 0x22;
+final bitmask = 0x0f;
+
+assert((value & bitmask) == 0x02); // AND
+assert((value & ~bitmask) == 0x20); // AND NOT
+assert((value | bitmask) == 0x2f); // OR
+assert((value ^ bitmask) == 0x2d); // XOR
+assert((value << 4) == 0x220); // Shift left
+assert((value >> 4) == 0x02); // Shift right
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="级联运算符 (..)">级联运算符 (..)</h2>
+
+**级联运算符 (..) 可以实现对同一个对像进行一系列的操作。 除了调用函数， 还可以访问同一对象上的字段属性。** 这通常可以节省创建临时变量的步骤， 同时编写出更流畅的代码。 考虑一下代码：
+
+```
+querySelector('#confirm') // 获取对象。
+  ..text = 'Confirm' // 调用成员变量。
+  ..classes.add('important')
+  ..onClick.listen((e) => window.alert('Confirmed!'));
+```
+
+第一句调用函数 querySelector() ， 返回获取到的对象。 获取的对象依次执行级联运算符后面的代码， 代码执行后的返回值会被忽略。 上面的代码等价于：
+
+```
+var button = querySelector('#confirm');
+button.text = 'Confirm';
+button.classes.add('important');
+button.onClick.listen((e) => window.alert('Confirmed!'));
+```
+
+<br/>
+
+级联运算符可以嵌套，例如：
+
+```
+final addressBook = (AddressBookBuilder()
+      ..name = 'jenny'
+      ..email = 'jenny@example.com'
+      ..phone = (PhoneNumberBuilder()
+            ..number = '415-555-0100'
+            ..label = 'home')
+          .build())
+    .build();
+```
+
+<br/>
+
+在返回对象的函数中谨慎使用级联操作符。 例如，下面的代码是错误的：
+
+```
+var sb = StringBuffer();
+sb.write('foo')
+  ..write('bar'); // Error: 'void' 没哟定义 'write' 函数
+```
+
+sb.write() 函数调用返回 void， 不能在 void 对象上创建级联操作。
+
+> **提示： 严格的来讲， “两个点” 的级联语法不是一个运算符。 它只是一个 Dart 的特殊语法。**
+
 
 
 
 <br/>
 
 ***
-<br/><br/>
+<br/><br/><br/>
 
-> <h1 id='关键字'>关键字</h1>
+># <h1 id='关键字'>[关键字](https://juejin.cn/post/6928375103780552717#heading-4)</h1>
 
 
 <br/><br/>
@@ -712,6 +1035,39 @@ getHttpUrl('example.com', '/index.html', 8080);
 getHttpUrl('example.com', '/index.html', 8080, 5);
 ```
 
+<br/>
+
+
+- **函数类型，参数类型，变量类型是可以直接省略**
+
+```
+sum(a, b, c, d) {//函数参数类型和返回值类型可以省略
+  return a + b + c + d;
+}
+main() {
+  print('${sum(10, 12, 14, 12)}');//正常运行
+}
+```
+
+上述的sum函数既没有返回值类型也没有参数类型，可能有的人会疑惑如果sum函数最后一个形参传入一个String类型会是怎么样。
+
+答案是: **静态类型检查分析正常但是编译运行异常。**
+
+```
+sum(a, b, c, d) {
+  return a + b + c + d;
+}
+
+main() {
+  print('${sum(10, 12, 14, "12312")}');//静态检查类型检查正常，运行异常
+}
+
+//运行结果
+Unhandled exception:
+type 'String' is not a subtype of type 'num' of 'other' //请先记住这个子类型不匹配异常问题，因为在后面会详细分析子类型的含义，而且Dart、Flutter开发中会经常看到这个异常。
+Process finished with exit code 255
+```
+
 
 
 
@@ -719,17 +1075,18 @@ getHttpUrl('example.com', '/index.html', 8080, 5);
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 > <h1 id='函数'>函数</h1>
 
+**Dart 是一门真正面向对象的语言， 甚至其中的函数也是对象，并且有它的类型 Function 。** 这也意味着函数可以被赋值给变量或者作为参数传递给其他函数。 也可以把 Dart 类的实例当做方法来调用。[Dart官方函数介绍](https://www.dartcn.com/guides/language/language-tour#%E5%87%BD%E6%95%B0)
 
 <br/><br/><br/>
 
 > <h2 id='函数作为参数'>函数作为参数</h2>
 
-在 Dart 中，函数本身也是个对象，它对应的类型是Function，这意味着函数可以当做变量的值或者作为一个方法入传参数值。
+**函数也是对象**，并且有它的类型 **`Function`** ，这意味着函数可以当做变量的值或者作为一个方法入传参数值。
 
 ```
 void sayHello(var name){
@@ -760,7 +1117,7 @@ hello, Boy
 
 <br/> <br/>
 
-函数也是对象，并且有它的**类型 Function** ， 这也意味着函数可以被赋值给变量或者作为参数传递给其他函数。一个函数可以作为另一个函数的参数。 例如：
+再比如：
 
 ```
 void printElement(int element) {
@@ -817,24 +1174,9 @@ assert(loudify('hello') == '!!! HELLO !!!');
 示例中使用了匿名函数。 
 
 
-
-
 <br/> <br/>
 
 **或者:**
-
-一个函数可以作为另一个函数的参数。 例如：
-
-```
-void printElement(int element) {
-  print(element);
-}
-
-var list = [1, 2, 3];
-
-// 将 printElement 函数作为参数传递。
-list.forEach(printElement);
-```
 
 同样可以将一个函数赋值给一个变量，例如：
 

@@ -27,6 +27,9 @@
 	- [软链接](#软链接)
 - [**Xcode**](#Xcode)
 	- [**调试**](#调试)
+	- [控制台po无法打印](#控制台po无法打印)
+		- [调试命令frame](#调试命令frame)
+	- [控制台高级调试技巧](#控制台高级调试技巧)
 	- [快捷键](#快捷键0)
 	- [配置](#配置0)
 		- [导航显示开发页面](#导航显示开发页面)
@@ -640,7 +643,300 @@ realpath /opt/homebrew/bin/doxygen
 	- 当xcode工具区打印的堆栈信息不全时，可以在控制台通过“bt”指令打印完整的堆栈信息
 
 
+<br/><br/><br/>
+
+> <h2 id="控制台po无法打印">控制台po无法打印</h2>
+
+当使用po命令在某一个断点进行打印的时候，出现如下情况：
+
+```
+po model.itemPic
+
+error: Expression evaluation failed. Retrying without binding generic parameters
+error: Could not evaluate the expression without binding generic types.
+```
+
+在google上搜索了一通，各种配置和摆弄都不行，所以找到了下面一个命令`frame`
+
+```
+frame variable model.itemPic
+
+(String?) model.itemPic = "https://img.mishifeng.com/FhyY7lSjIykM81zfQm8cIqqNBTSz?imageView2/1/w/450/h/225/q/75"
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="调试命令frame">调试命令frame</h2>
+
+
+**疑问：frame是什么命令？为什么frame可以但是po不可以呢**
+
+
+`frame variable 或 fr v`
+
+**用途：显示当前帧中的所有变量。**
+
+
+<br/>
+
+在 LLDB 调试器中，frame variable 和 po 是两种不同的命令，用于不同的目的和场景。让我们详细解释这些命令及其用途，并解释为什么在某些情况下 frame variable 可能比 po 更有用。
+
+<br/>
+**LLDB 命令简介**
+
+- **`po (print object):`**
+
+	- 用途：用于打印对象的描述（description）。
+	
+	- 工作原理：这个命令实际上调用了对象的 description 或 debugDescription 方法，对于 Swift 对象，它通常调用 CustomStringConvertible 或 CustomDebugStringConvertible 协议的实现。
+
+<br/>
+
+示例：
+
+```
+(lldb) po myVariable
+```
+
+<br/> <br/>
+
+
+- **`frame variable:`**
+
+- 用途：用于显示当前帧中的变量信息。它显示变量的详细信息，包括类型和值。
+- 工作原理：这个命令直接读取变量的内存并显示它的值和类型，不依赖于对象的描述方法。
+
+<br/>
+
+示例：
+
+```
+(lldb) frame variable myVariable
+```
+
+**为什么 frame variable 有时比 po 更有用?**
+
+- **直接访问内存：** frame variable 直接读取变量的内存内容，而不依赖于任何类型描述或方法。这意味着即使对象的描述方法不可用或存在问题，frame variable 也能显示变量的实际值。
+
+- **泛型和复杂类型**：在处理泛型和复杂类型时，LLDB 的 po 命令有时会失败，因为它可能无法正确解析对象的类型描述。而 frame variable 可以直接读取和显示这些复杂类型的内存内容。
+
+- **调试优化：** 当代码在调试模式下编译时，优化级别较低，po 命令可能会受到影响，而 frame variable 更加可靠。
+
+<br/> <br/>
+
+**示例**
+
+假设你有一个复杂的泛型结构体，po 命令可能会失败，但 frame variable 能够正常工作：
+
+
+```
+struct Box<T> {
+    var value: T
+}
+```
+
+let myBox = Box(value: 42)
+
+1.在调试过程中，尝试使用以下命令：
+
+**1.1使用 po 命令：**
+
+
+```
+(lldb) po myBox
+```
+
+如果遇到错误，可能是因为调试器无法解析泛型类型的描述。
+
+**1.2使用 frame variable 命令：**
+
+
+```
+(lldb) frame variable myBox
+```
+
+这个命令会显示变量的详细信息，包括类型和值，例如：
+
+
+```
+(Box<Int>) myBox = {
+    value = 42
+}
+```
+
+
+- **总结**
+	- po 命令：适用于需要打印对象描述的简单场景，但在处理泛型和复杂类型时可能会失败。
+	- frame variable 命令：直接读取和显示内存内容，适用于调试泛型和复杂类型的变量。
+	- 通过了解这些命令的不同用途和工作原理，你可以更有效地使用 LLDB 进行调试，尤其是在处理复杂类型和泛型代码时。
+
+
 <br/><br/><br/><br/>
+
+
+
+
+<br/><br/><br/>> <h2 id="控制台高级调试技巧">控制台高级调试技巧</h2>
+常用的 LLDB 调试命令
+po (print object)
+
+用途：打印对象的描述。
+示例：
+sh
+复制代码
+(lldb) po myVariable
+p 或 print
+
+用途：打印变量的值和类型。
+示例：
+sh
+复制代码
+(lldb) p myVariable
+frame variable 或 fr v
+
+用途：显示当前帧中的所有变量。
+示例：
+sh
+复制代码
+(lldb) frame variable
+frame select 或 f s
+
+用途：选择不同的堆栈帧。
+示例：
+sh
+复制代码
+(lldb) frame select 1
+bt 或 backtrace
+
+用途：显示当前线程的调用堆栈。
+示例：
+sh
+复制代码
+(lldb) bt
+thread list
+
+用途：显示当前进程的所有线程。
+示例：
+sh
+复制代码
+(lldb) thread list
+thread select
+
+用途：选择当前线程。
+示例：
+sh
+复制代码
+(lldb) thread select 1
+breakpoint set 或 br set
+
+用途：设置断点。
+示例：
+sh
+复制代码
+(lldb) breakpoint set --name viewDidLoad
+breakpoint list 或 br list
+
+用途：列出所有断点。
+示例：
+sh
+复制代码
+(lldb) breakpoint list
+continue 或 c
+
+用途：继续执行程序直到下一个断点或异常。
+示例：
+sh
+复制代码
+(lldb) continue
+step in 或 s
+
+用途：单步执行进入函数内部。
+示例：
+sh
+复制代码
+(lldb) step in
+step over 或 n
+
+用途：单步执行，不进入函数内部。
+示例：
+sh
+复制代码
+(lldb) step over
+step out 或 finish
+
+用途：执行完当前函数并返回。
+示例：
+sh
+复制代码
+(lldb) step out
+高级调试技巧
+使用条件断点
+
+用途：设置仅在满足特定条件时才会触发的断点。
+示例：
+sh
+复制代码
+(lldb) breakpoint set --name myMethod --condition 'myVariable == 42'
+表达式求值
+
+用途：在调试过程中动态执行代码。
+示例：
+sh
+复制代码
+(lldb) expr myArray.append(5)
+查看和修改变量
+
+用途：在调试时查看和修改变量的值。
+示例：
+sh
+复制代码
+(lldb) p myVariable
+(lldb) expr myVariable = 10
+使用 watchpoints
+
+用途：在内存位置被访问或修改时触发。
+示例：
+sh
+复制代码
+(lldb) watchpoint set variable myVariable
+使用调试日志
+
+用途：记录并查看调试期间的日志输出。
+示例：
+sh
+复制代码
+(lldb) log enable lldb expr
+加载调试脚本
+
+用途：使用 Python 脚本扩展 LLDB 的功能。
+示例：
+sh
+复制代码
+(lldb) command script import my_debug_script.py
+使用 Data Formatters
+
+用途：自定义数据类型的显示格式。
+示例：
+sh
+复制代码
+(lldb) type summary add MyClass --summary-string "MyClass: ${var.myProperty}"
+Xcode 调试视图和工具
+使用变量视图
+
+在断点处暂停时，可以使用变量视图查看和修改变量的值。
+使用调试导航器
+
+调试导航器显示当前线程和调用堆栈，可以快速定位和跳转代码。
+使用仪表
+
+仪表显示应用的实时性能数据，如 CPU 使用率、内存消耗等。
+使用线程断点
+
+在线程死锁或竞争条件下，可以设置线程断点来调试多线程问题。
+利用捕获的 View Hierarchy
+
+捕获和查看应用的 UI 层次结构，调试布局和界面问题。
 
 
 
