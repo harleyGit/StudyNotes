@@ -28,6 +28,7 @@
 		- [逃逸闭包](#逃逸闭包)
 		- [非逃逸闭包](#非逃逸闭包)
 		- [自动闭包](#自动闭包)
+	- [存储属性和计算属性区别](#存储属性和计算属性区别)
 	- [什么是写时复制(copy-on-write)(杭州腾展科技股份有限公司)](#什么是写时复制(copy-on-write))
 	- [值类型和引用类型](#值类型和引用类型)
 		- [区别](#区别)
@@ -966,6 +967,72 @@ class ViewController: UIViewController {
 &emsp; 使用非逃逸闭包可以使编译器应用更多强有力的性能优化，例如，当明确了一个闭包的生命周期的话，就可以省去一些保留（retain）和释放（release）的调用。
 
 &emsp; 非逃逸闭包它的上下文的内存可以保存在栈上而不是堆上。
+
+
+<br/><br/><br/>
+
+> <h2 id="存储属性和计算属性区别">存储属性和计算属性区别</h2>
+
+- 计算的属性由类，结构体和枚举提供。 存储的属性仅由类和结构体提供。
+
+区别：存储属性存储值，计算属性不存储值
+
+<br/>
+
+```
+class DataImporter {
+
+	//存储属性
+    var filename = "data.txt"
+}
+
+class DataManager {
+    
+    //懒加载，只有使用的时候才加载，比如：DataManger初始化的时候，这个importer并不会加载初始化
+    lazy var importer = DataImporter()
+    var data = [String]()
+}
+
+let manager = DataManager()
+manager.data.append("Some data")
+manager.data.append("Some more data")
+```
+
+<br/><br/>
+
+计算属性：**并不存储值**。 相反，它们提供了一个getter和一个可选的setter，以间接检索和设置其他属性和值。
+
+```
+struct Point {
+    var x = 0.0, y = 0.0
+}
+struct Size {
+    var width = 0.0, height = 0.0
+}
+struct Rect {
+    var origin = Point()
+    var size = Size()
+    var center: Point {
+        get {
+            let centerX = origin.x + (size.width / 2)
+            let centerY = origin.y + (size.height / 2)
+            return Point(x: centerX, y: centerY)
+        }
+        set(newCenter) {
+            origin.x = newCenter.x - (size.width / 2)
+            origin.y = newCenter.y - (size.height / 2)
+        }
+    }
+}
+var square = Rect(origin: Point(x: 0.0, y: 0.0),
+                  size: Size(width: 10.0, height: 10.0))
+let initialSquareCenter = square.center
+square.center = Point(x: 15.0, y: 15.0)
+print("square.origin is now at (\(square.origin.x), \(square.origin.y))")
+// Prints "square.origin is now at (10.0, 10.0)"
+
+```
+
 
 
 
