@@ -1,6 +1,8 @@
 > <h1 id=''></h1>
 - [**相对路径**](#相对路径)
 - [**快捷键**](#快捷键)
+- [**脚本构建**](#脚本构建)
+	- [AQG脚本构建](#AQG脚本构建)
 - [**💻终端命令**](#💻终端命令)
 	- [禁止系统更新](#禁止系统更新)
 		- [彻底禁止 macOS Catalina 自动更新，去除更新标记和通知](#彻底禁止macOSCatalina自动更新，去除更新标记和通知)
@@ -132,6 +134,120 @@
 - [x] **Finder显示隐藏文件:** `Command + shift + “ . ”`
 
 - [ ] **表情包快捷键:** `Command + Control +空格键`
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="脚本构建">脚本构建</h1>
+
+[Shell使用快捷键运行](https://juejin.cn/post/6844903989738242062)
+
+<br/><br/><br/>
+
+> <h2 id="AQG脚本构建">脚本构建</h2>
+
+- **1.先写好终端命令**
+
+```
+#!/bin/bash
+
+#创建一个爱抢购apk文件夹
+mkdir ~/desktop/爱抢购apk  
+
+#将桌面的app-product-release.apk移动到 爱抢购apk 文件夹
+mv /Users/ganghuang/Desktop/app-product-release.apk /Users/ganghuang/Desktop/爱抢购apk
+
+#使用如下命令将 app-product-release.apk 包打包成多个android平台的包
+java -jar /Users/ganghuang/HGFiles/GitLab/AiQiangGou_Android/app/walle-cli-all.jar  batch -f /Users/ganghuang/HGFiles/GitLab/AiQiangGou_Android/app/batch.txt "/Users/ganghuang/Desktop/爱抢购apk/app-product-release.apk"
+```
+
+<br/>
+
+- **2.将上述命令保存在run.sh文件内，并将该文件放在桌面**
+
+<br/>
+
+- **3.终端执行：**
+
+使用 chmod 命令将脚本文件设置为可执行
+
+```
+
+chmod +x /Users/ganghuang/Desktop/run.sh
+```
+
+确保将 /path/to/your/script.sh 替换为你实际保存脚本文件的路径。
+
+<br/>
+
+
+- **4.运行脚本**
+
+在终端中导航到脚本文件所在的目录，然后运行脚本来执行其中的命令：
+
+
+```
+./run.sh
+```
+
+这将执行脚本中包含的所有命令。
+
+
+<br/><br/>
+
+
+当然若是，更近一步可以将上述脚本与快捷键进行挂钩，哈哈😁。如下：
+
+
+
+- [**创建 Automator 服务**](https://blog.csdn.net/liaowenxiong/article/details/119145293)
+	- 打开 Automator 应用程序（可以通过 Spotlight 搜索找到）。
+	- 选择 "服务" 作为新建的文档类型。
+	- 在右侧的搜索框中，搜索并选择 "运行 Shell 脚本" 动作。
+	- 将动作拖动到右侧的工作区。
+
+<br/>
+
+- **编辑 Shell 脚本**
+
+在 Shell 脚本动作的工作区中，将 "Pass input" 设置为 "as arguments"。
+
+在 Shell 脚本框中，输入要执行的脚本命令，例如：
+
+```
+/path/to/your/run.sh
+```
+
+确保将 /path/to/your/script.sh 替换为你实际保存脚本文件的路径
+
+<br/>
+
+- **保存服务**
+	- 点击菜单栏的 "文件" -> "保存"。
+	- 给这个服务一个有意义的名字，比如 "Run Script"。
+	- 确保 "服务保存位置" 设置为 "服务"。
+	- 点击 "保存"。
+
+<br/>
+- **分配快捷键**
+	- 打开 macOS 的 "系统偏好设置"。
+	- 点击 "键盘"。
+	- 选择 "快捷键" 选项卡。
+	- 在左侧选择 "服务"。
+	- 在右侧找到你创建的服务，并勾选它。
+	- 点击 "添加快捷键"。
+	- 按下你想要分配的快捷键，然后点击 "添加"。
+
+<br/> 
+
+- **使用快捷键运行脚本**
+
+现在，当你按下你为这个服务分配的快捷键时，Automator 将会运行脚本，执行你定义的命令。
+
+
 
 
 
