@@ -61,6 +61,8 @@
 ⌃ -> Control
 ```
 
+<br/>
+
 ```
 向上/下/左/右滑动网页：上下左右方向键
 大幅度滑动网页：方向键+ option 键
@@ -82,6 +84,12 @@
 重载当前网页：command + R 键
 停止载入网页：command + . 键
 ```
+
+<br/><br/>
+
+- [**超过1000本的计算机经典书籍分享**](https://github.com/forthespada/CS-Books)
+- [**LearnGolang(Github学习资料**)](https://github.com/LearnGolang/LearnGolang/tree/master)
+- [**Go编程基础**](https://github.com/Unknwon/go-fundamental-programming)
 
 
 <br/>
