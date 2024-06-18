@@ -61,7 +61,7 @@
 
 <br/>
 
-[![ky0.0.0.1.jpg](./../Pictures/ky0.0.0.1.jpg)](https://www.bilibili.com/video/BV1vi4y1C73C/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
+[![ky0.0.0.1.jpg](./Pictures/ky0.0.0.1.jpg)](https://www.bilibili.com/video/BV1vi4y1C73C/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
 
 
-[![ky0.0.0.0.png](./../Pictures/ky0.0.0.0.png)](https://www.bilibili.com/video/BV1vi4y1C73C/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
+[![ky0.0.0.0.png](./Pictures/ky0.0.0.0.png)](https://www.bilibili.com/video/BV1vi4y1C73C/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
