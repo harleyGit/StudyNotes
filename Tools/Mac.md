@@ -29,6 +29,7 @@
 	- [软链接](#软链接)
 - [**Xcode**](#Xcode)
 	- [**调试**](#调试)
+	- [Xcode格式化代码工具](#Xcode格式化代码工具)
 	- [控制台po无法打印](#控制台po无法打印)
 		- [调试命令frame](#调试命令frame)
 	- [控制台高级调试技巧](#控制台高级调试技巧)
@@ -757,6 +758,14 @@ realpath /opt/homebrew/bin/doxygen
 
 - 控制台**`bt`**命令
 	- 当xcode工具区打印的堆栈信息不全时，可以在控制台通过“bt”指令打印完整的堆栈信息
+
+
+<br/><br/><br/>
+
+> <h2 id="Xcode格式化代码工具">Xcode格式化代码工具</h2>
+
+[Xcode代码格式化工具-(Clang For Mat)安装和使用(博客园)](https://www.cnblogs.com/styCy/p/17222576.html)
+
 
 
 <br/><br/><br/>
