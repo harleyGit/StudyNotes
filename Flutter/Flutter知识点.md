@@ -592,6 +592,78 @@ fun main(args: Array<String>) {
 	- 引用传递（pass by reference）是指在调用函数时将实际参数的地址直接传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。
 
 
+<br/><br/>
+
+**值类型:**
+
+值类型通常是指那些在赋值和传递时会复制实际值的类型。在Dart中，值类型主要包括以下几类：
+
+- 基本数据类型（Primitive Data Types）：
+	- int
+	- double
+	 - bool
+	- num（int 和 double 的父类）
+	- 字符串类型（String）：
+
+- String
+- 枚举类型（Enum）：
+	- 枚举类型在Dart中也是值类型。
+
+```
+void main() {
+  int a = 10;
+  int b = a; // b是a的一个拷贝
+  b = 20; // 改变b不会影响a
+  print(a); // 输出10
+  print(b); // 输出20
+
+  String str1 = "Hello";
+  String str2 = str1; // str2是str1的一个拷贝
+  str2 = "World"; // 改变str2不会影响str1
+  print(str1); // 输出Hello
+  print(str2); // 输出World
+}
+```
+
+<BR>
+
+**引用类型**
+
+引用类型是指那些在赋值和传递时会复制引用（即内存地址）而不是实际值的类型。在Dart中，所有的对象都是引用类型，包括内置的集合类型。主要包括：
+
+- 类（Class）：
+	- Dart中用户定义的所有类（除了前面提到的基本数据类型和String）都是引用类型。
+
+- 集合类型（Collection Types）：
+	- List
+	- Set
+	- Map
+
+```
+class Person {
+  String name;
+  int age;
+
+  Person(this.name, this.age);
+}
+
+void main() {
+  Person p1 = Person("Alice", 30);
+  Person p2 = p1; // p2是p1的一个引用
+  p2.name = "Bob"; // 改变p2会影响p1，因为它们引用同一个对象
+  print(p1.name); // 输出Bob
+  print(p2.name); // 输出Bob
+
+  List<int> list1 = [1, 2, 3];
+  List<int> list2 = list1; // list2是list1的一个引用
+  list2[0] = 10; // 改变list2会影响list1
+  print(list1); // 输出[10, 2, 3]
+  print(list2); // 输出[10, 2, 3]
+}
+```
+
+
+
 
 
 
@@ -599,8 +671,7 @@ fun main(args: Array<String>) {
 <br/>
 
 ***
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h1 id='关键字'>关键字</h1>
@@ -1341,6 +1412,7 @@ void main() {
 
 
 对上述代码进行片段摘抄:
+
 ```
 class _ExampleWidgetState extends State<ExampleWidget> {
   @override
@@ -1381,7 +1453,7 @@ class _ExampleWidgetState extends State<ExampleWidget> {
     );
   }
 }
-````
+```
 
 <br/>
 
@@ -2103,7 +2175,7 @@ class MyApp extends StatelessWidget {
 
 **众安保险问到:当有A组件,B组件,这时有一个C组件.在C组件如何维护A、B组件的通信,但是要求不会触发A组件、B组件的state状态改变?**
 
-这里其实就问到Provider的状态管理,可以用这个进行解决,[具体看这里](#组件基础.md#Provider)
+这里其实就问到Provider的状态管理,可以用这个进行解决,[具体看这里](./组件基础.md#Provider)
 
 
 <br/><br/><br/>

@@ -19,11 +19,13 @@
 	- [适配器、响应元是什么](#适配器响应元是什么)
 	- [热更新](#热更新)
 	- [NSString的属性copy和strong区别](#NSString的属性copy和strong区别)
+	- [字符串为什么用copy](#字符串为什么用copy)
 	- [NSMutableSet和NSMutableArray区别](#NSMutableSet和NSMutableArray区别)
 	- [retain和strong区别](#retain和strong区别)
 	- [NSCache详解](#NSCache详解)
 	- [为什么说atomic不是安全的](#为什么说atomic不是安全的)
 	- [代码管理](#代码管理)
+		- [pod install和pod update区别](#podinstall和podupdate区别)
 	- [静态库和动态库区别(同程旅行)](#静态库和动态库区别)
 	- [数据本地持久化](#数据本地持久化)
 	- [@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？(杭州腾展科技股份有限公司)](#使用copy关键字为什么)
@@ -478,7 +480,7 @@ self.copyedString: 123456, 0x107b2bff0
 类似的[NSArray和NSMutableArray](https://github.com/harleyGit/StudyNotes/blob/master/iOS/Objective-C/NSArray.md#%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D)和这个差不多.
 
 
-<br/><br/><br/>> <h2 id='字符串为什么用copy'>字符串为什么用copy</h2>
+<br/><br/><br/> <h2 id='字符串为什么用copy'>字符串为什么用copy</h2>
 
 [copy的使用](./关键字.md#copy)
 
@@ -646,7 +648,7 @@ atomic表示，我TM也很冤啊！！！！
 
 <br/>
 
-> <h3 id="pod instal和pod update区别">pod instal和pod update区别
+> <h3 id="podinstall和podupdate区别">pod install和pod update区别
 </h3>
 
 <br/>
@@ -673,8 +675,7 @@ atomic表示，我TM也很冤啊！！！！
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 
 >## <h2 id = "数据本地持久化">[数据本地持久化](https://www.jianshu.com/p/d1c621631f7e)</h2>
