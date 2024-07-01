@@ -1,5 +1,7 @@
 > <h2 id=""></h2>
 - [**48英语音标发音**](#48英语音标发音)
+- **资料**
+	- [连连上岸：考研英语语法小课堂(B站-连俊霞)](https://www.bilibili.com/video/BV13h411H7fA?p=5&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
 
 
 
@@ -65,3 +67,145 @@
 
 
 [![ky0.0.0.0.png](./Pictures/ky0.0.0.0.png)](https://www.bilibili.com/video/BV1vi4y1C73C/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id=""></h1>
+
+![ky0.0.0.2.png](./Pictures/ky0.0.0.2.png)
+
+![ky0.0.0.3.png](./Pictures/ky0.0.0.3.png)
+
+
+![ky0.0.0.4.png](./Pictures/ky0.0.0.4.png)
+
+
+
+<br/><br/><br/>
+
+> <h2 id="动词分类">动词分类</h2>
+
+
+**动词分类**
+
+![ky0.0.0.5.png](./Pictures/ky0.0.0.5.png)
+
+实义动词：有实际动作意义的动词，如：吃，睡， 看；
+
+系动词： 是的意思(be:是， mean：意味着； seem：似乎，看起来)
+
+
+<br/><br/><br/>
+
+> <h2 id="主谓宾和主系表的结构">主谓宾和主系表的结构</h2>
+
+句子逐渐变复杂了，变成了各种从句充当主语或者宾语了！如下：
+
+![ky0.0.0.6.png](./Pictures/ky0.0.0.6.png)
+
+
+<br/><br/><br/>
+
+> <h2 id="动词“三姨太”">动词“三姨太”</h2>
+
+
+**时态**
+   
+![ky0.0.0.7.png](./Pictures/ky0.0.0.7.png)
+
+
+**现在完成进行态：** 从过去做到现在，而且现在还在做；
+
+
+
+<br/> <br/>
+
+**语态**
+
+![ky0.0.0.8.png](./Pictures/ky0.0.0.8.png)
+
+
+<br/>
+
+**变种：时态+语态**
+
+![ky0.0.0.9.png](./Pictures/ky0.0.0.9.png)
+
+
+
+<br/> <br/>
+
+
+**情态动词**
+
+![ky0.0.0.10.png](./Pictures/ky0.0.0.10.png)
+
+
+
+情态动词不能单独作谓语，必须与其他动词构成谓语；
+
+```
+I can eat food； can eat 构成谓语
+```
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="it形式主语">it形式主语</h1>
+
+![ky0.0.0.11.png](./Pictures/ky0.0.0.11.png)
+
+
+```
+it作为形式主语，不可翻译，若是翻译最好翻译成：重要的是....; 很明显的是.....; 关键的是...;
+```
+
+<br/>
+
+
+**It作为形式主语句型：**
+
+![ky0.0.0.13.png](./Pictures/ky0.0.0.13.png)
+
+
+
+<br/><br/><br/>
+
+> <h2 id="宾语">宾语</h2>
+
+![ky0.0.0.15.png](./Pictures/ky0.0.0.15.png)
+
+
+<br/>
+
+**It形式宾语**
+
+![ky0.0.0.14.png](./Pictures/ky0.0.0.14.png)
+
+```
+//注意：it作形式宾语不翻译
+句型速记： make（使得）/find（发现）/take（认为，采取）/have（让） + it + adj+真正宾语
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
