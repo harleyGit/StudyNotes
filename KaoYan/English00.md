@@ -1,6 +1,9 @@
 > <h2 id=""></h2>
 - [**48英语音标发音**](#48英语音标发音)
 - [**语法**](#语法)
+	- [定语从句](#定语从句)
+	- [状语从句](#状语从句)
+	- [补语从句](#补语从句)
 	- [动词分类](#动词分类)
 	- [主谓宾和主系表的结构](#主谓宾和主系表的结构)
 	- [动词“三姨太”](#动词“三姨太”)
@@ -83,6 +86,60 @@
 > <h1 id=""></h1>
 
 ![ky0.0.0.2.png](./Pictures/ky0.0.0.2.png)
+
+
+
+<br/><br/><br/>
+
+> <h2 id="定语从句">定语从句</h2>
+
+定语从句是用来修饰名词或代词的从句，通常由关系代词 (如 that, which, who, whom, whose) 或关系副词 (如 when, where, why) 引导。它们紧跟在所修饰的名词或代词之后。
+
+```
+The book that you gave me is very interesting. (你给我的那本书非常有趣。)
+
+She is the woman who helped me. (她就是帮助我的那位女士。)
+```
+
+在这些例子中，定语从句 **"that you gave me"** 和 **"who helped me"** 修饰了主语 "The book" 和 "the woman"。
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id="状语从句">状语从句</h2>
+
+状语从句用来修饰动词、形容词或副词，通常表示时间、原因、目的、条件、方式、结果等。它们由从属连词 (如 because, since, if, when, although) 引导。
+
+
+```
+She was happy because she passed the exam. (因为她通过了考试，所以她很高兴。)
+
+When the bell rang, the students left the classroom. (铃声一响，学生们就离开了教室。)
+```
+
+在这些例子中，状语从句 "because she passed the exam" 和 "When the bell rang" 修饰了主句中的动词 "was happy" 和 "left"。
+
+<br/><br/><br/>
+
+> <h2 id="补语从句">补语从句</h2>
+
+补语从句是用来补充说明主语的从句，通常由连接词 that 引导，或者由连接词 if, whether 等引导表示疑问的从句。补语从句可以用来作主语补语、宾语补语或者表语。
+
+例子：
+
+```
+The fact that she is a doctor surprises me. (她是医生这一事实让我感到惊讶。)
+
+My hope is that he will recover soon. (我希望他能很快康复。)
+```
+
+在这些例子中，补语从句 "that she is a doctor" 和 "that he will recover soon" 分别作为名词 "The fact" 的补语和动词 "is" 的表语。
+
+
+
+<br/> <br/> <br/>
 
 ![ky0.0.0.3.png](./Pictures/ky0.0.0.3.png)
 
