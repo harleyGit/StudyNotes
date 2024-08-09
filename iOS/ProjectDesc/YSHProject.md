@@ -300,10 +300,51 @@ YTKNetwork 是一个基于 AFNetworking 的轻量级网络库，用于简化 iOS
     return dic;
 }
 
+//缓存：可以通过重载 cacheTimeInSeconds 方法来实现缓存
 - (NSInteger)cacheTimeInSeconds {
     // 缓存时间，单位为秒，这里设置为1分钟
     return 60;
 }
+
+
+//自定义请求头：通过重载 requestHeaderFieldValueDictionary 方法可以自定义请求头
+- (NSDictionary<NSString *,NSString *> *)requestHeaderFieldValueDictionary {
+    return @{
+        @"Authorization": @"Bearer token",
+        @"Accept": @"application/json"
+    };
+}
+
+
+
+//在请求完成后（无论是成功还是失败）调用。你可以重写这个方法来进行一些统一的后处理工作，例如解析数据、记录日志或更新 UI 等。
+- (void)requestCompleteFilter {
+    [super requestCompleteFilter];
+    
+    // 打印请求的 URL
+    NSLog(@"Request URL: %@", self.requestUrl);
+    
+    // 打印返回的 JSON 数据
+    NSDictionary *response = self.responseJSONObject;
+    NSLog(@"Response JSON: %@", response);
+    
+    // 可选：将 JSON 数据转化为字符串以便更好地打印
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:response options:NSJSONWritingPrettyPrinted error:&error];
+    if (!error) {
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        NSLog(@"Formatted Response JSON: %@", jsonString);
+    } else {
+        NSLog(@"Error converting JSON to string: %@", error);
+    }
+    
+    // 打印错误信息（如果有）
+    if (self.error) {
+        NSLog(@"Error: %@", self.error);
+    }
+}
+
+
 
 @end
 ```
