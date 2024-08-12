@@ -5,6 +5,11 @@
 	- [实时处理语音识别为文字](#实时处理语音识别为文字)
 - [**YYKit**](./../Objective-C/YYKit.md)
 - [**‌YTKNetwork**](#YTKNetwork)
+- [**热修复OCRunnerArm64**](#热修复OCRunnerArm64)
+- [**动画库lottie-ios**](#动画库lottie-ios)
+- [**推送通知库GTSDK**](#推送通知库GTSDK)
+- [**广告标识IDFA**](#广告标识IDFA)
+- 
 
 
 
@@ -366,9 +371,226 @@ GetUserInfoApi *api = [[GetUserInfoApi alloc] initWithUserId:@"12345"];
 ```
 
 
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="热修复OCRunnerArm64">热修复OCRunnerArm64</h1>
+
+&emsp; OCRunnerArm64 是一个用于 iOS 的开源库，专注于实现运行时的 Objective-C 代码动态编译和执行。它为 iOS 提供了一种热修复的解决方案，特别是在处理 arm64 架构的设备上。通过使用 OCRunner，你可以在应用运行时动态加载和执行 Objective-C 代码，从而修复或者调整应用的功能，而不需要重新发布整个应用。
+
+<br/>
+
+**主要功能**
+
+- 动态代码执行：OCRunner 可以动态加载并执行 Objective-C 代码，这使得它在需要热修复的场景中非常有用。
+- 轻量级：相比于一些其他的热修复解决方案，OCRunner 是一个相对轻量级的实现。
+- arm64 支持：OCRunner 专门针对 arm64 架构进行了优化。
+
+<br/>
+
+**使用场景**
+
+&emsp; OCRunner 的主要使用场景是 iOS 应用的热修复，即在应用已经发布后，通过动态加载和执行修复代码，解决潜在的 Bug 或者添加新的功能，而无需重新提交 App Store。
+
+
+<br/><br/>
+
+```
+pod 'OCRunnerArm64'
+```
+
+
+<br/><br/>
+
+- **修复案例**
+
+初始化 OCRunner
+
+首先，在你的 AppDelegate 或者其他适合的位置初始化 OCRunner：
+
+```
+#import <OCRunner/OCRunner.h>
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // 初始化 OCRunner
+    [OCRunner run];
+    return YES;
+}
+
+```
+
+<br/>
+
+- **编写热修复代码**
+
+假设你在应用中有一个错误的功能，需要在运行时修复它。你可以编写一个修复代码文件（通常是 .txt 或者 .runt 文件），其中包含需要动态执行的 Objective-C 代码。
+
+比如，你有一个原始方法：
+
+```
+- (NSString *)sayHello {
+    return @"Hello, World!";
+}
+```
+
+现在你发现这个方法返回的字符串有问题，你想要修复它，使其返回 "Hello, OCRunner!"。
+
+创建一个修复代码文件 fix.txt：
+
+```
+%hook YourClassName
+
+- (NSString *)sayHello {
+    return @"Hello, OCRunner!";
+}
+
+%end
+```
+
+
+<br/>
+
+- **加载和执行修复代码**
+
+你可以将修复代码文件打包在应用内，或者从服务器上下载。在需要时，加载并执行这个文件：
+
+```
+NSString *fixFilePath = [[NSBundle mainBundle] pathForResource:@"fix" ofType:@"txt"];
+NSString *fixCode = [NSString stringWithContentsOfFile:fixFilePath encoding:NSUTF8StringEncoding error:nil];
+
+[OCRunner eval:fixCode];
+
+```
+
+
+<br/>
+
+- **测试修复**
+
+在你的应用中，当你调用 sayHello 方法时，它应该会返回 "Hello, OCRunner!" 而不是原来的 "Hello, World!"。
+
+<br/>
+
+- **动态更新修复代码**
+
+为了实现真正的热修复，你可以将修复代码存储在服务器上，并在应用启动时从服务器下载最新的修复代码，然后动态执行。例如：
+
+
+```
+NSURL *url = [NSURL URLWithString:@"https://example.com/fix.txt"];
+
+NSData *data = [NSData dataWithContentsOfURL:url];
+NSString *fixCode = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+[OCRunner eval:fixCode];
+
+```
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+
+> <h1 id="动画库lottie-ios">动画库lottie-ios</h1>
+
+[**动画库lottie-ios(Github地址)**](https://github.com/airbnb/lottie-ios)
+
+
+[iOS Lottie动画接入过程详解(掘金)](https://juejin.cn/post/6844903576272125966)
+
+[Lottie-iOS的应用及部分源码分析(掘金)](https://juejin.cn/post/6844903609478414343)
 
 
 
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="推送通知库GTSDK">推送通知库GTSDK</h1>
+
+[GTSDK官网iOS集成](https://docs.getui.com/getui/mobile/ios/xcode/)
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="广告标识IDFA">广告标识IDFA</h1>
+
+
+**IDFA介绍：**
+
+&emsp; IDFA（Identifier for Advertising）是苹果为 iOS 设备提供的一个广告标识符。它是苹果从 iOS 6 开始引入的一个功能，用于广告跟踪和营销分析。以下是关于 IDFA 的一些关键点：
+
+- 定义：IDFA 是一个由苹果系统生成的随机字符串，用来唯一标识设备，但它与设备硬件无关，也不包含个人可识别信息。
+- 用途：IDFA 主要用于广告定位和效果测量。广告商可以使用 IDFA 来跟踪用户对广告的响应情况，比如查看广告后是否进行了应用安装或其他购买行为。
+- 隐私保护：用户可以选择重置 IDFA 或者完全关闭广告跟踪。这意味着用户可以控制他们的数据如何被用于广告目的。
+- 获取方式：开发人员可以通过调用苹果提供的 API 获取 IDFA，但在 iOS 14.5 之后，必须先获得用户的明确同意才能读取 IDFA。
+- 变化：随着对用户隐私保护的重视增加，苹果在 iOS 14.5 中引入了 App Tracking Transparency（ATT）框架，要求所有 app 必须显示弹窗请求用户的许可才能访问 IDFA 或进行跨 app 跟踪。
+
+
+&emsp; 总之，IDFA 是苹果为 iOS 设备提供的一个用于广告定位和跟踪的标识符，旨在平衡广告商的需求和个人隐私保护之间的关系。随着隐私政策的变化，获取 IDFA 的过程变得更加严格，需要用户的明确同意。
+
+
+**重要方法：**
+
+```
+[ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+
+}];
+```
+
+ATTrackingManager.requestTrackingAuthorizationWithCompletionHandler: 是一个用于请求用户授权进行跨应用广告跟踪的方法。这个方法是苹果在 iOS 14.5 中引入的 AppTrackingTransparency 框架的一部分，目的是让用户能够选择是否允许应用追踪其数据以便用于个性化广告。
+
+
+<br/>
+
+Block中的status有以下几种状态：
+
+```
+ATTrackingManagerAuthorizationStatus 类型，表示授权状态的结果。
+
+ATTrackingManagerAuthorizationStatusNotDetermined: 授权状态未确定。
+
+ATTrackingManagerAuthorizationStatusRestricted: 授权受到限制（例如，用户是儿童账户）。
+
+ATTrackingManagerAuthorizationStatusDenied: 用户拒绝了跟踪授权。
+
+ATTrackingManagerAuthorizationStatusAuthorized: 用户授权了跟踪。
+```
+
+
+<br/>
+
+
+- **使用步骤：**
+	
+- 获取使用权限后，可以获取IDFA的序列号，通过调用方法：
+
+```
+NSString *idfa = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+```
+
+若是上述方法获取不到idfa，可以通过获取模拟器的方法进行获取：
+
+```
+NSString *simulateIdfa = [SimulateIDFA createSimulateIDFA];
+```
+
+
+<br/>
+
+- 存储
+
+为了可以实时跟踪这个用户可以使用KeyChain这个东西，因为这个keyChain是跟着AppleID的，😝哈哈！这大概也算是活用功能吧！
 
 
 
