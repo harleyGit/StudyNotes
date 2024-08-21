@@ -45,6 +45,7 @@
 		- [控制台调试](https://www.jianshu.com/p/75688613c6f4)
 - [**开发必备工具**](#开发必备工具)
 	- [Charles使用](#Charles使用)
+		- [Mock本地json数据](#Mock本地json数据)
 	- [Wireshark🦈SIP](#Wireshark🦈SIP)
 	- [MacVim](#MacVim)
 	- [微信小助手扩展](#微信小助手扩展)
@@ -1954,12 +1955,32 @@ ffmpeg -i 'https://video.twimg.com/amplify_video/1689197552615444480/pl/oZLnz_7Q
 <br/>
 
 >## <h2 id='Charles使用'>[Charles 使用](https://www.jianshu.com/p/633ac6221028)</h2>
->
 
 
-<br/>
-<br/>
-<br/>
+[Charles 抓包及 Mock 数据教程——超级详细(掘金)](https://juejin.cn/post/6844904162044428302#heading-5)
+
+
+<br/><br/><br/>
+
+> <h2 id="Mock本地json数据">Mock本地json数据</h2>
+
+利用Charles工具Mock本地的Json文件数据的前提条件是手机和电脑要使用同一WIFI、iPhone安装描述文件、电脑需要安装Charles证书并信任、手机的Wi-Fi的iP地址要和电脑ip一样。
+
+按如下所图步骤：
+
+![](./../Pictures/tool.0.0.4.jpg)
+
+![](./../Pictures/tool.0.0.5.png)
+
+![](./../Pictures/tool.0.0.6.png)
+
+![](./../Pictures/tool.0.0.7.png)
+
+![](./../Pictures/tool.0.0.8.png)
+
+
+
+<br/><br/><br/>
 
 
 ># <h2 id='Wireshark🦈SIP'>Wireshark🦈SIP</h2>
