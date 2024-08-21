@@ -1970,10 +1970,6 @@ ffmpeg -i 'https://video.twimg.com/amplify_video/1689197552615444480/pl/oZLnz_7Q
 
 ![](./../Pictures/tool.0.0.4.jpg)
 
-![](./../Pictures/tool.0.0.5.png)
-
-![](./../Pictures/tool.0.0.6.png)
-
 ![](./../Pictures/tool.0.0.7.png)
 
 ![](./../Pictures/tool.0.0.8.png)
