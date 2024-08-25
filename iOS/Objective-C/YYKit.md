@@ -25,6 +25,15 @@
 
 > <h2 id="递归解析模型">递归解析模型</h2>
 
+
+> <h2 id=""></h2>
+[模型转换为字典或者数组](#模型转换为字典或者数组)
+
+
+<br/><br/><br/>
+
+> <h2 id="模型转换为字典或者数组">模型转换为字典或者数组</h2>
+
 ```
 - (id)modelToJSONObject
 ```
@@ -84,4 +93,5 @@ YYKit 和 YYModel 的联系
 NSString *jsonString = @"{\"students\": [{\"name\": \"Alice\", \"age\": 20}, {\"name\": \"Bob\", \"age\": 22}]}";
 ClassRoom *classRoom = [ClassRoom yy_modelWithJSON:jsonString];
 ```
+
 

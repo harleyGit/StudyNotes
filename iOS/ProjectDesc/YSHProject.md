@@ -9,7 +9,9 @@
 - [**动画库lottie-ios**](#动画库lottie-ios)
 - [**推送通知库GTSDK**](#推送通知库GTSDK)
 - [**广告标识IDFA**](#广告标识IDFA)
-- 
+- [**YYKit**](#YYKit)
+	- [递归解析模型](#递归解析模型)
+- [**‌YTKNetwork**](#YTKNetwork)
 
 
 
@@ -221,6 +223,19 @@ isFinal：是否是最终结果。
 
 
 
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="YYKit">YYKit</h1>
+
+<br/><br/><br/>
+
+> <h2 id="递归解析模型">[递归解析模型](./../Objective-C/YYKit#模型转换为字典或者数组)</h2>
+
+
 
 
 <br/>
@@ -312,6 +327,7 @@ YTKNetwork 是一个基于 AFNetworking 的轻量级网络库，用于简化 iOS
 }
 
 
+
 //自定义请求头：通过重载 requestHeaderFieldValueDictionary 方法可以自定义请求头
 - (NSDictionary<NSString *,NSString *> *)requestHeaderFieldValueDictionary {
     return @{
@@ -348,9 +364,6 @@ YTKNetwork 是一个基于 AFNetworking 的轻量级网络库，用于简化 iOS
         NSLog(@"Error: %@", self.error);
     }
 }
-
-
-
 @end
 ```
 
@@ -369,6 +382,7 @@ GetUserInfoApi *api = [[GetUserInfoApi alloc] initWithUserId:@"12345"];
     NSLog(@"Failed: %@", request.error);
 }];
 ```
+
 
 
 <br/>
@@ -591,6 +605,7 @@ NSString *simulateIdfa = [SimulateIDFA createSimulateIDFA];
 - 存储
 
 为了可以实时跟踪这个用户可以使用KeyChain这个东西，因为这个keyChain是跟着AppleID的，😝哈哈！这大概也算是活用功能吧！
+
 
 
 
