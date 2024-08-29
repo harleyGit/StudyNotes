@@ -686,7 +686,7 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 
 <br/><br/><br/>
 
-># <h2 id="类型擦除">类型擦除(./Swift知识点.md#范型的高级使用-类型擦除)</h2>
+># <h2 id="类型擦除">[类型擦除](./基础.md#范型的高级使用-类型擦除)</h2>
 
 
 <br/><br/>
