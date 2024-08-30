@@ -1,4 +1,4 @@
->
+> <h3/>
 - [**TRTC**](#TRTC)
 	- [捕获本地音频数据处理](#捕获本地音频数据处理)
 - [**腾讯语音识别器QCloudRealTimeRecognizer**](#腾讯语音识别器QCloudRealTimeRecognizer)
@@ -12,6 +12,10 @@
 - [**YYKit**](#YYKit)
 	- [递归解析模型](#递归解析模型)
 - [**‌YTKNetwork**](#YTKNetwork)
+- [**Swift应用**](#Swift应用)
+	- [数据模型继承Codable](./../Swift/数据.md#继承Codable的结构体)
+	- [网络请求配置自定义](#网络请求配置自定义)
+	- [double类型判断是否有限值-isFinite](#double类型判断是否有限值-isFinite)
 
 
 
@@ -605,6 +609,68 @@ NSString *simulateIdfa = [SimulateIDFA createSimulateIDFA];
 - 存储
 
 为了可以实时跟踪这个用户可以使用KeyChain这个东西，因为这个keyChain是跟着AppleID的，😝哈哈！这大概也算是活用功能吧！
+
+
+
+
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="Swift应用"> Swift应用 </h1>
+
+
+<br/><br/><br/>
+
+> <h2 id="网络请求配置自定义">网络请求配置自定义</h2>
+
+```
+let dataProvider = MoyaProvider<xxxRequest>(endpointClosure: MoyaProvider.xxxAuthorizedEndpointMapping)
+```
+
+是如何解读的？
+
+详细解读，[请看这里](./../Swift/Moya.md#网络请求配置自定义)
+
+
+<br/><br/><br/>> <h2 id="double类型判断是否有限值-isFinite">double类型判断是否有限值-isFinite</h2>
+
+在 Swift 中，`isFinite` 是 `FloatingPoint` 协议的一部分，`Double` 类型遵循该协议。`isFinite` 用来判断一个浮点数是否为有限值（finite value）。
+
+具体来说：
+
+- **有限值**：指的是任何非无穷大（`infinity`）或非非数字（`NaN`）的数字。对于 `Double` 类型的值，像 `2.00` 这样的普通数字就是有限值。
+- **非有限值**：包括正无穷大（`infinity`）、负无穷大（`-infinity`）以及非数字值（`NaN`，例如 0.0 除以 0.0 的结果）。
+
+所以，`a.isFinite` 会返回一个布尔值 `true` 或 `false`，表示 `a` 是否为有限值。
+
+<br/>
+
+**例子**
+
+```swift
+let a: Double = 2.00
+print(a.isFinite) // 输出: true
+
+let b: Double = Double.infinity
+print(b.isFinite) // 输出: false
+
+let c: Double = Double.nan
+print(c.isFinite) // 输出: false
+```
+
+在这个例子中：
+
+- `a.isFinite` 返回 `true`，因为 `2.00` 是一个有限的数字。
+- `b.isFinite` 返回 `false`，因为 `b` 是无穷大。
+- `c.isFinite` 返回 `false`，因为 `c` 是非数字（`NaN`）。
+
+`isFinite` 方法非常有用，特别是在涉及到浮点数运算时，你可能需要确保数值是一个实际的数字而不是无穷大或 `NaN`。
+
 
 
 

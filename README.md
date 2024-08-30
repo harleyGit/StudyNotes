@@ -196,6 +196,9 @@
 	* [UITextField](./iOS/Objective-C/UITextField.md)
 	* [UIViewController(I)](./iOS/Objective-C/UIViewController(I).md)
 	* [UIWindow](./iOS/Objective-C/UIWindow.md)
+* [**动画&绘图**](#动画&绘图)
+	*	[UI布局更新](./iOS/Objective-C/UI布局更新.md)
+
 * **安全**
 	* [KeyChain](./iOS/Objective-C/KeyChain.md)
 	*	[加密](./iOS/Objective-C/加密.md)
@@ -255,6 +258,7 @@
 * [String(I)](./iOS/Swift/String(I).md)
 * **类库**
 	* [RxSwift](./iOS/Swift/RxSwift.md)
+	* [Moya](./iOS/Swift/Moya.md)
 * **底层**
 	* [动态性](./iOS/Swift/动态性.md)
 
@@ -382,8 +386,6 @@
 *	[图片绘制(I)](./AnimationDraw/图片绘制(I).md)
 *	[CoreAnimation(I)](./AnimationDraw/CoreAnimation(I).md)
 *	[drawRect(I)](./AnimationDraw/drawRect(I).md)
-*	[layoutSubviews(I)](./AnimationDraw/layoutSubviews(I).md)
-*	[layoutSubviews(II)](./AnimationDraw/layoutSubviews(II).md)
 
 
 
