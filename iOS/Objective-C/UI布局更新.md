@@ -6,9 +6,14 @@
 	- [updateConstraintsIfNeeded](#updateConstraintsIfNeeded)
 	- [updateConstraints](#updateConstraints)
 	- [Controller的方法updateViewConstraints方法](#Controller的方法updateViewConstraints方法)
-- **layoutSubviews**
-	- layoutSubviews 会调用的情况
-	- layoutSubviews 不会调用的情况
+- [**layoutSubviews**](#layoutSubviews)
+	- [layoutSubviews 会调用的情况](#layoutSubviews会调用的情况)
+	- [layoutSubviews 不会调用的情况](#layoutSubviews不会调用的情况)
+- [**UIView视图更新与重绘**](#UIView视图更新与重绘)
+	- [对应的事件序列](#对应的事件序列)
+	- [通知 Controller 有数据变化](#通知Controller有数据变化)
+- [setNeedsLayout和setNeedsDisplayInRect区别](#setNeedsLayout和setNeedsDisplayInRect区别)
+- [**视图绘制循环**](#视图绘制循环)
 
 
 
@@ -106,19 +111,20 @@ ViewController的View在更新视图布局时，会先调用ViewController的upd
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
+> <h1 id="layoutSubviews">layoutSubviews</h1>
 
-># layoutSubviews
-
-简介：
+**简介：**
 
 &emsp;  iOS5.1和之前的版本，此方法的缺省实现不会做任何事情(实现为空)，iOS5.1之后(iOS6开始)的版本，此方法的缺省实现是使用你设置在此view上面的constraints(Autolayout)去决定subviews的position和size。
 
-&emsp;  UIView的子类如果需要对其subviews进行更精确的布局，则可以重写此方法。只有在autoresizing和constraint-based behaviors of subviews不能提供我们想要的布局结果的时候，我们才应该重写此方法。可以在此方法中直接设置subviews的frame。 我们不应该直接调用此方法，而应当用setNeedsLayout、layoutIfNeeded 这两个方法。
+&emsp;  UIView的子类如果需要对其subviews进行更精确的布局，则可以重写此方法。只有在autoresizing和constraint-based behaviors of subviews不能提供我们想要的布局结果的时候，我们才应该重写此方法。
+
+&emsp;  可以在此方法中直接设置subviews的frame。 我们不应该直接调用此方法，而应当用setNeedsLayout、layoutIfNeeded 这两个方法。
 
 
-<br/>
+<br/><br/>
 
 **TestView.h 文件**
 
@@ -130,6 +136,7 @@ ViewController的View在更新视图布局时，会先调用ViewController的upd
 @end
 ```
 
+<br/>
 
 **TestView.m 文件**
 
@@ -142,16 +149,14 @@ ViewController的View在更新视图布局时，会先调用ViewController的upd
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
-    if (self)
-    {
+    if (self){
         NSLog(@"initWithFrame:%@" ,NSStringFromCGRect(frame));
     }
     return self;
 }
 
 //layoutSubviews方便数据计算, 调用先于drawRect
-- (void)layoutSubviews
-{
+- (void)layoutSubviews {
     NSLog(@"-------触发了layoutSubviews方法： %@", self);
     [super layoutSubviews];
     
@@ -172,8 +177,10 @@ ViewController的View在更新视图布局时，会先调用ViewController的upd
 ```
 
 
+<br/><br/><br/>
 
-- **layoutSubviews 会调用的情况**
+> <h2 id="layoutSubviews会调用的情况">layoutSubviews会调用的情况</h2>
+
 
 <br/>
 
@@ -183,6 +190,7 @@ ViewController的View在更新视图布局时，会先调用ViewController的upd
  TestView *test1 = [[TestView alloc] init];
  [self.view addSubview:test1];
 ```
+
 打印：
 
 ```
@@ -198,6 +206,7 @@ ViewController的View在更新视图布局时，会先调用ViewController的upd
 TestView *test1 = [[TestView alloc] initWithFrame:CGRectMake(70, 70, 100, 100)];
 [self.view addSubview:test1];
 ```
+
 打印：
 
 ```
@@ -207,7 +216,10 @@ TestView *test1 = [[TestView alloc] initWithFrame:CGRectMake(70, 70, 100, 100)];
 ```
 
 效果图：
-![调用了layoutSubviews 和 drawRect 方法](https://upload-images.jianshu.io/upload_images/2959789-cc8f3c3d686ffea0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/480)
+
+
+![ios0.0.24.png](./../../Pictures/ios0.0.24.png)
+
 
 `结论：`当设置了frame值后，drawRect 方法会被系统调用。
 
@@ -258,22 +270,23 @@ TestView *test1 = [TestView new];
 
 结论：
 
-&emsp;  `通过打断点发现，在执行了 setNeedsLayout、layoutIfNeeded 方法后会立马调用layoutSubviews，`然后在 addSubview 后又调用了一次 layoutSubviews 方法。
+&emsp;  `通过打断点发现，在执行了 `setNeedsLayout、layoutIfNeeded `方法后会立马调用layoutSubviews，`然后在 addSubview 后又调用了一次 layoutSubviews 方法。
 
-&emsp;  layoutIfNeeded方法：在receiver标上一个需要被重新绘图的标记，在下一个draw周期自动重绘(iphone device的刷新频率是60hz，也就是1/60秒后重绘)，立即调用layoutSubviews进行布局（如果没有标记，不会调用layoutSubviews）。
+&emsp;  `layoutIfNeeded`方法：在receiver标上一个需要被重新绘图的标记，在下一个draw周期自动重绘(iphone device的刷新频率是60hz，也就是1/60秒后重绘)，立即调用`layoutSubviews`进行布局（如果没有标记，不会调用layoutSubviews）。
 
-&emsp; 如果要立即刷新，要先调用[view setNeedsLayout]，把标记设为需要布局，然后马上调用[view layoutIfNeeded]，实现布局。
+&emsp; 如果要立即刷新，要先调用`[view setNeedsLayout]`，把标记设为需要布局，然后马上调用`[view layoutIfNeeded]`，实现布局。
 
 &emsp; 因为视图在第一次显示之前，标记总是“需要刷新”的，所以可以直接调用[view layoutIfNeeded]。
 
-layoutIfNeeded遍历的不是superview链，应该是subviews链。 
+**layoutIfNeeded遍历的不是superview链，应该是subviews链。** 
+
+
+<br/> <br/>
+
 
 drawRect是对receiver的重绘，能获得context
 
-
-<br/>
-
-⑤ 调用 setNeedsDisplay
+- ⑤ 调用 setNeedsDisplay
 
 ```
 TestView *test1 = [[TestView alloc] initWithFrame: CGRectZero];
@@ -303,8 +316,7 @@ TestView *test1 = [[TestView alloc] initWithFrame: CGRectZero];
 
 - ⑧ 改变一个UIView大小的时候也会触发父UIView上的layoutSubviews事件；
 
-<br/>
-<br/>
+<br/><br/>
 
 - **layoutSubviews 不会调用的情况**
 
@@ -337,40 +349,12 @@ TestView *test1 = [[TestView alloc] initWithFrame:CGRectMake(10, 10, 100, 100)];
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- UIView视图更新与重绘
-	- 对应的事件序列
-	- 通知 Controller 有数据变化
-- 方法调用逻辑
-- View Drawing Cycle
-
-
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
-># UIView视图更新与重绘
+> <h1 id="UIView视图更新与重绘">UIView视图更新与重绘</h1>
 
 ```
 public func setNeedsLayout()
@@ -382,46 +366,56 @@ public func setNeedsDisplayInRect(rect: CGRect)
 public func drawRect(rect: CGRect)
 ```
 
-<br/>
+<br/><br/>
 
->- **对应的事件序列如下：**<br/>
-① 用户触摸屏幕<br/>
-②硬件报告触摸事件给 UIKit 框架<br/>
-③UIKit 框架将触摸事件打包成 UIEvent 对象，然后分发给合适的视图<br/>
-④事件处理代码会对相应事件作出响应，代码可以是这样的：
--更改 frame、bounds、alpha 等属性
--调用 setNeedsLayout 方法以标记该视图（或者它的子视图）为需要进行布局更新
--调用 setNeedsDisplay 或者 setNeedsDisplayInRect: 方法以标记该视图（或者它的子视图）需要进行重画
+- **对应的事件序列如下：**
+	- ① 用户触摸屏幕
+	- ②硬件报告触摸事件给 UIKit 框架<br/>
+	- ③UIKit 框架将触摸事件打包成 UIEvent 对象，然后分发给合适的视图<br/>
+	- ④事件处理代码会对相应事件作出响应，代码可以是这样的：
+		- 更改 frame、bounds、alpha 等属性
+		- 调用 setNeedsLayout 方法以标记该视图（或者它的子视图）为需要进行布局更新
+		- 调用 setNeedsDisplay 或者 setNeedsDisplayInRect: 方法以标记该视图（或者它的子视图）需要进行重画
 
-> - 通知 Controller 有数据变化<br/>
-⑤ 如果一个视图的几何结构改变了，UIKit 会更新它的子视图<br/>
-⑥ 如果任何视图的任何部分被标记为需要重画，UIKit 会要求视图重画自身<br/>
-⑦任何已经更新的视图会与应用余下的可视内容组合在一起，同时被发送到图形硬件去显示<br/>
-⑧图形硬件将已解释内容转化到屏幕上<br/>
+<br/><br/>
+ - **通知 Controller 有数据变化**<br/>
+	- ⑤ 如果一个视图的几何结构改变了，UIKit 会更新它的子视图<br/>
+	
+	- ⑥ 如果任何视图的任何部分被标记为需要重画，UIKit 会要求视图重画自身<br/>
+	
+	- ⑦任何已经更新的视图会与应用余下的可视内容组合在一起，同时被发送到图形硬件去显示<br/>
+	
+	- ⑧图形硬件将已解释内容转化到屏幕上<br/>
+
 
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
+
+> <h1 id="setNeedsLayout和setNeedsDisplayInRect区别">setNeedsLayout和setNeedsDisplayInRect区别</h1>
 
 
-
-># 方法调用逻辑
 
 在上面的过程中，我们可以接触到开头提到的方法，调用逻辑是这样的：
 
->setNeedsLayout 会给当前 UIView 立一个 flag，以表示后续应该调用 layoutSubviews 方法，以调整当前视图及其子视图的布局。<br/>
-setNeedsDisplayInRect: 会给当前 UIView 立一个 flag，以表示后续应该调用 drawRect: 方法，以进行视图重绘。
+- **`setNeedsLayout`** 会给当前 UIView 立一个 flag，以表示后续应该调用 layoutSubviews 方法，以调整当前视图及其子视图的布局。<br/>
+
+- **`setNeedsDisplayInRect`:** 会给当前 UIView 立一个 flag，以表示后续应该调用 drawRect: 方法，以进行视图重绘。
+
 
 
 <br/>
 
 ***
-<br/>
 
-># View Drawing Cycle
+<br/><br/><br/>
 
->个人对 View Drawing Cycle 的理解是这样的：<br/>
+
+> <h1 id="视图绘制循环">视图绘制循环</h1>
+
+
+个人对 **`View Drawing Cycle `** 的理解是这样的：<br/>
 
 &emsp;  UIKit 需要处理非常多的事件，这些事件组合起来变成了一个非常复杂的事件序列，在这个序列中有些特定的点是 UIKit 专门提供给 UIView 来进行视图更改的。
 
