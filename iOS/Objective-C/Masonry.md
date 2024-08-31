@@ -338,7 +338,7 @@ array 的 `mas_distributeViewsAlongAxis withFixedSpacing ` 变化的是控件 �
 }
 ```
 
-![ios_oc1.0.7.png](./../../Pictures/ios_oc1.0.7.png)
+![ios_oc1.0.9.PNG](./../../Pictures/ios_oc1.0.9.PNG)
 
 
 
