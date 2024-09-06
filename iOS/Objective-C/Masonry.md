@@ -2,14 +2,16 @@
 - [**重点**](#重点)
 	- [mas_equalTo和equalTo区别](#mas_equalTo和equalTo区别)
 	- [更新视图布局方法](#更新视图布局方法)
+		- [UITableViewCell中布局后获取到的frame不准确，无法贝塞尔曲线绘制圆角](#UITableViewCell中布局后获取到的frame不准确，无法贝塞尔曲线绘制圆角)
+	- [**简介**](#简介)
 	- [视图居中显示](#视图居中显示)
 	- [两个视图等宽高边距](#两个视图等宽高边距)
 	- [键盘弹出和收回](#键盘弹出和收回)
 	- [三控件等宽间距](#三控件等宽间距)
 	- [父视图的高度,是里面俩控件高度的和](#父视图的高度,是里面俩控件高度的和)
 - [**中心**](#中心)
+	- [顶部和底部距离竖直中心Y轴距离](#顶部和底部距离竖直中心Y轴距离)
 - [**‌比例multipliedBy**](#比例multipliedBy)
-- [**简介**](#简介)
 
 - **参考资料**
 	- [Masonry 使用中的一些整理](https://www.jianshu.com/p/a24dd8638d28)
@@ -45,6 +47,105 @@ make.center.equalTo(weakSelf.view);
 <br/><br/><br/>
 
 ># <h2 id="更新视图布局方法">[更新视图布局方法](./UI布局更新l.md#更新页面方法简介)</h2>
+
+
+<br/><br/><br/>
+
+> <h2 id="UITableViewCell中布局后获取到的frame不准确，无法贝塞尔曲线绘制圆角">UITableViewCell中布局后获取到的frame不准确，无法贝塞尔曲线绘制圆角</h2>
+
+具体遇到的问题是这样的：
+
+```
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        self.selectionStyle = UITableViewCellSelectionStyleNone;
+        self.backgroundColor = [UIColor clearColor];
+        [self addSubviews];
+        [self setupLayout];
+    }
+    return self;
+}
+
+
+- (void)addSubviews {
+    [self.contentView addSubview:self.bgView];
+ }
+   
+- (void)setupLayout {
+    [self.bgView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_offset(12);
+        make.top.mas_offset(6);
+        make.right.mas_offset(-12);
+        make.bottom.mas_offset(-6);
+    }];
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+
+    [self setupBgViewCornerRadius];
+}
+
+- (void)setupBgViewCornerRadius {
+    CGSize topLeftRadius = CGSizeMake(6.0, 6.0);
+    CGSize bottomLeftRadius = CGSizeMake(6.0, 6.0);
+    CGSize topRightRadius = CGSizeMake(10.0, 10.0);
+    CGSize bottomRightRadius = CGSizeMake(10.0, 10.0);
+    
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    
+    // 左上角
+    [path moveToPoint:CGPointMake(0, topLeftRadius.height)];
+    [path addArcWithCenter:CGPointMake(topLeftRadius.width, topLeftRadius.height) radius:topLeftRadius.width startAngle:M_PI endAngle:3 * M_PI_2 clockwise:YES];
+    
+    // 右上角
+    [path addLineToPoint:CGPointMake(_bgView.bounds.size.width - topRightRadius.width, 0)];
+    [path addArcWithCenter:CGPointMake(_bgView.bounds.size.width - topRightRadius.width, topRightRadius.height) radius:topRightRadius.width startAngle:3 * M_PI_2 endAngle:0 clockwise:YES];
+    
+    // 右下角
+    [path addLineToPoint:CGPointMake(_bgView.bounds.size.width, _bgView.bounds.size.height - bottomRightRadius.height)];
+    [path addArcWithCenter:CGPointMake(_bgView.bounds.size.width - bottomRightRadius.width, _bgView.bounds.size.height - bottomRightRadius.height) radius:bottomRightRadius.width startAngle:0 endAngle:M_PI_2 clockwise:YES];
+    
+    // 左下角
+    [path addLineToPoint:CGPointMake(bottomLeftRadius.width, _bgView.bounds.size.height)];
+    [path addArcWithCenter:CGPointMake(bottomLeftRadius.width, _bgView.bounds.size.height - bottomLeftRadius.height) radius:bottomLeftRadius.width startAngle:M_PI_2 endAngle:M_PI clockwise:YES];
+    
+    [path closePath];
+
+    CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
+    maskLayer.path = path.CGPath;
+    _bgView.layer.mask = maskLayer;
+}
+
+```
+
+运行以后发现cell的高度不对，根本不是要显示的高度86，而是32.弄了好久也不行。后来问了同事，把 `‌- (void)layoutSubviews` 方法加入一行代码，如下：
+
+```
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    
+    [self.bgView.superview layoutIfNeeded];
+    [self setupBgViewCornerRadius];
+}
+```
+
+这是因为我们在cell的初始化方法`‌- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier`对其子视图进行添加和设置约束，但是到了`‌- (void)layoutSubviews`方法中其父视图并没有展开，导致拿不到布局后设置的frame值。
+
+所以我加了`‌[self.bgView.superview layoutIfNeeded];`方法，这样`‌self.bgView.superview`的父视图就开始布局展开设置其子视图frame，然后我再设置其子视图的圆角就对了。
+
+
+<br/><br/>
+
+这里其实我有点担心在父视图里的`‌- (void)layoutSubviews`方法调用‌[self.bgView.superview layoutIfNeeded];`会导致死循环。但是后面一想就明白了。这是为什么呢？
+
+
+- Masonry布局以后执行 [xxx.superview layoutIfNeeded]; 就能立马拿到他的实际frame。但是前提是 superview 本身的frame也是存在的
+
+- 若是后面子视图和父视图frame不变，布局不变就不会造成死循循环了。
+
+-  layoutIfNeeded就和他名字一样，只要需要的时候才会重刷布局，不会每次执行都走 layoutsubviews
 
 
 
@@ -516,6 +617,23 @@ make.center.equalTo(button1)
 
 ```
 //使 centerX = superview.centerX - 5, centerY = superview.centerY + 10 make.center.equalTo(superview).centerOffset(CGPointMake(-5, 10))
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="顶部和底部距离竖直中心Y轴距离">顶部和底部距离竖直中心Y轴距离</h2>
+
+```
+[self.titleLab mas_remakeConstraints:^(MASConstraintMaker *make) {
+    make.left.mas_equalTo(self.activityPic.mas_right).offset(12);
+    make.right.mas_equalTo(self.bgView).offset(-12);
+    make.bottom.mas_equalTo(self.activityPic.mas_centerY).mas_offset(2);//底部距离中心Y轴向上距离为2
+    make.height.mas_equalTo(20);
+}];
+[self.subTitleLab mas_updateConstraints:^(MASConstraintMaker *make) {
+    make.top.mas_equalTo(self.activityPic.mas_centerY).offset(2);//顶部距离中心Y轴向下距离为2
+}];
 ```
 
 <br/>

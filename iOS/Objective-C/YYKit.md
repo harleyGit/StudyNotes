@@ -1,6 +1,7 @@
 > <h1 id=""></h1>
 - [递归解析模型](#递归解析模型)
 - [YYModel](#YYModel)
+- [输入框中的表情文字变为图片](#输入框中的表情文字变为图片)
 
 
 
@@ -93,5 +94,37 @@ YYKit 和 YYModel 的联系
 NSString *jsonString = @"{\"students\": [{\"name\": \"Alice\", \"age\": 20}, {\"name\": \"Bob\", \"age\": 22}]}";
 ClassRoom *classRoom = [ClassRoom yy_modelWithJSON:jsonString];
 ```
+
+
+<br/><br/><br/>
+
+> <h2 id="输入框中的表情文字变为图片">输入框中的表情文字变为图片</h2>
+
+微信在最开始的时候输入框里的自定义表情包是`‌[笑脸]`，但是后面升级后输入框里直接是图片，这是怎么做到的呢？
+
+其实很简单，这里面用到了富文本，可以利用富文本完美的把图片嵌入到输入文案里，为代码如下：
+
+下面的代码中，可能用到了YYKit库中的代码：
+
+```
+NSString *matchStr = [textStr substringWithRange:match.range];
+UIImage *img = imgs[matchStr];//返回对应matchStr的图片
+if (img) {    
+	//使用 YYText 库提供的便利方法将图片包装成一个 NSMutableAttributedString 对象，以便可以插入到文本中
+    NSMutableAttributedString *attr = [NSMutableAttributedString attachmentStringWithContent:img contentMode:(UIViewContentModeScaleAspectFill) attachmentSize:CGSizeMake(20, 20) alignToFont:self.font alignment:(YYTextVerticalAlignmentCenter)];
+    
+    //将之前在文本中找到的匹配范围 match.range 中的文本替换为上面创建的图片 attr
+    [self replaceCharactersInRange:match.range withAttributedString: attr];
+}
+```
+
+- `attachmentStringWithContent:`: 这是 YYText 提供的方法，用于将任何 UIView 或 UIImage 等内容转化为可插入到文本中的富文本对象。
+
+	- img: 你要插入到文本中的图片内容。
+	- contentMode: 图片的显示模式，这里使用 UIViewContentModeScaleAspectFill，表示图片将根据框架调整尺寸并裁剪多余的部分。
+	- attachmentSize: 图片的大小，这里设置为 CGSizeMake(20, 20)，即宽高为 20x20 点。
+	- alignToFont:self.font: 图片要对齐的字体，这里使用了当前上下文中的 self.font。
+	- alignment:YYTextVerticalAlignmentCenter: 图片的垂直对齐方式，设置为居中对齐。
+
 
 

@@ -11,11 +11,19 @@
 - [**广告标识IDFA**](#广告标识IDFA)
 - [**YYKit**](#YYKit)
 	- [递归解析模型](#递归解析模型)
+	- [将输入框中的表情文字变为图片](#将输入框中的表情文字变为图片)
 - [**‌YTKNetwork**](#YTKNetwork)
+- [**聊天模块**](#聊天模块)
+	- [发送消息滚动到最底部](#发送消息滚动到最底部)
+	- [输入框匹配表情包&@字符](#输入框匹配表情包&@字符)
+- [**OC高级应用**](#OC高级应用)
+	- [UILabel行高计算容器高度](#UILabel行高计算容器高度)
+	- [神坑-sectionHeader有段空白](#神坑-sectionHeader有段空白)
 - [**Swift应用**](#Swift应用)
 	- [数据模型继承Codable](./../Swift/数据.md#继承Codable的结构体)
 	- [网络请求配置自定义](#网络请求配置自定义)
 	- [double类型判断是否有限值-isFinite](#double类型判断是否有限值-isFinite)
+
 
 
 
@@ -238,6 +246,13 @@ isFinal：是否是最终结果。
 <br/><br/><br/>
 
 > <h2 id="递归解析模型">[递归解析模型](./../Objective-C/YYKit#模型转换为字典或者数组)</h2>
+
+
+
+<br/><br/><br/>
+
+># <h2 id="将输入框中的表情文字变为图片">[将输入框中的表情文字变为图片](./../Objective-C/YYKit#输入框中的表情文字变为图片)</h2>
+
 
 
 
@@ -612,6 +627,178 @@ NSString *simulateIdfa = [SimulateIDFA createSimulateIDFA];
 
 
 
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="聊天模块">聊天模块</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id="发送消息滚动到最底部">发送消息滚动到最底部</h2>
+
+```
+[self.cellArray addObject:cellModel];//模型插入到数组中
+
+//插入到指定的cell在section、row中
+[self.tableView beginUpdates];
+[self.tableView insertRowAtIndexPath:[NSIndexPath indexPathForRow:self.cellList.count-1 inSection:0] withRowAnimation:UITableViewRowAnimationNone];
+[self.tableView endUpdates];
+
+if (needScrollToBottom) {//是否需要滚动到底部
+    if (self.tableView.contentSize.height >= self.tableView.height) {
+        [self.tableView scrollToBottomAnimated:needScrollAnimation];
+    }
+}
+```
+
+
+`beginUpdates`和`‌endUpdates`方法，苹果已经不鼓励了，可以使用
+`-performBatchUpdates:completion:` 是代替 `-beginUpdates `和 `-endUpdates` 的最佳实践，它不仅是未来兼容性更好的选择，还为你提供了更多的控制和灵活性。建议在所有新的项目中使用这个方法来进行批量更新。
+
+
+如下举例：
+
+```
+- (void)addNewMessage:(NSString *)newMessage {
+    // 添加新消息到数据源
+    [self.messages addObject:newMessage];
+    
+    NSIndexPath *newIndexPath = [NSIndexPath indexPathForRow:self.messages.count - 1 inSection:0];
+    
+    [self.tableView performBatchUpdates:^{
+        // 插入新行到UITableView
+        [self.tableView insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
+    } completion:^(BOOL finished) {
+        if (finished) {
+            // 滚动到底部
+            [self.tableView scrollToRowAtIndexPath:newIndexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+        }
+    }];
+}
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="输入框匹配表情包&@字符">输入框匹配表情包&@字符</h2>
+
+
+```
+NSString *stirng = @"@你好 [嘻嘻] 很高兴见到你";
+NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\\[(\\S+?)\\]" options:NSRegularExpressionCaseInsensitive error:nil];
+NSArray *matches = [regex matchesInString:string options:NSMatchingReportProgress range:NSMakeRange(0, [string length])];
+
+return matches;
+```
+
+
+使用正则表达式从字符串中匹配特定模式的内容，并返回所有匹配结果。具体来说，它尝试从字符串中匹配形如 `[嘻嘻]` 的内容。
+
+
+<br/>
+
+```objc
+NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\\[(\\S+?)\\]" options:NSRegularExpressionCaseInsensitive error:nil];
+```
+
+- **说明**: 创建一个正则表达式对象，用于在字符串中查找匹配的内容。
+- **`NSRegularExpression`**: 这是一个用于正则表达式匹配的类，它提供了强大的文本搜索功能。
+
+- **`regularExpressionWithPattern:options:error:`**: 这是 `NSRegularExpression` 的一个类方法，用于生成一个正则表达式对象。
+  - `pattern`: 正则表达式的模式字符串，用来定义匹配规则。
+    - `\\[` 和 `\\]`：表示匹配方括号 `[` 和 `]`。由于在正则表达式中，`[` 和 `]` 是特殊字符，因此需要用 `\\` 进行转义。
+    - `(\\S+?)`：这是一个捕获组，用于匹配方括号内的内容。
+      - `\\S`：匹配任何非空白字符。
+      - `+?`：表示最小匹配，匹配一个或多个非空白字符，直到遇到 `]` 为止。
+  - `options`: 匹配选项，`NSRegularExpressionCaseInsensitive` 表示忽略大小写（但在这个场景中并不影响结果）。
+  - `error`: 如果正则表达式语法有误，会通过这个参数返回错误信息，这里传 `nil` 表示不关心错误。
+
+<br/>
+
+
+```objc
+NSArray *matches = [regex matchesInString:string options:NSMatchingReportProgress range:NSMakeRange(0, [string length])];
+```
+
+- **说明**: 使用正则表达式在目标字符串中查找所有符合条件的匹配项，并返回一个包含所有匹配结果的数组。
+
+- **`matchesInString:options:range:`**: 这是 `NSRegularExpression` 的实例方法，用于查找所有匹配项。
+  - `string`: 需要进行匹配的目标字符串。
+  - `options`: 匹配选项，这里使用 `NSMatchingReportProgress` 表示在匹配过程中生成中间结果（通常用于大型文本的匹配），对于普通应用场景这个选项可以忽略。
+  - `range`: 指定字符串的范围，`NSMakeRange(0, [string length])` 表示从字符串的第一个字符到最后一个字符。
+
+- **`matches`**: 这是一个 `NSArray` 数组，包含了所有的匹配结果，每一个匹配结果都是一个 `NSTextCheckingResult` 对象。
+
+<br/><br/>
+
+**匹配结果的解释**
+
+- **`matches`**: 每个 `NSTextCheckingResult` 对象包含了匹配到的文本的相关信息，包括匹配的范围 (`range`) 和内容。你可以通过这个对象提取到具体的匹配字符串，或是替换、标记匹配的部分。
+
+
+<br/><br/>
+
+
+**总结**
+
+&emsp; 这段代码通过正则表达式从字符串中提取形如 `[嘻嘻]` 的内容，并返回匹配的结果。你可以利用返回的匹配结果进行进一步的处理，比如将 `[嘻嘻]` 这样的字符串替换为对应的表情图片，或者进行其他的文本处理操作。
+
+
+
+
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="OC高级应用">OC高级应用</h1>
+
+<br/><br/><br/>
+
+> <h2 id="UILabel行高计算容器高度">UILabel行高计算容器高度</h2>
+
+
+<br/><br/><br/>
+
+> <h2 id="">[富文本嵌入图片](./../)</h2>
+
+
+<br/><br/><br/>
+
+> <h2 id="神坑-sectionHeader有段空白">神坑-sectionHeader有段空白</h2>
+
+
+```
+- (UITableView *)tableView {
+    if (!_tableView) {
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 30, 300, self.frame.size.height - 30 - 90) style:UITableViewStylePlain];
+        _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        if (@available(iOS 15.0, *)) {//解决设置tableview的header顶部有段空白
+            _tableView.sectionHeaderTopPadding = 0.0f;
+        }
+        _tableView.delegate = self;
+        _tableView.dataSource = self;
+        _tableView.backgroundColor = [UIColor clearColor];
+        _tableView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
+        _tableView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    }
+    
+    return _tableView;
+}
+```
+
+
+
+
+
+
+
 
 
 
@@ -637,7 +824,9 @@ let dataProvider = MoyaProvider<xxxRequest>(endpointClosure: MoyaProvider.xxxAut
 详细解读，[请看这里](./../Swift/Moya.md#网络请求配置自定义)
 
 
-<br/><br/><br/>> <h2 id="double类型判断是否有限值-isFinite">double类型判断是否有限值-isFinite</h2>
+<br/><br/><br/>
+
+> <h2 id="double类型判断是否有限值-isFinite">double类型判断是否有限值-isFinite</h2>
 
 在 Swift 中，`isFinite` 是 `FloatingPoint` 协议的一部分，`Double` 类型遵循该协议。`isFinite` 用来判断一个浮点数是否为有限值（finite value）。
 
