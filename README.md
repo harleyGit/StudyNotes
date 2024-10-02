@@ -521,6 +521,7 @@
 * [Android 模拟器 For Mac](./Tools/Android-模拟器-For-Mac.md)
 * [JAVA 和 Android 配置](./Tools/JAVA-和-Android-配置.md)
 * [Chat-GPT指令](https://www.explainthis.io/zh-hans/chatgpt)
+* [生活总结.md](./Tools/生活总结.md)
 
 
 <br/>
