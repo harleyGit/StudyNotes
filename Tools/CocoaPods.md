@@ -1,4 +1,5 @@
 > <h2 id=""></h2>
+- [.bashrc和和.zshrc区别](#.bashrc和和.zshrc区别)
 - [**使用**](#使用)
 	- [工作基本指令](#工作基本指令)
 	- [pod update 和 pod install](#podupdate和podinstall)
@@ -7,6 +8,7 @@
 - [**RVM安装**](#RVM安装)
 - [**安装Ruby**](#安装Ruby)
 	- [安装最新ruby](#安装最新ruby)
+	- [移除OpenSSL3](#移除OpenSSL3)
 - [**CocoaPosds**](#CocoaPosds)
 	- [**安装**](#安装) 
 		- [检测pod是否安装成功](#检测pod是否安装成功)
@@ -23,6 +25,51 @@
 - **资料**
 	- [CocoaPods使用指南](https://juejin.cn/post/7179231344147300412)
 	- [Cocoapods 使用](https://hanleylee.com/articles/usage-of-cocoapods/)
+- [**pynev:python的版本管理工具**](#pynev:python的版本管理工具)
+- [**Python安装‌**](#Python安装)
+
+
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+
+> <h1 id=".bashrc和和.zshrc区别">.bashrc和和.zshrc区别</h1>
+
+`.bashrc` 和 `.zshrc` 是两个不同的配置文件，用于不同的命令行解释器（shell）。具体区别如下：
+
+- **1.解释器类型**
+	- **`.bashrc`**：这是 Bash（Bourne Again SHell）的配置文件，主要用于交互式非登录 shell。它通常用于设置环境变量、别名、函数等。
+	- **`.zshrc`**：这是 Zsh（Z shell）的配置文件。Zsh 是一个功能更强大的 shell，相较于 Bash 提供了更多的功能和灵活性。`.zshrc` 也用于交互式非登录 shell。
+
+<br/>
+
+- **2.使用场景**
+	- 如果你在终端中使用 Bash 作为默认 shell，应该编辑 `.bashrc` 文件。
+	- 如果你使用的是 Zsh，应该编辑 `.zshrc` 文件。
+
+<br/>
+
+- **3.在 macOS 上的默认 shell**
+	- 从 macOS Catalina（10.15）开始，Zsh 成为默认的 shell，因此，如果你没有特别更改，应该配置 `.zshrc`。
+	- 在较早的版本中，Bash 是默认的 shell。
+
+<br/>
+
+- **4.文件位置**
+这两个文件通常位于用户的主目录中（`~`），并且都是隐藏文件。
+
+
+
+<br/>
+
+- **总结**
+	- 使用 `.bashrc` 时，适用于 Bash shell。
+	- 使用 `.zshrc` 时，适用于 Zsh shell，且在现代 macOS 版本中，Zsh 是默认 shell。
 
 
 
@@ -545,6 +592,22 @@ RVM reloaded!
 ```
 rvm install 2.7.0-preview1
 ```
+
+
+
+<br/><br/><br/>
+
+> <h2 id="移除OpenSSL3">移除OpenSSL3</h2>
+
+由于新版的brew默认安装OpenSSL3，导致Ruby无法安装，因此需要移除：
+
+```
+brew uninstall --ignore-dependencies openssl@3
+```
+
+
+
+
 
 <br/>
 
@@ -1294,5 +1357,201 @@ rm -rf /usr/local/bin/pod
 
 
 <br/><br/>
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="pynev:python的版本管理工具">pynev:python的版本管理工具</h1>
+
+**安装**
+
+```
+brew install pyenv
+```
+
+
+<br/>
+
+
+**根据自身环境，将下方内容加到对应文件中： [.bashrc / .zshrc](#.bashrc和和.zshrc区别)**
+
+**.bashrc的配置到 ~/.bash_profile文件中，然后记得 source ~/.bash_profile**
+
+这里只示范一个。打开`open ~/.zshrc`,将下面的配置写入
+
+```
+export PYENV_ROOT=/usr/local/var/pyenv
+export PATH="$PYENV_ROOT/bin:$PATH"
+export PATH="$PYENV_ROOT/shims:$PATH"
+#导出python的环境变量。否则python命令找不到
+export PATH=/Users/ganghuang/.pyenv/versions/3.9.9/bin:$PATH
+if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+```
+
+<br/>
+
+**验证是否安装成功**
+
+```
+pyenv
+```
+
+![tool.0.0.12.png](./../Pictures/tool.0.0.12.png)
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="Python安装">Python安装</h1>
+
+[Python安装](#Python安装)
+
+**安装**
+
+```
+pyenv install 3.9.9 //安装的python版本
+```
+
+遇到下面的问题：
+
+```
+python-build: use openssl@1.1 from homebrew
+python-build: use readline from homebrew
+Downloading Python-3.9.9.tar.xz...
+-> https://www.python.org/ftp/python/3.9.9/Python-3.9.9.tar.xz
+Installing Python-3.9.9...
+python-build: use readline from homebrew
+python-build: use zlib from xcode sdk
+
+BUILD FAILED (OS X 14.6.1 using python-build 20180424)
+
+Inspect or clean up the working tree at /var/folders/82/356fyp3j3kq2x8b03msz5w3w0000gn/T/python-build.20241009102336.54421
+Results logged to /var/folders/82/356fyp3j3kq2x8b03msz5w3w0000gn/T/python-build.20241009102336.54421.log
+
+Last 10 log lines:
+changing mode of build/scripts-3.9/idle3 from 644 to 755
+changing mode of build/scripts-3.9/2to3 from 644 to 755
+renaming build/scripts-3.9/pydoc3 to build/scripts-3.9/pydoc3.9
+renaming build/scripts-3.9/idle3 to build/scripts-3.9/idle3.9
+renaming build/scripts-3.9/2to3 to build/scripts-3.9/2to3-3.9
+Creating directory /usr/local/var/pyenv/versions/3.9.9/bin
+ginstall: cannot create directory ‘/usr/local/var’: Permission denied
+Creating directory /usr/local/var/pyenv/versions/3.9.9/lib
+ginstall: cannot create directory ‘/usr/local/var’: Permission denied
+make: *** [altbininstall] Error 1
+```
+
+这里主要注意的是苹果为了安全，不允许其他软件访问不分文件。可以修改终端读取所有磁盘文件在【系统设置】->【隐私安全】里修改。
+
+因为根据终端命令提示，是因为权限不够导致无法对部分文件夹进行读写，所以用下面命令：
+
+```
+#将该目录及其所有子目录的拥有者更改为当前用户
+sudo chown -R $(whoami) /usr/local/var
+
+sudo pyenv install 3.9.9  
+```
+
+然后
+
+```
+pyenv global 3.9.9  #设置全局版本
+```
+
+<br/>
+
+这里要等一会，或者重启终端，否则比如会出现python命令找不到。
+
+**查看安装目录**
+
+```
+ pyenv which python3
+```
+
+<br/>
+
+更新默认目录（$PATH替换为上一步提到的**安装目录**， --path不需要替换）
+
+```
+export PATH="$HOME/.pyenv/bin:$PATH"
+
+#如：export PATH="$HOME/.pyenv/bin:usr/bin/python3"
+
+
+#下面2行命令要关闭终端，重新打开才行
+eval "$(pyenv init --path)"
+
+eval "$(pyenv init -v)"
+```
+
+<br/>
+
+**关闭终端重新打开**
+
+```
+source ~/.zshrc #或者source ~/.bash_profile
+```
+
+会遇到如下错误：
+
+```
+mkdir: /usr/local/var: Permission denied
+mkdir: /usr/local/var: Permission denied
+```
+
+输入如下命令：
+
+```
+# 将 /usr/local/var 及其所有子目录的拥有者更改为当前用户，$(whoami) 会动态获取当前登录用户的用户名。
+#不用担心这个文件权限太宽泛了，关闭重新打开后这个文件夹下又会回复之前的权限
+sudo chown -R $(whoami) /usr/local/var
+
+chown: /usr/local/var: No such file or directory
+
+
+
+#因为提示没有这个/usr/local/var路径下的文件夹，那我们就创建
+sudo mkdir -p /usr/local/var
+
+
+#创建完这个问件夹后，我们再重新对其开启访问权限
+sudo chown -R $(whoami) /usr/local/var
+
+source ~/.zshrc #就可以了
+```
+
+
+<br/>
+
+**验证：**
+
+```
+#系统默认运行的python版本
+which python3
+
+/usr/bin/python3
+
+
+
+#python关联的openssl版本
+python3 -c "import ssl; print(ssl.OPENSSL_VERSION)"
+
+LibreSSL 2.8.3
+
+```
+
+
+
+
+
+
+
 
 
