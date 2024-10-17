@@ -9,6 +9,10 @@
 	- [合并](#合并)
 - [**UITableView**](#UITableView)
 	- [contentSize、contentInset和contentOffset区别及相互关系](#contentSize、contentInset和contentOffset区别及相互关系)
+- [**多线程**](#多线程)
+	- [同步和异步编码【OpenGLES画板】](#同步和异步编码)
+- [**设计模式**](#设计模式)
+	- [单例模式【OpenGLES画板】](#单例模式)
 - [**类库**](#类库)
 	- [Alamofire](#Alamofire)
 - **资料**
@@ -362,6 +366,134 @@ print(array1)
 - **contentOffset:** 是当前视图滑动的距离,比如向左、向右之类的
 
 
+
+<br/><br/><br/>
+
+
+***
+<br/>
+> <h1 id="多线程">多线程</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id="同步和异步编码">同步和异步编码【OpenGLES画板】</h2>
+
+```
+import Foundation
+import OpenGLES
+
+final class GLPaintManager {
+    
+    // 用于存储和检索 PaintManager.Type 类型的数据，这允许你存储 PaintManager.self,下面你用的类型是 String
+    private static var paintQueueKey = DispatchSpecificKey<String>()
+    
+    // MARK: - Public Functions
+    
+    static func runAsyncOnPaintRenderQueue(_ block: @escaping () -> Void) {
+        let queue = GLPaintManager.sharedRenderQueue()
+        
+        // DispatchQueue.getSpecific 和 setSpecific 来检查和设置线程特定数据，模拟原来的 dispatch_get_specific 和 dispatch_queue_set_specific 功能
+        if DispatchQueue.getSpecific(key:GLPaintQueueKey) != nil {
+            block()
+        } else {
+            queue.async {
+                block()
+            }
+        }
+    }
+
+    static func runSyncOnPaintRenderQueue(_ block: @escaping () -> Void) {
+        let queue = GLPaintManager.sharedRenderQueue()
+        if DispatchQueue.getSpecific(key: GLPaintQueueKey) != nil {
+            block()
+        } else {
+            queue.sync {
+                block()
+            }
+        }
+    }
+    
+    // MARK: - Shared Context
+    static var sharedPaintContext: EAGLContext = {
+        return EAGLContext(api: .openGLES2)!
+    }()
+    
+    // MARK: - Shared Render Queue
+    private static var sharedRenderQueue: DispatchQueue = {
+        let queue = DispatchQueue(label: "com.lymanli.glpaint.render")
+        queue.setSpecific(key: GLPaintQueueKey, value: "GLPaintQueueKey")
+        return queue
+    }()
+}
+```
+
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="设计模式">设计模式</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id="单例模式">单例模式【OpenGLES画板】</h2>
+
+在OC中的表现形式：
+
+```
+#import "MySingleton.h"
+
+@implementation MySingleton
+
++ (instancetype)sharedInstance {
+    static MySingleton *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] init];
+    });
+    return sharedInstance;
+}
+
+@end
+```
+
+<br/>
+
+Swift 中，可以使用静态属性和 dispatch_once 来实现单例模式。以下是上述 Objective-C 代码在 Swift 中的实现：
+
+```
+class MySingleton {
+    
+    static let sharedInstance = MySingleton() // 使用静态常量来保证线程安全和懒加载
+    
+    private init() {
+        // 初始化代码
+    }
+}
+
+// 使用
+let singletonInstance = MySingleton.sharedInstance
+```
+
+- **详解**
+- `static let sharedInstance：`
+	- 这是一个静态常量，sharedInstance 会在首次访问时被创建，确保了线程安全。
+	- 这是 Swift 中实现单例的推荐方式，系统会自动处理初始化的懒加载。
+
+- `private init()：`
+	- 构造器被标记为 private，确保其他地方不能直接创建 MySingleton 的实例。这是单例模式的关键。
+
+<br/><br/>
+
+其实还是有点担心万一在多线程中，导致创建多个MySingleton实例对象岂不是不是单例了吗？
+
+- 懒加载：使用 static let 会确保单例在首次被使用时才会创建，这是懒加载的一个实例。
+- 线程安全：Swift 的静态属性初始化是线程安全的，所以在访问单例时不必担心多线程问题。
 
 
 <br/>
