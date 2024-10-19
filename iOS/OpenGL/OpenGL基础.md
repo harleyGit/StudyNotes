@@ -7,6 +7,7 @@
 	- [常量缓冲对象（CBO）](#常量缓冲对象（CBO）)
 	- [像素缓冲对象（PBO）](#像素缓冲对象（PBO）)
 - [**常用函数**](#常用函数)
+	- [glViewport设置渲染区域](#glViewport设置渲染区域)
 	- [GLuint glCreateShader(GLenum type)](#glCreateShader)
 	- [glShaderSource将GLSL源代码绑定到着色器中](#glShaderSource将GLSL源代码绑定到着色器中)
 	- [glGetShaderiv查询着色器状态](#glGetShaderiv查询着色器状态)
@@ -16,8 +17,14 @@
 	- [glBindVertexArrayOES绑定顶点数组对象](#glBindVertexArrayOES绑定顶点数组对象)
 	- [视角（感觉就是放大和缩小）](#视角（感觉就是放大和缩小）)
 	- [视距(其实物体在三维空间中沿着 x、y和z轴进行移动)](#视距(其实物体在三维空间中沿着x、y和z轴进行移动))
+	- [glFramebufferTexture2D 将纹理（texture）附加到帧缓冲对象（FBO）中](#glFramebufferTexture2D)
+	- [glBlendFunc颜色等混合](#glBlendFunc颜色等混合)
+	- [glActiveTexture指定当前活跃纹理单元](#glActiveTexture指定当前活跃纹理单元)
+	- [glUniform1i将纹理单元绑定到着色器中](#glUniform1i将纹理单元绑定到着色器中)
+	- [glGetAttribLocation获取着色器程序中名为TextureCoords的顶点属性](#glGetAttribLocation获取着色器程序中名为TextureCoords的顶点属性)
 - [**曲线绘制**](#曲线绘制)
-	- 
+	- [贝塞尔曲线了解](#贝塞尔曲线了解)
+	- [如何绘制的不是折线而是曲线](#如何绘制的不是折线而是曲线)
 - **资料**
 	- [**OpenGL中文版**](https://learnopengl-cn.github.io/01%20Getting%20started/01%20OpenGL/)
 	- [OpenGL学习资料合集（CSDN）](https://blog.csdn.net/kyl282889543/article/details/95727519)
@@ -263,6 +270,64 @@ OpenGL 提供了多种类型的缓冲区对象，以支持不同的渲染需求�
 <br/><br/><br/>
 
 > <h1 id="常用函数">常用函数</h1>
+
+<br/><br/><br/>
+
+> <h2 id="glViewport设置渲染区域">glViewport设置渲染区域</h2>
+
+`glViewport` 是 OpenGL 中的一个重要函数，用于设置视口（viewport）的大小和位置。视口定义了渲染的区域，通常对应于窗口的大小。以下是对 `glViewport` 函数的详细解释：
+
+### 函数原型
+```swift
+public func glViewport(_ x: GLint, _ y: GLint, _ width: GLsizei, _ height: GLsizei)
+```
+
+### 参数详解
+
+1. **`_ x: GLint`**:
+   - 指定视口的左下角的 x 坐标。该坐标是相对于窗口的左下角的。
+
+2. **`_ y: GLint`**:
+   - 指定视口的左下角的 y 坐标。该坐标也是相对于窗口的左下角的。
+
+3. **`_ width: GLsizei`**:
+   - 指定视口的宽度，以像素为单位。
+
+4. **`_ height: GLsizei`**:
+   - 指定视口的高度，以像素为单位。
+
+### 功能和用途
+
+- **定义渲染区域**: `glViewport` 设置了 OpenGL 渲染的区域，这意味着所有的渲染输出将被限制在这个指定的矩形区域内。常用于控制图形的显示位置和大小。
+  
+- **适应窗口大小**: 在窗口大小改变时，通常需要调用 `glViewport` 来调整视口的大小，以确保渲染图形正确适应新窗口大小。例如，在窗口重塑时，应该重新设置视口。
+
+- **多视口渲染**: 通过多次调用 `glViewport`，可以在同一个窗口中渲染多个视口。这在需要分屏显示或实现小地图、用户界面元素等时非常有用。
+
+### 示例
+
+以下是一个使用 `glViewport` 的简单示例：
+
+```swift
+// 窗口大小改变时调用
+func reshape(width: Int, height: Int) {
+    glViewport(0, 0, GLsizei(width), GLsizei(height)) // 将视口设置为窗口的大小
+}
+
+// 在渲染循环中
+func render() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) // 清除缓冲区
+
+    // 渲染代码
+}
+```
+
+### 总结
+
+`glViewport` 是 OpenGL 中用于控制渲染区域的函数，允许开发者定义图形输出的区域位置和大小。通过合理使用 `glViewport`，可以确保图形在不同窗口尺寸和布局下的正确显示，支持多视口渲染等高级特性。
+
+
+
 
 <br/><br/><br/>
 
@@ -1303,9 +1368,497 @@ class ViewController: GLKViewController {
 如果你对某些部分还有疑问，或者希望看到其他示例，请告诉我！
 
 
-com.lyman.GLPaintViewDemo0
 
-com.lyman.MFPaintViewDemo
+<br/><br/><br/>
+
+> <h2 id="glFramebufferTexture2D">glFramebufferTexture2D</h2>
+
+
+`glFramebufferTexture2D` 是 OpenGL ES 中用于将纹理附件附加到帧缓冲区的函数。这个函数非常重要，因为它允许你使用纹理作为渲染目标。以下是对该方法的详解，包括参数、作用及示例。
+
+### 函数签名
+
+```c
+void glFramebufferTexture2D(GLenum target,
+                             GLenum attachment,
+                             GLenum textarget,
+                             GLuint texture,
+                             GLint level);
+```
+
+### 参数详解
+
+1. **`target`**:
+   - 类型：`GLenum`
+   - 指定帧缓冲对象的目标，可以是 `GL_FRAMEBUFFER`。在 OpenGL ES 中，通常使用 `GL_FRAMEBUFFER`。
+
+2. **`attachment`**:
+   - 类型：`GLenum`
+   - 指定要附加的纹理的附件点，常用的值包括：
+     - `GL_COLOR_ATTACHMENT0`: 颜色附件
+     - `GL_DEPTH_ATTACHMENT`: 深度附件
+     - `GL_STENCIL_ATTACHMENT`: 模板附件
+
+3. **`textarget`**:
+   - 类型：`GLenum`
+   - 指定纹理的目标类型。对于 2D 纹理，使用 `GL_TEXTURE_2D`。
+
+4. **`texture`**:
+   - 类型：`GLuint`
+   - 要附加的纹理对象的名称（ID）。这个纹理必须是有效的，并且在调用此函数之前已经创建并配置。
+
+5. **`level`**:
+   - 类型：`GLint`
+   - 指定要附加的纹理的 mipmap 层级。通常，对于基础纹理，使用 `0` 层。
+
+### 作用
+
+`glFramebufferTexture2D` 的主要作用是将指定的纹理附加到当前的帧缓冲对象的指定附件点。这允许渲染操作的结果被输出到纹理中，而不是默认的帧缓冲对象（通常是屏幕）。此功能通常用于实现离屏渲染（如后期处理、阴影贴图、反射等）。
+
+### 使用示例
+
+以下是一个示例，展示如何创建纹理并将其附加到帧缓冲对象：
+
+```c
+GLuint framebuffer;
+glGenFramebuffers(1, &framebuffer);
+glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+// 创建一个 2D 纹理
+GLuint texture;
+glGenTextures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+// 将纹理附加到帧缓冲对象
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+// 检查帧缓冲对象的状态
+if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    // 错误处理
+}
+
+// 解绑帧缓冲对象
+glBindFramebuffer(GL_FRAMEBUFFER, 0);
+```
+
+### 注意事项
+
+1. **检查完整性**: 每次附加纹理后，都应使用 `glCheckFramebufferStatus` 检查帧缓冲对象的状态，以确保它是完整的。如果未正确附加，可能会导致渲染问题。
+
+2. **纹理格式**: 附加的纹理格式应与帧缓冲对象的附件格式兼容。例如，如果使用深度附件，纹理应使用深度格式。
+
+3. **多个附件**: 你可以将多个纹理附加到同一个帧缓冲对象的不同附件点。比如可以同时附加颜色、深度和模板纹理，以支持复杂的渲染需求。
+
+### 总结
+
+`glFramebufferTexture2D` 是 OpenGL ES 中非常强大的函数，使得渲染到纹理成为可能。通过适当地附加纹理，可以实现许多视觉效果和优化，尤其是在游戏开发和图形应用程序中。确保理解其参数及用法，以便有效地利用该函数。
+
+
+<br/><br/><br/>
+
+> <h2 id="glBlendFunc颜色等混合">glBlendFunc颜色等混合</h2>
+
+`glBlendFunc` 是 OpenGL 中用于控制颜色混合方式的函数。它决定了源颜色和目标颜色在帧缓冲区中如何组合，从而实现透明效果或其他颜色混合效果。颜色混合通常用于实现半透明、淡入淡出等效果。
+
+### 函数原型
+```c
+void glBlendFunc(GLenum sfactor, GLenum dfactor);
+```
+
+- **`sfactor`**：源因子，定义了源颜色（即新绘制的颜色）的影响程度。
+- **`dfactor`**：目标因子，定义了目标颜色（即帧缓冲区中已有的颜色）的影响程度。
+
+### 工作原理
+颜色混合使用以下公式进行计算：
+
+```c
+result = sourceColor * sfactor + destinationColor * dfactor;
+```
+
+- **`sourceColor`**：当前绘制操作生成的颜色。
+- **`destinationColor`**：当前帧缓冲区中已有的颜色。
+- **`sfactor`**：用于修改源颜色的因子。
+- **`dfactor`**：用于修改目标颜色的因子。
+
+你可以通过设置不同的因子，来改变源颜色和目标颜色的比例，进而实现不同的混合效果。
+
+### 常见参数
+`sfactor` 和 `dfactor` 的参数通常相同，OpenGL 提供了多种可用的因子，以下是一些常见的值及其含义：
+
+#### 1. `GL_ZERO`
+- 因子为 0，颜色会被完全忽略。
+  
+#### 2. `GL_ONE`
+- 因子为 1，颜色保持不变。
+  
+#### 3. `GL_SRC_COLOR`
+- 因子为源颜色的每个分量值。例如，对于红色分量，因子是 `sourceColor.r`。
+
+#### 4. `GL_ONE_MINUS_SRC_COLOR`
+- 因子为 `1 - sourceColor` 的每个分量值。
+
+#### 5. `GL_DST_COLOR`
+- 因子为目标颜色的每个分量值。
+
+#### 6. `GL_ONE_MINUS_DST_COLOR`
+- 因子为 `1 - destinationColor` 的每个分量值。
+
+#### 7. `GL_SRC_ALPHA`
+- 因子为源颜色的 alpha 值。
+
+#### 8. `GL_ONE_MINUS_SRC_ALPHA`
+- 因子为 `1 - sourceAlpha`。
+
+#### 9. `GL_DST_ALPHA`
+- 因子为目标颜色的 alpha 值。
+
+#### 10. `GL_ONE_MINUS_DST_ALPHA`
+- 因子为 `1 - destinationAlpha`。
+
+### 常见用法
+
+#### 1. **实现普通透明度**
+这是最常见的情况，使用源的 alpha 值和目标的逆 alpha 值：
+```c
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+```
+这种混合模式可以很好地实现半透明效果。源颜色的影响根据它的 alpha 值，而目标颜色的影响根据 `1 - alpha`。
+
+#### 2. **加法混合**
+加法混合通常用于光效和粒子效果，源和目标颜色都以原始值相加：
+```c
+glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+```
+这会将源颜色和目标颜色直接叠加，产生更加亮的效果。
+
+#### 3. **乘法混合**
+用于创建阴影、暗角效果，源颜色和目标颜色相乘：
+```c
+glBlendFunc(GL_DST_COLOR, GL_ZERO);
+```
+这种方式会使得颜色变得更暗。
+
+### 例子
+假设源颜色为 `(0.4, 0.6, 0.8, 0.5)`，目标颜色为 `(0.7, 0.2, 0.3, 1.0)`。
+
+1. 使用 `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`：
+
+源颜色的 alpha 值为 `0.5`，目标颜色的影响因子为 `1 - 0.5 = 0.5`。
+
+计算后的结果为：
+```
+result = sourceColor * 0.5 + destinationColor * 0.5
+       = (0.4, 0.6, 0.8) * 0.5 + (0.7, 0.2, 0.3) * 0.5
+       = (0.2, 0.3, 0.4) + (0.35, 0.1, 0.15)
+       = (0.55, 0.4, 0.55)
+```
+最终混合后的颜色为 `(0.55, 0.4, 0.55)`。
+
+### 开启和关闭混合
+使用 `glBlendFunc` 之前，通常需要显式开启颜色混合：
+```c
+glEnable(GL_BLEND);
+```
+
+关闭混合时：
+```c
+glDisable(GL_BLEND);
+```
+
+### 总结
+`glBlendFunc` 允许开发者通过设置源和目标因子来自定义颜色的混合方式，灵活应用于各种场景，如透明度处理、光效模拟等。
+
+
+<br/><br/><br/>
+
+> <h2 id="glActiveTexture指定当前活跃纹理单元">glActiveTexture指定当前活跃纹理单元</h2>
+
+`glActiveTexture` 是 OpenGL 中用于指定当前活跃纹理单元（Texture Unit）的函数。纹理单元允许我们在一个着色器程序中使用多个纹理，这对复杂场景和特效非常重要。通过 `glActiveTexture`，我们可以切换当前活跃的纹理单元，并将纹理绑定到该单元上。
+
+### 函数原型
+```c
+void glActiveTexture(GLenum texture);
+```
+
+### 参数详解
+
+- **`texture`**：指定要激活的纹理单元。这个值通常是 `GL_TEXTURE0`, `GL_TEXTURE1`, `GL_TEXTURE2` 等，表示不同的纹理单元，具体可以通过 `GL_TEXTURE0 + i` 来表示第 `i` 个纹理单元。
+
+   OpenGL 至少保证支持 16 个纹理单元，分别为 `GL_TEXTURE0` 到 `GL_TEXTURE15`，但有些硬件可能支持更多纹理单元。你可以通过调用 `glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits)` 来查询具体支持的最大纹理单元数。
+
+### 工作原理
+
+在现代 OpenGL 中，着色器往往需要使用多个纹理，例如漫反射纹理、法线贴图、环境光遮蔽等。而 `glActiveTexture` 允许开发者指定当前激活的纹理单元，以便绑定相应的纹理对象。在调用 `glActiveTexture` 之后，所有的纹理绑定、纹理参数设置都作用于所激活的纹理单元。
+
+- **纹理单元**：OpenGL 的纹理单元是一个抽象的概念，它允许 GPU 同时管理多个纹理对象。通过激活不同的纹理单元并绑定不同的纹理，开发者可以在同一个着色器中使用多个纹理。
+
+### 使用步骤
+
+1. **激活纹理单元**：通过 `glActiveTexture` 选择一个纹理单元。
+   
+2. **绑定纹理**：使用 `glBindTexture` 将纹理绑定到当前激活的纹理单元。
+   
+3. **设置纹理属性和使用**：然后，你可以设置纹理参数或将其传递到着色器中。
+
+### 例子
+假设我们有两个纹理需要在着色器中使用，步骤如下：
+
+```c
+// 激活纹理单元 0 并绑定第一个纹理
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, texture1);
+
+// 激活纹理单元 1 并绑定第二个纹理
+glActiveTexture(GL_TEXTURE1);
+glBindTexture(GL_TEXTURE_2D, texture2);
+
+// 在着色器中设置采样器为相应的纹理单元
+glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);  // 对应 GL_TEXTURE0
+glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);  // 对应 GL_TEXTURE1
+```
+
+在这个例子中，我们：
+
+1. 激活 `GL_TEXTURE0` 纹理单元并绑定 `texture1`。
+2. 激活 `GL_TEXTURE1` 纹理单元并绑定 `texture2`。
+3. 使用 `glUniform1i` 设置着色器中的采样器，使得它们与适当的纹理单元绑定。
+
+### 着色器中的使用
+在着色器代码中，纹理通常使用 `sampler2D` 类型的变量。不同的 `sampler2D` 可以访问不同的纹理单元。你需要在程序中通过 `glUniform1i` 绑定这些采样器到适当的纹理单元。
+
+```glsl
+// 着色器代码
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+
+void main() {
+    vec4 color1 = texture(texture1, texCoords);
+    vec4 color2 = texture(texture2, texCoords);
+    
+    // 使用两张纹理
+    gl_FragColor = mix(color1, color2, 0.5);
+}
+```
+
+在上面的片段着色器中，`texture1` 和 `texture2` 对应于不同的纹理单元。OpenGL 会根据这些 `sampler2D` 的绑定，将纹理传递给着色器。
+
+### 注意事项
+
+1. **纹理单元的数量限制**：
+   每个着色器程序能够使用的纹理单元数量是有限的，通常至少支持 16 个。你可以通过查询硬件能力来确定具体支持的纹理单元数：
+   ```c
+   GLint maxUnits;
+   glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits);
+   printf("Max texture units: %d\n", maxUnits);
+   ```
+
+2. **默认激活的纹理单元**：
+   当没有显式调用 `glActiveTexture` 时，OpenGL 默认使用 `GL_TEXTURE0`。这意味着如果你只需要使用一个纹理，你不需要调用 `glActiveTexture`，只需直接绑定纹理即可。
+
+3. **每个纹理单元独立管理**：
+   每个纹理单元都独立管理其绑定的纹理和纹理状态（如纹理过滤器和环绕模式）。因此，在一个单元中绑定的纹理和状态不会影响其他纹理单元。
+
+### 总结
+
+`glActiveTexture` 允许你选择当前活跃的纹理单元，并在该单元上绑定纹理。通过这种方式，你可以在同一个着色器程序中使用多个纹理进行复杂的渲染效果。
+
+
+<br/><br/><br/>
+
+> <h2 id="glUniform1i将纹理单元绑定到着色器中">glUniform1i将纹理单元绑定到着色器中</h2>
+
+这一行代码涉及到在 OpenGL 中将一个纹理传递给着色器中的 `sampler` 变量，尤其是 `glUniform1i` 和 `glGetUniformLocation` 的结合使用。我们来分解每个部分的作用。
+
+### 背景
+在 OpenGL 中，当你在着色器中定义了一个 `sampler2D`（或者其他类型的 `sampler`，如 `samplerCube`）变量时，这个变量并不是直接指向一个纹理对象，而是指向一个纹理单元（Texture Unit）。通过 OpenGL 函数 `glUniform1i`，我们将纹理单元的索引传递给着色器中的采样器变量，这样，着色器就知道应该从哪个纹理单元采样。
+
+### 代码分解
+
+```c
+glUniform1i(glGetUniformLocation(self.normalProgram, "Texture"), 0);
+```
+
+#### 1. `glGetUniformLocation(self.normalProgram, "Texture")`
+- **作用**：获取着色器程序中 `Texture` 这个 uniform 变量的位置。
+- **参数说明**：
+  - `self.normalProgram`：这是已经编译和链接的 OpenGL 着色器程序的句柄（ID）。它可能是在之前使用 `glCreateProgram` 和 `glLinkProgram` 函数生成的程序对象。
+  - `"Texture"`：这是着色器中定义的 uniform 变量的名称，通常是一个 `sampler2D` 类型的变量。
+
+  **返回值**：`glGetUniformLocation` 返回的是这个变量在当前着色器程序中的位置索引（通常是一个整数），用于后续调用 `glUniform` 系列函数时指定哪个 uniform 变量需要赋值。
+
+  **示例**（片段着色器中的 `Texture` uniform）：
+  ```glsl
+  uniform sampler2D Texture;
+  ```
+
+#### 2. `glUniform1i(location, 0)`
+- **作用**：将 `0` 这个值赋给着色器中的 `Texture` uniform 变量。这里的 `0` 代表纹理单元 `GL_TEXTURE0`。
+- **参数说明**：
+  - `location`：通过 `glGetUniformLocation` 获取到的 `Texture` 变量的存储位置索引。
+  - `0`：表示纹理单元索引 `GL_TEXTURE0`。这意味着 `Texture` 变量会从纹理单元 0 中采样。
+
+#### 结合来看
+1. **`glGetUniformLocation(self.normalProgram, "Texture")`**：
+   这一部分获取了在 `self.normalProgram` 着色器程序中，名为 `Texture` 的 uniform 变量的位置索引。
+
+2. **`glUniform1i(location, 0)`**：
+   然后使用 `glUniform1i`，将纹理单元索引 `0`（即 `GL_TEXTURE0`）赋值给 `Texture` 这个 uniform 变量。这告诉 OpenGL，当 `Texture` 被引用时，它应该从 `GL_TEXTURE0` 纹理单元读取数据。
+
+### 示例：如何在代码中使用
+
+1. **激活纹理单元**：
+   在渲染时，首先要激活 `GL_TEXTURE0` 纹理单元，并绑定相应的纹理。
+   
+   ```c
+   glActiveTexture(GL_TEXTURE0);  // 激活第一个纹理单元
+   glBindTexture(GL_TEXTURE_2D, textureID);  // 绑定要使用的纹理
+   ```
+
+2. **在着色器中指定采样器**：
+   通过 `glUniform1i` 告诉着色器 `Texture` 变量应该使用哪个纹理单元（这里是 `GL_TEXTURE0`，对应的值是 `0`）。
+
+   ```c
+   glUniform1i(glGetUniformLocation(programID, "Texture"), 0);  // 设置采样器使用的纹理单元为 0
+   ```
+
+3. **片段着色器中的采样器变量**：
+   在片段着色器中，`sampler2D Texture` 变量将会从纹理单元 `GL_TEXTURE0` 读取纹理数据。
+
+   ```glsl
+   uniform sampler2D Texture;
+
+   void main() {
+       vec4 texColor = texture(Texture, texCoords);
+       // 使用 texColor 进行渲染
+   }
+   ```
+
+### 总结
+这行代码的核心作用是将纹理单元（在本例中是 `GL_TEXTURE0`）绑定到着色器中的 `Texture` 变量上，以便着色器能够使用正确的纹理进行采样。具体步骤如下：
+1. 激活并绑定纹理到指定的纹理单元（如 `GL_TEXTURE0`）。
+2. 使用 `glUniform1i` 函数将纹理单元索引（如 `0` 表示 `GL_TEXTURE0`）赋值给着色器中的 `sampler2D` 变量。
+
+这是多重纹理处理的基本操作之一，尤其在需要多个纹理采样时，比如在光照、法线贴图、反射等效果中。
+
+
+
+<br/><br/><br/>
+
+> <h2 id="glGetAttribLocation获取着色器程序中名为TextureCoords的顶点属性">glGetAttribLocation获取着色器程序中名为TextureCoords的顶点属性</h2>
+
+
+`glGetAttribLocation(self.normalProgram, "TextureCoords")` 这一行代码的作用是获取着色器程序中名为 `TextureCoords` 的 **顶点属性**（attribute）的位置索引。它与之前的 `glGetUniformLocation` 类似，但专门用于顶点着色器中的 **attribute** 变量。
+
+在 OpenGL 中，顶点属性（attribute）用于从应用程序向顶点着色器传递每个顶点的数据，例如位置、颜色、纹理坐标等。`glGetAttribLocation` 函数允许我们获取一个特定顶点属性的位置索引，以便在后续操作中引用它。
+
+### 函数原型
+```c
+GLint glGetAttribLocation(GLuint program, const GLchar *name);
+```
+
+### 参数详解
+
+1. **`program`**：这是已经编译并链接的 OpenGL 着色器程序的 ID（句柄）。在这行代码中，它是 `self.normalProgram`，表示一个着色器程序对象。
+   
+2. **`name`**：这是需要获取位置索引的顶点属性的名称。在此例中，`"TextureCoords"` 是顶点着色器中的一个 attribute 变量名，通常与纹理坐标相关联。
+
+### 返回值
+
+`glGetAttribLocation` 返回一个整数，表示 `TextureCoords` 属性在着色器程序 `self.normalProgram` 中的位置索引。该索引用于在后续调用 `glVertexAttribPointer` 或 `glEnableVertexAttribArray` 函数时，引用这个顶点属性。
+
+- 如果返回值为负数（例如 -1），表示该属性未找到，可能是因为：
+  - 属性名称不存在。
+  - 该属性在着色器中未被使用，因此在编译过程中被优化掉了。
+
+### 使用背景
+
+顶点属性（attribute）通常在顶点着色器中定义，用来接收每个顶点的数据。常见的顶点属性包括顶点位置、法线向量、颜色和纹理坐标。`TextureCoords` 可能是与纹理映射相关的顶点属性，它传递了每个顶点的纹理坐标。
+
+在 OpenGL 中，将顶点数据传递给着色器时，首先需要获取这些顶点属性的位置索引，之后通过 `glVertexAttribPointer` 函数将实际的数据关联到这些属性上。
+
+### 示例：顶点着色器中的 attribute 定义
+
+假设在顶点着色器中有如下代码：
+
+```glsl
+// 顶点着色器
+attribute vec2 TextureCoords;  // 纹理坐标，vec2 类型
+
+void main() {
+    // 其他代码
+    // 使用 TextureCoords 做某些操作
+}
+```
+
+在这种情况下，`glGetAttribLocation(self.normalProgram, "TextureCoords")` 会返回 `TextureCoords` 在着色器程序中的位置索引，供后续绑定数据时使用。
+
+### 使用步骤
+
+通常，在使用顶点属性的过程中，涉及到如下几个步骤：
+
+1. **获取顶点属性位置**：通过 `glGetAttribLocation` 获取顶点属性的位置索引。
+   
+   ```c
+   GLint texCoordLocation = glGetAttribLocation(self.normalProgram, "TextureCoords");
+   ```
+
+2. **启用顶点属性**：使用 `glEnableVertexAttribArray` 启用指定位置的顶点属性。
+
+   ```c
+   glEnableVertexAttribArray(texCoordLocation);
+   ```
+
+3. **设置顶点属性指针**：使用 `glVertexAttribPointer` 指定顶点属性数据的位置和格式。
+
+   ```c
+   glVertexAttribPointer(texCoordLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+   ```
+
+4. **禁用顶点属性（可选）**：如果不再需要，可以通过 `glDisableVertexAttribArray` 禁用顶点属性。
+
+   ```c
+   glDisableVertexAttribArray(texCoordLocation);
+   ```
+
+### 例子：完整的使用流程
+
+```c
+// 获取 "TextureCoords" 顶点属性的位置
+GLint texCoordLocation = glGetAttribLocation(self.normalProgram, "TextureCoords");
+
+// 如果找到了有效的位置（即位置索引不是 -1）
+if (texCoordLocation != -1) {
+    // 启用该顶点属性
+    glEnableVertexAttribArray(texCoordLocation);
+
+    // 假设我们的顶点数据中每个顶点包含位置和纹理坐标
+    // 并且纹理坐标是 vec2 (两个浮点数)
+    glVertexAttribPointer(texCoordLocation, 2, GL_FLOAT, GL_FALSE, stride, (void*)(offsetof(Vertex, texCoords)));
+
+    // 其他渲染操作（绘制等）
+}
+```
+
+在这个例子中：
+- 我们首先通过 `glGetAttribLocation` 获取 `TextureCoords` 的位置索引。
+- 然后，我们启用了这个顶点属性，并通过 `glVertexAttribPointer` 将纹理坐标数据关联到这个属性上。
+- `glVertexAttribPointer` 中的第二个参数 `2` 表示纹理坐标是一个 `vec2`（两个浮点数）。
+  
+### 注意事项
+
+1. **Shader Attribute 优化**：如果着色器中的顶点属性没有在着色器代码中实际使用，OpenGL 可能会优化掉这个属性，从而导致 `glGetAttribLocation` 返回 -1。所以确保在着色器中使用该属性。
+   
+2. **顶点数组对象（VAO）与属性绑定**：在现代 OpenGL 中，通常使用 VAO（顶点数组对象）来管理顶点属性的状态。你可以将 `glVertexAttribPointer` 和 `glEnableVertexAttribArray` 等操作封装在 VAO 中。
+
+### 总结
+
+`glGetAttribLocation` 用于获取在着色器中声明的顶点属性（如 `TextureCoords`）的位置索引，后续通过这个索引，我们可以将实际的顶点数据传递给着色器进行处理。在纹理映射、顶点数据管理等场景中，这个函数起到了桥梁的作用，使得应用程序可以有效地将顶点属性与 OpenGL 管理的 GPU 资源关联起来。
+
+
+
 <br/>
 
 ***
@@ -1315,6 +1868,114 @@ com.lyman.MFPaintViewDemo
 
 [画板](https://github.com/wangyongy)
 
+
+<br/><br/><br/>
+
+> <h2 id="贝塞尔曲线了解">贝塞尔曲线了解</h2>
+
+
+&emsp; **贝塞尔曲线（Bézier Curve）** 是一种参数化曲线，广泛用于计算机图形学、动画和CAD设计中，以平滑地表示和插值路径。贝塞尔曲线由一组控制点定义，其中最常用的是二次和三次贝塞尔曲线。
+
+<br/>
+
+**贝塞尔曲线数学计算公式：**
+
+![ios0.0.43.png](./../../Pictures/ios0.0.43.png)
+
+<br/><br/>
+
+**如何绘制贝塞尔曲线**
+
+为了绘制贝塞尔曲线而不是折线，可以遵循以下步骤：
+
+- 选择控制点：确定您想要的控制点位置。
+- 计算曲线点：使用贝塞尔方程计算一系列 t 值（通常在 0 到 1 之间均匀分布）对应的曲线点。
+- 连接计算的点：将计算出的点连接起来形成平滑的曲线。
+
+
+<br/><br/>
+
+**Swift示例代码**
+
+```Swift
+import UIKit
+
+class BezierCurveView: UIView {
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+
+        // 设置贝塞尔曲线的控制点
+        let p0 = CGPoint(x: 50, y: 200)
+        let p1 = CGPoint(x: 150, y: 50)
+        let p2 = CGPoint(x: 250, y: 200)
+
+        // 绘制控制线（可选）
+        context.setStrokeColor(UIColor.gray.cgColor)
+        context.setLineWidth(1)
+        context.move(to: p0)
+        context.addLine(to: p1)
+        context.addLine(to: p2)
+        context.strokePath()
+
+        // 绘制贝塞尔曲线
+        context.setStrokeColor(UIColor.blue.cgColor)
+        context.setLineWidth(2)
+        context.move(to: p0)
+        context.addQuadCurve(to: p2, control: p1) // 二次贝塞尔曲线
+        context.strokePath()
+    }
+}
+```
+
+
+<br/><br/>
+
+> <h2 id="如何绘制的不是折线而是曲线">如何绘制的不是折线而是曲线</h2>
+
+由于 iOS 系统触摸事件的派发频率有限，我们最终得到的只能是稀疏的点。如下图所示，每个触摸点之间的间隔会比较大。
+
+![ios0.0.44.png](./../../Pictures/ios0.0.44.png)
+
+
+<br>
+
+**如何绘制密集的点呢？**
+
+很容易想到，只需要在两个点之间，按照一定的密度进行插值，就可以绘制出连续的轨迹。
+
+![ios0.0.45.png](./../../Pictures/ios0.0.45.png)
+
+但是很明显，我们的绘制结果是折线，并不平滑。
+
+<br> <br>
+
+**如何使我们绘制的线是柔滑的？不是有折点的呢？**
+
+具体的做法是使用 **两个顶点间的中点** 和 **一个顶点** ，来构造一条贝塞尔曲线。如下图，图中的 3 个 **红点** 被用来构造一条贝塞尔曲线。
+
+![ios0.0.46.png](./../../Pictures/ios0.0.46.png)
+
+<br/>
+
+于是，我们的问题就变成了 怎么在 OpenGL ES 中绘制贝塞尔曲线 。相当于已知贝塞尔曲线的 3 个关键点，反向来求曲线上的点序列。
+
+我们知道贝塞尔曲线的方程是 
+
+![ios0.0.47.png](./../../Pictures/ios0.0.47.png)
+
+其**t**的取值范围是`0~1`
+
+所以我们可以采取线性取值的方式，每一条贝塞尔曲线取 `n` 个点（`n` 是个确定的常量）。只要依次往方程中代入 `1 / n 、 2 / n 、 ... n / n `，就可以得到一个点序列。
+
+![ios0.0.48.png](./../../Pictures/ios0.0.48.png)
+
+
+<br/>
+
+先将 **n** 取一个比较小的值，这样比较容易看出存在的问题。我们发现，点序列的间隔并不均匀。原因有两个：
+
+- 不同贝塞尔曲线的长度不一样，使用同一个 n 值，算出来的点的疏密程度肯定不同。
+- 由于贝塞尔曲线随着 t 增长，曲线长度的增长并不是线性的。按照我们上面的算法，最终会得到的结果是 两头比较稀疏，中间比较密集 。
 
 
 
