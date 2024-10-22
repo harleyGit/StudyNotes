@@ -25,6 +25,8 @@
 - [**曲线绘制**](#曲线绘制)
 	- [贝塞尔曲线了解](#贝塞尔曲线了解)
 	- [如何绘制的不是折线而是曲线](#如何绘制的不是折线而是曲线)
+	- [glVertexAttribPointer指定顶点属性的函数（这个没有设置好，导致线条方向相反）](#glVertexAttribPointer指定顶点属性的函数)
+	- [glBlendFunc混合源颜色和目标颜色](#glBlendFunc混合源颜色和目标颜色)
 - **资料**
 	- [**OpenGL中文版**](https://learnopengl-cn.github.io/01%20Getting%20started/01%20OpenGL/)
 	- [OpenGL学习资料合集（CSDN）](https://blog.csdn.net/kyl282889543/article/details/95727519)
@@ -1977,6 +1979,196 @@ class BezierCurveView: UIView {
 - 不同贝塞尔曲线的长度不一样，使用同一个 n 值，算出来的点的疏密程度肯定不同。
 - 由于贝塞尔曲线随着 t 增长，曲线长度的增长并不是线性的。按照我们上面的算法，最终会得到的结果是 两头比较稀疏，中间比较密集 。
 
+
+<br/><br/><br/>
+
+> <h2 id="glVertexAttribPointer指定顶点属性的函数">glVertexAttribPointer指定顶点属性的函数（这个没有设置好，导致线条方向相反）</h2>
+
+```
+// 错误❌：参数的第5个设置成了5
+glVertexAttribPointer(GLuint(textureSlot), 2,
+                              GLenum(GL_FLOAT), GLboolean(GL_FALSE),
+                              GLsizei(MemoryLayout<GLfloat>.size * 5),
+                              UnsafeRawPointer(bitPattern: 5 * MemoryLayout<GLfloat>.size))
+                              
+
+// 正确✅：参数的第5个设置成3
+glVertexAttribPointer(GLuint(textureSlot), 2,
+                              GLenum(GL_FLOAT), GLboolean(GL_FALSE),
+                              GLsizei(MemoryLayout<GLfloat>.size * 5),
+                              UnsafeRawPointer(bitPattern: 3 * MemoryLayout<GLfloat>.size))
+```
+
+应该设置成3，结果设置成5导致绘画的点在屏幕的右下角，不是跟踪手指绘制的点。
+
+![ios0.0.49.png](./../../Pictures/ios0.0.49.png)
+
+
+
+<br/>
+
+`glVertexAttribPointer` 是 OpenGL 中用于指定顶点属性的函数，它定义了如何从顶点缓冲对象中提取顶点数据，并将其传递给着色器。以下是对 `glVertexAttribPointer` 的详细解析，包括其参数和使用场景。
+
+### 函数原型
+```c
+void glVertexAttribPointer(GLuint index, 
+                           GLint size, 
+                           GLenum type, 
+                           GLboolean normalized, 
+                           GLsizei stride, 
+                           const void *pointer);
+```
+
+### 参数详解
+
+1. **`GLuint index`**:
+   - **描述**: 指定要配置的顶点属性的索引。在顶点着色器中，您将使用 `layout(location = index)` 来引用该属性。`index` 可以是 0 到 `GL_MAX_VERTEX_ATTRIBS - 1` 之间的值。
+   - **用途**: 允许在顶点着色器中通过属性索引来访问不同的顶点数据。
+
+2. **`GLint size`**:
+   - **描述**: 指定每个顶点属性的组件数量。常见的值包括：
+     - `1` 表示单个标量（如单个浮点数）。
+     - `2` 表示二维向量（如纹理坐标）。
+     - `3` 表示三维向量（如位置）。
+     - `4` 表示四维向量（如颜色或四维位置）。
+   - **用途**: 决定每个顶点属性在顶点数据中的大小和格式。
+
+3. **`GLenum type`**:
+   - **描述**: 指定数据类型，常用的类型有：
+     - `GL_FLOAT`：浮点数。
+     - `GL_INT`：整数。
+     - `GL_UNSIGNED_BYTE`：无符号字节。
+     - `GL_UNSIGNED_SHORT`：无符号短整型。
+   - **用途**: 告诉 OpenGL 如何解释数据。
+
+4. **`GLboolean normalized`**:
+   - **描述**: 指定是否对整数类型的值进行归一化：
+     - `GL_TRUE`：将整数值归一化到 [0, 1] 或 [-1, 1] 范围内（取决于类型）。
+     - `GL_FALSE`：保持原始整数值。
+   - **用途**: 对于纹理坐标等数据，通常使用 `GL_FALSE`；对于颜色数据，可能会使用 `GL_TRUE`。
+
+5. **`GLsizei stride`**:
+   - **描述**: 指定相邻顶点之间的字节数。如果数据是连续的，可以设置为 `0`，表示使用前面定义的类型和大小自动计算。
+   - **用途**: 允许在顶点缓冲中跳过某些字节，以便找到下一个顶点的起始位置。
+
+6. **`const void *pointer`**:
+   - **描述**: 指向顶点数据的偏移指针。在 `glBufferData` 中分配的缓冲区指针可以与顶点数据的起始位置相对的偏移量。
+   - **用途**: 指定属性的起始位置，通常是通过指针计算得出的。
+
+### 使用场景
+- **绘制图形**: 在使用 OpenGL 绘制图形时，通常会在绘制前调用 `glVertexAttribPointer` 以设置顶点属性指针。
+- **使用 VAO**: 在使用顶点数组对象（VAO）时，可以将属性状态保存到 VAO 中，以便之后直接调用 `glBindVertexArray` 来恢复状态。
+
+### 示例
+以下是一个简单的使用示例，假设您正在渲染一个三角形：
+
+```c
+// 假设 vertices 是一个指向顶点数据的指针
+glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer); // 绑定顶点缓冲区
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); // 设置位置属性
+glEnableVertexAttribArray(0); // 启用位置属性
+
+// 绘制
+glDrawArrays(GL_TRIANGLES, 0, 3); // 绘制三角形
+```
+
+### 注意事项
+- 确保在调用 `glVertexAttribPointer` 之前已经绑定了合适的顶点缓冲对象。
+- 如果您在使用 VAO，确保在绑定 VAO 之后设置顶点属性。
+- 要正确管理内存，确保在不再需要顶点数据时释放内存。
+
+通过理解 `glVertexAttribPointer` 的每个参数和如何配置顶点属性，您可以有效地在 OpenGL 中处理顶点数据，并实现复杂的图形渲染。
+
+
+<br/><br/><br/>
+
+> <h2 id="glBlendFunc混合源颜色和目标颜色">glBlendFunc混合源颜色和目标颜色</h2>
+
+`glBlendFunc` 是一个用于设置 OpenGL 中混合（Blending）模式的函数，它定义了如何将源颜色（片段着色器输出的颜色）和目标颜色（帧缓冲区中已经存在的颜色）混合在一起。混合通常用于实现透明度、半透明效果以及复杂的图像合成。
+
+### 函数原型
+
+```c
+void glBlendFunc(GLenum sfactor, GLenum dfactor);
+```
+
+### 参数解释
+
+- **`sfactor`（源因子，Source Factor）**: 乘以源颜色的因子，决定片段着色器输出的颜色如何与帧缓冲中的颜色混合。
+- **`dfactor`（目标因子，Destination Factor）**: 乘以目标颜色的因子，决定帧缓冲中的颜色如何与片段颜色混合。
+
+这两个因子共同定义了混合操作，即最终颜色是以下公式的结果：
+
+```
+FinalColor = (SourceColor * sfactor) + (DestinationColor * dfactor)
+```
+
+### 常见的参数值
+
+`sfactor` 和 `dfactor` 都是使用 OpenGL 定义的常量，最常见的常量如下：
+
+- **`GL_ZERO`**: 使用 0 作为因子。
+- **`GL_ONE`**: 使用 1 作为因子（颜色值不会被改变）。
+- **`GL_SRC_COLOR`**: 使用源颜色（片段着色器输出的颜色）。
+- **`GL_ONE_MINUS_SRC_COLOR`**: 使用 1 减去源颜色。
+- **`GL_DST_COLOR`**: 使用目标颜色（帧缓冲区中的颜色）。
+- **`GL_ONE_MINUS_DST_COLOR`**: 使用 1 减去目标颜色。
+- **`GL_SRC_ALPHA`**: 使用源颜色的 alpha 值。
+- **`GL_ONE_MINUS_SRC_ALPHA`**: 使用 1 减去源颜色的 alpha 值。
+- **`GL_DST_ALPHA`**: 使用目标颜色的 alpha 值。
+- **`GL_ONE_MINUS_DST_ALPHA`**: 使用 1 减去目标颜色的 alpha 值。
+
+### 常用混合模式
+
+1. **正常透明度混合**（Standard Alpha Blending）:
+   ```c
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   ```
+   - 片段的 alpha 值决定透明度。`GL_SRC_ALPHA` 使用源颜色的 alpha 值，`GL_ONE_MINUS_SRC_ALPHA` 通过 1 减去 alpha 值来影响目标颜色的影响度。这是最常用的混合模式，用于半透明对象。
+
+2. **加法混合**（Additive Blending）:
+   ```c
+   glBlendFunc(GL_ONE, GL_ONE);
+   ```
+   - 源颜色和目标颜色直接相加。此模式通常用于粒子系统和光效渲染。
+
+3. **乘法混合**（Multiplicative Blending）:
+   ```c
+   glBlendFunc(GL_DST_COLOR, GL_ZERO);
+   ```
+   - 源颜色与目标颜色相乘，常用于实现阴影或深色物体的渲染。
+
+4. **预乘透明度**（Premultiplied Alpha Blending）:
+   ```c
+   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+   ```
+   - 使用预乘的 alpha 值，意味着源颜色已经乘以 alpha 值。这在处理半透明纹理时非常有效。
+
+### 使用场景
+
+- **透明物体**: 用于绘制透明或半透明的物体，比如玻璃、水面等。
+- **粒子效果**: 常用于粒子系统，比如火焰、烟雾和魔法效果等，可以通过加法混合让粒子光效叠加。
+- **图像合成**: 用于 2D 和 3D 场景中图像的合成，特别是在图形用户界面中，处理多层次的纹理、UI 元素的透明度。
+
+### 例子
+
+```c
+// 启用混合
+glEnable(GL_BLEND);
+
+// 设置混合因子
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+// 现在可以绘制半透明的物体了
+// 绘制代码
+```
+
+### 注意事项
+
+1. **启用混合**: 使用 `glEnable(GL_BLEND)` 启用混合功能，否则混合不会起作用。
+2. **绘制顺序**: 如果启用了混合，绘制时要注意物体的绘制顺序。通常，先绘制不透明的物体，最后绘制透明的物体，以避免深度缓冲的问题。
+
+通过合理设置 `glBlendFunc()`，可以实现各种视觉效果，比如透明、半透明、亮度增强等。
 
 
 
