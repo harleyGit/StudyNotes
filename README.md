@@ -264,6 +264,8 @@
 * **类库**
 	* [RxSwift](./iOS/Swift/RxSwift.md)
 	* [Moya](./iOS/Swift/Moya.md)
+	* [GPUImage](./iOS/Swift/GPUImage.md)
+	* [SnapKit](./iOS/Swift/SnapKit.md)
 * **底层**
 	* [动态性](./iOS/Swift/动态性.md)
 

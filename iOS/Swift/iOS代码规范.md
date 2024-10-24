@@ -53,6 +53,41 @@
 
 ```
 
+用扩展将代码组织成各个不同的功能逻辑块。每个扩展都应该添加` // MARK: - 注释符号`，以保证代码的结构清晰。
+
+<br/><br/>
+
+**协议一致性/Protocol Conformance**
+
+**推荐（Preferred）‌**
+
+```
+class MyViewController: UIViewController {
+  // class stuff here
+}
+
+// MARK: - UITableViewDataSource
+extension MyViewController: UITableViewDataSource {
+  // table view data source methods
+}
+
+// MARK: - UIScrollViewDelegate
+extension MyViewController: UIScrollViewDelegate {
+  // scroll view delegate methods
+}
+```
+
+<br/>
+
+**不推荐**
+
+```
+class MyViewController: UIViewController, UITableViewDataSource, UIScrollViewDelegate {
+  // all methods
+}
+```
+
+编译器不允许你在派生类中重新声明已经遵守的协议，因此可以在派生类中省略基类的扩展声明。这在派生类是一个终端类，且只有很少的方法需要重写的情况下是合理的。何时保留扩展声明将由开发者自行决定。
 
 <br/><br/>
 
@@ -169,6 +204,10 @@ private func setupTexture(pictureName name: String) -> GLuint {
 > <h2 id="标志注释MARK">标志注释MARK</h2>
 
 ![ios0.0.37.png](./../../Pictures/ios0.0.37.png)
+
+用扩展将代码组织成各个不同的功能逻辑块。每个扩展都应该添加 `// MARK: - 注释符号`，以保证代码的结构清晰。
+
+
 
 <br/><br/>
 
