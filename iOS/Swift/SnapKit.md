@@ -1,5 +1,6 @@
 > <h1 id=""></h1>
 - [left、right和leading、trailing区别](#left、right和leading、trailing区别) 
+- [makeConstraints和remakeConstraints区别](#makeConstraints和remakeConstraints区别)
 
 
 
@@ -60,4 +61,14 @@ view.snp.makeConstraints { make in
 <br/><br/>
 
 而且还有一点很重要的是，使用left在中东国家地区的时候，若是遵从**RTL**布局很可能造成app的崩溃。
+
+
+
+<br/><br/><br/>
+
+> <h2 id="makeConstraints和remakeConstraints区别">makeConstraints和remakeConstraints区别</h2>
+
+时隔多年再一次使用Snapkit时我设置约束时，犯了一个很大的错误。就是我将约束放在了UIView的系统方法`-(void)layouSubViews`方法里了，并且布局使用的还是`makeConstraints`方法，这样可能会导致这个布局方法在`-(void)layouSubViews`多次调用，可能导致程序崩溃。
+
+若是避免你可以用`remakeConstraints`方法，因为这个方法会把之前设置的约束都给清除掉，然后重新设置。但是这会又性能的损耗，所以需要单独一个方法对其进行布局了。
 
