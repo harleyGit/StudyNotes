@@ -1,5 +1,22 @@
 > <h2 id=""></h2>
-- [.bashrc和和.zshrc区别](#.bashrc和和.zshrc区别)
+- [**语法**](#语法)
+	- [CocoaPods 的默认官方仓库地址](#CocoaPods的默认官方仓库地址)
+		- [:git参数获取仓库代码](#:git参数获取仓库代码) 
+		- [:tag参数指定标签版本](#:tag参数指定标签版本) 
+		- [:branch指定Git仓库的分支](#:branch指定Git仓库的分支) 
+		- [:commit指定某个特定提交](#:commit指定某个特定提交) 
+		- [:path指定本地仓库地址](#:path指定本地仓库地址) 
+		- [:podspec指定spec文件路径](#:podspec指定spec文件路径) 
+		- [:binary用于某些特殊库分发二进制格式](#:binary用于某些特殊库分发二进制格式) 
+		- [综合示例](#综合示例)
+	- [自己私有库内的库名与三方库一样，如何解决](#自己私有库内的库名与三方库一样，如何解决)
+		- [使用 :branch、:tag 或 :commit 来锁定特定版本或分支](#使用:branch、:tag或:commit来锁定特定版本或分支)
+			- [方案一](#方案一)
+			- [方案二](#方案二)
+				- [post_install钩子代码理解](#post_install钩子代码理解)
+- [**问题解决**](#问题解决)
+	- [libarclite_iphoneos.a找不到](#libarclite_iphoneos.a找不到)
+	- [**.bashrc和和.zshrc区别**](#.bashrc和和.zshrc区别)
 - [**使用**](#使用)
 	- [工作基本指令](#工作基本指令)
 	- [pod update 和 pod install](#podupdate和podinstall)
@@ -34,11 +51,345 @@
 <br/>
 
 ***
+<br/><br/><br/>
+
+> <h1 id="语法">语法</h1>
 
 <br/><br/><br/>
 
+> <h2 id="CocoaPods的默认官方仓库地址">CocoaPods的默认官方仓库地址</h2>
 
-> <h1 id=".bashrc和和.zshrc区别">.bashrc和和.zshrc区别</h1>
+[`source 'https://github.com/CocoaPods/Specs.git'` ](https://github.com/CocoaPods/Specs/tree/master)是 CocoaPods 的默认官方仓库地址，其中包含了许多开源库的 spec 文件，用于指定库的依赖和版本信息。
+
+除了 `source` 参数指定的默认仓库，CocoaPods 中还有其他的参数可以用来自定义 Pod 的来源，以下是一些常见的用法：
+
+<br/><br/>
+
+> <h3 id=":git参数获取仓库代码">:git参数获取仓库代码</h3>
+
+- **`:git`**  
+   用于指定一个 Git 仓库地址，直接从这个仓库中获取库代码。通常搭配 `:tag`、`:branch` 或 `:commit` 使用来锁定版本。
+
+   ```ruby
+   pod 'LibraryName', :git => 'https://github.com/username/LibraryName.git'
+   ```
+
+<br/><br/>
+
+> <h3 id=":tag参数指定标签版本">:tag参数指定标签版本</h3>
+
+- **`:tag`**
+   指定一个特定的 Git 标签版本。
+   
+   ```ruby
+   pod 'LibraryName', :git => 'https://github.com/username/LibraryName.git', :tag => '1.0.0'
+   ```
+
+
+<br/><br/>
+
+> <h3 id=":branch指定Git仓库的分支">:branch指定Git仓库的分支</h3>
+
+- **`:branch`**
+   
+   指定一个 Git 仓库的分支。
+   
+```ruby
+pod 'LibraryName', :git => 'https://github.com/username/LibraryName.git', :branch => 'develop'
+```
+
+<br/><br/>
+
+> <h3 id=":commit指定某个特定提交">:commit指定某个特定提交</h3>
+
+
+- **`:commit`**
+  
+  指定 Git 仓库中的某个特定提交（commit ID）。
+ 
+```ruby
+pod 'LibraryName', :git => 'https://github.com/username/LibraryName.git', :commit => 'abcd1234'
+```
+
+<br/><br/>
+
+> <h3 id=":path指定本地仓库地址">:path指定本地仓库地址</h3>
+
+
+- **`:path`**
+   如果库位于本地，可以使用 `:path` 参数指定路径。这个方法适合在开发库时测试本地版本。
+  
+```ruby
+pod 'LibraryName', :path => '~/Documents/LocalPods/LibraryName'
+```
+
+<br/><br/>
+
+> <h3 id=":podspec指定spec文件路径">:podspec指定spec文件路径</h3>
+
+
+- **`:podspec`**
+   如果你有一个 podspec 文件（spec 文件），可以使用 `:podspec` 参数指定文件路径。
+   
+```ruby
+pod 'LibraryName', :podspec => '~/Documents/LocalPods/LibraryName/LibraryName.podspec'
+```
+
+<br/><br/>
+
+> <h3 id=":binary用于某些特殊库分发二进制格式">:binary用于某些特殊库分发二进制格式</h3>
+
+
+- **`:binary`**
+
+   使用二进制文件安装。适用于某些特殊库分发二进制格式（如 xcframeworks）。
+
+```ruby
+pod 'LibraryName', :binary => true
+```
+
+<br/><br/>
+
+> <h3 id="综合示例">综合示例</h3>
+
+以下是一个包含不同参数的 `Podfile` 示例：
+
+```ruby
+platform :ios, '13.0'
+use_frameworks!
+
+source 'https://github.com/CocoaPods/Specs.git'
+
+target 'YourApp' do
+  # 从指定仓库的分支安装
+  pod 'LibraryName', :git => 'https://github.com/username/LibraryName.git', :branch => 'main'
+
+  # 从指定的 tag 版本安装
+  pod 'AnotherLibrary', :git => 'https://github.com/username/AnotherLibrary.git', :tag => '2.1.0'
+
+  # 从本地路径安装
+  pod 'LocalLibrary', :path => '~/Documents/LocalPods/LocalLibrary'
+
+  # 从指定的提交版本安装
+  pod 'CommitLibrary', :git => 'https://github.com/username/CommitLibrary.git', :commit => 'abcd1234'
+end
+``` 
+
+
+
+
+<br/><br/><br/>
+
+> <h2 id="自己私有库内的库名与三方库一样，如何解决">自己私有库内的库名与三方库一样，如何解决</h2>
+
+```
+ pod 'SwiftLint', '0.57.0'
+```
+
+就会出现如下提示错误：
+
+![ios0.0.60.png](./../../Pictures/ios0.0.60.png)
+
+
+原因是当时在YSHoby项目中，公司的一套私有库中有一个SwiftLint库，其实是对SwiftLint裹了一层，但是也叫SwiftLint库。
+
+我是怎么发现的呢？,通过如下命令：
+
+```
+pod search SwiftLint
+```
+
+![ios0.0.61.png](./../../Pictures/ios0.0.61.png)
+
+
+这时我建立一个Demo，用到了SwiftLint库，但是再Pod install时，下载的还是YSHoby中私有库中的SwiftLint类，不是从网上GitHub下载的，那该如何做呢？
+
+<br/>
+
+这时我们可以我们的库指定从哪个地方下载就好了。
+
+```cocoapod
+pod 'SwiftLint', :git => 'https://github.com/realm/SwiftLint.git', :tag =>'0.57.0'
+```
+
+这个`:git`后的地址，通过如下图获取：
+
+![ios0.0.62.png](./../../Pictures/ios0.0.62.png)
+
+<br/><br/><br/>
+
+> <h3 id="使用:branch、:tag或:commit来锁定特定版本或分支">使用 :branch、:tag 或 :commit 来锁定特定版本或分支</h3>
+
+在 Podfile 中指定 SwiftLint 使用 GitHub 上的特定仓库代码，可以使用 :git 参数指定仓库的地址，并且可以使用 :branch、:tag 或 :commit 来锁定特定版本或分支。例如：
+
+```
+platform :ios, '11.0'
+use_frameworks!
+
+# 指定 CocoaPods 的官方 Specs 仓库
+source 'https://github.com/CocoaPods/Specs.git'
+
+target 'YourApp' do
+  # 使用指定的 SwiftLint 仓库和版本
+  pod 'SwiftLint', :git => 'https://github.com/realm/SwiftLint.git', :tag => '0.50.0'
+  
+  # 使用特定分支安装 SwiftLint
+  # pod 'SwiftLint', :git => 'https://github.com/realm/SwiftLint.git', :branch => 'main'
+  
+  # 或者，使用特定 commit 安装 SwiftLint
+  # pod 'SwiftLint', :git => 'https://github.com/realm/SwiftLint.git', :commit => 'abcd1234'  
+end
+```
+
+- **参数说明：**
+	- :git：指定 GitHub 仓库的 URL。
+	- :tag：指定一个版本标签，例如 0.50.0。
+	- :branch：指定分支名，例如 main 或 develop。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="问题解决">问题解决</h1>
+
+<br/><br/><br/>
+
+> <h2 id="libarclite_iphoneos.a找不到">libarclite_iphoneos.a找不到</h2>
+
+Xcode 14.3 运行项目报错`File not found libarclite_iphonesimulator.a or libarclite_iphoneos.a`
+
+**问题描述**
+
+升级到 Xcode14.3 后编译报错：
+
+真机运行
+
+```
+ld: file not found: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/arc/libarclite_iphoneos.a
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+
+模拟器运行：
+
+```
+ld: file not found: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/arc/libarclite_iphonesimulator.a
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+
+
+<br/><br/>
+
+> <h3 id=""></h3>
+
+
+**方案一**
+
+下载**`arc`**文件夹或者从旧版本 Xcode 复制并将 arc文件夹 拷贝到
+
+```
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/
+```
+
+![ios0.0.58.png](./../Pictures/ios0.0.58.png)
+
+
+我当时没有这么做，我是直接从网上下载的`‌libarclite_iphoneos.a`文件，因为我在真机运行的时候出现的这个错误。当时我在上述的路径中没有找到**arc**文件夹，就自己创建了一个，将上述文件放在里面就好了。😂哈哈
+
+<br/><br/>
+
+> <h3 id=""></h3>
+
+**方案二**
+
+还有就是直接在Podfile加入，如下脚本命令：
+
+```
+post_install do |installer|
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      end
+    end
+  end
+end
+```
+
+完整如下图：
+
+![ios0.0.59.png](./../../Pictures/ios0.0.59.png)
+
+是可以的。
+
+<br/><br/><br/>
+
+> <h4 id="post_install钩子代码理解">post_install钩子代码理解</h4>
+
+上面的一段代码是post——install的一段钩子，用于在 CocoaPods 安装完所有依赖后执行额外的配置。在这里，它将每个生成的项目中的所有目标（target）的 IPHONEOS_DEPLOYMENT_TARGET 版本设置为 13.0。下面逐步解析每一部分的作用：
+
+
+```ruby
+post_install do |installer|
+  ...
+end
+```
+
+- **`post_install`**：这是 CocoaPods 的一个钩子（hook），允许你在 `pod install` 执行完成后运行自定义脚本。`installer` 参数表示当前安装的上下文对象。
+- **`installer`**：包含 CocoaPods 安装过程中生成的所有信息，包括项目和目标的配置等，便于进一步调整配置。
+
+<br/> <br/>
+
+```ruby
+installer.generated_projects.each do |project|
+  ...
+end
+```
+
+- **`installer.generated_projects`**：指的是所有由 CocoaPods 生成的 Xcode 项目文件。这些文件包含你的项目依赖库的相关配置和构建信息。
+- **`each do |project|`**：遍历每一个生成的项目（`project`）。在 `post_install` 钩子中，可以对每个项目进行配置。
+
+<br/><br/>
+
+```ruby
+project.targets.each do |target|
+  ...
+end
+```
+
+- **`project.targets`**：指当前项目的所有目标（targets）。每个 CocoaPods 依赖项会被配置成一个目标，你可以在这些目标上应用构建设置。
+- **`each do |target|`**：遍历每一个 `target`，允许你进一步操作每个目标的配置。
+
+<br/><br/>
+
+```ruby
+target.build_configurations.each do |config|
+  ...
+end
+```
+
+- **`target.build_configurations`**：指目标的所有构建配置（如 `Debug` 和 `Release` 配置）。
+- **`each do |config|`**：遍历每个 `build_configuration`，以便对每个构建配置（例如 `Debug` 和 `Release`）应用相同的设置。
+
+```ruby
+config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+```
+
+- **`config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']`**：访问构建配置的 `build_settings` 字典，并设置 `IPHONEOS_DEPLOYMENT_TARGET` 的值。这个值用于指定 iOS 部署目标版本，在这里设置为 `13.0`。
+- **效果**：确保所有项目中的依赖库都将最低支持版本设置为 iOS 13.0，这样可以避免 CocoaPods 默认的最低版本配置不符合项目要求的问题。
+
+<br/><br/>
+
+**代码总结**
+
+这段 `post_install` 钩子代码的作用是强制所有生成的 CocoaPods 依赖库的 `IPHONEOS_DEPLOYMENT_TARGET` 版本设置为 iOS 13.0，确保它们符合项目的最低部署目标。
+
+
+<br/><br/>
+
+
+> <h2 id=".bashrc和和.zshrc区别">.bashrc和和.zshrc区别</h1>
 
 `.bashrc` 和 `.zshrc` 是两个不同的配置文件，用于不同的命令行解释器（shell）。具体区别如下：
 
@@ -62,8 +413,6 @@
 
 - **4.文件位置**
 这两个文件通常位于用户的主目录中（`~`），并且都是隐藏文件。
-
-
 
 <br/>
 
