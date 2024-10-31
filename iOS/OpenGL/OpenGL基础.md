@@ -28,6 +28,10 @@
 	- [glVertexAttribPointer指定顶点属性的函数（这个没有设置好，导致线条方向相反）](#glVertexAttribPointer指定顶点属性的函数)
 	- [glBlendFunc混合源颜色和目标颜色](#glBlendFunc混合源颜色和目标颜色)
 - **资料**
+	- [opengl常见面试题](https://blog.csdn.net/u010029439/article/details/115183854)
+	- [OpenGL ES教程（猿说编程）](https://www.codersrc.com/opengl-es-基础)
+		- [OPenGL ES（掘金版）](https://juejin.cn/user/501033034856637/posts)
+	- [OpenGLES（简书文集）](https://www.jianshu.com/c/776eaac8121c)
 	- [**OpenGL中文版**](https://learnopengl-cn.github.io/01%20Getting%20started/01%20OpenGL/)
 	- [OpenGL学习资料合集（CSDN）](https://blog.csdn.net/kyl282889543/article/details/95727519)
 	- [OpenGL很好的一个博客教程（CSDN）](https://blog.csdn.net/kyl282889543/category_9122773.html?spm=1001.2014.3001.5482)
@@ -35,6 +39,12 @@
 	- [iOS视觉-- (04) OpenGL ES+GLSL实现金字塔解析(试用期demo帮助很大-简书)](https://www.jianshu.com/p/083f0fa63ced)
 	- [iOS视觉-- (12) OpenGL ES+GLSL系列【桀骜不驯的搬砖者-掘金】](https://juejin.cn/user/3021906185830247/posts)
 	- [OpenGLES实践教程-字节大佬【简书】](https://www.jianshu.com/nb/2135411)
+	- [《OpenGL ES应用开发实践指南：iOS卷》代码解析](https://github.com/zhangfangtaozft/OpenGL-ES-iOS)
+	- [LearnOpenGLES](https://github.com/loyinglin/LearnOpenGLES/tree/master)
+		- [Demo07-多滤镜处理](https://github.com/loyinglin/LearnOpenGLES/tree/master/Demo07-多滤镜处理)
+	- [OpenGL 3D 与 Metal](https://juejin.cn/post/7369117524481785906)
+	- [iOS-OpenGL ES入门教程（四）光照（简书）](https://www.jianshu.com/p/531f0e569384)
+	- [一文详解 OpenGL ES 纹理颜色混合](https://www.cnblogs.com/xiaxveliang/p/15694599.html)
 
 
 

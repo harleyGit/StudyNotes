@@ -1,4 +1,5 @@
 > <h2 id=''></h2>
+- [**RxSwift和RxCocoa的区别和联系**](#RxSwift和RxCocoa的区别和联系)
 - [**RxSwift**](#RxSwift)
 	- [安装](#安装) 
 	- [Observer(观察者)](#Observer(观察者))
@@ -11,12 +12,19 @@
 	- [函数式](#函数式)
 	- [响应式](#响应式)
 	- [Observable类](#Observable类)
+		- [按钮点击转化为序列](#按钮点击转化为序列)
+		- [图片的数据绑定](#图片的数据绑定)
+		- [creare方法创建对列](#creare方法创建对列)
+		- [错误处理](#错误处理)
+			- [Result接受处理错误](#Result接受处理错误)
 	- [AnonymousObservableSink](#AnonymousObservableSink)
 	- [Event](#Event)
 	- [创建数据源](#创建数据源)
 	- [AnonymousObserver](#AnonymousObserver)
-	- [AsyncSubject](#AsyncSubject)
+- [**SinkDisposer处理订阅的资源管理和内存管理**](#SinkDisposer处理订阅的资源管理和内存管理)
 - [**Subject**](#Subject)
+	- [Observable & Observer 既是可监听序列也是观察者](#Observable&Observer既是可监听序列也是观察者)
+	- [AsyncSubject](#AsyncSubject)
 	- [PublishSubject](#PublishSubject)
 	- [ReplaySubject](#ReplaySubject)
 	- [BehaviorSubject](#BehaviorSubject)
@@ -59,24 +67,40 @@
 	- [线程切换](http://t.swift.gg/d/31-015)
 
 
+
+
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 
 > <h1 id='RxSwift'>RxSwift</h1>
 
+**`RxSwift` 和 `RxCocoa`** 都是 ReactiveX for Swift 的一部分，用于帮助开发者实现响应式编程（Reactive Programming），但它们有不同的侧重点：
 
-- **RxSwift：** 它只是基于 Swift 语言的 **Rx( ReactiveX)标准** 实现接口库，所以 RxSwift 里不包含任何 Cocoa 或者 UI方面的类。
+- **ReactiveX**
 	- ReactiveX 是一种编程范式，用于处理异步数据流和事件流。它提供了一系列操作符和工具，使得处理数据流和事件流变得简单、高效和直观。
-	- ReactiveX 最初由 Microsoft 在 .NET 平台上开发，后来被移植到其他语言和平台，包括 Java（RxJava）、JavaScript（RxJS）、C++（RxCpp）等。Rx 标准定义了一系列操作符和模式，用于处理异步数据流，并提供了一种响应式的编程模型
+		- ReactiveX 最初由 Microsoft 在 .NET 平台上开发，后来被移植到其他语言和平台，包括 Java（RxJava）、JavaScript（RxJS）、C++（RxCpp）等。
+		- Rx 标准定义了一系列操作符和模式，用于处理异步数据流，并提供了一种响应式的编程模型
 
 <br/>
 
-- **RxCocoa：** 是基于 RxSwift针对于 iOS开发的一个库，它通过 Extension 的方法给原生的比如 UI 控件添加了 Rx 的特性，使得我们更容易订阅和响应这些控件的事件。
+- **RxSwift：** 
+	- 它只是基于 Swift 语言的 **Rx( ReactiveX)标准** 实现接口库，所以 RxSwift 里不包含任何 Cocoa 或者 UI方面的类。
+	- 核心库，提供了响应式编程的基本功能。
+	- 主要包含 Observable、Observer、Scheduler 等核心概念，允许将数据流和事件流建模为可观察序列。
+	- 通过 RxSwift，你可以实现响应式的数据绑定和流的处理逻辑，是库的核心部分。	
+
+<br/>
+
+- **RxCocoa：** 
+	- 基于 RxSwift 的扩展库，专门为 iOS 和 Cocoa 的控件（如 `UIButton`、`UILabel`、`UITextField` 等）提供响应式支持。
+	- 提供了对 UI 控件的绑定封装，使得 UI 和数据更容易双向绑定。
+	- 例如，`UITextField` 的 `text` 属性可以使用 RxCocoa 进行绑定，以便随输入实时更新数据。
+
+总结来说，**RxSwift 提供响应式编程的核心功能**，而 **RxCocoa 为 Cocoa 框架中的 UI 控件提供便捷的响应式绑定支持**。
+
+<br/>
 
 ![ios_swift_00.jpg](./../../Pictures/ios_swift_00.jpg)
 
@@ -87,8 +111,6 @@
 	- 观察者 - Observer
 	- 调度者 - Scheduler
 	- 销毁者 - Dispose
-
-
 
 <br/>
 
@@ -140,8 +162,6 @@ $ git submodule add git@github.com:ReactiveX/RxSwift.git
 	
 
 <br/>
-
-
 
 - **类型**
 	-  观察者（Observer）：执行要做的事
@@ -195,12 +215,7 @@ protocol ObserverType {
 `Observable 继承关系图`
 
 
-<br/>
-
-
-
-
-<br/><br/>
+<br/><br/><br/>
 
 
 > <h2 id='Observable的核心函数'>Observable的核心函数</h2>
@@ -255,6 +270,49 @@ extension ObservableType {
 
 
 > <h2 id='订阅序列流程'>订阅、序列流程</h2>
+
+
+<br/><br/><br/>
+
+> <h2 id="观察者的创建">观察者的创建</h2>
+
+有一些自定义的观察者是需要我们自己创建的。这里介绍一下创建观察者最基本的方法，例如，我们创建一个弹出提示框的的观察者：
+
+
+```
+let button: UIButton = {
+    let btn = UIButton(type: .system)
+    btn.setTitle("点击我", for: .normal)
+    return btn
+}()
+
+let disposeBag = DisposeBag() // 管理订阅的销毁
+
+
+func bindBtn() {
+	// 按钮点击序列
+	let tap: Observable<Void> = button.rx.tap.asObservable()
+	
+	// 订阅按钮点击事件
+	tap.subscribe(onNext: { [weak self] in
+	    self?.showAlert()
+	}, onError: { error in
+	    print("发生错误： \(error.localizedDescription)")
+	}, onCompleted: {
+	    print("任务完成")
+	}).disposed(by: disposeBag) // 确保订阅的管理
+
+}
+
+// 弹出提示框
+func showAlert() {
+    let alert = UIAlertController(title: "提示", message: "您点击了按钮", preferredStyle: .alert)
+    alert.addAction(UIAlertAction(title: "确定", style: .default, handler: nil))
+    present(alert, animated: true, completion: nil)
+}
+```
+
+创建观察者最直接的方法就是在 Observable 的 subscribe 方法后面描述，事件发生时，需要如何做出响应。而观察者就是由后面的 onNext，onError，onCompleted的这些闭包构建出来的。
 
 
 <br/>
@@ -336,15 +394,307 @@ public class Observable<Element> : ObservableType {
 
 <br/>
 
-- Observable实现了一个协议ObservableType，而且ObservableType协议继承自ObservableConvertibleType协议，所以在Observable中实现了两个协议方法：subscribe和asObservable。
+- **1.** Observable实现了一个协议ObservableType，
+	- **1.1** ObservableType协议里有一个协议方法：
 
-- subscribe方法没有具体实现的逻辑，需要子类去实现。
+```
+func subscribe<Observer: ObserverType>(_ observer: Observer) -> Disposable where Observer.Element == Element
 
-- asObservable方法返回的是self，看似用处不大，其实不是这样的。asObservable是非常有用的，如果一类是Observable的子类，我们可以直接返回self，如果不是Observable的子类，我们可以通过重写这个协议方法来返回一个Observable对象，这样保证了协议的一致性。在使用的时候我们可以直接写类似self.asObservable().subscribe(observer)这样的代码，有利于保持代码的简洁性，是良好的封装性的体现。所以我觉得这个设计非常的好，在我们日常开发中也可以借鉴。
+```
 
-- _ = Resources.incrementTotal()和_ = Resources.decrementTotal()这两行代码其实是RxSwift内部实现的一个引用计数。这部分内容我会在后面的文章中再详解。
+- **1.2** 而且ObservableType协议继承自`ObservableConvertibleType`协议，ObservableConvertibleType协议的方法：
+
+```
+func asObservable() -> Observable<Element>
+```
+
+- **1.3** 所以在Observable中实现了两个协议方法：subscribe和asObservable。
+
+<br/><br/>
+
+- 2.subscribe方法没有具体实现的逻辑，需要子类去实现。
+
+- 3.asObservable方法返回的是self，看似用处不大，其实不是这样的。asObservable是非常有用的，如果一类是Observable的子类，我们可以直接返回self，如果不是Observable的子类，我们可以通过重写这个协议方法来返回一个Observable对象，这样保证了协议的一致性。在使用的时候我们可以直接写类似self.asObservable().subscribe(observer)这样的代码，有利于保持代码的简洁性，是良好的封装性的体现。所以我觉得这个设计非常的好，在我们日常开发中也可以借鉴。
+
+- `_ = Resources.incrementTotal()和_ = Resources.decrementTotal()`这两行代码其实是RxSwift内部实现的一个引用计数。这部分内容我会在后面的文章中再详解。
+
+<br/>
 
 - Observable子类非常多，感兴趣可以看下,主要区别在于对subscribe方法的实现不一样。
+
+
+<br/><br/><br/>
+
+> <h2 id="按钮点击转化为序列">按钮点击转化为序列</h2>
+
+```
+fileprivate lazy var observableBtn01: UIButton = createBtn(title: "按钮Observable观察者")
+
+private func observableBtn01SubscribeEvent() {
+    // 按钮点击序列
+    let observableBtn01Taps: Observable<Void> = self.observableBtn01.rx.tap.asObservable()
+    // 每次点击后弹出提示框
+    observableBtn01Taps.subscribe(onNext: { [weak self] in
+        self?.showAlert()
+    })// 确保订阅在视图控制器释放时自动销毁
+    .disposed(by: disposeBag)
+}
+
+// 弹出提示框
+func showAlert() {
+    let alert = UIAlertController(title: "提示", message: "按钮被点击！", preferredStyle: .alert)
+    alert.addAction(UIAlertAction(title: "确定", style: .default, handler: nil))
+    present(alert, animated: true, completion: nil)
+}
+```
+
+- disposeBag：DisposeBag 用于管理订阅的生命周期，以便在视图控制器释放时自动清理订阅，防止内存泄漏。
+
+- button.rx.tap.asObservable()：将按钮的点击事件转换为 Observable 序列，tap 是一个 ControlEvent，它会在每次按钮点击时触发。
+
+- subscribe(onNext:)：订阅按钮的点击事件，当点击发生时会调用 showAlert() 方法弹出提示框。
+
+- showAlert()：显示一个 UIAlertController 提示框，消息提示按钮已被点击。
+
+![ios0.0.63.png](./../../Pictures/ios0.0.63.png)
+
+
+<br/><br/><br/>
+
+
+<h2 id="图片的数据绑定">图片的数据绑定</h2>
+
+```
+@objc fileprivate func bindPictureDataAction(_ sender: UIButton) {
+        let imageView = UIImageView(frame: CGRect(x: self.view.frame.width - 160, y: 100, width: 160, height: 200))
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(imageView)
+        
+        // 创建一个 Observable，生成随机图片
+        let image: Observable<UIImage> = Observable<Int>.interval(.seconds(1), scheduler: MainScheduler.instance)
+            .map { _ in
+                return self.randomImage() // 生成随机图片
+            }
+        
+        // 将 Observable 绑定到 imageView
+        image.bind(to: imageView.rx.image)
+            .disposed(by: disposeBag) // 确保订阅的管理
+    }
+    
+// 生成随机图片
+private func randomImage() -> UIImage {
+	let size = CGSize(width: 200, height: 200)
+	UIGraphicsBeginImageContext(size)
+	
+	let context = UIGraphicsGetCurrentContext()
+	
+	// 生成随机颜色
+	let randomColor = UIColor(
+	    red: CGFloat.random(in: 0...1),
+	    green: CGFloat.random(in: 0...1),
+	    blue: CGFloat.random(in: 0...1),
+	    alpha: 1.0
+	)
+	
+	context?.setFillColor(randomColor.cgColor)
+	context?.fill(CGRect(origin: .zero, size: size))
+	
+	let image = UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+	UIGraphicsEndImageContext()
+	
+	return image
+}
+```
+
+通过运行代码，我们发现 图片在不断的变色，这说明是在不断的产生序列。
+
+![ios0.0.64.png](./../../Pictures/ios0.0.64.png)
+
+
+<br/><br/><br/>
+
+> <h2 id="creare方法创建对列">creare方法创建对列</h2>
+
+```
+let numbers: Observable<Int> = Observable.create { observer -> Disposable in
+
+    observer.onNext(0)
+    observer.onNext(1)
+    observer.onCompleted()
+
+    return Disposables.create()
+}
+```
+
+创建序列最直接的方法就是调用 Observable.create，然后在构建函数里面描述元素的产生过程。 observer.onNext(0) 就代表产生了一个元素，他的值是 0。后面又产生了 9 个元素分别是 1, 2, ... 8, 9 。最后，用 observer.onCompleted() 表示元素已经全部产生，没有更多元素了。
+
+<br/><br/>
+
+依照上面的可以分装网络数据：、
+
+```
+typealias JSON = Any
+
+let json: Observable<JSON> = Observable.create { (observer) -> Disposable in
+
+    let task = URLSession.shared.dataTask(with: ...) { data, _, error in
+
+        guard error == nil else {
+            observer.onError(error!)
+            return
+        }
+
+        guard let data = data,
+            let jsonObject = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
+            else {
+            observer.onError(DataError.cantParseJSON)
+            return
+        }
+
+        observer.onNext(jsonObject)
+        observer.onCompleted()
+    }
+
+    task.resume()
+
+    return Disposables.create { task.cancel() }
+}
+```
+
+在闭包回调中，如果任务失败，就调用 observer.onError(error!)。如果获取到目标元素，就调用 observer.onNext(jsonObject)。由于我们的这个序列只有一个元素，所以在成功获取到元素后，就直接调用 observer.onCompleted() 来表示任务结束。最后 Disposables.create { task.cancel() } 说明如果数据绑定被清除（订阅被取消）的话，就取消网络请求。
+
+这样一来我们就将传统的闭包回调转换成序列了。然后可以用 subscribe 方法来响应这个请求的结果：
+
+```
+json.subscribe(onNext: { json in
+    print("取得 json 成功: \(json)")
+}, onError: { error in
+    print("取得 json 失败 Error: \(error.localizedDescription)")
+}, onCompleted: {
+    print("取得 json 任务成功完成")
+}) .disposed(by: disposeBag)
+
+```
+
+这里subscribe后面的onNext,onError, onCompleted 分别响应我们创建 json 时，构建函数里面的onNext,onError, onCompleted 事件。我们称这些事件为 Event:
+
+
+<br/><br/><br/>
+
+> <h2 id="错误处理">错误处理</h2>
+
+
+<br/><br/><br/>
+
+> <h2 id="Result接受处理错误">Result接受处理错误</h2>
+
+如果我们只是想给用户错误提示，那要如何操作呢？
+
+以下提供一个最为直接的方案，不过这个方案存在一些问题：
+
+```
+// 当用户点击更新按钮时，
+// 就立即取出修改后的用户信息。
+// 然后发起网络请求，进行更新操作，
+// 一旦操作失败就提示用户失败原因
+
+updateUserInfoButton.rx.tap
+    .withLatestFrom(rxUserInfo)
+    .flatMapLatest { userInfo -> Observable<Void> in
+        return update(userInfo)
+    }
+    .observeOn(MainScheduler.instance)
+    .subscribe(onNext: {
+        print("用户信息更新成功")
+    }, onError: { error in
+        print("用户信息更新失败： \(error.localizedDescription)")
+    })
+    .disposed(by: disposeBag)
+```
+
+<br/>
+
+这样实现是非常直接的。但是一旦网络请求操作失败了，序列就会终止。整个订阅将被取消。如果用户再次点击更新按钮，就无法再次发起网络请求进行更新操作了。
+
+为了解决这个问题，我们需要选择合适的方案来进行错误处理。例如，使用系统自带的枚举 Result：
+
+```
+public enum Result<Success, Failure> where Failure : Error {
+    case success(Success)
+    case failure(Failure)
+}
+```
+
+<br/>
+
+然后之前的代码需要修改成：
+
+```
+updateUserInfoButton.rx.tap
+    .withLatestFrom(rxUserInfo)
+    .flatMapLatest { userInfo -> Observable<Result<Void, Error>> in
+        return update(userInfo)
+            .map(Result.success)  // 转换成 Result
+            .catchError { error in Observable.just(Result.failure(error)) }
+    }
+    .observeOn(MainScheduler.instance)
+    .subscribe(onNext: { result in
+        switch result {           // 处理 Result
+        case .success:
+            print("用户信息更新成功")
+        case .failure(let error):
+            print("用户信息更新失败： \(error.localizedDescription)")
+        }
+    })
+    .disposed(by: disposeBag)
+```
+
+这样我们的错误事件被包装成了 Result.failure(Error) 元素，就不会终止整个序列。即便网络请求失败了，整个订阅依然存在。如果用户再次点击更新按钮，也是能够发起网络请求进行更新操作的。
+
+另外你也可以使用 **materialize** 操作符来进行错误处理。
+
+<br/><br/>
+
+但是在阅读上面的代码时，发现一个奇怪的问题：
+
+```
+.flatMapLatest { userInfo -> Observable<Result<Void, Error>> in
+        return update(userInfo)
+            .map(Result.success)  // 转换成 Result
+            .catchError { error in Observable.just(Result.failure(error)) }
+    }
+```
+
+我在闭包要求返回的参数类型是
+
+```
+Observable<Result<Void, Error>>
+```
+
+但是转换成的却是
+
+```
+Result.success
+
+//或者错误的
+Result.failure(error)
+```
+
+这不是有点不对劲吗？返回2个参数，结果是返回一个，咋回事？
+
+<br/><br/>
+
+听我细细道来。。。。。
+
+Result<Success, Failure> 是一个泛型枚举，用于表示操作的结果。它有两个关联值：Success 和 Failure。这两个值是在定义时指定的，而在使用时，你只需要根据具体的成功或失败情况传递相应的参数。
+
+```
+public enum Result<Success, Failure> where Failure: Error {
+    case success(Success)
+    case failure(Failure)
+}
+```
 
 
 
@@ -353,6 +703,14 @@ public class Observable<Element> : ObservableType {
 > <h2 id='AnonymousObservableSink'>AnonymousObservableSink</h2>
 
 AnonymousObservableSink 是一个用于创建自定义 Observable 序列的工具类。它允许你手动创建 Observable 序列，以便更灵活地控制序列的行为和数据流。
+
+在这里，Result 是一个泛型枚举，其中 Success 和 Failure 是两个类型参数。Failure 必须遵循 Error 协议。
+
+<br/>
+
+但**这都不是重点，重点是：在 Swift 中，泛型类型的使用和参数的传递有一定的灵活性。**
+
+细看：[**泛型类型的定义与使用**](./基础.md#处理2种数据类型的范型)
 
 <br/>
 
@@ -609,10 +967,7 @@ let observer = Observable<Any>.create { (observer) -> Disposable in
 上述闭包中的调用了，就开始走`onNext`、`onCompleted()`方法的调用了。
 
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='AnonymousObserver'>AnonymousObserver</h2>
 
@@ -624,10 +979,112 @@ let observer = Observable<Any>.create { (observer) -> Disposable in
 
 AnonymousObservable是Observable的子类，它们的继承关系是：AnonymousObservable -> Producer -> Observable -> ObservableType -> ObservableConvertibleType
 
-<br/>
+
 <br/>
 
+***
+<br/><br/><br/>
+
+> <h1 id="SinkDisposer处理订阅的资源管理和内存管理">SinkDisposer处理订阅的资源管理和内存管理</h1>
+
+在 RxSwift 中，`SinkDisposer` 是一个重要的概念，用于处理订阅的资源管理和内存管理。它主要用于确保当一个订阅（Observer）被取消时，能够正确地释放相关的资源。
+
+### 主要功能
+
+1. **资源管理**：
+   `SinkDisposer` 负责管理与 `Observer` 相关的资源，确保当不再需要时，它们能被正确地释放。这样可以防止内存泄漏。
+
+2. **取消订阅**：
+   当 `Observer` 被取消订阅时，`SinkDisposer` 会被调用，执行清理操作。这通常涉及停止观察源数据、释放与观察者相关的任何状态或数据。
+
+3. **简化代码**：
+   `SinkDisposer` 使得 RxSwift 的 API 更加简洁，简化了资源的管理，开发者不需要手动处理这些细节。
+
+### 相关概念
+
+- **Observer**：接收数据的对象，能够响应数据流的变化。
+- **Disposable**：一个表示资源的对象，通常在不再需要某个订阅时被调用以释放资源。
+
+### 示例
+
+在 RxSwift 中，当你使用 `subscribe` 方法时，通常会返回一个 `Disposable`，而 `SinkDisposer` 是在这个过程中内部创建的。以下是一个简单的示例：
+
+```swift
+import RxSwift
+
+let disposeBag = DisposeBag()
+
+Observable.just("Hello, RxSwift!")
+    .subscribe(onNext: { value in
+        print(value)
+    })
+    .disposed(by: disposeBag) // 使用 DisposeBag 来管理订阅的生命周期
+```
+
+在这个例子中：
+
+- `subscribe(onNext:)` 方法创建了一个 `Observer`，并使用 `SinkDisposer` 来管理这个订阅。
+- `disposed(by: disposeBag)` 表示当 `disposeBag` 被释放时，`SinkDisposer` 也会被调用，从而释放资源。
+
+### 总结
+
+`SinkDisposer` 在 RxSwift 中用于确保在不再需要订阅时，能够正确管理和释放资源。它在背后工作，简化了开发者的工作，让他们可以专注于数据流和响应，而不必担心内存管理的问题。
+
+
+
+
+<br/>
+
+***
+<br/><br/>
+
+># <h1 id='Subject'>Subject</h1>
+
+&emsp;  我们把 Subject 当作一个桥梁（或者说是代理）， Subject 既是 Observable 也是 Observer :
+- 作为一个 Observer ，它可以订阅序列。
+- 同时作为一个 Observable ，它可以转发或者发射数据。
+
+<br/><br/><br/>
+
+> <h2 id="Observable&Observer既是可监听序列也是观察者">Observable & Observer 既是可监听序列也是观察者</h2>
+在我们所遇到的事物中，有一部分非常特别。它们既是可监听序列也是观察者。
+
+例如：textField的当前文本。它可以看成是由用户输入，而产生的一个文本序列。也可以是由外部文本序列，来控制当前显示内容的观察者：
+
+```
+// 作为可监听序列
+let observable = textField.rx.text
+observable.subscribe(onNext: { text in show(text: text) })
+```
+
+<br/>
+
+**作为观察者**
+
+```
+// 作为观察者
+let observer = textField.rx.text
+
+// 使用just
+let text: Observable<String?> = Observable.just("初始文本")
+
+// 使用BehaviorSubject
+// let textSubject = BehaviorSubject<String?>(value: "初始文本")
+// let text: Observable<String?> = textSubject.asObservable()
+// 更新文本
+// textSubject.onNext("更新后的文本")
+
+text.bind(to: observer)
+```
+
+有许多 UI 控件都存在这种特性，例如：switch的开关状态，segmentedControl的选中索引号，datePicker的选中日期等等。
+
+
+<br/><br/>
+
 > <h2 id='AsyncSubject'>AsyncSubject</h2>
+
+AsyncSubject 将在源 Observable 产生完成事件后，发出最后一个元素（仅仅只有最后一个元素），如果源 Observable 没有发出任何元素，只有一个完成事件。那 AsyncSubject 也只有一个完成事件。
 
 ```
 let disposeBag = DisposeBag()
@@ -653,28 +1110,16 @@ subscription: 1 Event: next(🥜)
 subscription: 1 Event: completed
 ```
 
+它会对随后的观察者发出最终元素。如果源 Observable 因为产生了一个 error 事件而中止， AsyncSubject 就不会发出任何元素，而是将这个 error 事件发送出来。
 
-
-<br/>
-
-***
-<br/>
-<br/>
-
-># <h1 id='Subject'>Subject</h1>
-
-&emsp;  我们把 Subject 当作一个桥梁（或者说是代理）， Subject 既是 Observable 也是 Observer :
-- 作为一个 Observer ，它可以订阅序列。
-- 同时作为一个 Observable ，它可以转发或者发射数据。
-
-
-<br/>
+<br/><br/>
 
 > <h2 id='PublishSubject'>PublishSubject</h2>
 
 
 `PublishSubject` 只发射给观察者订阅后的数据
 
+PublishSubject 将对观察者发送订阅后产生的元素，而在订阅前发出的元素将不会发送给观察者。如果你希望观察者接收到所有的元素，你可以通过使用 Observable 的 create 方法来创建 Observable，或者使用 ReplaySubject。
 
 ```        
 let disposeBag = DisposeBag()
@@ -694,14 +1139,19 @@ subject.onNext("❤️")
 subscription: 1 Event: next(❤️)
 ```
 
+如果源 Observable 因为产生了一个 error 事件而中止， PublishSubject 就不会发出任何元素，而是将这个 error 事件发送出来。
 
-<br/>
-<br/>
 
+
+<br/><br/>
 
 > <h2 id='ReplaySubject'>ReplaySubject</h2>
 
-&emsp; 和 PushblishSubject 不同，不论观察者什么时候订阅， ReplaySubject 都会发射完整的数据给观察者
+&emsp; ReplaySubject 将对观察者发送全部的元素，无论观察者是何时进行订阅的。
+
+这里存在多个版本的 ReplaySubject，有的只会将最新的 n 个元素发送给观察者，有的只会将限制时间段内最新的元素发送给观察者。
+
+如果把 ReplaySubject 当作观察者来使用，注意不要在多个线程调用 onNext, onError 或 onCompleted。这样会导致无序调用，将造成意想不到的结果。
 
 ```
 let disposeBag = DisposeBag()
@@ -713,6 +1163,13 @@ subject.subscribe{
 
 subject.onNext("🐶")
 subject.onNext("🐱")
+
+subject
+  .subscribe { print("Subscription: 2 Event:", $0) }
+  .disposed(by: disposeBag)
+
+subject.onNext("🅰️")
+subject.onNext("🅱️")
 ```
 
 打印:
@@ -720,14 +1177,14 @@ subject.onNext("🐱")
 ```
 Subscription: 1 Event: next(🐶)
 Subscription: 1 Event: next(🐱)
+Subscription: 2 Event: next(🐱)
+Subscription: 1 Event: next(🅰️)
+Subscription: 2 Event: next(🅰️)
+Subscription: 1 Event: next(🅱️)
+Subscription: 2 Event: next(🅱️)
 ```
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 > <h2 id='BehaviorSubject'>BehaviorSubject</h2>
 
@@ -755,13 +1212,7 @@ Subcription: 1 Event: next(🦁)
 Subcription: 1 Event: next(🐲)
 ```
 
-
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 
 
 > <h3 id='variable'>variable</h3>
@@ -1383,22 +1834,73 @@ createO("🔴").subscribe{
 
 ![ios_swift_02.png](./../../Pictures/ios_swift_02.png)
 
+![ios0.0.65.png](./../../Pictures/ios0.0.65.png)
+
 &emsp;  `Schedulers` 是 Rx 实现多线程的核心模块，它主要用于控制任务在哪个线程或队列运行,它内部的实现是对GCD和OperationQueue进行了封装
 
 <br/>
 
 &emsp; 若你想给 Observable 操作符链添加多线程功能，你可以指定操作符（或者特定的Observable）在特定的调度器(Scheduler)上执行。对于 ReactiveX 中可观察对象操作符来说，它有时会携带一个调度器作为参数，这样可以指定可观察对象在哪一个线程中执行。而默认的情况下，某些可观察对象是在订阅者订阅时的那个线程中执行。SubscribeOn 可以改变可观察对象该在那个调度器中执行。ObserveOn 用来改变给订阅者发送通知时所在的调度器。这样就可以使可观察对象想在那个调度器中执行就在那个调度器中执行，不受约束，而这些细节是不被调用者所关心的。犹如 GCD 一样，你只管使用，底层线程是咋么创建的，你不必关心。
 
+看一下传统的和现在的对比：
 
+传统的：
+
+```
+// 后台取得数据，主线程处理结果
+DispatchQueue.global(qos: .userInitiated).async {
+    let data = try? Data(contentsOf: url)
+    DispatchQueue.main.async {
+        self.data = data
+    }
+}
+```
 
 <br/>
-<br/>
+如果用 RxSwift 来实现，大致是这样的：
+
+```
+// 创建一个 Observable<Data>
+let rxData: Observable<Data> = Observable<Data>.create { observer in
+    // 模拟网络请求或其他异步操作
+    DispatchQueue.global().async {
+        // 假设这是获取到的数据
+        let data = Data("Hello, RxSwift!".utf8)
+
+        // 模拟延迟
+        sleep(2)
+
+        // 发送数据到观察者
+        observer.onNext(data)
+        observer.onCompleted() // 完成
+    }
+    return Disposables.create()
+}
+
+// 使用调度器
+rxData
+    .observeOn(MainScheduler.instance) // 确保在主线程上处理数据
+    .subscribe(onNext: { data in
+        // 处理接收到的数据
+        if let text = String(data: data, encoding: .utf8) {
+            print("接收到的数据: \(text)")
+        }
+    }, onError: { error in
+        print("发生错误: \(error.localizedDescription)")
+    }, onCompleted: {
+        print("数据流完成")
+    })
+    .disposed(by: disposeBag)
+}
+```
+
+
+
+<br/><br/>
 
 
 
 > <h2 id='切换线程'>切换线程</h2>
-
-
 
 ```
 sequence1.observeOn(backgroundScheduler) // 切换到后台线程
@@ -1433,20 +1935,13 @@ sequence1.observeOn(backgroundScheduler) // 切换到后台线程
 &emsp;  一个比较典型的例子就是，在后台发起网络请求，然后解析数据，最后在主线程刷新页面。你就可以先用 [subscribeOn](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/content/decision_tree/subscribeOn.html) 切到后台去发送请求并解析数据，最后用 [observeOn](https://beeth0ven.github.io/RxSwift-Chinese-Documentation/content/decision_tree/observeOn.html) 切换到主线程更新页面。
 
 
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='CurrentThreadScheduler'>CurrentThreadScheduler</h2>
 
 **表示当前线程，默认就在当前线程上**
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 > <h2 id='MainScheduler'>MainScheduler</h2>
@@ -1458,34 +1953,21 @@ public class func ensureExecutingOnScheduler()
 ```
 &emsp;  可以保证代码一定执行在主线程的地方调用 `MainScheduler.ensureExecutingOnScheduler() `，特别是在线程切换来切换去的情况下，或者是调用其他的库，我们不确定当前是否在执行在主线程。毕竟 UI 的更新还是要在主线程执行的。
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 > <h2 id='SerialDispatchQueueScheduler'>SerialDispatchQueueScheduler</h2>
 
 
 &emsp;`SerialDispatchQueueScheduler `(串行的调度器)抽象了串行 DispatchQueue, MainScheduler 就是继承于它。如果你需要执行一些串行任务，可以切换到这个 Scheduler 运行。
 
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 > <h2 id='ConcurrentDispatchQueueScheduler'>ConcurrentDispatchQueueScheduler</h2>
 
 &emsp;`ConcurrentDispatchQueueScheduler` 抽象了并行 DispatchQueue。如果你需要执行一些并发任务，可以切换到这个 Scheduler 运行。
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 
 > <h2 id='OperationQueueScheduler'>OperationQueueScheduler</h2>
 
@@ -1493,21 +1975,10 @@ public class func ensureExecutingOnScheduler()
 &emsp;`OperationQueueScheduler` 抽象了 NSOperationQueue。它具备 NSOperationQueue 的一些特点，例如，你可以通过设置maxConcurrentOperationCount，来控制同时执行并发任务的最大数量。
 
 
-
-
-
-
-
-
-
 <br/>
 
 ***
-<br/>
-<br/>
-
-
-
+<br/><br/>
 
 ># <h1 id='Disposable'>Disposable</h1>
 
