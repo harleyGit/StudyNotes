@@ -266,6 +266,8 @@
 	* [Moya](./iOS/Swift/Moya.md)
 	* [GPUImage](./iOS/Swift/GPUImage.md)
 	* [SnapKit](./iOS/Swift/SnapKit.md)
+	* [Then](./iOS/Swift/Then.md)
+	* [PromiseKit](./iOS/Swift/PromiseKit.md)
 * **底层**
 	* [动态性](./iOS/Swift/动态性.md)
 
