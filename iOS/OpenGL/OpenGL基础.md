@@ -39,12 +39,14 @@
 	- [iOS视觉-- (04) OpenGL ES+GLSL实现金字塔解析(试用期demo帮助很大-简书)](https://www.jianshu.com/p/083f0fa63ced)
 	- [iOS视觉-- (12) OpenGL ES+GLSL系列【桀骜不驯的搬砖者-掘金】](https://juejin.cn/user/3021906185830247/posts)
 	- [OpenGLES实践教程-字节大佬【简书】](https://www.jianshu.com/nb/2135411)
+		- [LearnOpenGLES【源码】](https://github.com/loyinglin/LearnOpenGLES/tree/master?tab=readme-ov-file)
 	- [《OpenGL ES应用开发实践指南：iOS卷》代码解析](https://github.com/zhangfangtaozft/OpenGL-ES-iOS)
 	- [LearnOpenGLES](https://github.com/loyinglin/LearnOpenGLES/tree/master)
 		- [Demo07-多滤镜处理](https://github.com/loyinglin/LearnOpenGLES/tree/master/Demo07-多滤镜处理)
-	- [OpenGL 3D 与 Metal](https://juejin.cn/post/7369117524481785906)
+	- [OpenGL 3D 与 Metal【掘金-water1307】](https://juejin.cn/post/7369117524481785906)
 	- [iOS-OpenGL ES入门教程（四）光照（简书）](https://www.jianshu.com/p/531f0e569384)
 	- [一文详解 OpenGL ES 纹理颜色混合](https://www.cnblogs.com/xiaxveliang/p/15694599.html)
+	- [IOS GPUImage OPenGL ES 实战掘金-猿说编程】](https://juejin.cn/column/7106518258894766116)
 
 
 

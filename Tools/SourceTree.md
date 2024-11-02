@@ -15,6 +15,7 @@
 	- **[Pro Git(中文版)](https://gitee.com/progit/)**
 	- **[Git教程 廖雪峰](https://www.liaoxuefeng.com/wiki/896043488029600/896202815778784)**
 	- [Git&GitLab](https://blog.csdn.net/csfreebird/article/category/1224512)
+	- [解决：Sourcetree 中一个项目改了密码，操作无权限](https://blog.csdn.net/meichaoWen/article/details/128204539)
 
 
 

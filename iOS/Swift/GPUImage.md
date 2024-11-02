@@ -1,5 +1,6 @@
 >[**GPUImage（GitHub）**](https://github.com/BradLarson/GPUImage3)
 - **资料**
+	- [iOS滤镜那些事儿 | 创作者训练营第二期](https://juejin.cn/post/6955668095348244516#heading-0)
 	- [iOS滤镜那些事儿 | 创作者训练营第二期](https://juejin.cn/post/6955668095348244516#heading-11)
 	- [GPUImage系列教程（简书）](https://www.jianshu.com/nb/4268718)
 	- [GPUImage简介与入门](https://www.zybuluo.com/qidiandasheng/note/1694590)

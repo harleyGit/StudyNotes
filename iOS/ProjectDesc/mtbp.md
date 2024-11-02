@@ -134,7 +134,254 @@ Array updated: ["Hello", "RxSwift", "is", "awesome"]
 
 <br/><br/><br/>
 
+
 > <h2 id="PublishRelay使用">PublishRelay使用</h2>
+
+PublishRelay：这是 RxSwift 中的一种特殊的 Relay（即不会终止的 Observable），它能够发布事件，但不会将事件缓存下来。因此，只有订阅者能够实时接收到事件，并且新的订阅者不会接收到之前已经发布的事件。
+
+<br/>
+
+假设我们有一个按钮点击时需要更新的 selected 状态。我们可以通过 BtnItem 的 selected 属性来管理选中状态
+
+- **定义数据模型和 ViewModel**
+
+```
+import RxSwift
+import RxCocoa
+
+// 数据模型 BtnItem
+class BtnItem: ItemType {
+    var type: Int
+    var selected: Bool
+
+    init(type: Int, selected: Bool = false) {
+        self.type = type
+        self.selected = selected
+    }
+}
+
+// 定义 ViewModel
+class ViewModel {
+    // 用于发布按钮点击事件
+    let clickAction = PublishRelay<BtnItem>()
+    
+    // 订阅并处理点击事件
+    init() {
+        clickAction.subscribe(onNext: { item in
+            // 处理点击事件：这里可以更改选中状态
+            item.selected.toggle()
+            print("Button item type: \(item.type), selected: \(item.selected)")
+        }).disposed(by: disposeBag)
+    }
+
+    private let disposeBag = DisposeBag()
+}
+```
+
+- **1.代码解析**
+
+- **1.1** `‌clickAction.accept(item)`： 这里将 item 事件发布给 clickAction，所有订阅 clickAction 的观察者都会收到这个 item，并触发相应的响应操作。
+
+这样做的目的是：使用`clickAction` 响应按钮点击的 Relay。当按钮点击时，可以调用 `clickAction.accept(item)`，将当前按钮的 BtnItem 数据对象作为事件发送出去。这样，每次点击按钮时，事件就会被发布，订阅者接收到该事件后可以进行进一步的处理，比如更改 UI 或者更新状态。
+
+<br/>
+
+- **1.2** 在vm中处理订阅的按钮点击事件
+
+要处理按钮点击事件，可以订阅 clickAction。这样，当 accept 方法被调用时，所有订阅 clickAction 的代码块都会被执行。
+
+在上述代码中，我们在 viewModel 中处理逻辑，通过订阅 clickAction 来实现点击事件的响应。
+
+<br/><br/>
+
+- **在视图控制器中绑定按钮点击**
+
+```
+import UIKit
+import RxSwift
+import RxCocoa
+
+class ViewController: UIViewController {
+    let viewModel = ViewModel()
+    let disposeBag = DisposeBag()
+    let button = UIButton(type: .system)
+    var item = BtnItem(type: 1) // 初始化 BtnItem
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        setupButton()
+        
+        // 将按钮点击绑定到 clickAction
+        button.rx.tap
+            .bind { [weak self] in
+                guard let self = self else { return }
+                self.viewModel.clickAction.accept(self.item)
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    func setupButton() {
+        button.setTitle("Click Me", for: .normal)
+        button.frame = CGRect(x: 100, y: 100, width: 100, height: 50)
+        view.addSubview(button)
+    }
+}
+```
+
+**解析：**
+
+- `button.rx.tap：`这是一个 RxCocoa 提供的扩展，用于将按钮点击事件转化为 RxSwift 的 ControlEvent<Void>，允许你对按钮点击事件进行响应。
+- `bind { ... }：`每次点击按钮时，闭包内的代码会被执行，将当前的 BtnItem 实例（item）传递给 clickAction。
+- 在 **`ViewModel`** 中：clickAction 被订阅，当按钮点击时触发 accept 方法，触发 onNext 闭包。在这里，我们切换了 selected 状态，模拟了一个选中和取消选中的效果。
+
+<br/><br/><br/>
+
+更近一步，是否可以用下面的代码替换subscribe订阅呢？
+
+```
+clickAction.withUnretained(self)
+            .flatMap { owner, item00 in
+                owner.vm.callMethod(item00)
+            }
+            .map { _ in () }
+            .bind(to: rx.reload)
+            .disposed(by: rx.disposeBag)
+```
+
+
+**代码解析**
+
+- 1.**`withUnretained(self)`**
+
+	- **作用**：`withUnretained(self)` 操作符在事件流中附加当前对象（`self`，即 `owner`），并在每次事件发生时检查 `self` 是否仍然存在，从而避免了内存泄漏。
+	- **工作方式**：将 `self` 和事件值（这里是 `BtnItem` 实例 `item00`）作为参数传递给后续闭包中的操作。若 `self` 已经释放，则不会继续传递，避免因循环引用而导致的内存泄漏。
+
+<br/>
+
+- 2.**`flatMap`**
+
+	- **作用**：`flatMap` 用于将一个值映射到另一个 `Observable` 对象中，通常用于触发异步操作或调用其他需要返回 `Observable` 的方法。
+	- **这里的作用**：在闭包 `{ owner, item00 in }` 中，调用 `owner.vm.callMethod(item00)`，处理点击事件。这可能是一个异步操作，也可能会返回一个与更新 `UI` 相关的信号（比如需要刷新列表的信号）。
+
+<br/>
+
+-  3.**`map { _ in () }`**
+
+	- **作用**：将事件流的输出转化为 `Void` 类型（即空值），以便与后续需要 `Void` 类型的 `Observer`（比如 `rx.reload`）绑定。
+	- **用途**：由于 `callMethod(item00)` 可能返回的并不是 `Void` 类型的数据（比如某个结果或处理状态），`map { _ in () }` 可以将其转化为 `Void` 类型，确保类型符合后续的绑定需求。
+
+<br/>
+
+- 4.**`bind(to: rx.reload)`**
+
+	- **作用**：将事件流的输出绑定到 `rx.reload`，触发 `UICollectionView` 或其他视图的刷新操作。
+	- **这里的意义**：在 `callMethod` 执行完成后，发出一个空事件并绑定到 `rx.reload`，这样视图就会根据 `rx.reload` 的响应来更新显示内容。
+
+<br/>
+
+- **5.`disposed(by: rx.disposeBag)`**
+
+	- **作用**：保证事件绑定在 `rx.disposeBag` 释放时自动解除，防止因为重复绑定导致的资源占用或内存泄漏。
+
+<br/>
+
+
+**为什么选择这种写法？**
+
+这种写法通过链式调用使代码更具可读性，并且减少了不必要的 `subscribe(onNext:)`，避免了强引用问题（通过 `withUnretained(self)` 确保 `self` 的生命周期管理）。此外，使用 `bind(to:)` 也更符合 RxSwift 的响应式编程风格，使得操作意图更清晰（即事件触发后直接影响 `rx.reload`）。
+
+<br/>
+
+**总结**
+
+- 这种写法主要优势在于：
+	- **减少内存泄漏**：避免循环引用，确保对象在事件流中安全使用。
+	- **链式风格**：使用链式 API 提高代码可读性和易维护性。
+	- **响应式思维**：直接绑定到 `rx.reload`，更加直观地表达事件与视图更新的关联。
+
+<br/><br/>
+
+在使用上述的代码后，我们发现有一个`‌rx.reload`，这个表示刷新什么呢？ 是什么在刷新？
+
+<br/>
+
+在这个代码片段中，`rx.reload` 作为事件绑定的目标，用于触发 `UICollectionView` 或其他视图的刷新操作。让我们更详细地看下如何触发刷新：
+
+<br/>
+
+ **`rx.reload` 的作用**
+
+`rx.reload` 是 `UICollectionView` 的一个自定义 `Binder`，用于监听事件并调用视图的刷新方法（例如 `reloadData()`）。在 RxSwift 中，我们可以使用 `Binder` 来创建自定义属性，使得它们能够响应事件流中的数据变化，从而更新视图。
+
+<br/>
+
+**实现 `rx.reload`**
+
+假设我们要为 `UICollectionView` 创建一个 `rx.reload`，我们可以通过扩展 `Reactive` 为 `UICollectionView` 增加这个自定义的 `Binder`：
+
+```swift
+import RxSwift
+import RxCocoa
+import UIKit
+
+extension Reactive where Base: UICollectionView {
+    var reload: Binder<Void> {
+        return Binder(self.base) { collectionView, _ in
+            collectionView.reloadData()
+        }
+    }
+}
+```
+
+<br/>
+
+- **解析**
+
+	- **`extension Reactive where Base: UICollectionView`**：为 `UICollectionView` 扩展 `Reactive`，使我们可以创建自定义的 `rx` 属性。
+	- **`var reload: Binder<Void>`**：声明 `rx.reload`，类型为 `Binder<Void>`，这意味着它将响应 `Void` 类型的事件。
+	- **`Binder(self.base) { collectionView, _ in collectionView.reloadData() }`**：在事件发生时调用 `collectionView.reloadData()`，从而刷新整个集合视图。
+
+<br/>
+
+**触发刷新**
+
+当 `clickAction` 发布事件，流经 `.bind(to: rx.reload)` 时，`rx.reload` 会监听到这个事件，并执行 `reloadData()` 方法，从而刷新 `UICollectionView` 的数据。
+
+<br/>
+
+**示例应用**
+
+以下是完整代码，展示如何使用 `rx.reload` 来绑定刷新操作：
+
+```swift
+class ViewController: UIViewController {
+    let disposeBag = DisposeBag()
+    let viewModel = ViewModel()
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+    var item = BtnItem(type: 1)
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // 假设点击按钮时调用 clickAction
+        viewModel.clickAction.accept(item)
+        
+        // 订阅 clickAction 以触发视图的刷新
+        viewModel.clickAction
+            .withUnretained(self)
+            .flatMap { owner, item00 in
+                owner.viewModel.callMethod(item00) // 调用方法进行数据更新
+            }
+            .map { _ in () }
+            .bind(to: collectionView.rx.reload) // 绑定到 rx.reload
+            .disposed(by: disposeBag)
+    }
+}
+```
+
+这样，每次 `clickAction` 有事件发出时，`rx.reload` 就会被触发，`UICollectionView` 将会执行 `reloadData()` 来刷新内容。
+
 
 
 
@@ -781,6 +1028,184 @@ extension UIColor {
 
 
 可以看下使用关键字where约束和范型的一个联合Demo，如下：
+
+```
+import UIKit
+
+// 这里我们简单实现一个包装器，可以用来扩展 UICollectionView 的功能。
+// 定义一个 PixWrapper 泛型类
+public class PixWrapper<Base> {
+    public let base: Base
+    
+    public init(_ base: Base) {
+        self.base = base
+    }
+}
+
+// 方便使用的扩展
+public extension UICollectionView {
+    var pix: PixWrapper<UICollectionView> {
+        return PixWrapper(self)
+    }
+}
+
+```
+
+- **`PixWrapper<Base>`** 是一个泛型类。这里的 Base 是一个类型占位符，可以代表任何类型。泛型类允许我们在使用 PixWrapper 时指定具体的类型。
+- **`base`** 是 PixWrapper 的一个属性，它的类型是 Base。构造器 init 接受一个参数，初始化 base 属性。
+
+<br/>
+
+ **扩展 UICollectionView**
+ 
+接下来，在 PixWrapper 的扩展中添加一些与 UICollectionView 相关的方法，例如设置默认的布局。
+
+```
+public extension PixWrapper where Base: UICollectionView {
+    // 设置默认的布局
+    func setDefaultLayout() {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 10
+        layout.minimumInteritemSpacing = 10
+        base.collectionViewLayout = layout
+    }
+    
+    // 其他自定义方法
+    func registerCell<T: UICollectionViewCell>(cellType: T.Type) {
+        base.register(cellType, forCellWithReuseIdentifier: String(describing: cellType))
+    }
+    
+    func dequeueCell<T: UICollectionViewCell>(cellType: T.Type, indexPath: IndexPath) -> T {
+        return base.dequeueReusableCell(withReuseIdentifier: String(describing: cellType), for: indexPath) as! T
+    }
+}
+```
+
+<br/>
+
+
+```
+public extension PixWrapper where Base: UICollectionView {
+
+}
+```
+
+&emsp; 是 Swift 中的一种扩展（extension）写法，旨在为 UICollectionView 添加一些功能或方法。具体来说，它是一个泛型扩展，用于在 PixWrapper 的上下文中增加对 UICollectionView 的支持。
+
+- **代码解析**
+	- `public extension：`表示这是一个公开的扩展，可以在模块外部访问。
+	- `PixWrapper：`这是一个包装类，通常用于封装原始对象（在本例中是 UICollectionView），以便在其基础上添加额外的功能。
+	- where Base: UICollectionView：这部分限制了扩展只能应用于 Base 为 UICollectionView 的情况下。这意味着在这个扩展中定义的方法只能被 UICollectionView 或其子类调用。
+
+<br/><br/>
+
+- **where 子句的作用**
+
+**`where Base: UICollectionView `**是一个类型约束，它指定了该扩展只适用于 Base 是 UICollectionView 或其子类的情况。换句话说，只有当 PixWrapper 的类型参数 Base 满足这一条件时，扩展中的方法和功能才会生效。
+
+**举例说明**
+
+例如，如果你有如下代码：
+
+```
+let myCollectionViewWrapper = PixWrapper<UICollectionView>(UICollectionView())
+```
+此时 Base 被推断为 UICollectionView，因此你可以使用以下扩展中的方法：
+
+
+```
+public extension PixWrapper where Base: UICollectionView {
+    func setDefaultLayout() {
+        // 这里可以使用 base 属性，它是 UICollectionView 类型
+        let layout = UICollectionViewFlowLayout()
+        base.collectionViewLayout = layout
+    }
+}
+```
+
+但是，如果你尝试创建一个 PixWrapper 实例，传递一个非 UICollectionView 类型的对象，例如 UILabel，则你将无法使用这个扩展，因为 Base 不是 UICollectionView。
+
+<br/><br/>
+
+- **`<Base>` 是什么？**
+
+- `<Base>` 不是一个枚举，而是一个泛型参数。这是 Swift 的一种特性，允许你在类、结构体或函数中使用占位符类型。它在具体使用时会被替换为实际类型。例如：
+
+	- 在 PixWrapper<Base> 中，Base 是一个泛型参数，具体类型可以在实例化时指定，比如 UICollectionView、UIView 或其他类型。
+	- 当你声明一个泛型类型时，它可以在其内部使用，也可以通过条件约束（如 where 子句）来限定。
+
+<br/>
+
+- **总结**
+
+	- 泛型类：PixWrapper<Base> 是一个泛型类，允许使用任意类型作为 Base。
+	- where 子句：指定扩展只在 Base 为 UICollectionView 或其子类时有效，这提供了类型安全和灵活性。
+	- 泛型参数：<Base> 是一种类型占位符，用于允许类型的灵活性，使得类、结构体或函数能够适应多种数据类型。
+
+
+
+
+<br/><br/>
+
+**使用示例**
+
+```
+class MyCollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+    
+    private var collectionView: UICollectionView!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // 初始化 UICollectionView
+        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: UICollectionViewFlowLayout())
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        
+        // 使用 PixWrapper 扩展的方法
+        collectionView.pix.setDefaultLayout()
+        collectionView.pix.registerCell(cellType: MyCollectionViewCell.self)
+
+        view.addSubview(collectionView)
+    }
+    
+    // UICollectionViewDataSource
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 20 // 示例数据量
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell: MyCollectionViewCell = collectionView.pix.dequeueCell(cellType: MyCollectionViewCell.self, indexPath: indexPath)
+        cell.configure(with: "Item \(indexPath.item + 1)") // 配置单元格
+        return cell
+    }
+}
+
+// 自定义 UICollectionViewCell
+class MyCollectionViewCell: UICollectionViewCell {
+    private let titleLabel = UILabel()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        contentView.addSubview(titleLabel)
+        titleLabel.frame = contentView.bounds
+        titleLabel.textAlignment = .center
+        titleLabel.textColor = .black
+        contentView.backgroundColor = .lightGray
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func configure(with text: String) {
+        titleLabel.text = text
+    }
+}
+```
+
+在这个示例中，我们创建了一个 PixWrapper 用于封装 UICollectionView，并在其中添加了一些方法来简化对 UICollectionView 的使用。通过 PixWrapper，我们能够使用链式调用来设置布局、注册和 dequeue 单元格，增强了代码的可读性和可维护性。
 
 
 
