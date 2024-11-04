@@ -32,6 +32,7 @@
 	- [Xcode格式化代码工具](#Xcode格式化代码工具)
 	- [控制台po无法打印](#控制台po无法打印)
 		- [调试命令frame](#调试命令frame)
+		- [其他调试命令（未整理）](其他调试命令)
 	- [控制台高级调试技巧](#控制台高级调试技巧)
 	- [快捷键](#快捷键0)
 	- [配置](#配置0)
@@ -898,12 +899,167 @@ let myBox = Box(value: 42)
 	- 通过了解这些命令的不同用途和工作原理，你可以更有效地使用 LLDB 进行调试，尤其是在处理复杂类型和泛型代码时。
 
 
-<br/><br/><br/><br/>
+<br/><br/><br/>
+
+> <h2 id="其他调试命令">其他调试命令</h2>
+
+在 Xcode 调试器中，除了 `po` 命令，还有一些其他方法可以帮助你打印和检查对象的属性值：
+
+### 1. `print` 命令
+   可以直接在调试器中使用 `print` 命令，类似于在代码中使用的 `print()` 函数：
+
+   ```swift
+   print(person)
+   ```
+
+   这样会调用对象的 `description` 或 `debugDescription`，并打印到控制台。对于基本类型或已实现 `CustomStringConvertible` 的类，也可以查看到有意义的描述。
+
+### 2. `expression` 或 `e` 命令
+   `expression`（简称 `e`）允许在调试器中直接执行 Swift 代码：
+
+   ```swift
+   e print(person.name)
+   ```
+
+   你也可以用它来动态调用属性或方法，从而查看更多对象信息，适合在 `po` 失败时使用。比如：
+
+   ```swift
+   e person.name
+   ```
+
+### 3. `v` 或 `frame variable` 命令
+   `v` 命令会显示当前堆栈帧中的变量和对象的详细信息。特别适合查看局部变量的值：
+
+   ```swift
+   v person
+   ```
+
+   这个命令输出更接近 `dump` 的结果，会列出对象的所有属性和值。如果你需要更多信息，可以使用：
+
+   ```swift
+   frame variable person
+   ```
+
+### 4. `lldb` 的自定义命令
+   可以通过 `lldb` 自定义一些命令，进一步查看对象属性。例如：
+
+   ```swift
+   lldb> expr person.someMethod()
+   ```
+
+   这可以直接在对象上调用方法，输出返回值。
+
+### 5. 使用 `memory read` 命令检查内存
+   如果对象复杂，可能还需要查看其内存结构。可以使用 `memory read` 查看内存中的原始数据：
+
+   ```swift
+   memory read -f x -s 1 -c 10 <address>
+   ```
+
+   这种方式一般用于深入调试底层内容，例如指针、原始数据。
+
+### 6. `print-object` (`p`) 命令
+   如果 `po` 失败，可以尝试 `print-object` 或 `p`。这类命令的输出比较有限，但在基本调试需求下也能提供部分信息：
+
+   ```swift
+   p person
+   ```
+
+### 总结
+在调试器中，除了常用的 `po` 命令之外，`e` 和 `v` 也是非常强大的工具，尤其是在 `po` 无法正常工作时。利用这些命令可以更加灵活地检查对象，确保调试过程顺利。
+
+<br/><br/>
+
+## **如何 打印一个地址或者其属性值呢 通过调试器？**
+
+在 Xcode 调试器中，你可以通过 LLDB 命令打印一个变量的地址以及其属性值。下面是一些常用方法来实现这一点：
+
+### 1. 打印变量的地址
+
+要打印变量的地址，你可以使用 `&` 操作符，结合 `p` 命令：
+
+```swift
+p &person
+```
+
+这将输出 `person` 变量在内存中的地址。
+
+### 2. 使用 `po` 命令打印属性值
+
+如果你想要打印特定属性的值，可以使用 `po` 命令。假设 `person` 是一个对象，并且你想打印它的 `name` 属性：
+
+```swift
+po person.name
+```
+
+如果 `po` 命令没有返回详细信息，可以尝试使用 `expression` 命令：
+
+```swift
+e person.name
+```
+
+### 3. 打印所有属性及其地址
+
+如果你想查看一个对象的所有属性及其内存地址，可以使用 `dump` 命令：
+
+```swift
+dump(person)
+```
+
+不过，`dump` 的输出可能没有直接显示内存地址。如果你需要查看每个属性的地址，可以结合使用 `p` 命令和属性名，逐个查看。
+
+### 4. 打印整个对象的地址
+
+如果你想打印整个对象的地址，可以使用：
+
+```swift
+p person
+```
+
+这会输出 `person` 对象的地址以及对象的内容。
+
+### 5. 使用 `memory read` 命令（深入调试）
+
+如果你知道对象在内存中的地址，也可以使用 `memory read` 命令查看该地址的内容：
+
+```swift
+memory read <address>
+```
+
+这里的 `<address>` 是你要查看的内存地址。请注意，这个命令通常需要更深入的理解数据结构，因为它会输出原始内存数据。
+
+### 6. 示例
+
+以下是一个完整的示例：
+
+```swift
+class Person {
+    var name: String
+    var age: Int
+
+    init(name: String, age: Int) {
+        self.name = name
+        self.age = age
+    }
+}
+
+let person = Person(name: "Alice", age: 30)
+```
+
+在调试器中，你可以使用以下命令：
+
+```swift
+p &person              // 打印 person 变量的地址
+po person.name         // 打印 person 的 name 属性
+e person.age           // 通过 expression 打印 age 属性
+p person               // 打印 person 对象及其内容
+```
+
+通过这些命令，你可以很方便地查看变量的地址和属性值，以帮助调试程序。
 
 
-
-
-<br/><br/><br/>> <h2 id="控制台高级调试技巧">控制台高级调试技巧</h2>
+<br/><br/><br/>
+> <h2 id="控制台高级调试技巧">控制台高级调试技巧</h2>
 常用的 LLDB 调试命令
 po (print object)
 

@@ -1,9 +1,12 @@
 > <h1 id=""></h1>
 - [**RxSwift使用**](#RxSwift使用)
+	- [Observer](#Observer)
+		- [Binder关于UI绑定](#Binder关于UI绑定)
 	- [BehaviorRelay使用](#BehaviorRelay使用)
 		- [BehaviorRelay数组](#BehaviorRelay数组)
 	- [**PublishRelay使用**](#PublishRelay使用)
 	- [**Reactive使用**](#Reactive使用)
+	- [Signal使用](#Signal使用)
 - [**语言本地化**](#语言本地化)
 - [**ObjectMapper库**](#ObjectMapper库)
 	- [接受网络数据转化为数据模型](#接受网络数据转化为数据模型)
@@ -12,6 +15,9 @@
 - [PixDefines库](#PixDefines库)
 	- [PixNameSpace使用](#PixNameSpace使用)
 		- [关键字where约束和范型的联合](#关键字where约束和范型的联合)
+- [CACurrentMediaTime媒体时间](#CACurrentMediaTime媒体时间)
+- [NSObjectProtocol协议](./../Swift/基础.md#NSObjectProtocol协议)
+- [枚举关联值](./../Swift/基础.md#枚举关联值)
 
 
 <br/>
@@ -20,6 +26,184 @@
 <br/><br/><br/>
 
 > <h1 id="RxSwift使用">RxSwift使用</h1>
+
+
+<br/><br/><br/>
+
+> <h2 id="Observer">Observer</h2>
+
+<br/><br/>
+
+> <h3 id="Binder关于UI绑定">Binder关于UI绑定</h3>
+
+`Binder` 是 `RxSwift` 中的一种绑定机制，它被设计为专门用于 UI 绑定，确保线程安全，同时帮助我们简洁地实现数据流绑定到 UI 元素的操作。`Binder` 是一种 observer，它只会监听并处理主线程上的事件，适合用于更新 UI 元素的属性，比如文本、颜色等。
+
+<br/>
+
+**`Binder` 的核心概念**
+
+`Binder` 是 `RxSwift` 中的一种类型安全的 observer，专门用于绑定 UI 组件。其设计主要考虑了以下几点：
+
+1. **线程安全**：`Binder` 会确保事件在主线程上执行，适合用于 UI 更新。
+2. **不会传播错误**：`Binder` 无法处理 error 事件，它只处理 `next` 事件，避免了将错误传播到 UI 层。
+3. **简洁的绑定方式**：`Binder` 可以将 observable 的输出直接绑定到 UI 元素的属性，简化了代码逻辑。
+
+<br/>
+
+ **`Binder` 的基本使用**
+
+`Binder` 的构造函数接收两个参数：
+1. `target`：表示绑定的目标对象，通常是 UI 元素。
+2. `binding`：表示事件触发时执行的闭包操作，接收目标对象 `target` 和新事件值。
+
+<br/>
+
+**使用示例**
+
+假设我们有一个 `UILabel`，我们希望当 observable 发出新值时，自动更新其文本内容。
+
+```swift
+import UIKit
+import RxSwift
+import RxCocoa
+
+class ViewController: UIViewController {
+    let label = UILabel()
+    let disposeBag = DisposeBag()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let observable = Observable.just("Hello, RxSwift!")
+
+        // 绑定 observable 的输出到 label 的文本
+        observable.bind(to: label.rx.text)
+            .disposed(by: disposeBag)
+    }
+}
+```
+
+在这个例子中，我们直接将 observable 的输出绑定到 `label.rx.text`。`label.rx.text` 就是一个 `Binder<String?>`，用于简洁地实现 observable 数据流到 UI 的绑定。
+
+<br/>
+
+### 自定义 `Binder`
+
+如果我们想自定义一个 `Binder`，例如实现一个用于控制按钮启用状态的 `Binder`，可以这样实现：
+
+```swift
+extension Reactive where Base: UIButton {
+    var isEnabled: Binder<Bool> {
+        return Binder(self.base) { button, isEnabled in
+            button.isEnabled = isEnabled
+        }
+    }
+}
+```
+
+然后在使用时，可以将 observable 直接绑定到按钮的 `isEnabled` 属性：
+
+```swift
+let isEnabledObservable = Observable.just(true)
+
+isEnabledObservable
+    .bind(to: myButton.rx.isEnabled)
+    .disposed(by: disposeBag)
+```
+
+<br/>
+
+**`Binder` 的构造函数详解**
+
+构造一个 `Binder` 一般遵循以下模式：
+
+```swift
+Binder<T>(self.base) { target, value in
+    // 更新 target 的 UI 属性
+}
+```
+
+- `target`：绑定的 UI 元素。
+- `value`：来自 observable 的新值，传递给 `Binder` 用于更新 UI。
+
+例如，以下 `Binder` 将 `Int` 类型的 observable 绑定到 `UILabel` 上，将整数转换为文本：
+
+```swift
+extension Reactive where Base: UILabel {
+    var textFromInt: Binder<Int> {
+        return Binder(self.base) { label, value in
+            label.text = "\(value)"
+        }
+    }
+}
+```
+
+然后可以使用 `Observable<Int>` 来绑定 `UILabel`：
+
+```swift
+let intObservable = Observable.just(42)
+intObservable
+    .bind(to: label.rx.textFromInt)
+    .disposed(by: disposeBag)
+```
+
+### 总结
+
+`Binder` 是 `RxSwift` 中用于 UI 绑定的 observer，可以简洁、安全地将数据流绑定到 UI 控件的属性上。其优点包括线程安全、不会处理错误事件以及简化的绑定操作。`Binder` 的构造函数接受 `target` 和 `binding`，可以灵活定义目标对象和更新逻辑，适用于大部分 UI 数据绑定场景。
+
+
+<br/><br/>
+
+> <h2 id="binder的按钮点击事件">binder的按钮点击事件</h2>
+
+```
+let button: UIButton = UIButton()
+
+button.rx.controlEvent(.touchUpInside)
+            .bind(to: rx.edit)
+            .disposed(by: rx.disposeBag)
+
+var edit: Binder<Void> {
+        return Binder(self.base) { owner, action in
+           print("-------------")
+        }
+    }
+```
+
+**代码解析：**
+
+- `.rx.controlEvent(.touchUpInside): ` RxSwift 中用于监听按钮点击事件的方法。.touchUpInside 表示按钮被点击并在其内部释放（即通常的点击效果）。
+
+- `bind(to: rx.edit)`: 将 btnEdit 的点击事件绑定到 edit 属性，这里 edit 是一个 Binder<Void> 类型，它定义了在点击事件发生时要执行的操作。
+
+- `disposed(by: rx.disposeBag)`: 通过 disposeBag 管理订阅的生命周期，确保在 disposeBag 被释放时，订阅也会自动取消，防止内存泄漏。
+
+- `edit` 是一个 Binder<Void>，用于定义点击事件的响应。
+
+- `Binder(self.base)`: Binder 是 RxSwift 中的一种类型安全的包装器，用于定义 UI 事件和观察者。self.base 是 edit 的持有对象，即 Binder 的上下文环境，它指向当前对象。
+
+- `{ owner, action in ... }`: 闭包参数中的 owner 是 self.base（持有者），action 是点击事件触发时传入的参数（Void 类型）。在这里，点击触发时会执行 print("-------------")，在控制台输出一个分隔线以示事件触发。
+
+<br/>
+
+**`Binder<Void>`**是什么？ 为什么定义成这个类型？
+
+`Binder<Void>` 类型用于表示一个不携带任何数据的事件绑定。当我们不关心事件的具体值时，使用 Void 类型就足够了。这种模式特别适用于按钮点击等操作，因为点击事件本身不需要附带任何数据，只要能够触发相应的响应操作即可。
+
+<br/>
+
+- **为什么使用 `Binder<Void>`？**
+	- 简化绑定逻辑：对于按钮点击等事件，数据内容并不重要，重要的是事件的发生。Void 表示“什么也不需要传递”，这种设计简化了代码，只关注触发操作，而无需处理额外的数据。
+
+	- 提高代码的可读性：使用 Void 明确表示事件没有负载，帮助开发者快速理解事件不携带数据。例如，如果看到 Binder<String>，则意味着绑定时会传递一个 String 类型的值；而 Binder<Void> 则表明事件仅用于触发，没有数据。
+
+	- 避免冗余数据传递：在不需要传递数据的情况下，用 Void 避免了无意义的数据传输和处理。这样可以减少内存和 CPU 开销，因为 Void 只是一个空事件，不占用额外资源。
+
+
+这里的 rx.edit 被定义为 Binder<Void>，因为点击事件本身并不需要数据，只是为了触发响应操作。
+
+
+
 
 <br/><br/><br/>
 
@@ -640,6 +824,14 @@ itemsObservable
 ***
 <br/><br/><br/>
 
+> <h1 id="Signal使用">Signal使用</h1>
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
 > <h1 id="语言本地化">语言本地化</h1>
 
 当然可以！下面是一个完整的例子，展示如何在 iOS 应用中使用 `NSLocalizedString` 和自定义的本地化 bundle。
@@ -1208,8 +1400,36 @@ class MyCollectionViewCell: UICollectionViewCell {
 在这个示例中，我们创建了一个 PixWrapper 用于封装 UICollectionView，并在其中添加了一些方法来简化对 UICollectionView 的使用。通过 PixWrapper，我们能够使用链式调用来设置布局、注册和 dequeue 单元格，增强了代码的可读性和可维护性。
 
 
+<br/>
 
+***
+<br/><br/><br/>
 
+> <h1 id="CACurrentMediaTime媒体时间">CACurrentMediaTime媒体时间</h1>
+
+`CACurrentMediaTime` 是 Core Animation 框架中的一个函数，用来获取当前媒体时间（media time）。它返回的是自系统启动以来的秒数，具有高精度和单调递增的特性。这意味着它不会受系统时间的修改（比如用户手动调整时间）影响，非常适合用于动画和计时的场景。
+
+### 主要用途
+
+1. **动画计时**：`CACurrentMediaTime` 经常用于 Core Animation 的动画同步。它可以精确控制动画的开始时间、持续时间等，确保动画平滑进行。
+   
+2. **高精度计时**：适用于需要精确时间控制的任务，比如性能测试、游戏开发等，适合用来测量代码块的执行时间。
+
+3. **相对时间的参考**：因为它返回的时间是基于系统启动的，而不是绝对的日期时间，所以在多个线程或不同系统间做时间同步比较有用。
+
+### 示例
+
+例如，如果你想要测量一个操作的执行时间，可以使用 `CACurrentMediaTime`：
+
+```swift
+let startTime = CACurrentMediaTime()
+// 执行一些操作
+let endTime = CACurrentMediaTime()
+let executionTime = endTime - startTime
+print("操作耗时: \(executionTime) 秒")
+```
+
+这种方式可以在 Core Animation 和其他需要精确时间的场景中广泛使用。
 
 
 
