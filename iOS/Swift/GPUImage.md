@@ -1,4 +1,13 @@
 >[**GPUImage（GitHub）**](https://github.com/BradLarson/GPUImage3)
+- [**GPUImage介绍&安装**](#GPUImage介绍&安装)
+- [**‌核心功能类**](#核心功能类)
+	- [GPUImageOutput](#GPUImageOutput)
+	- [核心功能和方法](#核心功能和方法)
+	- [GPUImageFramebuffer：管理和存储图像处理管道中的图像数据](#GPUImageFramebuffer：管理和存储图像处理管道中的图像数据)
+	- [Target的使用](#Target的使用)
+	- [GPUImageInput协议](#GPUImageInput协议)
+	- [**方法**](#方法)
+		- [视频同步处理runSynchronouslyOnVideoProcessingQueue](#视频同步处理runSynchronouslyOnVideoProcessingQueue)
 - **资料**
 	- [iOS滤镜那些事儿 | 创作者训练营第二期](https://juejin.cn/post/6955668095348244516#heading-0)
 	- [iOS滤镜那些事儿 | 创作者训练营第二期](https://juejin.cn/post/6955668095348244516#heading-11)
@@ -13,7 +22,7 @@
 ***
 <br/><br/><br/>
 
-> <h1 id=""></h1>
+> <h1 id="GPUImage介绍&安装">GPUImage介绍&安装</h1>
 
 ```
 pod 'GPUImage', '0.17.0'
@@ -176,7 +185,7 @@ framebuffer.unlock()
 
 <br/><br/><br/>
 
-> <h2 id="">Target的使用</h2>
+> <h2 id="Target的使用">Target的使用</h2>
 
 Target的添加以及管理，用来生成整个**FilterChain**.
 
@@ -239,6 +248,115 @@ GPUImageInput 是一个协议，它定义了一个能够接收 FrameBuffer 的 r
 	- GPUImageView：继承自 UIView，通过输入的纹理，执行一遍渲染流程。我们一般使用它来呈现渲染结果。
 	- GPUImageTextureOutput：它可以获取到输入的Framebuffer中的纹理对象.
 	- GPUImageRawDataOutput：通过 rawBytesForImage 属性，可以获取到当前输入纹理的二进制数据。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="方法">方法</h1>
+
+<br/><br/><br/>
+
+> <h2 id="视频同步处理runSynchronouslyOnVideoProcessingQueue">视频同步处理runSynchronouslyOnVideoProcessingQueue</h2>
+
+`runSynchronouslyOnVideoProcessingQueue` 是 GPUImage 框架中用于在**视频处理队列**上同步运行任务的一个方法。在 GPUImage 中，视频和图像处理通常是异步进行的，而这个方法可以确保某个操作在视频处理队列上同步执行。
+
+### `runSynchronouslyOnVideoProcessingQueue` 的作用
+
+1. **确保线程安全**：在图像处理操作中，通常涉及 GPU 资源的读取和写入，而 GPU 操作往往不是线程安全的。使用 `runSynchronouslyOnVideoProcessingQueue` 可以确保在视频处理队列上执行的代码片段与其他操作不会冲突，从而避免因线程竞争而导致的崩溃或错误。
+
+2. **同步执行任务**：通常，GPUImage 的视频处理和图像处理是异步的，如果希望在特定时刻等待操作完成才继续执行后续代码，可以使用此方法。该方法会在调用线程上阻塞，直到操作在视频处理队列上完成为止。这在某些情况下（例如需要立即获得处理结果）非常重要。
+
+3. **在特定队列上执行 GPU 操作**：在 GPUImage 中，许多操作会使用 OpenGL 对 GPU 资源进行操作。`runSynchronouslyOnVideoProcessingQueue` 确保这些操作在正确的队列上执行，不会影响主线程或其他操作队列。
+
+### 示例用法
+
+```swift
+// 假设我们有一个需要在视频处理队列上同步执行的任务
+runSynchronouslyOnVideoProcessingQueue {
+    // 在视频处理队列上执行的任务
+    // 可以是例如读取纹理数据、配置滤镜参数等操作
+    // 例如配置滤镜强度
+    filter.intensity = 0.8
+    
+    // 执行其他 GPU 资源操作
+}
+```
+
+在此示例中，`runSynchronouslyOnVideoProcessingQueue` 确保设置滤镜参数 `filter.intensity` 在视频处理队列上同步完成，从而避免了数据不一致的问题。
+
+### `runSynchronouslyOnVideoProcessingQueue` 的使用场景
+
+- **确保设置和渲染的顺序**：在某些需要严格顺序的任务中（如滤镜参数设置、资源读取、纹理更新等），可以用 `runSynchronouslyOnVideoProcessingQueue` 确保顺序执行。
+  
+- **处理异步操作的结果**：在执行异步 GPU 操作后立即获取结果时，可以在 `runSynchronouslyOnVideoProcessingQueue` 中同步执行代码以获得操作的结果。
+  
+- **避免主线程阻塞**：如果在主线程中执行 GPU 密集型操作，会导致应用卡顿。此方法在视频处理队列上执行操作，减少了对主线程的压力。
+
+### 注意事项
+
+- **阻塞主线程**：如果在主线程中调用 `runSynchronouslyOnVideoProcessingQueue` 运行大量代码，可能会造成卡顿。一般只在需要同步获取数据或执行小范围操作时使用。
+  
+- **理解线程队列**：该方法只是确保代码在 GPUImage 的视频处理队列上同步执行，不会跨线程队列运行。在多线程环境中，仍需合理设计线程间的数据传递和资源管理。
+
+### 总结
+
+`runSynchronouslyOnVideoProcessingQueue` 是 GPUImage 中用于确保在视频处理队列上同步执行操作的工具。它用于需要在队列上同步完成的 GPU 操作，保证代码执行的顺序性和线程安全性，非常适合在实时视频处理或滤镜配置等场景中使用。
+
+<br/><br/><br/>
+
+> <h2 id="useImageProcessingContext使用当前上下文">useImageProcessingContext使用当前上下文</h2>
+
+在 GPUImage 中，`useImageProcessingContext` 是一个用于在当前上下文中设置 GPU 渲染环境的辅助方法。GPUImage 底层使用 OpenGL 或 Metal 进行图像处理，需要确保在正确的 OpenGL/Metal 上下文中执行绘图命令。`useImageProcessingContext` 确保了 GPU 操作是在 GPUImage 指定的图像处理上下文中进行的。
+
+### `useImageProcessingContext` 的作用
+
+1. **设置图像处理上下文**：GPUImage 的图像处理需要一个专门的上下文（`GLContext`），这类似于 OpenGL 的 EAGLContext。`useImageProcessingContext` 将当前上下文设置为 GPUImage 的图像处理上下文，以确保所有 GPU 操作在该上下文中执行。
+   
+2. **防止多上下文冲突**：在 iOS 应用中，可能存在多个 OpenGL 或 Metal 上下文，若不明确指定上下文，可能导致资源冲突或操作失败。`useImageProcessingContext` 能避免这种情况，确保 GPUImage 的操作在预期的上下文中运行。
+
+3. **准备 GPU 资源**：在设置好图像处理上下文后，可以安全地进行纹理加载、滤镜参数设置等操作。`useImageProcessingContext` 确保了 GPU 资源的加载、绑定和更新不会受到其他上下文的干扰。
+
+### 使用场景
+
+`useImageProcessingContext` 在 GPUImage 内部大量使用，一般在以下场景中会被调用：
+
+- **滤镜处理**：在应用滤镜之前，确保 OpenGL 或 Metal 在 GPUImage 的上下文中运行，以正确处理滤镜效果。
+- **纹理加载和更新**：当载入或更新图像纹理时，使用 `useImageProcessingContext` 将上下文切换到 GPUImage，以确保纹理数据正确加载到 GPU。
+- **绘制到目标纹理**：在使用 GPUImage 的自定义渲染目标或生成纹理时，`useImageProcessingContext` 确保绘制操作在 GPUImage 上下文中执行。
+
+### 示例用法
+
+在 GPUImage 框架的底层代码中，可能会看到类似下面的代码：
+
+```objc
+- (void)processImage {
+    // 使用 GPUImage 的图像处理上下文
+    [GPUImageContext useImageProcessingContext];
+
+    // 在上下文中绑定纹理、配置滤镜等
+    [self.filter renderToTextureWithVertices:imageVertices textureCoordinates:textureCoordinates];
+
+    // 完成处理后，解除上下文
+}
+```
+
+在此代码示例中，`useImageProcessingContext` 确保在处理图像时，所有 GPU 操作（例如绑定纹理、应用滤镜等）在 GPUImage 的图像处理上下文中执行。
+
+### 注意事项
+
+- **不直接在应用代码中使用**：`useImageProcessingContext` 通常是 GPUImage 内部方法，用户一般无需直接调用。
+- **避免上下文切换**：频繁切换上下文可能影响性能，`useImageProcessingContext` 在 GPUImage 内部已经做了合理的上下文管理，通常无需手动干预。
+- **线程安全**：`useImageProcessingContext` 确保在 GPUImage 图像处理线程上切换上下文，多线程下应避免手动更改上下文，以防止线程冲突。
+
+### 总结
+
+`useImageProcessingContext` 是 GPUImage 中的一个关键方法，用于确保图像处理操作在正确的 GPU 上下文中执行。它在底层代码中切换上下文，防止多上下文冲突，确保滤镜处理、纹理绑定等 GPU 操作的稳定性和正确性。
+
+
+
 
 
 
