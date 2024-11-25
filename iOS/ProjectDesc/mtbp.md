@@ -18,6 +18,10 @@
 - [CACurrentMediaTime媒体时间](#CACurrentMediaTime媒体时间)
 - [NSObjectProtocol协议](./../Swift/基础.md#NSObjectProtocol协议)
 - [枚举关联值](./../Swift/基础.md#枚举关联值)
+- [**UI动画效果**](#UI动画效果)
+	- [弹窗隐藏](#弹窗隐藏)
+	- [CAKeyframeAnimation详解](./动画.md#CAKeyframeAnimation详解)
+
 
 
 <br/>
@@ -1430,6 +1434,146 @@ print("操作耗时: \(executionTime) 秒")
 ```
 
 这种方式可以在 Core Animation 和其他需要精确时间的场景中广泛使用。
+
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="UI动画效果">UI动画效果</h1>
+
+<br/><br/><br/>
+
+> <h2 id="弹窗隐藏">弹窗隐藏</h2>
+
+```
+// 显示弹窗view
+func showPopView() {
+    contentView.layer.removeAllAnimations()
+    let anim = CABasicAnimation(keyPath: "transform.scale")
+    anim.fromValue = 0.2
+    anim.toValue = 1.0
+    anim.timingFunction = .init(name: .easeInEaseOut)
+    anim.duration = 0.3
+    anim.fillMode = .forwards
+    anim.isRemovedOnCompletion = false
+    contentView.layer.add(anim, forKey: "scale")
+}
+```
+
+<br/>
+
+```
+func hidePopView() {
+    contentView.layer.removeAllAnimations()
+    let anim = CABasicAnimation(keyPath: "transform.scale")
+    anim.fromValue = 1.0
+    anim.toValue = 0.0
+    anim.timingFunction = .init(name: .easeInEaseOut)
+    anim.duration = 0.3
+    anim.fillMode = .forwards
+    anim.isRemovedOnCompletion = false
+    contentView.layer.add(anim, forKey: "scale")
+}
+```
+
+这段代码实现了一个缩放动画，用于在 `contentView` 上播放从正常大小（1.0 倍）缩小到 0.0 倍的动画效果，同时对动画的执行进行了特定的配置。以下是代码逐步详解：
+
+---
+
+### 3. **`contentView.layer.removeAllAnimations()`**
+- **功能**：移除 `contentView` 图层上所有当前正在执行的动画。
+- **原因**：
+  - 防止之前的动画没有完成或冲突。
+  - 确保接下来的动画从一个干净的状态开始。
+
+---
+
+### 4. **`let anim = CABasicAnimation(keyPath: "transform.scale")`**
+- **创建动画**：
+  - `CABasicAnimation` 是用于动画化图层属性的基本动画类。
+  - `keyPath` 设置为 `"transform.scale"`，指定对缩放比例属性进行动画。
+  - 动画会让 `contentView` 缩放到指定大小。
+
+---
+
+### 5. **`anim.fromValue = 1.0`**
+- 设置动画的起始值。
+  - 图层从 `1.0` 开始缩放（即原始大小）。
+
+---
+
+### 6. **`anim.toValue = 0.0`**
+- 设置动画的目标值。
+  - 图层会缩小到 `0.0`（完全不可见）。
+
+---
+
+### 7. **`anim.timingFunction = .init(name: .easeInEaseOut)`**
+- 设置动画的时间曲线。
+  - `.easeInEaseOut` 表示动画开始和结束时较慢，中间加速。
+  - 让动画看起来更自然。
+
+---
+
+### 8. **`anim.duration = 0.3`**
+- **设置持续时间**：
+  - 动画的播放时间为 0.3 秒。
+
+---
+
+### 9. **`anim.fillMode = .forwards`**
+- **设置动画填充模式**：
+  - `.forwards` 表示动画完成后，图层保持动画结束时的状态（即缩小到 0.0）。
+
+---
+
+### 10. **`anim.isRemovedOnCompletion = false`**
+- **保持动画效果**：
+  - 设置为 `false`，表示动画完成后不要从图层中移除。
+  - 结合 `fillMode = .forwards`，确保图层在动画完成后仍然保持最终的缩放状态。
+
+---
+
+### 11. **`contentView.layer.add(anim, forKey: "scale")`**
+- 将动画添加到 `contentView` 的图层中。
+- **`forKey: "scale"`**：
+  - 这是动画的标识符，可以用来管理动画，比如后续获取或移除它。
+
+---
+
+### 动画效果
+1. 动画开始时，`contentView` 缩放从正常大小（1.0 倍）逐渐变小。
+2. 在 0.3 秒内，最终缩放到 0.0 倍，即完全缩小到看不见。
+3. 动画完成后，`contentView` 的缩放状态保持在 0.0，不会恢复到原始大小。
+
+---
+
+### 注意点
+1. **`isRemovedOnCompletion = false`** 与 `fillMode = .forwards` 配合：
+   - 确保动画完成后状态不被重置。
+2. **动画移除逻辑**：
+   - 如果在动画完成后需要还原状态，可以手动移除动画或通过其他代码重置。
+3. **防止重复触发**：
+   - 利用 `isShowing` 的状态控制，避免同一动画被重复启动。
+
+---
+
+### 改进建议
+- **动画结束后的回调**：可以利用 `CAAnimationDelegate`，在动画完成时做额外处理，例如清理状态：
+  ```swift
+  anim.delegate = self
+  ```
+
+- **复位状态**：
+  如果需要在动画结束后恢复到原始大小，可以手动设置图层的 `transform` 属性：
+  ```swift
+  contentView.layer.transform = CATransform3DIdentity
+  ```
+
 
 
 

@@ -254,6 +254,7 @@
 * [**基础**](./iOS/Swift/基础.md)
 * [**关键字**](./iOS/Swift/关键字.md)
 * [**UI组件**](./iOS/Swift/UI组件.md)
+* [**动画**](./iOS/Swift/动画.md)
 * [**数据**](./iOS/Swift/数据.md)
 * [**隐私清单**](./iOS/Swift/隐私清单.md)
 * [包管理](./iOS/Swift/包管理.md)
