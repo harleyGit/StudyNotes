@@ -1,4 +1,6 @@
 > <h1 id=""></h1>
+- [**基础**](#基础)
+	- [立即执行闭包](#立即执行闭包)
 - [**RxSwift使用**](#RxSwift使用)
 	- [Observer](#Observer)
 		- [Binder关于UI绑定](#Binder关于UI绑定)
@@ -21,6 +23,32 @@
 - [**UI动画效果**](#UI动画效果)
 	- [弹窗隐藏](#弹窗隐藏)
 	- [CAKeyframeAnimation详解](./动画.md#CAKeyframeAnimation详解)
+
+
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="基础">基础</h1>
+
+<br/><br/><br/>
+
+> <h2 id="立即执行闭包">立即执行闭包</h2>
+
+```
+Swift中这个 
+
+lazy var path = { AClass.Path() }()
+
+什么语法？ 怎么回事
+```
+
+[请看这里](./../Swift/基础.md#立即执行闭包)
+
 
 
 

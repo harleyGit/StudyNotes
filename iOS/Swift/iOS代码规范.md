@@ -6,6 +6,7 @@
 		- [函数参数长要换行](#函数参数长要换行)
 		- [类后空一行再写代码](#类后空一行再写代码)
 		- [属性懒加载多行调用方法](#属性懒加载多行调用方法)
+		- [Project代码Review改正](#Project代码Review改正)
 	- [注释规范](#注释规范)
 		- [标志注释MARK](#标志注释MARK)
 		- [枚举类别说明注释](#枚举类别说明注释)
@@ -163,6 +164,70 @@ var bufferSize: GLsizeiptr {}
 
 - 套了两层无意义，可以直接赋值
 - 这么长的内容，会大大降低可读性，不适合在属性区域； 建议通过函数封装后调用；
+
+
+<br/><br/><br/>
+
+> <h2 id="Project代码Review改正">Project代码Review改正</h2>
+
+
+<br/><br/>
+
+- **代码量短没必要换行写**
+
+```
+/// 图片名
+var picName: String {
+    picId + ".jpg"
+}
+
+// 修正后
+var picName: String { picId + ".jpg"}
+```
+
+
+<br/><br/>
+
+- **没有过多逻辑直接返回**
+
+```
+func deleteData(item: Object) -> Bool {
+    self.items.removeAll { $0.picId == item.picId }
+    let isSuccess = Repo.deleteImageFromDisk(item: item)
+            
+    return isSuccess
+}
+```
+
+修改为：
+
+```
+func deleteData(item: Object) -> Bool {
+    self.items.removeAll { $0.picId == item.picId }
+            
+    return Repo.deleteImageFromDisk(item: item)
+}
+```
+
+
+<br/><br/>
+
+- **guard的规范改正**
+
+```
+guard let rfObject = Expression.Object(JSON: dicData) else { return nil }
+```
+
+修改为：
+
+```
+guard 
+    let rfObject = BPExpression.RFObject(JSON: dicData)
+else { return nil }
+```
+
+要求`guard`和`‌else { return nil }`独占一行，中间每有一个独占一行
+
 
 <br/><br/><br/>
 
