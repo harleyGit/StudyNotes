@@ -24,6 +24,7 @@
 	- [dev合并到release](#dev合并到release)
 	- [版本打Tag](#版本打Tag)
 - [**SourceTree工作流**](#SourceTree工作流)
+	- [.stCommitMsg设置提交内容模版](#.stCommitMsg设置提交内容模版)
 	- [新建分支](#新建分支)
 	- [远程检出分支](#远程检出分支)
 	- [删除分支](#删除分支)
@@ -628,11 +629,7 @@ $ git pull --rebase
 
 &emsp; 更准确的说是，git pull 相当于: 先执行git fetch + 指定参数，然后执行git merge 命令将检索到的分支合并到当前分支。
 
-
-
-<br/>
-<br/>
-<br/>
+<br/><br/><br/>
 
 
 > <h2 id='忽略文件配置'>忽略文件配置</h2>
@@ -927,11 +924,7 @@ lint/tmp/
 
 &emsp; 清理该文件夹有个小缺点：清理之后构建首次构建项目的时候可能会增加构建时间。但是这不影响正常使用。而且还可以回收更多自由的空间内存。
 
-
-
-<br/>
-<br/>
-<br/>
+<br/><br/><br/>
 
 问题: UserInterfaceState.xcuserstate 文件添加进忽略文件,还是无法消除.
 
@@ -962,20 +955,7 @@ git push
 ```
 
 
-
-
-<br/>
-<br/>
-
-
-
-
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -983,6 +963,30 @@ git push
 > <h1 id='工作流指令'>工作流指令</h1>
 
 <br/>
+
+
+<br/><br/><br/>
+
+> <h2 id=".stCommitMsg设置提交内容模版">.stCommitMsg设置提交内容模版</h2>
+
+**.stCommitMsg** 是Mac用户目录下的一个隐藏文件夹，在里面可以设置提交内容模版，如下：
+
+```
+
+【Feature】
+
+【Add】
+
+【Optimize】
+
+【Bugfix】
+
+【Bever-Bugfix-BP-xxxx】
+【产生原因】
+【解决方案】
+【影响范围】该bug 
+【缺陷分析】基本场景漏测
+```
 
 
 > <h2 id='新功能分支'>新功能分支</h2>
