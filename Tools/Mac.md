@@ -45,6 +45,7 @@
 		- [Xcode清理垃圾文件](https://www.jianshu.com/p/4540d34431db)
 		- [控制台调试](https://www.jianshu.com/p/75688613c6f4)
 - [**开发必备工具**](#开发必备工具)
+	- [MySQL使用](#MySQL使用)
 	- [Charles使用](#Charles使用)
 		- [Mock本地json数据](#Mock本地json数据)
 	- [Wireshark🦈SIP](#Wireshark🦈SIP)
@@ -2101,14 +2102,223 @@ ffmpeg -i 'https://video.twimg.com/amplify_video/1689197552615444480/pl/oZLnz_7Q
 <br/>
 
 ***
-<br/>
-
+<br/><br/><br/>
 
 ># <h1 id='开发必备工具'>[开发必备工具](https://juejin.cn/post/7088473126996181028)</h1>
 
 
+<br/><br/><br/>
+
+> <h2 id="MySQL使用">MySQL使用</h2>
+
+<br/><br/><br/>
+
+> <h2 id="brew安装mysql">brew安装mysql</h2>
+
+
+- **卸载现有的 MySQL：**
+
+```
+brew uninstall mysql
+```
+
+
+- **重新安装：**
+
+```
+brew install mysql
+```
+
+
+- **启动服务：**
+
+```
+brew services start mysql
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="mysql的配置">mysql的配置</h2>
+
+<br/><br/>
+
+
+
+![go.0.0.37.png](./../Pictures/go.0.0.37.png)
+
+**my.cnf文件的配置**
+
+```
+[mysqld]
+
+bind-address = 127.0.0.1
+
+port = 3306
+
+basedir=/usr/local/mysql
+
+datadir=/usr/local/mysql/data
+```
+
+
+<br/><br/>
+
+**.bash_profile文件中的配置：**
+
+```
+#MySQL环境配置(安装教程:https://blog.csdn.net/weixin_46019681/article/details/125509454，配置:https://www.cnblogs.com/onecyl/p/17616767.html 密码：12345678)
+# 启动mysql的环境变量地址（mysql -u root -p 密码：hh109）
+export PATH=$PATH:/usr/local/mysql/bin
+# 是为了简写mysql.server脚本的路径，方便启动
+export PATH=$PATH:/usr/local/mysql/support-files
+#MySQL环境配置END
+```
+
+
+<br/><br/><br/>
+
+> <h2 id="命令启动mysql服务">命令启动mysql服务</h2>
+
+- **如果你希望检查 MySQL 的运行状态，可以使用以下命令：**
+
+```
+sudo /usr/local/mysql/support-files/mysql.server status
+```
+
+若不是在运行状态，则需要启动mysql服务！！
 
 <br/>
+
+- **启动mysql**
+
+```
+sudo /usr/local/mysql/support-files/mysql.server start
+```
+
+<br/>
+
+- **停止mysql服务**
+
+```
+sudo /usr/local/mysql/support-files/mysql.server stop
+```
+
+<br/><br/>
+
+因为也配置了启动mysql的环境变量（`‌export PATH=$PATH:/usr/local/mysql/support-files
+`），若以也可以这样启动：
+
+```
+mysql -h 127.0.0.1  -P 3306 -u root -p
+
+// 或者（在使用下面的命令执行时要确定是否mysql启动起来了）
+// 查看服务状态： sudo /usr/local/mysql/support-files/mysql.server status
+// 若是mysql没有启动，启动： sudo mysql.server start
+sudo mysql -u root -p
+```
+
+<br/><br/><br/>
+
+> <h2 id="密码错误设置新密码">密码错误设置新密码</h2>
+
+确认提供的 root 用户密码是否正确。默认安装 MySQL 后，可能有以下几种情况：
+
+- **MySQL 初次安装：**
+
+如果你未设置密码，尝试使用空密码登录：
+
+```
+/usr/local/mysql/bin/mysql -u root -p
+```
+
+直接按回车（不输入密码）。
+
+<br/>
+
+- **通过 Homebrew 安装的 MySQL：**
+
+初始密码可能在安装日志中给出。查看日志：
+
+```
+cat /usr/local/var/mysql/*.err | grep 'temporary password'
+```
+
+使用该密码登录后，再重置密码。
+
+
+<br/><br/><br/>
+
+> <h2 id="重置root密码">重置 root 密码</h2>
+
+
+如果忘记了密码，可以通过以下步骤重置 root 密码：
+
+- **(1) 停止 MySQL 服务**
+
+首先停止 MySQL 服务：
+
+```
+sudo /usr/local/mysql/support-files/mysql.server stop
+```
+
+<br/>
+
+- **(2) 以安全模式启动 MySQL**
+
+启动 MySQL 到安全模式（跳过权限验证）：
+
+```
+sudo /usr/local/mysql/bin/mysqld_safe --skip-grant-tables &
+```
+
+<br/>
+
+- **(3) 登录 MySQL**
+
+新开一个终端窗口，在安全模式下登录不需要密码：
+
+
+```
+/usr/local/mysql/bin/mysql -u root
+```
+
+<br/>
+
+- **(4) 更改密码**
+
+选择 MySQL 系统数据库：
+
+```
+USE mysql;
+```
+
+对于 MySQL 8.0 或更高版本，重置 root 用户密码（将 new_password 替换为你的新密码）：
+
+```
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password';
+```
+
+刷新权限：
+
+```
+FLUSH PRIVILEGES;
+```
+
+退出 MySQL：
+
+```
+EXIT;
+```
+
+<br/>
+
+**忘记密码后**还有一种比上述更简单的方法，如下图：
+
+![go.0.0.38.png](./../../Pictures/go.0.0.38.png)
+
+
+<br/><br/><br/>
 
 >## <h2 id='Charles使用'>[Charles 使用](https://www.jianshu.com/p/633ac6221028)</h2>
 
@@ -2141,15 +2351,11 @@ ffmpeg -i 'https://video.twimg.com/amplify_video/1689197552615444480/pl/oZLnz_7Q
 - [抓取真机数据](https://blog.csdn.net/yulianlin/article/details/79095413)
 
 
-
-<br/>
-<br/>
+<br/><br/>
 
 ># <h2 id='MacVim'>[MacVim](https://www.jianshu.com/p/923aec861af3)</h2>
 
-
-<br/>
-<br/>
+<br/><br/>
 
 
 ># <h2 id='微信小助手扩展'>[微信小助手扩展](https://github.com/harleyGit/WeChatExtension-ForMac)</h2>
@@ -2166,18 +2372,13 @@ omw -n
 omw -g
 ```
 
-
-<br/>
-<br/>
+<br/><br/>
 
 - **2.自动卸载**
 
 `bash <(curl -sL https://git.io/JUO6r)`
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 
 ># <h2 id='美区AppleID'>[美区AppleID](https://www.ifanr.com/app/1367245)</h2>
