@@ -1,11 +1,12 @@
-<h3>
+></h3>
 - [**‌go-colly框架**](#go-colly框架)
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
 	- [将抓取的网页内容存储在文件中](#将抓取的网页内容存储在文件中)
 - [**‌gin框架**](#‌gin框架)
 	- [把爬虫程序设置成Web服务](#把爬虫程序设置成Web服务)
-</h3>
+- [**‌cellnet网络库**](#cellnet网络库)
+
 
 <br/>
 
@@ -525,6 +526,40 @@ Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-
 打开默认浏览器（比如：Safari浏览器），访问“本机IP：端口”​（即127.0.0.1:9200）​，即可看到如图19.10所示的提示信息。这段程序在当前项目目录下生成news.txt文件。单击news.txt，即可看到抓取的网页内容，如图所示。
 
 ![go.0.0.57.png](./../Pictures/go.0.0.57.png)
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="cellnet网络库">cellnet网络库</h1>
+
+cellnet的设计理念是：高性能、简单、方便、开箱即用，希望开发者能使用cellnet迅速开展业务开发，而无须为底层性能调优及架构扩展而担忧。
+
+[cellnet网络库](https://github.com/davyxu/cellnet)多个版本的迭代，无论是作为初学者学习的范例，还是作为私用、商用项目的基础构建乃至核心技术层已经在业内广受了解及使用。
+
+- **主要使用领域：**
+	- 游戏服务器
+	- 方便定制私有协议，快速构建逻辑服务器、网关服务器、服务器间互联互通、对接第三方SDK、转换编码协议等
+	- ARM设备
+	- 设备间网络通讯
+	- 证券软件
+	- 内部RPC
+
+<br/><br/><br/>
+> <h2 id="cellnet网络库的流程及架构">cellnet网络库的流程及架构</h2>
+
+- cellnet的主要处理流程和组件由下面几个部分组成。
+	- Socket连接管理：cellnet网络库使用连接器和接受器(Connector、Acceptor)管理Socket连接。
+	- 会话(Session)：客户端和服务器连接使用会话(Session)处理收发包流程。收发包的流程将事件通过事件回调(cellnet.EventFunc)派发。
+	-  包处理(packet)：cellnet中的packet包处理会话收发流程派发的事件，实现变长封包的解析、处理和收发。
+	-  编码器：用户的封包使用编码器(Codec)负责原始封包的字节数组和用户消息间的转换。
+	-  消息队列：可以将收到的消息按顺序排队并提供给用户进行处理。
+	-  消息元信息(MessageMeta)：为所有的系统提供静态的消息扩展信息，如消息的ID、编码器、创建方法等。
+
+![go.0.0.58.png](./../Pictures/go.0.0.58.png)
+
+
+
 
 
 
