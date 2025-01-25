@@ -2,6 +2,7 @@
 - [**‌go-colly框架**](#go-colly框架)
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
+- [**‌gin框架**](#‌gin框架)
 </h3>
 
 <br/>
@@ -396,12 +397,133 @@ func testCheckFileExist(filename string) bool {
 
 ![go.0.0.56.png](./../Pictures/go.0.0.56.png)
 
-<br/><br/>
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="‌gin框架">‌gin框架</h1>
+
+获取gin框架的包：
+
+```
+go get github.com/gin-gonic/gin
+```
+
+<br/><br/><br/>
 > <h2 id="把爬虫程序设置成Web服务">把爬虫程序设置成Web服务</h2>
 
 把爬虫程序设置成Web服务。具体修改如下：运行修改后的爬虫程序，打开浏览器，访问“本机IP：端口”​；当在网页上看到提示信息（​“已经把http://news.baidu.com的网页内容全部抓取下来，请查看当前项目目录下的news.txt文件！”​）时，说明已经把http://news.baidu.com的网页内容全部抓取下来，并存储在当前项目目录下的news.txt文件中。
 
 为了满足上述的修改要求，需要下载第三方包gin。如图19.8所示，下载gin包的步骤如下。
+
+```
+// 把爬虫程序设置成Web服务
+func testCrawlerAppointWebpageAndSaveTxtV2() {
+	// 初始化引擎
+	engine := gin.Default()
+	// 注册一个路由和处理函数
+	engine.Any("/", WebRoot)
+	// 绑定端口
+	engine.Run(":9200")
+}
+// 处理路由函数
+func WebRoot(context *gin.Context){
+	// 调用 testCrawlerAppointWebpageAndSaveTxt()函数
+	testCrawlerAppointWebpageAndSaveTxt("https://news.baidu.com")
+	// 设置网页上的文本内容
+	context.String(http.StatusOK, "已经把http://news.baidu.com 的网页内容全部抓取下来\n 请查看当前项目目录下的news.txt文本文件！")
+}
+
+// 存储爬虫文件
+func testCrawlerAppointWebpageAndSaveTxt(urls string) {
+	// 创建 Collector 对象
+	c := colly.NewCollector()
+	/* 
+	* 是否抓取指定链接的网页内容
+	* 初始设置为不抓取指定链接的网页内容
+	 */
+	visited := false
+	// 使用 Collector 对象抓取 URL
+	c.OnResponse(func (r *colly.Response)  {
+		if !visited {
+			visited = true
+			r.Request.Visit("/get?q=2")
+		}
+	})
+
+	// 文件的创建和持续写入
+	filename := "news.txt"	// 文件名
+	var f *os.File
+	var fileErr error 
+	if testCheckFileExist(filename) {	// 如果文件存在
+		f, fileErr = os.OpenFile(filename, os.O_APPEND | os.O_WRONLY, 0666)	// 打开文件
+		if fileErr != nil {
+			fmt.Printf("❌ 打开文件 news.txt 失败：%v\n", fileErr)
+		}
+	} else {
+		f,_ = os.Create(filename)	// 创建文件
+		fmt.Println("🍎 新建文件 news.txt")
+
+	}
+	defer f.Close()	// 关闭文件
+	write := bufio.NewWriter(f)
+	defer write.Flush()
+
+	// 对指定链接网页内容进行处理
+	c.OnHTML("a[href]", func (e *colly.HTMLElement)  {
+		href := e.Text	// 获取指定链接的网页内容
+		write.WriteString("🍒 "+href+"\n")
+		fmt.Println("🍎 网页内容：",href)	// 打印指定链接的网页内容
+	})
+
+
+	c.Visit(urls)	//访问指定链接
+}
+/* 检测文件是否存在
+* fileName 文件名
+ */
+func testCheckFileExist(filename string) bool {
+	var exist = true
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		exist = false
+	}
+	return exist
+}
+```
+
+**Log:**
+
+```
+ganghuang@GangHuangs-MacBook-Pro TestCrawlerBaidu % go run test_crawler_baidu.go
+ganghuang@GangHuangs-MacBook-Pro TestCrawlerBaidu % go run test_crawler_baidu.go
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /                         --> main.WebRoot (3 handlers)
+[GIN-debug] POST   /                         --> main.WebRoot (3 handlers)
+[GIN-debug] PUT    /                         --> main.WebRoot (3 handlers)
+[GIN-debug] PATCH  /                         --> main.WebRoot (3 handlers)
+[GIN-debug] HEAD   /                         --> main.WebRoot (3 handlers)
+[GIN-debug] OPTIONS /                         --> main.WebRoot (3 handlers)
+[GIN-debug] DELETE /                         --> main.WebRoot (3 handlers)
+[GIN-debug] CONNECT /                         --> main.WebRoot (3 handlers)
+[GIN-debug] TRACE  /                         --> main.WebRoot (3 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :9200
+```
+
+<br/>
+
+此时，Mac系统弹出如图19.9所示的Mac安全警报。选中“公用网络”复选框，单击“允许访问”按钮。
+
+打开默认浏览器（比如：Safari浏览器），访问“本机IP：端口”​（即127.0.0.1:9200）​，即可看到如图19.10所示的提示信息。这段程序在当前项目目录下生成news.txt文件。单击news.txt，即可看到抓取的网页内容，如图所示。
+
+![go.0.0.57.png](./../Pictures/go.0.0.57.png)
+
 
 
 
