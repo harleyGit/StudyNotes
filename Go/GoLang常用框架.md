@@ -6,6 +6,9 @@
 - [**‌gin框架**](#‌gin框架)
 	- [把爬虫程序设置成Web服务](#把爬虫程序设置成Web服务)
 - [**‌cellnet网络库**](#cellnet网络库)
+- [**‌图表库——go-chart**](#图表库——go-chart)
+- [**图表库go-echarts**](#图表库go-echarts)
+- [**packr库处理模板引擎内的文件**](#packr库处理模板引擎内的文件)
 
 
 <br/>
@@ -557,6 +560,52 @@ cellnet的设计理念是：高性能、简单、方便、开箱即用，希望�
 	-  消息元信息(MessageMeta)：为所有的系统提供静态的消息扩展信息，如消息的ID、编码器、创建方法等。
 
 ![go.0.0.58.png](./../Pictures/go.0.0.58.png)
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="图表库——go-chart">图表库——go-chart</h1>
+
+市面上有诸多的开源图表库，比如百度开源的ECharts、阿里开源的BizCharts、Chart.js、HighCharts、G2、D3、Google出品的Google Charts等，这些开源的库在兼容性、拓展性、支持图表的种类、交互等层面各有优缺点，具体的选择要结合具体的情况（比如开发者选择的技术栈、需要支持的图表种类等各方面）​。
+
+
+参照之前的思想，本节将基于chart.js构建一个完整的图表库go-chart，支持折线图、柱状图、饼图、雷达图、散点图、气泡图等。
+
+[完整代码地址](https://github.com/goecharts/go-chart)
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="图表库go-echarts">[图表库go-echarts](https://github.com/go-echarts/go-echarts)</h1>
+
+基于ECharts图表库逐步讲解如何构建图表，整体的核心思想是：
+
+- 明确ECharts如何构建图表。
+- 延伸到使用模板引擎加载动态数据的方式构建图表。
+- 抽取公共的结构体，方便组合复用。
+- 各图表类型对象实现定义的接口(Interface)。
+
+当然，还有很多细节没有涉及，但是整体思想皆是如此，如果想基于ECharts构建更为丰富的图表类型，那么可以查看[go-echarts](https://github.com/go-echarts/go-echarts)，其中采用的思维方式是类似的，而实现的功能更加完善。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="packr库处理模板引擎内的文件">packr库处理模板引擎内的文件</h1>
+
+packr库能够比较优雅地处理模板引擎内的文件。
+
+**下载命令如下：**
+
+```
+go get -u github.com/gobuffalo/packr
+```
+
+
 
 
 
