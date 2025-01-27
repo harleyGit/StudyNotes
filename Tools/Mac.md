@@ -1,6 +1,8 @@
 > <h1 id=''></h1>
 - [**相对路径**](#相对路径)
 - [**快捷键**](#快捷键)
+- [**终端**](#终端)
+	- [HTTPie-Web服务友好交互工具](#HTTPie-Web服务友好交互工具)
 - [**脚本构建**](#脚本构建)
 	- [AQG脚本构建](#AQG脚本构建)
 - [**💻终端命令**](#💻终端命令)
@@ -128,27 +130,155 @@
 
 ***
 <br/><br/>
-
 > <h1 id='快捷键'>快捷键</h1>
 
-- **锁屏：** `Command+Control+Q`
+| 作用效果 | 快捷键组合 |
+|:--|:--|
+| **锁屏：**  | `Command+Control+Q` |
+| **关机终端命令：** | `sudo halt` 或者 `sudo shutdown -h now` |
+| **重启终端命令:** | `sudo reboot` 或者 `sudo shutdown -r now` |
+| **休眠终端命令：** | `sudo shutdown -s now` |
+| **Finder显示隐藏文件:** | `Command + shift + “ . ”` |
+| **表情包快捷键:** | `Command + Control +空格键` |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
 
-- **关机终端命令：** `sudo halt` 或者 `sudo shutdown -h now`
 
-- **重启终端命令:** `sudo reboot` 或者 `sudo shutdown -r now`
-
-- **休眠终端命令：** `sudo shutdown -s now`
-
-- [x] **Finder显示隐藏文件:** `Command + shift + “ . ”`
-
-- [ ] **表情包快捷键:** `Command + Control +空格键`
 
 
 <br/>
 
 ***
 <br/><br/><br/>
+> <h1 id="终端">终端</h1>
 
+<br/><br/><br/>
+> <h2 id="HTTPie-Web服务友好交互工具">HTTPie-Web服务友好交互工具</h2>
+
+
+- **HTTPie 是什么？**
+
+HTTPie 是一个功能强大且用户友好的 **HTTP 客户端工具**，旨在帮助开发者与 Web 服务进行交互。与传统的 `curl` 或 `wget` 等工具相比，它更加人性化和易于使用，主要目标是让开发者通过命令行更轻松地发送 HTTP 请求和查看响应。
+
+<br/>
+
+- **主要功能：**
+	- 直观的请求和响应格式。
+	- 支持发送各种类型的 HTTP 请求（GET、POST、PUT、DELETE 等）。
+	- 简单的语法，自动格式化 JSON。
+	- 支持 HTTPS、身份验证和自定义请求头。
+	- 支持命令自动补全和高亮输出。
+
+<br/>
+
+- **如何安装 HTTPie**
+
+- 1. **通过包管理器安装**
+
+- **macOS**：
+```bash
+brew install httpie
+```
+
+- 2. **通过 Python 安装**
+
+HTTPie 是基于 Python 开发的，因此也可以通过 `pip` 安装：
+
+```bash
+pip install httpie
+```
+
+<br/>
+
+- **如何使用 HTTPie**
+
+- **基础语法**
+
+HTTPie 的命令格式如下：
+
+```bash
+http [METHOD] URL [HEADERS] [BODY]
+```
+
+---
+
+- **示例用法**
+
+1. **发送 GET 请求**
+
+```bash
+http https://jsonplaceholder.typicode.com/posts/1
+```
+输出：
+
+```json
+{
+    "userId": 1,
+    "id": 1,
+    "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+    "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum..."
+}
+```
+
+2. **发送 POST 请求**
+
+```bash
+http POST https://jsonplaceholder.typicode.com/posts title="Test Post" body="This is a test post."
+```
+
+3. **发送带自定义头的请求**
+
+```bash
+http GET https://jsonplaceholder.typicode.com/posts/1 "Authorization:Bearer token123"
+```
+
+4. **使用 JSON 数据**
+
+```bash
+http POST https://jsonplaceholder.typicode.com/posts Content-Type:application/json title="New Title" body="JSON Body"
+```
+
+5. **快速查看响应头**
+使用 `--headers` 查看响应头而不显示正文：
+
+```bash
+http --headers https://jsonplaceholder.typicode.com/posts/1
+```
+
+6. **显示请求头**
+
+使用 `--verbose` 查看请求和响应的头信息：
+
+```bash
+http --verbose GET https://jsonplaceholder.typicode.com/posts/1
+```
+
+---
+
+- **HTTPie 的优点**
+	- **清晰的输出**：自动格式化和高亮 JSON 响应。
+	- **简洁的命令**：避免冗长复杂的命令语法。
+	- **跨平台**：支持 Windows、macOS 和 Linux。
+	- **丰富的扩展性**：可以通过插件扩展功能，例如 OAuth 支持。
+
+- **对比 cURL**
+
+HTTPie 的优势在于更易读和人性化，适合日常开发和调试。而 `curl` 提供更底层和复杂的选项，适合需要更多控制的场景。
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
 > <h1 id="脚本构建">脚本构建</h1>
 
 [Shell使用快捷键运行](https://juejin.cn/post/6844903989738242062)

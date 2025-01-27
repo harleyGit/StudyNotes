@@ -1,4 +1,4 @@
-></h3>
+></h2>
 - [**‌go-colly框架**](#go-colly框架)
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
@@ -9,6 +9,7 @@
 - [**‌图表库——go-chart**](#图表库——go-chart)
 - [**图表库go-echarts**](#图表库go-echarts)
 - [**packr库处理模板引擎内的文件**](#packr库处理模板引擎内的文件)
+- [**‌GJSON解析JSON数据**](#‌GJSON解析JSON数据)
 
 
 <br/>
@@ -604,6 +605,21 @@ packr库能够比较优雅地处理模板引擎内的文件。
 ```
 go get -u github.com/gobuffalo/packr
 ```
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="GJSON解析JSON数据">GJSON解析JSON数据</h1>
+
+GJSON是一个更便捷的解析JSON数据的第三方库，支持链式操作，能让读者非常方便地获取任意数据。
+
+**下载**
+
+```
+go get -u github.com/tidwall/gjson
+```
+
 
 
 
