@@ -3,8 +3,7 @@
 - [**React知识点**](./../React/React知识点.md)
 
 <br/><br/><br/>
-
-># <h2 id=''>[《Flutter实战·第二版》](https://book.flutterchina.club/)</h2>
+># <h1 id=''>[《Flutter实战·第二版》](https://book.flutterchina.club/)</h1>
 - [**原生**](#原生)
 	- [如何与iOS和Android通信](#如何与iOS和Android通信)
 - [**类**](#类)
@@ -13,6 +12,8 @@
 	- [mixin、extends、implement之间的关系?](#mixinextendsimplement之间的关系)
 	- [mixin](#mixin)
 		- [mixin怎么指定异常类型](#mixin怎么指定异常类型)
+			- [mixin方法中手动抛出异常](#mixin方法中手动抛出异常) 
+			- [结合泛型限制异常类型](#结合泛型限制异常类型)
 - [**Widget组件**](#Widget组件)
 	- [状态](#状态)
 		- [createState方法什么时候调用?state里为什么可以直接获取到widget对象?](#createState方法什么时候调用?state里为什么可以直接获取到widget对象?)
@@ -3724,6 +3725,6 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 
 
 ---
-注释: 0,75089 SHA-256 c3c4cce0b3e94aca1803626400da0d23  
-@HuangGang <harley.smessage@icloud.com>: 16584 16863 16882,2 16899 16938 16940,10 17410,10 17423,2 17426,3 17456,3 17517,3 17599 17630 17632,2 17701,3 18053,4 18058,4 18065,2 18068,3 18134,3 18206,3  
+注释: 0,75159 SHA-256 03994c0c240e66df6f5807c63e5b8de5  
+@HuangGang <harley.smessage@icloud.com>: 153 214 447,7 468,3 485 487,7 504,3 517 16654 16933 16952,2 16969 17008 17010,10 17480,10 17493,2 17496,3 17526,3 17587,3 17669 17700 17702,2 17771,3 18123,4 18128,4 18135,2 18138,3 18204,3 18276,3  
 ...
