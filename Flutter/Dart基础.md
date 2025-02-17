@@ -1,7 +1,6 @@
 
 ># [Flutter实战·第二版](https://book.flutterchina.club/)</h2>
 ># [Dart 编程语言概览](https://www.dartcn.com/guides/language/language-tour)
-
 - [**变量**](#变量)
 	- [dynamic和Object类型](#dynamic和Object类型)
 	- [Final 和 Const](#Final和Const) 
@@ -16,7 +15,8 @@
 - [**空安全**](#空安全)
 - [**关键字**](#关键字)
 	- [@required](#@required)
-	- [mixin](#mixin)
+	- [Mixin](#Mixin)
+	- [mixin和on的结合使用](#mixin和on的结合使用)
 	- [with](#with)
 	- [final和const](#final和const)
 - [**`类的方法`**](#类的方法)
@@ -27,6 +27,7 @@
 	- [命名可选参数&可选参数](#命名可选参数&可选参数)
 		- [命名可选参数](#命名可选参数)
 		- [可选参数](#可选参数)
+	- [模拟重载方法](#模拟重载方法)
 - [**‌函数**](#函数)
 	- [函数作为参数](#函数作为参数)
 	- [匿名函数](#匿名函数)
@@ -585,14 +586,68 @@ const Scrollbar({Key key, @required Widget child})
 
 
 
+<br/><br/>. 
+> <h2 id='Mixin'>Mixin</h2>
+
+Dart 是不支持多继承的，Mixin 是一种允许一个类将其他类的功能添加到自己身上的机制, 而是将一个类的功能“混合”到另一个类中。这样，你可以共享代码，同时避免复杂的继承体系。
+
+<br/>
+
+- **Mixin 与 继承的区别:**
+	- **继承：** 继承是建立在类之间的父子关系上，一个类继承另一个类，获得它的方法和属性。
+	- **Mixin：** Mixin 是一种把功能“混合”到类中的方式。它没有类层次结构，只是将某些方法和功能添加到目标类中，不创建额外的父类/子类关系。
+
+<br/>
+
+- **Mixin 与 类之间的关系**
+	- Mixin 可以混合多个类的功能：你可以将多个 Mixin 混合到一个类中，这样类就能继承多个不同类的功能，而不必使用复杂的继承层次。
+	- Mixin 不能有构造函数：Mixin 本身不能定义构造函数，它只能包含方法和属性。
+
+<br/>
+
+- **创建一个 Mixin**
+
+可以在 Mixin 中定义一些方法和属性，这些方法和属性可以被其他类所使用。
+
+```dart
+mixin CanRun {
+  void run() {
+    print("Running...");
+  }
+}
+```
+
+**将 Mixin 应用于类**
+
+类可以使用 with 关键字来应用一个或多个 Mixin。通过 with 关键字，目标类可以使用 Mixin 中定义的所有方法和属性。
+
+```dart
+class Animal {}
+
+class Dog extends Animal with CanRun {
+  void bark() {
+    print("Barking...");
+  }
+}
+
+void main() {
+  var dog = Dog();
+  dog.bark();  // 输出 "Barking..."
+  dog.run();   // 输出 "Running..."
+}
+
+```
+
+Dog 类通过 with CanRun 使用了 CanRun Mixin。这样，Dog 类就获得了 CanRun 中定义的 run() 方法。
+
+<br/>
+
+&emsp; 我们定义了几个 mixin，然后通过 with 关键字将它们组合成不同的类。有一点需要注意：如果多个mixin 中有同名方法，with 时，会默认使用最后面的 mixin 的，mixin 方法中可以通过 super 关键字调用之前 mixin 或类中的方法。
+
+注意：一个类可以使用多个 mixin，只需要用逗号分隔即可。使用 mixin 的一个主要好处是可以将代码重用和功能添加分离开，使得代码更加模块化和可维护。
+
+
 <br/><br/>
-
-
-> <h2 id='mixin'>mixin</h2>
-
-Dart 是不支持多继承的，但是它支持 mixin，简单来讲 mixin 可以 “组合” 多个类，我们通过一个例子来理解。
-
-定义一个 Person 类，实现吃饭、说话、走路和写代码功能，同时定义一个 Dog 类，实现吃饭、和走路功能：
 
 ```
 class Person {
@@ -619,7 +674,7 @@ mixin Code {
   }
 }
 
-// 使用 mixin 的类
+// 仅仅使用Mixin中混合的方法
 class Dog with Eat, Walk{
 	void doSomething() {
     // 在这里使用 mixin 中定义的方法
@@ -628,8 +683,10 @@ class Dog with Eat, Walk{
   }
 }
 
-///Man 类继承自 Person 类。这意味着 Man 类会继承 Person 类中的所有成员（字段和方法）。
-///
+/** 多继承
+ * Man 类继承自 Person 类。这意味着 Man 类会继承 Person 类中的所有成员（字段和方法）。
+ * 然后使用Mixin混合方法
+*/
 class Man extends Person with Eat, Walk, Code{}
 
 
@@ -639,20 +696,17 @@ class Man extends Person with Eat, Walk, Code{}
 void main() {
   // 创建一个 Dog 的实例
   var dogObject = Dog();
-
   // 调用 Dog 中的方法，这个方法实际上是 mixin 中定义的
   dogObject.doSomething();
+  
+  
+  var oldMan = Man()
+  oldMan.say() // 类中的方法
+  oldMan.eat() // mixin中的方法
+  oldMan.walk() // mixin中的方法
+  oldMan.code() // mixin中的方法
 }
 ```
-
-
-&emsp; 我们定义了几个 mixin，然后通过 with 关键字将它们组合成不同的类。有一点需要注意：如果多个mixin 中有同名方法，with 时，会默认使用最后面的 mixin 的，mixin 方法中可以通过 super 关键字调用之前 mixin 或类中的方法。
-
-注意：一个类可以使用多个 mixin，只需要用逗号分隔即可。使用 mixin 的一个主要好处是可以将代码重用和功能添加分离开，使得代码更加模块化和可维护。
-
-
-<br/>
-<br/>
 
 **疑问:** 可以理解成Person类使用了 Eat、Walk 和 Code 三个 mixin，通过 with Eat, Walk, Code 的方式,然后Man类继承自Person类吗?
 
@@ -665,19 +719,217 @@ void main() {
 
 这样的设计允许你在不修改 Person 类的情况下，通过 mixin 的方式为 Man 类添加额外的功能。
 
+<br/><br/>
+> <h3 id="mixin和on的结合使用">mixin和on的结合使用</h3>
 
+在 Dart（Flutter）中，`on` 关键字用于**限制 Mixin 只能被特定类型的类使用**。这提供了更严格的类型约束，确保 Mixin 只能用于特定的基类或接口。
 
+<br/>
 
+- **1.`on` 关键字的作用**
 
+默认情况下，Mixin 可以被任何类使用。例如：
 
+```dart
+mixin CanRun {
+  void run() {
+    print("Running...");
+  }
+}
+
+class Person with CanRun {}  // ✅ 正常使用
+class Animal with CanRun {}  // ✅ 也可以使用
+```
+
+但是，在某些情况下，我们可能希望 Mixin 只能被某些特定的类（或子类）使用，比如只允许 `Animal` 的子类使用 `CanRun` Mixin。这时候，就可以用 `on` 关键字进行约束：
+
+```dart
+mixin CanRun on Animal {  // 只有 Animal 的子类才能使用
+  void run() {
+    print("Running...");
+  }
+}
+
+class Animal {}
+
+class Dog extends Animal with CanRun {}  // ✅ 允许
+
+class Car with CanRun {}  // ❌ 错误，Car 不是 Animal 的子类
+```
+
+这里 `on Animal` 限制了 `CanRun` Mixin 只能被 `Animal` 或其子类混合（`with`）。
+
+<br/>
+
+- **2.为什么要使用 `on` 关键字？**
+
+使用 `on` 关键字可以：
+- **限制 Mixin 的适用范围**，避免在不适合的类上使用 Mixin。
+- **访问基类的成员**，Mixin 只能访问其 `on` 限制的基类的属性和方法，而不能访问任意类的属性。
+
+例如：
+
+```dart
+mixin CanFly on Bird {
+  void fly() {
+    print('$name is flying!');
+  }
+}
+
+class Bird {
+  String name = "Unknown Bird";
+}
+
+class Sparrow extends Bird with CanFly {}
+
+void main() {
+  var sparrow = Sparrow();
+  sparrow.name = "Sparrow";
+  sparrow.fly();  // 输出：Sparrow is flying!
+}
+```
+
+如果不使用 `on`，`CanFly` Mixin 可能会被其他非 `Bird` 类型的类使用，从而导致 `name` 属性缺失的错误。
+
+<br/>
+- **3.Mixin `on` 关键字的使用规则**
+
+- `on` 关键字后面可以指定一个或多个基类：
+
+```dart
+mixin A on B, C { ... }
+```
+
+- Mixin 不能有构造函数，但可以访问 `on` 约束的类的 `super` 方法：
+
+假设我们有一个 `Animal` 基类，它有一个 `makeSound()` 方法。我们希望 `LoudAnimal` Mixin 可以增强 `makeSound()`，但仅适用于 `Animal` 的子类：
+
+```dart
+class Animal {
+  void makeSound() {
+    print("Animal sound");
+  }
+}
+
+mixin LoudAnimal on Animal {
+  void makeSound() {
+    super.makeSound(); // 调用 Animal 的 makeSound 方法
+    print("... but LOUDER!");
+  }
+}
+
+class Dog extends Animal with LoudAnimal {}
+
+void main() {
+  var dog = Dog();
+  dog.makeSound();
+}
+```
+
+**输出：**
+```
+Animal sound
+... but LOUDER!
+```
+
+这里 `LoudAnimal` Mixin 只能被 `Animal` 的子类使用，并且可以调用 `super.makeSound()`，在原方法的基础上添加功能。
+
+<br/>
+
+- **5.`on` 关键字与接口的区别**
+
+**`on` 关键字并不是接口，而是一种“约束”**。Mixin 不能单独实现接口，但它可以强制要求被用于某个基类。
+
+示例：
+```dart
+abstract class Swimmable {
+  void swim();
+}
+
+mixin CanSwim on Swimmable {
+  void swim() {
+    print("Swimming...");
+  }
+}
+
+class Fish extends Swimmable with CanSwim {} // ❌ Swimmable 不能被直接实例化
+```
+
+这里会报错，因为 `Swimmable` 只是接口（没有实现），而 Mixin 需要一个具体的类。正确的方式是让 `Swimmable` 变成一个普通类，或者提供默认实现：
+
+```dart
+abstract class Swimmable {
+  void swim() {
+    print("Default swimming...");
+  }
+}
+
+mixin CanSwim on Swimmable {
+  @override
+  void swim() {
+    super.swim();
+    print("Enhanced swimming...");
+  }
+}
+
+class Fish extends Swimmable with CanSwim {}
+
+void main() {
+  var fish = Fish();
+  fish.swim();
+}
+```
+
+**输出：**
+
+```
+Default swimming...
+Enhanced swimming...
+```
+
+<br/>
+
+- **6.总结**
+
+| 特性 | `mixin` | `mixin on` |
+|------|---------|------------|
+| **适用性** | 任何类都可以 `with` | 只能用于 `on` 限制的基类 |
+| **继承限制** | 没有限制 | 必须是 `on` 指定类的子类 |
+| **访问权限** | 不能访问基类方法 | 可以调用 `super` |
 
 
 <br/><br/>
-
 > <h2 id='with'>with</h2>
 
-- Mixins : 指能够将另一个或多个类的功能添加到您自己的类中，而无需继承这些类。
+- Mixin: 指能够将另一个或多个类的功能添加到您自己的类中，而无需继承这些类。
+	- with 关键字用于混入（mixin）一个或多个 Mixin，从而给类增加额外的功能，而不需要继承多个类（Dart 不支持多重继承）。
 - implements : 将一个类作为接口使用
+
+with 关键字通常用于将 Mixin 添加到类中。
+
+```dart
+mixin Logger {
+  void log(String message) {
+    print("Log: $message");
+  }
+}
+
+class MyClass with Logger {}
+
+void main() {
+  var obj = MyClass();
+  obj.log("Hello, Dart!");  // 输出：Log: Hello, Dart!
+}
+
+```
+
+- **在这里：**
+	- Logger 是一个 Mixin，它提供 log() 方法。
+	- MyClass 使用 with Logger，因此它可以调用 log() 方法。
+
+<br/>
+
+**项目实战中的方法：**
 
 ```
 class A {
@@ -749,8 +1001,7 @@ fun c => by d
 
 **疑问:d.a();为什么执行的是C类中的方法?**
 
-
-&emsp; 在给定的代码中，D 类继承了 A 类并混入了 C 类，因此 D 类中的 a() 方法将覆盖来自 A 类的 a() 方法。然而，在 C 类中也有一个名为 a() 的方法。
+&emsp; 在给定的代码中，`D类`继承了`A类`并混入了`C类`，因此`D类`中来自`C类的a()方法`将覆盖来自`A类的a()方法`。
 
 &emsp; 当调用 d.a(); 时，由于 Dart 中混入（with 关键字）的特性，它遵循以下原则：
 
@@ -760,21 +1011,14 @@ fun c => by d
 &emsp; 因此，在这段代码中，d.a(); 执行时打印的是 fun a => by c，因为 C 类中的 a() 方法覆盖了 A 类中的同名方法。
 
 
-<br/><br/><br/>
-
-***
 <br/>
 
+***
+<br/><br/><br/>
+> <h1 id='类的方法'>类的方法</h1>
 &emsp; **`Dart`** 中所有的类都继承自 **`Object`** 类。[Flutter 中文官方文档](https://book.flutterchina.club/chapter14/flutter_app_startup.html)
 
 <br/>
-
-> <h1 id='类的方法'>类的方法</h1>
-
-
-<br/>
-
-
 > <h2 id='构造方法'>构造方法</h2>
 
 ```
@@ -866,12 +1110,7 @@ flutter: <-----------------------------end------------------------------>
 ```
 
 
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='连缀书写'>连缀书写</h2>
 
 ```
@@ -1069,15 +1308,124 @@ Process finished with exit code 255
 ```
 
 
+<br/><br/><br/>
+> <h2 id="模拟重载方法">模拟重载方法</h2>
 
+**Dart不支持方法重载**
+
+
+- **如何在 Dart 中实现类似方法重载的效果？**
+
+虽然 Dart 不支持传统的**方法重载**，但是你可以通过以下方式实现类似的功能：
+
+- **1.使用可选参数（Optional Parameters）**
+Dart 支持函数的可选参数，可以使用 **命名参数** 或 **位置参数** 来让一个方法接受不同类型或数量的参数。
+
+示例 1：使用命名参数
+
+```dart
+class Example {
+  void printMessage({String? message, int? number}) {
+    if (message != null) {
+      print(message);
+    } else if (number != null) {
+      print(number);
+    } else {
+      print("No message or number provided.");
+    }
+  }
+}
+
+void main() {
+  Example example = Example();
+  
+  example.printMessage(message: "Hello, World!"); // 使用字符串参数
+  example.printMessage(number: 42); // 使用整数参数
+  example.printMessage(); // 不传参数
+}
+```
+
+在这个示例中，`printMessage` 方法有一个命名参数 `message` 和 `number`，你可以根据实际传入的参数来执行不同的逻辑。这就实现了类似方法重载的效果。
+
+<br/>
+
+**示例 2：使用位置参数**
+
+```dart
+class Example {
+  void printMessage([String? message, int? number]) {
+    if (message != null) {
+      print(message);
+    } else if (number != null) {
+      print(number);
+    } else {
+      print("No message or number provided.");
+    }
+  }
+}
+
+void main() {
+  Example example = Example();
+  
+  example.printMessage("Hello, World!"); // 使用字符串参数
+  example.printMessage(42); // 使用整数参数
+  example.printMessage(); // 不传参数
+}
+```
+
+在这个示例中，`printMessage` 使用了位置参数，参数的顺序决定了调用时的匹配。你可以传递任意数量的参数，但需要手动检查它们的类型。
+
+<br/>
+
+- **2.使用泛型（Generics）**
+
+通过使用泛型，你可以让一个方法接收不同类型的参数，而不需要重载方法。
+
+```dart
+class Example {
+  void printMessage<T>(T message) {
+    print(message);
+  }
+}
+
+void main() {
+  Example example = Example();
+
+  example.printMessage<String>("Hello, World!"); // 使用字符串
+  example.printMessage<int>(42); // 使用整数
+}
+```
+
+通过泛型，`printMessage` 方法变得更加灵活，能够接受不同类型的参数，并且类型
+会在调用时明确指定。
+
+<br/>
+
+- **3.使用函数重载风格的设计模式**
+虽然 Dart 不能直接支持传统的重载方式，但你可以使用 **函数式编程** 的一些技巧来模拟方法重载，尤其是通过不同类型的函数参数来进行区分。
+
+例如，利用 **函数类型** 和 **回调函数** 可以让你传递不同的实现来“模拟”重载的行为。
+
+```dart
+class Example {
+  void performAction(Function action) {
+    action();
+  }
+}
+
+void main() {
+  Example example = Example();
+  
+  example.performAction(() => print("Action with no parameters"));
+  example.performAction(() => print("Action with parameters"));
+}
+```
 
 
 <br/>
 
 ***
 <br/><br/><br/>
-
-
 > <h1 id='函数'>函数</h1>
 
 **Dart 是一门真正面向对象的语言， 甚至其中的函数也是对象，并且有它的类型 Function 。** 这也意味着函数可以被赋值给变量或者作为参数传递给其他函数。 也可以把 Dart 类的实例当做方法来调用。[Dart官方函数介绍](https://www.dartcn.com/guides/language/language-tour#%E5%87%BD%E6%95%B0)
@@ -2293,3 +2641,8 @@ plug.registrar = reg;
 
 
 
+
+---
+注释: 0,46539 SHA-256 dd78d52fb5f3338255809674679d27d0  
+@HuangGang <harley.smessage@icloud.com>: 493 501 507,35 10266,2 10279 10286 10343,2 10388,13 10414,3 10418,5 10426,3 10466,5 10477,3 10544,13 10571,2 10574,3 10645,3 10690 10692,11 10713,5 10755,10 10825,8 10845,3 10916,10 11133,6 11210,7 11447,6 11502 11565 11615 11663,2 11668,2 11672 11677,3 11681,2 11807,12 11873,20 12072,137 12211,4 12645,57 12792,5 12799,4 12819 13390,5 13397,4 13438,2 13478,2 13904,5 13910,4 13938 13964 14001 14603,5 14610,4 14632 15311 15362,5 15369,4 15380 15565,2 15648,4 15746 15773,10 15983,10 15997,2 16000,3 16034,3 16077,23 16984 16987 16991 16994 16999 17002 17006 17009 17011,5 17022 17028 17037 23632,2 23645,2 23648 24154,7 24162,2 24185 24506 24518,7 24526,2  
+...

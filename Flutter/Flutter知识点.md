@@ -114,21 +114,16 @@
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h1 id='原生'>原生</h1>
 
-
 <br/>
-
 >## <h2 id='如何与iOS和Android通信'>[如何与iOS和Android通信](https://juejin.cn/post/7012903456830652453)</h2>
 
 
 - **Flutter 通过 PlatformChannel 与原生进行交互，其中 PlatformChannel 分为三种：**
 
-	- 1).BasicMessageChannel：用于传递字符串和半结构化的信息。
+	- 1).BasicMessageChannel：用于传递字符串和半结构化的信息(常见的半结构化数据格式包括 JSON、XML 等)。
 		- 使用场景： 适用于简单的、双向的消息传递场景，可以传递任意数据类型。
 		- 传递方式： 通过 send 方法发送消息，并通过 Dart 的 setMessageHandler 方法设置消息处理器。可以用于双向通信，Dart 可以向原生发送消息，同时也能接收来自原生的消息。
 		- 例子： 用于传递简单的文本消息或其他数据，适合于没有明确的方法调用和回调的场景。
@@ -242,9 +237,7 @@ import Flutter
 
 ```
 	
-<br/>
-<br/>
-	
+<br/><br/>
 - 2).[MethodChannel](https://juejin.cn/post/7012905714418974728/)：用于传递方法调用。Flutter主动调用原生代码的方法，并获取相应的返回值。
 	- 使用场景： 适用于进行方法调用和获取返回值的场景。主要用于单向通信，Dart 调用原生方法，获取原生返回值。
 	- 传递方式： 使用 invokeMethod 方法调用原生方法，并通过原生代码中的 setMethodCallHandler 方法设置方法处理器，用于处理 Dart 传递过来的方法调用。
@@ -496,22 +489,16 @@ class StreamHandler: NSObject, FlutterStreamHandler {
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id=''></h2>
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id=''></h2>
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id=''></h2>
 
-<br/>
+
 
 
 
@@ -519,26 +506,15 @@ class StreamHandler: NSObject, FlutterStreamHandler {
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 > <h1 id='类'>类</h1>
 
-
-
 <br/>
-<br/>
-
-
-
 > <h2 id='函数支持重载吗'>函数支持重载吗</h2>
 
 Dart中函数是不支持重载的,原因请看下面:
 
 <br/>
-
-
 我们可以使用反证法，假设dart支持函数重载，那么可能就会有以下这段代码:
 
 ```
@@ -579,8 +555,14 @@ fun main(args: Array<String>) {
 
 
 
-<br/><br/>
+<br/>
 
+有没有方法可以实现**方法重载吗？**
+
+[看这里](./Dart基础.md#模拟重载方法)
+
+
+<br/><br/>
 >## <h2 id='函数里的参数是值传递还是引用传递'>[函数里的参数是值传递还是引用传递](https://juejin.cn/post/6931340267324702733#heading-8)</h2>
 
 这要分情况,当参数是一个对象的实例时时引用传递,当是一个值类型时是值传递.
@@ -663,22 +645,13 @@ void main() {
 ```
 
 
-
-
-
-
-
 <br/>
 
 ***
 <br/><br/>
-
-
 > <h1 id='关键字'>关键字</h1>
 
-
 <br/>
-
 > <h2 id='mixinextendsimplement之间的关系'>mixin、extends、implement之间的关系?</h2>
 
 
@@ -690,153 +663,110 @@ void main() {
 
 - 如果有一个类 A,你想让类B拥有A的API，但又不想拥有A里的实现，那么你就应该把A当做接口，类B implements 类A.
 
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id='mixin'>mixin</h2>
-
-
+<br/><br/>
+># <h2 id='mixin'>[mixin](./Dart基础.md#Mixin)</h2>
 首先mixin是一个定义类的关键字。直译出来是混入，混合的意思 Dart为了支持多重继承，引入了mixin关键字，它最大的特殊处在于： mixin定义的类不能有构造方法，这样可以避免继承多个类而产生的父类构造方法冲突
-
 
 <br/>
 
 - **使用mixins的条件：**
-
 	- mixins类只能继承自object
 	- mixins类不能有构造函数
 	- 一个类可以mixins多个mixins类
 	- 可以mixins多个类，不破坏Flutter的单继承
 
-<br/>
-<br/>
+<br/><br/>
+> <h3 id='mixin怎么指定异常类型'>Mixin怎么指定异常类型?</h3>
 
+<br/><br/>
+> <h4 id='mixin方法中手动抛出异常'>mixin方法中手动抛出异常</h4>
 
-
-> <h3 id='mixin怎么指定异常类型'>mixin 怎么指定异常类型?</h3>
-
-
-on 一个类：
-
-```
-class A {
-  void a(){
-    print("a");
-  }
-}
-
-
-mixin X on A{
-  void x(){
-    print("x");
-  }
-}
-
-
-class mixinsX extends A with X{
-}
-```
-
-on 的是一个接口： 得首先实现这个接口，然后再用mix
-
-```
-class A {
-  void a(){
-    print("a");
-  }
-}
-
-mixin X on A{
-  void x(){
-    print("x");
-  }
-}
-
-class implA implements A{
+```dart
+class CustomException implements Exception {
+  final String message;
+  CustomException(this.message);
+  
   @override
-  void a() {}
+  String toString() => "CustomException: $message";
 }
 
-class mixinsX2 extends implA with X{
+mixin ErrorHandler {
+  void handleError() {
+    throw CustomException("Something went wrong!");
+  }
+}
+
+class MyClass with ErrorHandler {}
+
+void main() {
+  var obj = MyClass();
+  try {
+    obj.handleError();
+  } catch (e) {
+    print(e); // 输出: CustomException: Something went wrong!
+  }
 }
 ```
 
+- **解释：**
+	- CustomException 是一个自定义异常类。
+	- ErrorHandler Mixin 在 handleError() 方法中抛出 CustomException。
+	- MyClass 通过 with ErrorHandler 使用 handleError()，并在 main() 中捕获异常。
+
+<br/><br/>
+> <h4 id='结合泛型限制异常类型'>结合泛型限制异常类型</h4>
+
+虽然 Dart 没有 Java 那样的 checked exceptions，但你可以使用泛型来约束 Mixin 处理的异常类型：
+
+```dart
+mixin ErrorHandler<T extends Exception> {
+  void handleError(T exception) {
+    print("Handling exception: ${exception.toString()}");
+  }
+}
+
+class MyClass with ErrorHandler<FormatException> {}
+
+void main() {
+  var obj = MyClass();
+  obj.handleError(FormatException("Wrong format")); 
+  // 输出: Handling exception: FormatException: Wrong format
+}
+```
+- **解释：**
+	- ErrorHandler<T extends Exception> 让 mixin 只能处理 Exception 及其子类。
+	- MyClass 通过 with ErrorHandler<FormatException> 指定只处理 FormatException。
+	- handleError() 只接受 FormatException 类型的异常。
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
@@ -845,67 +775,32 @@ class mixinsX2 extends implA with X{
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h1 id='状态'>状态</h1>
-
-
 <br/>
-
-
-
-
-
-<br/>
-<br/>
-
-
-
 > <h2 id=''></h2>
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
@@ -914,10 +809,7 @@ class mixinsX2 extends implA with X{
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h1 id='Widget组件'>Widget组件</h1>
 
 
@@ -3830,3 +3722,8 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 
 
 
+
+---
+注释: 0,75089 SHA-256 c3c4cce0b3e94aca1803626400da0d23  
+@HuangGang <harley.smessage@icloud.com>: 16584 16863 16882,2 16899 16938 16940,10 17410,10 17423,2 17426,3 17456,3 17517,3 17599 17630 17632,2 17701,3 18053,4 18058,4 18065,2 18068,3 18134,3 18206,3  
+...
