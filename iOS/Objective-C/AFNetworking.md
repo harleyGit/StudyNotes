@@ -1,5 +1,5 @@
 > <h2 id=''></h2>
-> [](https://www.jianshu.com/p/8184e762872c)
+> [**OC之NSURLsession**](https://www.jianshu.com/p/8184e762872c)
 - [**基础**](#基础)
 	- [请求头配置](#请求头配置)
 	- [HTTP 状态码](#HTTP状态码)
@@ -9,6 +9,7 @@
 		- [NSMutableRequest](#NSMutableRequest)
 	- [网络缓存](#网络缓存)
 - [**NSURLSession**](#NSURLSession)
+	- [NSURLSessionTaskMetrics和NSURLSessionTaskTransactionMetrics用法](#NSURLSessionTaskMetrics和NSURLSessionTaskTransactionMetrics用法)
 	- [创建NSURLSession](#创建NSURLSession)
 	- [NSURLSession属性](#NSURLSession属性)
 	- [管理会话](#管理会话)
@@ -84,33 +85,23 @@
 - [**host**](https://blog.csdn.net/weixin_45850939/article/details/120094342): 通过ip地址找到主机后,主机中可能有多台虚拟机,比如1.com、2.com、3.com等.这个host就是用来作区分的,比如:host=1.com,那说明找的是虚拟机1.com;
 
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 >## <h2 id='HTTP状态码'>[HTTP 状态码](https://github.com/ChenYilong/iOSDevelopmentTips/blob/master/Tips/HTTP状态码汇总.md)</h2>
 
 
 ![ios_oc1_113_7](./../../Pictures/ios_oc1_113_7.png)
 
-
-
 当我们对一个URL地址做请求开发时,往往可以看到服务器返还给我们的一些状态码,比如:[**200, 404, 500, 301等**](https://www.runoob.com/http/http-status-codes.html),其义分别如下:
+
+```
 - 200 - 请求成功
 - 301 - 资源（网页等）被永久转移到其它URL
 - 404 - 请求的资源（网页等）不存在
 - 500 - 内部服务器错误
+```
 
 
-
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='NSURLRequestCachePolicy缓存策略'>NSURLRequestCachePolicy缓存策略</h2>
 
 ```
@@ -118,7 +109,6 @@
 1> NSURLRequestUseProtocolCachePolicy = 0,
 
 //忽略本地缓存数据，直接请求服务端.
-
 2> NSURLRequestReloadIgnoringLocalCacheData = 1, 
 
 //忽略本地缓存，代理服务器以及其他中介，直接请求源服务端.
@@ -157,14 +147,10 @@ if (有网) {
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='请求对象'>请求对象</h2>
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='NSURLRequest'>NSURLRequest</h3>
 
 &emsp; NSURLRequest：封装一个请求，保存发给服务器的全部数据，包括一个NSURL对象，请求方法、请求头、请求体等;
@@ -195,9 +181,7 @@ NSMutableURLRequest是NSURLRequest的子类，常用方法有:
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='网络缓存'>网络缓存</h2>
 
 - [iOS网络缓存扫盲篇](https://www.jianshu.com/p/fb5aaeac06ef)
@@ -207,23 +191,124 @@ NSMutableURLRequest是NSURLRequest的子类，常用方法有:
 - [NSURLCache使用(一)------基本使用](https://blog.csdn.net/WangErice/article/details/100098825)
 
 
+<br/><br/>
+> <h3 id=''>Get网络缓存</h3>
 
-<br/>
-<br/>
+`NSURLCache` 在 `GET` 请求中用于缓存请求的响应数据，以减少网络请求并提高性能。  
+下面是一个完整的示例，演示如何使用 `NSURLCache` 在 `GET` 请求中缓存数据。  
 
-> <h2 id=''></h2>
+---
+
+- **实现步骤**
+	- 1.**配置 `NSURLCache`**: 设置一个全局的 `NSURLCache` 实例，并指定内存和磁盘缓存大小。  
+	- 2.**创建 `NSURLSession` 并发送 `GET` 请求**。  
+	- 3.**检查缓存**: 先尝试从缓存获取数据，如果没有，则执行网络请求并存入缓存。  
+
+---
+
+- **示例代码 (Objective-C)**
+
+```objc
+#import <Foundation/Foundation.h>
+
+void fetchDataWithCache() {
+    // 1. 设置缓存大小 (内存 20MB, 磁盘 100MB)
+    // NSURLCache 同时支持 内存缓存 和 磁盘缓存。
+    NSURLCache *sharedCache = [[NSURLCache alloc] initWithMemoryCapacity:20 * 1024 * 1024
+                                                            diskCapacity:100 * 1024 * 1024
+                                                                diskPath:nil];
+    [NSURLCache setSharedURLCache:sharedCache];
+
+    // 2. 创建请求
+    NSURL *url = [NSURL URLWithString:@"https://jsonplaceholder.typicode.com/posts/1"];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url
+                                             cachePolicy:NSURLRequestUseProtocolCachePolicy
+                                         timeoutInterval:30];
+
+    // 3. 先检查缓存
+    NSCachedURLResponse *cachedResponse = [[NSURLCache sharedURLCache] cachedResponseForRequest:request];
+    if (cachedResponse) {
+        // 缓存存在，使用缓存数据
+        NSString *cachedDataString = [[NSString alloc] initWithData:cachedResponse.data encoding:NSUTF8StringEncoding];
+        NSLog(@"[缓存数据] %@", cachedDataString);
+    } else {
+        // 4. 缓存不存在，执行网络请求
+        NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+        NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
+
+        NSURLSessionDataTask *task = [session dataTaskWithRequest:request
+                                                completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            if (error) {
+                NSLog(@"请求失败: %@", error.localizedDescription);
+                return;
+            }
+
+            // 5. 打印并存储响应
+            NSString *responseString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            NSLog(@"[网络请求数据] %@", responseString);
+
+            // 6. 手动存入缓存
+            NSCachedURLResponse *cachedResponse = [[NSCachedURLResponse alloc] initWithResponse:response data:data];
+            [[NSURLCache sharedURLCache] storeCachedResponse:cachedResponse forRequest:request];
+        }];
+
+        [task resume];
+    }
+}
+
+// 在主线程调用
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        fetchDataWithCache();
+        [[NSRunLoop mainRunLoop] run];  // 保持程序运行
+    }
+    return 0;
+}
+```
+
+---
+
+- **代码解析**
+	- **1.配置 `NSURLCache`:**
+		- `initWithMemoryCapacity:diskCapacity:diskPath:` 设置缓存大小，`memoryCapacity` 为 20MB，`diskCapacity` 为 100MB。
+		- `setSharedURLCache:` 让 `NSURLCache` 作为全局缓存。  
+
+	- **2.尝试从缓存获取数据:** 
+		- 使用 `[[NSURLCache sharedURLCache] cachedResponseForRequest:request]` 读取缓存。  
+
+	- **3.如果缓存不存在，执行网络请求**:
+		- 通过 `NSURLSessionDataTask` 发送 `GET` 请求。
+		- 在 `completionHandler` 里解析数据，并手动存入缓存 `[[NSURLCache sharedURLCache] storeCachedResponse:cachedResponse forRequest:request]`。  
+
+---
+
+- **缓存策略 (`NSURLRequestCachePolicy`)**
+
+你可以调整 `NSURLRequest` 的 `cachePolicy` 以控制缓存行为:
+| 缓存策略 | 说明 |
+|---------|------------------------------------------------|
+| `NSURLRequestUseProtocolCachePolicy` | 让系统自动决定缓存策略（默认值）。 |
+| `NSURLRequestReloadIgnoringCacheData` | 忽略缓存，每次都请求服务器。 |
+| `NSURLRequestReturnCacheDataElseLoad` | 先用缓存，没有缓存就去请求网络。 |
+| `NSURLRequestReturnCacheDataDontLoad` | 仅使用缓存，没有缓存就失败。 |
+
+---
+
+- **运行结果**
+	- **第一次运行 (无缓存)**
+
+```
+[网络请求数据] { "userId": 1, "id": 1, "title": "...", "body": "..." }
+```
+
+- **第二次运行 (有缓存)**
+
+```
+[缓存数据] { "userId": 1, "id": 1, "title": "...", "body": "..." }
+```
 
 
-
-
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -238,8 +323,6 @@ NSMutableURLRequest是NSURLRequest的子类，常用方法有:
 
 ![AFNet7.jpeg](./../../Pictures/AFNet7.jpeg)
 
-
-
 NSURLSession是网络通信的管理者，是因为NSURLSession 协调一组相关类完成网络通信：
 
 - NSURLSessionConfiguration ：配置选项的封装，如与主机同时连接的最大并发数目、使用的多路径TCP策略、以及是否允许蜂窝网络, 请求缓存策略, 请求超时, cookies/证书存储等等；
@@ -248,18 +331,87 @@ NSURLSession是网络通信的管理者，是因为NSURLSession 协调一组相�
 - NSURLSessionTaskMetrics ：对发送请求/DNS查询/TLS握手/请求响应等各种环节时间上的统计. 可用于分析App的请求缓慢到底是发生在哪个环节, 并对此优化APP性能。
 - NSURLSessionTaskTransactionMetrics
 
-
 ![ios_oc1_95.png](./../../Pictures/ios_oc1_95.png)
 
+<br/><br/>
+> <h2 id='NSURLSessionTaskMetrics和NSURLSessionTaskTransactionMetrics用法'>NSURLSessionTaskMetrics和NSURLSessionTaskTransactionMetrics用法</h2>
+
+
+- `NSURLSessionTaskMetrics` 和 `NSURLSessionTaskTransactionMetrics` 作用与区别：
+
+`NSURLSessionTaskMetrics` 和 `NSURLSessionTaskTransactionMetrics` 主要用于 **衡量和分析网络请求的性能**。
+
+- **`NSURLSessionTaskMetrics`**
+	- 表示整个 `NSURLSessionTask` 任务的度量数据。
+	- 包含多个 `NSURLSessionTaskTransactionMetrics` 实例（即多个 HTTP/HTTPS 事务）。
+	- 记录任务的开始和结束时间、重定向次数、网络协议、资源加载状态等。
+
+- **`NSURLSessionTaskTransactionMetrics`**
+	- 代表某个 HTTP/HTTPS 事务的度量数据（比如 DNS 解析时间、TCP 连接时间、TLS 握手时间等）。
+	- 一个 `NSURLSessionTaskMetrics` 可能包含多个 `NSURLSessionTaskTransactionMetrics`，如果请求经历了重定向或者 HTTP 复用（如 HTTP/2），就会有多个事务记录。
 
 <br/>
+---
+
+- **示例代码：获取任务的网络性能数据**
+
+```objc
+@interface MyURLSessionDelegate : NSObject <NSURLSessionTaskDelegate>
+@end
+
+@implementation MyURLSessionDelegate
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics {
+    NSLog(@"任务完成，开始解析 Metrics");
+
+    for (NSURLSessionTaskTransactionMetrics *transaction in metrics.transactionMetrics) {
+        NSLog(@"请求 URL: %@", transaction.request.URL);
+        NSLog(@"网络协议: %@", transaction.networkProtocolName);
+        NSLog(@"是否复用了连接: %@", transaction.isReusedConnection ? @"是" : @"否");
+        
+        NSLog(@"DNS 解析时间: %@", transaction.domainLookupEndDate ? @( [transaction.domainLookupEndDate timeIntervalSinceDate:transaction.domainLookupStartDate] ) : @"N/A");
+        
+        NSLog(@"TCP 连接时间: %@", transaction.connectEndDate ? @( [transaction.connectEndDate timeIntervalSinceDate:transaction.connectStartDate] ) : @"N/A");
+
+        NSLog(@"TLS 握手时间: %@", transaction.secureConnectionEndDate ? @( [transaction.secureConnectionEndDate timeIntervalSinceDate:transaction.secureConnectionStartDate] ) : @"N/A");
+        
+        NSLog(@"请求开始到首字节时间: %@", transaction.responseStartDate ? @( [transaction.responseStartDate timeIntervalSinceDate:transaction.requestStartDate] ) : @"N/A");
+    }
+}
+
+@end
+```
+
 <br/>
+---
+
+**使用 `NSURLSessionTaskMetrics` 分析网络性能**
+
+上面代码中的回调 `didFinishCollectingMetrics:` 可以用来分析请求的各个阶段耗时，例如：
+- **DNS 解析时间**：`domainLookupEndDate - domainLookupStartDate`
+- **TCP 连接时间**：`connectEndDate - connectStartDate`
+- **TLS 握手时间**：`secureConnectionEndDate - secureConnectionStartDate`
+- **请求开始到首字节时间**：`responseStartDate - requestStartDate`
+- **是否复用连接**：`isReusedConnection`
+
+这样可以帮助开发者优化网络请求，比如：
+- DNS 解析慢 -> 考虑本地 DNS 预解析
+- TCP 连接时间长 -> 考虑开启 HTTP/2 复用
+- TLS 握手时间长 -> 考虑开启 TLS 会话复用
+- 首字节时间长 -> 可能是服务器响应慢，可以优化 API 性能
+
+---
+
+### 总结
+- `NSURLSessionTaskMetrics` 代表整个请求的性能数据，包含多个 `NSURLSessionTaskTransactionMetrics`。
+- `NSURLSessionTaskTransactionMetrics` 记录单个 HTTP/HTTPS 事务的详细信息，包括 DNS 解析、TCP 连接、TLS 握手、响应时间等。
+- 通过 `NSURLSessionTaskMetrics` 可以分析网络请求的瓶颈，并优化性能。
+
+<br/><br/>
 
 &emsp; NSURLSession中比较重要的几个对象: NSURLSessionTask、NSURLSessionConfiguration、为它请求时执行的代理方法。
 
-
 ![AFNet8.png](./../../Pictures/AFNet8.png)
-
 
 - NSURLSession的使用共分两步:
 	- 通过NSURLSession的实例创建task
@@ -292,9 +444,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 > task一共有4个delegate，只要设置了一个，就代表四个全部设置，有时候一些delegate不会被触发的原因在于这四种delegate是针对不同的URLSession类型和URLSessionTask类型来进行响应的，也就是说不同的类型只会触发这些delegate中的一部分，而不是触发所有的delegate。
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='创建NSURLSession'>创建NSURLSession</h2>
 
 
@@ -344,9 +494,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 **注意：**只能使用上述方法获取一个 NSURLSession 对象，禁止使用 -init 或 +new等方法实例化；
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='NSURLSession属性'>NSURLSession属性</h2>
 
 ```
@@ -373,11 +521,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 ```
 
 
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='管理会话'>管理会话</h2>
 
 ```
@@ -417,9 +561,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='向会话添加任务'>向会话添加任务</h2>
 
 在网络通信中，NSURLSession根据请求NSURLRequest可以[创建多种任务：](https://developer.apple.com/documentation/foundation/nsurlsessiontask?changes=latest_minor&language=objc)
@@ -443,14 +585,11 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 ![ios_oc1_96.png](./../../Pictures/ios_oc1_96.png)
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='数据响应方式'>数据响应方式</h2>
 
 
 <br/>
-
 > <h3 id='任务响应数据'>任务响应数据</h3>
 
 
@@ -463,7 +602,6 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 
 
 <br/>
-
 > <h3 id='代理响应数据'>代理响应数据</h3>
 
 &emsp; 根据不通的delegate任务，由不同的 NSURLSessionDelegate 方法来处理：
@@ -481,16 +619,12 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 
 可以重复使用一个NSURLSession来创建多个任务，创建的 NSURLSessionTask 对象总是处于挂起状态，在它们执行之前必须调用 -resume 方法
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='添加任务'>添加任务</h2>
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='会话添加DataTasks'>会话添加DataTasks</h3>
 
 ```
@@ -546,9 +680,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='会话中添加UploadTasks'>会话中添加 UploadTasks</h3>
 
 ```

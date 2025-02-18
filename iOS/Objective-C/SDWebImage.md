@@ -1,4 +1,4 @@
-> <h1 id=''></h1>
+> </h1>
 - [**图片渲染过程**](#图片渲染过程)
 - [**SDWebImage的UML图**](#SDWebImage的UML图)
 - [**下载顺序枚举**](#下载顺序枚举)
@@ -17,18 +17,10 @@
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
-<br/>
-
-***
-
-<br/><br/>
-
 > <h1 id='图片渲染过程'>图片渲染过程</h1>
 
 - 图片文件只有在确认要显示时,CPU才会对齐进行解压缩.因为解压是非常消耗性能的事情.解压过的图片就不会重复解压,会缓存起来；
@@ -55,25 +47,20 @@ CG_EXTERN CGContextRef __nullable CGBitmapContextCreate(void * __nullable data,
 ```
 
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
 > <h1 id='SDWebImage的UML图'>SDWebImage的UML图</h1>
-
-
-<br/>
 
 **`SDWebImage UML类图`**
 
 &emsp;  若是想看下列的清晰的结构图，最新的版本有的类是没有的，所以需要 `pod 'SDWebImage',  '~>3.8.2' `版本。
 
-![SDWebImage 结构图](https://upload-images.jianshu.io/upload_images/2959789-86b22d19c095010a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**SDWebImage 结构图:**
+![ios_oc1_108_31.webp](./../../Pictures/ios_oc1_108_31.webp)
 
+<br/>
 
 SDWebImage的相关类分为以下三种：
 
@@ -83,17 +70,17 @@ SDWebImage的相关类分为以下三种：
 	- UIImageView+WebCache：为UIImageView类添加加载图片的方法。
 	- UIImageView+HighlightedWebCache：为UIImageView类添加高亮状态下加载图片的方法。
 
+<br/>
 
 - **工具类：**
-
 	- NSData+ImageContentType：根据图片数据获取图片的类型，比如GIF、PNG等。
 	- UIImage+MultiFormat：根据UIImage的data生成指定格式的UIImage。
 	- UIImage+GIF：判断一张图是否为GIF。
-	- SDWebImageCompat：根据屏幕的分辨倍数成倍放大或者缩小图片的大小。
+	- SDImageResizingTransformer：根据屏幕的分辨倍数成倍放大或者缩小图片的大小。
 	- SDImageCacheConfig：图片缓存策略记录。比如是否解压缩、是否允许iCloud、是否允许内存缓存、缓存时间等。
 	- SDWebImageCodersManager：编码解码管理器，处理多个图片编码解码任务，编码器是一个优先队列，这意味着后面添加的编码器将具有最高优先级。
 
-
+<br/>
 
 - **核心类：**
 
@@ -106,7 +93,8 @@ SDWebImage的相关类分为以下三种：
 
 <br/>
 
-![UML符号意义图](https://upload-images.jianshu.io/upload_images/2959789-eb3e096354a0456b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**UML符号意义图:**
+![ios_oc1_108_32.webp](./../../Pictures/ios_oc1_108_32.webp)
 
 <br/>
 
@@ -117,39 +105,27 @@ SDWebImageManger:    负责下载和缓存的管理；
 SDImgeCache                  负责内存和磁盘缓存的类；
 SDWebImageDownloader      负责下载类的管理；
 SDWebImageDownloaderOperation        负责单个图片下载的操作由它来做
-
 ```
 
 <br/>
 
-**`时序图`**
+**`SDWebImage 调用方法序列图`**
+![ios_oc1_108_33.webp](./../../Pictures/ios_oc1_108_33.webp)
 
-![SDWebImage 调用方法序列图](https://upload-images.jianshu.io/upload_images/2959789-bf324ade01767542.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![z27](./../../Pictures/z27.jpg)
 
-
-![z27](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/z27.jpg)
-
-
-<br/>
-
-***
-<br/>
-
+<br/><br/>
 
 &emsp;  SDWebImage 加载图片的格式是webp的图片格式(这种格式是谷歌提出的，但是这个webp图片格式因为防火墙的原因在国内是不能使用的, 这种格式可以节省服务器1/3的资源。)。
 
 &emsp;  程序运行时通过堆栈的方式进行加载的，可以在 `application: didFinishLaunchingWithOptions: ` 打断点看到。在Xcode左边的线程Thread1 运行可以看到，zai `start` 中是系统内核加载一些静态类库接着是执行`main`方法，然后才是执行 `application: didFinishLaunchingWithOptions: `  方法。
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
 > <h1 id='下载顺序枚举'>下载顺序枚举</h1>
-
-<br/>
 
 ```
 typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
@@ -169,27 +145,21 @@ typedef NS_ENUM(NSInteger, SDWebImageDownloaderExecutionOrder) {
 ```
 
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id='缓存文件清除机制'>缓存文件清除机制</h1>
 
-- 先清除已超过最大缓存时间的缓存文件；
+- 先清除已超过最大缓存时间(大于一周的图片)的缓存文件；
 - 保存文件的大小；
 - 判断设置的上限，进行第二轮的清除；
 - 默认的清除方式，先删除老的，达到期望缓存的大小，最大缓存的一半；
 
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
 > <h1 id='图片格式'>图片格式</h1>
 
 -  png: 无损压缩，解压缩性能高；
@@ -262,17 +232,17 @@ typedef NS_ENUM(NSInteger, SDImageFormat) {
 ```
 <br/>
 
-![打开图片的16进制data数据](https://upload-images.jianshu.io/upload_images/2959789-24f4442de4d09ac0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**打开图片的16进制data数据:**
+![ios_oc1_108_34.webp](./../../Pictures/ios_oc1_108_34.webp)
 
 
 
-<br/>
+
+<br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id='MD5获取文件名'>MD5获取文件名</h1>
-
 
 ```
 
@@ -306,12 +276,3 @@ static inline NSString * _Nonnull SDDiskCacheFileNameForKey(NSString * _Nullable
 
 
 &emsp; 强制解压缩的原理就是对图片进行重新绘制，得到一张新的解压缩后的位图。其中，用到的最核心的函数是 CGBitmapContextCreate 。
-
-
-
-<br/>
-
-***
-<br/>
-
-

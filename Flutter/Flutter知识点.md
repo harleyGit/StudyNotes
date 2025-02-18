@@ -821,54 +821,80 @@ void main() {
 
 
 <br/><br/>
-
-
 > <h2 id='状态'>状态</h2>
 
+在 Flutter 中，`State<T>` 是 `StatefulWidget` 的状态类，它有多个属性，以下是 **所有可用的属性**：
 
+---
+
+- **1.`context`**
+	- **类型**: `BuildContext`
+	- **作用**: 获取当前 `State` 所在的 `BuildContext`，用于访问 `Theme`、`MediaQuery` 等上下文信息。
+	- StatefulWidget对应的 BuildContext，作用同StatelessWidget 的BuildContext;
+		- 用途： 表示BuildContext对象，提供了关于控件在树中位置的信息;
+		- 例子： 在许多方法中，你需要使用context对象执行一些操作，如获取主题、定位父级控件等;
+
+```dart
+ThemeData theme = Theme.of(context);
+```
+
+---
+
+- **2.`mounted`**
+	- **类型**: `bool`
+	- **作用**: 表示当前 `State` 是否已经挂载到 `Widget` 树上，防止 `setState()` 在 `dispose()` 后调用导致异常。
+
+```dart
+if (mounted) {
+  setState(() {
+    // 更新 UI
+  });
+}
+```
+
+---
+
+- **3.`widget`**
+	- **类型**: `T extends StatefulWidget`
+	- **作用**: 访问 `StatefulWidget` 本身，可以获取传递的 `widget` 属性。
+	- 它表示与该 State 实例关联的 widget 实例，由Flutter 框架动态设置。
+	- 注意，这种关联并非永久的，因为在应用生命周期中，UI树上的某一个节点的 widget 实例在重新构建时可能会变化，
+	- 但State实例只会在第一次插入到树中时被创建，当在重新构建时，如果 widget 被修改了，Flutter 框架会动态设置State. widget 为新的 widget 实例。
+	- 例子： 你可以通过widget属性访问与当前State对象关联的StatefulWidget的属性
+
+```dart
+print(widget.someProperty);
+```
+
+<br/><br/>
+
+| 属性/方法 | 作用 |
+|-----------|------|
+| `context` | 获取 `BuildContext` |
+| `mounted` | 判断 `State` 是否挂载 |
+| `widget` | 访问 `StatefulWidget` |
+| `setState()` | 触发 UI 重新构建 |
+| `initState()` | 组件初始化时调用（**仅执行一次**） |
+| `didChangeDependencies()` | 依赖（如 `InheritedWidget`）变化时调用 |
+| `build()` | 构建 UI |
+| `didUpdateWidget()` | `widget` 变化时调用 |
+| `deactivate()` | `State` 从树中移除时调用（可能会重新插入） |
+| `dispose()` | `State` 销毁时调用，释放资源 |
+| `reassemble()` | **热重载（Hot Reload）** 时调用 |
 
 
 
 <br/><br/>
-
 > <h2 id='createState方法什么时候调用?state里为什么可以直接获取到widget对象?'>createState方法什么时候调用?state里为什么可以直接获取到widget对象?</h2>
 
 
 
 <br/>
-
-
 **问2:state里为什么可以直接获取到widget对象?**
 
 因为widget是state的一个属性,你说它能不能获取到! 问这个问题,说明你的基础很差啊!
 
-<br/>
-
-来!来!给你科普一下:
-
-
-- **State 中有两个常用属性：**
-
-	- **widget:** 它表示与该 State 实例关联的 widget 实例，由Flutter 框架动态设置。
-		- 注意，这种关联并非永久的，因为在应用生命周期中，UI树上的某一个节点的 widget 实例在重新构建时可能会变化，
-		- 但State实例只会在第一次插入到树中时被创建，当在重新构建时，如果 widget 被修改了，Flutter 框架会动态设置State. widget 为新的 widget 实例。
-		- 用途： 表示当前关联的StatefulWidget对象;
-		- 例子： 你可以通过widget属性访问与当前State对象关联的StatefulWidget的属性
-	
-	- **context:** StatefulWidget对应的 BuildContext，作用同StatelessWidget 的BuildContext;
-		- 用途： 表示BuildContext对象，提供了关于控件在树中位置的信息;
-		- 例子： 在许多方法中，你需要使用context对象执行一些操作，如获取主题、定位父级控件等;
-
-	- **mounted：**
-		- 用途： 表示当前的State对象是否已经插入到控件树中。
-		- 例子： 可以使用mounted属性检查State对象是否仍然有效，防止在控件被移除后访问已经被释放的State。
-
-
-<br/>
-<br/>
-
-<br/><br/>
-
+<br/><br/><br/>
 > <h2 id='widget和state的关联是永久的吗'>widget和state的关联是永久的吗</h2>
 
 
@@ -884,12 +910,7 @@ void main() {
 
 
 
-<br/>
-<br/>
-
-
-<br/><br/>
-
+<br/><br/><br/>
 > <h2 id='新widget的创建对旧widget的影响,和state的联系'>新widget的创建对旧widget的影响,和state的联系</h2>
 
 
@@ -904,11 +925,7 @@ void main() {
 &emsp; 总的来说，State对象可能会被重新关联到新的Widget实例上，而不是直接销毁。这种复用机制有助于在UI更新时保留一些状态，减少不必要的重建开销。
 
 
-<br/>
-<br/>
-
-<br/><br/>
-
+<br/><br/><br/>
 > <h2 id='新widget关联到旧的state如何处理'>新widget关联到旧的state如何处理</h2>
 
 
@@ -933,12 +950,7 @@ void didUpdateWidget(covariant T oldWidget) {
 &emsp; 这种自动处理的机制使得在 UI 变化时能够在保持性能的同时，让开发者有机会处理一些状态的更新逻辑。
 
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='StatefulWidget生命周期'>StatefulWidget生命周期</h2>
 
 ![flutter1_3.png](./../Pictures/flutter1_3.png)
@@ -3354,20 +3366,12 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h3 id=''></h3>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id='FlutterBoost'>FlutterBoost</h2>
 
 - **FlutterBoost解决的混合开发过程中的几个痛点：**
@@ -3378,52 +3382,30 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 	- 其他（比如黑屏闪屏的坑）
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h3 id=''></h3>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
-<br/>
-<br/>
 
-
-
+<br/><br/>
 > <h3 id=''></h3>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
-<br/>
-<br/>
 
-
-
+<br/><br/>
 > <h3 id=''></h3>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
@@ -3434,19 +3416,12 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h1 id=''></h1>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
@@ -3456,19 +3431,12 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 <br/>
 
 ***
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h1 id=''></h1>
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
@@ -3725,6 +3693,6 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 
 
 ---
-注释: 0,75159 SHA-256 03994c0c240e66df6f5807c63e5b8de5  
-@HuangGang <harley.smessage@icloud.com>: 153 214 447,7 468,3 485 487,7 504,3 517 16654 16933 16952,2 16969 17008 17010,10 17480,10 17493,2 17496,3 17526,3 17587,3 17669 17700 17702,2 17771,3 18123,4 18128,4 18135,2 18138,3 18204,3 18276,3  
+注释: 0,75924 SHA-256 5ddec87f44667cca5b2204c76156a973  
+@HuangGang <harley.smessage@icloud.com>: 153 214 447,7 468,3 485 487,7 504,3 517 16654 16933 16952,2 16969 17008 17010,10 17480,10 17493,2 17496,3 17526,3 17587,3 17669 17700 17702,2 17771,3 18123,4 18128,4 18135,2 18138,3 18204,3 18276,3 19193,2 19211 19237 19313,4 19524 19531,2 19548,4 19567 19721,2 19738 19776 19830,4 20139 20600 20830 74648 74667 74730 74774 74897  
 ...
