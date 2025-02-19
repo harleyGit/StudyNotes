@@ -20,6 +20,7 @@
 	- [AnonymousObservableSink](#AnonymousObservableSink)
 	- [Event](#Event)
 	- [创建数据源](#创建数据源)
+		- [高级语法学习](#高级语法学习)
 	- [AnonymousObserver](#AnonymousObserver)
 - [**SinkDisposer处理订阅的资源管理和内存管理**](#SinkDisposer处理订阅的资源管理和内存管理)
 - [**Subject**](#Subject)
@@ -513,7 +514,6 @@ private func randomImage() -> UIImage {
 
 
 <br/><br/><br/>
-
 > <h2 id="creare方法创建对列">creare方法创建对列</h2>
 
 ```
@@ -530,8 +530,7 @@ let numbers: Observable<Int> = Observable.create { observer -> Disposable in
 创建序列最直接的方法就是调用 Observable.create，然后在构建函数里面描述元素的产生过程。 observer.onNext(0) 就代表产生了一个元素，他的值是 0。后面又产生了 9 个元素分别是 1, 2, ... 8, 9 。最后，用 observer.onCompleted() 表示元素已经全部产生，没有更多元素了。
 
 <br/><br/>
-
-依照上面的可以分装网络数据：、
+依照上面的可以分装网络数据：
 
 ```
 typealias JSON = Any
@@ -581,12 +580,8 @@ json.subscribe(onNext: { json in
 
 
 <br/><br/><br/>
-
 > <h2 id="错误处理">错误处理</h2>
-
-
-<br/><br/><br/>
-
+<br/>
 > <h2 id="Result接受处理错误">Result接受处理错误</h2>
 
 如果我们只是想给用户错误提示，那要如何操作呢？
@@ -655,7 +650,6 @@ updateUserInfoButton.rx.tap
 另外你也可以使用 **materialize** 操作符来进行错误处理。
 
 <br/><br/>
-
 但是在阅读上面的代码时，发现一个奇怪的问题：
 
 ```
@@ -696,24 +690,18 @@ public enum Result<Success, Failure> where Failure: Error {
 }
 ```
 
-
-
 <br/><br/>
-
 > <h2 id='AnonymousObservableSink'>AnonymousObservableSink</h2>
-
 AnonymousObservableSink 是一个用于创建自定义 Observable 序列的工具类。它允许你手动创建 Observable 序列，以便更灵活地控制序列的行为和数据流。
 
 在这里，Result 是一个泛型枚举，其中 Success 和 Failure 是两个类型参数。Failure 必须遵循 Error 协议。
 
 <br/>
-
 但**这都不是重点，重点是：在 Swift 中，泛型类型的使用和参数的传递有一定的灵活性。**
 
-细看：[**泛型类型的定义与使用**](./基础.md#处理2种数据类型的范型)
+细看：[**泛型类型的定义与使用**](./基础.md#处理2种数据类型的范型-RxSwift的Signal)
 
 <br/>
-
 **详细解释如下：**
 
 - 创建自定义 Observable 序列
@@ -780,7 +768,6 @@ final private class AnonymousObservableSink<Observer: ObserverType>: Sink<Observ
 
 - 在run方法中的这行代码parent._subscribeHandler(AnyObserver(self))，其中parent是一个AnonymousObservable对象。_subscribeHandler这个block调用，代码会执行到创建序列时的block。然后会调用发送信号的代码obserber.onNext("发送信号")，然后代码会经过几个中间步骤会来到AnonymousObservableSink类的on方法。
 
-
 <br/>
 
 使用 AnonymousObservableSink 创建一个简单的定时序列：
@@ -823,8 +810,6 @@ customObservable.subscribe(onNext: { value in
 
 
 <br/><br/>
-
-
 > <h2 id='Event'>Event</h2>
 
 &emsp; 可观察序列存在三种情况：发射数据(Next)、遇到问题(Error)、发射完成(Completed),也就是3个事件.源码如下:
@@ -854,7 +839,6 @@ public enum Event<Element> {
 
 
 <br/><br/>
-
 > <h2 id='创建数据源'>创建数据源</h2>
 
 那如何能够让某些数据或事件成为 Observable 呢？
@@ -865,23 +849,23 @@ public enum Event<Element> {
 
 ```
 func createObserver() {
-        //1. 序列创建
-        let observer = Observable<Any>.create { (observer) -> Disposable in
+    //1. 序列创建
+    let observer = Observable<Any>.create { (observer) -> Disposable in
 
-            //3. 信号发送
-            observer.onNext("Hello! 我来了！！！")
-            observer.onCompleted()
-            
-            return Disposables.create()
-        }
+        //3. 信号发送
+        observer.onNext("Hello! 我来了！！！")
+        observer.onCompleted()
         
-        //2. 序列订阅
-        observer.subscribe(onNext: { (text) in
-            print("---> \(text)")
-        }, onError: nil, onCompleted: {
-            print("Completed 完成！！")
-        }, onDisposed: nil).disposed(by: disposeBag)
+        return Disposables.create()
     }
+    
+    //2. 序列订阅
+    observer.subscribe(onNext: { (text) in
+        print("---> \(text)")
+    }, onError: nil, onCompleted: {
+        print("Completed 完成！！")
+    }, onDisposed: nil).disposed(by: disposeBag)
+}
 ```
 打印：
 
@@ -891,10 +875,7 @@ func createObserver() {
 Completed 完成！！
 ```
 
-
-
 <br/><br/>
-
 
 点击`②`中的`subscribe`方法，来到其源码：
 
@@ -956,56 +937,108 @@ public func subscribe(onNext: ((Element) -> Void)? = nil, onError: ((Swift.Error
                 
 ```
 let observer = Observable<Any>.create { (observer) -> Disposable in
-
-            //3. 信号发送
-            observer.onNext("Hello! 我来了！！！")
-            observer.onCompleted()
-            
-            return Disposables.create()
-        }
+    //3. 信号发送
+    observer.onNext("Hello! 我来了！！！")
+    observer.onCompleted()
+    
+    return Disposables.create()
+}
 ```
 上述闭包中的调用了，就开始走`onNext`、`onCompleted()`方法的调用了。
 
+<br/><br/>
+> <h3 id="高级语法学习">高级语法学习</h3>
+
+- **1.语法一**
+
+**Create.swift**中有一段如下代码：
+
+```swift
+final private class AnonymousObservable<Element>: Producer<Element> {
+    /**
+     SubscribeHandler 是一个 闭包类型：
+        参数：AnyObserver<Element>（一个泛型 Element 的观察者）。
+        返回值：Disposable（一个可释放的订阅）。
+     
+     (AnyObserver<Element>： 表示一个可以接收 Element 类型的观察者，它可以用来手动发送 .next、.error、.completed 事件。
+     */
+    typealias SubscribeHandler = (AnyObserver<Element>) -> Disposable
+
+    let subscribeHandler: SubscribeHandler
+
+    init(_ subscribeHandler: @escaping SubscribeHandler) {
+        self.subscribeHandler = subscribeHandler
+    }
+}
+```
+
+**重点是：**
+
+```
+typealias SubscribeHandler = (AnyObserver<Element>) -> Disposable
+```
+
+这段代码如何使用？[**请看我列举的一个简单例子**](./基础.md#类似RxSwift数据转换)
 
 <br/><br/>
+- **2.语法二**
 
+**Observable.swift**中的返回实例本身：
+
+```
+public class Observable<Element> : ObservableType {
+```
+
+**[这种设计通常用与流式 API 设计](./基础.md#流式API设计)**
+
+
+<br/><br/>
+- **3.枚举事件**
+
+```
+public func onNext(_ element: Element) {
+    self.on(.next(element)) //这个on方法是来自AnyObserver.swift文件中AnyObserver类的on方法
+}
+```
+
+类似`‌self.on(.next(element)) `方法的调用，[**请看：枚举范型调用**](./基础.md#枚举范型)
+
+<br/><br/><br/>
 > <h2 id='AnonymousObserver'>AnonymousObserver</h2>
 
-
-继承关系图:
-
+**继承关系图:**
 ![ios_swift_01.png](./../../Pictures/ios_swift_01.png)
 
 
 AnonymousObservable是Observable的子类，它们的继承关系是：AnonymousObservable -> Producer -> Observable -> ObservableType -> ObservableConvertibleType
 
 
-<br/>
-
-***
 <br/><br/><br/>
 
+***
+<br/>
 > <h1 id="SinkDisposer处理订阅的资源管理和内存管理">SinkDisposer处理订阅的资源管理和内存管理</h1>
 
 在 RxSwift 中，`SinkDisposer` 是一个重要的概念，用于处理订阅的资源管理和内存管理。它主要用于确保当一个订阅（Observer）被取消时，能够正确地释放相关的资源。
 
-### 主要功能
+- **主要功能**
 
-1. **资源管理**：
-   `SinkDisposer` 负责管理与 `Observer` 相关的资源，确保当不再需要时，它们能被正确地释放。这样可以防止内存泄漏。
+	- 1.**资源管理**：
+	   `SinkDisposer` 负责管理与 `Observer` 相关的资源，确保当不再需要时，它们能被正确地释放。这样可以防止内存泄漏。
 
-2. **取消订阅**：
-   当 `Observer` 被取消订阅时，`SinkDisposer` 会被调用，执行清理操作。这通常涉及停止观察源数据、释放与观察者相关的任何状态或数据。
+	- 2.**取消订阅**：
+	   当 `Observer` 被取消订阅时，`SinkDisposer` 会被调用，执行清理操作。这通常涉及停止观察源数据、释放与观察者相关的任何状态或数据。
 
-3. **简化代码**：
-   `SinkDisposer` 使得 RxSwift 的 API 更加简洁，简化了资源的管理，开发者不需要手动处理这些细节。
+	- 3.**简化代码**：
+	   `SinkDisposer` 使得 RxSwift 的 API 更加简洁，简化了资源的管理，开发者不需要手动处理这些细节。
 
-### 相关概念
+<br/>
+- **相关概念**
+	- **Observer**：接收数据的对象，能够响应数据流的变化。
+	- **Disposable**：一个表示资源的对象，通常在不再需要某个订阅时被调用以释放资源。
 
-- **Observer**：接收数据的对象，能够响应数据流的变化。
-- **Disposable**：一个表示资源的对象，通常在不再需要某个订阅时被调用以释放资源。
-
-### 示例
+<br/>
+- **示例**
 
 在 RxSwift 中，当你使用 `subscribe` 方法时，通常会返回一个 `Disposable`，而 `SinkDisposer` 是在这个过程中内部创建的。以下是一个简单的示例：
 
@@ -1026,18 +1059,17 @@ Observable.just("Hello, RxSwift!")
 - `subscribe(onNext:)` 方法创建了一个 `Observer`，并使用 `SinkDisposer` 来管理这个订阅。
 - `disposed(by: disposeBag)` 表示当 `disposeBag` 被释放时，`SinkDisposer` 也会被调用，从而释放资源。
 
-### 总结
-
-`SinkDisposer` 在 RxSwift 中用于确保在不再需要订阅时，能够正确管理和释放资源。它在背后工作，简化了开发者的工作，让他们可以专注于数据流和响应，而不必担心内存管理的问题。
-
-
-
-
 <br/>
 
-***
-<br/><br/>
+- **总结：**
 
+&emsp; `SinkDisposer` 在 RxSwift 中用于确保在不再需要订阅时，能够正确管理和释放资源。它在背后工作，简化了开发者的工作，让他们可以专注于数据流和响应，而不必担心内存管理的问题。
+
+
+<br/><br/><br/>
+
+***
+<br/>
 ># <h1 id='Subject'>Subject</h1>
 
 &emsp;  我们把 Subject 当作一个桥梁（或者说是代理）， Subject 既是 Observable 也是 Observer :
@@ -1144,7 +1176,6 @@ subscription: 1 Event: next(❤️)
 
 
 <br/><br/>
-
 > <h2 id='ReplaySubject'>ReplaySubject</h2>
 
 &emsp; ReplaySubject 将对观察者发送全部的元素，无论观察者是何时进行订阅的。
@@ -1185,9 +1216,7 @@ Subscription: 2 Event: next(🅱️)
 ```
 
 <br/><br/>
-
 > <h2 id='BehaviorSubject'>BehaviorSubject</h2>
-
 
 &emsp;  当观察者对 BehaviorSubject 进行订阅时，它会将源 Observable 中最新的元素(**初始化元素**)发送出来（如果不存在最新的元素，就发出默认元素）。然后将随后产生的元素发送出来。
 
@@ -1213,8 +1242,6 @@ Subcription: 1 Event: next(🐲)
 ```
 
 <br/><br/>
-
-
 > <h3 id='variable'>variable</h3>
 
 Variable 是 BehaviorSubject 的一个封装。相比 BehaviorSubject ，它不会因为错误终止也不会正常终止，是一个无限序列。
@@ -1247,63 +1274,26 @@ Subscription: 1, event: next(索大)
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id=''></h2>
 
 
-
-
-
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-<br/>
-
-
 > <h1 id='Driver'>Driver</h1>
 
 &emsp; Driver从名字上可以理解为驱动，在功能上它类似被观察者（Observable）.
 
 <br/>
-
 UITextField绑定到UILable:
 
-```
-//普通绑定
- let result  = inputTF.rx.text.orEmpty
-    .asDriver() // 将序列转换为Driver序列
-    .flatMap {
-        return self.request(text: $0)
-            .asDriver(onErrorJustReturn: "检测到了错误事件")
-    }
-
-// 将结果绑定到textLabel显示，注意这里使用的是drive而不是bindTo
-let _ = result.map { "\($0 as! String)" } // 映射
-    .drive(self.textLabel.rx.text)
-    .disposed(by: disposeBag)
-        
-
-
-
+```swift
 //使用driver
 let result  = inputTF.rx.text.orEmpty
     .asDriver() // 将序列转换为Driver序列

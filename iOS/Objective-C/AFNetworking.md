@@ -1,4 +1,3 @@
-> <h2 id=''></h2>
 > [**OC之NSURLsession**](https://www.jianshu.com/p/8184e762872c)
 - [**基础**](#基础)
 	- [请求头配置](#请求头配置)
@@ -598,9 +597,6 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 - 设置 delegate：响应报文被 NSURLSessionDelegate 的代理方法处理；
 - 使用 completionHandler 创建任务，那么在 completionHandler 中处理响应数据（即使设置了 delegate）；
 
-
-
-
 <br/>
 > <h3 id='代理响应数据'>代理响应数据</h3>
 
@@ -652,9 +648,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url completionHandler:(void (^)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error))completionHandler;
 ```
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='会话中添加DownloadTasks'>会话中添加DownloadTasks</h3>
 
 当下载成功完成时，需要将下载数据从临时文件拷贝至指定文件，临时文件将被自动删除。
@@ -704,9 +698,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='会话中添加StreamTasks'>会话中添加 StreamTasks</h3>
 
 ```
@@ -724,9 +716,7 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='会话中添加WebSocketTasks'>会话中添加 WebSocketTasks</h3>
 
 ```
@@ -750,13 +740,10 @@ NSURLSessionDownloadTask *task = [session downloadTaskWithURL:[NSURL URLWithStri
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='NSURLSession完成一个网络请求'>NSURLSession完成一个网络请求</h2>
 
 <br/>
-
 > <h3 id='sharedSession单例创建会话'>sharedSession单例创建会话</h3>
 
 &emsp; 创建了一个简单的 Get 请求， sharedSession 默认配置类，代理对象与操作队列默认为nil，来看下会话的回调结果：
@@ -786,10 +773,7 @@ currentThread : <NSThread: 0x174263080>{number = 5, name = (null)}
 
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='配置session时&&不设置delegate'>配置session时 && 不设置delegate</h3>
 
 创建了一个简单的 Get 请求，为 session 设置了配置类，代理对象与操作队列默认为 nil，来看下会话的回调结果
@@ -819,10 +803,7 @@ currentThread : <NSThread: 0x174263170>{number = 8, name = (null)}
 
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='配置sesion&&设置delegate&&设置delegateQueue'>配置sesion&&设置delegate&&设置delegateQueue</h2>
 
 创建了一个简单的 Get 请求，为 session 设置了配置类，代理对象，操作队列.使用Block接收相应的数据很简单，只需要传入请求的Request就可以直接获取到数据。
@@ -877,10 +858,7 @@ currentThread : <NSThread: 0x174263170>{number = 8, name = (null)}
 
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='Post请求下载图片'>Post 请求下载图片</h3>
 
 使用 session 创建了一个简单的下载图片的 downloadTask，下载成功后将文件从临时路径转移到我们指定的位置
@@ -908,10 +886,7 @@ currentThread : <NSThread: 0x174263170>{number = 8, name = (null)}
 
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='创建Post请求上传一个图片'>创建Post 请求上传一个图片</h3>
 
 上传一个文件时，需要在请求头添加 Content-Type ，设置边界 boundary 为任意值，[有兴趣的可以去了解下**HTTP协议**](https://www.cnblogs.com/EricaMIN1987_IT/p/3837436.html)
@@ -1020,71 +995,46 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 ```
 
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
-
 > <h1 id='AFNetworking架构图'>AFNetworking架构图</h1>
-
-
 <br/>
-
 ![AFNet1.png](./../../Pictures/AFNet1.png)
 
 <br/>
-
-> <h2 id='AFNetworking3.0请求流程线程'>AFNetworking3.0请求流程线程</h2>
+><h2 id='AFNetworking3.0请求流程线程'>AFNetworking3.0请求流程线程</h2>
 
 
 <br/>
-
 > **请求流程**
 
 - **1.发送请求**
 
-![](./../../Pictures/AFNet2.png)
+![AFNet2.png](./../../Pictures/AFNet2.png)
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 - **2.接收到响应**
 
-![](./../../Pictures/AFNet3.png)
+![AFNet3.png](./../../Pictures/AFNet3.png)
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 - **3.进度条模块**
 
-![](./../../Pictures/AFNet4.png)
+![AFNet4.png](./../../Pictures/AFNet4.png)
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 - **4.认证模块**
 
-![](./../../Pictures/AFNet5.png)
+![AFNet5.png](./../../Pictures/AFNet5.png)
 
-![](./../../Pictures/AFNet6.png)
-
-
+![AFNet6.png](./../../Pictures/AFNet6.png)
 
 <br/>
-
 >- 我们一开始初始化`sessionManager`的时候，一般都是在主线程，（当然不排除有些人喜欢在分线程初始化...）
 
 >- 然后我们调用`get`或者`post`等去请求数据，接着会进行`request`拼接，AF代理的字典映射，`progress`的`KVO`添加等等，到`NSUrlSession`的`resume`之前这些准备工作，仍旧是在主线程中的。
@@ -1097,13 +1047,10 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 >- 最后我们如果有自定义的`completionQueue`，则在自定义的`queue`中回调回来，也就是分线程回调回来，否则就是主队列，主线程中回调结束。
 
 
-<br/>
-<br/>
-
-> <h2 id='属性'>属性</h2>
+<br/><br/>
+><h2 id='属性'>属性</h2>
 
 <br/>
-
 > <h3 id='removesKeysWithNullValues'>removesKeysWithNullValues</h3>
 
 **`@property (nonatomic, assign) BOOL removesKeysWithNullValues;`**
@@ -1112,16 +1059,12 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='HTTPS认证流程'>HTTPS 认证流程</h2>
 
 ![https认证流程](./../../Pictures/ios_oc1_49.jpg)
 
-<br/>
-<br/>
-
+<br/><br/>
 **1.客户端发起HTTPS请求**
 
 &emsp; 这个没什么好说的，就是用户在浏览器里输入一个https网址，然后连接到server的443端口。
@@ -1133,51 +1076,39 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 &emsp; 采用HTTPS协议的服务器必须要有一套数字证书，可以自己制作，也可以向组织申请。区别就是自己颁发的证书需要客户端验证通过，才可以继续访问，而使用受信任的公司申请的证书则不会弹出提示页面。这套证书其实就是一对公钥和私钥。如果对公钥和私钥不太理解，可以想象成一把钥匙和一个锁头，只是全世界只有你一个人有这把钥匙，你可以把锁头给别人，别人可以用这个锁把重要的东西锁起来，然后发给你，因为只有你一个人有这把钥匙，所以只有你才能看到被这把锁锁起来的东西。
 　
 
-<br/>
-　　
+<br/>　
 **3.传送证书**
 
 &emsp; 这个证书其实就是公钥，只是包含了很多信息，如证书的颁发机构，过期时间等等。
 　　
 　
 <br/>
-
-　
 **4.客户端解析证书**
 
 &emsp; 这部分工作是有客户端的TLS/SSL来完成的，首先会验证公钥是否有效，比如颁发机构，过期时间等等，如果发现异常，则会弹出一个警告框，提示证书存在问题。如果证书没有问题，那么就生成一个随机值。然后用证书对该随机值进行加密。就好像上面说的，把随机值用锁头锁起来，这样除非有钥匙，不然看不到被锁住的内容。
 　　
-<br/>
-
-　　
+<br/>　
 **5.传送加密信息**
 
 &emsp; 这部分传送的是用证书加密后的随机值，目的就是让服务端得到这个随机值，以后客户端和服务端的通信就可以通过这个随机值来进行加密解密了。
 　　
 <br/>
-
-　
 **6.服务段解密信息**
 
 &emsp; 服务端用私钥解密后，得到了客户端传过来的随机值(私钥)，然后把内容通过该值进行对称加密。所谓对称加密就是，将信息和私钥通过某种算法混合在一起，这样除非知道私钥，不然无法获取内容，而正好客户端和服务端都知道这个私钥，所以只要加密算法够彪悍，私钥够复杂，数据就够安全。
 　　
 
 <br/>
-
-
 **7.传输加密后的信息**
 
 &emsp; 这部分信息是服务段用私钥加密后的信息，可以在客户端被还原。
 　　
-　　
 <br/>
-
 **8.客户端解密信息**
 
 &emsp; 客户端用之前生成的私钥解密服务段传过来的信息，于是获取了解密后的内容。整个过程第三方即使监听到了数据，也束手无策。
 
-<br/>
-<br/>
+<br/><br/>
 
 - 这就是整个https验证的流程了。简单总结一下：
 	- 就是用户发起请求，服务器响应后返回一个证书，证书中包含一些基本信息和公钥。
@@ -1192,13 +1123,7 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 
 **了解了https认证流程后，接下来我们来讲讲AFSecurityPolicy这个类，AF就是用这个类来满足我们各种https认证需求。**
 
-
-
-
-<br/>
-<br/>
-<br/>
-
+<br/><br/><br/>
 > <h2 id='目录结构'>目录结构</h2>
 
 > **[目录结构](https://www.jianshu.com/p/e4ff363da7f7)**
@@ -1215,25 +1140,16 @@ static void url_session_manager_create_task_safely(dispatch_block_t block) {
 
 ![AFNet10.png](./../../Pictures/AFNet10.png)
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 ![ios_oc1_50](./../../Pictures/ios_oc1_50.jpg)
 
 
 <br/>
-
 ![封装架构图](./../../Pictures/ios_oc1_51.png)
 
 
 
-<br/>
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='原生NSURLSession和AF网络请求DEMO'>原生NSURLSession和AF网络请求DEMO</h2>
 
 
@@ -1289,13 +1205,8 @@ NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completion
 &emsp;  `@interface AFHTTPSessionManager : AFURLSessionManager <NSSecureCoding, NSCopying>`,可以看出 ` AFHTTPSessionManager` 继承自 `AFURLSessionManager`。
 
 
-<br/>
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 > <h2 id='数据序列化'>数据序列化</h2>
-
 
 简介：它就是AFNetworking参数编码的序列化器，它一共有三种编码格式。
 
@@ -1308,18 +1219,16 @@ NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completion
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id='AFURLSessionManager'>AFURLSessionManager</h1>
 
 
 ![AFNet9.jpeg](./../../Pictures/AFNet9.jpeg)
 
 <br/>
-
 > <h2 id='AFURLSessionManager头文件属性'>AFURLSessionManager头文件属性</h2>
 
 ```
@@ -1349,10 +1258,7 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 ```
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='类中使用的通知'>类中使用的通知</h2>
 
 在外面通过监听这些通知，可以获取到这些通知的信息
@@ -1369,19 +1275,13 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 - AFNetworkingTaskDidCompleteErrorKey
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='方法'>方法</h2>
 
 <br/>
-
 > <h2 id='SessionConfig'>SessionConfig</h2>
 
-
 `- (instancetype)initWithSessionConfiguration:(NSURLSessionConfiguration *)configuration`
-
 
 ```
 
@@ -1458,11 +1358,10 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id='AFHTTPSessionManager'>AFHTTPSessionManager</h1>
 
 `- (instancetype)initWithBaseURL:(NSURL *)url  sessionConfiguration:(NSURLSessionConfiguration *)configuration`
@@ -1492,12 +1391,7 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 }
 ```
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 ```
 //生成request，通过request生成task
@@ -1547,8 +1441,7 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 }
 ```
 
-<br/>
-<br/>
+<br/><br/>
 
 ```
 - (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request
@@ -1572,9 +1465,7 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 
 ```
 /*
@@ -1609,15 +1500,11 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id='AFURLRequestSerialization'>AFURLRequestSerialization</h1>
-
-<br/>
-<br/>
 
 ```
 //
@@ -1736,7 +1623,7 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 
 ```
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -1795,12 +1682,10 @@ interface AFURLSessionManager : NSObject <NSURLSessionDelegate, NSURLSessionTask
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
 > <h1 id='多路复用'>多路复用</h1>
 
 &emsp; AFURLSessionManager和NSURLSession是一对一的关系，AFURLSessionManager会在初始化的时候创建对应的NSURLSession。同样AFURLSessionManager在注释中写明了可以提供一个配置好的manager单例来全局复用。
