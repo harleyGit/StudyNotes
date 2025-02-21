@@ -37,6 +37,7 @@
 
 ***
 <br/>
+
 > <h1 id='git提交规范'>Git提交规范</h1>
 
 ```
@@ -96,14 +97,16 @@
 
 ***
 <br/>
-><h1 id = 'c-language'>C语言</h1>
-><h2 id='c'> C</h2>
+> <h1 id = 'c-language'>C语言</h1>
+> <h2 id='c'> C</h2>
 *	[**基础**](./C/C基础.md)
 *	[**指针**](./C/C指针.md)
 *	[**数据结构**](./C/数据结构.md)
 *	[**排序算法**](./C/排序算法.md)
 *	[**LeetCode算法**](./C/LeetCode.md)
+
 <br/><br/>
+
 >## <h2 id = 'c++'>[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
 *	[**基础**](./C/C2基础.md)
 *	[作用域](./C/作用域.md)
