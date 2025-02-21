@@ -5,12 +5,12 @@
 - [**博客园**](https://i.cnblogs.com/posts)
 - [JLRHX](https://github.com/bestswifter/blog/blob/master/articles/bat-offer.md)
 
-<br/><br/>
+<br/><br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
-> <h2 id=""></h2>
+> </h2>
 - [**线上面试控制平台**](https://www.showmebug.com/pads)
 - **[OC基础](#oc基础)**
 	- [UILabel多适应](#UILabel多适应)
@@ -3728,8 +3728,6 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 
 
 <br/><br/>
-
-
 ># <h3 id = "使用hook防崩溃">使用hook防崩溃</h3>
 
 
@@ -3741,7 +3739,6 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 
 
 <br>
-
 拓展: 
 
 **1.不使用三方SDK如何收集Crash堆栈信息?** 
@@ -3752,13 +3749,7 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 
 可以使用[NSSetUncaughtExceptionHandler](https://juejin.cn/post/6953142642746064910)进行崩溃信息的收集.
 
-
-
-
-<br/>
-<br/>
-<br/>
-
+<br/><br/><br/>
 >## <h2 id = "Runloop">[Runloop](https://www.jianshu.com/p/e29f846d8a97)</h2>
 
 [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/#base)
