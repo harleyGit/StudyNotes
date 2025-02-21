@@ -157,6 +157,9 @@
 - [**项目实践**](#项目实践)
 	- [爬虫程序](#爬虫程序)
 	- [模版引擎-加载渲染html](#模版引擎-加载渲染html)
+- [**知识拓展**](#知识拓展)
+	- [裸机和租用服务器系统辨识分类](#裸机和租用服务器系统辨识分类)
+		- [阿里云和腾讯云安转的是什么系统](#阿里云和腾讯云安转的是什么系统)
 
 
 <br/>
@@ -272,13 +275,12 @@ source ~/.zshrc　　# 如果是zsh
 
 ***
 <br/><br/><br/>
-
 > <h1 id="项目初创建">项目初创建</h1>
 
 我Mac电脑配置的环境变量如下：
 
 ```
-export GOROOT=/opt/homebrew/Cellar/go/1.22.3/libexec #Go源代码安装目录(homebrew安装:brew info go)
+export GOROOT=/opt/homebrew/Cellar/go/1.22.3/libexec #Go源代码安装目录(homebrew安装:brew info go- 俗称Go根目录)
 export GOPATH=$HOME/HGFiles/GitHub/GoProject	#项目程序目录
 export GOBIN=$GOPATH/bin	#Go执行目录(Go程序编译后生成的可执行文件存放目录)
 export PATH=$PATH:$GOROOT/bin	#将go可执行文件加入PATH中，使GO命令与我们编写的GO应用可以全局调用,$PATH表示引入之前的路径
@@ -305,7 +307,6 @@ go mod init
 ![go.0.0.6.png](./../Pictures/go.0.0.6.png)
 
 <br/><br/>
-
 - **Go的工作区目录结构有bin、pkg、src三个（在GOPATH目录下）：**
 
 	- bin：生成的可执行文件（编译后的可执行程序的存储目录。）
@@ -336,13 +337,11 @@ Golang执行流程：
 
 
 <br/>
-
 两者区别：
 
 ![go.0.0.5.png](./../Pictures/go.0.0.5.png)
 
 <br/>
-
 - **第一种：先编译在运行**
 
 ```
@@ -7660,7 +7659,6 @@ http.ListenAndServe(":9090", nil) // 改为 9090
 然后在浏览器中访问 `http://localhost:9090`。
 
 <br/>
-
 - **通过外网访问**
 
 如果需要让其他设备（如手机或其他电脑）访问：
@@ -7676,10 +7674,141 @@ http.ListenAndServe("192.168.1.100:8080", nil)
 3. 在其他设备的浏览器中访问 `http://192.168.1.100:8080`。
 
 <br/> 
-
 完成这些步骤后，你的 Go 应用程序生成的页面应该可以在浏览器中正确打开。
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="知识拓展">知识拓展</h1>
+> <h2 id="裸机和租用服务器系统辨识分类">裸机和租用服务器系统辨识分类</h2>
+
+
+一般来说，新购或租用的服务器可能有以下几种情况：  
+
+- **1.云服务器（阿里云、腾讯云、AWS 等）**
+	- **通常可自选操作系统**，提供多种 **Linux / Windows 选项**。  
+	- 常见预装系统：
+	  - **Linux**: Ubuntu, CentOS (7/Stream), Debian, Rocky Linux, AlmaLinux 等。
+	  - **Windows Server**: 2019、2022 版等。
+
+💡 **如何查看系统版本？**
+```bash
+# Linux (适用于 Ubuntu / CentOS / Debian)
+cat /etc/os-release
+
+# Windows
+systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+```
+
+---
+
+- **2.物理服务器（裸机服务器）**
+	- 可能是 **无系统（裸机）**，需要手动安装操作系统。  
+	- **预装系统**（若供应商已安装）：
+	  - **Linux 发行版**（CentOS、Ubuntu Server、RHEL、Debian 等）。
+	  - **Windows Server**（用于企业 IT 需求）。
+	  - **ESXi / Proxmox**（用于虚拟化管理）。
+
+- 💡**如何确认服务器是否有系统？**
+	- **无系统（裸机）**：开机后 **提示 No bootable device**，需要安装系统。
+	- **已有系统**：
+	  - Linux：尝试 `ssh root@服务器IP`
+	  - Windows：尝试远程桌面 `mstsc`
+
+---
+
+- **3.个人或公司购买的服务器**
+	- 若是全新设备，可能：
+	  - **未安装任何操作系统**，需要 **U 盘引导安装** Linux/Windows。
+	  - **厂商预装系统**（如 HPE、Dell 服务器可能有 Linux/Windows 预装）。
+
+💡 **如何安装系统？**
+1. **U 盘引导**：下载 Linux ISO（Ubuntu/CentOS），制作 U 盘安装盘。
+2. **PXE 网络安装**：企业环境下可以用 PXE 远程安装系统。
+3. **iDRAC / iLO**（戴尔 / 惠普服务器的远程管理）支持远程装机。
+
+---
+
+- **结论**
+	- 如果是云服务器，通常会预装 **Linux/Windows**，你可以选择系统。  
+如果是裸机服务器，可能是 **无系统**，需要自行安装。
+
+
 <br/><br/>
+><h3  id="阿里云和腾讯云安转的是什么系统">阿里云和腾讯云安转的是什么系统</h3>
+- **阿里云 & 腾讯云 服务器默认安装的系统**
+阿里云（Alibaba Cloud）和腾讯云（Tencent Cloud）都提供 **多种操作系统选择**，通常默认安装的是 **Linux 发行版**，但用户可以在购买时选择具体的系统。  
+
+---
+
+- **1️⃣ 阿里云默认系统**
+	- **阿里云 ECS（云服务器）** 默认安装 **Alibaba Cloud Linux**，但用户可以手动选择其他系统：
+
+- **Linux 选项**
+  - **Alibaba Cloud Linux**（阿里自研）
+  - CentOS 7 / 8（CentOS 8 已停止维护）
+  - Rocky Linux / AlmaLinux（CentOS 替代品）
+  - Ubuntu 18.04 / 20.04 / 22.04
+  - Debian 10 / 11
+  - OpenSUSE、SUSE Linux Enterprise Server（SLES）
+  - Red Hat Enterprise Linux（RHEL，需要付费授权）
+
+- **Windows 选项**
+  - Windows Server 2016 / 2019 / 2022（支持远程桌面）
+
+💡 **阿里云默认安装的系统**
+- 早期默认是 **CentOS 7**
+- 现在推荐 **Alibaba Cloud Linux**（基于 RHEL 优化）
+
+**如何查看阿里云服务器的系统版本？**
+
+```bash
+cat /etc/os-release
+```
+
+---
+
+- **2️⃣ 腾讯云默认系统**
+
+**腾讯云 CVM（云服务器）** 默认安装 **TencentOS Server**（基于 CentOS 优化），但也支持其他系统：
+
+- **Linux 选项**
+  - **TencentOS Server**（腾讯自研，基于 RHEL 优化）
+  - CentOS 7 / 8（CentOS 8 停止维护）
+  - Ubuntu 18.04 / 20.04 / 22.04
+  - Debian 10 / 11
+  - Rocky Linux / AlmaLinux
+  - SUSE Linux Enterprise Server（SLES）
+  - Red Hat Enterprise Linux（RHEL，需要授权）
+
+- **Windows 选项**
+  - Windows Server 2016 / 2019 / 2022（支持远程桌面）
+
+💡 **腾讯云默认安装的系统**
+- 早期默认是 **CentOS 7**
+- 现在推荐 **TencentOS Server**
+
+**如何查看腾讯云服务器的系统版本？**
+```bash
+cat /etc/os-release
+```
+
+---
+
+- **3️⃣ 阿里云 vs 腾讯云：默认系统对比**
+
+| **云平台**   | **默认 Linux 系统**       | **可选系统** |
+|-------------|------------------|-----------|
+| **阿里云**  | Alibaba Cloud Linux | CentOS, Ubuntu, Debian, RHEL, Windows 等 |
+| **腾讯云**  | TencentOS Server    | CentOS, Ubuntu, Debian, RHEL, Windows 等 |
+
+👉 **结论**：
+- **如果你不指定系统**，阿里云默认安装 **Alibaba Cloud Linux**，腾讯云默认安装 **TencentOS Server**。
+- **如果你需要 CentOS/Ubuntu**，可以在创建服务器时手动选择。
+- **如果你需要 Windows Server**，需要选择 **Windows 版本**（通常收费比 Linux 高）。
+
+
 
 
 

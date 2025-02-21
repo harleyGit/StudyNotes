@@ -241,7 +241,7 @@
 >## <h2 id = 'swift'>[**Swift**](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
 * [**资料集**](./iOS/Swift/资料集.md)
 * [代码规范](./iOS/Swift/iOS代码规范.md)
-* [**基础**](./iOS/Swift/基础.md)
+* [**swift基础**](./iOS/Swift/swift基础.md)
 * [**关键字**](./iOS/Swift/关键字.md)
 * [**UI组件**](./iOS/Swift/UI组件.md)
 * [**动画**](./iOS/Swift/动画.md)
@@ -268,10 +268,10 @@
 ***
 <br/><br/>
 > <h1 id = 'go'>Go</h1>
-- [**语法**](./Go/语法.md)
+- [**go语法**](./Go/go语法.md)
 - [**数据存储**](./Go/数据存储.md)
 - [**常用框架**](./Go/GoLang常用框架.md)
-- [**实战进阶**](./Go/实战进阶.md)
+- [**go实战进阶**](./Go/go实战进阶.md)
 - [**优化**](./Go/go优化.md)
 
 

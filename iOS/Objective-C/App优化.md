@@ -1,8 +1,9 @@
-> <h2 id=''></h2>
+> </h2>
 - [**启动时间优化**](#启动时间优化)
 - [**卡顿监控**](#卡顿监控)
 	- [子线程监控检测时间间隔](#子线程监控检测时间间隔)
 	- [子线程监控退火算法](#子线程监控退火算法)
+	- [堆栈相同比较方法](#堆栈相同比较方法)
 - [**App瘦身**](#App瘦身)
 	- [官方AppThinning](#官方AppThinning)
 	- [无用图片资源](#无用图片资源)
@@ -232,38 +233,77 @@ if (bIsSame) {
 &emsp; 可以看出，将子线程检查主线程时间间隔增加后，needFilter 就直接返回 EFilterType_Annealing 类型表示当前情况满足退火算法。使用退火算法，可以有效降低没有必要地获取主线程堆栈的频率。这样的话，我们就能够在准确获取卡顿的前提下，还能保障 App 性能不会受卡顿监控系统的影响。
 
 
+<br/><br/>
+><h2 id='堆栈相同比较方法'>堆栈相同比较方法</h2>
+在 iOS 开发中，想要**确认两次堆栈（Call Stack）是否相等**，通常是为了分析卡顿、死锁或性能瓶颈。你可以用以下方法来判断两次堆栈是否相等：  
 
+---
 
+- **1️⃣获取线程堆栈的方法**
+在 iOS 中，可以通过 `NSThread.callStackSymbols` 或 `thread backtrace` 来获取当前线程的调用堆栈。
 
+- **方法1：使用 `NSThread.callStackSymbols`（简单方式）**
+	- **直接比较**
 
-<br/>
-<br/>
+📌 `callStackSymbols` 返回 **字符串数组**，每个元素都是一个调用栈信息，如：
 
-><h2 id=''></h2>
+```objc
+NSArray<NSString *> *stack1 = [NSThread callStackSymbols];
+NSArray<NSString *> *stack2 = [NSThread callStackSymbols];
 
+if ([stack1 isEqualToArray:stack2]) {
+    NSLog(@"两次堆栈相等");
+} else {
+    NSLog(@"两次堆栈不同");
+}
+```
+📌 **注意**：`callStackSymbols` 可能包含 **内存地址**，不同情况下可能不同，因此 **不能完全依赖字符串比较**。
 
-<br/>
-<br/>
+---
 
-><h2 id=''></h2>
+- **方法 2：使用 `backtrace()`（更底层的方式）**
 
+```objc
+#include <execinfo.h>
 
+BOOL isBacktraceEqual() {
+    void *stack1[128];
+    void *stack2[128];
 
-<br/>
+    int size1 = backtrace(stack1, 128);
+    int size2 = backtrace(stack2, 128);
+
+    if (size1 != size2) return NO;
+
+    return memcmp(stack1, stack2, size1 * sizeof(void *)) == 0;
+}
+
+if (isBacktraceEqual()) {
+    NSLog(@"两次堆栈相等");
+} else {
+    NSLog(@"两次堆栈不同");
+}
+```
+📌 `memcmp()` 直接比较 **函数指针地址**，比字符串更准确，适合后续比较或进一步解析。但如果**加载地址发生变化**，可能会有偏差。
+
+---
+
+- **结论**
+	- **简单对比**：使用 `[NSThread callStackSymbols]`，但可能受内存地址影响。
+	- **精确对比**：使用 `backtrace()` 获取地址，并用 `memcmp()` 比较。
+	- **卡顿检测**：定期采样 `NSThread.callStackSymbols`，如果堆栈长时间不变，说明 UI 线程卡住了。
+
+<br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id='App瘦身'>App瘦身</h1>
 
 &emsp; App Store 规定了安装包大小超过 150MB 的 App 不能使用 OTA（over-the-air）环境下载，也就是只能在 WiFi 环境下下载。所以，150MB 就成了 App 的生死线，一旦超越了这条线就很有可能会失去大量用户。
 
 &emsp; App 包过大既损害用户体验，影响升级率，还会导致无法提交 App Store 的情况和非 WiFi 环境无法下载这样可能影响到 App 生死的问题。那么，怎样对包大小进行瘦身和控制包大小的不合理增长就成了重中之重。
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='官方AppThinning'>官方AppThinning</h2>
 
 &emsp; App Thinning 是由苹果公司推出的一项可以改善 App 下载进程的新技术，主要是为了解决用户下载 App 耗费过高流量的问题，同时还可以节省用户 iOS 设备的存储空间。

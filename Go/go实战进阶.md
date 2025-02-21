@@ -65,10 +65,11 @@
 	- [Go实战项目（简书-Leo丶Dicaprio）](https://www.jianshu.com/u/151e4eccc2e2)
 	- [煎鱼大佬的技术博客-Go学习之路（可以照着代码敲试一试）](https://eddycjy.com/tags/go/)
 		- [「连载一」Go 介绍与环境安装](https://eddycjy.com/posts/go/gin/2018-02-10-install/)
-  - [Go 的 Web 教程(源码)](https://go-mega.bonfy.im) 
-  - [人言兑博客](https://blog.axiaoxin.com/categories/)
-	  - [Golang Web开发：实现注册、登录与密码验证—bcrypt加密与存储详解](https://blog.axiaoxin.com/post/golang-web-dev-pwd-bcrypt/)
-  - [golang实战-（一系列教程-源码）丶吃鱼的猫（博客园）](https://www.cnblogs.com/eatfishcat/p/15953162.html)
+	- [Go 的 Web 教程(源码)](https://go-mega.bonfy.im)
+	- [人言兑博客](https://blog.axiaoxin.com/categories/)
+		- [Golang Web开发：实现注册、登录与密码验证—bcrypt加密与存储详解](https://blog.axiaoxin.com/post/golang-web-dev-pwd-bcrypt/)
+	- [golang实战-（一系列教程-源码）丶吃鱼的猫（博客园）](https://www.cnblogs.com/eatfishcat/p/15953162.html)
+	- [客户端制作教程（github-其他博客含有爬虫demo可以学习下）](https://github.com/GopherCoder/gitcli/tree/master)
 
 
 
