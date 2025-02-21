@@ -206,7 +206,6 @@
 	* [Runtime](./iOS/Objective-C/Runtime.md)
 	* [**浅谈Mach-O**](./iOS/Objective-C/浅谈Mach-O.md)
 - **逆向**
-	- [**资料集01**](./iOS/Objective-C/资料集01.md)
 	- [**逆向**](./iOS/Objective-C/逆向.md)
 	- [**Mach-O格式**](./iOS/Objective-C/Mach-O格式.md)
 - **错误总结**
