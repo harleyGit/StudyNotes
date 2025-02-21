@@ -97,8 +97,9 @@
 
 ***
 <br/>
-><h1 id = 'c-language'>C语言</h1>
-><h2 id='c'> C</h2>
+
+> <h1 id = 'c-language'>C语言</h1>
+> <h2 id='c'> C</h2>
 *	[**基础**](./C/C基础.md)
 *	[**指针**](./C/C指针.md)
 *	[**数据结构**](./C/数据结构.md)
@@ -129,6 +130,7 @@
 
 ***
 <br/>
+
 ># <h1 id = 'ios开发'>[iOS开发](https://github.com/apple)</h1>
 <br/>
 ![进阶](./Pictures/ios_oc0_0.png)
