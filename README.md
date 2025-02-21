@@ -33,12 +33,11 @@
 	- [dock打开](./Sources/2024考研救命300词.docx)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 > <h1 id='git提交规范'>Git提交规范</h1>
-
 
 ```
 - fix: 修复改bug;
@@ -88,25 +87,22 @@
 ```
 
 <br/><br/>
-
 - [**超过1000本的计算机经典书籍分享**](https://github.com/forthespada/CS-Books)
 - [**LearnGolang(Github学习资料**)](https://github.com/LearnGolang/LearnGolang/tree/master)
 - [**Go编程基础**](https://github.com/Unknwon/go-fundamental-programming)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
->#  <h1 id = 'c-language'>C语言</h1>
-
+<br/>
+><h1 id = 'c-language'>C语言</h1>
 ><h2 id='c'> C</h2>
 *	[**基础**](./C/C基础.md)
 *	[**指针**](./C/C指针.md)
 *	[**数据结构**](./C/数据结构.md)
 *	[**排序算法**](./C/排序算法.md)
 *	[**LeetCode算法**](./C/LeetCode.md)
-
 <br/><br/>
 >## <h2 id = 'c++'>[C++](https://www.bookstack.cn/read/cppreference-language/b1364a863c4e10b2.md)</h2>
 *	[**基础**](./C/C2基础.md)
@@ -125,16 +121,14 @@
 *	[异常处理](./C/C2异常处理.md)
 *	[C2Exercise(I)](./C/C2Exercise(I).md)
 
-<br/>
+
+<br/><br/><br/>
 
 ***
-<br/><br/>
-># <h1 id = 'ios开发'>[iOS开发](https://github.com/apple)</h1>
-
 <br/>
-
+># <h1 id = 'ios开发'>[iOS开发](https://github.com/apple)</h1>
+<br/>
 ![进阶](./Pictures/ios_oc0_0.png)
-
 <br/><br/>
 > <h2 id = 'objective-c'>Objective-C</h2>
 * [**OC资料**](./iOS/Objective-C/OC资料.md)
@@ -166,17 +160,17 @@
 * [**支付**](./iOS/Objective-C/支付.md)
 * [**网络通信**](./iOS/Objective-C/网络通信.md)
 * [iPhone设计规范](https://zhuanlan.zhihu.com/p/127780364)
-* [本地化(I)](./iOS/Objective-C/本地化(I).md)
+* [本地化](./iOS/Objective-C/本地化.md)
 * [闭包](./iOS/Objective-C/闭包.md)
-* [键盘弹出(I)](./iOS/Objective-C/键盘弹出(I).md)
+* [键盘弹出](./iOS/Objective-C/键盘弹出.md)
 * [**集合**](./iOS/Objective-C/集合.md)
 * [响应链](./iOS/Objective-C/响应链.md)
 * [远程推送(US)](./iOS/Objective-C/远程推送(US).md)
-* [坐标系(I)](./iOS/Objective-C/坐标系(I).md)
-* [NSTimer(I)](./iOS/Objective-C/NSTimer(I).md)
-* [Video(I)](./iOS/Objective-C/Video(I).md)
-* [单元测试(I)](./iOS/Objective-C/单元测试(I).md)
-* [语法精练(I)](./iOS/Objective-C/语法精练(I).md)
+* [坐标系](./iOS/Objective-C/坐标系.md)
+* [NSTimer](./iOS/Objective-C/NSTimer.md)
+* [Video](./iOS/Objective-C/Video.md)
+* [单元测试](./iOS/Objective-C/单元测试.md)
+* [语法精练](./iOS/Objective-C/语法精练.md)
 * [**WKWebView**](./iOS//Objective-C/WKWebView.md)
 * [**GUI框架**](./iOS/Objective-C/GUI框架.md)
 	* [UIButton](./iOS/Objective-C/UIButton.md)
@@ -188,22 +182,17 @@
 	* [UITabBarController](./iOS/Objective-C/UITabBarController.md)
 	* [UITableView](./iOS/Objective-C/UITableView.md)
 	* [UITextField](./iOS/Objective-C/UITextField.md)
-	* [UIViewController(I)](./iOS/Objective-C/UIViewController(I).md)
+	* [UIViewController](./iOS/Objective-C/UIViewController.md)
 	* [UIWindow](./iOS/Objective-C/UIWindow.md)
 * [**动画&绘图**](#动画&绘图)
 	*	[UI布局更新](./iOS/Objective-C/UI布局更新.md)
-
 * **安全**
 	* [KeyChain](./iOS/Objective-C/KeyChain.md)
 	*	[加密](./iOS/Objective-C/加密.md)
 	*	[网络安全](./iOS/Objective-C/网络安全.md)
 	*	[Https](./iOS/Objective-C/Https.md)
-* **优化**
-	*	[内存优化](./iOS/Objective-C/内存优化.md)
-	*	[二进制重排](./iOS/Objective-C/二进制重排.md)
-	*	[性能优化](./iOS/Objective-C/性能优化.md)
-* [**底层原理**](#底层原理)
-	* [基础](./iOS/Objective-C/基础.md)
+* **底层原理**
+	* [oc底层基础](./iOS/Objective-C/oc底层基础.md)
 	* [内存管理](./iOS/Objective-C/内存管理.md) 
 	* [RunLoop](./iOS/Objective-C/RunLoop.md)
 	* [自动释放池](./iOS/Objective-C/自动释放池.md)
@@ -211,7 +200,7 @@
 	* [**浅谈Mach-O**](./iOS/Objective-C/浅谈Mach-O.md)
 - **逆向**
 	- [**资料集01**](./iOS/Objective-C/资料集01.md)
-	- [**逆向(I)**](./iOS/Objective-C/逆向(I).md)
+	- [**逆向**](./iOS/Objective-C/逆向.md)
 	- [**Mach-O格式**](./iOS/Objective-C/Mach-O格式.md)
 - **错误总结**
 	- [上架错误](./iOS/Objective-C/上架错误.md)
@@ -235,8 +224,6 @@
 - **项目开发**
 	- [DevSum](./iOS/Objective-C/DevSum.md)
 	- [YSHProject](./iOS/ProjectDesc/YSHProject.md)
-
-
 <br/><br/><br/>     
 >## <h2 id = 'swift'>[**Swift**](https://swiftgg.gitbook.io/swift/yu-yan-can-kao)</h2>
 * [**资料集**](./iOS/Swift/资料集.md)
@@ -263,10 +250,10 @@
 	* [动态性](./iOS/Swift/动态性.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'go'>Go</h1>
 - [**go语法**](./Go/go语法.md)
 - [**数据存储**](./Go/数据存储.md)
@@ -275,11 +262,10 @@
 - [**优化**](./Go/go优化.md)
 
 
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'flutter'>Flutter</h1>
 *	[**资料集**](./Flutter/资料集.md)
 *	[**Dart基础**](./Flutter/Dart基础.md)
@@ -298,27 +284,27 @@
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 > <h1 id='android'>Android</h1>
 - [**基础**](./Android/基础.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'java-script'>JavaScript</h1>
 - [**基础(I)‌**](./JavaScript/基础(I).md)
 - [**字体自适应**](./JavaScript/字体自适应.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'react'>React</h1>
 - [**资料集**](./React/资料集.md)
 - [**Node**](./React/Node.md)
@@ -336,18 +322,18 @@
 - [**知识点**](./React/React知识点.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'css'>CSS</h1>
 - [布局](./CSS/布局.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'egret-engine'>Egret Engine</h1>
 * [位图使用](./EgretEngine/位图使用.md)
 * [配置](./EgretEngine/ee配置.md)
@@ -355,8 +341,7 @@
 * [engine](./EgretEngine/engine.md)
 
 
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/><br/>
@@ -365,7 +350,7 @@
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/><br/>
@@ -378,11 +363,11 @@
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/><br/>
-> <h1 id = '类库'>类库</h1>
+> <h1 id ='类库'>类库</h1>
 *	[阿里云(I)](./ClassLibrary/阿里云(I).md)
 *	[个人库](./ClassLibrary/个人库.md)
 *	[极光推送](./ClassLibrary/极光推送.md)
@@ -429,14 +414,10 @@
 	*	[plcrashreporter](https://github.com/microsoft/plcrashreporter)
 
 
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = '数据存储'>数据存储 </h1>
 *	[数据持久化](./DataStorage/数据持久化.md)
 *	[相册和视频处理(I)](./DataStorage/相册和视频处理(I).md)
@@ -444,11 +425,10 @@
 *	[NSCache(I)](./DataStorage/NSCache(I).md)
 
 
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = 'network'>Network</h1>
 *	[**数据解析**](./Network/数据解析.md)
 *	[**Header详解**](./Network/Header详解.md)
@@ -458,29 +438,27 @@
 *	[**Socket网络编程**](./Network/Socket网络编程.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 > <h1 id='亚亚笔记'>亚亚笔记</h1>
 - [HR知识汇总](./亚亚笔记/HR知识汇总.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 > <h1 id="考研资料">考研资料</h1>
 - [**English00(单词短语)**](./KaoYan/English00.md)
 - [**管综数学**](./KaoYan/管综数学.md)
 
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = '工具'>工具</h1>
 - [SourceTree](./Tools/SourceTree.md)
 * [CocoaPods](./Tools/CocoaPods.md)
@@ -500,10 +478,10 @@
 * [生活总结.md](./Tools/生活总结.md)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = '读书笔记'>读书笔记</h1>
 - [**Github书籍**](https://github.com/HarborLibrary)
 - [**收藏的一些经典的电子书(ebook) （约10万本）**](https://github.com/kska32/ebooks/tree/master/docs)
@@ -522,10 +500,10 @@
 	*	[汽车史 思维导图](./ReadNotes/汽车史.xmind)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = '优秀资料'>优秀资料</h1>
 - **资源**
 	- [**脚本之家电子书PDF下载**](https://www.jb51.net/books/)
@@ -549,10 +527,10 @@
 -	[**Fuchsia中文社区**](https://fuchsia-china.com)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id = '优秀文章'>优秀文章</h1>
 -	[iOS 底层安全分析(李斌同学)](https://juejin.im/user/3438928103236920/posts)
 -	[Flutter 基础知识](http://www.xmamiga.com/3428/)
@@ -563,16 +541,12 @@
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 > <h1 id='常用'>常用</h1>
-
-
-<br/><br/>
 > <h2 id='模块图片相对路径'>模块图片相对路径</h2>
-
 - **iOS**
 	- Objective-C
 	- Swift
@@ -624,7 +598,6 @@
 | 内容4 | 内容5 | 内容6 |
 
 <br/>
-
 - **HTML标签定义**
 <dl>
   <dt>定義列表</dt>
@@ -634,7 +607,6 @@
 </dl>
 
 <br/><br/>
-
 - **字体颜色测试**
 
 ```diff
@@ -649,10 +621,7 @@
 
 ```
 
-
-
 <br/><br/>
-
 - **图片链接到影片**
 
 ![](./Pictures/bf0_0x.png)
@@ -680,10 +649,3 @@ section 发布验收
     发布: 2d
     验收: 3d
 ```
-
-
-
-
-
-
-
