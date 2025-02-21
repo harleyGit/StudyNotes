@@ -80,6 +80,7 @@
 	- 元类对象（meta-class对象）
 
 <br/>
+
 > <h2 id="底层类结构为什么要这么设计">底层类结构为什么要这么设计</h2>
 **苹果的设计考虑了以下关键点：**
 
@@ -103,8 +104,6 @@
 	- **统一行为**：这样**实例对象**和**类对象**都可以用相同的 `objc_msgSend()` 方式查找方法。
 	- **节省存储**：类信息只存一份，而不是每个实例都存方法列表。
 
-
-<br/>
 ---
 
 >**2️⃣ 允许动态方法查找**
@@ -127,9 +126,10 @@ objc_msgSend -> 在缓存中查找 -> (未命中) 遍历方法列表 -> (仍未�
 ```
 
 <br/>
+
 ---
 
->**3️⃣ 支持「类方法」**
+> **3️⃣ 支持「类方法」**
 Objective-C 允许在类上调用方法：
 
 ```objc
@@ -151,8 +151,8 @@ Objective-C 允许在类上调用方法：
 [Person sayHello] -> Person 的 Meta-Class -> 查找 +sayHello
 ```
 
-<br/>
 ---
+
 >**4️⃣ 兼容 C 语言**
 Objective-C 是基于 C 语言的，需要兼容 C 的**结构体**、**函数指针**等低级操作。
 
@@ -172,8 +172,8 @@ struct objc_class {
 - **节省内存**：结构体比 C++ 虚函数表更紧凑。
 - **直接操作**：方便用 `class_addMethod()`、`class_replaceMethod()` 动态修改方法。
 
-<br/>
 ---
+
 >**5️⃣ 允许「动态创建类」**
 
 Objective-C 支持**运行时创建类**，比如：
@@ -192,7 +192,6 @@ objc_registerClassPair(newClass);
 - **支持 KVO**：KVO 需要**动态创建子类**，修改 `isa` 指针。
 - **适配动态框架**：如 CoreData、JS 调用等。
 
-<br/>
 ---
 >**6️⃣ 让「类」和「NSObject」兼容**
 Objective-C 允许：
@@ -215,7 +214,6 @@ Person -> Person Meta-Class -> NSObject Meta-Class -> NSObject
 - **让所有类都能用 NSObject 的方法**，比如 `performSelector:`。
 - **保持继承结构清晰**，不会破坏 `NSObject` 体系。
 
-<br/>
 ---
 >**7️⃣ 适配 ARC & MRC**
 Objective-C 需要支持：
@@ -230,7 +228,6 @@ Objective-C 需要支持：
 - **兼容老代码**：保留 MRC，同时支持 ARC。
 - **提高性能**：`retain`/`release` 不用走虚函数，直接操作内存。
 
-<br/>
 ---
 >**总结：Objective-C 类结构的设计目标**
 | **目标** | **解决方案** | **好处** |
@@ -243,7 +240,6 @@ Objective-C 需要支持：
 | **6️⃣ 兼容 NSObject** | 让元类继承 `NSObject Meta-Class` | `performSelector:` 适用于类 |
 | **7️⃣ 适配 ARC & MRC** | `retain/release` 直接操作内存 | 兼容老代码，优化性能 |
 
-<br/>
 ---
 >**苹果为什么这么设计？**
 **👉 兼顾动态性 & 高性能**
@@ -262,6 +258,7 @@ Objective-C 需要支持：
 
 
 <br/><br/>
+
 > <h2 id='实例对象'>实例对象</h2>
 &emsp;  实例对象（instance对象）就是通过类的alloc出来的对象，每次调用alloc都会产生新的实例对象。例如：
 
@@ -282,6 +279,7 @@ NSObjcet *obj2 = [[NSObject alloc] init];
 
 
 <br/><br/>
+
 > <h2 id='类对象(class对象)'>类对象(class对象)</h2>
 &emsp;  `类对象（class对象）`就是通过class方法或者runtime的object_getClass方法得到的class对象。
 
@@ -328,6 +326,7 @@ objClass5= NSObject,
 ![principle0.png](./../../Pictures/principle0.png)
 
 <br/><br/>
+
 > <h2 id='元类对象（meta-class对象）'>元类对象（meta-class对象）</h2>
 
 &emsp;  **`元类对象（meta-class对象）`**就是通过RunTime的`object_getClass`方法得到的对象
@@ -356,11 +355,11 @@ objectMetaClass就是NSObject的元类对象
 
 
 <br/><br/><br/>
+
 > <h2 id="苹果公司为什么要设计元类">苹果公司为什么要设计元类</h2>
 - **苹果为什么要设计元类（Meta-Class）？**
 	- 在 Objective-C 中，**元类（Meta-Class）** 主要用于支持 **面向对象的动态特性**，特别是**类方法（Class Method）的存储和查找机制**。苹果设计元类的主要目的是为了：
 
-<br/>
 ---
 >**1️⃣ 统一「类」和「对象」的行为**
 - 在 Objective-C 里，一切都是**对象**，包括**类本身**。但类本身也是对象，它必须有自己的**方法**。  
@@ -387,7 +386,6 @@ objectMetaClass就是NSObject的元类对象
 	- **实例对象** 找实例方法：从 `Class` 查找方法。
 	- **类对象** 找类方法：从 `Meta-Class` 查找方法。
 
-<br/>
 ---
 >**2️⃣ 支持「类方法」的动态分发**
 - 元类的设计允许 **`+method` 类方法可以动态调用**，并且方法查找过程类似于实例方法：
@@ -415,7 +413,6 @@ objectMetaClass就是NSObject的元类对象
 
 这样设计后，即使 `Person` 运行时添加新类方法，元类仍然可以处理动态调用。
 
-<br/>
 ---
 >**3️⃣ 使「类」也能响应 `NSObject` 的方法**
 元类允许**类本身**也能调用 `NSObject` 的实例方法。例如：
@@ -428,7 +425,6 @@ objectMetaClass就是NSObject的元类对象
 
 如果没有元类，`Person` 这个类本身就没法调用 `NSObject` 的方法了。
 
-<br/>
 ---
 >**4️⃣ 允许「类」本身也能被动态修改**
 - 在 iOS 运行时，类本身也可以动态修改，比如：
@@ -444,14 +440,12 @@ method_setImplementation(allocMethod, (IMP)myCustomAllocIMP);
 ```
 这些操作依赖于 `Meta-Class` 机制，否则无法动态修改类方法。
 
-<br/>
 ---
 >**5️⃣ 兼容 KVO、消息转发、Method Swizzling**
 - 元类的设计让 KVO（Key-Value Observing）、消息转发（`forwardInvocation:`）等特性成为可能：
 	- **KVO 动态创建子类**，并修改 `isa` 指针指向新子类。
 	- **Method Swizzling** 可以直接替换 `Meta-Class` 里的方法，从而修改类方法行为。
 
-<br/>
 ---
 >**总结**
 | 设计目标 | 解决的问题 | 作用 |
@@ -471,6 +465,7 @@ method_setImplementation(allocMethod, (IMP)myCustomAllocIMP);
 
 
 <br/><br/>
+
 > <h2 id='isa指针指向'>isa指针指向</h2>
 isa指针指向用一张示意图来简单概括一下：
 
@@ -484,7 +479,8 @@ isa指针指向用一张示意图来简单概括一下：
 
 
 <br/><br/><br/>
-><h2 id="Class本质">Class本质</h2>
+
+> <h2 id="Class本质">Class本质</h2>
 ><h3  id="类的底层为什么要设计两个结构体">类的底层为什么要设计两个结构体</h3>
 - **在 Objective-C 的底层实现中，一个类通常由两个核心的结构体来描述：**  
 	- 1.**类结构体（`struct objc_class`）**  
@@ -493,7 +489,6 @@ isa指针指向用一张示意图来简单概括一下：
 - **为什么要设计两个结构体？**
 	- 主要是为了**分离「类」和「对象」的职责**，提升**灵活性、性能**，同时**支持面向对象的继承和动态特性**。
 
-<br/>
 ---
 >**📌 1. `struct objc_object`（对象结构体）：表示实例对象**
 实例对象（`NSObject *obj`）的底层表示是 `objc_object` 结构体，它**存储对象的 `isa` 指针**，指向**类对象（Class Object）**。
@@ -524,7 +519,6 @@ obj（实例对象）   →    NSObject 类对象（objc_class）
 - 这样：
 	- 发送消息 `[obj description]` 时，会**沿着 `isa` 找到类对象**，从 `objc_class` 里获取 `description` 方法。
 
-<br/>
 ---
 >**📌 2. `struct objc_class`（类结构体）：表示类对象**
 类对象（Class Object）的底层结构是 `objc_class` 结构体，它**存储方法列表、属性列表、父类信息**。
@@ -560,7 +554,6 @@ struct objc_class {
 - 这样：
 	- `objc_msgSend(p, @selector(sayHello))` 会沿着 `isa` 找到 `Person` 类，查询 `sayHello` 方法。
 
-<br/>
 ---
 >**📌 为什么一个类要设计两个结构体？**
 - **1️⃣ 分离职责，提升灵活性**
@@ -577,7 +570,6 @@ struct objc_class {
 - **4️⃣ 兼容类方法**
 	- 类方法存储在**元类（Meta-Class）**，需要 `objc_class` 的 `isa` 指向 `Meta-Class`。
 
-<br/>
 ---
 >**📌 结构总结**
 | **结构体** | **代表** | **主要存储** | **作用** |
@@ -589,6 +581,7 @@ struct objc_class {
 **两个结构体分工明确，让 Objective-C 既能支持「面向对象」的继承，又能兼容 C 语言，提供高效的运行时特性！** 🚀
 
 <br/><br/>
+
 > <h3 id='objc_class源码'>objc_class源码</h3>
 
 ```
@@ -624,6 +617,7 @@ struct objc_class : objc_object {
 ```
 
 <br/>
+
 ![z34.png](./../../Pictures/z34.png)
 
 **class_data_bits_t源码**
@@ -652,6 +646,7 @@ struct class_data_bits_t {
 ```
 
 <br/><br/>
+
 > <h3 id='objc_object源码'>objc_object源码</h3>
 
 ```
@@ -782,6 +777,7 @@ private:
 
 
 <br/><br/>
+
 > <h2 id='class的superClass指针的指向'>class的superClass指针的指向</h2>
 
 类(class)的superClass指针指向用一张示意图来简单概括一下：
@@ -796,6 +792,7 @@ private:
 
 
 <br/><br/>
+
 > <h2 id='meta-class对象的superClass指针指向'>meta-class对象的superClass指针指向</h2>
 
 ![ios_oc2_11_0.png](./../../Pictures/ios_oc2_11_0.png)
@@ -889,6 +886,7 @@ struct objc_class {
 `struct class_ro_t`的结构体中包含了instance对象占用的内存空间、类名以及成员变量列表，当然这些都是只读的。
 
 <br/>
+
 > <h2 id='isa指针'>isa指针</h2>
 
 
@@ -960,6 +958,7 @@ struct objc_class {
 ```
 
 <br/><br/>
+
 > <h2 id='selfclass和superclass'>[self class]和[super class]</h2>
 
 ```
@@ -1001,9 +1000,11 @@ object_getClass(obj)和[obj class]返回的指针不同
 
 ***
 <br/>
+
 > <h1 id='自动引用计数'>自动引用计数</h1>
 <br/>
-><h2 id='自动引用计数流程'>自动引用计数流程</h2>
+
+> <h2 id='自动引用计数流程'>自动引用计数流程</h2>
 
 - 1.对象object调用retain方法后,会调用rrootRetain(bool tryRetain, bool handleOverflow)方法;
 
@@ -1035,6 +1036,7 @@ object_getClass(obj)和[obj class]返回的指针不同
 - 5.通过对应的SideTable实例然后通过SideTable其成员`RefcountMap refcnts`将该 object 的引用计数加1;
 
 <br/><br/>
+
 > <h2 id='retain源码'>retain源码</h2>
 
 面试提问：如果让你设计一套引用计数机制，你会怎么做？ 嗯，这是个不错的面试题！ 其实，该问题的答案不外乎两种：
@@ -1070,6 +1072,7 @@ inline id objc_object::retain()
 ```
 
 <br/><br/>
+
 > <h2 id='rootRetain()'>rootRetain()</h2>
 &emsp; 这代码段实际上调用了 objc_object 类的 rootRetain 方法，该方法带有两个参数 tryRetain 和 handleOverflow，而在这里调用的是重载版本，即 rootRetain(false, false)。
 
@@ -1213,6 +1216,7 @@ objc_object::rootRetain(bool tryRetain, bool handleOverflow)
 
 
 <br/><br/>
+
 > <h2 id='处理溢出rootRetain_overflow'>处理溢出rootRetain_overflow</h2>
 
 rootRetain_overflow 是在 rootRetain 方法中的一个分支，用于处理引用计数溢出的情况。下面是对这个分支的详细解读：
@@ -1282,6 +1286,7 @@ ALWAYS_INLINE id objc_object::rootRetain_overflow(bool tryRetain)
 
 
 <br/><br/><br/>
+
 > <h2 id='内联函数调用和普通函数调用的区别'>内联函数调用和普通函数调用的区别</h2>
 
 
@@ -1306,6 +1311,7 @@ ALWAYS_INLINE id objc_object::rootRetain_overflow(bool tryRetain)
 
 ***
 <br/>
+
 > <h1 id='引用计数'>引用计数</h1>
 > <h2 id='Sidetable'>Sidetable</h2>
 
@@ -1313,6 +1319,7 @@ ALWAYS_INLINE id objc_object::rootRetain_overflow(bool tryRetain)
 
 
 <br/><br/>
+
 > <h2 id='SideTable数据结构'>SideTable数据结构</h2>
 &emsp; 在runtime中，通过SideTable来管理对象的引用计数以及weak引用。这里要注意，一张SideTable会管理多个对象，而并非一个。
 而这一个个的SideTable又构成了一个集合，叫SideTables。SideTables在系统中是全局唯一的。
@@ -1337,6 +1344,7 @@ static unsigned int indexForPointer(const void *p) {
 
 
 <br/><br/><br/>
+
 > <h2 id='SideTable结构体定义'>SideTable结构体定义</h2>
 
 
@@ -1412,6 +1420,7 @@ static uintptr_t disguise(objc_object* ptr) {
 &emsp; 所以，对象引用计数map RefcountMap的key是：`-(object *)`，就是对象地址取负。value就是该对象的引用计数。
 
 <br/><br/>
+
 > <h2 id='获取对象引用计数'>获取对象引用计数</h2>
 
 ```
@@ -1504,6 +1513,7 @@ OK，到此为止，我们就学习完了runtime中所有的引用计数实现�
 
 ***
 <br/><br/>
+
 > <h1 id='弱引用'>弱引用</h1>
 > <h2 id='梳理流程图'>梳理流程图</h2>
 
@@ -1526,6 +1536,7 @@ if(entry) {//实体存在
 
 
 <br/><br/>
+
 > <h2 id='weak调用流程'>weak调用流程</h2>
 
 
