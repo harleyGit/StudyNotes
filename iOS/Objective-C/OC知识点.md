@@ -3754,10 +3754,7 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 
 [深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/#base)
 
-<br/>
-
-
-
+<br/><br/>
 > <h3 id='Runloop可以用来做什么'>Runloop可以用来做什么</h3>
 
 - **可以用来做:**
@@ -3765,9 +3762,6 @@ KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容�
 	- 保持线程存活
 	- 监测优化卡顿
 		- observer可以用来做卡顿检测
-
-
-
 
 <br/>
 Runloop监测卡顿部分代码,逻辑教育的,😄哈哈:
@@ -3780,15 +3774,12 @@ Runloop监测卡顿部分代码,逻辑教育的,😄哈哈:
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 - **保持线程保活:**
 
 ![ios_oc2_30.png](./../../Pictures/ios_oc2_30.png)
 
 先弹出一个弹窗,点击弹窗后的**崩溃**按钮后,app才崩溃!
-
 
 <br/>
 
@@ -3797,8 +3788,6 @@ Runloop监测卡顿部分代码,逻辑教育的,😄哈哈:
 Fps、屏幕刷新率59.94/s(这是和别人的一个区分点,一般人说是60hz/s)、ping、runloop
 
 <br/><br/><br/>
-
-
 > <h3 id='保活线程后,如何关闭?'>保活线程后,如何关闭?</h3>
 
 **线程保活出了用Runloop,还可以用NSCondition线程锁()!**
@@ -3834,7 +3823,6 @@ self.thread = nil;
 
 
 <br/><br/><br/>
-
 > <h3 id ="Runloop底层原理">Runloop底层原理</h3>
 [Runloop详解](https://imlifengfeng.github.io/article/487/)
 
@@ -4302,16 +4290,10 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__(block);
 这样每一次循环的结束时都会释放一次内存，因而这个循环全部执行完成时也几乎不消耗内存。
 
 
-<br/>
-<br/>
-
-
-
-
+<br/><br/>
 > <h2 id = "APP">APP</h2>
 
 <br/>
-
 > <h3 id = "app启动流程">app启动流程</h3>
 
 [**APP的启动流程:**](https://www.jianshu.com/p/229dd6190b95)
@@ -4348,15 +4330,10 @@ ASLR（Address Space Layout Randomization）：地址空间布局随机化，镜
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id = "app启动优化">app启动优化</h3>
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id = "app生命周期">app生命周期</h3>
 	
 ViewController的生命周期方法说明:(详细说明都在代码注释中)
@@ -4477,12 +4454,7 @@ ViewController的生命周期方法说明:(详细说明都在代码注释中)
 
 ```
 		
-		
-		
-		
-		
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id ="main函数之前会做什么">[main函数之前会做什么](https://juejin.cn/post/6844903783160348685#heading-11)</h2>
 

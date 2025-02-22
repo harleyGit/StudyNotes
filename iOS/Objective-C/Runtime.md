@@ -873,13 +873,23 @@ SEL swizzledSelector = @selector(swiz_viewWillAppear:);
      NSLog(@"我在viewWillAppear执行前偷偷插入了一段代码");
      
      //不能干扰原来的代码流程，插入代码结束后要让本来该执行的代码继续执行
+     // 这里调用的是原来的 viewWillAppear:，不会导致死循环
      [self swiz_viewWillAppear:animated];
  }
 ```
 
 <br/>
 
-**疑问:** 为什么在
+**疑问:** 为什么在swiz_viewWillAppear继续调用`[self swiz_viewWillAppear:animated]`不会造成循环调用？
+
+- method_exchangeImplementations 交换了 viewWillAppear: 和 swiz_viewWillAppear:
+	- 原 viewWillAppear: 变成了 swiz_viewWillAppear:
+	- swiz_viewWillAppear: 变成了 viewWillAppear:
+
+
+- 调用 [self swiz_viewWillAppear:animated]; 实际上执行的是原来的 viewWillAppear:
+		- 由于方法交换后，swiz_viewWillAppear: 内部调用 swiz_viewWillAppear: 其实是在调用 viewWillAppear:
+		- 避免了递归调用自身的问题
 
 
 
@@ -890,22 +900,13 @@ SEL swizzledSelector = @selector(swiz_viewWillAppear:);
 
 ># <h1 id='消息转发机制'>[消息转发机制](https://blog.csdn.net/wtdask/article/details/80613446)</h1>
 
-
 ![ios_oc2_26.png](./../../Pictures/ios_oc2_26.png)
-
-
 ![ios_oc2_27.png](./../../Pictures/ios_oc2_27.png)
-
-
 ![ios_oc2_28.png](./../../Pictures/ios_oc2_28.png)
-
 
 &emsp;   原理：Objective-C 语言 中，对象方法调用都是类似 `[receiver selector]; `的形式，其本质就是让对象在运行时发送消息的过程。
 
-
 <br/>
-
-
 **`编译阶段：`**`[receiver selector];` 方法被编译器转换为:
 
 ```
@@ -932,8 +933,6 @@ objc_msgSend(recevier，selector，org1，org2，…)（带参数）
 消息转发示意图:
 
 ![ios_oc2_24.png](./../../Pictures/ios_oc2_24.png)
-
-
 
 <br/>
 
@@ -1378,15 +1377,3 @@ Log:
 2023-06-21 15:21:07.390676+0800 MLC[38857:5604424] ----------------------
 2023-06-21 15:21:12.392251+0800 MLC[38857:5604424] ---->> taibangle
 ```
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
-                                   
