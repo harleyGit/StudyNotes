@@ -9,6 +9,7 @@
 	- [Go学习路线-王飞介绍](https://mp.weixin.qq.com/s/o1KxHuHyr32F7pQyKNLedw)
 - [命名规则](https://www.cnblogs.com/rickiyang/p/11074174.html)
 - [**安装配置**](#安装配置)
+	- [GOROOT环境变量路径下各个文件的意义](#GOROOT环境变量路径下各个文件的意义)
 - [**项目初创建**](#项目初创建)
 	- [创建项目目录](#创建项目目录)
 	- [2种方式运行](#2种方式运行)
@@ -270,11 +271,27 @@ source ~/.bash_profile　　# 如果是bash
 source ~/.zshrc　　# 如果是zsh
 ```
 
+<br/><br/><br/>
+> <h2 id="GOROOT环境变量路径下各个文件的意义">GOROOT环境变量路径下各个文件的意义</h2>
+
+![go.0.0.80.png](./../Pictures/go.0.0.80.png)
+
+- api：用于存放依照 Go 版本顺序的 API 增量列表文件。这里所说的 API 包含公开的变量、常量、函数等。这些 API 增量列表文件用于 Go 语言 API 检查
+- bin：用于存放主要的标准命令文件（可执行文件），包含go、godoc、gofmt
+- blog：用于存放官方博客中的所有文章
+- doc：用于存放标准库的 HTML 格式的程序文档。我们可以通过godoc命令启动一个 Web 程序展示这些文档
+- lib：用于存放一些特殊的库文件
+- misc：用于存放一些辅助类的说明和工具
+- pkg：用于存放安装Go标准库后的所有归档文件（以.a结尾的文件）。注意，你会发现其中有名称为linux_amd64的文件夹，我们称为平台相关目录。这类文件夹的名称由对应的操作系统和计算架构的名称组合而成。通过go install命令，Go程序会被编译成平台相关的归档文件存放到其中
+- src：用于存放 Go自身、Go 标准工具以及标准库的所有源码文件
+- test：存放用来测试和验证Go本身的所有相关文件
+
 
 <br/>
 
 ***
 <br/><br/><br/>
+
 > <h1 id="项目初创建">项目初创建</h1>
 
 我Mac电脑配置的环境变量如下：
@@ -565,6 +582,7 @@ go env GO111MODULE
 
 ***
 <br/><br/><br/>
+
 > <h1 id='常用命令'>常用命令</h1>
 
 [GO入门](https://blog.csdn.net/weixin_45440484/article/details/131692655)
@@ -610,6 +628,7 @@ go help：了解更多
 
 ***
 <br/><br/><br/>
+
 > <h1 id="命令行工具">命令行工具</h1>
 
 <br/><br/><br/>
@@ -787,6 +806,7 @@ Saving session...
 
 ***
 <br/><br/><br/>
+
 > <h1 id="命名规范">命名规范</h1>
 
 ![go.0.0.25.png](./../Pictures/go.0.0.25.png)
@@ -809,6 +829,7 @@ Saving session...
 
 ***
 <br/><br/><br/>
+
 > <h1 id='基本语法与使用'>基本语法与使用</h1>
 
 ![go.0.0.11.png](./../Pictures/go.0.0.11.png)
@@ -1521,6 +1542,7 @@ high
 
 ***
 <br/>
+
 > <h1 id='流程控制'>流程控制</h1>
 
 <br/><br/>
@@ -2922,6 +2944,7 @@ testStruct3()
 
 ***
 <br/><br/><br/>
+
 > <h1 id=""></h1>
 
 
@@ -2931,6 +2954,7 @@ testStruct3()
 
 ***
 <br/><br/><br/>
+
 > <h1 id=""></h1>
 
 
@@ -3875,6 +3899,7 @@ JumpState ---> IdleState
 
 ***
 <br/><br/><br/>
+
 > <h1 id="错误处理">错误处理</h1>
 
 <br/><br/>
@@ -4212,6 +4237,7 @@ error: &{手动触发panic}
 
 ***
 <br/><br/><br/>
+
 > <h1 id="并发编程">并发编程</h1>
 
 并发是指在同一时间内执行多个任务。并发编程包括多线程编程、多进程编程及分布式程序等。本章讲解并发编程中的多线程编程。Go语言支持并发的特性，并且通过goroutine完成。goroutine类似于线程，是由Go语言运行时(runtime)调度和管理的。Go程序能够将goroutine中的任务合理地分配给每个CPU。
@@ -4590,6 +4616,7 @@ var chRecvOnly <-chan int = ch
 
 ***
 <br/><br/><br/>
+
 > <h1 id="包管理">包管理</h1>
 
 ![go.0.0.17.png](./../Pictures/go.0.0.17.png)
@@ -6033,6 +6060,7 @@ Query OK, 1 row affected (0.00 sec)
 
 ***
 <br/><br/><br/>
+
 > <h1 id="文件处理">文件处理</h1>
 
 文件处理是指使用Go语言操作文件。那么，操作文件包含哪些内容呢？在通常情况下，操作文件主要有这几个动作：创建文件，打开文件，读取文件，写入文件，关闭文件，删除文件，移动文件，清空文件，重命名文件，文件的压缩／解压缩，改变文件权限等。
@@ -6386,6 +6414,7 @@ cannot flock directory /Users/ganghuang/HGFiles/GitHub/GoProject/MLC_GO/TestNote
 
 ***
 <br/><br/><br/>
+
 > <h1 id="网络编程">网络编程</h1>
 
 网络编程就是两个设备之间的数据交换，在计算机网络中，设备主要指计算机。数据交换就是当一个设备向另一个设备发送数据后，接受来自另一个设备的反馈。在网络编程中，发送连接请求的程序称作客户端(Client)，响应连接请求的程序称作服务器(Server)。其中，客户端程序可以在需要发送连接请求时再启动，而服务器程序则为了能够时刻响应连接请求，要一直保持启动状态。连接一旦建立，客户端程序和服务器程序就可以进行数据交换。
@@ -7031,6 +7060,7 @@ ganghuang@GangHuangs-MacBook-Pro TestHttpClient %  go run test_http_client.go
 
 ***
 <br/><br/><br/>
+
 > <h1 id="编写测试">编写测试</h1>
 
 在软件领域有一个重要的编程方法是TDD（Test-Driven Development，测试驱动开发）​，它强调的就是先编写测试，再对代码进行设计和重构。
@@ -7204,6 +7234,7 @@ go test ./... -coverprofile=cover.out
 
 ***
 <br/><br/><br/>
+
 > <h1 id="Web服务">Web服务</h1>
 
 <br/><br/><br/>
@@ -7431,6 +7462,7 @@ X-GitHub-Media-Type: gitHub.v3
 
 ***
 <br/><br/><br/>
+
 > <h1 id="项目实践">项目实践</h1>
 
 <br/><br/><br/>
@@ -7680,6 +7712,7 @@ http.ListenAndServe("192.168.1.100:8080", nil)
 
 ***
 <br/>
+
 > <h1 id="知识拓展">知识拓展</h1>
 > <h2 id="裸机和租用服务器系统辨识分类">裸机和租用服务器系统辨识分类</h2>
 

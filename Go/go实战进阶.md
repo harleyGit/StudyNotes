@@ -1,4 +1,10 @@
 > <h2 id=''></h2>
+- [**调试**](#调试)
+	- [单元测试](#单元测试)
+	- [压力测试（性能测试）](#压力测试)
+	- [Delve调试](#Delve调试)
+		- [图形界面调试](#图形界面调试)
+		- [调试正在运行的程序](#调试正在运行的程序)
 - [**API测试工具**](#API测试工具)
 	- [Curl进行API测试](#Curl进行API测试) 
 	- [HTTPie进行API测试](#HTTPie进行API测试) 
@@ -9,6 +15,9 @@
 	- [业务驱动的方式](#业务驱动的方式)
 	- [模型设计](#模型设计)
 - [**代码管理托管**](#代码管理托管)
+	- [git忽略文件模版](#git忽略文件模版)
+		- [chatgpt忽略模版](#chatgpt忽略模版)
+		- [deepseek忽略模版](#deepseek忽略模版)
 - [**Makefile构建项目**](#Makefile构建项目)
 	- [语法规范](#语法规范)
 	- [Go项目的命令](#Go项目的命令)
@@ -27,6 +36,7 @@
 	- [容器化部署](#容器化部署)
 	- [Docker](#Docker)
 		- [介绍](#介绍)
+			- [Docker使用](#Docker使用)
 		- [镜像](#镜像)
 			- [制作镜像](#制作镜像)
 			- [镜像分层存储](#镜像分层存储)
@@ -65,6 +75,7 @@
 	- [Go实战项目（简书-Leo丶Dicaprio）](https://www.jianshu.com/u/151e4eccc2e2)
 	- [煎鱼大佬的技术博客-Go学习之路（可以照着代码敲试一试）](https://eddycjy.com/tags/go/)
 		- [「连载一」Go 介绍与环境安装](https://eddycjy.com/posts/go/gin/2018-02-10-install/)
+	- [go-tutorial(各种学习链接包含Docker学习，搜索docker即可)](https://github.com/jincheng9/go-tutorial?tab=readme-ov-file)
 	- [Go 的 Web 教程(源码)](https://go-mega.bonfy.im)
 	- [人言兑博客](https://blog.axiaoxin.com/categories/)
 		- [Golang Web开发：实现注册、登录与密码验证—bcrypt加密与存储详解](https://blog.axiaoxin.com/post/golang-web-dev-pwd-bcrypt/)
@@ -73,11 +84,336 @@
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="调试">调试</h1>
+><h2  id="单元测试">单元测试</h2>
+- **选中调试代码如下：**
+
+在`setting.go`文件中，选中如下代码：
+
+```
+func LoadBase() {
+	RunMode = Cfg.Section("").Key("RUN_MODE").MustString("debug")
+}
+```
+
+<br/>
+- **生成测试代码**
+
+在Mac点击`fn+F1组合键`打开VSCode控制面板，输入`test`，选中如下图：
+
+![go.0.0.81.png](./../Pictures/go.0.0.81.png)
+
+然后第一次会生成一个setting_test.go文件（单元测试文件是以 *_test.go结尾的文件），并生成如下代码：
+
+```
+
+package setting
+
+import "testing"
+
+func TestLoadBase(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		// 这个测试需要自己写的
+		{"huanggang"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoadBase()
+		})
+	}
+}
+```
+
+![go.0.0.82.png](./../Pictures/go.0.0.82.png)
+
+<br/><br/>
+你也可以如下运行：
+
+```
+// cd 到指定单元测试文件夹下
+cd '/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO/TestNotes
+/PracticeGenExample/pkg/setting'
+
+// 运行
+go test
+ 
+ 
+PASS
+ok      MLC_GO/TestNotes/PracticeGenExample/pkg/setting 0.599s
+
+// 或者获取详细信息
+go test -v
+=== RUN   TestLoadBase
+=== RUN   TestLoadBase/huanggang
+--- PASS: TestLoadBase (0.00s)
+    --- PASS: TestLoadBase/huanggang (0.00s)
+PASS
+ok      MLC_GO/TestNotes/PracticeGenExample/pkg/setting 0.378s
+```
+
+
+<br/><br/><br/>
+> <h2 id="压力测试">压力测试</h2>
+
+基准测试或者压力测试的方法必须以Benchmark方法开头，并且只有参数，参数类型是` *testing.B`
+
+```
+func BencahmarkAdd(t *testing.B) {
+
+}
+```
+
+`go test `命令自动执行 `cd 文件路径 `下的所有基准测试，并且打印耗时。
+
+若是想测试某个包下的所有压力测试(基准测试)，可以用如下命令：
+
+```
+go test -bench .
+```
+
+若是执行某一个压力测试方法，可以如下：
+
+```shell
+// BenachAdd 为要测试的方法明
+go test -bench BenachAdd
+```
+
+
+<br/><br/><br/>
+> <h2 id="Delve调试">Delve调试</h2>
+
+- **安装**
+
+```
+go install github.com/go-delve/delve/cmd/dlv@latest
+
+// 确认是否安装好
+ganghuang@GangHuangs-MacBook-Pro MLC_GO % which dlv
+/Users/ganghuang/HGFiles/GitHub/GoProject/bin/dlv
+```
+
+<br/>
+
+- delve使用：
+	- dlv命令， dlv debug 包的路径或源代码路径；
+	- Dlv会编译我们的程序，然后进入调试界面；
+	- 使用VSCode进行调试，图形界面的使用；
+
+
+在项目的main.go文件下，又如下代码：
+
+```
+package main
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+
+func init() {
+
+}
+
+func main() {
+	dlvTest()
+}
+
+func dlvTest(){
+	router := gin.Default()
+
+	router.GET("/welcome", HelloHandler)
+	router.Run(":8000")
+}
+func HelloHandler(c *gin.Context) {
+	firstName := c.DefaultQuery("firstname", "Guest")
+	lastName := c.Query("lastname")
+	c.String(http.StatusOK, "Hello %s %s", firstName, lastName)
+}
+```
+
+**A终端窗口命令：**
+
+```
+go run main.go
+
+
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /welcome                  --> main.HelloHandler (3 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8000
+```
+
+另打开一个**B终端窗口：**
+
+```shell
+curl http://localhost:8000/welcom\?firstName\=海贼王🐦<200d>🔥\&lastName\=组合梁
+
+// 在A窗口出现：
+[GIN] 2025/02/25 - 14:03:48 | 404 |         416ns |             ::1 | GET      "/welcom?firstName=海贼王🐦\u200d🔥&lastName=组合梁"
+贼王🐦\u200d🔥&lastname=组合梁"
+
+
+ganghuang@GangHuangs-MacBook-Pro MLC_GO % curl http://localhost:8000/welcom\?firstname\=XiongYing\&lastname\=LiBai
+
+// 出现
+[GIN] 2025/02/25 - 14:05:56 | 404 |         875ns |             ::1 | GET      "/welcom?firstname=XiongYing&lastname=LiBai"
+
+```
+
+<br/>
+
+**然后使用B终端窗口使用dlv调试**,使用**dlv调试，需要把main.go运行起来**
+
+```shell
+// 进入调试
+dlv debug main.go
+Type 'help' for list of commands.
+
+// 或者cd xxx(main.go)所在文件夹下
+dlv debug
+```
+<br/>
+- **‌ b 设置断点**
+
+```shell
+// b 设置断点， HelloHandler 是函数
+(dlv) b HelloHandler
+
+// 比如在main.go下有一个dlvTest2()函数，想给dlvTest2()断点，可以这样做：
+b main.dlvTest2
+```
+<br/>
+- **c 表示continue，执行到断点位置**
+
+```shell
+c
+
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /welcome                  --> main.HelloHandler (3 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8000
+[GIN-debug] [ERROR] listen tcp :8000: bind: address already in use
+Process 49979 has exited with status 0
+```
+
+<br/>
+- **发出请求**
+
+```shell
+curl http://localhost:8000/welcom\?firstname\=海贼王🐦<200d>🔥\&lastname\=组合梁
+```
+
+<br/>
+- n 下一步
+
+```
+n
+```
+
+<br/>
+- 打印变量
+
+```
+p firstname
+```
+
+<br/>
+- 进入函数内部
+
+```
+// s step 下一步，进入下一个函数
+s
+```
+
+<br/>
+- 跳出内部函数
+
+```
+// stepout 跳出内部函数
+stepout
+```
+
+<br/>
+- 重新执行调试
+	- r
+
+<br/>
+- 结束
+	- exit
+
+<br/><br/>
+><h3  id="图形界面调试">图形界面调试</h3>
+
+- 打断点
+- 点击`运行和调试`
+
+即可开启图形界面调试了，调用的还是dlv进行调试的
+
+
+<br/><br/>
+><h3  id="调试正在运行的程序">调试正在运行的程序</h3>
+
+- **线程调试，dlv命令：**
+
+```
+dlv attach 进程ID
+```
+
+<br/>
+
+```shell
+cd xxxx（main.go所在路径）
+
+// 线程所在id
+ps aux|grep dlv                 
+ganghuang        17642   0.0  0.0 410208944   1232 s007  S+    4:01下午   0:00.00 grep dlv
+```
+
+但是上述不是dlv的所在的线程ID，不对，不知道怎么回事！！
+
+若是启动了，则用：
+
+```
+dlv attach 进程ID
+
+b main.go：11（行数）
+```
+
+
+
+
+
+
+
+
 
 <br/>
 
 ***
 <br/><br/><br/>
+
 > <h1 id="API测试工具">API测试工具</h1>
 
 在 Go 语言开发过程中，使用 API 测试工具（如 Curl、HTTPie、Postman 和 VSCode 插件）可以帮助调试和验证 API 是否正常工作。
@@ -287,6 +623,7 @@ Content-Type: application/json
 
 ***
 <br/><br/><br/>
+
 > <h1 id="代码管理托管">代码管理托管</h1>
 
 - GitLab：支持无限公有、私有项目，其网址为[https://about.gitlab.com/](https://about.gitlab.com/)。
@@ -315,10 +652,222 @@ Content-Type: application/json
 - 功能开发：`operator_feat_date`，即`开发者——功能开发——开发日期`。
 - 修复功能：`operator_fix_date`，即`开发者——修复功能——修复日期`。
 
+
+<br/><br/><br/>
+> <h2 id="git忽略文件模版">git忽略文件模版</h2>
+
+<br/><br/>
+><h3  id="chatgpt忽略模版">chatgpt忽略模版</h3>
+
+**Golang 项目 `.gitignore`（适用于 macOS）**
+
+```gitignore
+# 1. Go 编译文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.a
+
+# 2. Go Modules 相关
+vendor/
+go.sum
+
+# 3. 编译缓存（Go 编译时生成的缓存）
+*.o
+*.a
+*.lo
+*.la
+*.lai
+*.rej
+*.gox
+*.swp
+*.swo
+*.gcda
+*.gcno
+*.cover
+*.cov
+*.prof
+*.pb.go
+*.pb.gw.go
+
+# 4. MacOS 特有文件
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+.DS_Store?
+.AppleDouble
+.LSOverride
+Icon?
+__MACOSX/
+
+# 5. VS Code / JetBrains / Goland 编辑器相关
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# 6. GoLand / JetBrains
+/.idea/
+/*.iml
+/out/
+/gen/
+/coverage/
+*.bak
+
+# 7. Debug 相关
+debug/
+profile.out
+
+# 8. 日志 / 临时文件
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+
+# 9. Go Workspaces（适用于 Go 1.18+）
+go.work
+go.work.sum
+```
+
+---
+
+### **解释**
+1. **Go 编译文件**：忽略 Go 生成的二进制文件，如 `*.exe`、`*.so`、`*.test` 等。
+2. **Go Modules 相关**：忽略 `vendor/` 和 `go.sum`，一般建议 `go.mod` 提交，但 `go.sum` 视情况可忽略。
+3. **编译缓存**：Go 运行测试和构建时会生成 `*.o`、`*.a` 等临时文件，需要忽略。
+4. **macOS 特有文件**：macOS 会自动生成 `.DS_Store`、`._*` 和 `__MACOSX/` 等不必要的文件，这些文件可以忽略。
+5. **编辑器相关**：VS Code (`.vscode/`)、JetBrains/Goland (`.idea/`) 以及其他编辑器的缓存文件，避免污染仓库。
+6. **Debug 相关**：Golang 调试时可能会生成 `debug/` 或 `profile.out`，这些一般无需提交。
+7. **日志和临时文件**：忽略 `*.log`、`*.tmp` 以及 `*.bak` 之类的文件，避免上传无用的日志。
+8. **Go Workspaces（适用于 Go 1.18+）**：如果使用 Go 1.18+ 的 workspace，`go.work` 和 `go.work.sum` 可能会出现，可根据需求忽略。
+
+<br/><br/>
+><h3  id="deepseek忽略模版">deepseek忽略模版</h3>
+**Golang 项目 `.gitignore` 模板**
+
+```gitignore
+# 忽略编译生成的可执行文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 忽略测试二进制文件
+*.test
+
+# 忽略输出目录
+/bin/
+/pkg/
+
+# 忽略依赖目录
+/vendor/
+
+# 忽略 Go 模块的依赖缓存
+/go.mod
+/go.sum
+
+# 忽略 IDE 配置文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 忽略 macOS 特有的文件
+.DS_Store
+._*
+
+# 忽略日志文件
+*.log
+
+# 忽略环境变量文件
+.env
+.env.local
+
+# 忽略用户特定的文件
+*.user
+*.suo
+
+# 忽略临时文件
+*.tmp
+*.temp
+
+# 忽略构建缓存
+/.cache/
+/.build/
+
+# 忽略覆盖率文件
+*.out
+
+# 忽略 Go 工作区文件
+go.work
+go.work.sum
+```
+
+### 详细说明
+
+1. **编译生成的可执行文件**：
+   - `*.exe`, `*.exe~`, `*.dll`, `*.so`, `*.dylib`：这些是不同平台下的可执行文件和共享库文件。在 macOS 上，`.dylib` 是动态库文件，通常不需要纳入版本控制。
+
+2. **测试二进制文件**：
+   - `*.test`：Go 测试生成的可执行文件，通常不需要纳入版本控制。
+
+3. **输出目录**：
+   - `/bin/` 和 `/pkg/`：这些目录通常用于存放编译后的二进制文件和包文件，应该忽略。
+
+4. **依赖目录**：
+   - `/vendor/`：如果你使用 `go mod` 管理依赖，`/vendor/` 目录通常不需要纳入版本控制。
+
+5. **Go 模块的依赖缓存**：
+   - `go.mod` 和 `go.sum`：这些文件是 Go 模块管理的核心文件，通常需要纳入版本控制，但如果你使用 `go mod vendor`，则可能需要忽略 `/vendor/` 目录。
+
+6. **IDE 配置文件**：
+   - `.idea/` 和 `.vscode/`：这些是 JetBrains IDE 和 Visual Studio Code 的配置文件，通常是用户特定的，不需要纳入版本控制。
+   - `*.swp` 和 `*.swo`：这些是 Vim 编辑器的临时文件，应该忽略。
+
+7. **macOS 特有的文件**：
+   - `.DS_Store`：macOS 系统生成的文件夹元数据文件，通常不需要纳入版本控制。
+   - `._*`：macOS 生成的隐藏文件，通常不需要纳入版本控制。
+
+8. **日志文件**：
+   - `*.log`：日志文件通常不需要纳入版本控制。
+
+9. **环境变量文件**：
+   - `.env` 和 `.env.local`：这些文件通常包含敏感信息，如 API 密钥等，不应该纳入版本控制。
+
+10. **用户特定的文件**：
+    - `*.user` 和 `*.suo`：这些是 Visual Studio 用户特定的文件，通常不需要纳入版本控制。
+
+11. **临时文件**：
+    - `*.tmp` 和 `*.temp`：临时文件通常不需要纳入版本控制。
+
+12. **构建缓存**：
+    - `/.cache/` 和 `/.build/`：这些目录通常用于存放构建缓存，应该忽略。
+
+13. **覆盖率文件**：
+    - `*.out`：Go 测试生成的覆盖率文件，通常不需要纳入版本控制。
+
+14. **Go 工作区文件**：
+    - `go.work` 和 `go.work.sum`：这些文件是 Go 1.18 引入的工作区管理文件，通常不需要纳入版本控制。
+
+### 总结
+
+这个 `.gitignore` 模板适用于大多数 Golang 项目，并且特别考虑了 macOS 系统的特性。你可以根据项目的具体需求进行调整和扩展。
+
+
+
 <br/>
 
 ***
 <br/><br/><br/>
+
 > <h1 id="Makefile构建项目">Makefile构建项目</h1>
 
 Make是常用的构建工具，Makefile是一个文本文件，遵循一套语法规范，可用来对复杂项目的构建、编译等流程定义一系列规则和指定执行的命令，类似于Shell脚本。通过Makefile文件的定义，最后执行make command便可执行相应的命令。
@@ -678,6 +1227,7 @@ run:
 
 ***
 <br/><br/><br/>
+
 > <h1 id="区分生产、开发、测试环境">区分生产、开发、测试环境</h1>
 
 在 Go 语言中，常见的做法是根据不同的 **环境（开发、测试、生产）** 连接不同的数据库。你可以使用 **配置文件、环境变量、命令行参数** 或 **Go 内置的 `build tags`** 方式来管理不同的数据库连接信息。
@@ -1052,6 +1602,7 @@ go run main.go -env=production
 
 ***
 <br/>
+
 > <h1 id="容器化平台">容器化平台</h1>
 
 我们可以看下[尚硅谷老师的课件**Docker - 快速通关 （3h）**](https://www.yuque.com/leifengyang/sutong/au0lv3sv3eldsmn8)看下Docker的相关配置，学习一下！相关视频请看这里：[尚硅谷3小时速通Docker教程，雷神带练docker部署到实战！](https://www.bilibili.com/video/BV1Zn4y1X7AZ/?spm_id_from=333.1387.favlist.content.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
@@ -1090,7 +1641,7 @@ go run main.go -env=production
 &emsp; 在容器化技术未出现之前，Web服务的部署方式较为传统，比如将代码复制到服务器上，再安装相关的依赖并启动服务。传统的方式较为烦琐。容器技术的诞生使得部署更为简便，只需要构建相应的镜像，启动镜像的同时运行相应的代码，然后启动服务即可。
 
 <br/><br/><br/>
-> <h2 id="Docker">Docker</h2>
+># <h2 id="Docker">[Docker](https://yeasy.gitbook.io/docker_practice/install/mac)</h2>
 
 Docker容器有三大组件：镜像(Image)、容器(Container)和仓库(Repository)。要了解容器技术，[建议查看相关的文档](https://www.docker.com/)，这里仅进行简单的介绍。
 
@@ -1172,6 +1723,22 @@ Docker 是一个**容器化**平台，主要用于**构建、打包、分发和�
 
 ![go.0.0.75.png](./../Pictures/go.0.0.75.png)
 
+<br/><br/>
+><h3  id="Docker使用">Docker使用</h3>
+我们以官方的教学镜像作为简单示例。启动Desktop后，在电脑的终端上运行如下命令：
+
+```
+docker run -d -p 80:80 docker/getting-started
+```
+该命令如果发现本地没有docker/getting-started镜像文件，会从官方的镜像仓库Docker Hub上拉取镜像并运行。
+
+**-d:** 让容器进程以后台模式运行。
+
+`-p 80:80`：把主机的80端口映射到容器里的80端口。
+
+`docker/getting-started：`镜像名称。
+
+启动后，打开一个浏览器，访问 `http://localhost/ `就可以看到已经run起来的应用程序的界面了。
 
 
 <br/>
@@ -1531,6 +2098,7 @@ docker-compose restart
 
 ***
 <br/><br/><br/>
+
 > <h1 id="面向接口编程">面向接口编程</h1>
 
 
@@ -1741,6 +2309,7 @@ type Parser interface {
 
 ***
 <br/><br/><br/>
+
 > <h1 id="Go学习路径">Go学习路径</h1>
 
 <br/>
@@ -1892,9 +2461,11 @@ Prometheus的界面看起来非常简单，我们还需要Grafana这个非常强
 
 ***
 <br/><br/><br/>
+
 > <h1 id="项目语法">项目语法</h1>
 
 <br/>
+
 > <h1 id="BeekQuickProject陌生语法">BeekQuickProject陌生语法</h1>
 <br/>
 > <h2 id="参数验证">参数验证</h2>

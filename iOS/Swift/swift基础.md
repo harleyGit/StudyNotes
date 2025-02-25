@@ -86,6 +86,7 @@
 
 ***
 <br/>
+
 > <h1 id="构造方法">构造方法</h1>
 
 在 Swift 中，构造方法（初始化方法）用于在创建对象时进行初始化。构造方法有多种类型，主要包括：
@@ -276,6 +277,7 @@ if let person = Person(name: "John", age: 30) {
 
 ***
 <br/>
+
 > <h1 id="类">类</h1>
 > <h2 id="流式API">流式API</h2>
 
@@ -346,6 +348,7 @@ print(obj.value)  // 输出：20
 
 ***
 <br/>
+
 > <h1 id="属性">属性</h1>
 > <h2 id="属性包装器">属性包装器</h2>
 
@@ -837,6 +840,7 @@ apple.onCompleted()
 
 ***
 <br/>
+
 > <h1 id='结构体'>结构体</h1>
 
 结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
@@ -891,6 +895,7 @@ let student8 = Student(stringScore: "70,80,90")
 
 ***
 <br/><br/><br/>
+
 > <h1 id='集合'>集合</h1>
 > <h2 id='Set集合与NSArray、Dictionary区别'>Set集合与NSArray、Dictionary区别</h2>
 
@@ -1112,6 +1117,7 @@ print(numbers) // 输出: [1, 3]
 
 ***
 <br/>
+
 > <h1 id='函数'>函数</h1>
 <br/>
 > <h2 id='函数使用'>函数使用</h2>

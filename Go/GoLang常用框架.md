@@ -1,4 +1,5 @@
 ></h2>
+- [**依赖包安装**](依赖包安装)
 - [**动手实现一个库**](#动手实现一个库)
 	- [TravisCI](#TravisCI) 
 	- [GitHub Actions](#GitHubActions) 
@@ -7,6 +8,7 @@
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
 	- [将抓取的网页内容存储在文件中](#将抓取的网页内容存储在文件中)
+- [读写配置文件库viper](#读写配置文件库viper)
 - [**‌gin框架**](#‌gin框架)
 	- [把爬虫程序设置成Web服务](#把爬虫程序设置成Web服务)
 - [**‌cellnet网络库**](#cellnet网络库)
@@ -49,13 +51,87 @@
 		- [crypto哈希](#crypto哈希)
 
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="依赖包安装">依赖包安装</h1>
+
+```
+$ mkdir go-gin-example && cd go-gin-example
+
+$ go env -w GO111MODULE=on
+
+$ go env -w GOPROXY=https://goproxy.cn,direct
+
+$ go mod init github.com/EDDYCJY/go-gin-example
+go: creating new go.mod: module github.com/EDDYCJY/go-gin-example
+
+$ ls
+go.mod
+```
+
+- mkdir xxx && cd xxx：创建并切换到项目目录里去。
+- go env -w GO111MODULE=on：打开 Go modules 开关（目前在 Go1.13 中默认值为 auto）。
+- go env -w GOPROXY=...：设置 GOPROXY 代理，这里主要涉及到两个值，第一个是 https://goproxy.cn，它是由七牛云背书的一个强大稳定的 Go 模块代理，可以有效地解决你的外网问题；第二个是 direct，它是一个特殊的 fallback 选项，它的作用是用于指示 Go 在拉取模块时遇到错误会回源到模块版本的源地址去抓取（比如 GitHub 等）。
+- go mod init [MODULE_PATH]：初始化 Go modules，它将会生成 go.mod 文件，需要注意的是 MODULE_PATH 填写的是模块引入路径，你可以根据自己的情况修改路径。
+
+在执行了上述步骤后，初始化工作已完成，我们打开 go.mod 文件看看，如下：
+
+```shell
+module github.com/EDDYCJY/go-gin-example
+
+go 1.13
+```
+默认的 go.mod 文件里主要是两块内容，一个是当前的模块路径和预期的 Go 语言版本。
+
+- **基础使用:**
+	- (用 go get 拉取新的依赖)
+		- 拉取最新的版本(优先择取 tag)：go get golang.org/x/text@latest
+		- 拉取 master 分支的最新 commit：go get golang.org/x/text@master
+		- 拉取 tag 为 v0.3.2 的 commit：go get golang.org/x/text@v0.3.2
+		- 拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2：go get golang.org/x/text@342b2e
+		- 用 go get -u 更新现有的依赖
+		- 用 go mod download 下载 go.mod 文件中指明的所有依赖
+		- 用 go mod tidy 整理现有的依赖
+		- 用 go mod graph 查看现有的依赖结构
+		- 用 go mod init 生成 go.mod 文件 (Go 1.13 中唯一一个可以生成 go.mod 文件的子命令)
+	- 用 go mod edit 编辑 go.mod 文件
+	- 用 go mod vendor 导出现有的所有依赖 (事实上 Go modules 正在淡化 Vendor 的概念)
+	- 用 go mod verify 校验一个模块是否被篡改过
+
+
+<br/><br/>
+><h3  id="go.sum文件">go.sum文件</h3>
+
+
+- **go.sum** 文件详细罗列了当前项目直接或间接依赖的所有模块版本，并写明了那些模块版本的 SHA-256 哈希值以备 Go 在今后的操作中保证项目所依赖的那些模块版本不会被篡改。
+
+<br/><br/>
+><h3  id="go.mod文件">go.mod文件</h3>
+
+go.mod 文件是启用了 Go modules 的项目所必须的最重要的文件，因为它描述了当前项目（也就是当前模块）的元信息，每一行都以一个动词开头，目前有以下 5 个动词:
+
+- module：用于定义当前项目的模块路径。
+- go：用于设置预期的 Go 版本。
+- require：用于设置一个特定的模块版本。
+- exclude：用于从使用中排除一个特定的模块版本。
+- replace：用于将一个模块版本替换为另外一个模块版本。
+
+你可能还会疑惑 indirect 是什么东西，indirect 的意思是传递依赖，也就是非直接依赖。
+
+
+
+
+
 <br/>
 
 ***
 <br/><br/><br/>
+
 > <h1 id="动手实现一个库">动手实现一个库</h1>
-
-
 - **Golang 源代码持续集成工具的用途和功能**
 
 <br/>
@@ -219,6 +295,7 @@ docker build -t myapp .
 
 ***
 <br/><br/><br/>
+
 > <h1 id="go-colly框架">go-colly框架</h1>
 
 go-colly是使用Go语言实现的网络爬虫框架。go-colly以回调函数的形式提供了一组接口，通过这些接口能够实现任意类型的爬虫。开发者使用go-colly框架可以轻松地从Web页面中爬取结构化数据。
@@ -607,10 +684,24 @@ func testCheckFileExist(filename string) bool {
 
 ![go.0.0.56.png](./../Pictures/go.0.0.56.png)
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="读写配置文件库viper">[读写配置文件库viper](https://github.com/spf13/viper)</h1>
+
+读写配置文件库viper，目前是比较火的。
+
+但是本系列选用 [go-ini/ini](https://github.com/go-ini/ini) ，它的 [中文文档](https://ini.unknwon.io/)。大家是必须需要要简单阅读它的文档，再接着完成后面的内容。
+
+
 <br/>
 
 ***
 <br/><br/><br/>
+
 > <h1 id="‌gin框架">‌gin框架</h1>
 
 获取gin框架的包：
@@ -769,6 +860,7 @@ cellnet的设计理念是：高性能、简单、方便、开箱即用，希望�
 
 ***
 <br/><br/><br/>
+
 > <h1 id="图表库——go-chart">图表库——go-chart</h1>
 
 市面上有诸多的开源图表库，比如百度开源的ECharts、阿里开源的BizCharts、Chart.js、HighCharts、G2、D3、Google出品的Google Charts等，这些开源的库在兼容性、拓展性、支持图表的种类、交互等层面各有优缺点，具体的选择要结合具体的情况（比如开发者选择的技术栈、需要支持的图表种类等各方面）​。
@@ -799,6 +891,7 @@ cellnet的设计理念是：高性能、简单、方便、开箱即用，希望�
 
 ***
 <br/><br/><br/>
+
 > <h1 id="packr库处理模板引擎内的文件">packr库处理模板引擎内的文件</h1>
 
 packr库能够比较优雅地处理模板引擎内的文件。
@@ -813,6 +906,7 @@ go get -u github.com/gobuffalo/packr
 
 ***
 <br/><br/><br/>
+
 > <h1 id="GJSON解析JSON数据">GJSON解析JSON数据</h1>
 
 GJSON是一个更便捷的解析JSON数据的第三方库，支持链式操作，能让读者非常方便地获取任意数据。
@@ -828,6 +922,7 @@ go get -u github.com/tidwall/gjson
 
 ***
 <br/><br/><br/>
+
 > <h1 id="IrisWeb框架">Iris Web框架</h1>
 
 <br/><br/><br/>
@@ -1232,6 +1327,7 @@ Iris 适用于高性能 Web 应用，是 `Gin` 的有力竞争者。如果你需
 
 ***
 <br/><br/><br/>
+
 > <h1 id=""></h1>
 
 要使用好ORM，其核心还是掌握关系型数据库的原理、优化、索引等。受自身项目所限，读者使用基本的SQL功能就能完成任务，如果数据量大了，那么势必会遇到查询缓慢的问题；如果服务失联，那么势必会遇到数据丢失的问题。这些才是关系型数据库使用的核心，读者需要懂得索引的原理、索引的优化，才能设计更加健壮的模型，完成任务的同时使系统具备持续迭代的能力。
@@ -1992,6 +2088,7 @@ engine.Where("phone = ?", "12345678901").Get(&account)
 
 ***
 <br/><br/><br/>
+
 > <h1 id="crypto库"> crypto库 </h1>
 
 <br/><br/><br/>
