@@ -70,6 +70,8 @@
 		- [记录请求日志](#记录请求日志)
 		- [model使用XORM库序列化](#model使用XORM库序列化)
 		- [chapter11项目组织结构](#chapter11项目组织结构)
+	- [**MLC_GO中的PracticeGenExample**](#MLC_GO中的PracticeGenExample)
+		- [`map[string]interface{}`用法](#`map[string]interface{}`用法)
 - **优秀资源**
 	- [盘点 GitHub 那些标星超过 20 K 的 Golang 优质开源项目](https://blog.csdn.net/yuzhou_1shu/article/details/127066562)
 	- [Go实战项目（简书-Leo丶Dicaprio）](https://www.jianshu.com/u/151e4eccc2e2)
@@ -400,12 +402,6 @@ dlv attach 进程ID
 
 b main.go：11（行数）
 ```
-
-
-
-
-
-
 
 
 
@@ -2989,6 +2985,85 @@ c.Next()
 ![go.0.0.65.png](./../Pictures/go.0.0.65.png)
 
 参考[**工程原地址**](https://github.com/golang-standards/project-layout)
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="MLC_GO中的PracticeGenExample">MLC_GO中的PracticeGenExample</h1>
+
+<br/><br/>
+> <h2 id="`map[string]interface{}`用法">map[string]interface{}用法</h2>
+
+```
+router := gin.Default()
+	// 创建不同的 HTTP 方法绑定到Handlers中，也支持 POST、PUT、DELETE、PATCH、OPTIONS、HEAD 等常用的 Restful 方法
+	// 当访问服务器上的 /test 路由时，会调用这个匿名函数处理请求
+	// gin.Context：Context是gin中的上下文，它允许我们在中间件之间传递变量、管理流、验证 JSON 请求、响应 JSON 请求等，在gin中包含大量Context的方法，例如我们常用的DefaultQuery、Query、DefaultPostForm、PostForm等等
+	router.GET("/test", func(ctx *gin.Context) {
+		// gin.H{…}：就是一个map[string]interface{}
+		ctx.JSON(200, gin.H{
+			"message": "test",
+		})
+	})
+```
+
+gin.H 是 Gin 提供的一个快捷方式，它就是一个 `map[string]interface{}`，用来构造响应的 JSON 数据。在这个例子中，响应的数据是一个包含 "message": "test" 键值对的 JSON 对象。
+
+**问题：** `map[string]interface{}` 是什么类型？
+
+在 Go 语言中，`map[string]interface{}` 是一种非常常用的数据结构，它表示一个键为字符串类型，值为 `interface{}` 类型的映射。我们来详细解释一下它的含义和用法。
+
+### 1. `map` 类型
+Go 的 `map` 是一种哈希表（HashMap）实现的数据结构，用来存储一组键值对（key-value pair）。它是无序的，可以通过键来快速访问相应的值。
+
+#### 语法：
+
+```go
+map[KeyType]ValueType
+```
+其中：
+- `KeyType`：表示键的类型，可以是任何可以比较的类型（如字符串、数字等）。
+- `ValueType`：表示值的类型。
+
+### 2. `string` 作为键
+在 `map[string]interface{}` 中，`string` 是键的类型。也就是说，映射的键是字符串类型的。
+
+### 3. `interface{}` 作为值
+在 Go 语言中，`interface{}` 是一个空的接口类型，**它可以代表任何类型的数据**。空接口（`interface{}`）不包含任何方法，因此在 Go 中，任何类型都实现了空接口。
+
+#### `interface{}` 的含义：
+- `interface{}` 是 Go 中的“万能类型”，它可以用来表示任何类型的值。
+- 由于 `interface{}` 是空接口，它可以接收任何类型的数据，这使得它在需要通用数据容器时非常有用。
+
+### 4. `map[string]interface{}` 具体含义
+`map[string]interface{}` 是一种可以存储任何类型值的映射，其中键是字符串类型，值是空接口类型。因此，`map[string]interface{}` 实际上是一个可以存储各种类型值的字典，键是字符串类型，而值可以是任何类型的数据。
+
+#### 举个例子：
+
+```go
+m := map[string]interface{}{
+    "name":    "Alice",
+    "age":     30,
+    "isAdmin": true,
+    "address": map[string]string{"city": "New York", "state": "NY"},
+}
+
+fmt.Println(m)
+```
+
+输出：
+```
+map[address:map[city:New York state:NY] age:30 isAdmin:true name:Alice]
+```
+
+### 总结：
+- `map[string]interface{}` 是 Go 中的一种常见的数据结构，表示一个以字符串为键，值可以是任何类型的映射。
+- 它允许我们将不同类型的值存储在同一个 `map` 中，这对于处理动态数据（如 API 返回的 JSON）非常有用。
+- 在 Gin 中，`map[string]interface{}` 被用来快速构造 JSON 响应，因为 JSON 可以包含多种类型的数据。
 
 
 

@@ -2,6 +2,7 @@
 - [**构造方法**](#构造方法)
 - [**属性**](#属性)
 	- [属性包装器](#属性包装器)
+	- [属性包装器中的 `projectedValue`（呈现值）](#属性包装器中的projectedValue呈现值)
 - [**类**](#类)
 	- [流式API](#流式API)
 - [**值引用类型**](#值引用类型)
@@ -354,6 +355,392 @@ print(obj.value)  // 输出：20
 
 [属性包装](https://juejin.cn/post/6844904202834034696#heading-11)
 
+**Swift 属性包装器（Property Wrappers）解析**
+
+属性包装器（`@propertyWrapper`）是 **Swift 5.1** 引入的一项强大功能，可以封装属性的**逻辑**，使代码更加简洁、易读，并避免重复代码。
+
+---
+
+- **1.代码解析**
+
+```swift
+@propertyWrapper
+struct TwelveOrLess {
+    private var number = 0  // 私有存储变量，默认值为 0
+    var wrappedValue: Int {  // 通过 wrappedValue 访问和修改值
+        get { return number } 
+        set { number = min(newValue, 12) }  // 设定值时，限制最大值为 12
+    }
+}
+```
+- **🔹 `@propertyWrapper` 关键点**
+1. `TwelveOrLess` 是一个 **属性包装器**，它限制 `wrappedValue` 的最大值为 `12`。
+2. `wrappedValue`：
+   - **`get` 读取值** → 返回 `number`
+   - **`set` 赋值时** → 限制最大值为 `12`
+3. **存储变量 `number` 默认值为 `0`**。
+
+---
+
+## **2. 使用属性包装器**
+
+```swift
+struct SmallRectangle {
+    @TwelveOrLess var height: Int
+    @TwelveOrLess var width: Int
+}
+```
+### **🔹 作用**
+1. **在 `SmallRectangle` 结构体中**，`height` 和 `width` 现在都使用 `@TwelveOrLess` 作为属性包装器。
+2. **自动限制赋值**：
+   - `height = 10` ✅ → 存储 10
+   - `height = 24` ❌ → 超过 12，实际存储 **12**
+
+---
+
+## **3. 运行示例**
+
+```swift
+var rectangle = SmallRectangle()
+print(rectangle.height)  // 0（默认值）
+
+rectangle.height = 10
+print(rectangle.height)  // 10
+
+rectangle.height = 24
+print(rectangle.height)  // 12（超出限制，被修改为 12）
+```
+
+### **🔹 运行结果**
+
+```
+0
+10
+12
+```
+**解释：**
+- 默认 `height = 0`
+- 赋值 `10`，符合条件，成功存储
+- 赋值 `24`，超过 `12`，被 `min(24, 12)` 限制为 `12`
+
+---
+
+## **4. `@TwelveOrLess` 底层实现**
+在 `SmallRectangle` 结构体中：
+
+```swift
+struct SmallRectangle {
+    @TwelveOrLess var height: Int
+}
+```
+实际上 Swift **会自动扩展** 代码为：
+
+```swift
+struct SmallRectangle {
+    private var _height = TwelveOrLess()  // 属性包装器实例
+    var height: Int {
+        get { _height.wrappedValue }
+        set { _height.wrappedValue = newValue }
+    }
+}
+```
+🔹 **Swift 自动管理 `wrappedValue`，开发者只需简单声明 `@TwelveOrLess`。**
+
+---
+
+## **5. 进阶：提供默认值**
+我们可以允许用户设置**默认值**：
+
+```swift
+@propertyWrapper
+struct TwelveOrLess {
+    private var number: Int
+    var wrappedValue: Int {
+        get { return number }
+        set { number = min(newValue, 12) }
+    }
+    
+    // 自定义初始化，允许设置默认值
+    init(wrappedValue: Int) {
+        self.number = min(wrappedValue, 12)
+    }
+}
+```
+**使用方式：**
+
+```swift
+struct SmallRectangle {
+    @TwelveOrLess var height: Int = 8  // 默认值 8
+    @TwelveOrLess var width: Int = 15  // 15 超出限制，实际存储 12
+}
+
+let rectangle = SmallRectangle()
+print(rectangle.height) // 8
+print(rectangle.width)  // 12（15 超出限制）
+```
+**解释：**
+- `height` 赋值 `8`，符合限制，存储 `8`
+- `width` 赋值 `15`，超过 `12`，被 `min(15, 12)` 限制为 `12`
+
+---
+
+## **6. 进阶：使用 `projectedValue`**
+
+`projectedValue` 提供**额外功能**，允许访问内部状态：
+
+```swift
+@propertyWrapper
+struct TwelveOrLess {
+    private var number = 0
+    var wrappedValue: Int {
+        get { return number }
+        set { number = min(newValue, 12) }
+    }
+
+    var projectedValue: String {
+        return "当前值: \(number)"
+    }
+}
+
+struct SmallRectangle {
+    @TwelveOrLess var height: Int
+}
+
+var rect = SmallRectangle()
+rect.height = 9
+print(rect.$height)  // 输出 "当前值: 9"
+```
+### **🔹 关键点**
+1. `projectedValue` 返回额外的信息（当前值）。
+2. 通过 `$height` 访问 **`projectedValue`**。
+
+---
+
+## **7. 总结**
+✅ **`@propertyWrapper` 可以封装属性逻辑，提高代码复用性**  
+✅ **`wrappedValue` 控制属性的存取行为**  
+✅ **可以使用 `init(wrappedValue:)` 设置默认值**  
+✅ **可以使用 `projectedValue` 访问额外信息**  
+
+🚀 **示例最终优化版本**
+
+```swift
+@propertyWrapper
+struct TwelveOrLess {
+    private var number: Int
+    var wrappedValue: Int {
+        get { return number }
+        set { number = min(newValue, 12) }
+    }
+    
+    var projectedValue: String {
+        return "当前值: \(number)"
+    }
+
+    init(wrappedValue: Int) {
+        self.number = min(wrappedValue, 12)
+    }
+}
+
+struct SmallRectangle {
+    @TwelveOrLess var height: Int = 8
+    @TwelveOrLess var width: Int = 15
+}
+
+var rect = SmallRectangle()
+print(rect.height)  // 8
+print(rect.width)   // 12（15 超出限制）
+print(rect.$height) // "当前值: 8"
+```
+
+
+<br/><br/><br/>
+> <h2 id="属性包装器中的projectedValue呈现值">属性包装器中的 `projectedValue`（呈现值）</h2>
+
+### **Swift 属性包装器中的 `projectedValue`（呈现值）详解**
+在 Swift **属性包装器** (`@propertyWrapper`) 中，除了 `wrappedValue` 之外，还可以使用 **`projectedValue`** 来提供额外的信息或功能。
+
+---
+
+## **1. `projectedValue` 基本概念**
+- **`wrappedValue`**：存取属性的值（必须实现）。
+- **`projectedValue`**（呈现值）：提供额外的值或功能，通常用 `self` 或其他派生值返回。
+
+**语法：**
+
+```swift
+@propertyWrapper
+struct WrapperExample {
+    var wrappedValue: Int  // 主要存储的值
+    var projectedValue: String {  // 额外的呈现值
+        return "当前值: \(wrappedValue)"
+    }
+}
+```
+**访问方式：**
+- 直接访问属性：`instance.property` 获取 `wrappedValue`
+- 通过 **`$property`** 访问 `projectedValue`
+
+---
+
+## **2. 举个例子：自动记录修改次数**
+### **🔹 代码示例**
+
+```swift
+@propertyWrapper
+struct TrackedValue {
+    private var value: Int = 0
+    private(set) var updateCount: Int = 0  // 记录值被修改的次数
+    
+    var wrappedValue: Int {
+        get { value }
+        set {
+            value = newValue
+            updateCount += 1
+        }
+    }
+    
+    var projectedValue: String {
+        return "值已修改 \(updateCount) 次"
+    }
+}
+
+struct Example {
+    @TrackedValue var number: Int
+}
+
+var example = Example()
+
+example.number = 5
+example.number = 10
+example.number = 15
+
+print(example.number)   // 输出: 15
+print(example.$number)  // 输出: "值已修改 3 次"
+```
+
+---
+
+## **3. 代码详解**
+### **(1) `TrackedValue` 结构体**
+
+```swift
+@propertyWrapper
+struct TrackedValue {
+    private var value: Int = 0
+    private(set) var updateCount: Int = 0  
+```
+- `value` 存储实际值，默认 `0`。
+- `updateCount` 记录**值被修改的次数**，默认 `0`。
+
+### **(2) `wrappedValue`**
+
+```swift
+var wrappedValue: Int {
+    get { value }
+    set {
+        value = newValue
+        updateCount += 1  // 每次修改增加计数
+    }
+}
+```
+- 读取时返回 `value`。
+- 赋值时 **增加 `updateCount` 记录修改次数**。
+
+### **(3) `projectedValue`**
+
+```swift
+var projectedValue: String {
+    return "值已修改 \(updateCount) 次"
+}
+```
+- **返回一个 `String`**，显示值被修改的次数。
+
+---
+
+## **4. `projectedValue` 如何使用**
+在 `Example` 结构体中：
+
+```swift
+struct Example {
+    @TrackedValue var number: Int
+}
+```
+等价于：
+
+```swift
+struct Example {
+    private var _number = TrackedValue()
+    var number: Int {
+        get { _number.wrappedValue }
+        set { _number.wrappedValue = newValue }
+    }
+    var $number: String {
+        return _number.projectedValue
+    }
+}
+```
+- 直接访问 `example.number` 访问 `wrappedValue`
+- 通过 `$number` 访问 `projectedValue`
+
+---
+
+## **5. `projectedValue` 的实际应用**
+### **(1) 记录用户输入**
+
+```swift
+@propertyWrapper
+struct TrackedString {
+    private var value: String = ""
+    private(set) var history: [String] = []
+
+    var wrappedValue: String {
+        get { value }
+        set {
+            history.append(newValue)
+            value = newValue
+        }
+    }
+
+    var projectedValue: [String] {
+        return history
+    }
+}
+
+struct User {
+    @TrackedString var name: String
+}
+
+var user = User()
+user.name = "Alice"
+user.name = "Bob"
+user.name = "Charlie"
+
+print(user.name)     // 输出: Charlie
+print(user.$name)    // 输出: ["Alice", "Bob", "Charlie"]
+```
+**解释：**
+- 每次修改 `name`，都会把旧值存入 `history`。
+- `projectedValue` 返回 **修改历史**。
+- 通过 `$name` 访问用户所有输入的历史。
+
+---
+
+## **6. 结论**
+✅ **`wrappedValue`** 是**主属性**，控制存储和访问。  
+✅ **`projectedValue`** 用 `$` 访问，提供**额外功能**（如修改次数、历史记录）。  
+✅ `projectedValue` 可以返回 **其他数据类型**（如 `String`、`Array`、`Bool`）。  
+✅ **使用场景：**
+   - **记录属性修改次数**
+   - **提供额外功能（日志、历史记录）**
+   - **简化逻辑（如输入验证、自动修正）**  
+
+
+
+
+
+
+
 <br/><br/><br/>
 
 ***
@@ -384,7 +771,7 @@ struct SwiftStruct {
 <br/><br/><br/>
 ><h2 id='引用类型'>引用类型</h2>
 <br/>
-> <h3 id='引用类型使用intout参数，意义不大'>引用类型使用intout参数，意义不大</h3>
+><h3 id='引用类型使用intout参数，意义不大'>引用类型使用intout参数，意义不大</h3>
 
 ```
 func swap(clss: inout SwiftClass) {
