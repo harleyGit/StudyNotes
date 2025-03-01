@@ -1056,7 +1056,10 @@ class _ExampleWidgetState extends State<ExampleWidget> {
             ElevatedButton(
               onPressed: () {
                 // 在按钮点击时，推入新的路由页面
+                // Navigator.of(context) 获取 NavigatorState，并调用 push()，向导航栈中添加 NewPage。
                 Navigator.of(context).push(
+                  // MaterialPageRoute 创建了 NewPage 并在 Navigator 栈顶
+                  // NewPage 被构建，显示在屏幕上，而 ExampleWidget 仍然保留在 Navigator 栈中（但不可见）。
                   MaterialPageRoute(
                     builder: (context) => NewPage(),
                   ),
@@ -1097,24 +1100,26 @@ void main() {
 
 &emsp; didChangeDependencies()这个方法会在State对象被插入到树中，并且在依赖的BuildContext对象发生变化时被调用。一种常见的情况是，当BuildContext所在的位置发生变化，例如父级Widget被重新构建，didChangeDependencies()就会被调用。
 
-
 &emsp; 在这个例子中有一个包含两个页面的简单Flutter应用。初始页面是ExampleWidget，当用户点击按钮时，会推入一个新的页面NewPage。每当从一个页面切换到另一个页面时，都会发生BuildContext的变化，因为每个页面都有不同的BuildContext。
 
-
 <br/>
+&emsp; **疑问：** `上面依赖对象BuildContext的变化到底指的是什么？`
 
-&emsp; 上面依赖对象BuildContext的变化指的是Navigator将新页面推入导航堆栈时，它引入了一组新的小部件，因此为该页面创建了一个新的BuildContext。小部件树结构的这种变化会触发相应State对象中的didChangeDependencies()方法。
-
-
-
-&emsp; 在提供的示例中，当用户点击按钮时，触发Navigator.of(context).push(...)方法，将一个新页面（NewPage）推入导航堆栈。这个操作为NewPage的小部件创建了一个新的BuildContext。因此，由于小部件树的结构发生了变化，与_ExampleWidgetState相关联的BuildContext发生了变化，导致调用了_ExampleWidgetState中的didChangeDependencies()方法。
-
+- **当 ExampleWidget 页面跳转到 NewPage 时：**
+	- 1.ExampleWidget 的 BuildContext 仍然存在
+		- ExampleWidget 仍然在 Widget 树中（只是不可见），它的 Element 没有被销毁，所以它的 BuildContext 仍然有效。
+		- 但是，它的 BuildContext 不会被 NewPage 直接使用。
+	
+	- 2.NewPage 创建了新的 BuildContext
+		- NewPage 在 Navigator 中被创建并插入 Widget 树，它的 BuildContext 对应一个新的 Element。
+		- NewPage 的 BuildContext 代表它在 Widget 树中的新位置。
+	
+	- 3.Navigator 的 BuildContext 变化
+		- Navigator 是 Flutter 的 StatefulWidget，它的 State 管理一个 List<Route>，每次 push() 或 pop()，都会导致 Navigator 的 Widget 树变化，从而影响 BuildContext。
+		- Navigator 会在 push() 时创建新的 Route，然后重新构建 Widget 树，使 NewPage 出现在 MaterialPageRoute 里。
 
 <br/><br/>
-
-
 > <h2 id='State对象依赖的InheritedWidget发生变化时调用详解读'>State象依赖的InheritedWidget发生变化时调用详解读</h2>
-
 **在 didChangeDependencies中 `State 对象依赖的 InheritedWidget 发生变化时调用?` 什么意思? 可以详细说下吗? 可以举一个完整详细的例子代码吗?**
 
 
@@ -1122,7 +1127,7 @@ void main() {
 
 下面是一个例子，演示了如何在 didChangeDependencies() 中响应 InheritedWidget 的变化：
 
-```
+```flutter
 import 'package:flutter/material.dart';
 
 // 定义一个 InheritedWidget
@@ -1137,7 +1142,10 @@ class CounterInheritedWidget extends InheritedWidget {
   }) : super(child: child);
 
   // 通过该方法获取最近的 Widget 树中的 CounterInheritedWidget 实例
+  // 同时会让调用它的 Widget 订阅 该 CounterInheritedWidget，当数据变化时，Flutter 会重新构建这个 Widget。
+  // CounterInheritedWidget 是 of(BuildContext context) 方法的 返回类型
   static CounterInheritedWidget of(BuildContext context) {
+		// context.dependOnInheritedWidgetOfExactType<T>() 用于在 Widget 树中查找最近的 T 类型（这里是 CounterInheritedWidget） 实例
     return context.dependOnInheritedWidgetOfExactType<CounterInheritedWidget>()!;
   }
 
@@ -1213,16 +1221,13 @@ void main() {
     ),
   );
 }
-
 ```
 
 &emsp; 在这个例子中，我们创建了 CounterInheritedWidget，用于传递和更新计数器的值。ExampleWidget 中的 Text 小部件通过 CounterInheritedWidget.of(context) 获取最近的 CounterInheritedWidget 实例，并显示计数器的值。点击按钮时，通过 CounterInheritedWidget 的 updateCounter 方法模拟更新计数器的值。这时，didChangeDependencies() 就会被调用，你可以在这个方法中执行相应的逻辑。
 
-
 <br/>
 
 **疑问1:当CounterInheritedWidget的counter改变时, _ExampleWidgetState 的build 方法中的组件Text的显示值会改变,那ExmpleWidget会销毁然后重新构建吗**
-
 
 &emsp; 在上述的例子中，当 CounterInheritedWidget 的 counter 改变时，_ExampleWidgetState 中的 build 方法会重新执行，但 ExampleWidget 本身不会销毁和重新构建。这是因为 ExampleWidget 是一个 StatefulWidget，而其对应的 State 对象 _ExampleWidgetState 中的 build 方法会被调用，而不是 ExampleWidget 本身。
 
@@ -1235,14 +1240,8 @@ void main() {
 - 当 CounterInheritedWidget 的 counter 改变时，Builder 中的 build 方法会被重新执行，显示新的计数器值。
 - ExampleWidget 本身不会被销毁和重新构建，只有与 CounterInheritedWidget 直接关联的 State 对象 _ExampleWidgetState 中的 build 方法会被调用。
 
-
-
 <br/><br/>
-
-
 > <h2 id='Builder组件详解'>Builder组件详解</h2>
-
-
 对上述代码进行片段摘抄:
 
 ```
@@ -1288,14 +1287,13 @@ class _ExampleWidgetState extends State<ExampleWidget> {
 ```
 
 <br/>
-
 在代码中会出现:
 
-```
+```flutter
 Builder(
 	builder: (context) {
-			return Text('你好!!!!');
-		}
+		return Text('你好!!!!');
+	}
 );
 ```
 
@@ -1305,8 +1303,6 @@ Builder(
 
 
 <br/>
-
-
 &emsp; Builder 是 Flutter 中的一个小部件，它的主要作用是创建一个新的 BuildContext，以便在子树中使用。通常，Builder 会用来创建一个新的作用域，以解决某些特定情况下，需要使用不同的 BuildContext 的问题。
 
 &emsp; 在上述的代码中，Builder 主要用于获取一个新的 BuildContext，以便在其中使用 CounterInheritedWidget.of(context) 获取最近的 CounterInheritedWidget 实例。这样做的目的是为了在 Text 小部件中获取 CounterInheritedWidget 的数据而不是在 ExampleWidget 直接获取。这确保了在依赖发生变化时，只有 Text 小部件会被重新构建，而不是整个 ExampleWidget。
@@ -1330,24 +1326,23 @@ Builder({
 
 
 
+<br/><br/><br/>
+> <h2 id="widget频繁更改创建是否会影响性能?复用和更新机制是怎么样的?">widget频繁更改创建是否会影响性能?复用和更新机制是怎么样的?</h2>
+
+是的，Flutter 中 Widget 频繁创建和重建可能会影响性能，但并不一定是性能瓶颈，因为 Flutter 的设计理念是Widget 是轻量级、不可变的，而 Element 和 RenderObject 才是管理 UI 状态的关键。
+
+[复用和更新机制的阐述](./组件基础.md#Flutter的Widget更新机制)
 
 
-<br/>
-<br/>
-<br/>
 
 
-
+<br/><br/><br/>
 ># <h2 id='widget有几种key'>[widget有几种key](https://space.bilibili.com/589533168/channel/seriesdetail?sid=381997)</h2>
 
 
 ![flutter1_2.png](./../Pictures/flutter1_2.png)
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 - **主要有2种类型的Key：**
 	- GlobalKey（确保生成的Key在整个应用中唯一，是很昂贵的，允许element在树周围移动或变更父节点而不会丢失状态）
 	- LocalKey(包含下面3种)
@@ -1385,13 +1380,11 @@ Builder({
 
 
 <br/><br/><br/>
-
 > <h2 id='GlobyKey获取widget、state、context'>GlobyKey获取widget、state、context</h2>
 
 &emsp; 而针对GlobyKey它可以游走于不同级别的组件,比如他在A、B、C中的任意一个或者是其子组件中的一个.通过这个GlobyKey我们可以获取到其状态组件的widget、state、context.通过这个context可以拿到其大小,但是这个GlobKey有点耗性能,建议少用!除此之外用这个Globy通过设置Row或者Clomun可以巧妙达到横竖屏幕的作用.
 
 <br/>
-
 **1.通过 Key 获取 Widget 和 State**
 
 ```
@@ -1448,9 +1441,7 @@ void main() {
 
 &emsp; 通过 GlobalKey 来创建一个 Key，并将其传递给 MyWidget。然后，通过 myKey.currentWidget 可以获取与该 key 关联的 Widget 对象，通过 myKey.currentState 可以获取与该 key 关联的 State 对象
 
-
-<br/>
-<br/>
+<br/><br/>
 
 **2.Key 获取 BuildContext**
 
@@ -1470,16 +1461,8 @@ print('Theme data: $theme');
 ```
 
 
-
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='什么时候用key'>什么时候用key</h3>
-
-
 - **ValueKey**是先比较类型,然后比较其值,源码如下:
 
 ```
@@ -3620,6 +3603,6 @@ flutter_redux 非常强大，只要使用几个类，就可以让我们在 Flutt
 
 
 ---
-注释: 0,75467 SHA-256 6ad488707d1d36f7524621e362620c66  
-@HuangGang <harley.smessage@icloud.com>: 153 214 447,7 468,3 485 487,7 504,3 517 4528 4551,2 13633 13661 16557 16836 16855,2 16872 16911 16913,10 17383,10 17396,2 17399,3 17429,3 17490,3 17572 17603 17605,2 17674,3 18026,4 18031,4 18038,2 18041,3 18107,3 18179,3 18300 18749,2 18767 18793 18869,4 19080 19087,2 19104,4 19123 19277,2 19294 19332 19386,4 19695 20156 20384 74191 74210 74273 74317 74440  
+注释: 0,76473 SHA-256 cd309ab8e9ae01b7f3822cac41e34685  
+@HuangGang <harley.smessage@icloud.com>: 153 214 447,7 468,3 485 487,7 504,3 517 4528 4551,2 13633 13661 16557 16836 16855,2 16872 16911 16913,10 17383,10 17396,2 17399,3 17429,3 17490,3 17572 17603 17605,2 17674,3 18026,4 18031,4 18038,2 18041,3 18107,3 18179,3 18300 18749,2 18767 18793 18869,4 19080 19087,2 19104,4 19123 19277,2 19294 19332 19386,4 19695 20156 20384 27481,20 27612,22 27679,22 28818,9 28848,15 28895,2 28898,5 28936,5 29016,5 29057,8 29091,5 29164,5 29211,8 29246,5 29378,5 29465 29886,7 30263,6 30343,6 30466,6 35025,7 35042 35064,2 35968,28 36029,2 36064,7 36190,3 36200,15 36233,2 75197 75216 75279 75323 75446  
 ...

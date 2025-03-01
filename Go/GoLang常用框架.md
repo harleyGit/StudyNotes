@@ -12,6 +12,8 @@
 - [**‌gin框架**](#‌gin框架)
 	- [把爬虫程序设置成Web服务](#把爬虫程序设置成Web服务)
 - [**‌cellnet网络库**](#cellnet网络库)
+- [**Beego框架**](#Beego框架)
+	- [数据验证validation](#数据验证validation)
 - [**‌图表库——go-chart**](#图表库——go-chart)
 - [**图表库go-echarts**](#图表库go-echarts)
 - [**packr库处理模板引擎内的文件**](#packr库处理模板引擎内的文件)
@@ -871,10 +873,191 @@ cellnet的设计理念是：高性能、简单、方便、开箱即用，希望�
 [完整代码地址](https://github.com/goecharts/go-chart)
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Beego框架">Beego框架</h1>
+
+<br/>
+> <h2 id="数据验证validation">数据验证validation</h2>
+
+```
+go get -u github.com/astaxie/beego/validation 
+```
+
+
+`github.com/astaxie/beego/validation` 是 **Beego 框架** 提供的 **数据验证**（validation）库，用于对结构体字段、表单数据等进行校验，类似于 `validator` 库。它可以帮助开发者进行输入数据的合法性检查，比如非空校验、长度限制、数值范围、正则表达式等。
+
+---
+
+## **如何使用 `validation` 进行数据验证？**
+### **1. 安装 `validation`**
+```sh
+go get -u github.com/astaxie/beego/validation
+```
+
+### **2. 基本示例**
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/astaxie/beego/validation"
+)
+
+// 定义一个 User 结构体
+type User struct {
+    Name  string `valid:"Required;MaxSize(10)"` // 必填，最大长度 10
+    Age   int    `valid:"Range(1, 100)"`        // 年龄必须在 1 到 100 之间
+    Email string `valid:"Email"`                // 必须是有效的 Email
+}
+
+func main() {
+    user := User{Name: "", Age: 150, Email: "invalid-email"}
+
+    valid := validation.Validation{}
+    passed, err := valid.Valid(&user) // 对结构体进行验证
+    if err != nil {
+        fmt.Println("验证出错:", err)
+        return
+    }
+
+    if !passed {
+        for _, err := range valid.Errors {
+            fmt.Println("错误字段:", err.Key, "错误信息:", err.Message)
+        }
+    } else {
+        fmt.Println("所有字段验证通过！")
+    }
+}
+```
+#### **运行结果**
+```
+错误字段: Name 错误信息: can not be empty
+错误字段: Age 错误信息: 1 <= 100
+错误字段: Email 错误信息: must be a valid email address
+```
+- `Name` 不能为空
+- `Age` 超出 `1-100` 的范围
+- `Email` 格式不正确
+
+---
+
+## **3. 直接对变量进行校验**
+除了验证结构体，你也可以直接对变量进行单独验证：
+```go
+valid := validation.Validation{}
+
+email := "not-an-email"
+if v := valid.Email(email, "Email"); !v.Ok {
+    fmt.Println(v.Error.Key, v.Error.Message) // 输出：Email must be a valid email address
+}
+```
+
+---
+
+## **4. 自定义验证规则**
+如果默认的校验规则不够用，你可以自定义验证逻辑：
+```go
+valid := validation.Validation{}
+valid.CustomFunc(func(value interface{}) bool {
+    str, ok := value.(string)
+    return ok && len(str) > 5 // 长度必须大于 5
+}).Message("长度必须大于5")
+
+valid.Valid("abc") // 失败，因为长度不够
+```
+
+---
+
+## **5. 结合 `gin` 框架使用**
+在 `gin` 里，你可以结合 `beego/validation` 来验证 HTTP 请求参数：
+```go
+package main
+
+import (
+    "github.com/gin-gonic/gin"
+    "github.com/astaxie/beego/validation"
+    "net/http"
+)
+
+type LoginForm struct {
+    Username string `valid:"Required"`
+    Password string `valid:"Required;MinSize(6)"`
+}
+
+func login(c *gin.Context) {
+    var form LoginForm
+    if err := c.ShouldBindJSON(&form); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    valid := validation.Validation{}
+    if passed, _ := valid.Valid(&form); !passed {
+        errors := make(map[string]string)
+        for _, err := range valid.Errors {
+            errors[err.Key] = err.Message
+        }
+        c.JSON(http.StatusBadRequest, gin.H{"errors": errors})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "登录成功"})
+}
+
+func main() {
+    r := gin.Default()
+    r.POST("/login", login)
+    r.Run(":8080")
+}
+```
+- 这里的 `login` 处理函数会验证 `Username` 和 `Password`，如果不符合规则，就返回 `400 Bad Request`。
+
+---
+
+## **6. 常见的验证规则**
+| 规则 | 作用 |
+|------|------|
+| `Required` | 不能为空 |
+| `MinSize(n)` | 字符串长度至少为 `n` |
+| `MaxSize(n)` | 字符串长度最多为 `n` |
+| `Range(min, max)` | 数值在 `[min, max]` 之间 |
+| `Email` | 必须是有效的邮箱格式 |
+| `IP` | 必须是有效的 IP 地址 |
+| `Mobile` | 必须是有效的手机号码 |
+| `Alpha` | 只能包含字母 |
+| `Numeric` | 只能包含数字 |
+| `Match(pattern)` | 必须匹配正则表达式 |
+
+---
+
+## **7. `beego/validation` vs `go-playground/validator`**
+Go 里面更常见的验证库是 [`go-playground/validator`](https://github.com/go-playground/validator)，相比 `beego/validation`：
+- `validator` **更流行**，且支持 **嵌套结构体** 和 **自定义标签**
+- `beego/validation` **更灵活**，可以单独对变量进行验证
+
+如果你不使用 `beego` 框架，建议用 `go-playground/validator` 作为更现代的选择。
+
+---
+
+## **总结**
+`github.com/astaxie/beego/validation` 是一个 **数据验证库**，用于校验 **结构体** 或 **变量**，常用于表单提交、API 参数校验等。它支持：
+- **结构体字段校验**
+- **直接对变量校验**
+- **自定义校验规则**
+- **与 `gin` 等 Web 框架配合使用**
+
+但如果你不使用 `beego`，可以考虑 `go-playground/validator` 作为更现代的替代方案。
+
+
 <br/>
 
 ***
 <br/><br/><br/>
+
 ># <h1 id="图表库go-echarts">[图表库go-echarts](https://github.com/go-echarts/go-echarts)</h1>
 
 基于ECharts图表库逐步讲解如何构建图表，整体的核心思想是：

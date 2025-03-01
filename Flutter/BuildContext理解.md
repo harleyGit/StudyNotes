@@ -10,10 +10,10 @@
 	- [回顾问题](#回顾问题)
 
 
-<br/>
+<br/><br/><br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id='引言'>引言</h1>
 
@@ -29,12 +29,10 @@ flutter: The context used to push or pop routes from the Navigator must be that 
 flutter: descendant of a Navigator widget.
 ```
 
-
 <br/>
+**代码是这样的:**
 
-代码是这样的
-
-```
+```flutter
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -66,10 +64,80 @@ class SecondPage extends StatelessWidget {
   }
 }
 ```
+在 push() 里，context 不能是 Scaffold 的 context。
 
-一眼看上去好像没什么问题，解决方式也很简单，把home部分作为一个新的Widget拆出来就可以了。
+`Navigator.of(context).push()`的这个context 属于 Scaffold，在 SecondPage 被 push 进去后，Flutter 可能无法正确找到 Navigator，可能导致 Navigator.of(context) 失败。
 
+<br/>
+**为什么 Navigator.of(context) 可能找不到 Navigator？**
+
+**问题：** 这里的 context 作用域是 Scaffold，而不是 MaterialApp
+- context 解析时，从 FlatButton 开始向上查找 Navigator。
+- 但 Scaffold 不是 Navigator 的子级，所以 Navigator.of(context) 可能找不到 Navigator。
+- 正确的 context 必须是 MaterialApp 或 Navigator 内部的 Widget。
+
+也就是说这个context是处于导航控制栈的栈底，若是找也是自己找自己导致出错的。
+
+<br/><br/>
+**Navigator.of(context) 是如何工作的？**
+
+- Navigator.of(context) 本质上是这样工作的：
+	- context 其实是 Element，它表示 Widget 在 Widget 树中的位置。
+	- Navigator.of(context) 向上遍历 context 所在的 Widget 树，查找最近的 Navigator （由 MaterialApp 或 CupertinoApp 创建的）。
+	- 如果 context 作用域不包含 Navigator，就会报错。
+
+<br/><br/>
+**方法1:** 内部使用Builder。
+
+```flutter
+import 'package:flutter/material.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Builder(
+	          builder:(context){
+		          return FlatButton(
+		              onPressed: () {
+		                Navigator.of(context).push(
+		                    MaterialPageRoute(builder: (context) => SecondPage()));
+		              },
+		              child: Text('跳转')),
+	          }
+          )
+        ),
+      ),
+    );
+  }
+}
+
+class SecondPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+    );
+  }
+}
 ```
+这样，Navigator.of(context) 作用域正确，避免 context 过早绑定到 Scaffold。
+
+<br/>
+**为什么 Builder 能解决问题？**
+
+Builder 在 Widget 树中创建了一个新的 context，这个 context 直接位于 Scaffold 内，而不是 Scaffold 本身。
+
+这样 Navigator.of(context) 能正确找到 Navigator。
+
+<br/><br/>
+**方法2:** 把home部分作为一个新的Widget拆出来就可以了。
+
+```flutter
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -98,13 +166,12 @@ class FirstPage extends StatelessWidget {
 
 但是刚开始遇到这些东西的时候一定是很懵逼的。`BuildContext`是什么鬼，为什么每次我们需要在build函数的时候传入一个`BuildContext`？为什么我的Navigator操作会出现当前的context找不到Navigator的情况，为什么拆成新的widget就好了？
 
-
 所以今天想顺着这个问题跟大家分享一下如何在Flutter中理解和使用BuildContext。其中还会涉及到一些widget构建流程的地方，在正式开始之前先简单解释一下这几个概念。
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id='Navigator，MaterialApp作用'>Navigator，MaterialApp作用</h1>
 
@@ -126,11 +193,10 @@ Navigator.of(context).pop
 
 知道了Navigator和MaterialApp发挥的作用之后，我们再来看看BuildContext。
 
-<br/>
-
-***
 <br/><br/><br/>
 
+***
+<br/>
 > <h1 id='BuildContext'>BuildContext</h1>
 
 每次我们在编写界面部分代码的时候，都是在build函数中进行操作。而build函数则需要默认传入一个BuildContext。我们来看看这到底是啥。
@@ -151,7 +217,6 @@ abstract class BuildContext {
 <br/>
 
 ***
-
 <br/><br/><br/>
 
 > <h1 id='Flutter如何构建视图'>Flutter如何构建视图</h1>
@@ -223,12 +288,10 @@ Cool！我们现在终于知道这个BuildContext是哪里来的了。让我们�
 
 
 <br/><br/><br/>
-
 > <h2 id='视图树装载过程'>视图树装载过程</h2>
 
 
 <br/><br/><br/>
-
 > <h2 id='StatelessWidget'>StatelessWidget</h2>
 
 - 首先它会调用StatelessWidget的 createElement 方法，并根据这个widget生成StatelesseElement对象。
@@ -238,7 +301,6 @@ Cool！我们现在终于知道这个BuildContext是哪里来的了。让我们�
 - StatelesseElement对象调用widget的build方法，并将element自身作为BuildContext传入。
 
 <br/><br/><br/>
-
 > <h2 id='StatefulWidget'>StatefulWidget</h2>
 
 - 首先同样也是调用StatefulWidget的 createElement方法，并根据这个widget生成StatefulElement对象，并保留widget引用。
@@ -252,7 +314,6 @@ Cool！我们现在终于知道这个BuildContext是哪里来的了。让我们�
 所以我们在build函数中所使用的context，正是当前widget所创建的Element对象。
 
 <br/><br/><br/>
-
 > <h2 id='of(context)方法'>of(context)方法</h2>
 
 在flutter中我们经常会使用到这样的代码
@@ -324,7 +385,6 @@ visitChildElements(ElementVisitor visitor) → void
 需要注意的是，如果我们需要与祖先 Inherit 对象建立长期联系，`dependOnInheritedWidgetOfExactType `系列的方法不能在 initState 中调用，为了确保 Widget 在 Inherit 值更改时正确更新自身，请在 `State.didChangeDependencies` 阶段调用 of 方法。
 
 <br/><br/><br/>
-
 > <h2 id='回顾问题'>回顾问题</h2>
 
 我们现在再来看看之前遇到的 当前 context 不包含 Navigator 这个问题是不是很简单了呢。
