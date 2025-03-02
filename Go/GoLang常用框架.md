@@ -12,6 +12,7 @@
 - [**‌gin框架**](#‌gin框架)
 	- [把爬虫程序设置成Web服务](#把爬虫程序设置成Web服务)
 - [**‌cellnet网络库**](#cellnet网络库)
+- [**‌认证和授权JWT**](#‌认证和授权JWT)
 - [**Beego框架**](#Beego框架)
 	- [数据验证validation](#数据验证validation)
 - [**‌图表库——go-chart**](#图表库——go-chart)
@@ -831,6 +832,7 @@ Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-
 
 ***
 <br/><br/><br/>
+
 ># <h1 id="cellnet网络库">[cellnet网络库](https://github.com/davyxu/cellnet)</h1>
 
 cellnet的设计理念是：高性能、简单、方便、开箱即用，希望开发者能使用cellnet迅速开展业务开发，而无须为底层性能调优及架构扩展而担忧。
@@ -871,6 +873,201 @@ cellnet的设计理念是：高性能、简单、方便、开箱即用，希望�
 参照之前的思想，本节将基于chart.js构建一个完整的图表库go-chart，支持折线图、柱状图、饼图、雷达图、散点图、气泡图等。
 
 [完整代码地址](https://github.com/goecharts/go-chart)
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="‌认证和授权JWT">‌认证和授权JWT</h1>
+
+JWT (JSON Web Token) 是一种开放标准（RFC 7519），用于在客户端和服务器之间以一种安全的方式传递声明（信息）。它是基于 JSON 格式的，并且通常用于身份验证和授权场景。
+
+**JWT（JSON Web Token）** 是一个包含 JSON 格式数据的安全令牌，它被广泛用于 Web 应用中的认证和授权流程。它由三部分组成：
+
+1. **Header（头部）**：
+   - 通常包含两部分：令牌类型（JWT）和签名算法（如 HMAC SHA256 或 RSA 等）。
+
+   示例：
+   ```json
+   {
+     "alg": "HS256",
+     "typ": "JWT"
+   }
+   ```
+
+2. **Payload（负载）**：
+   - 负载部分包含了声明（claims），声明通常是关于实体（通常是用户）和其他数据的元数据。JWT 可以包括三种类型的声明：
+     - **Registered Claims**：预定义的声明，如 `sub`（主题，通常是用户ID）、`iat`（签发时间）等。
+     - **Public Claims**：自定义声明，可以包含任何用户需要的信息。
+     - **Private Claims**：由用户自定义的声明，通常用于在不同系统之间传递信息。
+
+   示例：
+   ```json
+   {
+     "sub": "1234567890",
+     "name": "John Doe",
+     "iat": 1516239022
+   }
+   ```
+
+3. **Signature（签名）**：
+   - 用于验证消息的完整性并确认发送方身份。签名是通过加密算法（如 HMAC SHA256）对 Header 和 Payload 进行加密生成的，并使用一个密钥。
+
+   生成签名的方式：
+   ```plaintext
+   HMACSHA256(
+     base64UrlEncode(header) + "." + base64UrlEncode(payload),
+     secretKey
+   )
+   ```
+
+### JWT 工作原理：
+
+1. **生成 JWT**：
+   - 客户端发送请求，服务器验证用户身份（如用户名和密码）。验证成功后，服务器创建 JWT，将用户的基本信息（如 `user_id`、`role` 等）作为声明（claims）放入负载部分，并使用密钥对其进行签名。然后，JWT 返回给客户端。
+
+2. **使用 JWT**：
+   - 客户端将 JWT 保存在浏览器的 localStorage 或 cookies 中，在后续请求时，客户端将 JWT 作为 Authorization header 发送到服务器。
+
+3. **验证 JWT**：
+   - 服务器接收到 JWT 后，通过密钥验证 JWT 的签名，以确保 JWT 在传输过程中没有被篡改。如果签名有效，服务器就可以从 JWT 中提取出用户信息，并进行相关操作。
+
+### 为什么使用 JWT？
+
+1. **无状态认证**：JWT 允许将所有的身份验证信息包含在令牌中，这意味着服务器不需要存储任何关于用户会话的状态信息（无状态认证）。
+   
+2. **跨平台兼容**：JWT 是基于 JSON 格式的，因此它可以轻松地在不同的语言和平台之间传输。
+
+3. **安全性**：JWT 支持加密和签名，能确保信息的安全性和完整性。
+
+4. **灵活性**：JWT 允许存储自定义数据，且通过签名验证数据的有效性和来源。
+
+### 使用 `jwt-go` 库：
+
+在 Go 语言中，`jwt-go` 是一个流行的库，用于创建和验证 JWT。使用这个库，你可以轻松地实现身份验证和授权功能。
+
+#### 安装 `jwt-go` 库：
+
+```bash
+go get -u github.com/dgrijalva/jwt-go
+```
+
+#### 创建 JWT 示例：
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+	"github.com/dgrijalva/jwt-go"
+)
+
+func GenerateJWT() (string, error) {
+	// 创建一个密钥，用于签名
+	secretKey := []byte("mySecretKey")
+
+	// 创建一个新的 token 对象
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	// 设置 token 的 Claims
+	claims := token.Claims.(jwt.MapClaims)
+	claims["sub"] = "1234567890"  // 例如，存储用户ID
+	claims["name"] = "John Doe"    // 存储用户名
+	claims["iat"] = time.Now().Unix() // 签发时间
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()  // 设置过期时间，24小时
+
+	// 使用指定的密钥生成 token 字符串
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func main() {
+	// 生成 JWT
+	tokenString, err := GenerateJWT()
+	if err != nil {
+		fmt.Println("Error generating token:", err)
+		return
+	}
+	fmt.Println("Generated JWT:", tokenString)
+}
+```
+
+#### 验证 JWT 示例：
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"time"
+)
+
+func ValidateJWT(tokenString string) (bool, error) {
+	// 设置密钥，用于验证签名
+	secretKey := []byte("mySecretKey")
+
+	// 解析并验证 token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// 确保 token 的签名方法是正确的
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return secretKey, nil
+	})
+
+	// 检查解析过程中是否发生错误
+	if err != nil {
+		return false, err
+	}
+
+	// 检查 token 是否有效
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// 你可以在这里检查 JWT 的 Claims 是否符合你的需求
+		if exp, ok := claims["exp"].(float64); ok {
+			// 检查 token 是否过期
+			if int64(exp) < time.Now().Unix() {
+				return false, fmt.Errorf("token has expired")
+			}
+		}
+		return true, nil
+	}
+	return false, fmt.Errorf("invalid token")
+}
+
+func main() {
+	// 假设你已经有一个生成的 token
+	tokenString := "your_jwt_token_string_here"
+
+	// 验证 JWT
+	valid, err := ValidateJWT(tokenString)
+	if err != nil {
+		fmt.Println("Error validating token:", err)
+		return
+	}
+
+	if valid {
+		fmt.Println("JWT is valid.")
+	} else {
+		fmt.Println("JWT is invalid.")
+	}
+}
+```
+
+### 总结：
+- **JWT** 是一种非常流行的身份验证和授权机制，适用于分布式系统、API 认证等场景。
+- **jwt-go** 库是 Go 语言中常用的 JWT 库，用于生成和验证 JWT。
+- 通过使用 JWT，可以在客户端和服务器之间传递安全的数据，并支持无状态认证。
+
+如果你有更多问题，或者需要更详细的实现，欢迎继续提问！
+
 
 
 <br/><br/><br/>

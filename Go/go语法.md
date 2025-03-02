@@ -26,6 +26,9 @@
 		- [解决直接点击编译后的文件，无法交互](#解决直接点击编译后的文件，无法交互)
 - [**命名规范**](#命名规范)
 - [**打印占位符**](#打印占位符)
+	- [`fmt.Print/fmt.Println`](#`fmt.Print`/`fmt.Println`)
+	-  [`fmt.Printf`](#`fmt.Printf`)	
+	-  [`log.Print`/`log.Println`/`log.Printf`](#`log.Print`/`log.Println`/`log.Printf`)
 - [**‌基本语法与使用**](#基本语法与使用)
 	- [**变量**](#变量)
 		- [多个变量的声明和推导](#多个变量的声明和推导)
@@ -40,6 +43,7 @@
 			- [切片内存底层原理](#切片内存底层原理)
 			- [切片改变数组元素解决](#切片改变数组元素解决)
 		- [Map(容器)](#Map(容器))
+			- [`map[string]interface{}`的意思](#`map[string]interface{}`的意思)
 		- [列表list](#列表list)
 	- [**流程控制**](#流程控制)
 		- [for循环](#for循环) 
@@ -62,6 +66,7 @@
 		- [使用事件系统实现事件的响应和处理](#使用事件系统实现事件的响应和处理)
 	- [类型内嵌和结构体内嵌](#类型内嵌和结构体内嵌)
 - [**接口**](#接口)
+	- [空接口`interface{} `](#空接口`interface{}`)
 	- [接口的实现](#接口的实现)
 	- [便于扩展的日志输出系统](#便于扩展的日志输出系统)
 	- [接口和类型间转换](#接口和类型间转换)
@@ -179,7 +184,6 @@ brew install go
 ```
 
 <br/>
-
 - **查看安装目录**
 
 如果不知道是安装到了哪个目录可以通过如下查看：
@@ -607,20 +611,14 @@ go help：了解更多
 
 
 <br/><br/><br/>
-
 > <h2 id="goinstall的原理">go install的原理</h2>
 
 ![go.0.0.21.png](./../Pictures/go.0.0.21.png)
 
 ![go.0.0.22.png](./../Pictures/go.0.0.22.png)
 
-
-
 > <h2 id="goget的原理">go get的原理</h2>
-
 ![go.0.0.23.png](./../Pictures/go.0.0.23.png)
-
-
 ![go.0.0.24.png](./../Pictures/go.0.0.24.png)
 
 
@@ -665,7 +663,7 @@ Docker是一个容器化平台，用于打包、分发和运行应用程序。�
 
 <br/><br/>
 
-```
+```go
 package main
 
 import (
@@ -717,7 +715,7 @@ func practiceCmdOs() {
 
 输入下面指令进行编译：
 
-```
+```sh
 ganghuang@GangHuangs-MacBook-Pro PracticeCommandLine % go build -o oscli practice_command_line_os.go
 ```
 
@@ -729,7 +727,7 @@ ganghuang@GangHuangs-MacBook-Pro PracticeCommandLine % go build -o oscli practic
 
 输入如下指令显示：
 
-```
+```bash
 ganghuang@GangHuangs-MacBook-Pro PracticeCommandLine % ./oscli 黄🍎  harley2025.1.27@feifei.com 上海  
 
         An example of os cli.
@@ -764,13 +762,13 @@ ganghuang@GangHuangs-MacBook-Pro PracticeCommandLine % ./oscli 黄🍎  harley20
 
 保存文件并赋予可执行权限：
 
-```
+```sh
 chmod +x run_userApp.command
 ```
 
 双击该文件即可在终端中运行。
 
-```
+```sh
 ganghuang@GangHuangs-MacBook-Pro ~ % /Users/ganghuang/Desktop/run_userApp.command ; exit;
 
 	An example of os cli.
@@ -790,45 +788,123 @@ Saving session...
 ```
 
 <br/>
-
 方法 2：创建一个图形界面工具
 如果需要更友好的用户交互，可以使用 Go 的 fyne 或其他 GUI 框架构建一个简单的图形界面程序。
 
-
-
-
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id="命名规范">命名规范</h1>
 
 ![go.0.0.25.png](./../Pictures/go.0.0.25.png)
-
 ![go.0.0.26.png](./../Pictures/go.0.0.26.png)
-
 ![go.0.0.27.png](./../Pictures/go.0.0.27.png)
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id="打印占位符">打印占位符</h1>
 
 ![go.0.0.7.png](./../Pictures/go.0.0.7.png)
 
 
+在 Go 语言中，有三种主要的打印函数，分别是：
+- 1.`fmt.Print` / `fmt.Println`
+- 2.`fmt.Printf`
+- 3.`log.Print` / `log.Println` / `log.Printf`
+
+
+**如何选择？**
+| **用途**        | **推荐使用**       |
+|---------------|----------------|
+| 简单输出     | `fmt.Print` / `fmt.Println` |
+| 需要格式化输出 | `fmt.Printf` |
+| 记录日志     | `log.Println` / `log.Printf` |
+
+如果是调试或正式的日志记录，建议使用 `log` 包，支持日志级别管理（如 `log.SetFlags`、`log.SetOutput`），更适合生产环境。
+
+<br/><br/><br/>
+> <h2 id="`fmt.Print`/`fmt.Println`">`fmt.Print`/`fmt.Println`</h2>
+- `fmt.Print(args...)`：直接输出，不会自动添加空格或换行。
+- `fmt.Println(args...)`：自动在参数之间添加空格，并在末尾添加换行符。
+
+- **示例：**
+
+```go
+fmt.Print("Hello", "World")  // 输出：HelloWorld
+fmt.Println("Hello", "World") // 输出：Hello World（自动加空格，并换行）
+```
+
+**适用场景：**  
+用于简单的终端输出，调试或日志信息。
+
 <br/>
+- **携带参数**
+
+`fmt.Print` 和 `fmt.Println` 都可以接受多个参数，并且可以是不同类型的变量。它们的参数可以是字符串、整数、浮点数、布尔值等，甚至可以混合使用。  
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    name := "Alice"
+    age := 25
+    height := 1.68
+
+    fmt.Print("Name: ", name, ", Age: ", age, ", Height: ", height, "\n")
+    // 输出: Name: Alice, Age: 25, Height: 1.68
+
+    fmt.Println("Name:", name, "Age:", age, "Height:", height)
+    // 输出: Name: Alice Age: 25 Height: 1.68（自动加空格并换行）
+}
+```
+
+<br/><br/><br/>
+> <h2 id="`fmt.Printf`">`fmt.Printf`</h2>
+- `fmt.Printf(format, args...)`：使用格式化占位符（如 `%d`, `%s`, `%v`）输出内容，**不会自动换行**。
+
+- **示例：**
+
+```go
+name := "Alice"
+age := 25
+fmt.Printf("Name: %s, Age: %d\n", name, age) 
+// 输出：Name: Alice, Age: 25
+```
+
+**适用场景：**  
+需要格式化输出，比如打印结构体、数字、日期等。
+
+<br/><br/><br/>
+> <h2 id="`log.Print`/`log.Println`/`log.Printf`">`log.Print`/`log.Println`/`log.Printf`</h2> 
+- `log.Print(args...)`：类似 `fmt.Print`，但带有时间戳。
+- `log.Println(args...)`：类似 `fmt.Println`，但带有时间戳。
+- `log.Printf(format, args...)`：类似 `fmt.Printf`，但带有时间戳。
+
+- 示例：
+
+```go
+log.Println("This is a log message")
+// 输出：2025/03/02 15:04:05 This is a log message
+
+log.Printf("Error: %s", "File not found")
+// 输出：2025/03/02 15:04:05 Error: File not found
+```
+
+**适用场景：**  
+用于日志记录，调试时可用于区分一般输出和日志信息。 
+
+
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id='基本语法与使用'>基本语法与使用</h1>
 
@@ -838,7 +914,6 @@ Saving session...
 > <h1 id="变量">变量</h1>
 
 <br/><br/>
-
 > <h2 id="多个变量的声明和推导">多个变量的声明和推导</h2>
 
 ```
@@ -895,7 +970,6 @@ globalVar00= 100 globalVar01= 200 globalVar02= 全局变量V300
 ```
 
 <br/><br/><br/>
-
 > <h2 id="bool值字段有无判断">bool值字段有无判断</h2>
 
 ```
@@ -1088,9 +1162,7 @@ value type: string
 value: 🏠房屋 366——26-404
 ```
 
-
 <br/>
-
 指针地址的交换：变量值的交换Demo
 
 ```
@@ -1179,15 +1251,11 @@ $ go run  ./main.go
 🍊 🍊
 ```
 
-
-![go8](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go8.png)
-
-
+![go8.png](./../Pictures/go8.png)
 
 
 <br/><br/>
 > <h2 id='类型别名'>类型别名</h2>
-
 Go1.9版本之前内建内型定义：
 
 ```
@@ -1216,26 +1284,48 @@ type Type Alias = type
 &emsp; 类型别名规定：Type Alias只是Type的别名，本质上Type Alias与Type是同一个类型。
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
 > <h1 id='容器：存储和组织数据的方式'>容器：存储和组织数据的方式</h1>
-
-
 **介绍：**
 
 &emsp; 变量在一定程度上能满足函数及代码要求。如果编写一些复杂算法、结构和逻辑，就需要更复杂的类型来实现。这类复杂类型一般情况下具有各种形式的存储和处理数据的功能，将它们称为“容器”。
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='数组'>数组</h2>
-
-> 初始化和遍历
+**声明：**
 
 ```
+var array_name [SIZE]array_type
+```
+- **参数说明如下。**
+	- array_name：数组变量名。
+	- SIZE：数组的长度，即数组中的元素个数。
+	- array_type：数组中元素的类型。
+
+```go
+var value [7]int
+fmt.Println("已声明的数组的长度 =", len(value))
+```
+
+**数组初始化：**
+
+```go
+var value = [7]int{1, 3, 5, 7, 9, 11, 13}
+
+// 使用“...”代替上述示例中初始化数组value时指定的数组长度
+var value = [...]int{1, 3, 5, 7, 9, 11, 13}
+```
+
+
+
+
+初始化和遍历
+
+```go
 // 初始化数组
 func init_array() {
 	fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
@@ -1249,7 +1339,6 @@ func init_array() {
 
 }
 ```
-
 打印：
 
 ```
@@ -1264,46 +1353,97 @@ func init_array() {
 6 李亚
 7 是个
 8 小螃蟹🦀️
-
 ```
 
 <br/><br/>
-
 > <h2 id='切片'>切片</h2>
-
 &emsp; Go语言切片的内部结构包含地址、大小和容量。切片一般用于快速地操作一块数据集合。如果将数据集合比作切糕的话，切片就是你要的“那一块”。切的过程包含从哪里开始（这个就是切片的地址）及切多大（这个就是切片的大小）。容量可以理解为装切片的口袋大小.
 
-![go9](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go9.png)
+![go9.png](./../Pictures/go9.png)
+
+**声明：**
 
 ```
-slice [开始位置:结束位置]
+var slice_name []slice_type
+```
+- **参数说明如下**
+	- slice_name：切片变量名。
+	- slice_type：切片中元素的类型
+
+<br/>
+**初始化：**
+
+```go
+slice := []int{2,5,8}	//等价于 var slice = []int{2, 5, 8}
 ```
 
+
+```go
+make([]Type, size, cap)
+
+// 使用“短变量声明”的语法格式和make()函数初始化元素是int类型的切片slice，并且为这个切片分配5个int类型的元素。创建一个长度为 5 的整型切片
+slice := make([]int, 5)
+fmt.Println(slice)  // 输出: [0 0 0 0 0]
+
+// 在上述示例的基础上，设置切片的容量为10
+slice := make([]int, 5, 10)
+fmt.Println("切片内容:", slice)        // 切片内容: [0 0 0 0 0]
+fmt.Println("切片长度:", len(slice))   // 切片长度: 5
+fmt.Println("切片容量:", cap(slice))   // 切片容量: 10
 ```
+
+- **参数说明如下**
+	- Type：切片的元素类型。
+	- size：为切片分配多少个指定类型的元素，即切片的长度。
+	- cap：切片的容量，可以省略。cap的值不影响size的值，只是提前分配内存空间。
+
+<br/>
+**空切片**
+
+```
+var numbers []int
+```
+
+<br/>
+
+
+```go
+slice [起始索引: 终止索引]
+```
+
+```go
 // 切片
 func section_test() {
 	fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
 
 	var a = [4]int{10, 20, 30, 40}
-
 	fmt.Println(a, "\n", a[1:3])
 }
-
 ```
-
 打印：
 
-```
+```sh
 <=============== 🍎 🍎 🍎 ===============> 
 
 [10 20 30 40] 
- [20 30]
+[20 30]
+```
+
+<br/>
+**更简单Demo**
+
+```go
+arr := [3]int{123, 456, 789}  // 数组
+
+var s = []int{123, 456, 789} //切片
+sr := [0:2] //切片
+fmt.Println("sr = ", sr) //sr = [123 456]
 ```
 
 
 从数组或切片生成新的切片拥有如下特性。
 
-● 取出的元素数量为：结束位置-开始位置;
+● 取出的元素数量为：起始索引 - 终止索引;
 
 ● 取出元素不包含结束位置对应的索引，切片最后一个元素使用slice[len(slice)]获取;
 
@@ -1328,13 +1468,11 @@ func section_test() {
 
  <br/><br/>
  > <h3 id="切片改变数组元素解决">切片改变数组元素解决</h3>
-
-
 在 Go 中，切片（slice）是基于数组的引用类型。当你改变切片中的元素时，底层的数组也会相应地发生变化，因为它们共享相同的底层数组。
 
 如果你希望避免这种情况，并在切片修改时不影响底层数组，可以通过以下几种方法进行优化：
 
-### 1. **创建切片的副本**
+- 1.**创建切片的副本**
 通过创建切片的副本，你可以在副本上进行操作，而不会影响底层数组。可以使用 `copy` 函数来复制切片的内容到一个新的切片中。
 
 示例：
@@ -1411,12 +1549,9 @@ func main() {
 ```
 
 这些方法可以确保你在修改切片时不会影响原始的底层数组。选择哪种方法取决于你的需求，尤其是对性能的考虑。
- 
-
 
 <br/><br/>
 > <h2 id="Map(容器)">Map(容器)</h2>
-
 &emsp; Go语言中map的定义是这样的：
 
 ```
@@ -1427,7 +1562,6 @@ map[Key Type]Value Type
 ● Value Type是键对应的值类型;
 
 一个map里，符合Key Type和Value Type的映射总是成对出现。
-
 
 ```
 // map是一个内部实现的类型，使用时，需要手动使用make创建
@@ -1451,7 +1585,6 @@ scene := make(map[string]int)
 	}
 ```
 
-
 打印：
 
 ```
@@ -1465,9 +1598,66 @@ S backward
 ```
 
 <br/><br/>
-> <h2 id='列表list'>列表list</h2>
+> <h3 id="`map[string]interface{}`的意思">`map[string]interface{}`的意思</h3>
 
-&emsp； 在Go语言中，将列表使用container/list包来实现，内部的实现原理是双链表。列表能够高效地进行任意位置的元素插入和删除操作。
+`map[string]interface{}` 是一个键为字符串类型，值为空接口的 `map`。这意味着这个 `map` 的键是字符串类型，而值可以是任何类型。
+
+- **示例：**
+
+```go
+m := map[string]interface{}{
+    "age":     30,               // 值是整数
+    "name":    "Alice",           // 值是字符串
+    "isAdmin": true,              // 值是布尔类型
+    "data":   []int{1, 2, 3},    // 值是切片
+}
+
+// 访问值
+fmt.Println(m["age"])     // 输出: 30
+fmt.Println(m["name"])    // 输出: Alice
+fmt.Println(m["isAdmin"]) // 输出: true
+fmt.Println(m["data"])    // 输出: [1 2 3]
+```
+
+**什么时候使用 `map[string]interface{}`？**
+
+- `map[string]interface{}` 在以下场景中非常有用：
+	- **处理动态类型数据**：当你需要存储不同类型的数据时，可以使用 `map[string]interface{}`，因为空接口可以容纳任何类型的值。
+	- **JSON 解析**：当解析 JSON 数据时，`map[string]interface{}` 非常常见，因为 JSON 的键通常是字符串，而值可以是多种类型（如数字、字符串、布尔值、数组、对象等）。
+	- **通用结构**：如果你有一个需要存储任意字段类型的结构体或数据字典，可以使用 `map[string]interface{}` 来表示。
+
+- **例子：处理 JSON 数据**
+
+```go
+import "encoding/json"
+
+func main() {
+    // JSON 字符串
+    jsonStr := `{"name": "Alice", "age": 30, "isAdmin": true}`
+
+    // 声明一个 map 用于解析 JSON 数据
+    var data map[string]interface{}
+
+    // 解析 JSON 数据到 map 中
+    err := json.Unmarshal([]byte(jsonStr), &data)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
+    // 访问解析后的数据
+    fmt.Println(data["name"])    // 输出: Alice
+    fmt.Println(data["age"])     // 输出: 30
+    fmt.Println(data["isAdmin"]) // 输出: true
+}
+```
+
+在这个例子中，JSON 字符串被解析成了 `map[string]interface{}`，其中值的类型根据原始 JSON 数据的类型自动推断。
+
+
+<br/><br/>
+> <h2 id='列表list'>列表list</h2>
+&emsp; 在Go语言中，将列表使用container/list包来实现，内部的实现原理是双链表。列表能够高效地进行任意位置的元素插入和删除操作。
 
 &emsp; list的初始化有两种方法：New和声明。两种方法的初始化效果都是一致的。
 
@@ -1478,7 +1668,6 @@ var变量名list.List
 ```
 
 <br/>
-
 通过container/list包的New方法初始化list
 
 ```
@@ -1486,10 +1675,9 @@ var变量名list.List
 ```
 
 <br/>
-
 **列表的添加、删除、遍历**
 
-```
+```go
 // 导入
 import (
 	"container/list"
@@ -1524,7 +1712,7 @@ func list_delete() {
 
 打印：
 
-```
+```sh
 
  <=============== 🍎 🍎 🍎 ===============> 
 
@@ -1536,19 +1724,13 @@ high
 
 
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
 > <h1 id='流程控制'>流程控制</h1>
-
-<br/><br/>
 > <h2 id='for循环'>for循环</h2>
-
-
 **九九乘法表**
 
 ```
@@ -1589,18 +1771,7 @@ func multiplication_table() {
 ```
 
 
-
-
-<br/>
-<br/>
-> <h2 id=''></h2>
-
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -1609,23 +1780,17 @@ func multiplication_table() {
 
 ![go.0.0.13.png](./../Pictures/go.0.0.13.png)
 
-
-<br/><br/>
-
+<br/>
 > <h2 id='声明函数'>声明函数</h2>
 
 > 带有变量名的返回值
-
 &emsp; 命名的返回值变量的默认值为类型的默认值，即数值为0，字符串为空字符串，布尔为false、指针为nil等。
 
-
-```
+```go
 func 函数名(参数列表) (返回参数列表) {
 	函数体
 }
 ```
-
-
 &emsp; 下面代码中的函数拥有两个整型返回值，函数声明时将返回值命名为a和b，因此可以在函数体中直接对函数返回值进行赋值。在命名的返回值方式的函数体中，在函数结束前需要显式地使用return语句进行返回，代码如下：
 
 ```
@@ -1651,18 +1816,13 @@ func typed Two Values() (int, int) {
 
 a, b = typed Two Values()
 fmt.println(a,b) // 打印：1 2
-
 ```
-
 
 <br/>
-
 > 函数参数传递测试
-
 > &emsp; **`注意：`Go语言中传入和返回参数在调用和返回时都使用值传递，这里需要注意的是指针、切片和map等引用型对象指向的内容在参数传递中不会发生复制，而是将指针进行复制，类似于创建一次引用**
 
-
-```
+```go
 // 用于测试值传递效果的结构体
 type Data struct {
 	// 测试切片在参数传递中的效果
@@ -1719,16 +1879,17 @@ func paramTranslate() {
 // 调用
 paramTranslate()
 ```
-
 打印：
 
-```
+```sh
 <=============== 🍎 🍎 🍎 ===============> 
 
 in value: {complax:[1 2 3] instance:{a:5} ptr:0x140000182c0}
 in ptr: 0x1400007a570
+
 in Func value: {complax:[1 2 3] instance:{a:5} ptr:0x140000182c0}
 in Func ptr: 0x1400007a600
+
 out value: {complax:[1 2 3] instance:{a:5} ptr:0x140000182c0}
 out ptr: 0x1400007a5d0
 ```
@@ -1742,11 +1903,8 @@ out ptr: 0x1400007a5d0
 ● Data结构的ptr成员在传递过程中保持一致，表示指针在函数参数值传递中传递的只是指针值，不会复制指针指向的部分。
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='匿名函数'>匿名函数</h2>
-
 格式：
 
 ```
@@ -1756,10 +1914,9 @@ func(参数列表)(返回参数列表) {
 ```
 
 <br/>
-
 **‌1). 在定义时调用匿名函数**
 
-```
+```go
 func testAnonymousFunction() {
 	fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
 
@@ -1780,11 +1937,9 @@ hello 100
 
 
 <br/>
-
 **2). 匿名函数赋值给变量**
 
 ```
-
 fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
 
 // 将匿名函数体保存到f()
@@ -1795,20 +1950,16 @@ f := func(data int) {
 f(100)
 
 ```
-
 打印：
 
-```
+```sh
 <=============== 🍎 🍎 🍎 ===============> 
 
 hello 100
 
 ```
 
-
-
 <br/>
-
 **3). 匿名函数用作回调函数**
 
 ```
@@ -1892,7 +2043,7 @@ func testAnnoymousFunction1() {
 
 终端命令执行如下，打印：
 
-```
+```sh
 $ go run main.go
 skill not found
 $ go run main.go --skill=fly
@@ -1902,16 +2053,8 @@ soldier run
 
 ```
 
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='函数类型实现接口'>函数类型实现接口</h2>
-
-<br/>
-
 **1). 结构体实现接口**
 
 ```
@@ -2036,12 +2179,11 @@ from function 🍓 函数接口 hello
 
 
 <br/>
-
 > 1). 闭包的记忆效应
 
 &emsp；被捕获到闭包中的变量让闭包本身拥有了记忆效应，闭包中的逻辑可以修改闭包捕获的变量，变量会跟随闭包生命期一直存在，闭包本身就如同变量一样拥有了记忆效应。
 
-```
+```go
 /**
  * @description: 闭包的记忆效应
  * @param {*}
@@ -2106,13 +2248,7 @@ fmt.Printf("\n<=============== 🍑 🍑 🍑 ===============> ")
 ```
 
 
-
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='可变参数'>可变参数</h2>
 
 &emsp; Go语言支持可变参数特性，函数声明和调用时没有固定数量的参数，同时也提供了一套方法进行可变参数的多级传递。
@@ -2940,51 +3076,20 @@ testStruct3()
 ```
 
 
-<br/>
 
-***
+
+
+
 <br/><br/><br/>
 
-> <h1 id=""></h1>
-
-
-
-
-<br/>
-
 ***
-<br/><br/><br/>
-
-> <h1 id=""></h1>
-
-
-
-
-<br/><br/>
-
-> <h3 id=''></h3>
-
-
-
-
 <br/>
-
-> <h3 id=''></h3>
-
-
-
-
-<br/>
-
-***
-<br/><br/>
 
 > <h1 id='接口'>接口</h1>
 
 &emsp; 接口本身是调用方和实现方均需要遵守的一种协议，大家按照统一的方法命名参数类型和数量来协调逻辑处理的过程。
 
 &emsp; Go语言中使用组合实现对象特性的描述。对象的内部使用结构体内嵌组合对象应该具有的特性，对外通过接口暴露能使用的特性。
-
 
 > 接口声明格式
 
@@ -3011,13 +3116,32 @@ type writer interface {
 ```
 
 
+<br/><br/><br/>
+> <h2 id="空接口`interface{}`">空接口`interface{} `</h2>
+interface{} 是 Go 中的一个空接口类型。它是 Go 中最通用的类型，可以代表任何类型。
+
+- **特点：**
+	- 空接口：interface{} 被称为空接口，它不包含任何方法。因此，任何类型的值都可以赋给空接口。
+	- 你可以使用空接口来表示一个未知类型或支持多种类型的数据。
+
+**示例：**
+```go
+var a interface{}  // 空接口变量
+a = 42             // 赋值为整数
+fmt.Println(a)      // 输出: 42
+
+a = "hello"         // 赋值为字符串
+fmt.Println(a)      // 输出: hello
+```
+空接口的作用非常广泛，尤其是当你不知道确切类型时，或者需要存储多种不同类型的数据时。
+
+
+
+
+
 <br/><br/>
-
 > <h2 id='接口的实现'>接口的实现</h2>
-
-<br/>
-
-> 规则1: 接口的方法与实现接口的类型方法格式一致
+规则1: 接口的方法与实现接口的类型方法格式一致
 
 &emsp; 在类型中添加与接口签名一致的方法就可以实现该方法。**签名包括方法中的名称、参数列表、返回参数列表**。也就是说，只要实现接口类型中的方法的名称、参数列表、返回参数列表中的任意一项与接口要实现的方法不一致，那么接口的这个方法就不会被实现。 
 
