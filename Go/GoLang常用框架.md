@@ -4,6 +4,7 @@
 	- [TravisCI](#TravisCI) 
 	- [GitHub Actions](#GitHubActions) 
 	- [DaoCloud](#DaoCloud)
+- [**gRPC框架**](#gRPC框架)
 - [**‌go-colly框架**](#go-colly框架)
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
@@ -332,16 +333,462 @@ go get -u github.com/gocolly/colly/...
 	- 定制抓取频次。
 
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="gRPC框架">gRPC框架</h1>
+
+RPC（远程过程调用）和 gRPC（基于 RPC 的现代框架）是两种用于 **内部 API 通信** 的方式，虽然它们有很多相似之处，但也有一些关键区别。  
+
+---
+
+## **1. RPC 作为内部 API 通信**
+RPC（Remote Procedure Call，远程过程调用）是一种 **分布式计算通信方式**，允许一个程序调用远程服务器上的方法，就像调用本地方法一样。RPC 主要特点：
+- **同步调用**，调用方等待远程方法执行完成后返回结果。
+- **二进制或文本格式传输**，比如 JSON-RPC、XML-RPC、Thrift、gRPC、自定义 TCP 协议等。
+- **需要序列化/反序列化数据**，不同 RPC 实现方式会使用不同的数据格式。
+
+### **常见的 RPC 实现**
+| **RPC 框架** | **传输协议** | **数据格式** | **适用场景** |
+|-------------|------------|------------|--------------|
+| JSON-RPC    | HTTP/TCP   | JSON       | 轻量级、简单系统 |
+| XML-RPC     | HTTP       | XML        | 旧系统兼容 |
+| Thrift      | TCP/HTTP   | 二进制/JSON | 高效跨语言 RPC |
+| gRPC        | HTTP/2     | Protocol Buffers（protobuf） | 高性能、现代微服务 |
+
+---
+
+## **2. gRPC 作为内部通信**
+gRPC 是 Google 开源的 **高性能 RPC 框架**，与传统 RPC 相比，它具有以下特点：
+### ✅ **基于 HTTP/2**
+- 多路复用，减少连接数，提高吞吐量。
+- 头部压缩（HPACK），降低带宽消耗。
+
+### ✅ **使用 Protocol Buffers（protobuf）作为数据格式**
+- 高效的二进制序列化，减少带宽占用，解析速度比 JSON/XML 更快。
+- 代码自动生成，减少手写 API 解析代码。
+
+### ✅ **支持流式通信**
+- **普通 RPC**：请求 → 响应（单次交互）。
+- **服务器流式 RPC**：客户端请求，服务器持续返回数据（适合日志流、视频流）。
+- **客户端流式 RPC**：客户端连续发送数据，服务器一次性响应（适合上传大文件）。
+- **双向流式 RPC**：客户端和服务器都可以持续发送数据（适合实时聊天、语音通话）。
+
+### ✅ **多语言支持**
+- gRPC 官方支持 Golang、Python、Java、C++、Node.js 等。
+
+---
+
+## **3. RPC vs gRPC 区别**
+| **对比项**       | **传统 RPC（JSON-RPC、Thrift）** | **gRPC** |
+|-----------------|---------------------------------|---------|
+| **通信协议**    | HTTP/TCP                        | **HTTP/2** |
+| **数据格式**    | JSON/XML/Thrift 二进制         | **protobuf（二进制）** |
+| **序列化速度**  | JSON/XML 较慢                   | **protobuf 更快** |
+| **语言支持**    | 取决于框架，如 JSON-RPC 只支持部分语言 | **多语言支持（Go、Python、C++等）** |
+| **流式支持**    | 仅支持请求-响应                 | **支持流式通信（单向/双向）** |
+| **性能**        | 解析 JSON 较慢，占用带宽较大     | **二进制格式，解析快，低带宽占用** |
+| **生态**        | 取决于具体 RPC 框架              | **Google 支持，社区活跃** |
+
+---
+
+## **4. 选择 RPC 还是 gRPC？**
+### **什么时候用传统 RPC（如 JSON-RPC、Thrift）？**
+✅ **适用于：**
+- **轻量级项目**（不需要高性能通信，简单 HTTP JSON API 足够）
+- **已有 JSON/XML API**（与前端交互，前端不支持 protobuf）
+- **不支持 HTTP/2** 的环境（如老旧服务器）
+
+❌ **不适用于：**
+- 高吞吐、低延迟场景（JSON 解析慢，HTTP/1.1 开销大）
+- 大规模微服务架构（协议设计较老，缺少流式支持）
+
+---
+
+### **什么时候用 gRPC？**
+✅ **适用于：**
+- **微服务架构**（跨语言、跨团队开发，自动生成代码）
+- **高性能、低延迟通信**（protobuf 解析速度快，减少 CPU 占用）
+- **需要流式通信**（如日志推送、WebSocket 替代方案）
+- **Kubernetes、Service Mesh（Istio）等云原生环境**
+
+❌ **不适用于：**
+- 需要在浏览器直接访问（gRPC-Web 需要额外代理，如 Envoy）
+- 需要兼容 RESTful API（JSON 友好）
+
+---
+
+## **5. gRPC 在 Golang 内部 API 通信示例**
+### **定义 gRPC 服务**
+创建 `.proto` 文件：
+
+```proto
+syntax = "proto3";
+
+package userpb;
+
+service UserService {
+  rpc GetUser (UserRequest) returns (UserResponse);
+}
+
+message UserRequest {
+  int32 id = 1;
+}
+
+message UserResponse {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+}
+```
+
+### **生成 Golang 代码**
+
+```sh
+protoc --go_out=. --go-grpc_out=. user.proto
+```
+
+### **实现 gRPC 服务器**
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+	"net"
+
+	pb "example.com/userpb"
+	"google.golang.org/grpc"
+)
+
+type server struct {
+	pb.UnimplementedUserServiceServer
+}
+
+func (s *server) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
+	return &pb.UserResponse{Id: req.Id, Name: "Alice", Email: "alice@example.com"}, nil
+}
+
+func main() {
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	pb.RegisterUserServiceServer(s, &server{})
+
+	log.Println("gRPC server listening on port 50051")
+	s.Serve(lis)
+}
+```
+
+### **gRPC 客户端**
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	pb "example.com/userpb"
+	"google.golang.org/grpc"
+)
+
+func main() {
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewUserServiceClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	res, err := client.GetUser(ctx, &pb.UserRequest{Id: 1})
+	if err != nil {
+		log.Fatalf("Could not get user: %v", err)
+	}
+	fmt.Printf("User: %v\n", res)
+}
+```
+
+---
+
+## **6. 总结**
+| **选择** | **适用场景** |
+|---------|------------|
+| **RESTful API（HTTP+JSON）** | 前后端交互，兼容性强，浏览器友好 |
+| **传统 RPC（JSON-RPC、Thrift）** | 轻量级 RPC，适合小规模内部服务 |
+| **gRPC** | 高性能微服务，低延迟、流式通信，云原生架构 |
+
+如果你的系统是**高吞吐量、跨语言、多微服务架构**，那么 **gRPC 是更好的选择**。如果只是简单的**内部 API 通信**，可以用 **JSON-RPC/Thrift** 代替。
+
+
+<br/><br/><br/>
+> <h2 id="grpc环境配置">grpc环境配置</h2>
+
+**grpc安装**
+
+```sh
+go get -u google.golang.org/grpc
+```
+
+<br/><br/>
+
+**Protoc Plugin(protobuf 插件)安装**
+
+为了在 Golang 中使用 protobuf，你需要安装 Go 的 protobuf 插件。运行以下命令来安装
+
+```sh
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
+
+<br/><br/>
+
+**编译和安装 Protocol Buffers (protobuf)** 
+protobuf 的安装过程。运行以下命令来安装 protobuf：
+
+```
+brew install protobuf
+```
+
+安装完成后，你可以通过以下命令验证 protobuf 是否安装成功：
+
+```bash
+protoc --version
+```
+如果安装成功，这将输出 protobuf 的版本号。
+<br/>
+
+**更新你的 PATH**
+
+确保你的 $GOPATH/bin 或 $HOME/go/bin 在你的 PATH 中，这样你就可以直接使用 protoc-gen-go。你可以通过以下命令将其添加到你的 .bashrc 或 .zshrc 文件中：
+
+```
+bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+然后运行以下命令使更改生效：
+
+```bash
+source ~/.bashrc  # 或者 source ~/.zshrc
+```
+
+<br/><br/>
+
+**Grpc-gateway**
+
+grpc-gateway是protoc的一个插件。它读取gRPC服务定义，并生成一个反向代理服务器，将RESTful JSON API转换为gRPC。此服务器是根据gRPC定义中的自定义选项生成的。
+
+**安装：**
+
+```sh
+go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+```
+
+
+<br/><br/><br/>
+> <h2 id="protoc使用">protoc使用</h2>
+- 我们按照惯例执行protoc --help（查看帮助文档），我们抽出几个常用的命令进行讲解：
+	- 1、-IPATH, --proto_path=PATH：指定import搜索的目录，可指定多个，如果不指定则默认当前工作目录
+	- 2、--go_out：生成golang源文件
+
+<br/>
+
+**参数**
+若要将额外的参数传递给插件，可使用从输出目录中分离出来的逗号分隔的参数列表:
+
+使用 Protocol Buffers 编译器（`protoc`）生成 Go 代码的命令，且支持 gRPC 服务。如下面的命令：
+
+```sh
+protoc --go_out=plugins=grpc,import_path=mypackage:. *.proto
+```
+- import_prefix=xxx：将指定前缀添加到所有import路径的开头
+- import_path=foo/bar：如果文件没有声明go_package，则用作包。如果它包含斜杠，那么最右边的斜杠将被忽略。
+- plugins=plugin1+plugin2：指定要加载的子插件列表（我们所下载的repo中唯一的插件是grpc）
+- Mfoo/bar.proto=quux/shme： M参数，指定.proto文件编译后的包名（foo/bar.proto编译后为包名为quux/shme）
+
+<br/>
+
+***
+### **各部分详解：**
+
+1. **`protoc`**
+   - 这是 Protocol Buffers 编译器的命令行工具，用来将 `.proto` 文件编译为指定语言（如 Go、Java、Python）的代码。
+
+2. **`--go_out`**
+   - `--go_out` 是指示 `protoc` 编译器生成 Go 语言代码的标志。
+   - 通过这个选项，`protoc` 会将 `.proto` 文件编译为 Go 代码。
+
+3. **`plugins=grpc`**
+   - `plugins=grpc` 选项启用 gRPC 插件。gRPC 是一种高效的 RPC 框架，`protoc` 会生成用于 gRPC 服务的 Go 代码。
+   - 使用此选项时，生成的 Go 代码会包括 gRPC 所需的客户端和服务器代码。
+   
+   **解释：**
+   - gRPC 服务和客户端代码包含了与 Protocol Buffers 相关的 `Client` 和 `Server` 接口方法，这些方法用于服务的通信。
+   
+4. **`import_path=mypackage`**
+   - `import_path` 选项指定 Go 代码中 `import` 的包路径。
+   - 这表示生成的 Go 文件将在 `mypackage` 包下。例如，生成的文件将通过 `import "mypackage/yourfile"` 来引用。
+   
+   **注意：**
+   - `mypackage` 应该是你希望在 Go 项目中使用的包名称。它通常是你项目的 Go 模块路径或目录路径。
+
+5. **`:.`**
+   - `.` 表示当前目录。这指定了生成的 Go 代码应该放置在当前目录下。
+   - 所以，生成的 Go 文件将被输出到执行命令时所在的目录。
+
+6. **`*.proto`**
+   - `*.proto` 是你要编译的 `.proto` 文件的通配符。这个命令会匹配当前目录下的所有 `.proto` 文件，并将它们作为输入传递给 `protoc` 编译器。
+   
+### **总结**
+
+- 这个命令会将当前目录下所有的 `.proto` 文件编译成 Go 代码，并且会生成包含 gRPC 客户端和服务器实现的代码。
+- 生成的 Go 文件将被放置在当前目录中，并且这些文件会被包含在 `mypackage` 包中。
+
+### **示例：**
+
+假设你有一个 `hello.proto` 文件，如下所示：
+
+```proto
+syntax = "proto3";
+
+package hello;
+
+service Greeter {
+    rpc SayHello (HelloRequest) returns (HelloReply);
+}
+
+message HelloRequest {
+    string name = 1;
+}
+
+message HelloReply {
+    string message = 1;
+}
+```
+
+运行命令：
+
+```bash
+protoc --go_out=plugins=grpc,import_path=mypackage:. hello.proto
+```
+
+这会生成一个包含 gRPC 客户端和服务器代码的 Go 文件，类似于：
+
+- `hello.pb.go`：包括与消息类型和 gRPC 服务相关的代码。
+- `hello_grpc.pb.go`：包括 gRPC 相关的客户端和服务器代码。
+
+这样，你就可以使用生成的 Go 代码来实现和调用 `Greeter` 服务。
+
+### **常见问题：**
+- **Go 插件未安装：**
+  如果你遇到 `protoc-gen-go: program not found or is not executable` 错误，意味着你没有安装 Go 的插件。
+  安装命令：
+  ```bash
+  go get google.golang.org/protobuf/cmd/protoc-gen-go
+  ```
+
+- **gRPC 插件未安装：**
+  如果没有安装 gRPC 插件，可以通过以下命令安装：
+  ```bash
+  go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
+  ```
+
+
+
+<br/>
+**Grpc支持**
+如果proto文件指定了RPC服务，protoc-gen-go可以生成与grpc相兼容的代码，我们仅需要将plugins=grpc参数传递给--go_out，就可以达到这个目的
+
+```
+protoc --go_out=plugins=grpc:. *.proto
+```
+
+
+<br/><br/><br/>
+> <h2 id=""></h2>
+
+**初始化目录**
+
+```sh
+grpc-hello-world/
+├── certs
+├── client
+├── cmd
+├── pkg
+├── proto
+│   ├── google
+│   │   └── api
+└── server
+```
+- certs：证书凭证
+- client：客户端
+- cmd：命令行
+- pkg：第三方公共模块
+- proto：protobuf的一些相关文件（含.proto、pb.go、.pb.gw.go)，google/api中用于存放annotations.proto、http.proto
+- server：服务端
+
+<br/><br/>
+
+**制作证书**
+在服务端支持Rpc和Restful Api，需要用到TLS，因此我们要先制作证书
+
+进入certs目录，生成TLS所需的公钥密钥文件
+
+**私钥**
+
+```sh
+openssl genrsa -out server.key 2048
+
+openssl ecparam -genkey -name secp384r1 -out server.key
+```
+
+- openssl genrsa：生成RSA私钥，命令的最后一个参数，将指定生成密钥的位数，如果没有指定，默认512
+- openssl ecparam：生成ECC私钥，命令为椭圆曲线密钥参数生成及操作，本文中ECC曲线选择的是secp384r1
+
+**自签名公钥**
+
+```
+openssl req -new -x509 -sha256 -key server.key -out server.pem -days 3650
+```
+
+openssl req：生成自签名证书，-new指生成证书请求、-sha256指使用sha256加密、-key指定私钥文件、-x509指输出证书、-days 3650为有效期，此后则输入证书拥有者信息
+
+**填写信息**
+
+```sh
+Country Name (2 letter code) [AU]:ShangHai
+String too long, must be at most 2 bytes long
+Country Name (2 letter code) [AU]:CN
+State or Province Name (full name) [Some-State]:ShangHai
+Locality Name (eg, city) []:ShangaHai
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:HuangGang
+Organizational Unit Name (eg, section) []:HuangGang.dev.use 
+Common Name (e.g. server FQDN or YOUR name) []:HuangGang_personalCertificate       
+Email Address []:harleysor@qq.com 
+```
+
+
+
+
 
 <br/><br/><br/>
 > <h2 id="go-colly框架使用">go-colly框架使用</h2>
-
 **导入框架**
 
 ```
 import "github.com/gocolly/colly"
 ```
-
 <br/>
 
 &emsp; 使用go-colly框架的关键是创建Collector对象（即“收集器”​）​，该对象的作用是管理网络通信，并负责在收集任务运行时执行附加的回调函数。通过调用colly库中的NewCollector()函数，即可创建Collector对象。其语法格式如下。
@@ -349,7 +796,6 @@ import "github.com/gocolly/colly"
 ```
 colly.NewCollector()
 ```
-
 <br/>
 
 ![go.0.0.55.png](./../Pictures/go.0.0.55.png)
