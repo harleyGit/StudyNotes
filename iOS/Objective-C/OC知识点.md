@@ -1558,7 +1558,7 @@ GCD 的全局队列会自动将线程数量限制在一个比较合理的数量
 
 > <h2 id='线程最大开到多少合适'>线程最大开到多少合适</h2>
 
-[子线程数最多开到64个,否则会就会导致主线程卡顿,这是根据微信团队的Matrix库得出来的.](./App优化##子线程监控退火算法)
+[子线程数最多开到64个,否则会就会导致主线程卡顿,这是根据微信团队的Matrix库得出来的.](./App优化.md#子线程监控退火算法)
 
 
 <br/><br/><br/>
@@ -1582,24 +1582,16 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 });
 ```
 
-
-
 <br/><br/><br/>
-
 
 ># <h2 id='dispatch_once安全的原因'>[dispatch_once安全的原因](./多线程.md#dispatch_once)</h2>
 
 
 <br/><br/><br/>
-
 ># <h2 id = "锁分为哪几类?说一下">[锁分为哪几类?说一下](./多线程.md#锁分类)</h2>
 
-
 <br/><br/><br/>
-
-
 > <h2 id = "dispatch_after时间准确吗">dispatch_after时间准确吗(杭州灵伴科技)</h2>
-
 
 指定时间（如3秒后），执行某个任务。
 
@@ -1635,10 +1627,7 @@ CADisplayLink *displayLink = [CADisplayLink displayLinkWithTarget:self selector:
 }
 
 ```
-
-
 <br/><br/>
-
 
 - **NSTimer** 是一种定时器，可以用于在指定时间间隔后执行某个方法。虽然 NSTimer 的精确性受到运行循环的影响，但在一些场景下仍可以提供足够的精度。
 
@@ -1652,10 +1641,7 @@ NSTimer *timer = [NSTimer timerWithTimeInterval:0.1 target:self selector:@select
     // 在这里执行需要精确控制的操作
 }
 ```
-
-
 <br/><br/>
-
 
 - **dispatch_source_t：**
 
@@ -1673,18 +1659,12 @@ dispatch_resume(timer);
 
 这些方法都可以提供一定程度上的时间精确性，但在实际应用中，需要根据具体的场景和需求选择合适的方案。CADisplayLink 在动画和渲染方面非常适用，NSTimer 适用于相对低频率的定时任务，而 dispatch_source_t 则提供了较高的精确度。
 
-
-
 总结:实际使用中，总是受到系统负载、调度器的影响，以及其他并发任务的执行情况。所以说的时间精确性,是没有绝对的.
 
-
-
-<br/>
-
-***
 <br/><br/><br/>
 
-
+***
+<br/>
 
 ># <h1 id = "性能优化"> [性能优化](https://www.jianshu.com/p/3ad7880e3667) </h1>
 
@@ -1692,22 +1672,17 @@ dispatch_resume(timer);
 
 WHC_Scan:  Mac工具, 删除项目没有使用的类减少打包体积;
 
-
 <br/><br/><br/>
 
 >## <h2 id = "性能优化总结"> [**性能优化总结**](https://juejin.cn/post/6844903590138478600) </h2>
 
-
-
 <br/><br/><br/>
-
 > <h2 id = "循环引用解决">循环引用解决</h2>
 
 [♻️解决循环引用框架：FBRetainCycleDetector](https://draveness.me/retain-cycle1/)
 
 
 <br/><br/><br/>
-
 > <h3 id = "NSTimer循环引用解决">NSTimer循环引用解决？</h1>
 
 NSTimer循环引用的解决方法，目前有以下几种
