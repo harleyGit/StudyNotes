@@ -1,10 +1,17 @@
 ></h2>
 - [**依赖包安装**](依赖包安装)
+	- [依赖安装命令](#依赖安装命令)
 - [**动手实现一个库**](#动手实现一个库)
 	- [TravisCI](#TravisCI) 
 	- [GitHub Actions](#GitHubActions) 
 	- [DaoCloud](#DaoCloud)
 - [**gRPC框架**](#gRPC框架)
+	- [grpc环境配置](#grpc环境配置)
+	- [protoc使用](#protoc使用)
+	- [简单Demo流程](#简单Demo流程)
+	- [proto编译成go代码](#proto编译成go代码)	
+	- [命令行模块cmd](#命令行模块cmd)
+- [**‌CLI（命令行界面）Cobra库**](#CLI（命令行界面）Cobra库)
 - [**‌go-colly框架**](#go-colly框架)
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
@@ -99,31 +106,31 @@ go 1.13
 ```
 默认的 go.mod 文件里主要是两块内容，一个是当前的模块路径和预期的 Go 语言版本。
 
+<br/><br/><br/>
+> <h2 id="依赖安装命令"> 依赖安装命令 </h2>
+
 - **基础使用:**
-	- (用 go get 拉取新的依赖)
-		- 拉取最新的版本(优先择取 tag)：go get golang.org/x/text@latest
-		- 拉取 master 分支的最新 commit：go get golang.org/x/text@master
-		- 拉取 tag 为 v0.3.2 的 commit：go get golang.org/x/text@v0.3.2
-		- 拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2：go get golang.org/x/text@342b2e
-		- 用 go get -u 更新现有的依赖
-		- 用 go mod download 下载 go.mod 文件中指明的所有依赖
-		- 用 go mod tidy 整理现有的依赖
-		- 用 go mod graph 查看现有的依赖结构
-		- 用 go mod init 生成 go.mod 文件 (Go 1.13 中唯一一个可以生成 go.mod 文件的子命令)
-	- 用 go mod edit 编辑 go.mod 文件
-	- 用 go mod vendor 导出现有的所有依赖 (事实上 Go modules 正在淡化 Vendor 的概念)
-	- 用 go mod verify 校验一个模块是否被篡改过
+	- (用 `go get` 拉取新的依赖)
+		- 拉取最新的版本(优先择取 tag)：`go get golang.org/x/text@latest`
+		- 拉取 master 分支的最新 commit：`go get golang.org/x/text@master`
+		- 拉取 tag 为 v0.3.2 的 commit：`go get golang.org/x/text@v0.3.2`
+		- 拉取 hash 为 342b231 的 commit，最终会被转换为 v0.3.2：`go get golang.org/x/text@342b2e`
+		- 用 `go get -u` 更新现有的依赖
+		- 用 `go mod download` 下载 go.mod 文件中指明的所有依赖
+		- 用 `go mod tidy` 这个命令会清理 go.mod 并自动添加缺少的依赖。
+		- 用 `go mod graph` 查看现有的依赖结构
+		- 用 `go mod init` 生成 go.mod 文件 (Go 1.13 中唯一一个可以生成 go.mod 文件的子命令)
+	- 用 `go mod edit` 编辑 go.mod 文件
+	- 用 `go mod vendor` 导出现有的所有依赖 (事实上 Go modules 正在淡化 Vendor 的概念)
+	- 用 `go mod verify` 校验一个模块是否被篡改过
 
 
 <br/><br/>
 ><h3  id="go.sum文件">go.sum文件</h3>
-
-
 - **go.sum** 文件详细罗列了当前项目直接或间接依赖的所有模块版本，并写明了那些模块版本的 SHA-256 哈希值以备 Go 在今后的操作中保证项目所依赖的那些模块版本不会被篡改。
 
 <br/><br/>
 ><h3  id="go.mod文件">go.mod文件</h3>
-
 go.mod 文件是启用了 Go modules 的项目所必须的最重要的文件，因为它描述了当前项目（也就是当前模块）的元信息，每一行都以一个动词开头，目前有以下 5 个动词:
 
 - module：用于定义当前项目的模块路径。
@@ -297,41 +304,6 @@ docker build -t myapp .
 - **用途场景**：
 	- 国内项目的持续集成和交付。
 	- 快速实现 CI/CD 和容器化交付。
-
-<br/>
-
-
-
-
-<br/>
-
-***
-<br/><br/><br/>
-
-> <h1 id="go-colly框架">go-colly框架</h1>
-
-go-colly是使用Go语言实现的网络爬虫框架。go-colly以回调函数的形式提供了一组接口，通过这些接口能够实现任意类型的爬虫。开发者使用go-colly框架可以轻松地从Web页面中爬取结构化数据。
-
-<br/>
-**通过如下命令下载到项目中：**
-
-```
-cd cd /Users/ganghuang/HGFiles/GitHub/GoProject/MLC_GO
-go get -u github.com/gocolly/colly/...
-```
-
-
-<br/><br/><br/>
-> <h2 id="go-colly框架的特性">go-colly框架的特性</h2>
-- **go-colly框架具有如下特性。**
-	- 清晰的API。快速（单核>1k请求/s）​。
-	- 管理每个域的请求延迟和最大并发性。
-	- 自动cookie和会话处理。
-	- 同步／异步／并行抓取。高速缓存。
-	- 自动处理非Unicode的编码。
-	- 支持Robots.txt定制Agent信息。
-	- 定制抓取频次。
-
 
 <br/><br/><br/>
 
@@ -583,16 +555,15 @@ export PATH=$PATH:$(go env GOPATH)/bin
 source ~/.bashrc  # 或者 source ~/.zshrc
 ```
 
-<br/><br/>
+<br/>
 
 **Grpc-gateway**
-
 grpc-gateway是protoc的一个插件。它读取gRPC服务定义，并生成一个反向代理服务器，将RESTful JSON API转换为gRPC。此服务器是根据gRPC定义中的自定义选项生成的。
 
 **安装：**
 
 ```sh
-go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 ```
 
 
@@ -703,9 +674,7 @@ protoc --go_out=plugins=grpc,import_path=mypackage:. hello.proto
   ```bash
   go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
   ```
-
-
-
+  
 <br/>
 **Grpc支持**
 如果proto文件指定了RPC服务，protoc-gen-go可以生成与grpc相兼容的代码，我们仅需要将plugins=grpc参数传递给--go_out，就可以达到这个目的
@@ -714,9 +683,8 @@ protoc --go_out=plugins=grpc,import_path=mypackage:. hello.proto
 protoc --go_out=plugins=grpc:. *.proto
 ```
 
-
 <br/><br/><br/>
-> <h2 id=""></h2>
+> <h2 id="简单Demo流程">简单Demo流程</h2>
 
 **初始化目录**
 
@@ -778,28 +746,863 @@ Common Name (e.g. server FQDN or YOUR name) []:HuangGang_personalCertificate
 Email Address []:harleysor@qq.com 
 ```
 
+<br/>
+
+**或者你也可以这样做：**
+
+是的，你可以 **不创建 `openssl.cnf` 文件**，直接在命令行执行 `openssl` 命令来生成 **带 `SAN`（Subject Alternative Name）** 的证书。
+
+ **🚀 直接执行 OpenSSL 命令**
+
+```sh
+openssl req -x509 -nodes -newkey rsa:4096 -keyout server.key -out server.pem -days 365 \
+-subj "/C=CN/ST=ShangHai/L=ShangHai/O=HuangGang/OU=HuangGang.dev.use/CN=dev" \
+-addext "subjectAltName = DNS:dev, DNS:localhost, IP:127.0.0.1"
+```
+---
+
+### **🛠 参数解析**
+1. **`-x509`**  → 生成自签名证书  
+2. **`-nodes`**  → 不加密私钥（无需密码）  
+3. **`-newkey rsa:4096`**  → 生成 4096-bit RSA 私钥  
+4. **`-keyout server.key`**  → 生成私钥 `server.key`  
+5. **`-out server.pem`**  → 生成证书 `server.pem`  
+6. **`-days 365`**  → 证书有效期 365 天  
+7. **`-subj`**  → 直接在命令行设置证书信息（避免交互输入）  
+8. **`-addext "subjectAltName = DNS:dev, DNS:localhost, IP:127.0.0.1"`**  
+   - 添加 `SAN`，支持：
+     - `DNS:dev`
+     - `DNS:localhost`
+     - `IP:127.0.0.1`
+
+---
+
+### **✅ 这样你不需要 `openssl.cnf`，就能直接生成带 `SAN` 的证书！**  
+然后，你可以在 **Go gRPC 客户端** 中这样使用：
+
+```go
+creds, err := credentials.NewClientTLSFromFile("server.pem", "dev")
+```
+确保 `"dev"` 这个名称 **和 `SAN` 里的 `DNS:dev` 匹配**，这样 TLS 验证就不会失败了！ 🚀
+
+这里的 "dev" 需要匹配服务器证书的 CN 或 SAN，否则会导致 tls: failed to verify certificate 错误。
+
+✅ 检查服务器证书的 CN 和 SAN：
+
+```sh
+openssl x509 -in ../certs/server.pem -text -noout | grep -E 'Subject:|DNS:'
+```
+如果输出类似：
+
+```pgsql
+Subject: CN = myserver.local
+X509v3 Subject Alternative Name:
+    DNS:myserver.local, IP Address:127.0.0.1
+```
+
+<br/>
+
+**server.pem证书信息：**
+
+```
+openssl x509 -in ../certs/server.pem -text -noout | grep -E 'Subject:|DNS:'
+  
+// 我自己证书信息
+Subject: C=CN, ST=ShangHai, L=ShangaHai, O=HuangGang, OU=HuangGang.dev.use, CN=HuangGang_personalCertificate, emailAddress=harleysor@qq.com
+```
+
+<br/>
+
+**client_server.pem证书信息：**
+
+```
+openssl x509 -in ../certs/client_server.pem -text -noout | grep -E 'Subject:|DNS:'
+
+Subject: C=CN, ST=ShangHai, L=ShangHai, O=HuangGang, OU=HuangGang.dev.use, CN=dev
+        DNS:dev, DNS:localhost, IP Address:127.0.0.1
+```
 
 
 
+说明 证书的 CN 或 SAN 不是 dev，你应该修改 client.go：
+
+```go
+creds, err := credentials.NewClientTLSFromFile("../certs/server.pem", "myserver.local")
+```
+或者：
+
+```go
+creds, err := credentials.NewClientTLSFromFile("../certs/server.pem", "")
+（"" 表示不检查证书的 CN/SAN，仅校验证书是否可信）
+```
+
+<br/><br/>
+> <h3 id="proto">proto</h3>
+**annotations.proto文件：**
+
+```proto
+annotations.proto文件如下代码
+
+syntax = "proto3";
+
+package google.api;
+option go_package = "github.com/golang/protobuf/protoc-gen-go/descriptor;descriptor";
+
+
+import "google/api/http.proto";
+import "google/protobuf/descriptor.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationsProto";
+option java_package = "com.google.api";
+
+extend google.protobuf.MethodOptions {
+  // See `HttpRule`.
+  HttpRule http = 72295728;
+}
+```
+
+这段 Protobuf (`annotations.proto`) 代码定义了一个 **protobuf 扩展 (extension)**，用于给 gRPC 方法添加 HTTP 绑定，使得 gRPC 方法可以通过 RESTful API 进行访问。下面是详细解析：
+
+---
+
+### **1. Protobuf 版本**
+
+```proto
+syntax = "proto3";
+```
+这表示该文件使用的是 **Protocol Buffers v3 (proto3) 语法**，是目前 Google 推荐的版本。
+
+---
+
+### **2. `package google.api;`**
+
+```proto
+package google.api;
+```
+- 这表示该 `proto` 文件属于 `google.api` 这个命名空间。
+- 避免不同 `proto` 文件的消息类型（message）和服务（service）冲突。
+
+---
+
+### **3. 依赖的 `proto` 文件**
+
+```proto
+import "google/api/http.proto";
+import "google/protobuf/descriptor.proto";
+```
+- `google/api/http.proto`
+  - 该文件定义了 **`HttpRule`**，用于描述 gRPC 方法如何映射到 HTTP 路由（REST API）。
+  - `HttpRule` 允许将 gRPC 方法绑定到 `GET`、`POST` 等 HTTP 方法，使得 gRPC 服务器可以作为 RESTful API 访问。
+
+- `google/protobuf/descriptor.proto`
+  - 该文件定义了 **protobuf 反射 (reflection) 和扩展机制**，允许我们扩展 protobuf 自带的功能，例如：
+    - 扩展 `MethodOptions`，给 RPC 方法增加额外的元信息（metadata）。
+
+---
+
+### **4. Java 相关的 `option` 选项**
+
+```proto
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationsProto";
+option java_package = "com.google.api";
+```
+- `java_multiple_files = true;`
+  - 生成 Java 代码时，**每个 `message` 和 `service` 都会生成独立的 Java 类**，而不是全部嵌套在一个类中。
+  - 这样可以提高 Java 代码的可读性和管理性。
+
+- `java_outer_classname = "AnnotationsProto";`
+  - 如果 `java_multiple_files = false`，则所有定义的 `message` 和 `service` 会嵌套在 `AnnotationsProto` 这个外部类中。
+  - 但这里 `java_multiple_files = true`，所以这个 `option` 影响不大。
+
+- `java_package = "com.google.api";`
+  - 生成的 Java 代码会放在 `com.google.api` 这个 Java 包下。
+
+---
+
+### **5. `extend google.protobuf.MethodOptions` 扩展 `MethodOptions`**
+
+```proto
+extend google.protobuf.MethodOptions {
+  // See `HttpRule`.
+  HttpRule http = 72295728;
+}
+```
+这一部分是 **protobuf 的扩展 (extension) 机制**，用于给 gRPC 方法的 `MethodOptions` 添加 `http` 选项，使得 gRPC 方法可以通过 HTTP 访问：
+
+- `extend google.protobuf.MethodOptions`：
+  - `MethodOptions` 是 **protobuf 自带的 RPC 方法元数据**，用于存储 gRPC 方法的额外信息。
+  - `extend` 关键字允许我们**扩展** `MethodOptions`，增加新的字段。
+
+- `HttpRule http = 72295728;`
+  - 这里定义了一个 `HttpRule` 类型的 `http` 字段，并且它的**唯一标识符**为 `72295728`。
+  - 这个字段的作用是：**允许 gRPC 方法映射到 HTTP 端点（REST API）**。
+
+---
+
+### **6. 这个扩展的作用**
+这个 `extend` 语句的作用是**允许在 gRPC 方法上定义 HTTP 规则**，以支持 HTTP/REST 访问。
+
+#### **使用示例**
+在其他 `.proto` 文件中，我们可以这样使用：
+
+```proto
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+
+service MyService {
+  rpc GetUserInfo (UserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      get: "/v1/user/{id}"
+    };
+  }
+}
+```
+- `option (google.api.http) = { get: "/v1/user/{id}" }`
+  - 这个 `option` 使用了 `annotations.proto` 定义的 `http` 扩展。
+  - 使得 `GetUserInfo` 这个 gRPC 方法可以通过 **HTTP `GET /v1/user/{id}`** 访问。
+
+**等效于 REST API：**
+
+```http
+GET /v1/user/123
+```
+会被转换为 gRPC 调用：
+
+```proto
+rpc GetUserInfo(UserRequest) returns (UserResponse);
+```
+
+---
+
+### **7. `72295728` 这个数字的意义**
+在 `protobuf` 里，每个字段都需要一个唯一的 **标识符 (Tag Number)**，如：
+
+```proto
+string name = 1;
+int32 age = 2;
+```
+- 这里 `name` 的 Tag 是 `1`，`age` 的 Tag 是 `2`。
+
+在 `extend google.protobuf.MethodOptions` 里：
+
+```proto
+HttpRule http = 72295728;
+```
+- `72295728` 是 **扩展字段的 Tag Number**，用于唯一标识 `http` 这个扩展字段。
+- Google 选择了一个**高位数字**，避免与 Protobuf 内部字段冲突。
+- 该编号在 Google API 设计指南里是固定的，不要随意更改。
+
+---
+
+### **8. `HttpRule` 作用**
+`HttpRule`（在 `google/api/http.proto` 中定义）用于指定 gRPC 方法和 HTTP 请求之间的映射关系：
+
+```proto
+message HttpRule {
+  string get = 1;
+  string post = 2;
+  string put = 3;
+  string delete = 4;
+  ...
+}
+```
+因此，在 `.proto` 里，我们可以这样使用：
+
+```proto
+rpc CreateUser (UserRequest) returns (UserResponse) {
+  option (google.api.http) = {
+    post: "/v1/users"
+    body: "*"
+  };
+}
+```
+这意味着：
+- `CreateUser` 方法可以通过 **HTTP `POST /v1/users`** 访问。
+- `body: "*"` 表示请求的 body 作为 gRPC 方法的参数。
+
+---
+
+### **总结**
+1. **`extend google.protobuf.MethodOptions`** 是 Protobuf 的扩展机制，允许为 gRPC 方法添加自定义的 **HTTP 绑定选项**。
+2. `HttpRule` 允许 gRPC 方法支持 RESTful API 调用，使得 gRPC 方法可以通过 HTTP（`GET`、`POST`、`PUT`、`DELETE`）访问。
+3. `option (google.api.http)` 语法用于在 `.proto` 文件中启用 HTTP 绑定。
+4. `72295728` 是 Google 预留的 **唯一标识符 (Tag Number)**，表示 `http` 这个扩展字段。
+5. 在 **Google API 设计规范** 里，`annotations.proto` 主要用于 `gRPC-Gateway`，使 gRPC 方法可以通过 REST 访问。
+
+---
+
+### **实战意义**
+- **如果你使用 gRPC**，但想让客户端用 REST API 访问，你可以使用 `google.api.http` 选项。
+- **如果你在写 Protobuf API**，但希望支持 `gRPC-Gateway`，`annotations.proto` 是必不可少的。
+
+---
+
+这个 `annotations.proto` 是 Google API 设计中的关键部分，使得 **gRPC 和 REST API 可以无缝结合**，在 Google Cloud 和其他微服务架构中广泛使用。
+
+<br/><br/>
+
+**http.proto文件：**
+
+```proto
+syntax = "proto3";
+
+package google.api;
+option go_package = "github.com/golang/protobuf/protoc-gen-go/descriptor;descriptor";
+
+option cc_enable_arenas = true;
+option java_multiple_files = true;
+option java_outer_classname = "HttpProto";
+option java_package = "com.google.api";
+
+message HttpRule {
+  // Selects methods to which this rule applies.
+  //
+  // Refer to [selector][google.api.DocumentationRule.selector] for syntax details.
+  string selector = 1;
+
+  // Determines the URL pattern is matched by this rules. This pattern can be
+  // used with any of the {get|put|post|delete|patch} methods. A custom method
+  // can be defined using the 'custom' field.
+  oneof pattern {
+    // Used for listing and getting information about resources.
+    string get = 2;
+
+    // Used for updating a resource.
+    string put = 3;
+
+    // Used for creating a resource.
+    string post = 4;
+
+    // Used for deleting a resource.
+    string delete = 5;
+
+    // Used for updating a resource.
+    string patch = 6;
+
+    // Custom pattern is used for defining custom verbs.
+    CustomHttpPattern custom = 8;
+  }
+
+  // The name of the request field whose value is mapped to the HTTP body, or
+  // `*` for mapping all fields not captured by the path pattern to the HTTP
+  // body. NOTE: the referred field must not be a repeated field.
+  string body = 7;
+
+  // Additional HTTP bindings for the selector. Nested bindings must
+  // not contain an `additional_bindings` field themselves (that is,
+  // the nesting may only be one level deep).
+  repeated HttpRule additional_bindings = 11;
+}
+
+// A custom pattern is used for defining custom HTTP verb.
+message CustomHttpPattern {
+  // The name of this custom HTTP verb.
+  string kind = 1;
+
+  // The path matched by this custom verb.
+  string path = 2;
+}
+```
+
+`http.proto` 主要定义了 **gRPC 方法与 HTTP API 之间的映射规则**，核心是 `HttpRule` 这个消息（message），它允许我们把 gRPC 方法映射到 RESTful API，如 `GET`、`POST`、`PUT` 等 HTTP 方法。  
+
+---
+
+## **1. 头部选项 (`option`)**
+
+```proto
+option cc_enable_arenas = true;
+option java_multiple_files = true;
+option java_outer_classname = "HttpProto";
+option java_package = "com.google.api";
+```
+这些选项用于控制代码生成：
+
+- `cc_enable_arenas = true;`
+  - **C++ 相关优化**，启用 **Arena Allocation** 机制，提高对象的内存管理效率，减少内存分配和回收的开销。
+
+- `java_multiple_files = true;`
+  - 生成的 Java 代码会为 `HttpRule`、`CustomHttpPattern` 等每个 message 单独创建一个 `.java` 文件，而不是全部嵌套在 `HttpProto` 这个类里。
+
+- `java_outer_classname = "HttpProto";`
+  - 设定 Java 代码的外部类名为 `HttpProto`（如果 `java_multiple_files = false`）。
+
+- `java_package = "com.google.api";`
+  - 生成的 Java 代码放在 `com.google.api` 这个 Java 包下。
+
+---
+
+## **2. `HttpRule` 结构**
+
+```proto
+message HttpRule {
+  string selector = 1;
+
+  oneof pattern {
+    string get = 2;
+    string put = 3;
+    string post = 4;
+    string delete = 5;
+    string patch = 6;
+    CustomHttpPattern custom = 8;
+  }
+
+  string body = 7;
+
+  repeated HttpRule additional_bindings = 11;
+}
+```
+`HttpRule` 主要用于**将 gRPC 方法映射到 HTTP 端点**，它包含以下字段：
+
+### **(1) `selector`**
+
+```proto
+string selector = 1;
+```
+- `selector` 指定要应用 HTTP 规则的 **gRPC 方法**，其值是 `package.service/method` 形式。
+- 例如：
+
+```proto
+selector = "my.package.MyService.GetUserInfo";
+```
+
+### **(2) `pattern` (HTTP 方法绑定)**
+
+```proto
+oneof pattern {
+  string get = 2;
+  string put = 3;
+  string post = 4;
+  string delete = 5;
+  string patch = 6;
+  CustomHttpPattern custom = 8;
+}
+```
+- 这是 **`oneof` 字段**，即**同一时间只能选其中一个**。
+- 允许 gRPC 方法映射到标准 HTTP 方法：
+  - `get = 2;`  → HTTP `GET` 请求
+  - `put = 3;`  → HTTP `PUT` 请求
+  - `post = 4;` → HTTP `POST` 请求
+  - `delete = 5;` → HTTP `DELETE` 请求
+  - `patch = 6;` → HTTP `PATCH` 请求
+  - `custom = 8;` → **自定义 HTTP 方法**（如 `OPTIONS`）
+
+#### **示例**
+
+```proto
+rpc GetUser (GetUserRequest) returns (User) {
+  option (google.api.http) = {
+    get: "/v1/user/{id}"
+  };
+}
+```
+这里的 `get: "/v1/user/{id}"` 表示：
+- gRPC 方法 `GetUser` 可以通过 HTTP `GET /v1/user/123` 访问，并将 `{id}` 绑定到 `GetUserRequest` 参数。
+
+---
+
+### **(3) `body` (HTTP 请求体绑定)**
+
+```proto
+string body = 7;
+```
+- 指定哪个请求字段映射到 HTTP `body` 中。
+- 特殊值：
+  - `"*"` → **全部字段** 作为 `body`
+  - `""`（空字符串）→ **不映射 `body`**，参数需通过 URL 查询参数传递。
+
+#### **示例**
+
+```proto
+rpc CreateUser (CreateUserRequest) returns (User) {
+  option (google.api.http) = {
+    post: "/v1/users"
+    body: "*"
+  };
+}
+```
+等效于 REST API：
+
+```http
+POST /v1/users
+Content-Type: application/json
+
+{
+  "name": "Alice",
+  "age": 25
+}
+```
+- `body: "*"` 让整个 `CreateUserRequest` 作为 HTTP `body` 传递。
+
+如果 `body: "user"`：
+
+```proto
+message CreateUserRequest {
+  User user = 1;
+}
+```
+则 HTTP `body` 变成：
+
+```json
+{
+  "user": {
+    "name": "Alice",
+    "age": 25
+  }
+}
+```
+
+---
+
+### **(4) `additional_bindings` (额外的 HTTP 规则)**
+
+```proto
+repeated HttpRule additional_bindings = 11;
+```
+- 允许一个 gRPC 方法有 **多个 HTTP 绑定**（比如既支持 `GET` 也支持 `POST`）。
+- 但**不能嵌套多层**（即 `additional_bindings` 不能再包含 `additional_bindings`）。
+
+#### **示例**
+
+```proto
+rpc GetUser (GetUserRequest) returns (User) {
+  option (google.api.http) = {
+    get: "/v1/user/{id}"
+    additional_bindings {
+      post: "/v1/user"
+      body: "*"
+    }
+  };
+}
+```
+等效于：
+- `GET /v1/user/123` → 通过 URL 查询参数传递 `id`
+- `POST /v1/user` + `body: "*"` → 通过 `body` 传递 `id`
+
+---
+
+## **3. `CustomHttpPattern` 结构**
+
+```proto
+message CustomHttpPattern {
+  string kind = 1;
+  string path = 2;
+}
+```
+- 允许使用自定义的 HTTP 方法（如 `OPTIONS`、`HEAD`）。
+- `kind`：自定义 HTTP 方法的名称，如 `OPTIONS`。
+- `path`：HTTP 端点。
+
+#### **示例**
+
+```proto
+rpc CustomOptions (Empty) returns (Empty) {
+  option (google.api.http) = {
+    custom {
+      kind: "OPTIONS"
+      path: "/v1/custom"
+    }
+  };
+}
+```
+等效于：
+
+```http
+OPTIONS /v1/custom
+```
+
+---
+
+## **总结**
+1. **`HttpRule` 作用**
+   - 允许 gRPC 方法映射到 HTTP API，使 gRPC 可通过 RESTful API 访问。
+   - `get`、`post`、`put`、`delete`、`patch` 定义 HTTP 方法绑定。
+   - `body` 决定请求参数是否放入 `body`（默认放 URL 查询参数）。
+   - `additional_bindings` 允许一个 gRPC 方法支持多种 HTTP 映射。
+   - `custom` 允许定义自定义 HTTP 方法（如 `OPTIONS`）。
+
+2. **示例**
+
+```proto
+rpc CreateUser (CreateUserRequest) returns (User) {
+ option (google.api.http) = {
+   post: "/v1/users"
+   body: "*"
+ };
+}
+```
+   - gRPC 方法 `CreateUser` → `POST /v1/users`
+   - `body: "*"` 表示整个请求体作为 HTTP `body`。
+
+3. **与 `annotations.proto` 结合**
+   - `annotations.proto` 通过 `extend MethodOptions` **把 `HttpRule` 绑定到 gRPC 方法**。
+   - 让 `gRPC-Gateway` **自动转发** RESTful API 调用到 gRPC 服务。
+
+---
+
+这就是 `http.proto` 的核心，它是 `gRPC-Gateway` 和 Google Cloud API 的关键组件，使 gRPC 既能支持高效的 RPC，又能兼容 RESTful API 🚀
+
+<br/><br/>
+> <h3 id="proto编译成go代码">proto编译成go代码</h3>
+
+```sh
+# 编译google.api
+# 首先cd到proto目录
+ganghuang@GangHuangs-MacBook-Pro proto% cd MLC_GO/TestNotes/PracticeGRPCExample/proto 
+protoc -I . \
+--go_out=Mgoogle/api/http.proto=github.com/golang/protobuf/protoc-gen-go/descriptor:. \
+--go-grpc_out=Mgoogle/api/http.proto=github.com/golang/protobuf/protoc-gen-go/descriptor:. \
+google/api/*.proto
+
+# 编译hello_http.proto为hello_http.pb.proto
+ganghuang@GangHuangs-MacBook-Pro proto % protoc -I . \
+--go_out=Mgoogle/api/annotations.proto=grpc-hello-world/proto/google/api,\
+Mhello.proto=github.com/your-username/your-repo/grpc-hello-world/proto:. \
+--go-grpc_out=Mgoogle/api/annotations.proto=grpc-hello-world/proto/google/api,\
+Mhello.proto=github.com/your-username/your-repo/grpc-hello-world/proto:. \
+./hello.proto
+
+# 编译hello_http.proto为hello_http.pb.gw.proto
+protoc -I . -I ./third_party/googleapis \
+--grpc-gateway_out=logtostderr=true,\
+Mhello.proto=github.com/your-username/your-repo/grpc-hello-world/proto,\
+Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api:. \
+./hello.proto
+```
+执行完毕后将生成hello.pb.go和hello.gw.pb.go，分别针对grpc和grpc-gateway的功能支持
+
+![go.0.0.84.png](./../Pictures/go.0.0.84.png)
+
+
+<br/><br/>
+> <h3 id="命令行模块cmd">命令行模块cmd</h3>
+
+这一小节我们编写命令行模块，为什么要独立出来呢，是为了将cmd和server两者解耦，避免混淆在一起。
+
+- 我们采用 [Cobra](#CLI（命令行界面）Cobra库) 来完成这项功能，Cobra既是创建强大的现代CLI应用程序的库，也是生成应用程序和命令文件的程序。提供了以下功能：
+	- 简易的子命令行模式
+	- 完全兼容posix的命令行模式(包括短和长版本)
+	- 嵌套的子命令
+	- 全局、本地和级联flags
+	- 使用Cobra很容易的生成应用程序和命令，使用cobra create appname和cobra add cmdname
+	- 智能提示
+	- 自动生成commands和flags的帮助信息
+	- 自动生成详细的help信息-h，--help等等
+	- 自动生成的bash自动完成功能
+	- 为应用程序自动生成手册
+	- 命令别名
+	- 定义您自己的帮助、用法等的灵活性。
+	- 可选与viper紧密集成的apps
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="CLI（命令行界面）Cobra库">CLI（命令行界面）Cobra库</h1>
+Cobra 是一个用于构建强大 CLI（命令行界面）
+
+**Cobra 是什么？**
+**Cobra** 是一个用于构建强大 CLI（命令行界面）应用的 Go 语言库。它可以帮助你**组织命令行程序的结构**，并且**支持子命令、自动生成帮助文档、flag（标志）、命令补全等功能**。
+
+Cobra 由 **spf13**（Go 生态中著名的开发者）开发，广泛用于 Kubernetes、Hugo、Docker 等知名项目的 CLI 组件。
+
+---
+
+**为什么使用 Cobra？**
+在 Go 中，我们可以用 `flag` 包来解析命令行参数，但如果程序有多个子命令（如 `git clone`、`git push`），使用 `flag` 会让代码变得复杂且难以维护。**Cobra 提供了一种优雅的方式来组织 CLI 结构**。
+
+- **Cobra 的核心功能**
+	- ✅ **支持嵌套子命令**（如 `kubectl get pods`）  
+	- ✅ **自动生成 CLI 帮助文档**（`myapp help`）  
+	- ✅ **支持 flag（标志）管理**（`myapp run --port=8080`）  
+	- ✅ **支持 Bash/Zsh/Fish 终端自动补全**  
+	- ✅ **与 Viper 库兼容，可用于解析配置文件**  
+
+---
+
+- **如何安装 Cobra**
+在你的 Go 项目中执行：
+
+```sh
+go get -u github.com/spf13/cobra@latest
+go get -u github.com/spf13/cobra/cobra@latest
+```
+
+如果想要用 Cobra 生成项目骨架：
+
+```sh
+go install github.com/spf13/cobra-cli@latest
+```
+
+然后使用：
+
+```sh
+cobra-cli init myapp
+cd myapp
+cobra-cli add server  # 添加一个子命令
+cobra-cli add client
+```
+这会在 `cmd/` 目录下生成 `server.go` 和 `client.go`。
+
+---
+
+- **Cobra 代码示例**
+	- **1. 创建 CLI 入口**
+在 `main.go` 里：
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"github.com/spf13/cobra"
+)
+
+func main() {
+	var rootCmd = &cobra.Command{
+		Use:   "myapp",
+		Short: "MyApp 是一个示例 CLI",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Hello from MyApp!")
+		},
+	}
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+```
+运行：
+
+```sh
+go run main.go
+```
+输出：
+
+```sh
+Hello from MyApp!
+```
+
+---
+
+- **2. 添加子命令**
+我们创建 `cmd/server.go` 作为 `server` 子命令：
+
+```go
+package cmd
+
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+)
+
+// 创建 server 命令
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "启动服务器",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("服务器启动中...")
+	},
+}
+
+// 初始化并注册命令
+func init() {
+	rootCmd.AddCommand(serverCmd)
+}
+```
+
+在 `main.go` 里引入：
+
+```go
+package main
+
+import (
+	"myapp/cmd"
+)
+
+func main() {
+	cmd.Execute()
+}
+```
+运行：
+
+```sh
+go run main.go server
+```
+输出：
+
+```sh
+服务器启动中...
+```
+
+---
+
+## **总结**
+Cobra 让 CLI 代码更加清晰、模块化，并且支持：
+- **子命令管理**
+- **自动补全**
+- **Flag（选项参数）**
+- **自动生成帮助文档**
+
+**适用于：**
+- `kubectl`、`docker`、`git` 这种**多子命令工具**
+- **微服务项目的命令行管理工具**
+- **任务脚本 & 自动化工具**
+
+在你的项目中使用 Cobra，可以把 `cmd`（命令行处理）和 `server`（服务逻辑）解耦，保持代码结构清晰，方便扩展 🚀。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+
+> <h1 id="go-colly框架">go-colly框架</h1>
+
+go-colly是使用Go语言实现的网络爬虫框架。go-colly以回调函数的形式提供了一组接口，通过这些接口能够实现任意类型的爬虫。开发者使用go-colly框架可以轻松地从Web页面中爬取结构化数据。
+
+<br/>
+**通过如下命令下载到项目中：**
+
+```
+cd cd /Users/ganghuang/HGFiles/GitHub/GoProject/MLC_GO
+go get -u github.com/gocolly/colly/...
+```
+
+<br/><br/>
+> <h2 id="go-colly框架的特性">go-colly框架的特性</h2>
+- **go-colly框架具有如下特性。**
+	- 清晰的API。快速（单核>1k请求/s）​。
+	- 管理每个域的请求延迟和最大并发性。
+	- 自动cookie和会话处理。
+	- 同步／异步／并行抓取。高速缓存。
+	- 自动处理非Unicode的编码。
+	- 支持Robots.txt定制Agent信息。
+	- 定制抓取频次。
 
 <br/><br/><br/>
 > <h2 id="go-colly框架使用">go-colly框架使用</h2>
 **导入框架**
 
-```
+```go
 import "github.com/gocolly/colly"
 ```
 <br/>
 
 &emsp; 使用go-colly框架的关键是创建Collector对象（即“收集器”​）​，该对象的作用是管理网络通信，并负责在收集任务运行时执行附加的回调函数。通过调用colly库中的NewCollector()函数，即可创建Collector对象。其语法格式如下。
 
-```
+```go
 colly.NewCollector()
 ```
 <br/>
 
 ![go.0.0.55.png](./../Pictures/go.0.0.55.png)
-
 
 - **这些回调函数在收集任务运行时被有序调用，调用顺序如下。**
 	- OnRequest()函数在请求发出前被调用。
@@ -810,10 +1613,9 @@ colly.NewCollector()
 		- OnXML()函数执行完毕后调用OnScraped()函数。
 
 <br/><br/>
-
 运行程序后，程序根据http://news.baidu.com开始抓取页面结果。通过回调函数OnHTML()，能够分析页面中的新闻标题及其链接。代码如下:
 
-```
+```go
 package main
 
 import (
@@ -875,7 +1677,7 @@ func testCrawlerBaidu(){
 
 **Log:**
 
-```
+```sh
 ganghuang@GangHuangs-MacBook-Pro TestCrawlerBaidu % go run test_crawler_baidu.go
 正在访问： http://news.baidu.com
 收到响应内容的数量：  200
@@ -907,7 +1709,7 @@ https://www.cnr.cn/tj/tjtp/20250124/t20250124_527050755.shtml
 
 控制台打印的抓取结果是爬虫程序通过限制域名、设置抓取深度、过滤URL后得到的。通过访问http://news.baidu.com发现该链接的网页内容很丰富，涉及方方面面的领域。那么，如何才能把http://news.baidu.com的网页内容全部抓取下来呢？代码如下。
 
-```
+```go
 // 访问指定网址
 testCrawlerAppointWebpage("https://news.baidu.com")
 

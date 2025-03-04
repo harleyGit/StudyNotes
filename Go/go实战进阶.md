@@ -82,6 +82,7 @@
 		- [chapter11项目组织结构](#chapter11项目组织结构)
 	- [**MLC_GO中的PracticeGenExample**](#MLC_GO中的PracticeGenExample)
 		- [`map[string]interface{}`用法](#`map[string]interface{}`用法)
+	- [**DeepSeek本地Mac电脑部署**](#DeepSeek本地Mac电脑部署)
 - **优秀资源**
 	- [盘点 GitHub 那些标星超过 20 K 的 Golang 优质开源项目](https://blog.csdn.net/yuzhou_1shu/article/details/127066562)
 	- [Go实战项目（简书-Leo丶Dicaprio）](https://www.jianshu.com/u/151e4eccc2e2)
@@ -200,8 +201,8 @@ go test -bench BenachAdd
 
 
 <br/><br/><br/>
-> <h2 id="Delve调试">Delve调试</h2>
 
+># <h2 id="Delve调试">[Delve调试](https://blog.csdn.net/love666666shen/article/details/88887086)</h2>
 - **安装**
 
 ```
@@ -218,7 +219,6 @@ ganghuang@GangHuangs-MacBook-Pro MLC_GO % which dlv
 	- dlv命令， dlv debug 包的路径或源代码路径；
 	- Dlv会编译我们的程序，然后进入调试界面；
 	- 使用VSCode进行调试，图形界面的使用；
-
 
 在项目的main.go文件下，又如下代码：
 
@@ -2556,7 +2556,6 @@ Docker: https://www.docker.com/
 
 <br/><br/>
 > <h3 id="监控运维"> 监控运维 </h3>
-
 Prometheus是近年来比较火的开源监控框架。Prometheus灵活性高，模块间比较解耦，比如告警模块、代理模块等都可以选择性配置。服务器端和客户端都是“开箱即用”的，不需要进行安装。
 
 Prometheus的界面看起来非常简单，我们还需要Grafana这个非常强大且常用的监控展示框架。这两种框架配合使用对运维监控效果非常好，建议读者遇到监控运维场景选择这种方案。
@@ -2572,7 +2571,6 @@ Prometheus的界面看起来非常简单，我们还需要Grafana这个非常强
 <br/><br/><br/>
 
 > <h1 id="项目语法">项目语法</h1>
-
 <br/>
 
 > <h1 id="BeekQuickProject陌生语法">BeekQuickProject陌生语法</h1>
@@ -3177,6 +3175,188 @@ map[address:map[city:New York state:NY] age:30 isAdmin:true name:Alice]
 - `map[string]interface{}` 是 Go 中的一种常见的数据结构，表示一个以字符串为键，值可以是任何类型的映射。
 - 它允许我们将不同类型的值存储在同一个 `map` 中，这对于处理动态数据（如 API 返回的 JSON）非常有用。
 - 在 Gin 中，`map[string]interface{}` 被用来快速构造 JSON 响应，因为 JSON 可以包含多种类型的数据。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="DeepSeek本地Mac电脑部署">DeepSeek本地Mac电脑部署</h1>
+
+
+在个人Mac电脑上训练模型或使用DeepSeek官方模型，需要根据硬件条件和需求选择合适的方式。以下是分场景的详细方案：
+
+---
+
+### **一、Mac本地训练模型的可行性方案**
+#### **硬件限制说明**
+- **算力**：M2 Ultra芯片（最高配置）FP32算力约27 TFLOPS，远低于单块A100（312 TFLOPS）
+- **内存**：最高192GB Unified Memory，但训练70亿参数模型需至少24GB显存
+- **存储**：建议2TB SSD（训练数据+模型权重）
+
+#### **推荐场景**
+1. **微调小模型（<7B参数）**
+2. **领域适配（Domain Adaptation）**
+3. **轻量级实验（Prompt Engineering）**
+
+---
+
+### **二、本地训练实践指南**
+#### **1. 环境配置**
+```bash
+# 安装核心工具链
+brew install cmake protobuf rust
+conda create -n ml python=3.10
+conda activate ml
+
+# 安装Apple专用框架（针对M系列芯片优化）
+pip install mlx  # Apple官方机器学习库
+```
+
+#### **2. 模型选择与优化**
+| 模型类型       | 推荐模型         | 内存占用  | 训练速度（M2 Max） |
+|----------------|------------------|-----------|-------------------|
+| 文本生成       | Phi-2 (2.7B)     | 10GB      | 12 tokens/sec     |
+| 代码生成       | StarCoder (3B)   | 14GB      | 8 tokens/sec      |
+| 对话模型       | Alpaca (7B)      | 24GB      | 3 tokens/sec      |
+
+#### **3. 量化训练示例（使用MLX）**
+```python
+import mlx.core as mx
+from mlx.utils import tree_map
+
+# 加载预训练模型
+model, tokenizer = mx.models.load("mistral-7b-v0.1")
+
+# 4-bit量化
+def quantize_weights(weights):
+    return mx.quantize(weights, bits=4, group_size=64)
+
+quantized_model = tree_map(quantize_weights, model)
+
+# 微调配置
+optimizer = mx.optimizers.AdamW(learning_rate=1e-5)
+loss_fn = mx.losses.cross_entropy
+
+# 训练循环
+for batch in dataset:
+    inputs = tokenizer(batch["text"], return_tensors="np")
+    inputs = {k: mx.array(v) for k, v in inputs.items()}
+    
+    with mx.train.GradientTape() as tape:
+        outputs = quantized_model(**inputs)
+        loss = loss_fn(outputs.logits, inputs["labels"])
+    
+    gradients = tape.gradient(loss, quantized_model.trainable_parameters())
+    optimizer.apply_gradients(zip(gradients, quantized_model.trainable_parameters()))
+```
+
+#### **4. 内存优化技巧**
+1. **梯度检查点（Gradient Checkpointing）**
+   ```python
+   mx.enable_gradient_checkpointing()  # 减少30%内存占用
+   ```
+2. **混合精度训练**
+   ```python
+   mx.set_default_dtype(mx.float16)  # FP16模式
+   ```
+3. **数据分片**
+   ```python
+   sharded_data = mx.split(dataset, num_shards=4)  # 分4个数据片段
+   ```
+
+---
+
+### **三、使用DeepSeek官方模型的方案**
+#### **1. API调用（推荐方式）**
+```python
+import requests
+
+API_KEY = "your_api_key_here"
+headers = {"Authorization": f"Bearer {API_KEY}"}
+
+def deepseek_query(prompt):
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7
+    }
+    response = requests.post(
+        "https://api.deepseek.com/v1/chat/completions",
+        json=payload,
+        headers=headers
+    )
+    return response.json()["choices"][0]["message"]["content"]
+
+# 示例调用
+print(deepseek_query("如何用Python实现快速排序？"))
+```
+
+#### **2. 本地部署（若提供下载）**
+```bash
+# 假设官方提供Hugging Face格式模型
+git lfs install
+git clone https://huggingface.co/deepseek-ai/deepseek-7b-base
+
+# 使用vLLM加速推理
+from vllm import LLM, SamplingParams
+
+llm = LLM(model="deepseek-7b-base")
+prompts = ["AI的未来发展方向是"]
+sampling_params = SamplingParams(temperature=0.8, max_tokens=200)
+
+outputs = llm.generate(prompts, sampling_params)
+print(outputs[0].outputs[0].text)
+```
+
+---
+
+### **四、方案对比决策表**
+| 评估维度       | Mac本地训练                  | DeepSeek API               | 本地部署官方模型         |
+|----------------|-----------------------------|---------------------------|-------------------------|
+| 硬件要求       | M1/M2芯片+16GB+内存          | 任何能联网设备            | 需至少24GB内存          |
+| 成本           | 电费+时间成本                | $0.002/1k tokens         | 免费（若模型开源）      |
+| 数据隐私       | 完全本地处理                 | 需上传数据到服务器        | 本地处理                |
+| 自定义能力     | 可任意修改模型结构           | 仅能调整prompt            | 有限微调                |
+| 典型延迟       | 200-500ms（推理）           | 300-800ms                | 100-300ms              |
+| 适用场景       | 敏感数据/定制需求            | 快速验证/通用问题         | 平衡隐私与性能          |
+
+---
+
+### **五、分步操作建议**
+1. **快速验证阶段**
+   - 使用DeepSeek API在5分钟内验证想法
+   ```python
+   # 快速测试代码
+   print(deepseek_query("用三句话解释量子计算"))
+   ```
+
+2. **原型开发阶段**
+   - 本地微调小模型（如Phi-2）
+   ```bash
+   python finetune.py --model=microsoft/phi-2 --dataset=my_data.json
+   ```
+
+3. **生产部署阶段**
+   - 若需本地化，购买Mac Studio（M2 Ultra+192GB内存）
+   - 使用MLX框架优化推理速度
+   ```python
+   compiled_model = mx.compile(model)  # 编译加速
+   ```
+
+4. **持续学习路径**
+   ```mermaid
+   graph LR
+   A[Mac基础训练] --> B[Colab GPU进阶]
+   B --> C[租赁云服务器]
+   C --> D[分布式训练]
+   ```
+
+---
+
+根据你的具体需求（数据敏感性、预算、响应时间要求），可以选择最适合的方案。如需进一步优化Mac端训练性能，可以参考[Apple MLX最佳实践指南](https://github.com/ml-explore/mlx-examples)。
+
 
 
 
