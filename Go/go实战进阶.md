@@ -1981,7 +1981,7 @@ docker run -d -p 80:80 docker/getting-started
 
 | 常见指令 | 格式 | 作用 |
 |:--|:--|
-| FROM | `COPY <源路径>... <目标路径> <br/>` <br/><br/> `COPY ["<源路径1>",... "<目标路径>"]` | 指定镜像基础环境 |
+| FROM | `COPY <源路径>... <目标路径> <br/>` <br><br> `COPY ["<源路径1>",... "<目标路径>"]` | 指定镜像基础环境 |
 | RUN | RUN <命令> | 用于执行命令行命令 |
 | CMD |  | 容器启动命令或参数 |
 | LABEL |  | 自定义标签 |
@@ -1989,7 +1989,7 @@ docker run -d -p 80:80 docker/getting-started
 | ENV |  | 环境变量 |
 | ADD |  | 添加文件到镜像 |
 | COPY |  | 复制文件到镜像 |
-| ENTRYPOINT | exec 格式：`<ENTRYPOINT> "<CMD>"` <br/> <br/> shell 格式：`ENTRYPOINT [ "curl", "-s", "http://ip.cn"` ] | 容器固定启动命令 |
+| ENTRYPOINT | exec 格式：`<ENTRYPOINT> "<CMD>"` <br> <br> shell 格式：`ENTRYPOINT [ "curl", "-s", "http://ip.cn"` ] | 容器固定启动命令 |
 | VOLUME |  | 数据卷 |
 | USER |  | 指定用户和用户组 |
 | WORKDIR | WORKDIR <工作目录路径> ｜ 指定默认工作目录 |
