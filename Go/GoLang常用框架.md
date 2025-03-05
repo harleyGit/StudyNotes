@@ -12,6 +12,7 @@
 	- [proto编译成go代码](#proto编译成go代码)	
 	- [命令行模块cmd](#命令行模块cmd)
 - [**‌CLI（命令行界面）Cobra库**](#CLI（命令行界面）Cobra库)
+- [**优雅重启服务库endless**](#优雅重启服务库endless)
 - [**‌go-colly框架**](#go-colly框架)
 	- [go-colly框架的特性](#go-colly框架的特性)
 	- [go-colly框架使用](#go-colly框架使用)
@@ -1375,7 +1376,6 @@ Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party
 
 ![go.0.0.84.png](./../Pictures/go.0.0.84.png)
 
-
 <br/><br/>
 > <h3 id="命令行模块cmd">命令行模块cmd</h3>
 
@@ -1556,6 +1556,100 @@ Cobra 让 CLI 代码更加清晰、模块化，并且支持：
 - **任务脚本 & 自动化工具**
 
 在你的项目中使用 Cobra，可以把 `cmd`（命令行处理）和 `server`（服务逻辑）解耦，保持代码结构清晰，方便扩展 🚀。
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="优雅重启服务库endless">优雅重启服务库endless</h1>
+
+在终端运行时其实启动了一个进程，下面是进程命令：
+
+| **命令** | **信号** | **含义** |
+|:--|:--|:--|
+| Ctrl + c | SIGINT | 强制进程结束 |
+| ctrl + z | SIGTSTP | 任务中断，进程挂起 |
+| ctrl + \ | SIGQUIT | 进程结束 和 dump core |
+| ctrl + d |  | EOF |
+|  | SIGHUP	 | 终止收到该信号的进程。若程序中没有捕捉该信号，当收到该信号时，进程就会退出（常用于 重启、重新加载进程 |
+|  |  |  |
+|  |  |  |
+
+因此在我们执行ctrl + c关闭gin服务端时，会强制进程结束，导致正在访问的用户等出现问题
+
+常见的 kill -9 pid 会发送 SIGKILL 信号给进程，也是类似的结果
+
+<br/><br/>
+
+**信号**
+本段中反复出现信号是什么呢？
+
+信号是 Unix 、类 Unix 以及其他 POSIX 兼容的操作系统中进程间通讯的一种有限制的方式
+
+它是一种异步的通知机制，用来提醒进程一个事件（硬件异常、程序执行异常、外部发出信号）已经发生。当一个信号发送给一个进程，操作系统中断了进程正常的控制流程。此时，任何非原子操作都将被中断。如果进程定义了信号的处理函数，那么它将被执行，否则就执行默认的处理函数
+
+**所有信号**
+
+```sh
+% kill -l
+
+kill -l
+ 1) SIGHUP   2) SIGINT   3) SIGQUIT  4) SIGILL   5) SIGTRAP
+ 6) SIGABRT  7) SIGBUS   8) SIGFPE   9) SIGKILL 10) SIGUSR1
+11) SIGSEGV 12) SIGUSR2 13) SIGPIPE 14) SIGALRM 15) SIGTERM
+16) SIGSTKFLT   17) SIGCHLD 18) SIGCONT 19) SIGSTOP 20) SIGTSTP
+21) SIGTTIN 22) SIGTTOU 23) SIGURG  24) SIGXCPU 25) SIGXFSZ
+26) SIGVTALRM   27) SIGPROF 28) SIGWINCH    29) SIGIO   30) SIGPWR
+31) SIGSYS  34) SIGRTMIN    35) SIGRTMIN+1  36) SIGRTMIN+2  37) SIGRTMIN+3
+38) SIGRTMIN+4  39) SIGRTMIN+5  40) SIGRTMIN+6  41) SIGRTMIN+7  42) SIGRTMIN+8
+43) SIGRTMIN+9  44) SIGRTMIN+10 45) SIGRTMIN+11 46) SIGRTMIN+12 47) SIGRTMIN+13
+48) SIGRTMIN+14 49) SIGRTMIN+15 50) SIGRTMAX-14 51) SIGRTMAX-13 52) SIGRTMAX-12
+53) SIGRTMAX-11 54) SIGRTMAX-10 55) SIGRTMAX-9  56) SIGRTMAX-8  57) SIGRTMAX-7
+58) SIGRTMAX-6  59) SIGRTMAX-5  60) SIGRTMAX-4  61) SIGRTMAX-3  62) SIGRTMAX-2
+63) SIGRTMAX-1  64) SIGRTMAX
+```
+
+***
+
+<br/><br/>
+
+**怎样算优雅**
+- **目的**
+	- 不关闭现有连接（正在运行中的程序）
+	- 新的进程启动并替代旧进程
+	- 新的进程接管新的连接
+	- 连接要随时响应用户的请求，当用户仍在请求旧进程时要保持连接，新用户应请求新进程，不可以出现拒绝请求的情况
+
+**流程**
+	- 1、替换可执行文件或修改配置文件
+	- 2、发送信号量 SIGHUP
+	- 3、拒绝新连接请求旧进程，但要保证已有连接正常
+	- 4、启动新的子进程
+	- 5、新的子进程开始 Accet
+	- 6、系统将新的请求转交新的子进程
+	- 7、旧进程处理完所有旧连接后正常结束
+
+
+***
+
+<br/><br/>
+
+我们借助 fvbock/endless 来实现 Golang HTTP/HTTPS 服务重新启动的零停机
+
+- endless server 监听以下几种信号量：
+	- syscall.SIGHUP：触发 fork 子进程和重新启动
+	- syscall.SIGUSR1/syscall.SIGTSTP：被监听，但不会触发任何动作
+	- syscall.SIGUSR2：触发 hammerTime
+	- syscall.SIGINT/syscall.SIGTERM：触发服务器关闭（会完成正在运行的请求）
+
+endless 正正是依靠监听这些信号量，完成管控的一系列动作
+
+**安装：**
+
+```
+go get -u github.com/fvbock/endless
+```
 
 
 <br/>

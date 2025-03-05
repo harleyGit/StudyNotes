@@ -5,6 +5,7 @@
 	- [Delve调试](#Delve调试)
 		- [图形界面调试](#图形界面调试)
 		- [调试正在运行的程序](#调试正在运行的程序)
+		- [dlv的案例1](#dlv的案例1)
 - [**API测试工具**](#API测试工具)
 	- [Curl进行API测试](#Curl进行API测试) 
 		- [发送GET请求](#发送GET请求) 
@@ -115,6 +116,7 @@ func LoadBase() {
 ```
 
 <br/>
+
 - **生成测试代码**
 
 在Mac点击`fn+F1组合键`打开VSCode控制面板，输入`test`，选中如下图：
@@ -311,6 +313,7 @@ dlv debug
 b main.dlvTest2
 ```
 <br/>
+
 - **c 表示continue，执行到断点位置**
 
 ```shell
@@ -331,6 +334,7 @@ Process 49979 has exited with status 0
 ```
 
 <br/>
+
 - **发出请求**
 
 ```shell
@@ -376,7 +380,39 @@ stepout
 	- exit
 
 <br/><br/>
-><h3  id="图形界面调试">图形界面调试</h3>
+> <h2 id="dlv的案例1">dlv的案例1</h2>
+在PracticeGo工程文件夹下：
+
+```
+dlv debug main.go
+```
+
+我想在当前文件夹下 `./server/server.go` 中的 `server.go` 中Run()方法打断点如何做？
+
+**在 server.go 中设置断点**
+
+在 Delve 启动之后，你可以通过 Delve 的命令行界面设置断点。假设你想在 server.go 文件中的 Run() 方法上打断点，你可以使用以下命令：
+
+```bash
+break ./server/server.go:line_number
+
+//如：
+break ./server/server.go:20
+```
+
+替换 line_number 为 Run() 方法所在的实际行号。
+
+<br/>
+
+**通过函数名称设置断点**
+另外，如果你知道 Run() 方法的具体函数签名，你也可以通过函数名称来设置断点：
+
+```bash
+break server.Run
+```
+
+<br/><br/>
+> <h3  id="图形界面调试">图形界面调试</h3>
 
 - 打断点
 - 点击`运行和调试`
@@ -385,7 +421,7 @@ stepout
 
 
 <br/><br/>
-><h3  id="调试正在运行的程序">调试正在运行的程序</h3>
+> <h3  id="调试正在运行的程序">调试正在运行的程序</h3>
 
 - **线程调试，dlv命令：**
 
@@ -425,6 +461,7 @@ b main.go：11（行数）
 在 Go 语言开发过程中，使用 API 测试工具（如 Curl、HTTPie、Postman 和 VSCode 插件）可以帮助调试和验证 API 是否正常工作。
 
 <br/>
+
 - **3者总结对比**
 
 | 工具 | 适用场景 |  优势  |  缺点 |
@@ -447,7 +484,7 @@ b main.go：11（行数）
 `curl`（Client URL）是一个**命令行工具**，用于发送 HTTP 请求、下载文件、调试 API 等。支持多种协议，如 HTTP、HTTPS、FTP、SFTP 等。
 
 <br/><br/>
-><h3 id="发送GET请求">发送GET请求</h3>
+> <h3 id="发送GET请求">发送GET请求</h3>
 
 ```bash
 curl http://example.com
@@ -455,6 +492,7 @@ curl http://example.com
 🔹 **默认使用 GET 方法**，相当于在浏览器里访问 `http://example.com`。
 
 <br/>
+
 **发送带 Token 的请求**
 
 ```sh
@@ -463,7 +501,7 @@ curl -X GET http://localhost:8080/api/protected \
 ```
 
 <br/><br/>
-><h3 id="发送POST请求">发送POST请求</h3>
+> <h3 id="发送POST请求">发送POST请求</h3>
 
 ```bash
 curl -X POST http://example.com -d "username=admin&password=123456"
@@ -471,6 +509,7 @@ curl -X POST http://example.com -d "username=admin&password=123456"
 🔹 `-X POST` 指定 `POST` 方法，`-d` 发送表单数据。
 
 <br/>
+
 **发送 POST 请求（JSON 数据）**
 
 ```sh
@@ -492,7 +531,7 @@ curl -H "Authorization: Bearer TOKEN" \
 
 
 <br/><br/>
-><h3 id="发送带认证的请求">发送带认证的请求</h3>
+> <h3 id="发送带认证的请求">发送带认证的请求</h3>
 
 ```bash
 curl -u username:password http://example.com/protected
@@ -500,7 +539,7 @@ curl -u username:password http://example.com/protected
 🔹 `-u` 发送 **Basic Auth** 认证（用户名/密码）。
 
 <br/><br/>
-><h3 id="下载文件">下载文件</h3>
+> <h3 id="下载文件">下载文件</h3>
 
 ```bash
 curl -O http://example.com/file.zip
@@ -513,7 +552,7 @@ curl -o myfile.zip http://example.com/file.zip
 🔹 `-o` **自定义文件名**。
 
 <br/><br/>
-><h3 id="跟随重定向">跟随重定向</h3>
+> <h3 id="跟随重定向">跟随重定向</h3>
 
 ```bash
 curl -L http://example.com
@@ -521,7 +560,7 @@ curl -L http://example.com
 🔹 `-L` **自动跟随 301/302 重定向**。
 
 <br/><br/>
-><h3 id="显示响应头">显示响应头</h3>
+> <h3 id="显示响应头">显示响应头</h3>
 
 ```bash
 curl -I http://example.com
@@ -529,7 +568,7 @@ curl -I http://example.com
 🔹 `-I` **只显示响应头**（HEAD 请求）。
 
 <br/><br/>
-><h3 id="保存响应到文件">保存响应到文件</h3>
+> <h3 id="保存响应到文件">保存响应到文件</h3>
 
 ```bash
 curl http://example.com -o output.html
@@ -766,7 +805,7 @@ Content-Type: application/json
 > <h2 id="git忽略文件模版">git忽略文件模版</h2>
 
 <br/><br/>
-><h3  id="chatgpt忽略模版">chatgpt忽略模版</h3>
+> <h3  id="chatgpt忽略模版">chatgpt忽略模版</h3>
 
 **Golang 项目 `.gitignore`（适用于 macOS）**
 
@@ -858,7 +897,7 @@ go.work.sum
 8. **Go Workspaces（适用于 Go 1.18+）**：如果使用 Go 1.18+ 的 workspace，`go.work` 和 `go.work.sum` 可能会出现，可根据需求忽略。
 
 <br/><br/>
-><h3  id="deepseek忽略模版">deepseek忽略模版</h3>
+> <h3  id="deepseek忽略模版">deepseek忽略模版</h3>
 **Golang 项目 `.gitignore` 模板**
 
 ```gitignore
@@ -1478,6 +1517,7 @@ GO_ENV=development go run main.go
 ```
 
 <br/>
+
 - **测试环境**
 
 ```sh
@@ -1720,6 +1760,7 @@ go run main.go -env=production
 ![go.0.0.67.png](./../Pictures/go.0.0.67.png)
 
 <br/><br/>
+
 **容器的演变：**
 
 ![go.0.0.70.png](./../Pictures/go.0.0.70.png)
@@ -1732,11 +1773,10 @@ go run main.go -env=production
 
 
 <br/>
+
 **检索镜像**
 
 ![go.0.0.71.png](./../Pictures/go.0.0.71.png)
-
-
 
 <br/><br/><br/>
 > <h2 id="容器化部署">容器化部署</h2>
@@ -1785,7 +1825,7 @@ postgres=#
 
 上面是以postgres为例的一些简单使用，事实上各种服务都可以使用Docker来操作它们，而无须在本地安装和进行繁杂的配置。以后开发者想学习任何服务，优先使用容器版本，即可快速上手。
 
-获取到镜像之后，各种镜像的配置参数不同，如何使用它们呢？可以查看DockerHub最大的镜像托管平台(https://hub.docker.com)，网站上托管了许多官方和个人的镜像，查看相应的文档即可。
+获取到镜像之后，各种镜像的配置参数不同，如何使用它们呢？[可以查看DockerHub最大的镜像托管平台，网站上托管了许多官方和个人的镜像，查看相应的文档即可。](https://hub.docker.com/search?badges=official)
 
 对个人开发者而言，构建自己的镜像无须从零开始，在官方的镜像基础上构建自己的镜像即可，这也是个人或者企业构建镜像的核心步骤。如何构建镜像呢？答案是编写Dockerfile，官方提供了一套语法规范，按照规范编写Dockerfile文件即可。
 
@@ -1814,7 +1854,6 @@ RUN make prod
 CMD [ "bash", "-c", "/go/GopherBook/chapter11/votes;" ]
 ```
 
-
 为什么这样操作，构建镜像的目的是什么？
 
 &emsp; 开发者构建Web服务，在本地开发时直接在本地启动服务即可，比如go web项目，执行go run命令启动服务。那么想要在远程服务器上部署这套代码，怎么启动服务呢？答案是构建镜像，启动镜像的同时启动服务，这样开发者只需要提供Dockerfile文件就可以构建镜像，在镜像的基础上再执行docker run命令启动容器，即可启动Web服务。这就是容器这么受欢迎的原因，一套代码多处部署，使用非常方便。
@@ -1823,20 +1862,18 @@ CMD [ "bash", "-c", "/go/GopherBook/chapter11/votes;" ]
 
 <br/><br/>
 > <h2 id="介绍">介绍</h2>
-
 Docker 是一个**容器化**平台，主要用于**构建、打包、分发和运行**应用程序。它的核心作用是让应用程序及其依赖项一起封装在一个**轻量级、可移植的容器**中，从而确保应用能够在不同的环境（如开发、测试、生产）中一致运行。
 
-
 <br/><br/>
-><h3 id="docker大致命令介绍">docker大致命令介绍</h3>
+> <h3 id="docker大致命令介绍">docker大致命令介绍</h3>
 
 ![go.0.0.75.png](./../Pictures/go.0.0.75.png)
 
 <br/><br/>
-><h3  id="Docker使用">Docker使用</h3>
+> <h3  id="Docker使用">Docker使用</h3>
 我们以官方的教学镜像作为简单示例。启动Desktop后，在电脑的终端上运行如下命令：
 
-```
+```sh
 docker run -d -p 80:80 docker/getting-started
 ```
 该命令如果发现本地没有docker/getting-started镜像文件，会从官方的镜像仓库Docker Hub上拉取镜像并运行。
@@ -1849,16 +1886,14 @@ docker run -d -p 80:80 docker/getting-started
 
 启动后，打开一个浏览器，访问 `http://localhost/ `就可以看到已经run起来的应用程序的界面了。
 
-
 <br/>
-- **Docker 的主要用途**
 
-<br/>
+**Docker 的主要用途**
+
 - **1.环境一致性**  
 	- 解决“**在我电脑上可以跑**，但在服务器上有问题”的问题。  
 	- 通过容器让应用及其依赖环境始终一致。
 
-<br/>
 - **2.快速部署与扩展**  
 	- 轻量级容器启动速度快，适合微服务架构。  
 	- 可在本地开发，直接打包部署到云端或服务器。
@@ -1875,30 +1910,35 @@ docker run -d -p 80:80 docker/getting-started
 
 
 <br/>
+
 - **3.依赖管理**  
 	- 解决不同项目需要不同依赖的问题，比如 Python2 和 Python3 共存。  
 	- 容器内的环境彼此隔离，不会互相影响。
 
 <br/>
+
 -  **4.跨平台运行**  
 	- 容器能在**Windows、macOS、Linux**上运行，解决不同平台的兼容性问题。  
 	- 只需安装 Docker，就能运行相同的容器，无需额外配置环境。
 
 <br/>
+
 -  **5.版本管理**  
 	- 通过 Docker **镜像**（Image）管理应用的不同版本，可以回滚、更新。  
 	- 类似于 Git，Docker Hub 也可以存储和分发镜像。
 
 <br/>
+
 -  **6.微服务架构**  
 	- 适合拆分大型应用，每个服务在独立容器中运行，互不影响。  
 	- 通过 `docker-compose` 方便管理多个容器。
 
 <br/><br/>
+
 - **核心概念**
 
 <br/><br/><br/>
-><h2 id="镜像">镜像</h2>
+> <h2 id="镜像">镜像</h2>
 - **镜像（Image）**：  
 	- 类似于“模板”，包含应用及其环境的所有内容。  
 	- 例如：`nginx:latest` 是官方提供的 Nginx 服务器镜像。
@@ -1909,6 +1949,7 @@ docker run -d -p 80:80 docker/getting-started
 ![go.0.0.68.png](./../Pictures/go.0.0.68.png)
 
 <br/>
+
 ![go.0.0.69.png](./../Pictures/go.0.0.69.png)
 
 - **Docker肩负着：**
@@ -1928,61 +1969,66 @@ docker run -d -p 80:80 docker/getting-started
 
 
 <br/><br/>
-><h3 id="制作镜像">制作镜像</h3>
+> <h3 id="制作镜像">制作镜像</h3>
 
 制作镜像需要的指令、构建器、软件包，如下：
 
 ![go.0.0.78.png](./../Pictures/go.0.0.78.png)
 
 <br/>
+
 **常见指令：**
 
-| 常见指令 | 作用 |
+| 常见指令 | 格式 | 作用 |
 |:--|:--|
-| FROM | 指定镜像基础环境 |
-| RUN | 运行自定义命令 |
-| CMD | 容器启动命令或参数 |
-| LABEL | 自定义标签 |
-| EXPOSE | 指定暴露端口 |
-| ENV | 环境变量 |
-| ADD | 添加文件到镜像 |
-| COPY | 复制文件到镜像 |
-| ENTRYPOINT | 容器固定启动命令 |
-| VOLUME | 数据卷 |
-| USER | 指定用户和用户组 |
-| WORKDIR | 指定默认工作目录 |
-| ARG | 指定构建参数 |
+| FROM | `COPY <源路径>... <目标路径> <br/>` <br/><br/> `COPY ["<源路径1>",... "<目标路径>"]` | 指定镜像基础环境 |
+| RUN | RUN <命令> | 用于执行命令行命令 |
+| CMD |  | 容器启动命令或参数 |
+| LABEL |  | 自定义标签 |
+| EXPOSE | `EXPOSE <端口 1> [<端口 2>…]` | EXPOSE 指令是声明运行时容器提供服务端口，这只是一个声明，在运行时并不会因为这个声明应用就会开启这个端口的服务 |
+| ENV |  | 环境变量 |
+| ADD |  | 添加文件到镜像 |
+| COPY |  | 复制文件到镜像 |
+| ENTRYPOINT | exec 格式：`<ENTRYPOINT> "<CMD>"` <br/> <br/> shell 格式：`ENTRYPOINT [ "curl", "-s", "http://ip.cn"` ] | 容器固定启动命令 |
+| VOLUME |  | 数据卷 |
+| USER |  | 指定用户和用户组 |
+| WORKDIR | WORKDIR <工作目录路径> ｜ 指定默认工作目录 |
+| ARG |  | 指定构建参数 |
 
 **Docker File文件如下：**
 
+```dockerfile
+// golang:latest 镜像为基础镜像，将工作目录设置为 $GOPATH/src/go-gin-example，并将当前上下文目录的内容复制到 $GOPATH/src/go-gin-example 中
+FROM golang:latest 
+
+ENV GOPROXY https://goproxy.cn,direct
+// 使用 WORKDIR 指令可以来指定工作目录（或者称为当前目录），以后各层的当前目录就被改为指定的目录，如果目录不存在，WORKDIR 会帮你建立目录
+WORKDIR $GOPATH/src/MLC_GO
+copy . $GOPATH/src/MLC_GO
+// go build 编译完毕后，将容器启动程序设置为 ./go-gin-example，也就是我们所编译的可执行文件
+// 注意 go-gin-example 在 docker 容器里编译，并没有在宿主机现场编译
+RUN go build .
+
+EXPOSE 8000
+ENTRYPOINT [ "./MLC_GO" ]
 ```
-FROM openjdk:17 #
-
-LABEL author=leifengyang
-
-COPY app.jar /app.jar
-
-EXPOSE 8080
-
-ENTRYPOINT ["java","-jar","/app.jar"]
-```
 
 
-<br/>
 <br/><br/>
-><h3 id="镜像分层存储">镜像分层存储</h3>
+> <h3 id="镜像分层存储">镜像分层存储</h3>
 
 ![go.0.0.79.png](./../Pictures/go.0.0.79.png)
 
 镜像分层存储是为了解决磁盘存储压力。
 
 <br/>
+
 - **容器（Container）**：  
 	- 由镜像运行而来的实例，是真正运行的应用。  
 	- 例如：用 `docker run -d nginx` 启动一个 Nginx 容器。
 
 <br/><br/>
-><h3 id="启动容器命令">启动容器命令</h3>
+> <h3 id="启动容器命令">启动容器命令</h3>
 ![go.0.0.74.png](./../Pictures/go.0.0.74.png)
 
 <br/>
@@ -1990,16 +2036,18 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 ![go.0.0.73.png](./../Pictures/go.0.0.73.png)
 
-
 <br/>
+
 - **Docker Hub**：  
 	- 官方提供的镜像仓库，可以下载和上传镜像。
 
 <br/>
+
 - **Docker Compose**：  
 	- 用 `docker-compose.yml` 定义多个容器的运行方式，一键启动整个应用。
 
 <br/><br/>
+
 - **简单示例**
 
 运行一个 Nginx 服务器：
@@ -2072,6 +2120,7 @@ networks:
 使用 **Docker Compose** 来编排启动 **MySQL**，可以创建一个 `docker-compose.yml` 文件，定义 MySQL 容器及相关参数。
 
 <br/>
+
 - **1.创建 `docker-compose.yml` 文件**
 
 在你的项目目录下，创建一个 `docker-compose.yml` 文件，并写入以下内容：
@@ -2104,6 +2153,7 @@ networks:
 ```
 
 <br/>
+
 - **2.启动 MySQL 容器**
 
 在 `docker-compose.yml` 文件所在的目录运行：

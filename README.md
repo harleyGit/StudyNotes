@@ -268,6 +268,7 @@
 - [**常用框架**](./Go/GoLang常用框架.md)
 - [**go实战进阶**](./Go/go实战进阶.md)
 - [**优化**](./Go/go优化.md)
+- [**go_swagger(API文档编写)**](./Go/go_swagger.md)
 
 
 <br/><br/><br/>
