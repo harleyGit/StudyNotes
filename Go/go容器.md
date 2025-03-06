@@ -250,8 +250,8 @@ ENTRYPOINT [ "./MLC_GO" ]
 <br/><br/><br/>
 > <h2 id="docker常见命令">docker常见命令</h2>
 
-| 用途 | **命令** | **举例** | **描述** | 
-|-- |--|--| --|--|
+| **用途** | **命令** | **举例** | **描述** | 
+|--|--|--|--|
 | 构建镜像 | `‌docker build -t <image_name> <path>` | `‌docker build -t gin-blog-docker .` | `‌-t <image_name>：` 为构建的镜像指定一个名称（和可选的标签）。<br/><br/> `. (路径)：`作用：指定构建上下文的路径。构建上下文是指 Docker build 命令需要用来构建镜像的文件和目录。<br/> `. `表示当前目录（即你运行命令的目录），它告诉 Docker 从当前目录开始查找 Dockerfile 文件以及构建镜像所需要的其他资源 |
 | 列出本地所有镜像 | `docker images` 或 `docker image ls` | | 列出本地的所有镜像，包括镜像的名称、标签、ID、创建时间和大小等信息。|
 | 返回指定镜像信息 | `docker inspect <image>` |  | 返回指定镜像的详细元数据，内容较为详细，以 JSON 格式输出，适合查看镜像的配置、层次、环境变量等信息。 |
