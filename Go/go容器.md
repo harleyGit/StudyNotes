@@ -4,6 +4,8 @@
 		- [Docker使用](#Docker使用)
 	- [镜像](#镜像)
 		- [制作镜像](#制作镜像)
+		- [docker常见命令](#docker常见命令)
+			- [`docker images`详解](#dockerimages详解)
 		- [镜像分层存储](#镜像分层存储)
 		- [镜像分层存储](#镜像分层存储)
 	- [docker大致命令介绍](#docker大致命令介绍)
@@ -12,6 +14,7 @@
 	- [Docker Compose批量管理容器](#DockerCompose批量管理容器)
 	- [Docker启动mysql](#Docker启动mysql)
 	- [案例Docker构建](#案例Docker构建)
+		- [Golang + Mysql](#Golang+Mysql)
 	- [自动CI/CD](#自动CI/CD)
 
 
@@ -244,13 +247,54 @@ ENTRYPOINT [ "./MLC_GO" ]
 ```
 
 
+<br/><br/><br/>
+> <h2 id="docker常见命令">docker常见命令</h2>
+
+| 用途 | **命令** | **举例** | **描述** | 
+|-- |--|--| --|--|
+| 构建镜像 | `‌docker build -t <image_name> <path>` | `‌docker build -t gin-blog-docker .` | `‌-t <image_name>：` 为构建的镜像指定一个名称（和可选的标签）。<br/><br/> `. (路径)：`作用：指定构建上下文的路径。构建上下文是指 Docker build 命令需要用来构建镜像的文件和目录。<br/> `. `表示当前目录（即你运行命令的目录），它告诉 Docker 从当前目录开始查找 Dockerfile 文件以及构建镜像所需要的其他资源 |
+| 列出本地所有镜像 | `docker images` 或 `docker image ls` | | 列出本地的所有镜像，包括镜像的名称、标签、ID、创建时间和大小等信息。|
+| 返回指定镜像信息 | `docker inspect <image>` |  | 返回指定镜像的详细元数据，内容较为详细，以 JSON 格式输出，适合查看镜像的配置、层次、环境变量等信息。 |
+| 显示镜像的构建历史 | `docker history <image>` |  | 显示镜像的构建历史，按层次列出镜像的每一层及其大小、命令和创建时间等。 |
+| 列出所有“悬空”镜像 | `docker images -f "dangling=true"`  |  | 列出所有“悬空”镜像（即没有标签且不被任何容器使用的镜像）。这些镜像通常是构建过程中产生的中间镜像。 |
+| 删除镜像 | `docker rmi <image_name_or_id>` <br/><br/> `‌docker image prune (删除未使用的镜像)` | `docker rmi my_image`  <br/><br/> `docker rmi a1b2c3d4e5f6`| 删除的镜像 ID 或镜像的名称（标签） |
+| 查看当前正在运行的容器 | `docker ps -a` <br/><br/> `docker ps‌` |  |  |
+| 停止该容器 | docker stop 容器ID | `‌docker stop 9493ee378e55` |  |
+| 删除容器 |  | `‌docker rm 9493ee378e55` <br/><br/> 强制删除容器：`‌docker rm -f 9493ee378e55`|  |
+| 查看哪些容器依赖该镜像 |  | `‌docker ps -a --filter ancestor=c87a062484a3` | 这将列出所有使用该镜像的容器（无论是正在运行的还是已停止的） |
+|  |  |  |  |
+|  |  |  |  |
+
 <br/><br/>
+> <h3 id="dockerimages详解">docker images 详解</h3>
+
+```sh
+// 或者：docker image ls 
+$ docker images
+
+REPOSITORY               TAG       IMAGE ID       CREATED        SIZE
+<none>                   <none>    c87a062484a3   20 hours ago   1.34GB
+mysql                    latest    ccc8e7cf9efa   6 weeks ago    814MB
+docker/getting-started   latest    289dc403af49   2 years ago    46.5MB
+```
+
+**参数说明：**                     
+
+| 名称 | 说明 | 举例 |
+|:--|:--|:--|
+| REPOSITORY | 镜像的仓库名称（Repository），即镜像的 名称。 | ubuntu 表示官方的 Ubuntu 镜像 |
+| TAG | 镜像的标签（Tag），用于标识镜像的版本。 | ubuntu:20.04 表示 Ubuntu 20.04 版本的镜像 <br/> 标签用于标识同一仓库下不同版本的镜像。默认情况下，如果没有指定标签，Docker 会使用 latest 标签 |
+| IMAGE ID | 镜像的 唯一标识符，一个哈希值 | `a1b2c3d4e5f6` <br/> 说明：每个镜像都有一个唯一的 IMAGE ID，是由 Docker 在镜像构建时生成的一个哈希值。通常你不需要直接使用这个 ID，但它在某些操作（如删除镜像）时是有用的。 |
+| CREATED | 镜像的 创建时间 | `3 days ago` <br/> Docker 会根据构建镜像时的时间戳来显示这个字段 |
+| SIZE | 镜像的 大小 | 这是镜像文件的实际大小，表示镜像所占用的磁盘空间。这个大小包括镜像的所有层（层级存储结构）。不同版本的镜像可能会有不同的大小 |
+
+
+<br/><br/><br/>
 > <h3 id="镜像分层存储">镜像分层存储</h3>
 
 ![go.0.0.79.png](./../Pictures/go.0.0.79.png)
 
 镜像分层存储是为了解决磁盘存储压力。
-
 <br/>
 
 - **容器（Container）**：  
@@ -405,8 +449,7 @@ docker ps
 
 <br/>
 
-- **4. 连接到 MySQL**
-
+- **4.连接到 MySQL**
 **方法 1：使用 `mysql` 命令行客户端**
 
 ```sh
@@ -417,7 +460,7 @@ mysql -h 127.0.0.1 -P 3306 -u test_user -p
 
 <br/>
 
-**方法 2：进入 MySQL 容器内部**
+**方法2：进入 MySQL 容器内部**
 
 ```sh
 docker exec -it my_mysql mysql -u root -p
@@ -426,7 +469,7 @@ docker exec -it my_mysql mysql -u root -p
 
 <br/>
 
-- **5. 停止 MySQL 容器**
+- **5.停止 MySQL 容器**
 
 ```sh
 docker-compose down
@@ -440,7 +483,7 @@ docker-compose down -v
 
 <br/>
 
-- **6. 修改配置（可选）**
+- **6.修改配置（可选）**
 
 如果需要修改 MySQL 的配置，可以创建一个 `my.cnf` 文件：
 
@@ -472,7 +515,6 @@ docker-compose restart
 	- 也可以自定义 MySQL 配置，提高性能。
 
 🚀 这样，你的 **MySQL 容器** 就可以运行在 Docker 环境中了！
-
 
 <br/><br/><br/>
 > <h2 id="案例Docker构建">案例Docker构建</h2>
@@ -574,22 +616,9 @@ docker build -t gen-practice-exmple .
  => [1/4] FROM docker.io/library/golang:latest@sha256:c5adecdb7b3f8c5ca3c88648a861882849cc8b02fed68ece31e25de88ad1341  163.0s
  => => resolve docker.io/library/golang:latest@sha256:c5adecdb7b3f8c5ca3c88648a861882849cc8b02fed68ece31e25de88ad13418   0.0s
  => => sha256:e5701e2b5d2b168acc741a9ff3fdb127561218f08a68ad5dcc08b3d94a22fc9e 23.60MB / 23.60MB                        18.5s
- => => sha256:31d7468eece796ba37139bc942f068fc99cb7503eb828f59370c3421cca7d528 64.35MB / 64.35MB                        70.2s
- => => sha256:fcac9ac2c01ddb5ea125d3d57e536bc890bd8d74a773b73cc9bf858630dfbd12 2.32kB / 2.32kB                           0.0s
- => => sha256:52daf8b0f06f2fdaeb7dec4b92086a6e762488b98364a36c7abb3737d5423d3a 48.31MB / 48.31MB                        38.2s
- => => sha256:c5adecdb7b3f8c5ca3c88648a861882849cc8b02fed68ece31e25de88ad13418 10.06kB / 10.06kB                         0.0s
- => => sha256:88de62925c535c1a9006f31ea2adccc609e7c6ce90f84f4fb326376d287f67ce 2.82kB / 2.82kB                           0.0s
- => => sha256:5401acdbd47da62354605cdc39280e128c1fda32c0830d209bca96e7352c65f9 86.38MB / 86.38MB                       114.7s
- => => extracting sha256:52daf8b0f06f2fdaeb7dec4b92086a6e762488b98364a36c7abb3737d5423d3a                                1.5s
- => => sha256:57f2b93ee17017a4673f1a381ec312f22e8e9c0cee491adc746b10d3d5f200b7 75.18MB / 75.18MB                       159.1s
- => => extracting sha256:e5701e2b5d2b168acc741a9ff3fdb127561218f08a68ad5dcc08b3d94a22fc9e                                0.4s
- => => extracting sha256:31d7468eece796ba37139bc942f068fc99cb7503eb828f59370c3421cca7d528                                1.7s
- => => sha256:5307ec346c8f5c8f1cd4b4e7eb7909cfdd1526254d752a6aad28ce8c34d04335 127B / 127B                              72.4s
- => => sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 32B / 32B                                73.6s
- => => extracting sha256:5401acdbd47da62354605cdc39280e128c1fda32c0830d209bca96e7352c65f9                                1.6s
- => => extracting sha256:57f2b93ee17017a4673f1a381ec312f22e8e9c0cee491adc746b10d3d5f200b7                                3.6s
- => => extracting sha256:5307ec346c8f5c8f1cd4b4e7eb7909cfdd1526254d752a6aad28ce8c34d04335                                0.0s
- => => extracting sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1                                0.0s
+ ....
+ ..
+ .
  => [2/4] WORKDIR /go/src/MLC_GO                                                                                         0.2s
  => [3/4] COPY . /go/src/MLC_GO                                                                                          0.1s
  => [4/4] RUN go build .                                                                                                10.2s
@@ -634,17 +663,11 @@ $ docker run -p 8000:8000 gen-practice-exmple
  - using code:  gin.SetMode(gin.ReleaseMode)
 
 [GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (3 handlers)
-[GIN-debug] GET    /auth                     --> MLC_GO/TestNotes/PracticeGenExample/routers/api.GetAuth (3 handlers)
-[GIN-debug] GET    /api/v1/tags              --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.GetTags (4 handlers)
-[GIN-debug] POST   /api/v1/tags              --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.AddTag (4 handlers)
-[GIN-debug] PUT    /api/v1/tags/:id          --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.EditTag (4 handlers)
-[GIN-debug] DELETE /api/v1/tags/:id          --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.DeleteTag (4 handlers)
-[GIN-debug] GET    /api/v1/articles          --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.GetArticles (4 handlers)
-[GIN-debug] GET    /api/v1/articles/:id      --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.GetArticle (4 handlers)
-[GIN-debug] POST   /api/v1/articles          --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.AddArticle (4 handlers)
 [GIN-debug] PUT    /api/v1/articles/:id      --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.EditArticle (4 handlers)
 [GIN-debug] DELETE /api/v1/articles/:id      --> MLC_GO/TestNotes/PracticeGenExample/routers/api/v1.DeleteArticle (4 handlers)
-
+.....
+..
+.
 ```
 
 本来应该是错的，因为我在本地安装了mysql工具，若是没有会出错的，控制台的输出了一条错误 
@@ -663,46 +686,525 @@ dial tcp 127.0.0.1:3306: connect: connection refused`
 ```sh
 $ docker pull mysql
 
+docker pull mysql
 Using default tag: latest
 latest: Pulling from library/mysql
-903087d703a7: Pulling fs layer 
-9dcae24b624f: Download complete 
-d1014e296527: Downloading [====>                                              ]  82.45kB/913.5kB
-5dd6251984b1: Waiting 
-e176816781e5: Waiting 
-2adf46058f45: Waiting 
-c5d32318ef6d: Waiting 
-bcba864ffae7: Waiting 
-666d78c46a16: Waiting 
-5645ac95474c: Waiting 
+903087d703a7: Pull complete 
+9dcae24b624f: Pull complete 
+.....
+...
+.
+Digest: sha256:146682692a3aa409eae7b7dc6a30f637c6cb49b6ca901c2cd160becc81127d3b
+Status: Downloaded newer image for mysql:latest
+docker.io/library/mysql:latest 
 ```
+
+- **细节：**
+	- 默认行为：若不指定标签（如 :8.0），Docker 会拉取 latest 标签的镜像（通常是 MySQL 最新稳定版）。
+	- 推荐实践：建议明确指定版本标签，例如 docker pull mysql:8.0，以确保环境一致性。
+	- 镜像内容：该镜像包含预配置的 MySQL 服务，基于 Debian 或 Alpine 系统，开箱即用。
 
 ***
 
 <br/>
 
 - **创建并运行一个新容器**
-运行 Mysql 容器，并设置执行成功后返回容器 ID
+创建并启动一个名为 hhmysql 的容器，基于 mysql 镜像，设置 root 密码并映射端口。
+
+```sh
+% docker run --name hhmysql -p 3307:3307 -e MYSQL_ROOT_PASSWORD=hh109 -d mysql  
+
+fd769a56ea40b850508e9bd8a4778913552fa473ec73610704a4f6c0491e41e7
+```
+
+- **参数详解：**
+	- `--name hhmysql`：
+		- 为容器指定名称 hhmysql，便于后续管理（如启动/停止：docker start/stop hhmysql）。
+	- `-p 3307:3307`：
+		- 端口映射：将宿主机的 3307 端口映射到容器的 3307 端口。
+		- 潜在问题：MySQL 容器默认监听 3306 端口，若未修改容器内 MySQL 配置，此处应改为 -p 3307:3306（宿主机端口:容器端口）。否则外部无法通过 3307 连接到 MySQL。
+	- `-e MYSQL_ROOT_PASSWORD=hh109`：
+		- 设置环境变量 MYSQL_ROOT_PASSWORD，用于配置 MySQL root 用户的密码为 hh109。
+		- 必要性：此变量是 MySQL 官方镜像的必填项，否则容器启动失败。
+	- `-d`：
+		- 以“分离模式”（后台）运行容器，终端不阻塞，容器在后台运行。
+	- `mysql`：
+		- 指定使用的镜像名称。若本地不存在，会自动从 Docker Hub 拉取（等同于先执行 docker pull mysql）。
+
+***
+
+<br/>
+
+- **潜在问题与改进建议**
+- **1.端口映射错误**：
+	- **问题**：容器内 MySQL 默认监听 `3306`，但命令中映射到容器的 `3307` 端口，导致连接失败。
+	- **修复**：改为 `-p 3307:3306`，将宿主机 `3307` 映射到容器 `3306`。
+
+- **2.数据持久化缺失**：
+	- **风险**：容器删除后所有数据丢失。
+	- **改进**：添加 `-v /宿主机/目录:/var/lib/mysql` 挂载数据卷，例如：
+
+```bash
+docker run --name hhmysql -p 3307:3306 -v ./mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=hh109 -d mysql
+```
+
+<br/>
+
+**但是我在之前调用如下命令：**
 
 ```
-$ docker pull mysql
+docker run --name hhmysql_new -p 3306:3306 -v ./mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=hh109 -d mysql
 
-Using default tag: latest
-latest: Pulling from library/mysql
-903087d703a7: Pull complete 
-9dcae24b624f: Pull complete 
-d1014e296527: Pull complete 
-5dd6251984b1: Pull complete 
-e176816781e5: Pull complete 
-2adf46058f45: Pull complete 
-c5d32318ef6d: Pull complete 
-bcba864ffae7: Pull complete 
-666d78c46a16: Pull complete 
-5645ac95474c: Pull complete 
-Digest: sha256:146682692a3aa409eae7b7dc6a30f637c6cb49b6ca901c2cd160becc81127d3b
-Status: Downloaded newer image for mysql:latest
-docker.io/library/mysql:latest
+3baa6d33158908166d53426ea201be4e2a73e69b67a0f7d9fab48d44fbf3cbf8
+docker: Error response from daemon: Ports are not available: exposing port TCP 0.0.0.0:3306 -> 0.0.0.0:0: listen tcp 0.0.0.0:3306: bind: address already in use.
 ```
+
+出现上述错误是因为**宿主机上的 3306 端口被哪个进程占用了。**，使用`lsof 命令`查看进程占用
+
+```bash
+sudo lsof -i :3306
+```
+输出示例：
+
+```bash
+Password:
+COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+mysqld  97088 _mysql   21u  IPv4 0x81130a27b612dde1      0t0  TCP localhost:mysql (LISTEN)
+```
+COMMAND: 进程名称（如 mysqld 是 MySQL 服务进程）。
+PID: 进程 ID（示例中的 1234）。
+USER: 运行该进程的用户（如 mysql）
+
+<br/>
+
+***
+
+- **3.版本标签缺失**：
+	- **风险**：`latest` 标签可能随版本更新引入不兼容变更。
+	- **改进**：明确指定版本，如 `mysql:8.0`。
+
+---
+
+- **修正后的完整命令**
+
+```bash
+# 拉取指定版本的 MySQL 镜像
+docker pull mysql:8.0
+
+# 运行容器并正确配置
+docker run --name hhmysql \
+  -p 3307:3306 \
+  -v ./mysql-data:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=hh109 \
+  -d mysql:8.0
+```
+
+---
+
+- **验证容器状态**
+
+**1.查看运行中的容器**：
+
+```bash
+docker ps
+```
+
+<br/>
+
+**2.查看容器日志**：
+
+```bash
+docker logs hhmysql
+```
+
+<br/>
+
+**3.连接 MySQL**：
+
+```bash
+mysql -h 127.0.0.1 -P 3306 -u root -p
+
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 19
+Server version: 8.4.0 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> 
+```
+
+<br/>
+
+**若是错误端口，会出现如下提示：**
+
+```
+mysql -h 127.0.0.1 -P 3307 -u root -p
+Enter password:  //（输入密码 `hh109` 即可登录。）
+
+ERROR 2013 (HY000): Lost connection to MySQL server at 'reading initial communication packet', system error: 2
+```
+
+遇到 `ERROR 2013 (HY000): Lost connection to MySQL server` 错误通常与网络配置、MySQL 服务状态或权限问题相关。以下是详细排查步骤和解决方案：
+
+- **3.1.确认 MySQL 容器状态**
+**检查容器是否正常运行**
+
+```bash
+docker ps
+```
+- **预期结果**：应看到名为 `hhmysql` 的容器状态为 `Up`。
+- **问题处理**：
+  - 如果容器未运行，启动它：
+
+```bash
+docker start hhmysql_new
+```
+  
+  - 如果容器启动失败，查看日志：
+    
+```bash
+docker logs hhmysql_new
+```
+
+---
+
+- **3.2.验证端口映射**
+**确认容器端口映射正确**
+运行以下命令检查容器的端口映射：
+
+```bash
+docker port hhmysql
+
+3307/tcp -> 0.0.0.0:3307
+```
+- **预期结果**：输出类似 `3306/tcp -> 0.0.0.0:3307`，表示宿主机的 `3307` 端口映射到容器的 `3306` 端口。
+- **常见错误**：
+  - 错误映射为 `-p 3307:3307`（容器内 MySQL 实际监听 `3306`，需修正为 `-p 3307:3306`）。
+
+若是`3307/tcp -> 0.0.0.0:3307 `表示当前容器的端口映射是 **宿主机的 3307 端口映射到 容器的 3307 端口**。但 MySQL 容器默认监听的端口是 3306（而非 3307），因此这种映射会导致无法通过宿主机 3307 端口连接到 MySQL 服务。
+
+<br/>
+
+**有问题了：**
+
+在这之前我用的是：
+
+```
+docker run --name hhmysql -p 3307:3307 -e MYSQL_ROOT_PASSWORD=hh109 -d mysql  
+```
+
+<br/>
+接着后面使用：docker ps
+
+```
+CONTAINER ID   IMAGE                 COMMAND                   CREATED        STATUS        PORTS                                         NAMES
+fd769a56ea40   mysql                 "docker-entrypoint.s…"   3 hours ago    Up 3 hours    3306/tcp, 33060/tcp, 0.0.0.0:3307->3307/tcp   hhmysql
+```
+
+<br/>
+连接mysql用的命令是下面的，居然成功了：
+
+```
+mysql -h 127.0.0.1 -P 3306 -u root -p
+```
+
+从`docker ps`命令看出：
+- 错误点：0.0.0.0:3307->3307/tcp 表示将宿主机的 3307 端口映射到容器的 3307 端口。
+- 核心问题：MySQL 容器默认在 3306 端口监听服务，而你的映射规则让宿主机 3307 端口映射到了容器内未使用的 3307 端口，导致连接失败。
+---
+
+**解决方案**
+需要将宿主机的 `3307` 端口映射到容器内的 `3306` 端口（MySQL 默认端口）。
+
+**3.2.1.停止并删除旧容器**
+
+```bash
+docker stop hhmysql && docker rm hhmysql
+```
+
+<br/>
+
+**3.2.2.重新运行容器，修正端口映射**
+
+```bash
+docker run --name hhmysql \
+  -p 3307:3306 \          # 关键修正：宿主机 3307 -> 容器 3306
+  -e MYSQL_ROOT_PASSWORD=hh109 \
+  -d mysql:8.0            # 建议明确指定版本（如 8.0）
+```
+
+<br/>
+
+**3.2.3.验证新容器的端口映射**
+运行 `docker ps`，预期输出应包含：
+
+```bash
+PORTS
+0.0.0.0:3307->3306/tcp, 33060/tcp
+```
+这表示宿主机的 `3307` 端口已正确映射到容器的 `3306` 端口。
+
+---
+
+<br/>
+
+**3.2.4.测试 MySQL 连接**
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u root -p
+```
+输入密码 `hh109`，应能成功登录。
+
+---
+
+- **为何会出现“3307->3307”的错误映射？**
+	- **原因**：你在最初的 `docker run` 命令中使用了 `-p 3307:3307`，即宿主机的 `3307` 端口映射到容器的 `3307` 端口。
+	- **MySQL 容器真相**：MySQL 镜像默认在容器内监听 `3306` 端口（而非 `3307`），因此必须将宿主端口映射到容器的 `3306` 端口。
+
+---
+
+**3.2.5附加建议**
+**3.2.5.1数据持久化**
+添加数据卷挂载以避免容器删除后数据丢失：
+```bash
+docker run --name hhmysql \
+  -p 3307:3306 \
+  -v ./mysql-data:/var/lib/mysql \  # 挂载数据卷
+  -e MYSQL_ROOT_PASSWORD=hh109 \
+  -d mysql:8.0
+```
+
+<br/>
+
+**3.2.5.2.检查容器日志**
+如果仍无法连接，查看容器日志定位问题：
+
+```bash
+docker logs hhmysql
+```
+
+**3.2.5.3.允许远程访问**
+若需从其他机器连接，确保 MySQL 用户允许远程登录：
+1. 进入容器：
+
+```bash
+docker exec -it hhmysql mysql -u root -p
+```
+
+<br/>
+
+**3.2.5.4.执行 SQL：**
+
+```sql
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'hh109';
+FLUSH PRIVILEGES;
+```
+
+---
+
+- **总结**
+	- **核心修复**：将 `-p 3307:3306` 替换原有的错误映射 `-p 3307:3307`。
+	- **验证标准**：通过 `docker ps` 检查端口映射是否为 `0.0.0.0:3307->3306/tcp`。
+	- **数据安全**：始终挂载数据卷（`-v`）以持久化数据库文件。
+
+执行上述步骤后，MySQL 服务应能通过宿主机 `3307` 端口正常访问。
+
+---
+
+<br/>
+
+**4.检查宿主机端口监听**
+**查看 3307 端口是否被监听**
+
+```bash
+# Linux/macOS(注意：macOS上若是没有安装，无法执行，也没有提示)
+netstat -tuln | grep 3307
+
+# Windows
+netstat -ano | findstr :3307
+```
+- **预期结果**：显示 `0.0.0.0:3307` 或 `:::3307` 的监听状态。
+- **问题处理**：
+  - 若无输出，说明 Docker 未正确映射端口，需重新运行容器：
+
+```bash
+docker run --name hhmysql_new -p 3307:3306 -e MYSQL_ROOT_PASSWORD=hh109 -d mysql
+```
+
+<br/>
+
+- **5.检查 MySQL 容器配置**
+**确认 MySQL 绑定地址**
+MySQL 默认可能只允许本地连接（`bind-address=127.0.0.1`），需修改为 `0.0.0.0` 以允许外部连接。
+
+**5.1.进入容器**：
+
+```bash
+docker exec -it hhmysql_new bash
+```
+
+<br/>
+
+**5.2.编辑 MySQL 配置文件**：
+
+```bash
+apt-get update && apt-get install vim -y  # 安装编辑器（若容器内无vim）
+vim /etc/mysql/my.cnf
+```
+
+- 在 `[mysqld]` 部分添加：
+
+```ini
+bind-address = 0.0.0.0
+```
+
+<br/>
+
+**5.3.重启 MySQL 服务**：
+
+```bash
+service mysql restart
+```
+- 或直接重启容器：
+
+```bash
+docker restart hhmysql_new
+```
+
+<br/><br/>
+> <h3 id="Golang+Mysql">Golang + Mysql</h3>
+**查看镜像**
+
+```sh
+// 或者：docker image ls 
+$ docker images
+
+REPOSITORY               TAG       IMAGE ID       CREATED        SIZE
+<none>                   <none>    c87a062484a3   20 hours ago   1.34GB
+mysql                    latest    ccc8e7cf9efa   6 weeks ago    814MB
+docker/getting-started   latest    289dc403af49   2 years ago    46.5MB
+```
+---
+
+<br/>
+
+**删除镜像**
+
+- 由于原本的镜像存在问题，我们需要删除它，此处有几种做法
+	- 删除原本有问题的镜像，重新构建一个新镜像
+	- 重新构建一个不同 name、tag 的新镜像
+
+删除原本的有问题的镜像，-f 是强制删除及其关联状态
+
+若不执行 -f，你需要执行 docker ps -a 查到所关联的容器，将其 rm 解除两者依赖关系
+
+```
+$ docker rmi -f gin-blog-docker
+
+Untagged: gin-blog-docker:latest
+Deleted: sha256:d8a109c7697c3c2d9b4de7dbb49669d10106902122817b6467a031706bc52ab4
+Deleted: sha256:b65bd4076c65a3c24029ca4def3b3f37001ff7c9eca09e2590c4d29e1e23dce5
+Deleted: sha256:7bfbeb301fea9d8912a4b7c43e4bb8b69bdc57f0b416b372bfb6510e476a7dee
+Deleted: sha256:3b60960120cf619181c1762cdc1b8ce318b8c815e056659809252dd321bcb642
+Deleted: sha256:56294f978c5dfcfa4afa8ad033fd76b755b7ecb5237c6829550741a4d2ce10bc
+```
+
+<br/>
+但有时根据id删除会出现如下：
+
+```
+$ docker rmi -f c87a062484a3
+
+Error response from daemon: conflict: unable to delete c87a062484a3 (cannot be forced) - image is being used by running container 9493ee378e55
+```
+
+这个错误提示表明你尝试删除的镜像（c87a062484a3）正在被一个运行中的容器（9493ee378e55）使用，因此无法删除。为了删除这个镜像，你需要先停止并删除依赖这个镜像的容器。
+
+按照如下做：
+**停止容器**
+
+```sh
+//docker ps -a 查看当前正在运行的容器
+$ docker ps -a
+CONTAINER ID   IMAGE                    COMMAND                   CREATED             STATUS                      PORTS                               NAMES
+5ab1b65fff23   mysql                    "docker-entrypoint.s…"   About an hour ago   Up About an hour            33060/tcp, 0.0.0.0:3307->3306/tcp   hhmysql
+3baa6d331589   mysql                    "docker-entrypoint.s…"   4 hours ago         Created                                                         hhmysql_new
+2c1b704fc4d3   mysql                    "docker-entrypoint.s…"   4 hours ago         Created                                                         mysql
+9493ee378e55   c87a062484a3             "./MLC_GO"                20 hours ago        Up 20 hours                 0.0.0.0:8000->8000/tcp              sharp_elgamal
+c6898518e88a   docker/getting-started   "/docker-entrypoint.…"   10 days ago         Exited (255) 21 hours ago   0.0.0.0:80->80/tcp                  suspicious_rubin
+
+
+// 找到容器 ID 9493ee378e55，然后使用以下命令停止该容器
+$ docker stop 9493ee378e55
+9493ee378e55
+
+```
+
+<br/>
+
+**删除容器**
+停止容器后，你可以删除该容器。使用以下命令删除容器：
+
+```bash
+$ docker rm 9493ee378e55
+9493ee378e55
+```
+
+如果你希望在停止容器的同时删除它，可以使用以下命令：
+
+```bash
+$ docker rm -f 9493ee378e55
+9493ee378e55
+```
+
+这将强制删除容器，即使它正在运行。
+<br/>
+
+**删除镜像**
+现在，容器已经停止并删除，你就可以删除镜像了。使用之前的命令：
+
+```bash
+$ docker rmi c87a062484a3
+Deleted: sha256:c87a062484a3e80c399600a4b6d131f85ff911ea4d29e6c88de3a1422face5d9
+```
+
+这时，镜像应该能够成功删除了。
+
+***
+
+<br/>
+
+**如果有多个容器使用同一镜像**
+如果你有多个容器使用同一镜像，你需要依次停止并删除这些容器，或者使用 `docker ps -a` 查看所有容器，包括已停止的容器，然后执行删除操作。
+
+***
+
+<br/>
+
+**查看哪些容器依赖该镜像**
+如果你不确定哪些容器正在使用该镜像，可以使用以下命令查看镜像被哪些容器使用：
+
+```bash
+docker ps -a --filter ancestor=c87a062484a3
+```
+
+***
+
+<br/>
+
+**重新构建镜像**
+
+```
+docker build -t gin-blog-docker .
+```
+
 
 
  
