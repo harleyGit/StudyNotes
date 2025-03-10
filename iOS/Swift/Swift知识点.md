@@ -36,8 +36,8 @@
 		- [什么时候使用值类型?什么时候使用引用类型?(杭州灵伴科技)](#什么时候使用值类型什么时候使用引用类型)
 		- [什么时候值类型会发生装箱](#什么时候值类型会发生装箱)
 	- [关键字](#关键字)
-		- [private、filePrivate、public、open权限关键字(杭州腾展科技股份有限公司、北京寰宇科技[加密货币交易说])](#private、filePrivate、public、open权限关键字)
-		- [guard使用(北京寰宇科技[加密货币交易说])](#guard使用)
+		- [private、filePrivate、public、open权限关键字(杭州腾展科技股份有限公司、北京寰宇科技-加密货币交易说)](#private、filePrivate、public、open权限关键字)
+		- [guard使用(北京寰宇科技-加密货币交易说)](#guard使用)
 		- [final修饰符](#final修饰符)
 		- [dynamic](#dynamic)
 		- [@objc/@nonobjc](#@objc/@nonobjc)
@@ -685,35 +685,27 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 
 
 <br/><br/><br/>
-
-># <h2 id="类型擦除">[类型擦除](./基础.md#范型的高级使用-类型擦除)</h2>
+># <h2 id="类型擦除">[类型擦除](./swift基础.md#范型的高级使用-类型擦除)</h2>
 
 
 <br/><br/>
-
 ># <h2 id='map和flatMap区别'>[map和flatMap区别](./基础.md#map和flatMap区别)</h2>
 
 
 
 <br/><br/><br/>
-
-
 > <h2 id='Set集合与NSArray、Dictionary区别'>Set集合与NSArray、Dictionary区别</h2>
-
-
 [Set集合与NSArray、Dictionary区别](./基础.md#Set集合与NSArray、Dictionary区别)
 
 
 <br/><br/><br/>
-
 > <h2 id='实例对象数组去重有哪几种方法'>实例对象数组去重有哪几种方法</h2>
-
  **疑问:** 实例对象数组去重,比如:实例对象元素有一个属性id,通过这个id去重相同元素,有哪几种方法?
  
- 
+
  **1.使用 Set 进行去重：**  如果实例对象的 id 属性遵循 Hashable 协议，您可以先将数组转换为一个 Set，然后再转回数组。由于 Set 自动去除了重复元素，这样就实现了基于 id 去除重复的目的。这种方法简单直接，但需要注意的是，转换过程中会丢失原数组的顺序，且要求 id 能够正确实现 Hashable。
  
- ```
+ ```swift
  struct MyObject: Hashable {
     let id: String // 假设id是String类型，且已经遵循了Hashable协议
     // 其他属性...

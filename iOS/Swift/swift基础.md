@@ -51,6 +51,8 @@
 	-	[**泛型协议**](#泛型协议)
 		-	[泛型](#泛型)
 			-	[范型的高级使用-类型擦除](#范型的高级使用-类型擦除)
+				-	[协议擦除](#协议擦除)
+				-	[范型擦除](#范型擦除)
 			-	[处理2种数据类型的范型-RxSwift的Signal](#处理2种数据类型的范型-RxSwift的Signal)
 			-	[where约束和范型联合使用实践(可以加深理解)](./../ProjectDesc/mtbp.md#关键字where约束和范型的联合)
 	-	[**协议**](#协议)
@@ -2268,7 +2270,7 @@ print(outputData.result)  // 输出："处理后的值: 50"
 
 &emsp;  Swift3.0 Error protocol 的使用首先定义一个枚举,集成协议Error (Swift 2.0 的协议叫做ErrorType,3.0后协议改名Error)
 
-```
+```swift
 enum MyError : Error {
     case one
     case two
@@ -2284,7 +2286,7 @@ enum MyError : Error {
 
 &emsp; "throwing函数"通常是指能够抛出错误的函数。Swift使用错误处理机制来处理在程序执行过程中可能发生的错误或异常情况。与其他语言中使用异常处理类似，Swift使用错误处理来响应和传播错误。
 
-```
+```swift
 enum CustomError: Error {
     case someError
 }
@@ -2302,16 +2304,15 @@ do {
     print(error)
 }
 ```
-
-
 在上面的例子中，throwingFunction函数被标记为throws，并且抛出了一个自定义的错误CustomError.someError。在调用这个函数时，我们使用do-catch块来处理可能的错误。
 
 值得注意的是，throws关键字只能用于函数、方法和闭包的声明中。在函数内部，你使用throw语句来抛出实际的错误。
 
 <br/>
+
 **案例:**
 
-```
+```swift
 enum DivisionError: Error {
     case divisionByZero
 }
@@ -2357,9 +2358,7 @@ Error: Division by zero is not allowed.
 
 在这个例子中，divide(_:_:) 函数通过检查除数是否为零来防止除以零的情况。如果尝试除以零，函数将抛出一个 DivisionError.divisionByZero 错误。在调用函数时，我们使用 try 关键字，并使用 do-catch 块捕获可能的错误。如果没有错误发生，代码将继续执行。如果抛出了错误，相应的 catch 块将被执行，处理特定的错误类型。
 
-<br/>
-<br/>
-<br/>
+<br/><br/><br/>
 
 ># <h2 id='三者区别'>三者区别</h2> 
 
@@ -2369,14 +2368,13 @@ Error: Division by zero is not allowed.
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id='try?的使用'>**try? 的使用**</h2>
 
 **`try?`**, 如果不想处理异常那么可以用这个关键字,使用这个关键字返回一个可选值类型,如果有异常出现,返回nil.如果没有异常,则返回可选值
 
-```
+```swift
 func testFunc(str: String) throws -> String  {
     if str == "one" {
         throw MyError.one
@@ -2399,12 +2397,11 @@ nil
 ```
 
 <br/><br/>
-
 > <h3 id='try!'>try!</h3>
 
 &emsp; 如果不想处理异常,而且不想让异常继续传播下去,可以使用try!.这有点儿类似NSAssert().但是一旦使用try!后,在可能抛出异常的方法中抛出了异常,那么程序会立刻停止.
 
-```
+```swift
 let str = try! testFunc(str: "three")
 print(str)
 ```
@@ -2414,10 +2411,9 @@ print(str)
 ![ios_swift0_4.png](./../../Pictures/ios_swift0_4.png)
 
 <br/><br/>
-
 >## <h3 id='try'>**try**</h3>
 
-```
+```swift
 do {
     let str = try testFunc(str: "three")
     let str1 = try testFunc(str: "333")
@@ -2465,97 +2461,345 @@ three
 ># <h1 id='泛型协议'>[泛型协议](http://chuquan.me/2021/09/25/swift-generic-protocol/)</h1>
 
 <br/><br/>
-
 > <h2 id='泛型'>泛型</h2>
-
-
-<br/><br/><br/>
+<br/>
 
 > <h2 id="范型的高级使用-类型擦除">范型的高级使用-类型擦除</h2>
-
 在 Swift 中，“类型擦除”（Type Erasure）是一个设计模式，主要用于隐藏具体的类型信息，使得代码能够在保留泛型灵活性的同时，也可以进行类型抽象。
 
 类型擦除通常在处理协议或泛型时使用，因为协议本身不能直接作为一种类型来使用。如果一个协议中有与关联类型或 Self 相关的要求，那么这个协议就不能直接用作函数的参数类型、返回类型或存储属性的类型。在这种情况下，就需要用到类型擦除。
 
 <br/>
 
-**举例说明**
+- **类型擦除的实现步骤:**
+	- 定义一个协议：协议中包含需要的方法或属性，可能包含关联类型。
+	- 创建类型擦除包装器：一个泛型结构体或类，遵循该协议。
+	- 在包装器中存储闭包：将协议方法的实现通过闭包保存，从而隐藏具体类型。
 
-假设我们有一个协议 Animal，它有一个关联类型 Food，并且定义了一个喂食的函数
+<br/><br/>
+> <h3 id="协议擦除">协议擦除</h3>
+**示例：一个生成器（Generator）的类型擦除**
+
+- **1.定义协议**
+协议 Generator 包含一个关联类型 Value 和一个生成下一个值的方法：
+
+```swift
+protocol Generator {
+    associatedtype Value
+    mutating func next() -> Value?
+}
+```
+<br/>
+
+**2.创建类型擦除包装器**
 
 ```
+struct AnyGenerator<T>: Generator {
+    typealias Value = T
+    private let _next: () -> T?
+    
+    init<G: Generator>(_ generator: G) where G.Value == T {
+        var generator = generator
+        _next = { generator.next() }
+    }
+    
+    func next() -> T? {
+        _next()
+    }
+}
+```
+- AnyGenerator 包装了任意遵循 Generator 的具体类型。
+- 闭包 _next 捕获原始生成器的 next() 方法，隐藏了具体类型 G。
+<br/>
+
+**3.实现具体生成器**
+
+示例1：倒计时生成器（整数）
+
+```swift
+struct CountdownGenerator: Generator {
+    typealias Value = Int
+    var count: Int
+    
+    init(start: Int) {
+        count = start
+    }
+    
+    mutating func next() -> Int? {
+        guard count >= 0 else { return nil }
+        defer { count -= 1 }
+        return count
+    }
+}
+```
+<br/>
+示例2：字符串生成器
+
+```swift
+struct StringGenerator: Generator {
+    typealias Value = String
+    var strings: [String]
+    var index: Int = 0
+    
+    init(strings: [String]) {
+        self.strings = strings
+    }
+    
+    mutating func next() -> String? {
+        guard index < strings.count else { return nil }
+        defer { index += 1 }
+        return strings[index]
+    }
+}
+```
+<br/>
+
+**4.使用类型擦除包装器：**
+
+```swift
+// 包装倒计时生成器
+let countdown = CountdownGenerator(start: 3)
+let anyCountdown = AnyGenerator(countdown)
+
+// 包装字符串生成器
+let strings = StringGenerator(strings: ["Hello", "World", "!"])
+let anyStrings = AnyGenerator(strings)
+
+// 统一处理不同类型生成器
+func printValues<T>(from generator: AnyGenerator<T>) {
+    var gen = generator
+    while let value = gen.next() {
+        print(value)
+    }
+}
+
+printValues(from: anyCountdown) // 输出 3, 2, 1, 0
+printValues(from: anyStrings)    // 输出 Hello, World, !
+```
+- **关键点解析**
+	- 隐藏具体类型：AnyGenerator 允许将不同具体类型的 Generator（如 CountdownGenerator 和 StringGenerator）统一处理。
+	- 闭包捕获：通过闭包 _next 保存原始生成器的 next() 方法，绕过协议关联类型的限制。
+	- 泛型约束：初始化时通过 where G.Value == T 确保关联类型一致。
+
+<br/><br/>
+> <h2 id="范型擦除">范型擦除</h2>
+**举例说明**
+假设我们有一个协议 Animal，它有一个关联类型 Food，并且定义了一个喂食的函数
+
+```swift
 protocol Animal {
     associatedtype Food
+   
     func feed(_ food: Food)
 }
 ```
-
+<br/>
 如果我们想要创建一个可以保存任意 Animal 的数组，比如：
 
-```
+```swift
 var animals: [Animal] = []  // 这是不允许的
 ```
 
 上面的代码会报错，因为 Animal 协议有一个关联类型 Food，所以不能直接将 Animal 用作具体的类型。
-
-
 <br/>
 
 为了实现这一点，我们可以使用类型擦除，来创建一个可以存储任意 Animal 的容器。我们可以定义一个类型擦除的包装器 AnyAnimal：
 
-```
+```swift
+// MARK: - 定义类型擦除包装器
 class AnyAnimal<FoodType>: Animal {
     private let _feed: (FoodType) -> Void
-
+    
+    /**
+     * 泛型参数 <A: Animal>：
+     *      这里定义了一个泛型参数 A，并要求 A 必须遵循 Animal 协议。
+     *      因为 Animal 协议包含一个关联类型 Food，所以不同的 Animal 实现可能有不同的 Food 类型。
+     *
+     *
+     *where A.Food == FoodType 约束：
+     *      这个 where 子句要求传入的 Animal 实例的 Food 类型必须与 AnyAnimal 泛型参数 FoodType 相同。
+     *      例如，如果你定义 AnyAnimal<String>，那么传入的 Animal 实例必须是其 Food 类型为 String 的（比如 Dog 实现中 Food 为 String）。
+     *
+     * 参数 _ animal: A：
+     *      该初始化方法接收一个 Animal 实例 animal，其类型为泛型参数 A（并满足前面约束）。
+     */
     init<A: Animal>(_ animal: A) where A.Food == FoodType {
         _feed = animal.feed
     }
-
+    
     func feed(_ food: FoodType) {
         _feed(food)
     }
 }
 
-```
 
+
+// MARK: - 具体实现
+// 例如，定义一个 Dog 结构体，Animal 的 Food 类型为 String
+struct Dog: Animal {
+    typealias Food = String
+    
+    func feed(_ food: String) {
+        LogInfo("范型擦除---- Dog is fed with \(food)")
+    }
+}
+struct Cat: Animal {
+    typealias Food = String
+    
+    func feed(_ food: String) {
+        print("Cat is fed with \(food)")
+    }
+}
+```
+<br/>
 
 **使用：**
 
+```swift
+@objc public static func testPatterTypeEraseAnimal() {
+        
+    // 定义一个数组，存储 AnyAnimal<String> 类型的对象
+    var animals: [AnyAnimal<String>] = []
+    
+    let dog = Dog()
+    let cat = Cat()
+    
+    // 将具体的 Animal 对象包装成 AnyAnimal<String>
+    animals.append(AnyAnimal(dog))
+    animals.append(AnyAnimal(cat))
+    
+    // 遍历数组，调用 feed 方法
+    for animal in animals {
+        animal.feed("Bone")
+    }
+}
 ```
-var animals: [AnyAnimal<SomeFoodType>] = []
-let dog = Dog() // 假设 Dog 遵循 Animal 协议
-let cat = Cat() // 假设 Cat 也遵循 Animal 协议
 
-animals.append(AnyAnimal(dog))
-animals.append(AnyAnimal(cat))
+**log：**
+
 ```
-
-
+🍎 TestTypeErase.swift: [158] - 范型擦除---- Dog is fed with Bone
+🍎 TestTypeErase.swift: [165] - 范型擦除---- Cat is fed with Bone
+```
 在这个例子中，AnyAnimal 类通过类型擦除隐藏了具体的 Animal 类型，使得可以将不同的 Animal 类型存储在同一个集合中。
 
 **总结**
-
-类型擦除的主要目的是在使用泛型或协议时，隐藏类型信息以满足 API 设计的需求，并且允许更灵活的代码复用。它在 Swift 中经常用于处理涉及到泛型或协议的复杂场景。
-
+&emsp; 类型擦除的主要目的是在使用泛型或协议时，隐藏类型信息以满足 API 设计的需求，并且允许更灵活的代码复用。它在 Swift 中经常用于处理涉及到泛型或协议的复杂场景。
 
 <br/>
 
-***
-<br/><br/><br/>
+**疑问：为什么在AnyAnimal没有显式声明 `typealias Food = FoodType`？**
 
-> <h1 id='协议'>协议</h1>
+- 在这里，AnyAnimal 实现了 feed(_:) 方法，其参数类型为 FoodType。
+- 因为 Animal 协议要求的 feed(_:) 方法必须接受其关联类型 Food 的参数，所以编译器自动推断出 AnyAnimal 中的 Food 就是 FoodType。
 
-[泛型和协议实现的底层原理](http://chuquan.me/2020/02/19/swift-performance-protocol-type-generic-type/)
+**自动推导**
+Swift 的类型推导机制允许你不用显式写出：
+
+```swift
+typealias Food = FoodType
+```
+而让编译器自动将 Food 与 FoodType 对应起来。换句话说，只要你满足了协议方法的签名要求，Swift 就能知道 Food 就是 FoodType。
+
+因此，虽然你可以选择显式声明 typealias Food = FoodType 来增强代码的可读性，但这并不是必须的，因为编译器已经通过你实现的 feed 方法推导出了关联类型的具体类型。
 
 <br/><br/>
 
-> <h3 id='Sequence协议'>Sequence协议</h3>
+**Demo2:范型类型擦除**
 
+```swift
+
+/// 定义协议
+protocol Store {
+    associatedtype Item
+    func save(_ item: Item)
+    func retrieve() -> Item?
+}
+
+/// 创建类型擦除包装器
+struct AnyStore<T>: Store {
+    typealias Item = T
+    private let _save: (T) -> Void
+    private let _retrieve: () -> T?
+    
+    init<S: Store>(_ store: S) where S.Item == T {
+		    // 注意：此处对于值类型的 Store 可能会发生拷贝问题，建议使用 class 实现以确保引用语义
+        _save = { store.save($0) }
+        _retrieve = { store.retrieve() }
+    }
+    
+    func save(_ item: T) {
+        _save(item)
+    }
+    
+    func retrieve() -> T? {
+        _retrieve()
+    }
+}
+
+/// 实现具体生成器：用于保存字符串的 Store 实现
+class StringStore: Store {
+    typealias Item = String
+    var storedItem: String?
+    
+    func save(_ item: String) {
+        storedItem = item
+    }
+    
+    func retrieve() -> String? {
+        return storedItem
+    }
+}
+
+
+/// 测试函数
+func testProtocolTypeEraseCountdownGenerator() {
+    // 创建具体的 StringStore 对象
+    let stringStore = StringStore()
+    
+    // 利用类型擦除包装成 AnyStore<String>
+    let anyStore = AnyStore(stringStore)
+    
+    // 保存一个字符串
+    anyStore.save("Hello, Swift!")
+    
+    // 尝试取出保存的字符串并打印
+    if let value = anyStore.retrieve() {
+        print("Retrieved value: \(value)")
+    } else {
+        print("No value retrieved")
+    }
+}
+
+// 调用测试函数
+testProtocolTypeEraseCountdownGenerator()
+```
+**log:**
+
+```sh
+Retrieved value: Hello, Swift!
+```
+
+- **说明：**
+	- 我们首先定义了 Store 协议和 AnyStore 类型擦除包装器（与你提供的代码一致）。
+	- 通过定义一个 StringStore 类（继承自 NSObject 不是必须的，但这里使用 class 以确保引用语义），实现了 Store 协议，用于保存和获取一个字符串。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id='协议'>协议</h1>
+[泛型和协议实现的底层原理](http://chuquan.me/2020/02/19/swift-performance-protocol-type-generic-type/)
+
+<br/><br/>
+> <h3 id='Sequence协议'>Sequence协议</h3>
 Sequence 是 Swift 中的一个标准协议，用于表示一系列具有相同类型元素的值。它定义了一组操作，使得你可以按照特定顺序多次访问序列的元素，例如使用循环遍历数组或集合。
 
 下面是一个简单的示例，演示如何使用 Sequence 协议：
 
-```
+```swift
 // 定义一个实现 Sequence 协议的简单类型
 struct SimpleSequence: Sequence {
     let elements: [Int]
@@ -2609,8 +2853,6 @@ func sequenceTest() {
 <br/>
 
 Sequence 协议定义了一系列操作，使得类型可以表示一系列有序元素，并且可以使用 for-in 循环等语法对序列进行迭代。
-
-
 <br/>
 
 **makeIterator是一个什么样的方法呢?**
@@ -2619,7 +2861,7 @@ makeIterator() 是 Sequence 协议中定义的一个方法。这个方法返回�
 
 具体来说，makeIterator() 的定义如下：
 
-```
+```swift
 protocol Sequence {
     associatedtype Iterator: IteratorProtocol
 
@@ -2629,7 +2871,6 @@ protocol Sequence {
 在这里，makeIterator() 方法返回一个与序列关联的迭代器。这个迭代器必须符合 IteratorProtocol 协议，该协议包含了用于遍历元素的 next() 方法。
 
 <br/><br/><br/>
-
 > <h2 id="NSObjectProtocol协议">NSObjectProtocol协议</h2>
 
 在 Swift 中，`NSObjectProtocol` 是一个协议，它定义了一组基础的行为和属性，使得遵循该协议的类具备一些核心功能。这个协议主要用于支持与 Objective-C 的互操作性，让 Swift 类可以和 Objective-C 类更好地兼容。

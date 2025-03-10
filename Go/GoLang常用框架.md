@@ -42,7 +42,7 @@
 - **数据库框架**
 	- [Redis](#Redis)
 	- [GORM和XORM详介](#GORM和XORM详介)
-		- [GORM使用](#GORM使用)
+		- [GORM框架](#GORM框架)
 			- [GORM定义模型](#GORM定义模型) 
 			- [GORM初始化数据库](#GORM初始化数据库) 
 			- [GORM插入数据](#GORM插入数据) 
@@ -61,6 +61,7 @@
 	- [主要区别](#主要区别)
 		- [什么时候选用？](#什么时候选用？)
 	- [model序列化和继承](#model序列化和继承)
+	- [Cron框架](#Cron框架)
 - [**安全**](#安全)
 	- [crypto库](#crypto库)
 		- [crypto哈希](#crypto哈希)
@@ -2639,8 +2640,13 @@ go get github.com/gomodule/redigo/redis
 | **支持 JSON 结构** | ✅（通过 `json` 解析） | ✅（支持 `JSON` 字段存储） |
 
 
-<br/><br/>
-> <h3 id="GORM使用">GORM使用</h4>
+<br/><br/><br/>
+
+***
+<br/>
+
+># <h1 id="GORM框架">[GORM框架](https://learnku.com/docs/gorm/v2/write_plugins/9750)</h1>
+[编写插件和钩子](https://learnku.com/docs/gorm/v2/write_plugins/9750)
 
 <br/><br/>
 > <h3 id="GORM定义模型"> GORM定义模型</h3>
@@ -3346,11 +3352,18 @@ engine.Where("phone = ?", "12345678901").Get(&account)
 ```
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Cron框架">[Cron框架](./Cron框架.md)</h1>
+
 <br/>
 
 ***
 <br/><br/><br/>
-
+> <h1 id="安全">安全</h1>
 > <h1 id="crypto库"> crypto库 </h1>
 
 <br/><br/><br/>

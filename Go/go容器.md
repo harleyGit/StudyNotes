@@ -13,6 +13,7 @@
 	- [启动容器命令](#启动容器命令)
 	- [Docker Compose批量管理容器](#DockerCompose批量管理容器)
 	- [Docker启动mysql](#Docker启动mysql)
+	- [数据卷](#数据卷)
 	- [案例Docker构建](#案例Docker构建)
 		- [Golang + Mysql](#Golang+Mysql)
 	- [自动CI/CD](#自动CI/CD)
@@ -203,7 +204,6 @@ docker run -d -p 80:80 docker/getting-started
 
 <br/><br/>
 > <h3 id="制作镜像">制作镜像</h3>
-
 制作镜像需要的指令、构建器、软件包，如下：
 
 ![go.0.0.78.png](./../Pictures/go.0.0.78.png)
@@ -232,6 +232,7 @@ docker run -d -p 80:80 docker/getting-started
 
 ```dockerfile
 // golang:latest 镜像为基础镜像，将工作目录设置为 $GOPATH/src/go-gin-example，并将当前上下文目录的内容复制到 $GOPATH/src/go-gin-example 中
+//  拉取的是官方 golang 镜像，包含 Golang 的编译和运行环境，外加一堆 GCC、build 工具。相当齐全，所以镜像体积很大
 FROM golang:latest 
 
 ENV GOPROXY https://goproxy.cn,direct
@@ -262,7 +263,7 @@ ENTRYPOINT [ "./MLC_GO" ]
 | 停止该容器 | docker stop 容器ID | `‌docker stop 9493ee378e55` |  |
 | 删除容器 |  | `‌docker rm 9493ee378e55` <br/><br/> 强制删除容器：`‌docker rm -f 9493ee378e55`|  |
 | 查看哪些容器依赖该镜像 |  | `‌docker ps -a --filter ancestor=c87a062484a3` | 这将列出所有使用该镜像的容器（无论是正在运行的还是已停止的） |
-|  |  |  |  |
+| 启动2个容器进行连接 | `‌docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>` | `‌docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker` | `docker run：`用于运行一个新的容器实例 <br/><br/> `--name gin-blog-docker`：为运行的容器指定一个自定义名称（在这个例子中是 gin-blog-docker）<br/><br/> `--link hhmysql:mysql：`将 hhmysql 容器连接到当前容器，并为它设置别名 <br/><br/> `mysql -p 8000:8000`：将容器内部的端口映射到宿主机的端口 <br/><br/> `-d`：让容器在后台运行（detached mode） <br/><br/>  gin-blog-docker： 指定要运行的 Docker 镜像  |
 |  |  |  |  |
 
 <br/><br/>
@@ -516,6 +517,42 @@ docker-compose restart
 
 🚀 这样，你的 **MySQL 容器** 就可以运行在 Docker 环境中了！
 
+
+<br/><br/><br/>
+> <h2 id="数据卷">数据卷</h2>
+
+**Mysql 挂载数据卷**
+
+倘若不做任何干涉，在每次启动一个 Mysql 容器时，数据库都是空的。另外容器删除之后，数据就丢失了（还有各类意外情况），非常糟糕！
+<br/>
+
+**数据卷**
+
+**数据卷** 是被设计用来持久化数据的，它的生命周期独立于容器，Docker 不会在容器被删除后自动删除 数据卷，并且也不存在垃圾回收这样的机制来处理没有任何容器引用的 数据卷。如果需要在删除容器的同时移除数据卷。可以在删除容器的时候使用 docker rm -v 这个命令
+
+数据卷 是一个可供一个或多个容器使用的特殊目录，它绕过 UFS，可以提供很多有用的特性：
+- 数据卷 可以在容器之间共享和重用
+- 对 数据卷 的修改会立马生效
+- 对 数据卷 的更新，不会影响镜像
+- 数据卷 默认会一直存在，即使容器被删除
+
+> 注意：数据卷 的使用，类似于 Linux 下对目录或文件进行 mount，镜像中的被指定为挂载点的目录中的文件会隐藏掉，能显示看的是挂载的 数据卷。
+<br/>
+
+**如何挂载**
+
+首先创建一个目录用于存放数据卷；示例目录 /data/docker-mysql，注意 --name 原本名称为 mysql 的容器，需要将其删除 docker rm
+
+```sh
+$ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=rootroot -v /data/docker-mysql:/var/lib/mysql -d mysql
+54611dbcd62eca33fb320f3f624c7941f15697d998f40b24ee535a1acf93ae72
+```
+创建成功，检查目录 /data/docker-mysql，下面多了不少数据库文件
+
+**验证**
+
+接下来交由你进行验证，目标是创建一些测试表和数据，然后删除当前容器，重新创建的容器，数据库数据也依然存在（当然了数据卷指向要一致）
+
 <br/><br/><br/>
 > <h2 id="案例Docker构建">案例Docker构建</h2>
 - **项目根目录新建Dockerfile文件，如下：**
@@ -531,7 +568,6 @@ RUN go build .
 EXPOSE 8000
 ENTRYPOINT [ "./MLC_GO" ]
 ```
-
 ***
 
 <br/>
@@ -631,7 +667,6 @@ docker build -t gen-practice-exmple .
  - ConsistentInstructionCasing: Command 'copy' should match the case of the command majority (uppercase) (line 5)
  - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 3)
 ```
-
 ***
 
 <br/>
@@ -1176,14 +1211,12 @@ Deleted: sha256:c87a062484a3e80c399600a4b6d131f85ff911ea4d29e6c88de3a1422face5d9
 ```
 
 这时，镜像应该能够成功删除了。
-
 ***
 
 <br/>
 
 **如果有多个容器使用同一镜像**
 如果你有多个容器使用同一镜像，你需要依次停止并删除这些容器，或者使用 `docker ps -a` 查看所有容器，包括已停止的容器，然后执行删除操作。
-
 ***
 
 <br/>
@@ -1194,7 +1227,6 @@ Deleted: sha256:c87a062484a3e80c399600a4b6d131f85ff911ea4d29e6c88de3a1422face5d9
 ```bash
 docker ps -a --filter ancestor=c87a062484a3
 ```
-
 ***
 
 <br/>
@@ -1204,8 +1236,80 @@ docker ps -a --filter ancestor=c87a062484a3
 ```
 docker build -t gin-blog-docker .
 ```
+***
 
+<br/>
 
+**创建并运行一个新容器**
+**关联**
+Q：我们需要将 Golang 容器和 Mysql 容器关联起来，那么我们需要怎么做呢？
+
+A：增加命令 `--link mysql:mysql` 让 Golang 容器与 Mysql 容器互联；通过 `--link`，可以在容器内直接使用其关联的容器别名进行访问，而不通过 IP，但是`--link`只能解决单机容器间的关联，在分布式多机的情况下，需要通过别的方式进行连接。
+
+```
+// 查看容器
+$ ps -a
+CONTAINER ID   IMAGE                    COMMAND                   CREATED       STATUS                      PORTS                               NAMES
+5ab1b65fff23   mysql                    "docker-entrypoint.s…"   2 hours ago   Up 2 hours                  33060/tcp, 0.0.0.0:3307->3306/tcp   hhmysql
+c6898518e88a   docker/getting-started   "/docker-entrypoint.…"   11 days ago   Exited (255) 21 hours ago   0.0.0.0:80->80/tcp                  suspicious_rubin
+```
+
+```
+// 注意：容器名是hhmysql，不是镜像名mysql
+$ docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker
+8ca5d0227adf1317edddf65fbb88dbdfb681c7d9132bf89b6e591f2dc66d74c6
+```
+
+命令 `docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker` 是用来启动 Docker 容器并运行你的应用的。下面是对该命令的详细解释：
+
+- 这个命令会基于 `gin-blog-docker` 镜像启动一个新的容器，并将该容器命名为 `gin-blog-docker`。
+- `--link hhmysql:mysql` 让该容器与运行中的 `hhmysql` 容器进行连接，并将 `hhmysql` 容器命名为 `mysql`，使得 `gin-blog-docker` 容器能够通过 `mysql` 访问数据库。
+- `-p 8000:8000` 将容器的端口 8000 映射到宿主机的 8000 端口，允许你通过 `http://localhost:8000` 访问容器中的应用。
+- `-d` 使容器在后台运行。
+
+<br/>
+
+**命令结构：**
+
+```bash
+docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>
+```
+
+### 各个参数的解释：
+
+1.**`docker run`**：
+   - **作用**：用于运行一个新的容器实例。
+   - **功能**：启动一个新的容器并根据提供的镜像创建一个容器。执行完命令后，容器将启动并可以开始工作。
+
+2.**`--name gin-blog-docker`**：
+   - **作用**：为运行的容器指定一个自定义名称（在这个例子中是 `gin-blog-docker`）。
+   - **功能**：这个选项允许你为容器指定一个易于识别的名称，而不是 Docker 自动生成的容器 ID。这个名称可以用于后续的容器管理（如 `docker stop gin-blog-docker`）。
+
+3.**`--link hhmysql:mysql`**：
+   - **作用**：将 `hhmysql` 容器连接到当前容器，并为它设置别名 `mysql`。
+   - **功能**：`--link` 允许当前容器（`gin-blog-docker`）与其他运行中的容器（这里是 `hhmysql`）进行通信。通过这个参数，当前容器可以使用别名 `mysql` 来访问 `hhmysql` 容器，Docker 会自动为 `gin-blog-docker` 容器配置好 `/etc/hosts` 文件，使得容器可以通过 `mysql` 作为主机名访问 MySQL 服务。  
+   - **注意**：`--link` 选项已经被弃用（不推荐使用），可以考虑使用 Docker 网络来代替。
+
+4.**`-p 8000:8000`**：
+   - **作用**：将容器内部的端口映射到宿主机的端口。
+   - **功能**：此参数将容器的端口 8000 映射到宿主机的端口 8000。这意味着，你可以通过访问宿主机的 `http://localhost:8000` 来访问运行在容器中的应用。
+
+   - **格式**：`-p <host_port>:<container_port>`，这里的 `host_port` 是宿主机上的端口，而 `container_port` 是容器内的端口。
+
+5.**`-d`**：
+   - **作用**：让容器在后台运行（detached mode）。
+   - **功能**：默认情况下，`docker run` 会在前台运行容器，显示容器的日志输出。如果加上 `-d` 参数，容器会在后台运行，命令行会返回容器 ID，而不会显示容器的日志。你可以通过 `docker logs <container_name>` 来查看后台运行容器的日志。
+
+6.**`gin-blog-docker`**：
+   - **作用**：指定要运行的 Docker 镜像。
+   - **功能**：这里的 `gin-blog-docker` 是你要运行的镜像名称，Docker 会使用该镜像来创建并启动一个新的容器。
+
+***
+
+<br/>
+
+**结果**
+&emsp; 检查启动输出、接口测试、数据库内数据，均正常；我们的 Golang 容器和 hhmysql 容器成功关联运行，大功告成 :)
 
  
 
