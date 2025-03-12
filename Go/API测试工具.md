@@ -12,6 +12,7 @@
 	- [🌟`curl`高级用法](#🌟`curl`高级用法)
 - [HTTPie进行API测试](#HTTPie进行API测试) 
 - [Postman进行API测试](#Postman进行API测试) 
+	- [图片上传测试](#图片上传测试)
 - [VSCode插件API测试](#VSCode插件API测试)
 
 
@@ -237,4 +238,11 @@ Content-Type: application/json
 - **执行请求**
 	1. 在 VSCode 打开 `.http` 文件。
 	2. 在请求上方会出现 `Send Request` 按钮，点击即可运行并查看响应。
+
+<br/><br/><br/>
+> <h2 id="图片上传测试">图片上传测试</h2>
+
+![go.0.0.86.png](./../Pictures/go.0.0.86.png)
+
+
 

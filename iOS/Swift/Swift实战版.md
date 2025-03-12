@@ -15,17 +15,19 @@
 	- [单例模式【OpenGLES画板】](#单例模式)
 - [**类库**](#类库)
 	- [Alamofire](#Alamofire)
+- [**高级(不太熟练或不清楚)语法**](#高级(不太熟练或不清楚)语法)
+	- [操作符<~模仿ObjectMapper](#操作符<~模仿ObjectMapper)
+		- [operator知识点详解](#operator知识点详解)
 - **资料**
 	- [**Swift学习笔记**](https://nintendoboy.gitbooks.io/swift-study-note-v2/content/)
 	- [Swift组件Demo](https://github.com/pro648/BasicDemos-iOS.git)
 
 
 
-<br/>
+<br/><br/><br/><br/><br/>
 
 ***
-<br/><br/>
-
+<br/>
 > <h1 id='swift语法糖的本质'>swift 语法糖 ？ ！的本质</h1>
 
 ![<br/>](./../../Pictures/ios_pd3.png)
@@ -36,7 +38,7 @@
 
 等价于以下四种：
 
-```
+```swift
 var age0: Optional<Int> = Optional<Int>.some(10)
 var age1: Optional = .some(10)
 var age2 = Optional.some(10)
@@ -44,7 +46,7 @@ var age3 = Optional(10)
 
 ```
 
-```
+```swift
 ？为optional的语法糖
 optional 是一个包含了nil 和普通类型的枚举，确保使用者在变量为nil的情况下处理
 
@@ -52,22 +54,17 @@ optional 是一个包含了nil 和普通类型的枚举，确保使用者在变�
 
 ```
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
-
-<br/><br/>
-
+<br/>
 > <h1 id='工具类'>工具类</h1>
-
-<br/><br/>
+<br/>
 
 > <h2 id='空数值处理'>空数值处理</h2>
 通过为 Numeric 协议添加一个扩展来实现这个功能。以下是一个将数字转换为
 
-```
+```swift
 extension Numeric {
     func handleOptionValue() -> String {
         let number = self
@@ -97,11 +94,10 @@ print(number4.stringValueOrEmpty()) // 输出: ""
 ```
 
 <br/><br/>
-
 > <h2 id='@propertyWrapper'>@propertyWrapper</h2>
 是 Swift 语言中的一个属性包装器（Property Wrapper）特性，引入于 Swift 5.1 版本。属性包装器允许你定义包装器类型，将通用的代码用于属性的存取和设置，使代码更具可读性、可维护性，并提供了一种在属性上应用自定义行为的方式。
 
-```
+```swift
 @propertyWrapper
 struct TwelveOrLess {
     private var value: Int
@@ -119,7 +115,7 @@ struct TwelveOrLess {
 
 在这个例子中，TwelveOrLess 是一个属性包装器，它确保属性值不超过 12。然后，你可以将这个包装器应用于其他属性：
 
-```
+```swift
 struct MyStruct {
     @TwelveOrLess var number: Int
 }
@@ -140,7 +136,7 @@ print(myStruct.number)  // 输出: 12
 
 你可以在属性包装器中定义自定义初始化方法以及其他方法，以满足特定的需求。
 
-```
+```swift
 @propertyWrapper
 struct CustomWrapper {
     var wrappedValue: Int
@@ -165,7 +161,7 @@ myStruct.$number.doSomething()  // 输出: Doing something with 42
 ```
 你可以通过在包装器中实现 projectedValue 属性，为属性包装器添加额外的设置或投影。
 
-```
+```swift
 @propertyWrapper
 struct WrapperWithProjection {
     var wrappedValue: Int
@@ -188,17 +184,14 @@ print(myStruct.$number)  // 输出: SomeOtherType()
 
 
 <br/><br/>
-
 > <h2 id='task使用'>Task使用</h2>
-
-
 Task 是 Swift Concurrency 中的一部分，它用于处理异步编程，包括协程（coroutines）和异步/等待（async/await）模式。Swift Concurrency 是在 Swift 5.5 版本中引入的，并通过 async 和 await 关键字提供了一种更直观和可读的异步编程模型。
 
 基本用法：
 
 异步函数声明和调用：
 
-```
+```swift
 func fetchData() async -> String {
     return "Data fetched successfully"
 }
@@ -212,7 +205,7 @@ async {
 
 异步闭包：
 
-```
+```swift
 func fetchData(completion: @escaping (String) -> Void) {
     DispatchQueue.global().async {
         let result = "Data fetched successfully"
@@ -234,7 +227,7 @@ func useFetchData() {
 
 创建和运行 Task：
 
-```
+```swift
 func fetchData() async -> String {
     return "Data fetched successfully"
 }
@@ -256,7 +249,7 @@ Task 可以用于创建异步任务。在上述例子中，通过 Task 创建一
 
 Task 组：
 
-```
+```swift
 func fetchData(id: Int) async -> String {
     return "Data for id \(id) fetched successfully"
 }
@@ -278,19 +271,18 @@ func fetchAllData() async {
 在这个例子中，Task.withGroup 创建了一个任务组，允许并发执行多个任务。group.addTask 添加了多个异步任务到任务组中，然后使用 for try await 循环等待所有任务的完成。
 
 
-<br/>
+<br/><br/><br/>
 
 ***
+<br/>
 
-<br/><br/>
 
 > <h1 id='解包'>解包</h1>
-
-<br/><br/>
+<br/>
 
 > <h2 id='隐式解包-可选'>隐式解包-可选</h2>
 
-```
+```swift
 var dataModel: MineDataModel! = nil
 ```
 
@@ -311,8 +303,7 @@ var dataModel: MineDataModel! = nil
 <br/><br/>
 
 > <h1 id='数组'>数组</h1>
-
-<br/><br/>
+<br/>
 
 > <h2 id='合并'>合并</h2>
 
@@ -320,7 +311,7 @@ var dataModel: MineDataModel! = nil
 
 &emsp; 具体来说，这个闭包的参数是两个元素，分别是已存在于目标数组中的元素和要合并的新元素。这里使用了通配符 _ 表示不使用已存在的元素，而 new 表示要合并的新元素。闭包的返回值表示在有重复元素时选择保留的是新元素。
 
-```
+```swift
 var array1 = ["apple", "orange", "banana"]
 let array2 = ["orange", "grape", "kiwi"]
 
@@ -341,8 +332,7 @@ print(array1)
 <br/><br/>
 
 > <h1 id='UITableView'>UITableView</h1>
-
-<br/><br/>
+<br/>
 
 > <h2 id='contentSize、contentInset和contentOffset区别及相互关系'>contentSize、contentInset和contentOffset区别及相互关系</h2>
 
@@ -365,21 +355,16 @@ print(array1)
 
 - **contentOffset:** 是当前视图滑动的距离,比如向左、向右之类的
 
-
-
 <br/><br/><br/>
-
 
 ***
 <br/>
 > <h1 id="多线程">多线程</h1>
-
-
-<br/><br/><br/>
+<br/>
 
 > <h2 id="同步和异步编码">同步和异步编码【OpenGLES画板】</h2>
 
-```
+```swift
 import Foundation
 import OpenGLES
 
@@ -437,9 +422,7 @@ final class GLPaintManager {
 <br/><br/><br/>
 
 > <h1 id="设计模式">设计模式</h1>
-
-
-<br/><br/><br/>
+<br/>
 
 > <h2 id="单例模式">单例模式【OpenGLES画板】</h2>
 
@@ -500,9 +483,9 @@ let singletonInstance = MySingleton.sharedInstance
 
 ***
 
-<br/><br/>> <h1 id='类库'>类库</h1>
-
 <br/><br/>
+> <h1 id='类库'>类库</h1>
+<br/>
 
 > <h2 id='Alamofire'>Alamofire</h2>
 
@@ -527,7 +510,7 @@ ParameterEncoding什么用法? **URLEncoding.default**、**JSONEncoding.default*
 例如，将 { "key": "value" } 编码为 JSON 格式为 {"key":"value"}，并作为请求的主体内容。
 示例代码：
 
-```
+```swift
 import Alamofire
 
 let parameters: [String: Any] = ["key": "value"]
@@ -540,7 +523,203 @@ let jsonEncodedRequest = try! JSONEncoding.default.encode(URLRequest(url: URL(st
 ```
 在上述代码中，urlEncodedRequest 是使用 URLEncoding.default 编码的请求，而 jsonEncodedRequest 是使用 JSONEncoding.default 编码的请求。这两种编码方式适用于不同的请求场景，根据实际需求选择合适的方式。
 
+<br/><br/><br/>
 
+***
+<br/>
+
+> <h1 id="高级(不太熟练或不清楚)语法">高级(不太熟练或不清楚)语法</h1>
+<br/>
+
+> <h2 id="操作符<~模仿ObjectMapper">操作符<~模仿ObjectMapper</h2>
+
+**CommonOperator.swift文件**
+**定义操作符：**
+
+```
+import Foundation
+
+// 1. 在全局作用域声明自定义操作符，并设置优先级
+infix operator <~ : AssignmentPrecedence
+
+
+/// 操作符赋值
+/// - Parameters:
+///   - left: 这是待赋值的属性，它必须是 inout 类型，以允许在函数内部修改其值。
+///   - right: 这是一个元组 (key, json)，其中：
+///         key 是 JSON 中的键（字符串）。
+///         json 是 JSON 数据（字典）。
+///         right.json[right.key] as? T 试图从字典中取出值，并转换成泛型 T，如果成功就赋值给 left
+func <~ <T>(left: inout T, right: (key: String, json: [String: Any])) {
+    if let value = right.json[right.key] as? T {
+        left = value
+    }
+}
+```
+
+<br/>
+
+**使用：**
+
+```swift
+// 3. 示例类，使用自定义的 `<~` 操作符进行 JSON 映射
+class AClass {
+        var name: String = ""
+    var age: Int = 0
+    var isStudent: Bool = false
+    
+    // 进行 JSON 映射
+    func mapping(json: [String: Any]) {
+        /**泛型的类型参数通常是由编译器自动推断出来的
+         *      左侧已知类型：在这个例子中，name 已经在你的类或结构体中声明了具体类型（比如 Int、Double 或其他类型）。
+         *      类型推断：Swift 编译器会根据 mathematics 的类型来推断出 <- 操作符中的泛型参数 <T>，使得操作符实现中的泛型函数能够正确地进行赋值或者转换。
+         *
+         * 因此，即使你在调用时没有显式声明 <T> 的类型，编译器也能自动推断出正确的类型，确保代码正常编译并运行。这种类型推断是 Swift 语言中泛型使用的一大优势，使代码更简洁而且更易维护。
+         */
+        name <~ (key: "name", json: json)
+        age <~ (key: "age", json: json)
+        isStudent <~ (key: "isStudent", json: json)
+    }
+}
+
+// 4. 测试代码
+let jsonData: [String: Any] = [
+    "name": "Alice",
+    "age": 25,
+    "isStudent": true
+]
+
+let instance = AClass()
+instance.mapping(json: jsonData)
+
+// 5. 打印结果
+print("Name: \(instance.name)")         // 输出: Name: Alice
+print("Age: \(instance.age)")           // 输出: Age: 25
+print("Is Student: \(instance.isStudent)") // 输出: Is Student: true
+```
+
+- `infix operator <~` 定义了一个新的中缀操作符（即 a <~ b 这样的形式）。
+- `AssignmentPrecedence` 让这个操作符具有赋值运算符的优先级，确保在表达式中能正确解析。
+
+<br/><br/>
+> <h2 id="operator知识点详解">operator知识点详解</h2>
+
+### **Swift 中的 `infix operator`（中缀操作符）详解**
+
+在 Swift 语言中，`operator` 关键字用于**自定义运算符**，而 `infix` 代表**中缀操作符**（运算符位于两个操作数之间，如 `a + b`）。Swift 允许你自定义运算符，使代码更加直观和简洁。
+
+---
+
+## **1. `operator` 关键字的作用**
+`operator` 关键字用于声明一个新的操作符，Swift 允许定义三种类型的操作符：
+- **前缀操作符 (`prefix`)** —— 作用于单个操作数前，例如 `-a`
+- **中缀操作符 (`infix`)** —— 作用于两个操作数之间，例如 `a + b`
+- **后缀操作符 (`postfix`)** —— 作用于单个操作数后，例如 `i!`
+
+---
+
+## **2. `infix operator`（中缀操作符）**
+在 Swift 中，中缀操作符用于两个操作数之间。例如，`+` 和 `-` 都是中缀操作符：
+
+```swift
+let sum = 3 + 5  // + 是中缀操作符
+```
+Swift 允许你创建自己的中缀操作符，并为其指定优先级和结合性。
+
+### **示例：自定义中缀操作符**
+
+```swift
+// 声明一个新的中缀操作符 `***`
+infix operator *** : MultiplicationPrecedence
+
+// 定义 `***` 操作符的行为，使其返回两个字符串拼接后的结果
+func *** (left: String, right: String) -> String {
+    return left + " " + right
+}
+
+// 使用自定义操作符
+let result = "Hello" *** "World"
+print(result)  // 输出: "Hello World"
+```
+
+---
+
+## **3. 结合性 (`associativity`) 和优先级 (`precedence`)**
+Swift 允许你为自定义的 `infix operator` 指定**结合性**和**优先级**。
+
+### **结合性 (`associativity`)**
+结合性决定当多个相同优先级的操作符出现在同一个表达式时，它们是从左到右计算还是从右到左计算：
+- `left`（左结合）：从左到右执行（默认）。例如：
+
+```swift
+2 - 3 - 4  // 计算顺序为 (2 - 3) - 4
+```
+- `right`（右结合）：从右到左执行，例如 Swift 中的**幂运算**：
+
+```swift
+2 ** 3 ** 2  // 计算顺序为 2 ** (3 ** 2)
+```
+- `none`（无结合性）：不允许多个相同优先级的操作符连用，例如比较运算符：
+
+```swift
+3 < 5 < 8  // ❌ Swift 不允许这么写，需改成 3 < 5 && 5 < 8
+```
+
+### **优先级 (`precedence`)**
+优先级决定运算符的计算顺序，例如：
+
+```swift
+let result = 2 + 3 * 4  // * 先执行，再执行 +
+```
+Swift 预定义了一些优先级组（从高到低），如：
+- `MultiplicationPrecedence`（乘法优先级，适用于 `*`、`/` 等）
+- `AdditionPrecedence`（加法优先级，适用于 `+`、`-`）
+- `AssignmentPrecedence`（赋值优先级，适用于 `=`）
+
+---
+
+## **4. 结合性和优先级的应用**
+
+```swift
+// 声明一个新的操作符，并指定优先级
+infix operator ** : MultiplicationPrecedence
+
+// 计算幂次方的操作符
+func ** (left: Int, right: Int) -> Int {
+    return Int(pow(Double(left), Double(right)))
+}
+
+// 测试
+print(2 ** 3)  // 输出 8，因为 2^3 = 8
+print(2 + 3 ** 2)  // 先计算 3^2 = 9，再加上 2，结果为 11
+```
+
+---
+
+## **5. ObjectMapper 中的 `<-` 操作符**
+在 `ObjectMapper` 框架中，`<-` 操作符是一个中缀操作符，它的作用是将 JSON 数据映射到对象属性：
+
+```swift
+infix operator <- : AssignmentPrecedence
+
+func <- <T>(left: inout T, right: Map) {
+    // 解析 JSON 并赋值
+}
+```
+在 `mapping` 方法中可以直接使用：
+
+```swift
+mathematics <- map["mathematics"]
+```
+编译器会自动推断 `mathematics` 的类型并执行映射操作。
+
+---
+
+## **总结**
+1. `operator` 关键字用于定义自定义运算符，`infix` 关键字指定它是**中缀操作符**（运算符在两个操作数之间）。
+2. `infix operator` 可以定义**优先级**和**结合性**，影响运算顺序。
+3. Swift 允许创建自定义的操作符，使代码更简洁直观，例如 `a *** b` 进行字符串拼接，`a ** b` 计算幂次方等。
+4. `ObjectMapper` 通过 `infix operator <-` 来实现 JSON 映射，简化了数据解析。
 
 
 

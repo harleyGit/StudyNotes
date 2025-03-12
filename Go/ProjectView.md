@@ -26,6 +26,7 @@
 	- 水平扩展能力
 	- 消息内存+磁盘混合存储
 	- 消费者自动发现机制
+
 ```
 nsq/
 ├── apps/
@@ -185,6 +186,7 @@ curl -d 'hello' 'http://127.0.0.1:4151/pub?topic=test'
 
 ### 二、为什么需要多个组件？
 #### 1. 组件协作流程
+
 ```go
 // 伪代码示意
 producer → nsqd（存储消息） 
@@ -204,6 +206,7 @@ consumer ← nsqlookupd（查询可用节点）
 ### 三、UI界面说明
 #### 1. 访问方式
 运行 `nsqadmin` 后访问：
+
 ```bash
 http://localhost:4171  # 默认端口
 ```
@@ -218,6 +221,7 @@ http://localhost:4171  # 默认端口
 
 ### 四、客户端工具使用指南
 #### 1. 编译客户端工具
+
 ```bash
 # 在项目根目录执行
 make BUILD_ALL=1
@@ -234,6 +238,7 @@ ls ./build/nsq_*
 | `nsq_pub`      | 生产消息               | echo "hello" \| ./build/nsq_pub --topic=test |
 
 #### 3. 快速测试消息流
+
 ```bash
 # 终端1：启动消费者
 ./build/nsq_tail --topic=test --lookupd-http-address=127.0.0.1:4161
@@ -248,6 +253,7 @@ echo "Hello NSQ" | ./build/nsq_pub --topic=test
 
 ### 五、典型运行场景配置
 #### 场景1：本地开发调试（完整组件）
+
 ```bash
 # 终端1 - 启动nsqlookupd
 ./nsqlookupd
@@ -266,6 +272,7 @@ echo "debug message" | ./build/nsq_pub --topic=test
 ```
 
 #### 场景2：极简模式（仅nsqd）
+
 ```bash
 # 单终端运行
 ./nsqd --broadcast-address=127.0.0.1
@@ -281,12 +288,13 @@ echo "debug message" | ./build/nsq_pub --topic=test
 #### 1. 组件无法启动
 - **现象**：端口冲突
 - **解决**：
-  ```bash
-  # 查找占用4160端口的进程
-  lsof -i :4160
-  # 杀死进程或修改启动端口
-  ./nsqlookupd --http-address=0.0.0.0:5161 --tcp-address=0.0.0.0:5160
-  ```
+
+```bash
+# 查找占用4160端口的进程
+lsof -i :4160
+# 杀死进程或修改启动端口
+./nsqlookupd --http-address=0.0.0.0:5161 --tcp-address=0.0.0.0:5160
+```
 
 #### 2. 消息无法消费
 - **检查步骤**：
@@ -297,13 +305,14 @@ echo "debug message" | ./build/nsq_pub --topic=test
 #### 3. 客户端工具报错
 - **典型错误**：`ERROR: lookupd http endpoints should not contain scheme (http://)`
 - **正确写法**：
-  ```bash
-  # 错误示例
-  ./nsq_tail --lookupd-http-address=http://127.0.0.1:4161
-  
-  # 正确写法
-  ./nsq_tail --lookupd-http-address=127.0.0.1:4161
-  ```
+
+```bash
+# 错误示例
+./nsq_tail --lookupd-http-address=http://127.0.0.1:4161
+
+# 正确写法
+./nsq_tail --lookupd-http-address=127.0.0.1:4161
+```
 
 ---
 
@@ -335,10 +344,12 @@ echo "debug message" | ./build/nsq_pub --topic=test
 #### 2. **Topic管理**
 - **访问路径**：左侧导航栏 → `Topics`
 - **操作示例**：
-  ```bash
-  # 创建Topic（自动创建）
-  ./build/nsq_pub --topic=web_metrics --nsqd-tcp-address=127.0.0.1:4150
-  ```
+  
+```bash
+# 创建Topic（自动创建）
+./build/nsq_pub --topic=web_metrics --nsqd-tcp-address=127.0.0.1:4150
+```
+
 - **界面显示**：
   - 所有活跃Topic列表
   - 每个Topic的消息总数、通道数、深度（内存+磁盘）
@@ -354,19 +365,21 @@ echo "debug message" | ./build/nsq_pub --topic=test
 #### 4. **实时数据流**
 - **访问路径**：顶部导航栏 → `Counter`
 - **动态演示**：
-  ```bash
-  # 终端持续生产消息
-  while true; do echo "test $(date)" | ./build/nsq_pub --topic=test; sleep 1; done
-  ```
+  
+```bash
+# 终端持续生产消息
+while true; do echo "test $(date)" | ./build/nsq_pub --topic=test; sleep 1; done
+```
   - 观察界面中的`Messages`每秒更新
 
 #### 5. **消息追踪**
 - **访问路径**：Topic详情页 → `Message Trace`
 - **调试技巧**：
-  ```bash
-  # 发送带TraceID的消息
-  curl -d '{"trace_id":"debug_123","data":"payload"}' http://127.0.0.1:4151/pub?topic=test
-  ```
+
+```bash
+# 发送带TraceID的消息
+curl -d '{"trace_id":"debug_123","data":"payload"}' http://127.0.0.1:4151/pub?topic=test
+```
   - 在UI中通过TraceID查询消息流转路径
 
 ---
@@ -374,6 +387,7 @@ echo "debug message" | ./build/nsq_pub --topic=test
 ### 二、完整调试流程演示
 
 #### 步骤1：启动所有组件
+
 ```bash
 # 终端1 - 启动服务发现
 ./nsqlookupd
@@ -386,6 +400,7 @@ echo "debug message" | ./build/nsq_pub --topic=test
 ```
 
 #### 步骤2：生产测试消息
+
 ```bash
 # 生产100条测试数据
 for i in {1..100}; do
@@ -401,6 +416,7 @@ done
    - `Channel` 是否有消费者连接
 
 #### 步骤4：启动消费者
+
 ```bash
 # 终端4 - 启动消费者
 ./build/nsq_tail --topic=stress_test --lookupd-http-address=127.0.0.1:4161
@@ -418,13 +434,14 @@ done
 #### 场景1：消息堆积分析
 1. **现象**：UI显示某个Channel的`Depth`持续增长
 2. **诊断步骤**：
-   ```bash
-   # 查看消费者处理延迟
-   curl http://127.0.0.1:4151/stats | jq '.topics[].channels[].client_count'
-   
-   # 检查消费者日志
-   tail -f /tmp/nsq_tail.*.log
-   ```
+
+```bash
+# 查看消费者处理延迟
+curl http://127.0.0.1:4151/stats | jq '.topics[].channels[].client_count'
+
+# 检查消费者日志
+tail -f /tmp/nsq_tail.*.log
+```
 
 #### 场景2：节点失联排查
 1. **现象**：UI的`Nodes`列表显示节点心跳超时
@@ -440,13 +457,14 @@ done
 #### 场景3：消息丢失调试
 1. **现象**：生产者显示成功，但UI无数据
 2. **诊断步骤**：
-   ```bash
-   # 确认nsqd注册到lookupd
-   curl http://127.0.0.1:4161/nodes | jq
 
-   # 直接查询nsqd状态
-   curl http://127.0.0.1:4151/stats?format=json | jq
-   ```
+```bash
+# 确认nsqd注册到lookupd
+curl http://127.0.0.1:4161/nodes | jq
+
+# 直接查询nsqd状态
+curl http://127.0.0.1:4151/stats?format=json | jq
+```
 
 ---
 
@@ -465,16 +483,19 @@ done
 ### 五、配置参数调优示例
 
 #### 1. 修改nsqd内存队列大小（UI显示`Memory Depth`上限）
+
 ```bash
 ./nsqd --mem-queue-size=10000  # 默认1000
 ```
 
 #### 2. 调整消息持久化频率（影响磁盘IO）
+
 ```bash
 ./nsqd --sync-interval=5s  # 默认1s
 ```
 
 #### 3. 开启调试日志
+
 ```bash
 ./nsqd --log-level=debug
 ```
@@ -484,6 +505,7 @@ done
 ### 六、组件日志分析技巧
 
 #### 1. nsqd关键日志模式
+
 ```log
 # 正常消息处理
 [nsqd] topic(test): channel(default) exiting
@@ -494,6 +516,7 @@ done
 ```
 
 #### 2. 日志过滤方法
+
 ```bash
 # 实时监控错误日志
 tail -f /tmp/nsqd.log | grep -E 'ERROR|WARN'

@@ -6,13 +6,12 @@
 	- [with()](#with())
 - **资料**
 
-<br/>
+<br/><br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id="Then介绍">Then介绍</h1>
-
 Then 是一个轻量级 Swift 库（一个 Swift 初始化器的语法糖），主要用于简化对象的初始化和配置，使代码更简洁易读。它提供了一种便利的语法，可以在对象创建的同时进行属性的设置，避免重复的代码。
 
 Then 框架非常简单，代码量在 60 行左右。
@@ -25,16 +24,16 @@ Then 框架一共提供了三个方法，用于减少代码量：
 - do() 用在多次使用同一个对象，比如设置一个对象的多个属性时（无返回值）；
 - with() 对一个值形的实例进行复制，修改新实例的属性，返回修改后的实例。
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id="then()">then()</h1>
 
 label传统设置属性值：
 
-```
+```swift
 let label: UILabel = {
     let label = UILabel()
     label.textAlignment = .center
@@ -46,7 +45,7 @@ let label: UILabel = {
 
 等价于：
 
-``` 
+```swift
 private let tetLab00 = UILabel().then {
     $0.backgroundColor = .orange
     $0.textAlignment = .center
@@ -59,7 +58,7 @@ private let tetLab00 = UILabel().then {
 
 对于自定义的类、结构体，可以通过扩展 Then 协议，来使用 then():
 
-```
+```swift
 class MyThen {
     var really:String?
 }
@@ -78,11 +77,9 @@ let myThen = MyThen().then {
 
 
 <br/><br/><br/>
-
 > <h2 id=""></h2>
-
-   
-```
+  
+```swift
 private func testUserdefaultsDo() {
     UserDefaults.standard.do {
         $0.set("devxoul", forKey: "userName")
@@ -90,22 +87,18 @@ private func testUserdefaultsDo() {
         $0.synchronize()
     }
 }
-
 ```
-
-
 do() 可以减少代码的键入量。do() 和 then() 的区别就是，do() 没有返回值，then() 会返回 self。
 
 若是不用`then`，我们要写很多行UserDefaults.standard，除非用一个变量对其进行引用。
 
 
 <br/><br/><br/>
-
 > <h2 id="with()">with()</h2>
 
 with() 为创建一个新值，对新值进行修改。
 
-```
+```swift
 private let tetLab00 = UILabel().then {
     $0.backgroundColor = .orange
     $0.textAlignment = .center

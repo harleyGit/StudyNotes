@@ -1,10 +1,19 @@
->
+> <h4/>
 - [**SwiftRuntime**](#SwiftRuntime)
 	- [Dispatch(派发)是什么](#Dispatch(派发)是什么)
 	- [了解Dispatch种类](#了解Dispatch种类)
 		- [V-Table](#V-Table)
 		- [PWT(协议目击表)](#PWT(协议目击表))
 	- [**Swift派发方式**](#Swift派发方式)
+		- [静态派发&动态派发(ChatGPT)](#静态派发&动态派发(ChatGPT))
+			- [Swift方法调度的四种方式](#Swift方法调度的四种方式)
+				- [直接调用(静态派发)](#直接调用(静态派发)) 
+				- [表查找](#表查找) 
+					- [VTable（虚函数表，适用于类继承）](#VTable（虚函数表，适用于类继承）)
+					- [@objc、dynamic、final、extension方法调用全解](#@objc、dynamic、final、extension方法调用全解)
+					- [Witness Table（见证表，适用于协议）](#WitnessTable（见证表，适用于协议）)
+				- [动态派发（objc_msgSend 消息机制）](#动态派发（objc_msgSend消息机制）)
+			- [Swift vs Objective-C 方法调度对比](#SwiftvsObjective-C方法调度对比)
 		- [静态派发和动态派发的比较](#静态派发和动态派发的比较)
 		- [静态派发](#静态派发)
 		- [动态派发](#动态派发)
@@ -22,20 +31,15 @@
 
 
 
-<br/>
+<br/><br/><br/><br/>
 
 ***
-<br/><br/>
-
-
-> <h1 id='SwiftRuntime'>SwiftRuntime</h1>
-
 <br/>
 
+> <h1 id='SwiftRuntime'>SwiftRuntime</h1>
+<br/>
 
 > <h2 id='Dispatch(派发)是什么'>Dispatch(派发)是什么</h2>
-
-
 &emsp; Dispatch 派发，指的是**语言底层**找到用户想要调用的方法，并执行调用过程的动作。
 
 &emsp; Call 调用，指的是**语言在高级层面**，指示一个函数进行相关命令的行为。
@@ -51,16 +55,8 @@
 	- Swift 则巧妙的使用了这三种方法，分别应对不同的情况.
 
 
-
-
-
-<br/>
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 > <h2 id='了解Dispatch种类'>了解Dispatch种类</h2>
-
 - **Direct Dispatch 直接派发**
 	- 直接派发（静态派发）最快。不只是因为他的汇编命令少，还因为他可以应用很多编译器黑魔法，比如 inline 优化等。
 
@@ -80,29 +76,18 @@
 
 <br/>
 
-
 - **Message 派发**
-
 	- Message 派发是最灵活的派发方式。他是 Cocoa 的基石，也是 KVO，UIAppearance，Core Data 的核心。
-
 	- 他的关键功能是可以让开发者在运行时改变消息发送的行为。不仅可以通过 swizzling 修改 method，还可以通过 isa-swizzling 来修改对象。
-
 	- 一旦有消息发出，runtime 就会基于继承关系开始查找，虽然听起来很慢，但是有 cache 做保障，一旦 cache 经过预热，就和 Table 方式差不多快了。
 
-
-
 <br/>
-
 
 - [**队列派发**](https://hechen.xyz/post/messagedispatchinswift/#pwt)
 
 &emsp; 在 Swift 中，针对拥有继承的 Class 类型来说，依然采用了 V-Table 这种实现形式达到对多态的支持，而针对值类型由于 Protocol 产生的多态而采用了另外一种函数表派发形式，这个表格被称为协议目击表 （Protocol Witness Table，简称 PWT），这个暂时略去不表。
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='V-Table'>V-Table</h3>
 
 - 对于 V-Table 的应用场景下，每一个类都会维护一个函数表，里面记录着该类所有的函数指针，主要包含：
@@ -114,22 +99,19 @@
 
 - 在程序运行期间会根据这个表去查询真正要调用的函数是哪一个。这种特性就极大的提升了代码的灵活性，也是 Java，C++ 等语言得以支持多态这种语言特性的基石。当然，相对于静态派发而言，表格派发则多了很多的隐式花销，因为函数调用不再是直接调用了，而是需要通过先行查表的形式找到真实的函数指针来执行，编译器也无法再进行诸如 inline 等编译期优化了。
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='PWT(协议目击表)'>PWT(协议目击表)</h3>
 
 &emsp; 对于 Swift 来说，还有更为重要的 Protocol，对于符合同一协议的对象本身是不一定拥有继承关系的，因此 V-Table 就没法使用了。这里，Swift 使用了 Protocol Witness Table 的数据结构达到动态查询协议方法的目的。如果将上面的例子中的 Drawable 抽象成协议。
 
 
 
-<br/><br/>
+<br/><br/><br/>
 
-> <h2 id='Swift派发方式'>Swift派发方式</h2>
+***
+<br/>
 
-
+> <h1 id='Swift派发方式'>Swift派发方式</h1>
 首先，值类型和引用类型**都支持静态派发**。
 
 但是，**仅引用类型（即 Class）支持动态派发**。这样做的原因是，简而言之，对于动态性或动态派发而言，我们需要继承，而我们的值类型并不支持继承。
@@ -149,8 +131,260 @@
 Swift方法的调用是由编译器来决定应该使用哪种派发方法，优先使用内联，然后再按需选择。
 
 
-<br/><br/>
+<br/><br/><br/>
+> <h2 id="静态派发&动态派发(ChatGPT)">静态派发&动态派发(ChatGPT)</h2>
+Swift 和 Objective-C 在**方法调度（Method Dispatch）**上的最大区别在于它们的底层实现机制。Swift 结合了**静态派发（Static Dispatch）**和**动态派发（Dynamic Dispatch）**，而 Objective-C 主要依赖 **动态派发**。这使得 Swift 既能提高性能（通过静态优化），又能在需要时保持灵活性（通过动态派发）。
 
+---
+
+**1.什么是方法调度？**
+方法调度决定了**当你调用一个方法时，底层如何找到并执行该方法**。这通常涉及到：
+- **直接调用（Direct Call）**
+- **表查找（Function Table Lookup）**
+- **消息发送（Message Sending）**
+- **动态分发（Dynamic Dispatch）**
+
+
+
+<br/><br/>
+> <h3 id="Swift方法调度的四种方式">Swift 方法调度的四种方式</h3>
+> Swift 主要使用**四种方法调度方式**：
+1. **直接调用（Direct Call / 静态派发）**
+2. **表查找（VTable / Witness Table）**
+3. **消息机制（objc_msgSend）**
+4. **运行时反射（Reflection）**
+接下来，我们详细介绍这些调度方式，并对比 Swift 和 Objective-C 的实现。
+
+<br/><br/>
+> <h3 id="直接调用(静态派发)">直接调用(静态派发)</h3>
+**1.1 直接调用（Direct Call / 静态派发）**
+**概念：**  
+如果编译器在编译时就知道确切的方法实现位置，它可以直接生成目标代码来调用该方法，而**不需要任何额外的查找开销**。
+
+**发生时机：**
+- **全局函数**
+- **静态方法**
+- **final 方法**（`final` 修饰的方法不会被子类重写）
+- **private 方法**（编译器知道它不会被外部访问）
+- **内联（Inlining）优化**（编译器可能会直接替换方法调用）
+
+**示例：**
+
+```swift
+struct Person {
+    func sayHello() {
+        print("Hello!")
+    }
+}
+
+let p = Person()
+p.sayHello()  // 直接调用，无需动态查找
+```
+**性能优势：**  
+因为方法地址在编译期已知，调用它时不需要**动态分发**，执行速度最快。
+
+<br/><br/>
+> <h3 id="表查找">表查找</h3>
+**表查找（VTable & Witness Table / 虚表 & 见证表）**
+
+<br/><br/>
+> <h3 id="VTable（虚函数表，适用于类继承）">VTable（虚函数表，适用于类继承）</h3>
+
+**(1) VTable（虚函数表，适用于类继承）**
+
+**概念：**  
+在**类继承体系**中，Swift 使用 **VTable（虚函数表）** 来存储**可被子类重写**的方法。当调用方法时，会根据对象的类型查找**VTable**，从而确定正确的方法地址。
+
+**发生时机：**
+- **类的普通方法**（默认情况下，非 `final`、非 `static` 的方法）
+- **允许子类重写的方法**
+
+**示例：**
+
+```swift
+class Animal {
+    func speak() {
+        print("Animal makes a sound")
+    }
+}
+
+class Dog: Animal {
+    override func speak() {
+        print("Dog barks")
+    }
+}
+
+let animal: Animal = Dog()
+animal.speak()  // 通过 VTable 查找方法
+```
+**底层实现流程：**
+1. `animal` 变量的类型是 `Animal`，但实例是 `Dog`。
+2. Swift 通过 `VTable` 查找 `speak()` 方法的具体实现。
+3. `Dog.speak()` 被找到并调用。
+
+**性能比对：**
+- **比直接调用稍慢**（需要查表），但比 `objc_msgSend` **快**。
+- **减少动态查找的开销**，但仍然支持**方法重写**。
+
+<br/>
+这个表其实也就是函数表,是在编译的时候就生成了，这个函数表我们可以通过脚本生成`xx.sil`文件，可以看到其实就是一个数组。如下：
+
+原类如下：
+
+![ios_oc1_108_36.png](./../../Pictures/ios_oc1_108_36.png)
+
+
+LLVM编译后生成的函数表如下：
+
+![ios_oc1_108_34](./../../Pictures/ios_oc1_108_34.png)
+
+<br/><br/>
+> <h2 id="@objc、dynamic、final、extension方法调用全解">@objc、dynamic、final、extension方法调用全解</h2>
+
+```swift
+class LGTeacher: NSObject {
+
+	final func teach() {// 直接调用
+		print("teach")
+	}
+	
+	@objc func teach0() {// 函数表调度
+		print("teach")
+	}
+	
+	dynamic func teach2() {// 函数表调度
+		print("teach")
+	}
+	
+	@objc dynamic func teach3() {// 消息派发调度
+		print("teach")
+	}
+}
+
+extension LGTeacher {
+	
+	// extention申明的函数是不可以直接合并到原类LGTeacher的函数表中的 
+	func teach4() { // 直接调用，通过地址（和final一样）。
+		print("teach")
+	}
+}
+```
+&emsp; 由上面的代码可知道，单个`@objc、dynamic`不会改变 `teach()`方法的调用方式，但是一旦`@objc、dynamic`在一块 `‌@objc dynamic func teach3()`，方法调用类型就会变了，变成成消息派发了。
+
+<br/>
+
+&emsp; final意味着不可以继承，它修饰方法后会被直接优化成当前地址调用了，直接拿到这个地址直接调用了，如下：
+
+![ios_oc1_108_37.png](./../../Pictures/ios_oc1_108_37.png)
+
+
+<br/>
+
+&emsp; teach4()方法之所以是通过地址直接调用的是因为原类 class LGTeach类是**默认通过函数表调用方法**的。假如LGTeacher有一个子类LGStudent，那么LGStudent也继承并默认使用函数表调用方法。现在在其他文件FSHing.swif文件中也对LGTeacher申明了一个extention扩展类，那么这会造成这个方法是在原类表中插入，那也会修改其子类LGStudent方法函数表，这个对性能不太友好的。
+
+所以还不如通过extention扩展类，直接通过地址调用，性能比较高。
+
+
+
+<br/><br/>
+> <h3 id="WitnessTable（见证表，适用于协议）">WitnessTable（见证表，适用于协议）</h3>
+
+> **(2) Witness Table（见证表，适用于协议）**
+**概念：**  
+Swift 采用**Witness Table（见证表）** 来实现**协议（Protocol）**的方法调度。协议本身不能存储方法的具体实现，但可以存储一个**表（WT）**，指向实现该协议的类型的方法地址。
+
+**发生时机：**
+- **协议方法（Protocol Methods）**
+- **方法通过协议调用**
+
+**示例：**
+
+```swift
+protocol Speaker {
+    func speak()
+}
+
+struct Cat: Speaker {
+    func speak() {
+        print("Cat meows")
+    }
+}
+
+func makeSound(animal: Speaker) {
+    animal.speak()  // 通过 Witness Table 查找
+}
+
+let kitty = Cat()
+makeSound(animal: kitty)
+```
+**底层实现流程：**
+1. `kitty` 变量符合 `Speaker` 协议。
+2. `animal.speak()` 被调用时，Swift 通过 **Witness Table** 查找 `Cat` 对应的 `speak()` 实现。
+3. `Cat.speak()` 方法被找到并执行。
+
+**Witness Table vs VTable**
+- **Witness Table** 适用于**协议**，**VTable** 适用于**类继承**。
+- Witness Table 允许**值类型**（`struct`、`enum`）支持多态行为。
+
+<br/><br/>
+> <h3 id="动态派发（objc_msgSend 消息机制）">动态派发（objc_msgSend 消息机制）</h3>
+**概念：**  
+Swift 支持与 Objective-C 互操作，因此如果某个方法是 `@objc` 的，并且是**可被动态调度**的（如 `dynamic` 修饰），它会使用 `objc_msgSend` 进行方法调用。
+
+**发生时机：**
+- 方法声明为 `@objc dynamic`
+- 继承自 `NSObject` 且非 `final` 的方法
+
+**示例：**
+
+```swift
+import Foundation
+
+class Human: NSObject {
+    @objc dynamic func greet() {
+        print("Hello, I'm a human")
+    }
+}
+
+let h = Human()
+h.greet()  // 通过 objc_msgSend 进行方法调用
+```
+**底层实现流程：**
+1. `h.greet()` 触发 `objc_msgSend`。
+2. 运行时查找 `Human` 的 `greet` 方法的地址。
+3. 调用找到的方法。
+
+**性能对比**
+- **比 VTable 慢**，因为它需要**运行时查找方法**。
+- 但它提供了**强大的动态性**，如**方法交换（Method Swizzling）** 和 **KVO**（Key-Value Observing）。
+
+<br/><br/><br/>> <h2 id="SwiftvsObjective-C方法调度对比">Swift vs Objective-C 方法调度对比</h2>
+**Swift vs Objective-C 方法调度对比**
+
+| 调度方式 | Swift | Objective-C |
+|----------|-------|------------|
+| **直接调用** | ✅（全局函数、final 方法等） | ❌（所有方法默认动态派发） |
+| **VTable（虚表查找）** | ✅（类的普通方法） | ❌（不使用 VTable） |
+| **Witness Table（协议查找）** | ✅（协议方法） | ❌（Objective-C 协议基于 `objc_msgSend`） |
+| **objc_msgSend（动态派发）** | ✅（@objc dynamic 方法） | ✅（默认使用 objc_msgSend） |
+
+**结论：**
+- Swift **默认使用 VTable**，提高性能，但仍然支持**动态派发**（`@objc dynamic`）。
+- Objective-C **完全依赖 `objc_msgSend`**，灵活但性能较低。
+
+---
+
+**结论**
+1. **Swift 默认使用静态派发（直接调用 / VTable / Witness Table），以提高性能**。
+2. **Objective-C 主要使用 `objc_msgSend` 进行动态派发，运行时查找方法，开销更大但更灵活**。
+3. **Swift 仍支持 `@objc dynamic` 方法，可以与 Objective-C 交互**，但通常不推荐滥用。
+
+如果你的 Swift 代码不需要动态性，尽量避免 `@objc dynamic`，这样可以利用 Swift 的静态优化，提高运行效率！🚀
+
+
+
+
+<br/><br/>
 > <h2 id='静态派发和动态派发的比较'>静态派发和动态派发的比较</h2>
 
 **动态派发:**

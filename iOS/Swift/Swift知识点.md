@@ -645,7 +645,7 @@ bar(local) --> bar<T = Point>(local)
 
 类型形式参数
 
-```
+```swift
 func swapTwoValues<T>(_ a: inout T, _ b: inout T)
 ```
 
@@ -656,7 +656,7 @@ func swapTwoValues<T>(_ a: inout T, _ b: inout T)
 
 拓展下-泛型协议:
 
-```
+```swift
 protocol Drawable { 
     func draw() 
 }
@@ -689,125 +689,126 @@ let value: Drawable = arc4random()%2 == 0 ? Point(x: 0, y: 0) : Line(x1: 0, y1: 
 
 
 <br/><br/>
-># <h2 id='map和flatMap区别'>[map和flatMap区别](./基础.md#map和flatMap区别)</h2>
-
+># <h2 id='map和flatMap区别'>[map和flatMap区别](./swift基础.md#map和flatMap区别)</h2>
 
 
 <br/><br/><br/>
 > <h2 id='Set集合与NSArray、Dictionary区别'>Set集合与NSArray、Dictionary区别</h2>
-[Set集合与NSArray、Dictionary区别](./基础.md#Set集合与NSArray、Dictionary区别)
+[Set集合与NSArray、Dictionary区别](./swift基础.md#Set集合与NSArray、Dictionary区别)
 
 
 <br/><br/><br/>
 > <h2 id='实例对象数组去重有哪几种方法'>实例对象数组去重有哪几种方法</h2>
  **疑问:** 实例对象数组去重,比如:实例对象元素有一个属性id,通过这个id去重相同元素,有哪几种方法?
  
+ 要在去重后保留原有数组中元素的顺序，一般建议使用基于 filter 和 Set 的方法，因为 filter 会按照原数组顺序遍历，从而只保留第一次出现的元素。以下给出两种实现示例：
 
- **1.使用 Set 进行去重：**  如果实例对象的 id 属性遵循 Hashable 协议，您可以先将数组转换为一个 Set，然后再转回数组。由于 Set 自动去除了重复元素，这样就实现了基于 id 去除重复的目的。这种方法简单直接，但需要注意的是，转换过程中会丢失原数组的顺序，且要求 id 能够正确实现 Hashable。
- 
- ```swift
- struct MyObject: Hashable {
-    let id: String // 假设id是String类型，且已经遵循了Hashable协议
-    // 其他属性...
+---
+
+**方法 1：直接用 filter + Set**
+
+```swift
+struct Animal {
+    let id: Int
+    let name: String
+}
+
+// 示例数组（顺序为：Dog, Cat, Puppy, Bird）
+let animals: [Animal] = [
+    Animal(id: 1, name: "Dog"),
+    Animal(id: 2, name: "Cat"),
+    Animal(id: 1, name: "Puppy"),
+    Animal(id: 3, name: "Bird")
+]
+
+var seenIDs = Set<Int>()
+let uniqueAnimals = animals.filter { animal in
+    if seenIDs.contains(animal.id) {
+        return false
+    } else {
+        seenIDs.insert(animal.id)
+        return true
+    }
+}
+
+uniqueAnimals.forEach { animal in
+    print("\(animal.id): \(animal.name)")
+}
+```
+
+**说明：**  
+- 该方法遍历数组时，用 `seenIDs` 来记录已经遇到的 `id`。  
+- 由于 filter 保持原数组顺序，因此保留的是第一次出现的元素。  
+- 输出结果为：  
+  
+```
+  1: Dog
+  2: Cat
+  3: Bird
+```
+
+---
+
+**方法 2：使用 Array 扩展（通用版本）**
+
+可以写一个泛型扩展方法，根据传入的键值闭包去重，同时保持顺序：
+
+```swift
+extension Array {
     
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-    
-    static func ==(lhs: MyObject, rhs: MyObject) -> Bool {
-        return lhs.id == rhs.id
-    }
+	/**
+	 *泛型参数 <T: Hashable>：
+	 *  这里定义了一个泛型类型 T，要求 T 必须符合 Hashable 协议。原因是我们需要将 T 类型的值存入 Set，而 Set 要求其元素必须是 Hashable 的。
+	 *
+	 *参数 by key: (Element) -> T：
+	 *  这是一个闭包，接受数组中的一个元素，并返回一个 T 类型的值，这个值用作该元素的“键”（key）。
+	 *  例如，如果数组中存储的是自定义对象，而我们希望根据对象的某个属性（比如 id）去重，就可以传入一个闭包：{ $0.id }。
+	 */
+	/// 根据指定键去重，保留第一次出现的元素，顺序不变
+	/// - Parameter key: 关键字
+	/// - Returns: 数组
+	func uniqueArray<T: Hashable>(by key:(Element) -> T) -> [Element] {
+	    var seen = Set<T>()
+	    // 调用闭包 key($0)，计算出该元素对应的 key
+	    // 执行 seen.insert(key($0)) 将这个 key 插入 Set 中
+	    return self.filter{ seen.insert(key($0)).inserted}
+	}
 }
 
-var objectsArray = [MyObject(id: "1", ...), MyObject(id: "2", ...), MyObject(id: "1", ...)]
-
-// 由于Set会根据MyObject的Hashable实现去重，因此需要确保id是唯一标识符
-let uniqueObjectsSet: Set<MyObject> = Set(objectsArray)
-
-// Set会自动去除重复元素，但顺序会被打乱
-let uniqueObjectsArray = Array(uniqueObjectsSet)
-
-// 若要保持原数组中首次出现的元素顺序，可以使用一个字典辅助
-var uniqueObjectsOrdered: [MyObject] = []
-var dictionaryOfObjects: [String: MyObject] = [:]
-for obj in objectsArray {
-    if dictionaryOfObjects[obj.id] == nil {
-        uniqueObjectsOrdered.append(obj)
-        dictionaryOfObjects[obj.id] = obj
-    }
-}
-```
-
-
-上面的代码中，MyObject遵循了Hashable协议，并正确实现了hash(into:)方法和==运算符，确保Set可以根据id进行去重。然后，我们创建了一个Set，其中包含了objectsArray中不重复的MyObject实例。若需要保持原数组中首次出现的元素顺序，可以使用一个字典记录每个id对应的首个对象，并最终将字典的值转换为数组。
-
-然而，如果只是想根据id去重，而不在乎其他属性，那么需要先将id收集到Set中，然后再结合原始数组重构不重复的对象数组，但这通常不是一个理想的解决方案，因为它破坏了原始对象的完整性(这句话的意思说先获取id数组,在根据实例对象数组进行遍历,性能有点低)。在实际场景中，通常还是按照上述方法，确保整个对象都是Hashable的，并根据整个对象去重。
-
-
-<br/>
-
-**遵循Hashable协议代码解读:**
-
-对于上述代码中MyObject遵循Hashable 协议并实现 hash(into:) 和 == 方法,这意味着在将 objectsArray 中的元素放入 Set 时，Swift 会调用这些方法来判断两个 MyObject 是否代表相同的元素。
-
-如果您已经在 MyObject 中正确实现了 hash(into:) 和 == 方法，使其基于 id 属性进行比较，那么 Set 会根据 id 去除重复的 MyObject 实例。换句话说，uniqueObjectsSet 中的元素将是 id 不重复的 MyObject 实例。
-
-接下来，将 uniqueObjectsSet 转换为数组 uniqueObjectsArray 时，得到的数组包含的是完整的 MyObject 实例，而不只是 id 数组。因此，uniqueObjectsArray 中的元素是去重后的 MyObject 实例，且它们的 id 属性各不相同。
-
-<br/><br/>
-
-
-**2.使用 Dictionary 进行去重：** 若 id 属性也是唯一标识符，可以利用 Dictionary 的键值对特性来达到去重目的。将 id 作为键，实例对象作为值，由于字典不允许键重复，所以最终字典中只会保留每个唯一 id 对应的一个对象。之后可将字典的值数组取出，得到去重后的结果。
-
-```
-var uniqueObjects = Dictionary(grouping: objectsArray, by: { $0.id }).values.map { $0.first! }
-```
-此处使用 grouping(_:by:) 方法将数组按 id 分组，得到一个字典，然后取字典的值（即每个 id 对应的对象组），最后使用 map 取每个组的第一个对象，得到去重后的数组。
-
-
-<br/><br/>
-
-**3.使用数组进行遍历移除**
-
-这个就不多说了,基本都会!也就是直接遍历了!
-
-
-<br/><br/>
-
-
-**4.使用 reduce 或 filter 结合 indexOf(where:)：** 如果要保持原数组顺序且不使用额外数据结构，可以结合 reduce 或 filter 与 indexOf(where:) 方法来实现。这里以 reduce 为例：
-
-```
-var uniqueObjects = objectsArray.reduce(into: []) { (result, object) in
-    if !result.contains(where: { $0.id == object.id }) {
-        result.append(object)
-    }
+/**{ $0.id } 是一个简写的闭包，该闭包特点：
+*      匿名函数：这个闭包没有显式的名称，它是一个匿名函数。
+*      参数和返回值：
+*          闭包的参数可以通过 $0、$1 等简写方式引用。这里 $0 代表传入的第一个参数。
+*          该闭包接受一个参数，并返回该参数的 id 属性。
+*      内联表达：
+*          它直接写在需要的地方，例如作为函数参数传入，而不需要事先声明一个函数。
+ */
+let uniqueAnimals2 = animals.uniqueArray{ $0.id }
+/* 完整写法
+ let uniqueAnimals = animals.unique(by: { (animal: Animal) -> Int in
+     return animal.id
+ })
+ */
+uniqueAnimals2.forEach { animal in
+    print("\(animal.id): \(animal.name)")
 }
 ```
 
-此处使用 reduce 初始化一个新的空数组 result，在遍历过程中检查当前元素是否已存在于 result 中，如果不存在，则将其添加到 result 中。最后得到的 result 就是去重后的数组。
-
-
+**说明：**  
+- 该扩展方法接受一个闭包，从元素中提取出一个可哈希的键（例如 `id`）。  
+- `seen.insert(key($0)).inserted` 会返回 true 仅当该键第一次出现，从而保留顺序。  
+- 结果与方法 1 相同。
 
 
  
- 
- 
- 
-
-
-
-
 <br/><br/>
-
-
 > <h2 id="AnyAnyObjectAnyClass的区别">Any、AnyObject、AnyClass的区别</h2>
 
 - Any: 可以表示任意类型，甚至方法类型（func）
 - AnyObject: 表示任何class类型的实例对象（类似OC中的id类型）
 - AnyClass：表示任意类的元类型.任意类的类型都隐式遵守这个协议.  AnyObject.Type中的.Type就是获取元类型, 辟如你有一个Student类, Student.Type就是获取Student的元类型.
 
-```
+```swift
 // AnyObject的定义：
 protocol AnyObject {
 
@@ -817,7 +818,7 @@ protocol AnyObject {
 &emsp; 特别之处在于，所有的 class 都隐式地实现了这个接口，这也是 AnyObject 只适用于 class 类型的原因。而在 Swift 中所有的基本类型，包括 Array 和 Dictionary 这些传统意义上会是 class 的东西，统统都是 struct 类型，并不能由 AnyObject 来表示，于是 Apple 提出了一个更为特殊的 Any，除了 class 以外，它还可以表示包括 struct 和 enum 在内的所有类型。
 为了深入理解，举个很有意思的例子。为了实验 Any 和 AnyObject 的特性，在 Playground 里写如下代码：
 
-```
+```swift
 import UIKit
 
 let swiftInt: Int = 1
@@ -832,7 +833,7 @@ array.append(swiftString)
 
 &emsp; 在上面的代码中如果我们把 import UIKit 去掉的话，就会得到无法适配 AnyObject 的编译错误了。我们需要做的是将声明 array 时的 [AnyObject] 换成 [Any]，就一切正确了。
 
-```
+```swift
 let swiftInt: Int = 1
 let swiftString: String = "miao"
 
@@ -840,28 +841,20 @@ var array: [Any] = []
 array.append(swiftInt)
 array.append(swiftString)
 array
-
 ```
 
 &emsp; 顺便值得一提的是，只使用 Swift 类型而不转为 Cocoa 类型，对性能的提升是有所帮助的，所以我们应该尽可能地使用原生的类型。
 
-
-
 <br/><br/>
-
 > <h2 id="逃逸闭包使用">逃逸闭包怎么使用，它的关键字@escaping什么时候使用</h2>
-
 <br/>
-
 > <h3 id='逃逸闭包'>逃逸闭包</h3>
-
 
 &emsp; **逃逸闭包概念：** 一个接受闭包作为参数的函数，该闭包可能在函数返回后才被调用，也就是说这个闭包逃离了函数的作用域，这种闭包称为逃逸闭包。当你声明一个接受闭包作为形式参数的函数时，你可以在形式参数前写@escaping来明确闭包是允许逃逸。
 
 &emsp; 例如：当网络请求结束后调用的闭包。发起请求后过了一段时间后这个闭包才执行，并不一定是在函数作用域内执行的。
 
-
-```
+```swift
 class ViewController: UIViewController {
    
     override func viewDidLoad() {
@@ -898,23 +891,15 @@ class ViewController: UIViewController {
 ```
 
 从结果可以看出，逃逸闭包的生命周期是长于函数的。
-
 - 逃逸闭包的生命周期：
-
 	- 闭包作为参数传递给函数；
-	
 	- 退出函数；
-	
 	- 闭包被调用，闭包生命周期结束。
 
 即逃逸闭包的生命周期长于函数，函数退出的时候，逃逸闭包的引用仍被其他对象持有，不会在函数结束时释放。
 
-
-<br/><br/><br/>
-
-
+<br/><br/>
 > <h3 id='非逃逸闭包'>非逃逸闭包</h3>
-
 &emsp; **非逃逸闭包概念：** 一个接受闭包作为参数的函数， 闭包是在这个函数结束前内被调用。
 例如：
 
@@ -958,25 +943,20 @@ class ViewController: UIViewController {
 &emsp; 为了管理内存，闭包会强引用它捕获的所有对象，比如你在闭包中访问了当前控制器的属性、函数，编译器会要求你在闭包中显示 self 的引用，这样闭包会持有当前对象，容易导致循环引用。
 
 而对于非逃逸闭包：
-
 &emsp; 非逃逸闭包不会产生循环引用，它会在函数作用域内释放，编译器可以保证在函数结束时闭包会释放它捕获的所有对象。
 
 &emsp; 使用非逃逸闭包可以使编译器应用更多强有力的性能优化，例如，当明确了一个闭包的生命周期的话，就可以省去一些保留（retain）和释放（release）的调用。
 
 &emsp; 非逃逸闭包它的上下文的内存可以保存在栈上而不是堆上。
 
-
 <br/><br/><br/>
-
 > <h2 id="存储属性和计算属性区别">存储属性和计算属性区别</h2>
 
 - 计算的属性由类，结构体和枚举提供。 存储的属性仅由类和结构体提供。
 
 区别：存储属性存储值，计算属性不存储值
 
-<br/>
-
-```
+```swift
 class DataImporter {
 
 	//存储属性
@@ -1030,19 +1010,13 @@ print("square.origin is now at (\(square.origin.x), \(square.origin.y))")
 
 ```
 
-
-
-
-<br/><br/><br/>
-
-
+<br/><br/>
 > <h3 id='自动闭包'>自动闭包</h3>
-
-&emsp; 是一种用来把实际参数传递给函数表达式打包的闭包，不接受任何实际参数，当其调用是返回内部表达式的值。
+&emsp; 是一种用来把实际参数传递给函数表达式的闭包，不接受任何实际参数，当其调用是返回内部表达式的值。
 
 好处：用普通表达式代替闭包的写法，语法糖的一种
 
-```
+```swift
 func loginfo(_ condition: Bool , _ message: String){
 
     if condition {
@@ -1061,13 +1035,11 @@ loginfo(true, test())
 loginfo(true, "HelloWord")
 
 ```
-
-
 <br/>
 
 自动闭包, 会自动将某一个表达式封装为闭包
 
-```
+```swift
 func autoClosureFunction(_ closure: @autoclosure () -> Int) {
    closure()
 }
@@ -1075,16 +1047,12 @@ autoClosureFunction(1)
 
 ```
 
-
-
 <br/><br/><br/>
-
 > <h2 id="什么是写时复制(copy-on-write)">什么是写时复制(copy-on-write)</h2>
 
 &emsp; **有两种传值方式：** 引用类型(Class)和值类型(Struct/Enum)。而值类型有一个copy的操作，它的意思是当你传递一个值类型的变量的时候(给一个变量赋值，或者函数中的参数传值)，它会拷贝一份新的值让你进行传递。你会得到拥有相同内容的两个变量，分别指向两块内存。
 
 &emsp; **问题：** 这样的话，在你频繁操作占用内存比较大的变量的时候就会带来严重的性能问题，Swift 也意识到了这个问题，所以推出了 Copy-on-Write 机制，用来提升性能。
-
 
 **什么是 Copy-on-Write？**
 
@@ -1094,8 +1062,7 @@ autoClosureFunction(1)
 
 **先看一下基本类型(Int、String等)**
 
-```
-
+```swift
 var num1 = 10
 var num2 = num1
 print(address(of: &num1)) //0x7ffee0c29828
@@ -1116,14 +1083,11 @@ func address(of object: UnsafeRawPointer) -> String {
 ```
 **`从上面的打印我们可以看出基本类型在进行赋值的时候就发生了拷贝操作。`**
 
-
-
-
 <br/>
 
 **在看一下集合类型：**
 
-```
+```swift
 var arr1 = [1,2,3,4,5]
 var arr2 = arr1
 print(address(of: &arr1)) //0x6000023b06b0
@@ -1132,23 +1096,18 @@ print(address(of: &arr2)) //0x6000023b06b0
 arr2[2] = 4
 print(address(of: &arr1)) //0x6000023b06b0
 print(address(of: &arr2)) //0x6000023b11f0
-
-
-
 ```
 
 **`从上面代码我们可以看出，当arr1赋值给arr2时并没有发生拷贝操作，当arr2的值改变的时候才发生了拷贝操作`**
-
 
 <br/>
 
 **原理：**
 &emsp; 使用class，这是一个引用类型，因为当我们将引用类型分配给另一个时，两个变量将共享同一个实例，而不是像值类型一样复制它。
 
-
 在[OptimizationTips.rst](https://github.com/apple/swift/blob/main/docs/OptimizationTips.rst)里发现如下代码:
 
-```
+```swift
 final class Ref<T> {
   var val: T
   init(_ v: T) { val = v }
@@ -1188,10 +1147,7 @@ if !isKnownUniquelyReferenced(&ref) {
 
 >为了提供高效的写时复制特性，我们需要知道一个对象是否是唯一的。如果它是唯一引用，那么我们就可以直接原地修改对象。否则，我们需要在修改前创 建对象的复制。在 Swift 中，我们可以使用 isKnownUniquelyReferenced 函数来检查某个引 用只有一个持有者。如果你将一个 Swift 类的实例传递给这个函数，并且没有其他变量强引用 这个对象的话，函数将返回 true。如果还有其他的强引用，则返回 false。不过，对于 Objective-C 的类，它会直接返回 false。
 
-
-
 <br/>
-
 
 - **总结：**
 	- Copy-on-Write 是一种用来优化占用内存大的值类型的拷贝操作的机制。
@@ -1204,7 +1160,7 @@ if !isKnownUniquelyReferenced(&ref) {
 
 但是我们可以这样做：
 
-```
+```swift
 struct Person {
     var name = ""
 }
@@ -1217,23 +1173,20 @@ p2.name = "bbb"
 print(address(of: &p2)) // 0x104d6a310
 ```
 
+struct 是值类型，默认是按值复制的。需要我们手动设计和实现。
 
+Swift 的标准库中像 A`rray、Dictionary、Set 等类型能够实现“写时复制”（Copy-on-Write, COW）` **(实现 COW 通常需要使用 `isKnownUniquelyReferenced(_:)` 函数** 是因为它们内部使用了共享的存储（通常是封装了引用计数的类对象）以及在写入时检查是否唯一引用，从而在必要时再执行真正的复制。
 
-
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 
 >## <h1 id="值类型和引用类型">[值类型和引用类型](https://juejin.cn/post/6844904000794394637)</h1>
 
 [值类型和引用类型](https://www.cnblogs.com/luoxiaofu/p/8528383.html)
 
-
-
 <br/>
-
 > <h2 id='区别'>区别</h2>
 
 - **存储区别：**
@@ -1249,8 +1202,6 @@ print(address(of: &p2)) // 0x104d6a310
 
 - **比如:** 
 	- 结构体和类的区别: 定义结构体类型时其成员可以没有初始值。如果使用这种格式定义一个类，编译器是会报错的，他会提醒你这个类没有被初始化。
-
-
 <br/><br/>
 
 >## <h3 id='什么时候使用值类型什么时候使用引用类型'>[什么时候使用值类型?什么时候使用引用类型?](https://juejin.cn/post/6844904000794394637)</h3>
@@ -1286,14 +1237,13 @@ print(address(of: &p2)) // 0x104d6a310
 - 2.值类型和引用类型混合时
 	- 结构体中包含类，类中包含结构的情况
 
-
 <br/>
 
 - 3.带有泛型的值类型。
 
 让我们声明一个带泛型的结构体：
 
-```
+```swift
 struct Bas<T> {
     var x: T
 
@@ -1302,8 +1252,6 @@ struct Bas<T> {
     }
 }
 ```
-
-
 
 <br/>
 
@@ -1317,57 +1265,36 @@ struct Bas<T> {
 
 让我们为foo(x :)生成一个接受inout参数的SIL：
 
-```
+```swift
 func foo(x: inout Int) {
     x += 1
 }
 ```
 
-
-
-<br/><br/><br/><br/>
-
-
+<br/><br/><br/>
 > <h2 id="关键字">关键字</h2>
-
 <br/>
 
 > <h2 id='private、filePrivate、public、open权限关键字'>private、filePrivate、public、open权限关键字</h2>
-
-
 [private、filePrivate、public、open](./关键字.md#访问权限关键字使用)
 
 
 <br/><br/><br/>
-
 > <h2 id='guard使用'>guard使用</h2>
-
 [guard关键字使用](./关键字.md#guard)
 
-
-<br/><br/><br/>
-
+<br/><br/>
 > <h3 id="final修饰符">final修饰符</h3>
-
 - **使用final规则：**
 	- final修饰符只能修饰类，表明该类不能被其他类继承，也就是它没资格当父类；
-	
 	- final不能修饰结构体和枚举；
-	
 	- final修饰符也可以修饰类中的属性、方法和下标，但前提是该类并没有被final修饰过；
-	
-	- 结构体和枚举只能遵循协议（protocol）。虽然协议也可以遵循其他协议，但是它并不能重写遵循的协议的任何成员，这就是结构体和枚举不需要final修饰的原因。
-
+	- 结构体（struct）和枚举（enum）都是值类型，它们本身就不支持继承，所以没有必要也无法使用 final。
 	- 使用了 final 的，都用静态派发，因为 final 意味着完全没有动态性。final 用于类型，或是 function，都会造成这样的情况。
-		
 	- 而且 final 作用范围的方法，都不会被 export 到 OC runtime，也不会生成 selector
 
-
 <br/><br/>
-
 > <h3 id='dynamic'>dynamic</h3>
-
-
 - Swift中也有dynamic关键字，它可以用于修饰变量或函数，它的意思也与OC完全不同。它告诉编译器使用动态分发而不是静态分发。OC区别于其他语言的一个特点在于它的动态性，任何方法调用实际上都是消息分发，而Swift则尽可能做到静态分发。
 
 - 因此，标记为dynamic的变量/函数会隐式的加上@objc关键字，会开启 message 模式，让 OC runtime 可以调用;
@@ -1381,12 +1308,8 @@ func foo(x: inout Int) {
 - 延展阅读： dynamic vs @objc: dynamic 是强制使用 message 派发，KVO 需要。@objc 只是 export 给 objc，swift 还是静态派发
 
 
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='@objc/@nonobjc'>@objc/@nonobjc</h2>
-
 - @objc / @nonobjc 控制方法对于 objc 的可见性。但是不会改变 swift 中的函数如何被派发。
 
 - @nonobjc 可以禁止函数使用 message 派发 （和 final 在汇编上看起来类似，偏向于使用 final)
@@ -1397,16 +1320,8 @@ func foo(x: inout Int) {
 
 - @objc final func aFunc() {} 会让消息使用直接派发，不过依然会 export 给 objc
 
-
-
-<br/>
-<br/>
-
-
-
-> <h3 id='@inline'>@inline</h3>
-
-	
+<br/><br/>
+> <h3 id='@inline'>@inline</h3>	
 - @inline 可以告诉编译器去优化直接派发的性能。
 
 - [see](https://github.com/vandadnp/swift-weekly/blob/master/issue11/README.md#inline)
@@ -1424,34 +1339,19 @@ func foo(x: inout Int) {
 	
 	- 有趣的是，如果你用 dynamic @inline(__always) func dynamicOrDirect() {} 依然会得到一个 message 派发的函数。
 
-
-
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id="语法基础">语法基础</h2>
-
-
 <br/>
 
 > <h3 id="只能被类遵守的protocol">只能被类遵守的protocol</h3>
 
-```
+```swift
 protocol OnlyClassProtocol : class {
 }
 ```
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="defer使用场景">defer使用场景</h3>
-
 &emsp; **defer** **语句块中的代码**, **会在当前作用域结束前调用**, 常用场景如异常退出后, 关闭数据库连接.≥..
 
 ```
@@ -1470,14 +1370,11 @@ func someQuery() -> ([Result], [Result]){
 }
 
 ```
-
-
 <br/>
 
 需要注意的是, 如果有多个 defer, 那么**后加入的先执行**
 
-```
-
+```swift
 func someDeferFunction() {
     defer {
         print("\(#function)-end-1-1")
@@ -1500,12 +1397,11 @@ func someDeferFunction() {
 //调用
 someDeferFunction()
 ```
-
 <br/>
 
 **输出**
 
-```
+```swift
 if end
 if defer
 function end
@@ -1515,39 +1411,27 @@ someDeferFunction()-end-1-1
 someDeferFunction()-end-1-2
 ```
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="数组索引越界会Crash,字典取不到为nil">数组索引越界会Crash,字典取不到为nil</h3>
 
 - 数组索引本来就是访问一段连续地址,越界访问也能访问到内存，但这段内存不一定可用，所以会引起Crash.
 - 字典的key并没有对应确定的内存地址,所以是安全的.
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="Self的使用场景">Self的使用场景</h3>
-
 Self 通常在协议中使用, 用来表示实现者或者实现者的子类类型.
 
 定义一个复制的协议:
 
-```
+```swift
 protocol CopyProtocol {
     func copy() -> Self
 }
 ```
 
-
 如果是结构体去实现, 要将Self 换为具体的类型:
 
-```
+```swift
 struct SomeStruct: CopyProtocol {
     let value: Int
     func copySelf() -> SomeStruct {
@@ -1558,8 +1442,7 @@ struct SomeStruct: CopyProtocol {
 
 如果是类去实现, 则有点复杂, 需要有一个 required 初始化方法, 具体可以看这里:
 
-
-```
+```swift
 class SomeCopyableClass: CopyProtocol {
     func copySelf() -> Self {
         return type(of: self).init()
@@ -1569,16 +1452,13 @@ class SomeCopyableClass: CopyProtocol {
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id="throws和rethrows的用法与作用">throws和rethrows的用法与作用</h3>
-
 throws 用在函数上, 表示这个函数会抛出错误.
 
 有两种情况会抛出错误, 一种是直接使用 throw 抛出, 另一种是调用其他抛出异常的函数时, 直接使用 try xx 没有处理异常.
 
-```
+```swift
 enum DivideError: Error {
     case EqualZeroError;
 }
@@ -1593,34 +1473,22 @@ func split(pieces: Int) throws -> Double {
 }
 ```
 
+<br/>
 
 rethrows 与 throws 类似, 不过只适用于参数中有函数, 且函数会抛出异常的情况, rethrows 可以用 throws 替换, 反过来不行
 
-```
+```swift
 func processNumber(a: Double, b: Double, function: (Double, Double) throws -> Double) rethrows -> Double {
     return try function(a, b)
 }
 ```
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='值类型(ValueType)'>值类型(ValueType)</h3>
-
 - struct, enum 这样的值类型不支持继承，所以无需动态派发，它所有的方法调用（包括遵守的协议方法），都是直接调用。
-
 - 虽然不支持继承，但值类型还是可以通过 extension 和 Protocol 可以实现扩展。
 
-
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="值类型和引用类型在什么时候使用">值类型和引用类型在什么时候使用</h3>
 
 - **什么时候该用值类型：**
@@ -1635,7 +1503,7 @@ func processNumber(a: Double, b: Double, function: (Double, Double) throws -> Do
 	- 	你希望有创建一个共享的、可变对象的时候.
 
 
-```
+```swift
 let test1 = Test1()
 let test2 = Test1()
 //test1地址：SwiftTest.Test1	0x0000600003a1c300
@@ -1661,32 +1529,21 @@ if a1 == a2 {
 
 打印：
 
-```
+```swift
 test1 != test2 
 a1 == a2 
 ```
 
-
-
-
 <br/><br/>
-
 > <h3 id='Protocol'>Protocol</h3>
-
 Protocol 是一个比较特殊的情况，不同于 Objective-C，Swift 在对待 Protocol 方法调用时更重视实例的类型，而不是实例的内在（比如 Objc 中的 isa）
 
 
 
-
-
-<br/>
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="">协议的动态</h3>
 
-```
+```swift
 protocol Pizzeria { 
   func makePizza(_ ingredients: [String])
   func makeMargherita()
@@ -1723,7 +1580,7 @@ lombardis2.makeMargherita()
 
 再进一步，我们把 protocol Pizzeria 中的 func makeMargherita() 删掉，代码变为:
 
-```
+```swift
 protocol Pizzeria {
   func makePizza(_ ingredients: [String])
 }
@@ -1754,57 +1611,40 @@ lombardis2.makeMargherita()
 
 因为lombardis1 是 Pizzeria，而 makeMargherita() 有默认实现，这时候我们调用默认实现。
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="Swift和OC常量区别">Swift和OC常量区别</h3>
 
 OC中定义的常量:
 
-```
+```objective-c
 const int number = 0;
 ```
 
 
 Swift 是这样定义常量的：
-```
+
+```swift
 let number: Int = 0
 ```
 
 
 - **区别:**
 	- OC中用 const 来表示常量，而 Swift 中用 let 来判断是不是常量.
-	
 	- OC中 const 表明的常量类型和数值是在 compilation time 时确定的；
-	
 	- Swift 中 let 只是表明常量（只能赋值一次），其类型和值既可以是静态的，也可以是一个动态的计算方法，它们在 runtime 时确定的。
 
 
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="编译选择wholemoduleoptmization优化了什么">编译选择 whole module optmization 优化了什么</h3>
 
 编译器可以跨文件优化编译代码, 不局限于一个文件;
 [这里](https://www.jianshu.com/p/8dbf2bb05a1c)
 
-
-<br/>
-<br/>
-
-
-> <h3 id="mutaing的作用">[mutaing的作用](./关键字.md#Mutating)</h3>
-
+<br/><br/>
+># <h3 id="mutaing的作用">[mutaing的作用](./关键字.md#Mutating)</h3>
 - **作用1：**
 
-```
+```swift
 struct Person  {
    var name: String  {
        mutating get  {
@@ -1815,29 +1655,20 @@ struct Person  {
 ```
 让不可变对象无法访问name 属性;
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="怎么表示函数的参数类型只要是数字">函数的参数类型只要是数字（Int、Float）都可以，要怎么表示</h3>
 
 使用泛型
 
-```
+```swift
+// <T : SignedNumber>: 表示T准许SignedNumber的协议的子类
 func isNumber<T : SignedNumber>(number : T){
-print(" it is a number")
+	print(" it is a number")
 }
 ```
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id="dynamic的作用">dynamic的作用.</h3>
-
 - **dynamic的作用.**
 
 	- 由于swift是一门静态语言，所以没有Objective-C中的消息发送这些动态机制，dynamic的作用就是让swift代码也能有oc中的动态机制，常用的就是KVO。
@@ -1847,43 +1678,30 @@ print(" it is a number")
 	- dynamic只用于类，不能用于结构体和枚举，因为它们没有继承机制，而Objc的动态转发就是根据继承关系来实现转发。
 
 
-<br/>
-<br/>
-
-
-> <h3 id=""></h3>
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
 
 > <h1 id="常用类库">常用类库</h1>
 <br/>
 
 > <h2 id="ObjectMapper">ObjectMapper</h2>
-
 使用ObjectMapper的时候，我们一定要实现Mappable协议。这个协议里又有两个要实现的方法：
 
-```
+```swift
 init?(map: Map)
 mutating func mapping(map: Map)
 ```
 
 流程解析如下：
 
-```
+```swift
 //其对应的JSON如下：
-let json = """
-{
-"mathematics": "excellent",
-"physics": "bad",
-"chemistry": "fine"
+let json = {
+	"mathematics": "excellent",
+	"physics": "bad",
+	"chemistry": "fine"
 }
 
 
@@ -1917,7 +1735,7 @@ let ability = Mapper<Ability>().map(JSONString: json)
 
 去看源码，发现这个符号是这个库自定义的一个操作符，在Operators.swift里如下：
 
-```
+```swift
 infix operator <-
 
 /// Object of Basic type
@@ -1933,17 +1751,17 @@ public func <- <T>(left: inout T, right: Map) {
 	default: ()
 	}
 }
-
 ```
 
-然后根据不同的泛型类型，这个操作符会进行不同的处理。
+然后根据不同的泛型类型，这个操作符会进行不同的处理。若是不太理解，可以看下[操作符的使用](./Swift实战版.md#操作符<~模仿ObjectMapper)
+
+<br/>
 
 接着，我们再看一下map方法。
 
 map方法存在于Mapper类中, 定义如下:
 
-```
-
+```swift
  func map(JSONString: String) -> M? {
 	if let JSON = Mapper.parseJSONString(JSONString: JSONString) as? [String: Any] {
   		return map(JSON: JSON)
@@ -1974,7 +1792,7 @@ func map(JSON: [String: Any]) -> M? {
 
 最后再看一下Map这个类，这个类主要用来处理找到key所对应的value。处理方式如下:
 
-```
+```swift
 //ArraySlice<String> 是 Swift 中的一种特殊类型，它表示了一个数组的切片（Slice），即原数组的一个连续的子序列
 // 数组切片是一个轻量级的数据结构，它们只是对原始数组的引用，并没有实际拥有数组中的元素。切片允许你在不复制数组元素的情况下对数组进行切割、操作和传递，从而提高了性能和内存效率。
 private func valueFor(_ keyPathComponents: ArraySlice<String>, dict: [String: Any]) -> (Bool, Any?) {
@@ -2008,63 +1826,42 @@ private func valueFor(_ keyPathComponents: ArraySlice<String>, dict: [String: An
 
 
 <br/><br/>
-
-
 > <h2 id="SwiftJSON">SwiftJSON</h2>
-
-
-构造器
-
+**构造器**
 SwiftyJSON对外暴露的主要的构造器:
 
-
-```
+```swift
 public init(data: Data, options opt: JSONSerialization.ReadingOptions = []) throws
+
 public init(_ object: Any)
+
 public init(parseJSON jsonString: String)
 ```
 
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id = "RxSwift">[RxSwift](./RxSwift.md)<h2>
-
 [RxSwift实现原理](https://juejin.cn/post/6844903862571106317#heading-2)
 
 
-
-
-
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="Snapkit">[Snapkit](https://www.jianshu.com/p/44f3d812839f)</h2>
 
 
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
-
 > <h1 id="数据存储">数据存储</h1>
-	
 <br/>
 	
 <h2 id="CoreData">CoreData</h2>
 
 &emsp; 一个基本的 [**Core Data**](https://objccn.io/products/core-data/preview/) 栈由四个主要部分组成：托管对象 (managed objects) (**NSManagedObject**)，托管对象上下文 (managed object context) (**NSManagedObjectContext**)，持久化存储协调器 (persistent store coordinator) (**NSPersistentStoreCoordinator**)，以及持久化存储 (persistent store) (**NSPersistentStore**):
 
-![<br/>](./../../Pictures/ios_pd13.png)
+![ios_pd13.png](./../../Pictures/ios_pd13.png)
 
 - **托管对象:** 位于这张图的最上层，它是架构里最有趣的部分，同时也是我们的数据模型 
 	- 在这个例子里，它是 Mood 类的实例们。Mood 需要是 NSManagedObject 类的子类，这样它才能与 Core Data 其他的部分进行集成。每个 Mood 实例表示了一个 **mood**，也就是用户用相机拍摄的照片。
@@ -2075,26 +1872,20 @@ public init(parseJSON jsonString: String)
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
-
-
 > <h1 id="组件化">组件化</h1>
-
 [iOS组件化实践](https://www.jianshu.com/p/510ee1290ab4)
-
 [iOS组件化-之搭建基于AFNetworking的网络请求框架](https://www.jianshu.com/p/b99520518f2f)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
 
 > <h1 id="路由导航">路由导航</h1>
 
@@ -2106,13 +1897,12 @@ public init(parseJSON jsonString: String)
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 
 > <h1 id="安全">安全</h1>
-
 <br/>
 
 > <h2 id="MD5">MD5</h2>
@@ -2131,12 +1921,11 @@ public init(parseJSON jsonString: String)
 
 [MD5原理](https://cloud.tencent.com/developer/article/1402024)
 
-
 OC实现MD5加密：
 
 获得MD5加密
 
-```
+```oc
 - (NSString *)md5:(NSString *)str {
 
 	NSString *resultStr = nil;
@@ -2181,8 +1970,6 @@ OC实现MD5加密：
 
 
 <br/><br/>
-
-
 > <h2 id="防止反编译">如何防止反编译？</h2>
 
 [防止反编译](https://icocos.github.io/2017/10/26/iOS——防止反编译总结/)
@@ -2195,7 +1982,7 @@ OC实现MD5加密：
 
 注意： **Base64并不是一种加密方式**，明文使用Base64编码后的字符串通过索引表可以直接还原为明文。因此，Base64只能作为一种数据的存储格式。
 
-```
+```oc
 // 获取需要加密文件的二进制数据
 NSData *data = [NSData dataWithContentsOfFile:@"/Users/wangpengfei/Desktop/photo/IMG_5551.jpg"];
 
@@ -2209,7 +1996,7 @@ NSData *base64Data = [data base64EncodedDataWithOptions:0];
 
 将文件进行解密,**不过我们可以对其中编码后的文本进行替换就好了。😂**
 
-```
+```oc
 // 获得加密后的二进制数据
 NSData *base64Data = [NSData dataWithContentsOfFile:@"/Users/wangpengfei/Desktop/123"];
 
@@ -2220,8 +2007,6 @@ NSData *baseData = [[NSData alloc] initWithBase64EncodedData:base64Data options:
 [baseData writeToFile:@"/Users/wangpengfei/Desktop/IMG_5551.jpg" atomically:YES];
 ```    
 
-
-
 <br/>
 
 - **URL编码加密**
@@ -2229,7 +2014,7 @@ NSData *baseData = [[NSData alloc] initWithBase64EncodedData:base64Data options:
 
 ARC模式下,编码
 
-```
+```oc
 //用于 URL 编码的函数，可以帮助你处理 URL 中的特殊字符
 NSString *originalString = @"Hello World!";
 CFStringRef encodedString = CFURLCreateStringByAddingPercentEscapes(
@@ -2244,7 +2029,7 @@ NSLog(@"Encoded string: %@", (NSString *)encodedString);
 
 解码
 
-```
+```oc
 + (NSString *)decodeFromPercentEscapeString: (NSString *) input
 
 {
@@ -2270,7 +2055,6 @@ NSLog(@"Encoded string: %@", (NSString *)encodedString);
 
 <br/>
 
-
 - 网络传输数据加密
 
 使用MD5对一些参数进行hash防篡改：
@@ -2289,20 +2073,16 @@ password = [password md5String];
 NSLog(@"password2:%@", password);
 ```
 
-
 <br/>
-
 
 - **方法体，方法名高级混淆**
 
 对应用程序的方法名和方法体进行混淆，保证源码被逆向后无法解析代码。 使用hopper disassembler 反编译iPA之后不能得到相应的方法调用信息。
 
 
-
-
 创建shell脚本(用来混淆代码生成代码名的)：
 
-```
+```sh
 TABLENAME=symbols
 SYMBOL_DB_FILE="symbols"
 STRING_SYMBOL_FILE="fun.list"
@@ -2350,7 +2130,7 @@ sqlite3 $SYMBOL_DB_FILE .dump
 
 声明要替换的方法名列表，[运行Shell脚本](https://www.jianshu.com/p/5fb895ca503d)
 
-```
+```sh
 //在上边脚本中提到了 STRING_SYMBOL_FILE="fun.list"，意思就是运行脚本的时候会到这个文件去读取需要替换的方法名，重新写入符号表中。
 nameAction
 refreshAction
@@ -2359,16 +2139,11 @@ refreshAction
 
 
 生成对应的转义之后的无序字符串
-
-
 ![11](https://user-gold-cdn.xitu.io/2018/1/11/160e332699f100d4?imageView2/0/w/1280/h/960/ignore-error/1)
-
-
 
 <br/>
 
 - **程序结构混排加密**
-
 
 <br/>
 
@@ -2376,17 +2151,12 @@ refreshAction
 
 如：[网易易盾](https://dun.163.com/?from=baiduP_PP_PPWYY1)
 
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
+<br/>
 
 > <h1 id="多线程">多线程</h1>
-
-
 <br/>
 
 >## <h2 id="NSOperation">[NSOperation](./../Objective-C/多线程.md#NSOperation)</h2>
@@ -2394,7 +2164,6 @@ refreshAction
 <br/>
 
 > <h2 id="GCD控制线程数量">GCD控制线程数量</h2>
-
 
 GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通过 GCD 的 semaphore 功能一样可以达到控制线程数量的效果。
 
@@ -2405,7 +2174,7 @@ GCD 不像 NSOperation 那样有直接提供线程数量控制方法，但是通
 - dispatch_semaphore_wait(dispatch_semaphore_t dsema, dispatch_time_t timeout); 如果信号量大于 0 ，信号量减 1 ，执行程序。否则等待信号量
 	- timeout:超过了指定的 timeout 时间，此时函数也会立即返回，不会阻塞
 
-```
+```objective-c
 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -2431,7 +2200,7 @@ if (result == 0) {
 
 - dispatch_semaphore_signal(dispatch_semaphore_t dsema); 增加信号量
 
-```
+```objective-c
 // 控制线程数量
 - (void)runMaxThreadCountWithGCD
 {
@@ -2457,14 +2226,13 @@ if (result == 0) {
 ```
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="线程锁">[线程锁](https://www.jianshu.com/p/256f555cf7b5)</h2>
 
 线程锁的种类：
 
-```
+```objective-c
  iOS中的常用的锁有如下几种：
  1、自旋锁：
     使用与多线程同步的一种锁，线程反复检查锁变量是否可用。由于线程在这一过程中保持执行，因此是一种忙等待。一旦获取了自旋锁，线程会一直保持该锁，直到显示释放自旋锁。
@@ -2533,11 +2301,10 @@ if (result == 0) {
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
-
+<br/>
 
 > <h1 id="底层">底层</h2>
 
@@ -2556,7 +2323,7 @@ if (result == 0) {
 
 **常量和变量:**
 
-```
+```swift
 // 静态类型推断
 let myInteger = 42  // Swift会推断myInteger为Int类型
 var myString = "Hello"  // Swift会推断myString为String类型
@@ -2579,7 +2346,7 @@ let person = ["name": "John", "age": 30]  // Swift会推断person为[String: Any
 
 **函数参数和返回值：**
 
-```
+```swift
 // 函数参数和返回值的类型推断
 func addTwoNumbers(_ a: Int, _ b: Int) -> Int {
     return a + b
@@ -2596,10 +2363,10 @@ let result = addTwoNumbers(5, 7)  // Swift会推断result为Int类型
 <br/><br/>
 
 >## <h2 id="Swift动态性">[Swift动态性](https://juejin.cn/post/6888989886280368141)</h2>
+[iOS-Runtime与Swift调度(Swift方法调度)](https://www.bilibili.com/video/BV1bf4y1j7ce/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
 
 
 <br/><br/>
-
 > <h2 id='SwiftRuntime'>Swift Runtime</h2>
 
 **Swift Runtime**
@@ -2642,10 +2409,8 @@ let result = addTwoNumbers(5, 7)  // Swift会推断result为Int类型
 
 
 <br/><br/>
-
 > <h2 id='科普'>科普</h2>
-
-<br/><br/>
+<br/>
 
 > <h2 id='分派'>分派</h2>
 
@@ -2655,17 +2420,12 @@ let result = addTwoNumbers(5, 7)  // Swift会推断result为Int类型
 	- 每种编程语言都需要分派机制来选择正确的唤起方法.
 
 <br/><br/>
-
 > <h2 id='静态分派和动态分派'>静态分派和动态分派</h2>
-
-
 - **静态分派(static dispatch)和 动态分派(dynamic dispatch):**
 	- 方法从书写完成到调用完成,概括上会经历编译期和运行期两个阶段,而前面说的确定哪个方法被执行,也是在这两个时期进行的.
 	- 选择正确方法的阶段,可以分为编译期和运行期,而分派机制通过这两个不同的时期分为两种: `静态分派(static dispatch)和 动态分派(dynamic dispatch).`
 
-
 <br/><br/>
-
 > <h2 id='静态分派'>静态分派</h2>
 
 static dispatch是在编译期就完全确定调用方法的分派方式.它是一种方法分派形式.用于描述一个语言或者环境是如何选择被调用的方法的实现的.
@@ -2689,10 +2449,7 @@ static dispatch还可以进行**进一步优化**,优化的一种实现方式叫
 
 
 <br/><br/>
-
 > <h2 id='inline'>inline</h2>
-
-
 inline也叫内联展开,它可以人为声明,也可以通过编译器优化来实现.inline是将被调用方法的指针替换为方法实现体.inline的具体实现其实就是内联展开,它和宏展开(macro expansion很像.
 
 内联展开和宏展开的区别在于,内联发生在编译期,并且不会改变源文件.但是宏展开是在编译前就完成的,会改变源码本身,之后再对此进行编译.
@@ -2702,10 +2459,7 @@ inline也叫内联展开,它可以人为声明,也可以通过编译器优化来
 内联方法的运行比传统的方法调用要快一些,因为节省了指针到方法实现体的调用的消耗,但是会带来一些内存损失.如果一个方法被内联10次,那么会出现10份方法的副本.所以内联适用于会被频繁调用的比较小的方法
 
 <br/><br/>
-
 > <h2 id='动态派发'>动态派发</h2>
-
-
 在计算机科学中,dynamic dispatch是 用于在运行期选择调用方法的实现的流程.
 dynamic dispatch被广泛应用,并且被认为是面向对象语言(Object-Oriented programming:OOP)的基本特性.
 
@@ -2722,10 +2476,7 @@ OOP是通过名称来查找对象和方法的.但是多态就是一种特殊情�
 这里提一句,因为动态分派经常会引起高性能消耗,所以很多语言对某些特定的方法,提供了静态分派的方式.
 
 <br/><br/>
-
 > <h2 id='虚函数表'>虚函数表</h2>
-
-
 虚函数表是用于支持动态分派的一种实现机制.
 
 当一个类定义了虚函数virtual function之后,大部分编译器会对类增加一个隐藏的属性,属性指向一个包含了虚函数表,表内包含被收纳了调用方法的指针数组.这些方法指针用于在运行期来调用正确的方法实现.
@@ -2747,7 +2498,6 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 
 <br/><br/>
-
 > <h2 id='OCRuntime'>OC Runtime</h2>
 
 - **OC Runtime**
@@ -2770,7 +2520,6 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 
 <br/><br/>
-
 > <h4 id='派发效率'>派发效率</h4>
 
 
@@ -2778,7 +2527,6 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 
 <br/><br/>
-
 > <h4 id='方法可见性影响'>方法可见性影响</h4>
 
 &emsp; Swift 编译器会尽可能的帮你优化派发，比如：你的方法没有被继承，那他就会注意到这个，并用尝试使用直接派发来优化性能。
@@ -2786,14 +2534,9 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 <br/><br/>
 
 > <h4 id='KVO'>KVO</h4>
-
 &emsp;值得注意的是 KVO，被观察的属性也必须被声明为 dynamic，否则 setter 会走直接派发，无法触发变化。
 
-
-
-<br/><br/><br/>
-
-
+<br/><br/>
 > <h4 id='值类型和引用类型支持什么派发方式'>值类型和引用类型支持什么派发方式</h4>
 
 首先，值类型和引用类型都支持静态派发。
@@ -2801,11 +2544,7 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 但是，仅引用类型（即 Class）支持动态派发。这样做的原因是，简而言之，对于动态性或动态派发而言，我们需要继承，而我们的值类型并不支持继承。
 
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h4 id="Swfit中的@Objc和dynamic的原理">Swfit中的@Objc和dynamic的原理</h4>
 
 [Swift 底层是怎么调度方法的](https://gpake.github.io/2019/02/11/swiftMethodDispatchBrief/)
@@ -2825,8 +2564,6 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 
 <br/><br/>
-
-
 > <h4 id="@Objc和Dynamic的使用">@Objc和Dynamic的使用</h4>
 
 [Swift动态性](https://juejin.cn/post/6888989886280368141)
@@ -2836,7 +2573,7 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 - @objc 关键字用于标记一个 Swift 中的成员（属性、方法、类、协议等），以便它可以在 Objective-C 中访问。这通常用于需要与 Objective-C 代码进行交互的情况，例如，当你需要使用 Objective-C 的运行时特性或者在 Objective-C 中使用这些成员时。
 
-```
+```swift
 @objc class MyClass: NSObject {
     @objc func myMethod() {
         // 在 Objective-C 中可以调用该方法
@@ -2853,7 +2590,7 @@ Python是不支持static dispatch的.实际上Python所有的方法和属性的�
 
 - dynamic 关键字用于告诉编译器将成员的调用动态派发，而不是静态派发。这通常用于在运行时动态派发方法调用，以提供更灵活的行为，例如使用 Key-Value Observing（KVO）或者通过运行时动态修改方法的行为等情况。
 
-```
+```swift
 class MyClass: NSObject {
     dynamic func myMethod() {
         // 方法实现
@@ -2863,23 +2600,19 @@ class MyClass: NSObject {
 
 &emsp; 使用final、private、static关键字修饰的类也是静态派发模式。动态派发是在程序运行时才确定方法的实现，Swift中使用dynamic修饰的方法是使用动态派发模式（ps：@objc修饰的方法不一定是动态派发，只是标明该方法对Objective-C可见）。
 
-
 <br/><br/>
-
 > <h2 id='SwiftRuntime的关键功能'>Swift Runtime的关键功能</h2>
-
 &emsp; Swift Runtime system关键功能主要包括**动态类型转换**，**泛型实例化**和**协议一致性注册**，它仅用于描述编译器生成的代码应遵循的运行时接口，而不是有关如何实现的细节。
 
 &emsp; Swift Runtime系统是一套支撑Swift语言特性的底层基础设施，确保Swift程序能够在运行时正确有效地执行。
 
 
 <br/><br/>
-
 > <h2 id='动态类型转换'>动态类型转换</h2>
 
 在Swift中，尽管语言设计更偏向于静态类型安全，但在某些情况下仍然存在动态类型检查的需求。例如，使用is和as?（条件转换）以及as!（强制转换）进行类型转换。这些操作会在运行时验证对象是否属于特定类型或子类型，并可能完成类型之间的转换。
 
-```
+```swift
 class Animal {}
 class Dog: Animal {}
 
@@ -2890,12 +2623,11 @@ if let doggy = anyAnimal as? Dog {
 ```
 
 <br/><br/>
-
 > <h2 id='泛型实例化'>泛型实例化</h2>
 
 泛型允许定义可以处理多种类型的数据结构或函数。在Swift中，每个泛型类型的实例都有其自己的类型信息记录在运行时元数据中。例如，当我们创建一个泛型Array时：
 
-```
+```swift
 struct Box<T> {
     var item: T
 }
@@ -2908,12 +2640,10 @@ let stringBox = Box(item: "Hello")
 
 
 <br/><br/>
-
 > <h2 id='协议一致性注册'>协议一致性注册</h2>
-
 Swift运行时维护了一个类型与其遵循的协议之间的映射关系表。当一个类型声明遵循某个协议时，Swift编译器会在运行时为该类型注册它所符合的协议信息。这样，在需要检查一个对象是否遵循某个协议或使用协议相关的方法、属性时，运行时能够正确地进行一致性检查和调用。
 
-```
+```swift
 protocol Printable {
     func description() -> String
 }
@@ -2934,10 +2664,7 @@ Swift Runtime系统保证了这些高级语言特性在实际运行时得以有�
 
 
 <br/><br/>
-
 > <h2 id='Swift结构体存放的位置'>Swift结构体存放的位置</h2>
-
-
 **疑问1:** Swift中的结构体存放在什么位置?
 
 在 Swift 中，结构体（struct）是值类型，它们通常会被分配在栈上,尤其是在它们作为局部变量或作为其他结构体/枚举成员时。与类不同，结构体实例的内存分配和释放是在编译时处理的，而不是在运行时进行的。
@@ -2951,7 +2678,6 @@ Swift Runtime系统保证了这些高级语言特性在实际运行时得以有�
 另外需要注意的是，Swift 中的编译器会进行一些优化，例如在某些情况下，可以避免不必要的复制操作，提高性能。但总体来说，结构体的内存分配是在栈上进行的，并且它们的值是被存储在这块分配的内存中的。
 
 <br/><br/>
-
 > <h2 id='结构体装箱后的内存变化'>结构体装箱后的内存变化</h2>
 
 在 Swift 中，结构体通常被存储在栈上，而不是堆上。这意味着当结构体作为参数传递给函数、方法或者闭包时，它们会被装箱（boxed），**即被包装到一个堆分配的对象中**，而不是直接复制到栈上。
@@ -2966,12 +2692,8 @@ Swift Runtime系统保证了这些高级语言特性在实际运行时得以有�
 
 
 <br/><br/>
-
 > <h2 id='结构体装箱和案例'>结构体装箱和案例</h2>
-
-
 **疑问2:** 什么叫装箱? 包含哪几种情况?
-
 
 **简介:**
 
@@ -2981,13 +2703,10 @@ Swift Runtime系统保证了这些高级语言特性在实际运行时得以有�
 
 
 <br/><br/><br/>
-
 > <h2 id='结构体装箱到NSValue'>结构体装箱到NSValue</h2>
-
-
 将结构体实例装箱到 NSValue 中：
 
-```
+```swift
 import Foundation
 
 // 定义一个结构体
@@ -3010,14 +2729,11 @@ print(boxedPoint)
 
 需要注意的是，装箱操作会增加一些额外的开销，因为它涉及到创建一个引用类型对象，并将值类型的数据复制到该对象中。因此，尽管装箱提供了一种在引用类型容器中存储值类型的方式，但应该谨慎使用，以避免不必要的性能开销。
 
-
 <br/><br/>
-
 > <h2 id='结构体装箱到Any类型'>结构体装箱到Any类型</h2>
-
 **使用 Any 类型：** 当你将一个结构体实例赋值给 Any 类型变量或者将其作为函数的参数传递时，Swift 会进行装箱操作。因为 Any 类型是一个类型擦除（type erasure）的容器，它可以存储任意类型的值，但实际上内部是通过引用来管理的。
 
-```
+```swift
 // 定义一个结构体
 struct Point {
     var x: Int
@@ -3032,16 +2748,11 @@ let anyValue: Any = point
 ```
 
 
-
 <br/><br/>
-
 > <h2 id='装箱到自定义类型'>装箱到自定义类型</h2>
-
-
 **使用自定义的引用类型包装器：** 有时候，你可能会定义自己的引用类型包装器来封装值类型。这种情况下，当你将结构体实例传递给或者赋值给这个自定义包装器类型时，也会发生装箱操作。
 
-
-```
+```swift
 // 定义一个自定义的引用类型包装器
 class Wrapper<T> {
     var value: T
@@ -3060,7 +2771,6 @@ let wrappedPoint = Wrapper(value: point)
 
 
 <br/><br/>
-
 > <h4 id='OC调用Swift类型,找不到方法?'>OC调用Swift类型,找不到方法?</h4>
 
 **问题是:** 如果我们要使用 Objective-C 的代码或者特性来调用纯 Swift 的类型时候，我们会因为找不到所需要的这些运行时信息而导致失败,怎么办？
@@ -3078,14 +2788,10 @@ let wrappedPoint = Wrapper(value: point)
 
 - 5）.一般情况下在做 app 开发时应该用不上，但是在施展一些像动态替换方法或者运行时再决定实现这样的 "黑魔法" 的时候，我们就需要用到dynamic修饰符了。
 
-
-
-
 <br/><br/><br/>
-
 > <h2 id='存在容器'>存在容器</h2>
 
-```
+```swift
 class ClassA {
 
 }
@@ -3104,11 +2810,8 @@ let aaa = ClassA()
 - aaa 这个指针（引用）本身存放在栈上，因为它是一个局部变量或全局变量。
 - ClassA 类型的实例存放在堆上，因为它是一个引用类型的对象。
 
-
 <br/><br/>
-
 > <h2 id='存在容器简介'>存在容器简介</h2>
-
 **Existential Container（存在容器）简介:**
 
 Existential Container（存在容器）是一种用于存储符合协议的对象的数据结构。它是 Swift 中实现协议和泛型的关键机制之一。
@@ -3126,9 +2829,7 @@ Existential Container 内部包含了对对象的引用以及一些元数据，�
 
 通过 Existential Container，Swift 能够实现协议的抽象和泛型的功能，同时保持类型安全和性能。这种存储机制使得 Swift 中的协议和泛型更加强大和灵活。
 
-
 <br/><br/>
-
 > <h2 id='存在容器在内存的位置'>存在容器在内存的位置</h2>
 
 Existential Container（存在容器）在**内存中通常存放在堆上**。这是因为 Existential Container 通常包含引用类型的对象，而引用类型的对象在 Swift 中通常都是在堆上分配内存的。
@@ -3151,10 +2852,7 @@ Existential Container（存在容器）在**内存中通常存放在堆上**。�
 
 - 如果类型符合了多个协议，后面还会有第二个协议的协议目击表指针，以及第三个，第四个等。符合的协议越多，存在容器占用内存空间就越大。
 
-
-
 [为什么你需要使用泛型而不是 protocol](https://www.6hu.cc/archives/30535.html)
-
 
 <br/><br/>
 
@@ -3181,7 +2879,7 @@ Value Buffer（值缓冲区）通常会存储在栈上或者堆上，具体取�
 
 <br/><br/>
 
-**疑问3:**在Swift遵守协议的引用对象,引用类型对象的引用通常会存储在堆上是准确的吗?
+**疑问3:** 在Swift遵守协议的引用对象,引用类型对象的引用通常会存储在堆上是准确的吗?
 
 那这个存在容器在内存什么位置?
 
@@ -3191,16 +2889,11 @@ Value Buffer（值缓冲区）通常会存储在栈上或者堆上，具体取�
 
 至于存在容器本身在内存中的位置，**它通常会根据其生命周期和作用域而有所不同。在大多数情况下，存在容器会被分配在堆上。** 这是因为存在容器通常用于长时间存活的对象引用，而堆上的内存分配由引用计数（reference counting）机制管理，可以灵活地管理对象的生命周期。然而，在一些局部作用域中，例如函数的栈帧中，存在容器也可以存储在栈上，这取决于编译器的优化和具体的情况。
 
-
 <br/><br/><br/>
-
-
 > <h2 id='VirtualTable和ProtocolWitnessTable区别'>Virtual Table和Protocol Witness Table区别</h2>
 
 
 <br/><br/>
-
-
 > <h2 id='ExistentialContainer5个内存单元'>Existential Container 5个内存单元</h2>
 
 Existential Container 类型占据 5 个内存单元（也称 词，Word）。其结构如下图所示：
@@ -3211,29 +2904,18 @@ Existential Container 类型占据 5 个内存单元（也称 词，Word）。�
 - 1 个词作为 Value Witness Table 的索引。
 - 1 个词作为 Protocol Witness Table 的索引。
 
-
-
 <br/><br/>
-
-
 > <h4 id='Value Buffer'>Value Buffer</h4>
-
 Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。对于 Small Value（存储空间小于等于 Value Buffer），可以直接内联存储在 Value Buffer 中。对于 Large Value（存储空间大于 Value Buffer），则会在堆区分配内存进行存储，Value Buffer 只存储对应的指针。如下图所示。
-
 
 ![ios_swift0_0.png](./../../Pictures/ios_swift0_0.png)
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h4 id='Value Witness Table'>Value Witness Table</h4>
-
 
 ![ios_swift0_2.png](./../../Pictures/ios_swift0_2.png)
 
 由于协议类型的具体类型不同，其内存布局也不同，Value Witness Table 则是对协议类型的生命周期进行专项管理，从而处理具体类型的初始化、拷贝、销毁。如下图所示：
-
 
 - Value Witness Table 管理协议类型的生命周期, 从而处理具体类型的初始化、拷贝、销毁;
 
@@ -3253,11 +2935,10 @@ Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。�
 ![ios_swift0_3.png](./../../Pictures/ios_swift0_3.png)
 
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/>
-
+<br/>
 
 > <h1 id='前端'>前端</h1>
 
@@ -3266,11 +2947,9 @@ Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。�
 [从输入 URL 到页面展示到底发生了什么？看完吊打面试官！](https://zhuanlan.zhihu.com/p/133906695)
 
 <br/><br/><br/>
-
 ><h2 id='302和301的区别'>302和301的区别</h2>
 
 - 302和301的区别?以及原理
-
 > - 301 和 302 的区别:
 
 &emsp; 301和302状态码都表示重定向，就是说浏览器在拿到服务器返回的这个状态码后会自动跳转到一个新的URL地址，这个地址可以从响应的Location首部中获取（用户看到的效果就是他输入的地址A瞬间变成了另一个地址B）——这是它们的共同点。
@@ -3281,7 +2960,6 @@ Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。�
 
 <br/><br/>
 
-
 ><h2 id='重定向原因'>重定向原因</h2>
 
 > - 重定向原因：
@@ -3291,11 +2969,7 @@ Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。�
 - 网页扩展名改变(如应用需要把.php改成.Html或.shtml)。
 - 这种情况下，如果不做重定向，则用户收藏夹或搜索引擎数据库中旧地址只能让访问客户得到一个404页面错误信息，访问流量白白丧失；再者某些注册了多个域名的网站，也需要通过重定向让访问这些域名的用户自动跳转到主站点等。
 
-
-
 <br/><br/>
-
-
 ><h2 id='什么时候进行301或者302跳转'>什么时候进行301或者302跳转</h2>
 
 >- 什么时候进行301或者302跳转呢？
@@ -3307,73 +2981,3 @@ Value Buffer 占据 3 个字节，存储的可能是值，也可能是指针。�
 &emsp; 域名到期不想续费（或者发现了更适合网站的域名），想换个域名。
 在搜索引擎的搜索结果中出现了不带www的域名，而带www的域名却没有收录，这个时候可以用301重定向来告诉搜索引擎我们目标的域名是哪一个。
 空间服务器不稳定，换空间的时候。
-
-
-
-
-
-
-<br/><br/>
-
-
-><h2 id=''></h2>
-
-
-
-
-
-<br/>
-
-***
-<br/><br/>
-
-
-> <h1 id=''></h1>
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
-> <h1 id=''></h1>
-
-
-
-
-
-<br/>
-
-***
-<br/><br/>
-
-
-> <h1 id=''></h1>
-
-
-
-
-<br/>
-
-***
-<br/><br/>
-
-
-> <h1 id=''></h1>
-
-
-
-
-
-
-
-
-
-
-
-
-

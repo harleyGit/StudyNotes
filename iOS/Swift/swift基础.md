@@ -77,7 +77,7 @@
 	- [**@autoclosure自动闭包**](https://juejin.cn/post/6844903424413138958)
 	- [闭包](https://zhuanlan.zhihu.com/p/92464947)
 	- [Swift 中的协议、泛型、不透明类型](https://zzzw.cool/Swift-中的协议)
-	[Swift 性能优化(1)——基本概念(楚权的世界)](http://chuquan.me/2020/02/15/swift-performance-optimization-basic-concepts/)
+	- [Swift 性能优化(1)——基本概念(楚权的世界)](http://chuquan.me/2020/02/15/swift-performance-optimization-basic-concepts/)
 
 
 
@@ -1700,28 +1700,20 @@ print("---->>> 调用后的值：m:\(m), n:\(n)")
 ---->>> 调用后的值：m:20, n:10
 ```
 
-
-
-
 <br/><br/>
-
-
 > <h2 id='map和flatMap区别'>map和flatMap区别</h2>
-
-
 - **1).map**: 对元素进行闭包定义的映射操作
 
 以下是map的定义,接收一个闭包，且类型为Element
 
-```
+```swift
 @inlinable public func map<T>(_ transform: (Element) throws -> T) rethrows -> [T]
 ```
 
 <br/>
-
 map函数常⽤⽅式: 
 
-```
+```swift
 let arr= [1,2,3]
 let result=arr.map{ $0 *2}
 let arr1 = ["HELLO","WORLD"]
@@ -1729,14 +1721,11 @@ let arr1Small = arr1.map{ $0.lowercased() }
 let arr1StrCount = arr1.map{ $0.count }
 let arr1String=arr1.map {"No. \($0)"}
 ```
-
-
 <br/><br/>
-
 
 - **2).flatMap**: 是将⼀个集合中的所有元素进⾏闭包定义的映射操作，添加到另⼀个集合
 
-```
+```swift
 @inlinable public func flatMap<SegmentOfResult>(_ transform: (Element) throws ->
 SegmentOfResult) rethrows -> [SegmentOfResult.Element] where SegmentOfResult
 : Sequence
@@ -1745,8 +1734,8 @@ SegmentOfResult) rethrows -> [SegmentOfResult.Element] where SegmentOfResult
 
 flatMap常⽤⽅式:
 
-```
-let str:String? ="10"
+```swift
+let str: String? ="10"
 let strflat = str.flatMap{ $0 }
 ```
 
@@ -1757,8 +1746,8 @@ let strflat = str.flatMap{ $0 }
 
 	- **3.1). map不会对数组的结构造成影响；⽽flatMap会影响数组的结构,例如将多维数组转化为⼀维数组**
 
-```
-letarr= [[1,2,3],[4,5]]
+```swift
+let arr= [[1,2,3],[4,5]]
 
 let map = arr.map{ $0.map{ $0 * 2} }//[[2, 4, 6], [8, 10]]
 
@@ -1770,7 +1759,7 @@ letflatMap=arr.flatMap{ $0.map{ $0 *2} }//[2, 4, 6, 8, 10]
 
 **3.2). flatMap对只有解包成功的元素，才会添加到集合中，可实现过滤数组中的nil值等，并且会对数组中的可选类型⾃动解包**
 
-```
+```swift
 let a:String? ="10"
 let arr= ["a","b",nil,a]
 
@@ -1783,16 +1772,13 @@ let flatMap = arr.flatMap{ $0 }
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='函数作为参数'>函数作为参数</h2>
-
 <br/>
 
 > <h3 id='函数可以作为另一个函数的返回值'>函数可以作为另一个函数的返回值</h3>
 
-```
+```swift
 
 func makeIncrementer() ->((Int) -> Int) {
    func addOne(number: Int) -> Int {
