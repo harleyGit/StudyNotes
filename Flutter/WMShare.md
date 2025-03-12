@@ -19,16 +19,12 @@
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
-
-
-
 > <h1 id='介绍'>介绍</h1>
-
 <br/>
 
 > <h2 id='优势'>**优势**</h2>
@@ -42,8 +38,7 @@
 	- 修复崩溃并继续从应用程序停止的地方进行调试
 
 
-<br/>
-<br/>
+<br/><br/>
 
 &emsp; 就像iOS的Swift提出的万物皆对象，在Flutter中提出的则是万物皆Widget(也就是组件)，Widget是界面的基本构建元素。
 
@@ -52,31 +47,26 @@
 许多功能强大的Widget通常由许多更小的、单一用途widget组成，比如：Container在Flutter很常用（相当于**`HTML中的div标签`**）， 它也由多个子widget组成，这些子widget负责布局、绘制、定位和调整大小。具体来说，Container由 LimitedBox、 ConstrainedBox、 Align、 Padding、 DecoratedBox、 和Transform组成。
 
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='组件分类'>组件分类</h2>
 
-![有无状态组件](./../Pictures/flutter2.png)
+**有无状态组件:**
+![flutter2.png](./../Pictures/flutter2.png)
 
 - **StatefulWidget:** 有状态组件，定义交互逻辑和业务数据，可以理解为具有动态可交互的内容界面，会根据数据的变化进行多次渲染。使用**`setState`**进行页面的类容的更新和刷新，这个和React一样。
 
-![StatefulWidget组件类图](./../Pictures/flutter3.png)
-
+**StatefulWidget组件类图:**
+![flutter3.png](./../Pictures/flutter3.png)
 
 <br/>
 
-
 - **StatelessWidget：** 无状态组件，外部传入的数据转化为界面展示的内容，只会渲染一次；
-
 
 ![StatelessWidget组件类图](./../Pictures/flutter4.png)
 
 <br/>
 
-- **RenderObjectWidget（渲染对象）：**是RenderObjectElement的配置信息，是个抽象类；
+- **RenderObjectWidget（渲染对象）：** 是RenderObjectElement的配置信息，是个抽象类；
 	
 	- RenderObjectElement也是个抽象类，其包装了RenderObject，RenderObject为应用程序提供真正的渲染，其系统子类：
 		
@@ -98,11 +88,10 @@
 				
 				- Offstage/SizedBox/Align/Padding
 
-![RenderObjectWidget组件类图](./../Pictures/flutter5.png)
-
+**RenderObjectWidget组件类图**
+![flutter5.png](./../Pictures/flutter5.png)
 
 <br/>
-
 
 - **ProxyWidget：** 提供一个提供子部件的部件，而不是构建新的部件；
 	
@@ -113,7 +102,7 @@
     
     Main.dart文件
     
-```
+```dart
 void main() {
   runApp(MyApp());
 }
@@ -137,7 +126,7 @@ class MyApp extends StatelessWidget {
 
 **InheritedWidgetTestRoute.dart文件**
 
-```
+```dart
 class InheritedWidgetTestRoute extends StatefulWidget {
   @override
   _InheritedWidgetTestRouteState createState() =>
@@ -214,7 +203,7 @@ class __TestWidgetState extends State<_TestWidget> {
 
 **ShareDataWidget.dart文件**
 
-```
+```dart
 class ShareDataWidget extends InheritedWidget {
   ShareDataWidget({@required this.data, Widget child}) : super(child: child);
 
@@ -247,16 +236,8 @@ class ShareDataWidget extends InheritedWidget {
 
 **Element提供渲染的方法，而Widget只是它的配置而已。**
 
-
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='生命周期'>生命周期</h2>
-
 - [**createState**](#createState)
 - [**initState**](#initState)
 - [**didChangeDependencies**](#didChangeDependencies)
@@ -266,43 +247,33 @@ class ShareDataWidget extends InheritedWidget {
 - [**deactivate**](#deactivate)
 - [**dispose**](#dispose)
 
-
-<br/>
-<br/>
-
+<br/><br/>
 
 ![z16](./../Pictures/z16.png)
 
 上图是Flutter生命周期的示意图，其各个方法依次执行的分别是：
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='createState'>createState</h3>
 
 &emsp; createState 是 StatefulWidget 里创建 State 的方法，当要创建新的 StatefulWidget 的时候，会立即执行 createState，而且只执行一次，createState 必须要实现：
 
-```
+```dart
 class MyScreen extends StatefulWidget {
 @override
 _MyScreenState createState() => _MyScreenState();
 }
 ```
 
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='initState'>initState</h3>
-
-
 &emsp; 前面的 `createState` 是在创建 StatefulWidget 的时候会调用，initState 是 StatefulWidget 创建完后调用的第一个方法，而且只执行一次，类似于 **`Android 的 onCreate`**、**`iOS 的 viewDidLoad()`**，所以在这里 View 并没有渲染，但是这时 StatefulWidget 已经被加载到渲染树里了。
 
 &emsp; 这时 StatefulWidget 的 mount 的值会变为 true，直到 dispose 调用的时候才会变为 false。可以在 initState 里做一些初始化的操作
 
 &emsp; 在 override initState 的时候必须要调用 super.initState()：
 
-```
+```dart
 @override
 void initState() {
   super.initState();
@@ -311,45 +282,21 @@ void initState() {
 ```
 
 
-
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h3 id='didChangeDependencies'>didChangeDependencies</h3>
-
 &emsp; 当 StatefulWidget 第一次创建的时候，didChangeDependencies 方法会在 initState 方法之后立即调用，之后当 StatefulWidget 刷新的时候，就不会调用了，除非你的 StatefulWidget 依赖的 InheritedWidget 发生变化之后，didChangeDependencies 才会调用，所以 didChangeDependencies 有可能会被调用多次
 
 
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='build'>build</h3>
-
-
 &emsp; 在 StatefulWidget 第一次创建的时候，build 方法会在 didChangeDependencies 方法之后立即调用，另外一种会调用 build 方法的场景是，每当 UI 需要重新渲染的时候，build 都会被调用，所以 build 会被多次调用，然后 返回要渲染的 Widget。千万不要在 build 里做除了创建 Widget 之外的操作，因为这个会影响 UI 的渲染效率。
 
 
-
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h3 id='addPostFrameCallback'>addPostFrameCallback</h3>
-
-
 &emsp; addPostFrameCallback 是 StatefulWidge 渲染结束的回调，只会被调用一次，之后 StatefulWidget 需要刷新 UI 也不会被调用，addPostFrameCallback 的使用方法是在 initState 里添加回调：
 
-```
+```dart
 import 'package:flutter/scheduler.dart';
 @override
 	void initState() {
@@ -363,18 +310,8 @@ import 'package:flutter/scheduler.dart';
 
 &emsp； 渲染完成后，在这个方法里我们可以在[获取页面中Widget大小和位置](https://juejin.cn/post/6844903950257242119)，而且还可以进行网络接口请求
 
-
-
-
-<br/>
-<br/>
-
-
-
-
+<br/><br/>
 > <h3 id='didUpdateWidget'>didUpdateWidget</h3>
-
-
 &emsp; `didUpdateWidget` 这个生命周期我们一般不会用到，只有在使用 key 对 Widget 进行复用的时候才会调用。
 
 &emsp; 这个Key是Widget、Element和[SemanticsNode的](https://juejin.cn/post/6844904167085965326)标识符，只有当新的Widget的Key与当前Element中Widget的Key相同时，它才会被用来更新现有的Element。 Key在具有相同父级的Element之间必须是唯一的。
@@ -383,7 +320,7 @@ import 'package:flutter/scheduler.dart';
 
 而Widget的是否能够更新是根据它的一个源码方法：
 
-```
+```dart
 static bool canUpdate(Widget oldWidget, Widget newWidget) {
 return oldWidget.runtimeType == newWidget.runtimeType
     && oldWidget.key == newWidget.key;
@@ -391,7 +328,6 @@ return oldWidget.runtimeType == newWidget.runtimeType
 ```
 
 &emsp; 来进行判断是否要更新，这里的`runtimeType`是其组件类型，而在上例中起类型都相同的，所以要根据其key的不同来进行判断。
-
 
 &emsp; 这里有涉及到Flutter中的[3颗渲染树](#渲染三颗树)🌲，其分别是：**Widget Tree**、**Element Tree**、RenderObject Tree。
 
@@ -406,44 +342,20 @@ return oldWidget.runtimeType == newWidget.runtimeType
 - Element则是UI设计师，根据原型整理出最终设计图；
 - RenderObject就是我们程序开发者，负责具体的落地实现。
 
-
-
-
-
 <br/>
-
 > <h3 id='deactivate'>deactivate</h3>
-
-
 &emsp; 当要将 State 对象从渲染树中移除的时候，就会调用 deactivate 生命周期，这标志着 StatefulWidget 将要销毁，但是有时候 State 不会被销毁，而是重新插入到渲染树种。
 
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h3 id='dispose'>dispose</h3>
-
 &emsp; 当 View 不需要再显示，从渲染树中移除的时候，State 就会永久的从渲染树中移除，就会调用 dispose 生命周期，这时候就可以在 dispose 里做一些取消监听、动画的操作，和 initState 是相反的
 
-
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id='路由管理'>路由管理</h3>
-
-
-
 - **路由表**
 &emsp; 要想使用命名路由，我们必须先提供并注册一个路由表（routing table），这样应用程序才知道哪个名字与哪个路由组件相对应。其实注册路由表就是给路由起名字，路由表的定义如下：
 
-```
+```dart
 Map<String, WidgetBuilder> routes;
 ```
 
@@ -453,7 +365,7 @@ Map<String, WidgetBuilder> routes;
 
 &emsp; 路由表的注册方式很简单，我们回到之前“计数器”的示例，然后在MyApp类的build方法中找到MaterialApp，添加routes属性，代码如下：
 
-```
+```dart
 MaterialApp(
   title: 'Flutter Demo',
   theme: ThemeData(
@@ -471,7 +383,7 @@ MaterialApp(
 
 在使用时，我们可以直接使用起对应的**键**即可：
 
-```
+```dart
 onPressed: () {
   Navigator.pushNamed(context, "new_page");
   //Navigator.push(context,
@@ -482,12 +394,8 @@ onPressed: () {
 
 ```
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='状态管理'>状态管理</h3>
-
 - **常见的状态管理方：**
 	- Widget管理自己的状态。
 	- Widget管理子Widget状态。
@@ -500,8 +408,6 @@ onPressed: () {
 	- 如果状态是用户数据，如复选框的选中状态、滑块的位置，则该状态最好由父Widget管理。
 	- 如果状态是有关界面外观效果的，例如颜色、动画，那么状态最好由Widget本身来管理。
 	- 如果某一个状态是不同Widget共享的则最好由它们共同的父Widget管理。
-
-
 
 <br/>
 
@@ -517,22 +423,15 @@ onPressed: () {
 
 - 使用一些专门用于状态管理的包，如Provider、Redux，读者可以在pub上查看其详细信息。
 
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='布局组件'>布局组件</h3>
-
 > 线性布局（Row和Column）
 
 &emsp; 通过Row和Column来实现线性布局，类似于Android中的LinearLayout控件,CSS中的display中的Flex。在Flutter中Row和Column都继承自Flex
 
 Rowd的参数配置：
 
-```
+```dart
 Row({
   ...  
   //表示水平方向子组件的布局顺序(是从左往右还是从右往左)
@@ -548,16 +447,12 @@ Row({
 })
 ```
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > 弹性布局（Flex）
 
 Flutter中的弹性布局主要通过Flex和Expanded来配合实现.
 
-```
+```dart
 return Column(
       children: <Widget>[
         //Flex的两个子widget按1：2来占据水平空间  
@@ -619,22 +514,16 @@ return Column(
 
 ![效果](./../Pictures/flutter15.png)
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > 层叠布局 Stack、Positioned
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > 对齐与相对定位（Align）
 
 Align 组件可以调整子组件的位置，并且可以根据子组件的宽高来确定自身的的宽高，定义如下：
 
-```
+```dart
 Align({
   Key key,
   this.alignment = Alignment.center,
@@ -652,7 +541,7 @@ Align({
 
 <br/>
 
-```
+```dart
 Container(
   height: 120.0,
   width: 120.0,
@@ -668,23 +557,15 @@ Container(
 
 ![右上](./../Pictures/flutter16.png)
 
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='滚动组件'>滚动组件</h3>
-
-
 <br/>
 
 > **GridView**
 
 GridView可以构建一个二维网格列表，其默认构造函数定义如下：
 
-```
+```dart
 GridView({
   Axis scrollDirection = Axis.vertical,
   bool reverse = false,
@@ -704,10 +585,9 @@ GridView({
 
 &emsp; SliverGridDelegate是一个抽象类，定义了GridView Layout相关接口，子类需要通过实现它们来实现具体的布局算法。Flutter中提供了两个SliverGridDelegate的子类SliverGridDelegateWithFixedCrossAxisCount和SliverGridDelegateWithMaxCrossAxisExtent.
 
-
 <br/>
 
-```
+```dart
 GridView(
   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 3, //横轴三个子widget
@@ -728,13 +608,7 @@ GridView(
 
 ![网格图](./../Pictures/flutter17.png)
 
-
-
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > **CustomScrollView**
 
 **可滚动组件的Sliver版**
@@ -747,7 +621,7 @@ GridView(
 
 
 
-```
+```dart
 import 'package:flutter/material.dart';
 
 class CustomScrollViewTestRoute extends StatelessWidget {
@@ -822,21 +696,13 @@ class CustomScrollViewTestRoute extends StatelessWidget {
 ![复杂列表](./../Pictures/flutter18.png)
 
 
-
-
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='原生交互'>原生交互</h2>
-
-
 ![原生和Flutter交互](./../Pictures/flutter19.png)
-
 
 <br/>
 
 **平台通道支持的数据类型：**
-
 
 ![数据类型支持](./../Pictures/flutter20.png)
 
@@ -854,13 +720,11 @@ Flutter 通过 PlatformChannel 与原⽣进⾏交互，其中 PlatformChannel �
 	- PlatformChannel EventChannel: 以事件的模式
 	- 使⽤ PlatformChannel BasicMessageChannel:可以在BasicMessageChannel ⽅便进⾏⾃定义扩展，主要⽤于个性化的扩展
 
-
-
 <br/>
 
 iOS代码：
 
-```
+```dart
 //
 //  ViewController.m
 //  FlutterD
@@ -965,7 +829,7 @@ iOS代码：
 
 Flutter端：
 
-```
+```dart
 import 'dart:ui' as ui; // 调用window拿到route判断跳转哪个界面
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1079,19 +943,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
 ```
 
-
-
-<br/>
-<br/>
-
-
-
-
+<br/><br/>
 > <h2 id='模型数据'>模型数据</h2>
 
 &emsp; 在[JSON to Dart](#https://javiercbk.github.io/json_to_dart/)中我们可以直接把网络请求的json数据在这里生成Model，如下：
 
-```
+```dart
 {
     "firstName": "John",
     "lastName": "Smith",
@@ -1125,25 +982,12 @@ class _MyHomePageState extends State<MyHomePage> {
 &emsp; 将`provider: ^6.0.0`粘贴到项目中的pubspec.yaml的文件夹中，然后执行`flutter pub get`指令，下载对应插件到项目中。
 
 
-
-
-
-
-
-
-
-
 <br/>
 
 ***
 <br/>
 
-
-
-
 > <h1 id='架构原理'>架构原理</h1>
-
-
 <br/>
 
 > <h2 id='渲染三颗树'>渲染三颗树</h2>
@@ -1163,27 +1007,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
 ![3棵🌲](./../Pictures/flutter12.png)
 
-
-
-<br/>
-<br/>
-
+<br/><br/>
 **为什么需要3颗树⁉️**
-
 
 **使用三棵树的目的是尽可能复用 Element**
 
 &emsp; 复用 Element 对性能非常重要，因为 Element 拥有两份关键数据：Stateful widget 的状态对象及底层的 RenderObject。当应用的结构很简单时，或许体现不出这种优势，一旦应用复杂起来，构成页面的元素越来越多，重新创建 3 棵树的代价是很高的，所以需要最小化更新操作。当 Flutter 能够复用 Element 时，用户界面的逻辑状态信息是不变的，并且可以重用之前计算的布局信息，避免遍历整棵树。
 
-
-<br/>
-<br/>
+<br/><br/>
 
 类比HTML中的DOM树，开始一个Flutter项目中的结构树，如下：
 
-
 ![Demo结构树](./../Pictures/flutter13.png)
-
 
 &emsp; 在这个结构树中，Text、FloatingActionButton等组件都属于Widget，它表示了我们在Dart代码中所写的控件的结构，由他们构成了Widget树。
 
@@ -1191,44 +1026,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
 &emsp; Element其实是Widget的另一种抽象，我们项目中使用的像 Container、Text 等这类组件和其属性只不过是我们想要构建的组件的配置信息，当调用`build()`方法想要在屏幕上显示这些组件时，Flutter 会根据这些信息生成该 Widget 控件对应的 Element，相对的Element也会被放到相应的 Element 树当中。我们把 Widget 组件当作一个虚拟的组件树，而真正被渲染在屏幕上的其实是 Elememt 这棵树，它持有其对应 Widget 的引用，如果他对应的 Widget 发生改变，它就会被标记为 dirty Element，于是下一次更新视图时根据这个状态只更新被修改的内容，从而达到提升性能的效果。
 
-
 ![元素树对应控件树](./../Pictures/flutter14.png)
-
 
 <br/>
 
 &emsp; **`RenderObject`** 在 Flutter 当中做组件布局渲染的工作，其为了组件间的渲染搭配及布局约束也有对应的 RenderObject 树，我们也称之为渲染树。
 
 
-
-
-
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id='底层概略'>底层概略</h2>
-
-
 
 ![源码路径图](./../Pictures/flutter0.png)
 源码路径图
-
 
 <br/>
 
 ![Flutter框架图](./../Pictures/flutter1.png)
 Flutter 整体结构图
 
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 
 > **Flutter框架结构**
 
@@ -1262,16 +1078,12 @@ Flutter 整体结构图
 - **Foundation**
 	- 底层框架，定义底层工具类和方法，提供其他层使用
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > Flutter引擎（Engine）
 
 ![Flutter引擎](./../Pictures/flutter21.png)
 Flutter引擎
-
 
 &emsp; Flutter Engine使用C++实现，主要包括三个部分：**Dart Runtime**, **Skia（Google开源图形库）**,**Text(文字排版引擎)**
 
@@ -1280,31 +1092,22 @@ Flutter引擎
 &emsp; Skia是一个谷歌出品的开源二维图形库，提供常用的API，并且可以在多种软硬件平台上运行。谷歌Chrome浏览器、Chorme OS、Android、火狐浏览器、火狐操作系统及其他许多产品都使用它作为图形引擎
 和其他跨平台方案不同Flutter没有使用原生的UI 和 绘制框架，以此来保证Flutter的高性能体验.
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > 嵌入层（Embedder）
 
 ![嵌入层（Embedder）](./../Pictures/flutter22.png)
 嵌入层（Embedder）
 
-
-
 &emsp; 嵌入层的主要作用就是将Flutter嵌入到各个平台上去，其中主要负责的工作有：**surface渲染设置，线程的管理，原生插件管理，事件循环的交互**。
 
 &emsp; 嵌入层位于整个框架的最底层说明了Flutter的平台相关层非常低，大部分的渲染操作在Flutter本身内部完成，各个平台（Android，iOS等）只需要提供一个画布，这就让Flutter本身有了很好的跨端一致性。
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > **Flutter如何做到图形性能媲美原生**
 
 ![各个平台比较](./../Pictures/flutter23.png)
-
 
 &emsp; 图形计算和绘制都是由相应的硬件来完成，而直接操作硬件的指令通常都会有操作系统屏蔽，应用开发者通常不会直接面对硬件，操作系统屏蔽了这些底层硬件操作后会提供一些封装后的API供操作系统之上的应用调用。
 
@@ -1340,7 +1143,7 @@ Flutter引擎
 
 <br/>
 
-- 	一般的跨平台框架（以RN为例）
+- 一般的跨平台框架（以RN为例）
 	- 	调用框架代码（JS）
 	- 	调用原生Java代码
 	- 	调用绘图引擎Skia的C/C++代码
@@ -1348,8 +1151,7 @@ Flutter引擎
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 **渲染图解**
 
@@ -1363,21 +1165,3 @@ Flutter引擎
 
 
 **`总结：`** Flutter 并不关心显示器、视频控制器以及 GPU 具体工作，它只关心向 GPU 提供视图数据，在显示器会发出一个垂直同步信号（VSync），尽可能快地在两个 VSync 信号之间计算并合成视图数据，并且把数据提供给 GPU 。
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
-
-
-> <h1 id=''></h1>
-
-
-
-
-
