@@ -69,33 +69,12 @@
 		- [使用事件系统实现事件的响应和处理](#使用事件系统实现事件的响应和处理)
 	- [类型内嵌和结构体内嵌](#类型内嵌和结构体内嵌)
 - [**接口**](#接口)
-	- [空接口`interface{} `](#空接口`interface{}`)
-	- [接口的实现](#接口的实现)
-	- [便于扩展的日志输出系统](#便于扩展的日志输出系统)
-	- [接口和类型间转换](#接口和类型间转换)
-	- [空接口类型（interface{}）](#空接口类型（interface{}）)
-	- [类型分支](#类型分支)
-	- [实现有限状态机（FSM）](#实现有限状态机（FSM）)
 - [**错误处理**](#错误处理)
 	- [处理运行时发生的错误](#处理运行时发生的错误)
 		- [自定义错误](#自定义错误)
 	- [宕机（panic）——程序终止运行](#宕机程序终止运行)
 	- [宕机恢复（recover）](#宕机恢复recover)
 - [**‌并发编程**](#并发编程)
-	- [进程、线程与协程进程](#进程、线程与协程进程)
-	- [轻量级线程](#轻量级线程)
-	- [线程锁](#线程锁)
-		- [互斥锁](#互斥锁)
-		- [读写互斥锁](#读写互斥锁)
-		- [等待组](#等待组)
-	- [goroutine](#goroutine)
-	- [为普通函数创建goroutine](#为普通函数创建goroutine)
-	- [为匿名函数创建goroutine](#为匿名函数创建goroutine)
-	- [channel（通道）](#channel（通道）)
-	- [通道的声明和创建](#通道的声明和创建)
-		- [通道发送数据](#通道发送数据) 
-		- [单向通道](#单向通道) 
-		- [带缓冲的通道](#带缓冲的通道)
 - [**包管理**](#包管理) 
 	- [GOPATH](#GOPATH) 
 	- [包的基本使用](#包的基本使用) 
@@ -3214,7 +3193,7 @@ testStruct1()
 
 > **使用组合思想描述对象特性**
 
-```
+```go
 // 可飞行的
 type Flying struct{}
 
@@ -3259,7 +3238,7 @@ func testStruct2() {
 
 打印：
 
-```
+```go
 <=============== 🍎 🍎 🍎 ===============> 
 
 Bird: 
@@ -3275,7 +3254,7 @@ can calk
 
 > 初始化内嵌匿名结构体
 
-```
+```go
 // 车轮
 type Wheel struct {
 	Size int
@@ -3327,7 +3306,12 @@ testStruct3()
 ```
 
 
+<br/><br/><br/>
 
+***
+<br/>
+
+># <h1 id='接口'>[接口](./go接口.md)</h1>
 
 
 
@@ -3335,949 +3319,9 @@ testStruct3()
 
 ***
 <br/>
-
-> <h1 id='接口'>接口</h1>
-
-&emsp; 接口本身是调用方和实现方均需要遵守的一种协议，大家按照统一的方法命名参数类型和数量来协调逻辑处理的过程。
-
-&emsp; Go语言中使用组合实现对象特性的描述。对象的内部使用结构体内嵌组合对象应该具有的特性，对外通过接口暴露能使用的特性。
-
-> 接口声明格式
-
-```
-type 接口类型名 interface {
-	方法1( 参数列表1 ) 返回值列表1
-	方法2( 参数列表2 ) 返回值列表2
-
-	 . . . . . 
-}
-
-```
-
-● 接口类型名：使用type将接口定义为自定义的类型名。Go语言的接口在命名时，一般会在单词后面添加er，如有写操作的接口叫Writer，有字符串功能的接口叫Stringer，有关闭功能的接口叫Closer等。
-
-● 方法名：**当方法名首字母是大写时，且这个接口类型名首字母也是大写时，这个方法可以被接口所在的包（package）之外的代码访问**。
-
-● 参数列表、返回值列表：参数列表和返回值列表中的参数变量名可以被忽略，如：
-
-```
-type writer interface {
-	writer([]byte) error
-}
-```
-
-
-<br/><br/><br/>
-> <h2 id="空接口`interface{}`">空接口`interface{} `</h2>
-interface{} 是 Go 中的一个空接口类型。它是 Go 中最通用的类型，可以代表任何类型。
-
-- **特点：**
-	- 空接口：interface{} 被称为空接口，它不包含任何方法。因此，任何类型的值都可以赋给空接口。
-	- 你可以使用空接口来表示一个未知类型或支持多种类型的数据。
-
-**示例：**
-```go
-var a interface{}  // 空接口变量
-a = 42             // 赋值为整数
-fmt.Println(a)      // 输出: 42
-
-a = "hello"         // 赋值为字符串
-fmt.Println(a)      // 输出: hello
-```
-空接口的作用非常广泛，尤其是当你不知道确切类型时，或者需要存储多种不同类型的数据时。
-
-
-
-
-
-<br/><br/>
-> <h2 id='接口的实现'>接口的实现</h2>
-规则1: 接口的方法与实现接口的类型方法格式一致
-
-&emsp; 在类型中添加与接口签名一致的方法就可以实现该方法。**签名包括方法中的名称、参数列表、返回参数列表**。也就是说，只要实现接口类型中的方法的名称、参数列表、返回参数列表中的任意一项与接口要实现的方法不一致，那么接口的这个方法就不会被实现。 
-
-
-```
-//定义一个数据写入器
-type DataWriter interface {
-	// interface{}类型的data，返回一个error结构表示可能发生的错误
-	WriteData(data interface{}) error
-}
-
-// 定义文件结构，用于实现DataWriter
-type file struct{}
-
-// 实现DataWriter接口的WriteData()方法
-func (d *file) WriteData(data interface{}) error {
-	// 模拟写入数据
-	fmt.Println("Write Data:", data)
-	return nil
-}
-
-/** 接口的方法与实现接口的类型方法格式一致
- * @description:
- */
-func testInterface1() {
-	// 实例化file赋值给f，f的类型为*file
-	f := new(file)
-	// 声明一个DataWriter的接口
-	var writer DataWriter
-	// 将接口赋值f，也就是＊file类型
-	writer = f
-	// 使用DataWriter接口进行数据写入
-	writer.WriteData("data")
-}
-
-
-testInterface1()
-```
-
-打印：
-
-```
-<=============== 🍎 🍎 🍎 ===============> 
-
-Write Data: data
-
-
-<=============== 🍑 🍑 🍑 ===============> 
-```
-
-
-<br/>
-
-
-> **接口中所有方法均被实现**
-
-
-
-
-
-
-<br/>
-<br/>
-
-> <h2 id='便于扩展的日志输出系统'>便于扩展的日志输出系统</h2>
-
-> **日志对外接口**
-
-```
-type LogWriter interface {
-	Write(data interface{}) error
-}
-
-// 日志器
-type Logger struct {
-	// 这个日志器用到的日志写入器
-	writerList []LogWriter
-}
-
-// 注册一个日志写入器
-func (l *Logger) RegisterWriter(writer LogWriter) {
-	l.writerList = append(l.writerList, writer)
-}
-
-// 将一个data类型的数据写入日志
-func (l *Logger) Log(data interface{}) {
-	// 遍历所有注册的写入器
-	for _, writer := range l.writerList {
-		// 将日志输出到每一个写入器中
-		writer.Write(data)
-	}
-}
-
-// 创建日志器的实例￼
-func NewLogger() *Logger {
-	return &Logger{}
-}
-
-```
-
-
-<br/>
-
-> **文件写入器**
-
-```
-/**
- * @description: 文件写入器
- * 文件写入器的功能是根据一个文件名创建日志文件（file Writer的Set File方法）。
- * 在有日志写入时，将日志写入文件中。
- */
-// 声明文件写入器，在结构体中保存一个文件句柄，以方便每次写入时操作
-type fileWriter struct {
-	file *os.File
-}
-
-// 设置文件写入器写入的文件名
-func (f *fileWriter) SetFile(filename string) (err error) {
-	// 如果文件已经打开，关闭前一个文件
-	// 考虑到SetFile()方法可以被多次调用（函数可重入性）
-	// 假设之前已经调用过Set File()后再次调用，此时的f.file不为空，就需要关闭之前的文件，重新创建新的文件。
-	if f.file != nil {
-		f.file.Close()
-	}
-	// 创建一个文件并保存文件句柄
-	f.file, err = os.Create(filename)
-	// 如果创建的过程出现错误，则返回错误
-	return err
-}
-
-// 实现LogWriter的Write()方法
-func (f *fileWriter) Write(data interface{}) error {
-	// 如果文件没有准备好，文件句柄为nil
-	// 此时使用errors包的New()函数返回一个错误对象，包含一个字符串“file not created”
-	if f.file == nil {
-		// 日志文件没有准备好
-		return errors.New("file not created")
-	}
-	// 将数据序列化为字符串
-	// 使用fmt.Sprintf将data转换为字符串，这里使用的格式化参数是“%v”，意思是将data按其本来的值转换为字符串
-	str := fmt.Sprintf("%v\n", data)
-	// 通过f.file的Write()方法，将str字符串转换为[]byte字节数组，再写入到文件中。如果发生错误，则返回
-	_, err := f.file.Write([]byte(str))
-	return err
-}
-
-// 创建文件写入器实例
-func newFileWriter() *fileWriter {
-	return &fileWriter{}
-}
-
-```
-
-
-&emsp; 在操作文件时，会出现文件无法创建、无法写入等错误。开发中尽量不要忽略这些底层报出的错误，应该处理可能发生的所有错误。
-
-&emsp; 文件使用完后，要注意使用os.File的Close()方法进行及时关闭，否则文件再次访问时会因为其属性出现无法读取、无法写入等错误。
-
-&emsp; 提示：一个完备的文件写入器会提供多种写入文件的模式，例子中使用的模式是将日志添加到日志文件的尾部。随着文件越来越大，文件的访问效率和查看便利性也会大大降低。此时，就需要另外一种写入模式：滚动写入文件。
-
-- 滚动写入文件模式也是将日志添加到文件的尾部，但当文件达到设定的期望大小时，会自动开启一个新的文件继续写入文件，最终将获得多个日志文件。
-
-- 日志文件名不仅可以按照文件大小进行分割，还可以按照日期范围进行分割。在到达设定的日期范围，如每天、每小时的周期范围时，日志器会自动创建新的日志文件。这种日志文件创建方法也能方便开发者按日志查看日志。
-
-
-
-> 命令行写入器
-
-&emsp; 在UNIX的思想中，一切皆文件。文件包括内存、磁盘、网络和命令行等。这种抽象方法方便我们访问这些看不见摸不着的虚拟资源:
-- 命令行在Go中也是一种文件;
-- os.Stdout对应标准输出，一般表示屏幕，也就是命令行，也可以被重定向为打印机或者磁盘文件；
-- os.Stderr对应标准错误输出，一般将错误输出到日志中，不过大多数情况，os.Stdout会与os.Stderr合并输出；
-- os.Stdin对应标准输入，一般表示键盘。
-- os.Stdout、os.Stderr、os.Stdin都是*os.File类型，和文件一样实现了io.Writer接口的Write()方法。
-
-
-```
-// 命令行写入器
-type consoleWriter struct{}
-
-// 实现LogWriter的Write()方法
-func (f *consoleWriter) Write(data interface{}) error {
-	// 将数据序列化为字符串
-	str := fmt.Sprintf("%v\n", data)
-	// 将数据以字节数组写入命令行中
-	_, err := os.Stdout.Write([]byte(str))
-	return err
-}
-
-// 创建命令行写入器实例
-func newConsoleWriter() *consoleWriter {
-	return &consoleWriter{}
-}
-```
-
-&emsp; 除了命令行写入器（console Writer）和文件写入器（file Writer），读者还可以自行使用net包中的Socket封装实现网络写入器socket Writer，让日志可以写入远程的服务器中或者可以跨进程进行日志保存和分析。
-
-
-<br/>
-
-> 使用日志
-
-```
-// 创建日志器
-func testInterface2() {
-	// 创建日志器
-	l := NewLogger()
-	// 创建命令行写入器
-	cw := newConsoleWriter()
-	// 注册命令行写入器到日志器中
-	l.RegisterWriter(cw)
-	// 创建文件写入器
-	fw := newFileWriter()
-	// 设置文件名
-	if err := fw.SetFile("log.log"); err != nil {
-		fmt.Println(err)
-	}
-	// 注册文件写入器到日志器中
-	l.RegisterWriter(fw)
-
-	// 写一个日志
-	l.Log("hello")
-}
-```
-
-打印：
-
-```
-<=============== 🍎 🍎 🍎 ===============> 
-
-hello
-
-
-<=============== 🍑 🍑 🍑 ===============> 
-```
-
-&emsp; 同时还有一个log.log文件生成，在`l.RegisterWriter(cw)`中，其意思是：使用日志器方法RegisterWriter()将一个日志写入器（LogWriter）注册到日志器（Logger）中。注册的意思就是将日志写入器的接口添加到write List中
-
-
-
-
-
-<br/>
-<br/>
-
-> <h2 id='接口和类型间转换'>接口和类型间转换</h2>
-
-> 类型断言的格式
-
-```
-t, ok := i.(T)
-```
-
-&emsp; 如果发生接口未实现时，将会把ok置为false，t置为T类型的0值。正常实现时，ok为true。这里ok可以被认为是：i接口是否实现T类型的结果
-
-
-<br/>
-
-> **将接口转换为其他接口**
-
-实现某个接口的类型同时实现了另外一个接口，此时可以在两个接口间转换。
-
-**`interface{}类型表示空接口，意思就是这种接口可以保存为任意类型。`**
-
-
-```
-// 定义飞行动物接口
-type Flyer interface {
-	Fly()
-}
-
-// 定义行走动物接口
-type Walker interface {
-	Walk()
-}
-
-// 定义鸟类
-type bird struct{}
-
-// 实现飞行动物接口
-func (b *bird) Fly() {
-	fmt.Println("bird: fly")
-}
-
-// 为鸟添加Walk()方法，实现行走动物接口
-func (b *bird) Walk() {
-	fmt.Println("bird: walk")
-}
-
-// 定义猪
-type pig struct{}
-
-// 为猪添加Walk()方法，实现行走动物接口
-func (p *pig) Walk() {
-	fmt.Println("pig: walk")
-}
-func testInterface3() {
-	// 创建动物的名字到实例的映射
-	animals := map[string]interface{}{
-		"bird": new(bird),
-		"pig":  new(pig),
-	}
-	// 遍历映射
-	for name, obj := range animals {
-		// 使用类型断言获得f，类型为Flyer及is Flyer的断言成功的判定
-		f, isFlyer := obj.(Flyer)
-		// 判断对象是否为行走动物
-		w, isWalker := obj.(Walker)
-		fmt.Printf("name: %s is Flyer: %v is Walker: %v\n", name, isFlyer, isWalker)
-		// 如果是飞行动物则调用飞行动物接口
-		if isFlyer {
-			f.Fly()
-		}
-		// 如果是行走动物则调用行走动物接口
-		if isWalker {
-			w.Walk()
-		}
-	}
-}
-```
-
-打印：
-
-```
-<=============== 🍎 🍎 🍎 ===============> 
-
-name: bird is Flyer: true is Walker: true
-bird: fly
-bird: walk
-name: pig is Flyer: false is Walker: true
-pig: walk
-
-<=============== 🍑 🍑 🍑 ===============> 
-```
-
-
-
-<br/>
-
-> 将接口转换为其他类型
-
-```
-func testInterface4() {
-	p1 := new(pig)
-
-	// 由于pig实现了Walker接口，因此可以被隐式转换为Walker接口类型保存于a中
-	var a Walker = p1
-	// 由于a中保存的本来就是*pig本体，因此可以转换为*pig类型
-	p2 := a.(*pig)
-
-	fmt.Printf("p1=%p p2=%p", p1, p2)
-}
-```
-
-
-打印：
-
-```
-<=============== 🍎 🍎 🍎 ===============> 
-
-p1=0x100602af8 p2=0x100602af8
-
-<=============== 🍑 🍑 🍑 ===============> 
-```
-
-&emsp; 接口断言类似于流程控制中的if。但大量类型断言出现时，应使用更为高效的类型分支switch特性。
-
-
-
-
-<br/>
-<br/>
-
-> <h2 id='空接口类型（interface{}）'>空接口类型（interface{}）</h2>
-
-&emsp； 空接口是接口类型的特殊形式，空接口没有任何方法，因此任何类型都无须实现空接口。从实现的角度看，任何值都满足这个接口的需求。因此空接口类型可以保存任何值，也可以从空接口中取出原值。
-
-&emsp； 提示：空接口类型类似于C#或Java语言中的Object、C语言中的void*、C++中的std::any。
-
-- 在泛型和模板出现前，空接口是一种非常灵活的数据抽象保存和使用的方法。
-- 空接口的内部实现保存了对象的类型和指针。使用空接口保存一个数据的过程会比直接用数据对应类型的变量保存稍慢。因此在开发中，应在需要的地方使用空接口，而不是在所有地方使用空接口。
-
-<br/>
-
-空接口赋值如下：
-
-```
-// 声明any为interface{}类型的变量
-var any interface{}
-
-any = 1
-// 打印any的值，提供给fmt.Println的类型依然是interface{}
-fmt.Println(any)
-
-any = "hello"
-fmt.Println(any)
-```
-
-输出：
-
-```
-1
-hello
-```
-
-
-
-<br/>
-
-> 空接口获取值
-
-保存到空接口的值，如果直接取出指定类型的值时，会发生编译错误，代码如下：
-
-```
-// 声明a变量，类型int，初始值为1 var a int = 1 
-// 声明i变量，类型为interface{}，初始值为a，此时i的值变为1 var i interface{} = a 
-// 声明b变量，尝试赋值i var b int = i
-
-```
-
-编译报错：
-
-```
-cannot use i (type interface {}) as type int in assignment: need type assertion
-```
-
-编译器告诉我们，不能将i变量视为int类型赋值给b。
-
-&emsp; 将a的值赋值给i时，虽然i在赋值完成后的内部值为int，但i还是一个interface{}类型的变量。类似于无论集装箱装的是茶叶还是烟草，集装箱依然是金属做的，不会因为所装物的类型改变而改变。
-
-
-编译器提示我们得使用`type assertion`，意思就是类型断言。
-使用类型断言修改如下：
-
-``` var b int = i.(int)
-```
-
-
-
-
-
-
-<br/>
-<br/>
-
-> <h2 id='类型分支'>类型分支</h2>
-
-
-> **类型断言的书写格式**
-
-```
-switch 接口变量.(type) {
-	
-		case类型1:
-			
-			// 变量是类型1时的处理
-			
-		case类型2:
-			
-			// 变量是类型2时的处理
-			
-			…
-		default:
-			// 变量不是所有case中列举的类型时的处理
-	}
-```
-
-● 接口变量：表示需要判断的接口类型的变量。
-
-● 类型1、类型2……：表示接口变量可能具有的类型列表，满足时，会指定case对应的分支进行处理。
-
-<br/>
-
-```
-func printType(v interface{}) {
-	switch v.(type) {
-	case int:
-		fmt.Println(v, "is int")
-	case string:
-		fmt.Println(v, "is string")
-	case bool:
-		fmt.Println(v, "is bool")
-	}
-}
-func testInterface5() {
-	printType(1024)
-	printType("pig")
-	printType(true)
-}
-
-
-testInterface5()
-```
-
-输出：
-
-```
-<=============== 🍎 🍎 🍎 ===============> 
-
-1024 is int
-pig is string
-true is bool
-
-
-<=============== 🍑 🍑 🍑 ===============> 
-```
-
-
-v.(type)就是类型分支的典型写法。
-
-通过这个写法，在switch的每个case中写的将是各种类型分支。代码经过switch时，会判断v这个interface{}的具体类型从而进行类型分支跳转。
-
-switch的default也是可以使用的，功能和其他的switch一致
-
-<br/>
-<br/>
-
-> <h2 id='实现有限状态机（FSM）'>实现有限状态机（FSM）</h2>
-
-&emsp; 有限状态机（Finite-State Machine，FSM），表示有限个状态及在这些状态间的转移和动作等行为的数学模型。
-
-**状态的概念**
-- 状态机中的状态与状态间能够自由转换。但是现实当中的状态却不一定能够自由转换，例如：人可以从站立状态转移到卧倒状态，却不能从卧倒状态直接转移到跑步状态，需要先经过站立状态后再转移到跑步状态。
-- 每个状态可以设置它可以转移到的状态。一些状态机还允许在同一个状态间互相转换，这也需要根据实际情况进行配置。
-
-
-<br/>
-
-**自定义状态需要实现的接口**
-
-&emsp; 有限状态机系统需要制定一个状态需具备的属性和功能，由于状态需要由用户自定义，为了统一管理状态，就需要使用接口定义状态。状态机从状态接口查询到用户的自定义状态应该具备的属性有：
-
-● 名称，对应State接口的Name()方法。
-
-● 状态是否允许在同状态间转移，对应State接口的Enable Same Transit()方法。
-
-● 能否从当前状态转移到指定的某一个状态，对应State接口的Can Transit To()方法。
-
-
-&emsp; 除此之外，状态在转移时会发生的事件可以由状态机通过状态接口的方法通知用户自己的状态，对应的是两个方法OnBegin()和OnEnd()，分别代表状态转移前和状态转移后。
-
-
-<br/>
-
-> **状态接口**
-
-```
-// 此接口用于状态管理器内部保存和外部实现
-type State interface {
-	// 获取状态名字
-	Name() string
-	// 该状态是否允许同状态转移
-	EnableSameTransit() bool
-	
-	/*
-	* 需要实现状态的事件，分别是“状态开始”和“状态结束”。
-	* 当一个状态转移到另外一个状态时，当前状态的OnEnd()方法会被调用，而目标状态的OnBegin()方法也将被调用。
-	*/
-	// 响应状态开始时
-	OnBegin()
-	// 响应状态结束时
-	OnEnd()
-	// 判断能否转移到某个状态
-	CanTransitTo(name string) bool
-}
-
-// 从状态实例获取状态名
-func StateName(s State) string {
-	if s == nil {
-		return "none"
-	}
-	// 使用反射获取状态的名称
-	return reflect.TypeOf(s).Elem().Name()
-}
-```
-
-
-
-<br/>
-
-> **状态基本信息**
-
-&emsp; State接口中定义的方法，在用户自定义时都是重复的，为了避免重复地编写很多代码，使用State Info来协助用户实现一些默认的实现。
-
-
-&emsp; StateInfo包含有名称，在状态初始化时被赋值。StateInfo同时实现了OnBegin()、OnEnd()方法。此外，StateInfo的EnableSameTransit()方法还能判断是否允许状态在同类状态中转移，CanTransi To()方法能判断是否能转移到某个目标状态
-
-```
-/**
- * @description: 状态基本信息
- */
-// 状态的基础信息和默认实现
-type StateInfo struct {
-	// 状态名
-	name string
-}
-
-// 状态名
-func (s *StateInfo) Name() string {
-	return s.name
-}
-
-// 提供给内部设置名字
-// setName()方法的首字母小写，表示这个方法只能在同包内被调用。
-// 这里我们希望setName()不能被使用者在状态初始化后随意修改名称，而是通过后面提到的状态管理器自动赋值
-func (s *StateInfo) setName(name string) {
-	s.name = name
-}
-
-// 允许同状态转移
-func (s *StateInfo) EnableSameTransit() bool {
-	return false
-}
-
-// 默认将状态开启时实现
-func (s *StateInfo) OnBegin() {
-
-}
-
-// 默认将状态结束时实现
-func (s *StateInfo) OnEnd() {}
-
-// 默认可以转移到任何状态
-func (s *StateInfo) CanTransitTo(name string) bool {
-	return true
-}
-```
-
-
-<br/>
-
-> **状态管理**
-
-&emsp; 状态管理器管理和维护状态的生命期。用户根据需要，将需要进行状态转移和控制的状态实现后添加（StateManager的Add()方法）到状态管理器里，状态管理器使用名称对这些状态进行维护，同一个状态只允许一个实例存在。状态管理器可以通过回调函数（StateManager的OnChange成员）提供状态转移的通知。
-
-```
-/**
- * @description: 状态管理器
- */
-
-type StateManager struct {
-	// 已经添加的状态
-	// 声明一个以状态名为键，以State接口为值的map
-	stateByName map[string]State
-	// 状态改变时的回调
-	OnChange func(from, to State)
-	// 当前状态
-	curr State
-}
-
-// 添加一个状态到管理器中
-func (sm *StateManager) Add(s State) {
-	// 获取状态的名称
-	name := StateName(s)
-	// 将s转换为能设置名字的接口，然后调用该接口
-	// 将s（State接口）通过类型断言转换为带有set Name()方法(name string)的接口。
-	// 接着调用这个接口的set Name()方法设置状态的名称。使用该方法可以快速调用一个接口实现的其他方法
-	s.(interface {
-		setName(name string)
-	}).setName(name)
-	// 根据状态名获取已经添加的状态，检查该状态是否存在
-	if sm.Get(name) != nil {
-		panic("duplicate state:" + name)
-	}
-	// 根据名字保存到map中
-	sm.stateByName[name] = s
-}
-
-// 根据名字获取指定状态
-func (sm *StateManager) Get(name string) State {
-	if v, ok := sm.stateByName[name]; ok {
-		return v
-	}
-	return nil
-}
-
-// 初始化状态管理器
-func NewStateManager() *StateManager {
-	return &StateManager{
-		stateByName: make(map[string]State),
-	}
-}
-
-```
-
-
-
-<br/>
-
-
-> **在状态间转移**
-
-
-&emsp; 状态管理器不仅管理状态的实例，还可以控制当前的状态及转移到新的状态。状态管理器从当前状态转移到给定名称的状态过程中，如果发现状态不存在、目标状态不能转移及同类状态不能转移时，将返回error错误对象，这些错误以Err开头，在包（package）里提前定义好。
-
-本例一共涉及3种错误，分别是：
-
-● 状态没有找到的错误，对应Err State Not Found。
-
-● 禁止在同状态间转移的错误，对应Err Forbid Same State Transit。
-
-● 不能转移到指定状态的错误，对应Err Cannot Transit To State。状态转移时，还会调用状态管理器的On Change()函数进行外部通知。
-
-```
-/**
- * @description: 在状态间转移
- */
-// 状态没有找到的错误
-var ErrStateNotFound = errors.New("state not found")
-
-// 禁止在同状态间转移
-var ErrForbidSameStateTransit = errors.New("forbid same state transit")
-
-// 不能转移到指定状态
-var ErrCannotTransitToState = errors.New("cannot transit to state")
-
-// 获取当前的状态
-func (sm *StateManager) CurrState() State {
-	return sm.curr
-}
-
-// 当前状态能否转移到目标状态
-func (sm *StateManager) CanCurrTransitTo(name string) bool {
-	if sm.curr == nil {
-		return true
-	}
-	// 相同的状态不用转换
-	if sm.curr.Name() == name && !sm.curr.EnableSameTransit() {
-		return false
-	}
-	// 使用当前状态，检查能否转移到指定名字的状态
-	return sm.curr.CanTransitTo(name)
-}
-
-// 转移到指定状态
-func (sm *StateManager) Transit(name string) error {
-	// 获取目标状态
-	next := sm.Get(name)
-	// 目标不存在
-	if next == nil {
-		return ErrStateNotFound
-	}
-	// 记录转移前的状态
-	pre := sm.curr
-	// 当前有状态
-	if sm.curr != nil {
-		// 相同的状态不用转换
-		if sm.curr.Name() == name && !sm.curr.EnableSameTransit() {
-			return ErrForbidSameStateTransit
-		}
-		// 不能转移到目标状态
-		if !sm.curr.CanTransitTo(name) {
-			return ErrCannotTransitToState
-		}
-		// 结束当前状态
-		sm.curr.OnEnd()
-	}
-	// 将当前状态切换为要转移到的目标状态
-	sm.curr = next
-	// 调用新状态的开始
-	sm.curr.OnBegin()
-	// 通知回调
-	if sm.OnChange != nil {
-		sm.OnChange(pre, sm.curr)
-	}
-	return nil
-}
-
-```
-
-
-
-<br/>
-
-
-> 自定义状态实现状态接口
-
-```
-/**
- * @description: 自定义状态实现状态接口
- */
-
-// 闲置状态
-type IdleState struct {
-	StateInfo // 使用State Info实现基础接口
-}
-
-// 重新实现状态开始
-func (i *IdleState) OnBegin() {
-	fmt.Println("Idle State begin")
-}
-
-// 重新实现状态结束
-func (i *IdleState) OnEnd() {
-	fmt.Println("Idle State end")
-}
-
-// 移动状态
-type MoveState struct {
-	StateInfo
-}
-
-func (m *MoveState) OnBegin() {
-	fmt.Println("Move State begin")
-}
-
-// 允许移动状态互相转换
-func (m *MoveState) EnableSameTransit() bool {
-	return true
-}
-
-// 跳跃状态
-type JumpState struct {
-	StateInfo
-}
-
-func (j *JumpState) OnBegin() {
-	fmt.Println("Jump State begin")
-} // 跳跃状态不能转移到移动状态
-func (j *JumpState) CanTransitTo(name string) bool {
-	return name != "Move State"
-}
-
-
-
-// 状态机调用
-func testInterface6() {
-	// 实例化一个状态管理器
-	sm := NewStateManager()
-	// 响应状态转移的通知
-	sm.OnChange = func(from, to State) {
-		// 打印状态转移的流向
-		fmt.Printf("%s ---> %s\n\n", StateName(from), StateName(to))
-	}
-	// 添加3个状态
-	sm.Add(new(IdleState))
-	sm.Add(new(MoveState))
-	sm.Add(new(JumpState))
-	// 在不同状态间转移
-	transitAndReport(sm, "IdleState")
-	transitAndReport(sm, "MoveState")
-	transitAndReport(sm, "MoveState")
-	transitAndReport(sm, "JumpState")
-	transitAndReport(sm, "JumpState")
-	transitAndReport(sm, "IdleState")
-}
-
-```
-
-输出：
-
-```
-<=============== 🍎 🍎 🍎 ===============> 
-
-Idle State begin
-none ---> IdleState
-
-Idle State end
-Move State begin
-IdleState ---> MoveState
-
-Move State begin
-MoveState ---> MoveState
-
-Jump State begin
-MoveState ---> JumpState
-
-FAILED! JumpState --> JumpState, forbid same state transit
-
-Idle State begin
-JumpState ---> IdleState
-
-
-
-<=============== 🍑 🍑 🍑 ===============> 
-```
-
-<br/>
-
-***
-<br/><br/><br/>
 
 > <h1 id="错误处理">错误处理</h1>
-
-<br/><br/>
+<br/>
 
 > <h2 id='处理运行时发生的错误'>处理运行时发生的错误</h2>
 
@@ -4294,7 +3338,7 @@ JumpState ---> IdleState
 
 > **错误接口的定义格式**
 
-```
+```go
 type error interface {
      Error() string
  }
@@ -4317,7 +3361,7 @@ var err = errors.New("this is an error")
 
 &emsp; 错误字符串由于相对固定，一般在包作用域声明，应尽量减少在使用时直接使用errors.New返回。
 
-```
+```go
 // 错误字符串
 type errorString struct {
 	s string
@@ -4364,7 +3408,7 @@ fmt.Printf("\n\n<=============== 🍑 🍑 🍑 ===============> ")
 
 **代码中定义错误：**
 
-```
+```go
 /**
  * @description:除法错误测试
  * @param {*}
@@ -4411,8 +3455,7 @@ fmt.Printf("\n\n<=============== 🍑 🍑 🍑 ===============> ")
 > <h2 id="自定义错误">**自定义错误**</h2>
 &emsp; 自定义错误，这种错误包含两个内容：文件名和行号。解析错误的结构还实现了error接口的Error()方法，返回错误描述时，就需要将文件名和行号返回。
 
-```
-
+```go
 // 声明一个解析错误
 type ParseError struct {
 	Filename string // 文件名
@@ -4520,9 +3563,7 @@ main.main()
 &emsp; 在其他语言里，宕机往往以异常的形式存在。底层抛出异常，上层逻辑通过try/catch机制捕获异常，没有被捕获的严重异常会导致宕机，捕获的异常可以被忽略，让代码继续运行。Go没有异常系统，其使用panic触发宕机类似于其他语言的抛出异常，那么recover的宕机恢复机制就对应try/catch机制。
 
 
-```
-
-
+```go
 // 崩溃时需要传递的上下文信息
 type panicContext struct {
 	function string // 所在函数
@@ -4581,7 +3622,7 @@ testPanic1()
 
 打印：
 
-```
+```sh
 <=============== 🍎 🍎 🍎 ===============> 
 
 运行前
@@ -4594,7 +3635,6 @@ error: &{手动触发panic}
 <br/>
 
 > **panic和recover的关系**
-
 **panic和defer的组合有如下几个特性。**
 
 &emsp; ● 有panic没recover，程序宕机。
@@ -4607,386 +3647,18 @@ error: &{手动触发panic}
 
 如果想在捕获错误时设置当前函数的返回值，可以对返回值使用命名返回值方式直接进行设置。
 
-<br/>
+<br/><br/><br/>
 
 ***
-<br/><br/><br/>
-
-> <h1 id="并发编程">并发编程</h1>
-
-并发是指在同一时间内执行多个任务。并发编程包括多线程编程、多进程编程及分布式程序等。本章讲解并发编程中的多线程编程。Go语言支持并发的特性，并且通过goroutine完成。goroutine类似于线程，是由Go语言运行时(runtime)调度和管理的。Go程序能够将goroutine中的任务合理地分配给每个CPU。
-
-![go.0.0.14.png](./../Pictures/go.0.0.14.png)
-
 <br/>
 
-Socket的收发包分配一个线程。开发人员需要在线程数量和CPU数量间建立一个对应关系，以保证每个任务能及时地被分配到CPU上进行处理，同时避免多个任务频繁地在线程间切换执行而损失效率。
-
-&emsp; 虽然，线程池为逻辑编写者提供了线程分配的抽象机制。但是，如果面对随时随地可能发生的并发和线程处理需求，线程池就不是非常直观和方便了。能否有一种机制：使用者分配足够多的任务，系统能自动帮助使用者把任务分配到CPU上，让这些任务尽量并发运作。这种机制在Go语言中被称为goroutine。
-
-&emsp; goroutine的概念类似于线程，但goroutine由Go程序运行时的调度和管理。Go程序会智能地将goroutine中的任务合理地分配给每个CPU。
-
-<br/><br/><br/>
-> <h2 id="进程、线程与协程进程">进程、线程与协程进程</h2>
-
-
-进程、线程与协程进程是计算机系统进行资源分配和调度的基本单位，是操作系统结构的基础。
-
-线程是CPU独立调度和分派的基本单位。它被包含在进程之中，是进程中的实际运作单位。一个进程中可以并发多个线程，每条线程并行执行不同的任务。
-
-与线程类似，协程与协程之间相对独立，每个协程都有自己的上下文；由当前协程切换到其他协程的过程是由当前协程进行控制并实现的。
-
-<br/>
-
-- **并发与并行**
-
-- 并行：同时执行；多个CPU同时执行多个线程。
-- 并发：穿插执行；一个CPU在不同时间段执行不同的线程，也就是说多个线程轮流穿插执行。
-
-为了方便理解，使用如图11.1所示的示意图展示并行与并发的区别。
-
-
-![go.0.0.15.png](./../Pictures/go.0.0.15.png)
-
-&emsp; 并发编程是指让一个CPU在某个时间段内执行一个含有多个线程的程序，这些线程被这个CPU轮流穿插执行。并发编程的优势在于当一个CPU执行含有多个线程的程序时，另一个线程不必等待当前线程被执行完毕后再被执行，进而提高使用CPU的效率。
-
-> <h2 id='轻量级线程'>轻量级线程</h2>
-
-`runtime.GOMAXPROCS(逻辑CPU数量)`
-
-逻辑CPU数量可以有如下几种数值：
-
-● <1：不修改任何数值。
-
-● =1：单核心执行。
-
-● >1：多核并发执行。
-
-`runtime.NumCPU()`： 查询CPU数量
-
-> <h2 id='线程锁'>线程锁</h1>
-
-<br/>
-
-> 静态检测
-
-```
-/**
- * @description: 序列号生成器
- */
-
-var (
-	// 序列号
-	seq int64
-)
-
-func testLock1() {
-	//生成10个并发序列号
-	for i := 0; i < 10; i++ {
-		go GenID()
-	}
-	fmt.Println(GenID())
-}
-func GenID() int64 {
-	// 尝试原子的增加序列号
-	// 使用原子操作函数atomic.Add Int64()对seq()函数加1操作。
-	// 不过这里故意没有使用atomic.Add Int64()的返回值作为Gen ID()函数的返回值，因此会造成一个竞态问题
-	atomic.AddInt64(&seq, 1)
-	return seq
-}
-
-```
-
-在运行程序时，为运行参数加入“-race”参数，开启运行时（runtime）对竞态问题的分析，命令如下：`go run -race main.go`
-
-![go11](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go11.png)
-
-根据报错信息是`atomic.AddInt64(&seq, 1)`有竞态问题，根据atomic.AddInt64()的参数声明，这个函数会将修改后的值以返回值方式传出。修改后如下：
-
-```
-func GenID() int64 {
-	// 尝试原子的增加序列号
-	return atomic.AddInt64(&seq, 1)
-}
-
-```
-
-执行命令后输出：
-
-```
-go run -race main.go
-<=============== 🍎 🍎 🍎 ===============> 
-
-10
-
-
-<=============== 🍑 🍑 🍑 ===============> %  
-```
-
-本例中只是对变量进行增减操作，虽然可以使用互斥锁（sync.Mutex）解决竞态问题，但是对性能消耗较大。
-
-<br/><br/>
-> <h3 id='互斥锁'>互斥锁</h3>
-&emsp; **`（sync.Mutex）`** 保证同时只有一个goroutine可以访问共享资源互斥锁是一种常用的控制共享资源访问的方法。
-
-<br/><br/>
-> <h3 id='读写互斥锁'>读写互斥锁</h3>
-&emsp; **`（sync.RWMutex）`**在读比写多的环境下比互斥锁更高效
-
-&emsp;在读多写少的环境中，可以优先使用读写互斥锁，sync包中的RWMutex提供了读写互斥锁的封装。
-
-
-<br/><br/>
-> <h3 id='等待组'>等待组</h3>
-&emsp; **（sync.Wait Group）** 保证在并发环境中完成指定数量的任务
-
-&emsp; 除了可以使用通道（channel）和互斥锁进行两个并发程序间的同步外，还可以使用等待组进行多个任务的同步。
-
-![go12](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go12.jpeg)
-
-&emsp; 等待组内部拥有一个计数器，计数器的值可以通过方法调用实现计数器的增加和减少。当我们添加了N个并发任务进行工作时，就将等待组的计数器值增加N。每个任务完成时，这个值减1。同时，在另外一个goroutine中等待这个等待组的计数器值为0时，表示所有任务已经完成。
+># <h1 id="go并发编程">[并发编程](./go并发编程.md)</h1>
 
 
 <br/><br/><br/>
-> <h2 id="goroutine">goroutine</h2>
-
-在Go语言中，goroutine不仅是轻量级线程，而且是用户级线程。用户级线程是指由用户控制代码的执行流程，不需要操作系统进行调度和分派。也就是说，Go程序智能地将goroutine中的任务合理分配给每个CPU。
-
-Go语言不仅有goroutine，还有用于调度goroutine的、对接系统级线程的调度器。调度器主要负责统筹调配Go语言并发编程模型（即GPM模型）中的3个主要元素，它们分别是G（goroutine的缩写）​、P（processor的缩写）和M（machine的缩写）​。
-
-其中，M指的是系统级线程；P指的是能够使若干个G在恰当的时机与M对接，并得以运行的中介。
-
-
-<br/><br/><br/>
-> <h2 id="为普通函数创建goroutine">为普通函数创建goroutine</h2>
-
-```
-go 函数名称(prameter)
-```
-
-参数说明如下。
-
-**parameter：参数列表。**
-
-
-<br/><br/><br/>
-> <h2 id="为匿名函数创建goroutine">为匿名函数创建goroutine</h2>
-
-
-在Go程序中，使用go关键字还可以为匿名函数创建goroutine。注意，go关键字的后面须包含两个内容：一个是定义的匿名函数；另一个是匿名函数的调用参数。
-
-使用go关键字为匿名函数创建goroutine的语法格式如下。
-
-```
-go func(parameter){
-	func field
-}(para)
-```
-
-参数说明如下。
-
-- func: Go语言的关键字，用于定义匿名函数。
-- parameter：参数列表。
-- func field：匿名函数的实现代码。
-- para：匿名函数被调用时所需设置的参数。
-
-
-<br/><br/><br/>
-> <h2 id="channel（通道）">channel（通道）</h2>
-
-通道是Go语言在两个或多个goroutine之间的一种通信方式。通道可以让一个goroutine给另一个goroutine发送消息。当需要在goroutine之间共享一个数据资源时，通道是确保同步交换数据资源的方法。goroutine与通道的关系如图11.2所示。
-
-![go.0.0.16.png](./../Pictures/go.0.0.16.png)
-
-多个goroutine为了争抢数据资源，势必会降低执行效率。为了保证执行效率不降低，goroutine之间通过通道进行通信，确保同一时刻只有一个goroutine访问通道，并执行发送和接收数据的操作。
-
-通道就像队列一样，遵循“先入先出”的规则，保证发送和接收数据的顺序。
-
-<br/><br/><br/>
-
-> <h2 id="通道的声明和创建">通道的声明和创建</h2>
-
-**声明**
-
-```
-var name chan type
-```
-
-- **参数说明如下。**
-	- var: Go语言关键字，用于声明变量。
-	- name：通道的名称。
-	- chan: Go语言关键字，通道类型。
-	- type：在通道内部传输的数据的类型。为了创建通道，需要使用make()函数。创建通道的语法格式如下。
-
-
-<br/>
-
-**创建**
-
-```
-name := make(chan type)
-```
-
-- **参数说明如下**。
-	- name：通道的名称。
-	- make: make()函数，用于创建通道。
-	- chan: Go语言关键字，通道类型。
-	- type：在通道内部传输的数据的类型。在实际开发中，可以先声明通道，再创建通道。
-
-```
-var chel chan string
-chel = make(chan string)
-```
-
-**或者**
-
-```
-1 := make(chan int)            // 创建一个整型类型的通道
- ch2 := make(chan interface{})  // 创建一个空接口类型的通道，可以存放任意格式
- type Equip struct{ /＊ 一些字段 ＊/ }
- ch2 := make(chan ＊Equip)         // 创建Equip指针类型的通道，可以存放＊Equip
-```
-
-<br/><br/><br/>
-> <h2 id="通道发送数据">通道发送数据</h2>
-
-通道的发送使用特殊的操作符“<-”，
-
-将数据通过通道发送的格式为：
-
-`通道变量 <- 值`
-
-● 通道变量：通过make创建好的通道实例。
-
-● 值：可以是变量、常量、表达式或者函数返回值等。值的类型必须与ch通道的元素类型一致。
-
-```
-// 创建一个空接口通道
- ch := make(chan interface{})
- // 将0放入通道中
- ch <-0
- // 将hello字符串放入通道中
- ch <- "hello"
-```
-
-
-<br/>
-
-
-> **通道接收数据特性**
-
-通道接收同样使用“<-”操作符，通道接收有如下特性：
-
-● 通道的收发操作在不同的两个goroutine间进行。
-
-由于通道的数据在没有接收方处理时，数据发送方会持续阻塞，因此通道的接收必定在另外一个goroutine中进行。
-
-● 接收将持续阻塞直到发送方发送数据。
-
-如果接收方接收时，通道中没有发送方发送数据，接收方也会发生阻塞，直到发送方发送数据为止。
-
-● 每次接收一个元素。通道一次只能接收一个数据元素。
-
-
-<br/>
-
-通道接收数据有4种写法：
-
-**1). 阻塞接受数据：将接收变量作为“<-”操作符的左值**
-
-```
-data := <- ch
-```
-
-<br/>
-
-**2). 非阻塞接收数据**
-
-```
-data, ok := <- ch
-```
-
-&emsp; data：表示接收到的数据。未接收到数据时，data为通道类型的零值。● ok：表示是否接收到数据。非阻塞的通道接收方法可能造成高的CPU占用，因此使用非常少。如果需要实现接收超时检测，可以配合select和计时器channel进行。
-
-
-<br/>
-
-**3). 接收任意数据，忽略接收的数据:阻塞接收数据后，忽略从通道返回的数据**
-
-```
-<-ch
-```
-
-执行该语句时将会发生阻塞，直到接收到数据，但接收到的数据会被忽略。这个方式实际上只是通过通道在goroutine间阻塞收发实现并发同步。
-
-<br/>
-
-
-4).循环接收
-
-通道的数据接收可以借用for range语句进行多个元素的接收操作。
-
-```
-for data := range ch {
-
-}
-```
-
-
-通道ch是可以进行遍历的，遍历的结果就是接收到的数据。数据类型就是通道的数据类型。通过for遍历获得的变量只有一个，即上面例子中的data。
-
-<br/><br/><br/>
-> <h2 id="单向通道">单向通道</h2>
-
-声明格式:
-
-只能发送的通道类型为chan<-，只能接收的通道类型为<-chan: 
-
-```
-// 只能发送通道
-var 通道实例 chan <- 元素类型                      
-
-// 只能接收通道
-var 通道实例 <-chan 元素类型                      
-```
-
-● 元素类型：通道包含的元素类型。
-
-● 通道实例：声明的通道变量。
-
-
-```
-// 声明一个只能发送的通道类型，并赋值为ch
-ch := make(chan int)
-var chSendOnly chan<- int = ch
-
-//声明一个只能接收的通道类型，并赋值为ch
-var chRecvOnly <-chan int = ch
-```
-
-<br/><br/><br/>
-> <h2 id="带缓冲的通道">带缓冲的通道</h2>
-
-&emsp; 在无缓冲通道的基础上，为通道增加一个有限大小的存储空间形成带缓冲通道。带缓冲通道在发送时无需等待接收方接收即可完成发送过程，并且不会发生阻塞，只有当存储空间满时才会发生阻塞。同理，如果缓冲通道中有数据，接收时将不会发生阻塞，直到通道中没有数据可读时，通道将会再度阻塞。
-
-&emsp; **提示：** 无缓冲通道保证收发过程同步。无缓冲收发过程类似于快递员给你电话让你下楼取快递，整个递交快递的过程是同步发生的，你和快递员不见不散。但这样做快递员就必须等待所有人下楼完成操作后才能完成所有投递工作。如果快递员将快递放入快递柜中，并通知用户来取，快递员和用户就成了异步收发过程，效率可以有明显的提升。带缓冲的通道就是这样的一个“快递柜”。
-
-<br/>
-
-> 创建带缓冲通道
-
-`通道实例 := make(chan通道类型, 缓冲大小)`
-
-● 通道类型：和无缓冲通道用法一致，影响通道发送和接收的数据类型。
-
-● 缓冲大小：决定通道最多可以保存的元素数量。
-
-● 通道实例：被创建出的通道实例。
-
-<br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 > <h1 id="包管理">包管理</h1>
 
@@ -5041,7 +3713,7 @@ var chRecvOnly <-chan int = ch
 
 在安装了Go开发包的操作系统中，可以使用命令行查看Go开发包的环境变量配置信息，在这些配置信息里可以查看当前GOPATH路径设置的情况。在命令行中运行`go env`后，将提示以下信息。
 
-```
+```go
 GO111MODULE='on'
 GOARCH='arm64'
 GOBIN='/Users/ganghuang/HGFiles/GitHub/GoProject/bin'
@@ -5084,7 +3756,7 @@ GOGCCFLAGS='-fPIC -arch arm64 -pthread -fno-caret-diagnostics -Qunused-arguments
 ganghuang@GangHuangs-MacBook-Pro ~ % 
 ```
 
-```
+```go
 上述内容的说明如下。
 
 第1行，执行goenv指令，输出当前Go开发包的环境变量。

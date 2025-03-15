@@ -263,8 +263,10 @@
 
 > <h1 id = 'go'>Go</h1>
 - [**go语法**](./Go/go语法.md)
+- [**并发编程**](./Go/并发编程.md)
 - [**数据存储**](./Go/数据存储.md)
 - [**常用框架**](./Go/GoLang常用框架.md)
+	- [数据库Redis](./Go/数据库Redis.md)
 - [**go实战进阶**](./Go/go实战进阶.md)
 - [**优化**](./Go/go优化.md)
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
@@ -278,7 +280,7 @@
 > <h1 id = 'flutter'>Flutter</h1>
 *	[**资料集**](./Flutter/资料集.md)
 *	[**Dart基础**](./Flutter/Dart基础.md)
-*	[]()
+*	[**Flutter设计模式**](./Flutter/Flutter设计模式.md)
 *	[**‌BuildContext理解**](./Flutter/BuildContext理解.md)
 *	[**组件基础**](./Flutter/组件基础.md)
 *	[**线程**](./Flutter/线程.md)
