@@ -2464,42 +2464,41 @@ typedef CF_OPTIONS(uint32_t, CGBitmapInfo) {
 - 图片处理（解码、绘制）
 - 图片都需要先解码成bitmap才能渲染到UI上，iOS创建UIImage，不会立刻进行解码，只有等到显示前才会在主线程进行解码，固可以使用Core Graphics中的CGBitmapContextCreate相关操作提前在子线程中进行强制解压缩获得位图(YYImage/SDWebImage/kingfisher的对比)
 
-```
+```objective-c
 SDWebImage的使用:
- CGImageRef imageRef = image.CGImage;
-        // device color space
-        CGColorSpaceRef colorspaceRef = SDCGColorSpaceGetDeviceRGB();
-        BOOL hasAlpha = SDCGImageRefContainsAlpha(imageRef);
-        // iOS display alpha info (BRGA8888/BGRX8888)
-        CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host;
-        bitmapInfo |= hasAlpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
-        
-        size_t width = CGImageGetWidth(imageRef);
-        size_t height = CGImageGetHeight(imageRef);
-        
-        // kCGImageAlphaNone is not supported in CGBitmapContextCreate.
-        // Since the original image here has no alpha info, use kCGImageAlphaNoneSkipLast
-        // to create bitmap graphics contexts without alpha info.
-        CGContextRef context = CGBitmapContextCreate(NULL,
-                                                     width,
-                                                     height,
-                                                     kBitsPerComponent,
-                                                     0,
-                                                     colorspaceRef,
-                                                     bitmapInfo);
-        if (context == NULL) {
-            return image;
-        }
-        
-        // Draw the image into the context and retrieve the new bitmap image without alpha
-        CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
-        CGImageRef imageRefWithoutAlpha = CGBitmapContextCreateImage(context);
-        UIImage *imageWithoutAlpha = [[UIImage alloc] initWithCGImage:imageRefWithoutAlpha scale:image.scale orientation:image.imageOrientation];
-        CGContextRelease(context);
-        CGImageRelease(imageRefWithoutAlpha);
-        
-        return imageWithoutAlpha;
+CGImageRef imageRef = image.CGImage;
+// device color space
+CGColorSpaceRef colorspaceRef = SDCGColorSpaceGetDeviceRGB();
+BOOL hasAlpha = SDCGImageRefContainsAlpha(imageRef);
+// iOS display alpha info (BRGA8888/BGRX8888)
+CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host;
+bitmapInfo |= hasAlpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
 
+size_t width = CGImageGetWidth(imageRef);
+size_t height = CGImageGetHeight(imageRef);
+
+// kCGImageAlphaNone is not supported in CGBitmapContextCreate.
+// Since the original image here has no alpha info, use kCGImageAlphaNoneSkipLast
+// to create bitmap graphics contexts without alpha info.
+CGContextRef context = CGBitmapContextCreate(NULL,
+                                             width,
+                                             height,
+                                             kBitsPerComponent,
+                                             0,
+                                             colorspaceRef,
+                                             bitmapInfo);
+if (context == NULL) {
+    return image;
+}
+
+// Draw the image into the context and retrieve the new bitmap image without alpha
+CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
+CGImageRef imageRefWithoutAlpha = CGBitmapContextCreateImage(context);
+UIImage *imageWithoutAlpha = [[UIImage alloc] initWithCGImage:imageRefWithoutAlpha scale:image.scale orientation:image.imageOrientation];
+CGContextRelease(context);
+CGImageRelease(imageRefWithoutAlpha);
+
+return imageWithoutAlpha;
 ```
 
 <br/><br/>
@@ -2530,10 +2529,7 @@ SDWebImage的使用:
 			- 阴影，layer.shadowXXX
 			- 如果设置了layer.shadowPath就不会产生离屏渲染
 
-
-	
 <br/><br/>
-
 
 - [**卡顿监测**](https://juejin.cn/post/6844904004053368846#heading-6)
 	- Xcode 自带 Instruments
@@ -2541,27 +2537,18 @@ SDWebImage的使用:
 	- RunLoop 监听
 
 
-
 <br/><br/><br/>
-
-
 > <h2 id='WKWebview白屏'>WKWebview白屏</h2>
-
 
 - WKWebview白屏问题，严格来说，是一种内存方面的问题；之前的UIWebview因为内存使用过大会Crash，而WKWebview不会Crash，会白屏；
 
-
 - WKWebView是一个多进程组件，Network Loading以及UI Rendering在其它进程中执行，当WKWebView总体的内存占用比较大时，WebContent Process会Crash，从而出现白屏现象。
 
-
 - 解决办法：
-
 	- KVO监听URL, 当URL为nil，重新reload
-
-
 	- 在进程被终止回调中，重新reload
 
-```
+```objective-c
 // 此方法适用iOS9.0以上 
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView NS_AVAILABLE(10_11, 9_0){
 		//reload
@@ -2569,17 +2556,13 @@ SDWebImage的使用:
 ```
 
 <br/><br/><br/>
-
-
->## <h2 id = "UITableView优化">UITableView优化</h2>
-
-
+> <h2 id = "UITableView优化">UITableView优化</h2>
 **1）.Cell的重用**
 
 - 如果cell内部显示的内容来自web，使用异步加载，缓存结果请求
 - 尽量少在cellForRowAtIndexPath中设置数据，假如有100个数据，那么cellForRowAtIndexPath会执行100次，但实际屏幕显示却只有几个。这样会大量消耗时间，可以在willDisplayCell里进行数据的设置，因为willDisplayCell只会在cell将要显示时调用，屏幕显示几个cell才会调用。可以大大减少数据设置时间
 
-```
+```objective-c
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
 //不要去设置cell的数据
 }
@@ -2589,23 +2572,17 @@ SDWebImage的使用:
 }
 ```
 
-
 <br/>
 
 **2）.cell动画和绘制**
-
 重用时，它内部绘制的内容并不会被自动清除，因此你可能需要调用setNeedsDisplayInRect:或setNeedsDisplay方法。
 
 <br/>
 
 - **CPU与GPU的说明**
-
 	- CPU就是做绘制的操作把内容放到缓存里，GPU负责从缓存里读取数据然后渲染到屏幕上。CPU将准备好的bitmap放到RAM里，GPU去搬这快内存到VRAM中处理。 
-
 	- 而这个过程GPU所能承受的极限大概在16.7ms完成一帧的处理，所以最开始提到的60fps其实就是GPU能处理的最高频率。 
-
 	- GPU是图形硬件，主要的工作是混合纹理并算出像素的RGB值，这是一个非常复杂的计算过程，计算的过程越复杂，所需要消耗的时间就越长，GPU的使用率就越高，这并不是一个好的现像，而我们需要做的是减少GPU的计算量。
-
 
 <br/>
 
@@ -2613,19 +2590,19 @@ SDWebImage的使用:
 
 当图片下载完成后，如果cell是可见的，还需要更新图像
 
-```
+```objective-c
 NSArray *indexPaths = [self.tableView indexPathsForVisibleRows];
 for (NSIndexPath *visibleIndexPath in indexPaths) {
-if (indexPath == visibleIndexPath) { 
-MyTableViewCell *cell = (MyTableViewCell *)[self.tableView cellForRowAtIndexPath:indexPath];
-cell.image = image; 
-[cell setNeedsDisplayInRect:imageRect]; break; 
-}
+	if (indexPath == visibleIndexPath) { 
+		MyTableViewCell *cell = (MyTableViewCell *)[self.tableView cellForRowAtIndexPath:indexPath];
+		cell.image = image; 
+		[cell setNeedsDisplayInRect:imageRect]; 
+		break; 
+	}
 }// 也可不遍历，直接与头尾相比较，看是否在中间即可。
 ```
 
 insertRowsAtIndexPaths:withRowAnimation:方法，插入新行需要在主线程执行，而一次插入很多行的话（例如50行），会长时间阻塞主线程。而换成reloadData方法的话，瞬间就处理完了。
-
 
 <br/>
 
@@ -2634,7 +2611,7 @@ insertRowsAtIndexPaths:withRowAnimation:方法，插入新行需要在主线程�
 >假如内存里有一张400x400的图片，要放到100x100的imageview里，如果不做任何处理，直接丢进去，问题就大了，这意味着，GPU需要对大图进行缩放到小的区域显示，需要做像素点的sampling，这种smapling的代价很高，又需要兼顾pixel alignment。计算量会飙升。
 OpenGL ES是直接调用底层的GPU进行渲染；Core Graphics是一个基于CPU的绘制引擎
 
-```
+```objective-c
 //重新绘制图片
 //按照imageWidth, imageHeight指定宽高开始绘制图片
 UIGraphicsBeginImageContext(CGSizeMake(imageWidth, imageHeight));
@@ -2644,29 +2621,20 @@ UIGraphicsBeginImageContext(CGSizeMake(imageWidth, imageHeight));
 UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
 //结束绘制
 UIGraphicsEndImageContext();
-
 ```
-
 
 <br/>
 
 **丢帧概念：** 
-&emsp;&emsp;  RunLoop开始，RunLoop是一个60fps的回调，也就是说每16.7ms绘制一次屏幕，也就是我们需要在这个时间内完成view的缓冲区创建，view内容的绘制这些是CPU的工作；然后把缓冲区交给GPU渲染，这里包括了多个View的拼接(Compositing),纹理的渲染(Texture)等等，最后Display到屏幕上。但是如果你在16.7ms内做的事情太多，导致CPU，GPU无法在指定时间内完成指定的工作，那么就会出现卡顿现象，也就是丢帧。
 
+&emsp;&emsp;  RunLoop开始，RunLoop是一个60fps的回调，也就是说每16.7ms绘制一次屏幕，也就是我们需要在这个时间内完成view的缓冲区创建，view内容的绘制, 这些是CPU的工作；然后把缓冲区交给GPU渲染，这里包括了多个View的拼接(Compositing),纹理的渲染(Texture)等等，最后Display到屏幕上。但是如果你在16.7ms内做的事情太多，导致CPU，GPU无法在指定时间内完成指定的工作，那么就会出现卡顿现象，也就是丢帧。
 
-
-<br/>
-<br/>
-<br/>
-
-
+<br/><br/><br/>
 > <h4 id='圆角图片处理'>4）.圆角图片处理</h4>
-
-
 - 直接在原图上层覆盖一个内部透明圆的图片。(目前来说最优的方式)
 - 重新绘制图片(虽然重新绘制后会减少渲染的计算，但还是会影响渲染。这种方式只是把GPU的压力转义到了CPU上。负载平衡)。下面是绘制图片的方法
 
-```
+```objective-c
 //根据size 和 radius 把image重新绘制。
 -(UIImage *)getCornerRadius:(UIImage *)image size:(CGSize)size radius:(int)r
 {
@@ -2728,7 +2696,7 @@ static void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWi
 
 优化方案1:使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角
 
-```
+```objective-c
 UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(100, 100, 100, 100)];
 imageView.image = [UIImage imageNamed:@"myImg"]; 
 //开始对imageView进行画图 
@@ -2743,12 +2711,11 @@ UIGraphicsEndImageContext();
 
 ```
 
-
 <br/>
 
 优化方案2：使用CAShapeLayer和UIBezierPath设置圆角
 
-```
+```objective-c
 UIImageView *imageView = [[UIImageViewalloc]initWithFrame:CGRectMake(100,100,100,100)];
 imageView.image = [UIImageimageNamed:@"myImg"];
 UIBezierPath *maskPath = [UIBezierPathbezierPathWithRoundedRect:imageView.boundsbyRoundingCorners:UIRectCornerAllCornerscornerRadii:imageView.bounds.size];
@@ -2778,17 +2745,11 @@ imageView.layer.mask=maskLayer;
 
 [异步绘制](https://juejin.cn/post/6850418118850789390#heading-4)
 
-
 <br/>
-
 
 **4）.[cell图片加载优化](https://segmentfault.com/a/1190000018161741)**
 
-
-
-<br/>
-<br/>
-
+<br/><br/>
 
 >## <h2 id ="启动优化">[启动优化](https://juejin.cn/post/6844904127068110862#heading-3)</h2>
 
@@ -2818,9 +2779,7 @@ imageView.layer.mask=maskLayer;
 		- 	静态扫描 macho 特定段和节里面所存储的符号以及函数数据 . (静态扫描 , 主要用来获取 load 方法 , c++ 构造(有关 c++ 构造 , 参考 从头梳理 dyld 加载流程 这篇文章有详细讲述和演示 ) .
 		- clang 插桩 ( 完美版本 , 完全拿到 swift , oc , c , block 全部函数 ) 
 
-
-
-```
+```objective-c
 1.iOS系统首先会加载解析该APP的Info.plist文件，因为Info.plist文件中包含了支持APP加载运行所需要的众多Key，value配置信息，例如APP的运行条件(Required device capabilities)，是否全屏，APP启动图信息等。
 
 2.创建沙盒(iOS8后，每次启动APP都会生成一个新的沙盒路径)
@@ -2839,7 +2798,6 @@ imageView.layer.mask=maskLayer;
 
 <br/>
 
-
 **Mach-O文件说明:**
 
 &emsp; Mach-O文件格式是 OS X 与 iOS 系统上的可执行文件格式，类似于windows的 PE 文件。像我们编译产生的.o文件、程序可执行文件和各种库等都是Mach-O文件。
@@ -2852,18 +2810,11 @@ Mach-O文件主要有3部分组成：
 
 3).Data： 每一个segment的具体数据都保存在这里，这里包含了具体的代码、数据等等。
 
-
-
-
 <br/>
 
 [**高德启动耗时优化**](https://cloud.tencent.com/developer/news/616444)
 
-
-
-
 <br/>
-
 
 - **优化点**
 
@@ -2878,35 +2829,15 @@ Mach-O文件主要有3部分组成：
 	- 减少非基本类型的 C++ 静态全局变量的个数。（因为这类全局变量通常是类或者结构体，如果在构造函数中有繁重的工作，就会拖慢启动速度）
 
 
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id = ""></h2>
-
-
-
-
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 
 >## <h2 id = "内存优化">[**内存优化**](https://juejin.cn/post/6864492188404088846)</h2>
 
-
 <br/><br/>
-
 > <h3 id='内存泄漏'>内存泄漏</h3>
 
 - **内存泄漏**
-	- ARC模式下由于循环引用造成内存泄漏，可以使用**`weak`**和**`unowned`**来避免;
+	- ARC模式下由于循环引用造成内存泄漏，可以使用 **`weak`** 和 **`unowned`** 来避免;
 		- 提问： [weak和unowened区别](https://hisoka0917.github.io/swift/2017/10/17/closure-unowned-weak-self/)？
 			- 答：1）.unowned相当于以前的unsafe_unretained，当对象被释放时，unowned引用地址不会被指向nil，而是维持原内存地址，而实际上该地址上的对象已经被释放，此时去访问这个地址，程序当然会崩溃。而weak的对象在释放后会指向nil，这样不会造成crash。
 			- 2）.如何正确选择这两者的使用，Apple给我们的建议是如果能够确定在访问时不会已被释放的话，尽量使用 unowned，如果存在被释放的可能，那就选择用 weak。
@@ -2914,19 +2845,13 @@ Mach-O文件主要有3部分组成：
 			- 答：[weak原理](http://cloverkim.com/ios_weak-principle.html)
 
 <br/><br/>
-
 > <h3 id='野指针'>野指针</h3>
-
-
 - **野指针**
 	- 开发阶段可以通过开启编译里的 **Zombie Objects**（在edit scheme的Run中进行打开）复现问题，原理是 Hook 系统的 dealloc 方法，执行 __dealloc_zombie 将对象进行僵尸化，如果当前对象再次收到消息，则终止程序并打印出调用信息。 
 
 
 <br/><br/>
-
 > <h3 id='图片存取'>图片存取</h3>
-
-
 - **图片存取** 
 	- 图片读取
 		- imageNamed 会被缓存到内存中，适用于频繁使用的小图片；
@@ -2941,35 +2866,22 @@ Mach-O文件主要有3部分组成：
 
 
 <br/><br/>
-
 > <h3 id='OOM监控'>OOM 监控</h3>
-
-Out Of Memory: 内存不足
-
+**Out Of Memory: 内存不足**
 - **OOM(Out Of Memory) 监控**
-
 	- 指 App 在前台因消耗内存过大导致被系统杀死，针对这类问题，我们需要记录发生 OOM 时的调用栈、内存占用等信息，从而具体分析解决内存占用大的问题。
-
-
 	- 流程是监控 App 生命周期内的内存增减，在收到内存警告时，记录内存信息，获取当前所有对象信息和内存占用值，并在合适的时机上传到服务器。目前比较出名的 OOM 监控框架有 Facebook 的 [**FBAllocationTracker**](https://github.com/facebookarchive/FBAllocationTracker) ，国内的有腾讯开源的[**OOMDetector**](https://github.com/Tencent/OOMDetector)。
-
 
 	- FBAllocationTracker
 		- 原理是 hook 了 malloc/free 等方法，以此在运行时记录所有实例的分配信息，从而发现一些实例的内存异常情况，有点类似于在 app 内运行、性能更好的 Allocation。但是这个库只能监控 Objective-C 对象，所以局限性非常大，同时因为没办法拿到对象的堆栈信息，所以更难定位 OOM 的具体原因。
 
-
 	- OOMDetector
 		- **OOMDetector(腾讯开源)** 通过  malloc/free 的更底层接口 malloc_logger_t 记录当前存活对象的内存分配信息，同时也根据系统的 backtrace_symbols 回溯了堆栈信息。之后再根据伸展树（Splay Tree）等做数据存储分析，具体方式参看这篇文章：[iOS微信内存监控](https://wetest.qq.com/lab/view/367.html)。
-
 
 这里要说明下，内存警告和 OOM 没有必然相关性。当瞬间申请了大量内存，而 CPU 正在执行其他任务，会导致进程没有收到内存警告就发生了 OOM；当进程收到内存警告时，如果该进程优先级较高，且系统通过杀死低优先级进程已释放了足够内存，就不会在接收到 OOM。
 
 <br/><br/>
-
 > <h3 id='其它优化'>其它优化</h3>
-
-
-
 - 其它优化
 	- 构建缓存时使用 NSCache 替代 NSMutableDictionary
 		- NSCache 是线程安全的，当内存不足时会自动释放内存（取数据时需要先判空），并且可以通过 countLimit 和 totalCostLimit 属性设置上限，另外对存在 Compressed Memory 情况下的内存警告也做了优化，这些都是 NSDictionary 不具备的。
@@ -2977,17 +2889,7 @@ Out Of Memory: 内存不足
 		- Plists、XML、JSON等文件修改都必须替换整个文件，拓展性差，且开销大，容易误用
 		- NSUserDefaults默认是Plist
 
-
-
-
-
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 
 >## <h2 id = "包体积优化">[包体积优化](https://juejin.cn/post/6844904169938092045)</h3>
 
@@ -2995,32 +2897,24 @@ Out Of Memory: 内存不足
 
 <br/>
 
-![<br/>](./../../Pictures/ios_oc1.png)
-
+![ios_oc1.png](./../../Pictures/ios_oc1.png)
 
 - **资源瘦身**
-	
-	<br/>
-	
 - 移除无用图片资源
 
 &emsp; 这里推荐使用工具 [LSUnusedResources](https://github.com/tinymind/LSUnusedResources)，可以根据项目实际情况定义查找文件的正则表达式。另外建议勾选 Ignore similar name ，避免扫描出图片组。
 
-
 ![<br/>](./../../Pictures/ios_oc2.png)
-
 
 <br/>
 
 - 压缩图片等资源文件
 
-
 &emsp; 建议使用无损压缩，例如 ImageOptim、pngquant命令、tinypng ，如果涉及有损压缩最好要求设计介入进行资源检查。
-
 
 &emsp; 还可以使用 Webp 格式的图片，Webp 是由 Google 推出的图片格式，有损压缩模式下图片体积只有 jpeg 格式的 1/3，无损压缩也能减小 1/4，可以使用 cwebp 进行格式压缩转换，目前 SDWebImage、Kingfisher 都用支持该格式解析的拓展。无损压缩命令如下：
 
-```
+```objective-c
 // 语法
 cwebp [options] input_file -o output_file.webp
 // 无损压缩
@@ -3028,19 +2922,12 @@ cwebp -lossless original.png -o new.webp
 复制代码
 除了终端命令，还可以使用 iSparta 进行批量转换格式。
 ```
-
-
-<br/>
-
 - Xcode 本身也提供压缩图片的编译选项
 	- Compress PNG Files
 打包的时候基于 pngcrush 工具自动对图片进行无损压缩，如果我们已自行对图片进行压缩，该选项最好关闭。
 	
 	- Remove Text Medadata From PNG Files
 移除 PNG 资源的文本字符，比如图像名称、作者、版权、创作时间、注释等信息。
-
-***
-
 
 <br/>
 
@@ -3050,21 +2937,20 @@ cwebp -lossless original.png -o new.webp
 
 通过 `Homebrew 安装 fdupes：`
 
-```
+```sh
 brew install fdupes
-
 ```
 
 查看目标文件夹下的重复文件：
 
-```
+```sh
 fdupes -Sr 文件夹   // 查看文件夹下所有子目录中的重复文件及大小
 fdupes -Sr 文件夹 > 输出地址.txt  // 将信息输出到txt文件中
 ```
 
 输出内容如下，一般情况下，相同文件仅保留一份，修改对应的引用即可。
 
-```
+```sh
 4474 bytes each:
 Test/Images.xcassets/TabBarImage/tabBar_2.imageset/tabBar_2@2x.png
 Test/Resource/TabBarImage/tabBar_2@2x.png
@@ -3074,27 +2960,17 @@ Test/Images.xcassets/TabBarImage/tabBar_3.imageset/tabBar_3@2x.png
 Test/Resource/TabBarImage/tabBar_3@2x.png
 ```
 
-
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id ="内存暴涨解决">内存暴涨解决</h2>
-
 [**自建内存泄漏检测工具**](https://jishuin.proginn.com/p/763bfbd56d2c)
-
 
 &emsp; 在列表滑动的情况内存莫名的增长，频繁访问图片的时候内存莫名的增长，频繁的打开和关闭数据库的时候内存莫名的增长……。 这些都是拜iOS的autorelease机制所赐；具体分析如下：
 
 1.滑动列表的时候，内存出现莫名的增长，原因可能有如下可能：
 
-	a. 没有使用UITableView的reuse机制； 导致每显示一个cell都用autorelease的方式重新alloc一次；导致cell的内存不断的增加；
+a. 没有使用UITableView的reuse机制； 导致每显示一个cell都用autorelease的方式重新alloc一次；导致cell的内存不断的增加；
 
-	b. 每个cell会显示一个单独的UIView， 在UIView发生内存泄漏，导致cell的内存不断增长；
-
+b. 每个cell会显示一个单独的UIView， 在UIView发生内存泄漏，导致cell的内存不断增长；
 
 <br/>
 
@@ -3104,7 +2980,7 @@ Test/Resource/TabBarImage/tabBar_3@2x.png
 
 **NSCache使用：**
 
-```
+```objective-c
 // 创建对象
 NSCache *cache = [[NSCache alloc] init];
 // 设置缓存数量限制，默认值是 0，表示没有限制
@@ -3144,12 +3020,9 @@ NSString *string = [cache objectForKey:@(i)];
 */
 - (void)cache:(NSCache *)cache willEvictObject:(id)obj {
 }
-	
 ```
 
- 
 <br/>
-
 
 3.频繁打开和关闭SQLite，导致内存不断的增长；
 
@@ -3400,86 +3273,34 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 	- Caches：一般存储的是缓存文件，例如图片视频等，此目录下的文件不会再应用程序退出时删除。在手机备份的时候，iTunes不会备份该目录。例如:音频,视频等文件存放其中
 	- Preferences：保存应用程序的所有偏好设置iOS的Settings(设置)，我们不应该直接在这里创建文件，而是需要通过NSUserDefault这个类来访问应用程序的偏好设置。iTunes会自动备份该文件目录下的内容。比如说:是否允许访问图片,是否允许访问地理位置......
 
-
-
-
-
-
-<br/>
-<br/>
-<br/>
-
-
-
+<br/><br/><br/>
 > <h2 id='Crash优化'>Crash优化</h2>
 
 ![ios_oc2_16.png](./../../Pictures/ios_oc2_16.png)
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 ><h3 id='你知道哪些类蔟?他们有什么有缺点?'>你知道哪些类蔟?他们有什么有缺点?<h3>
 
-
-
-
-<br/>
-<br/>
-
-
-
+<br/><br/>
 ><h3 id='不使用三方SDK如何收集Crash堆栈信息?'>不使用三方SDK如何收集Crash堆栈信息</h3>
 
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 ><h3 id='有没有方法检测到异常后不让程序闪退?'>有没有方法检测到异常后不让程序闪退?(大厂)</h3>
 
 
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 ><h3 id='NSSetUncaughtExceptionHandler底层原理'>NSSetUncaughtExceptionHandler底层原理(大厂)</h3>
 
 
 
-
-<br/>
-<br/>
-
-
-><h3 id=''></h3>
-
-
-
-
-<br/>
-<br/>
-
-
-><h3 id=''></h3>
-
-
-<br/>
-<br/>
+<br/><br/>
 
 ***
 <br/>
 
-
-
-
 ># <h1 id = "架构与设计模式">架构与设计模式</h1>
-
 <br/>
 
 - [开发架构设计思考](https://www.jianshu.com/p/1e1009ba061c)
@@ -3487,35 +3308,29 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 - [组件优化](https://casatwy.com/iOS-Modulization.html?hmsr=toutiao.io)
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="MVC和MVVM">[MVC和MVVM](./设计模式.md#MVC)</h2>
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="单例类">[**单例类**](./设计模式.md#单例类)</h2>
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="协议代理">[**协议代理**](./设计模式.md#代理协议)</h2>
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 >## <h2 id="KVC和KVO">[**KVC和KVO**](./设计模式.md#KVC和KVO)</h2>
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 
 >## <h3 id="KVO的原理"> [KVO的原理](https://www.jianshu.com/p/e59bb8f59302) </h3>
 
@@ -3546,8 +3361,7 @@ namespace Acon.UrineAnalyzerPlatform.DataAccess
 
 KVO 为子类的观察者属性重写调用存取方法的工作原理在代码中相当于：
 
-
-```
+```objective-c
 //手动通过下面的方法关闭kvo
 + (BOOL)automaticallyNotifiesObserversForKey:(NSString *)key {
 	return NO;
@@ -3566,7 +3380,7 @@ KVO 为子类的观察者属性重写调用存取方法的工作原理在代码�
 
 Kvo其实也可以对成员变量进行值改变的观察,但是当我们这么设置时:
 
-```
+```objective-c
 [self.myObject addObserver:self
                        forKeyPath:@"varibaleName "
                           options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
@@ -3583,8 +3397,7 @@ self.varibaleName = @"sss";
 &emsp; 因为我们可以通过查看GNU(可以作为参照)代码中看到,在setValue:forKey、willChangeValueForKey:、didChangeValueForKey: 方法中才能触发kvo属性观察者方法.而且在setValue:forKey方法中还有一个类似通知的方法再调用observeValueForKeyPath方法达到属性观察的功能(这是看的学习视频了解的)
 
 
-<br/>
-<br/>
+<br/><br/>
 
 **嘿侍面试提问：**	当使用KVO时，一个类的实例使用kvo，它的属性值改变了，那它的另一个实例变量属性值会变吗？
 
@@ -3592,12 +3405,11 @@ self.varibaleName = @"sss";
 
 若2者都添加爱了监听，则属性值都会改变。
 
-
 <br/>
 
 注意：观察者是谁，就在谁里面写观察者方法
 
-```
+```objective-c
 //观察者是self
 [self.myObject addObserver:self
                        forKeyPath:@"num"
@@ -3613,31 +3425,29 @@ self.varibaleName = @"sss";
                       context:(void *)context {}
 ```
 
-
-
-
 <br/>
-storehub提问：NSNotification的class方法指向谁？
+
+**storehub提问：NSNotification的class方法指向谁？**
 
 错误答案：指向了**NSKVONotifying_MyKVOModel**，这说明你根本就没有理解class方法如何使用的。
 
-```
+```objective-c
 #import <objc/message.h>
 
 
 - (void)viewDidLoad {
-    [super viewDidLoad];
-    
-    // 初始化待观察类对象
-    self.myObject2 = [[MyKVOModel alloc]init];
-    self.myObject2.num = 2;
-    
-    [self.myObject2 addObserver:self
-                       forKeyPath:@"num"
-                          options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
-                          context:nil];
-                          
-    NSLog(@"%@", [self.myObject2 class]);
+	[super viewDidLoad];
+	
+	// 初始化待观察类对象
+	self.myObject2 = [[MyKVOModel alloc]init];
+	self.myObject2.num = 2;
+	
+	[self.myObject2 addObserver:self
+	           forKeyPath:@"num"
+	              options:NSKeyValueObservingOptionOld|NSKeyValueObservingOptionNew
+	              context:nil];
+	              
+	NSLog(@"%@", [self.myObject2 class]);
 	//[obj class]返回类对象本身
 	NSLog(@"---->>>2: %@", [self.myObject2 class]);
 	
@@ -3659,41 +3469,30 @@ storehub提问：NSNotification的class方法指向谁？
 ```
 
 
-
 <br/><br/>
-
-
 > <h2 id='kvo、delegate、Notification3者比较区别'>kvo、delegate、Notification3者比较区别</h2>
-
 
 ![ios_oc1_113_32](./../../Pictures/ios_oc1_113_32.png)
 
 KVO思维导图中的**NSString**值得是字符串key容易写错,但是不容易监测出来!
 
 
-
 <br/>
 
 ***
 <br/><br/>
+> <h1 id = "底层">底层</h1>
+<br/>
 
-
-># <h1 id = "底层">底层</h1>
-
-<br/><br/>
-
-># <h2 id='Mach-O文件有哪几部分组成'>[Mach-O文件有哪几部分组成](./Mach-O格式.md#格式简介)</h2>
+> <h2 id='Mach-O文件有哪几部分组成'>[Mach-O文件有哪几部分组成](./Mach-O格式.md#格式简介)</h2>
 
 
 <br/><br/>
-
-># <h0 id = "Runtime">Runtime</h0>
+> <h0 id = "Runtime">Runtime</h0>
 
 
 <br/><br/>
-
-># <h3 id = "Runtime可以做什么?">Runtime可以做什么?</h3>
-
+> <h3 id = "Runtime可以做什么?">Runtime可以做什么?</h3>
 - Method swizzle
 - 动态添加方法、属性;
 - 可以获取类的成员变量和属性

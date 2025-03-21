@@ -438,7 +438,13 @@ p1=0x100602af8 p2=0x100602af8
 
 > <h2 id='空接口类型（interface{}）'>空接口类型（interface{}）</h2>
 
-&emsp； 空接口是接口类型的特殊形式，空接口没有任何方法，因此任何类型都无须实现空接口。从实现的角度看，任何值都满足这个接口的需求。因此空接口类型可以保存任何值，也可以从空接口中取出原值。
+&emsp； interface{} 是一个空的 interface 类型，根据前文的定义：一个类型如果实现了一个 interface 的所有方法就说该类型实现了这个 interface，空的 interface 没有方法，所以可以认为所有的类型都实现了 interface{}。如果定义一个函数参数是 interface{} 类型，这个函数应该可以接受任何类型作为它的参数。
+
+```dart
+func doAnything(i interface{}){
+    
+}
+```
 
 &emsp； 提示：空接口类型类似于C#或Java语言中的Object、C语言中的void*、C++中的std::any。
 

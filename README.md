@@ -261,6 +261,9 @@
 ***
 <br/>
 
+**Go学习路线:**
+
+![go.0.0.0.0.png.png](./Pictures/go.0.0.0.0.png)
 > <h1 id = 'go'>Go</h1>
 - [**go语法**](./Go/go语法.md)
 - [**并发编程**](./Go/并发编程.md)
@@ -269,6 +272,7 @@
 	- [数据库Redis](./Go/数据库Redis.md)
 - [**go实战进阶**](./Go/go实战进阶.md)
 - [**优化**](./Go/go优化.md)
+- [go性能分析](./Go/go性能分析.md)
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
 
 

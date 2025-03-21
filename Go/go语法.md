@@ -3,6 +3,7 @@
 	- [GO指南](https://tour.go-zh.org/list)
 	- [GoLang中文网](https://studygolang.com/pkgdoc)
 	- [Go语言资料集合](https://github.com/LearnGolang/LearnGolang/tree/master/01-Golang资源/01-中文书籍)
+	- [Go开发者路线图](https://github.com/darius-khll/golang-developer-roadmap/blob/master/i18n/zh-CN/ReadMe-zh-CN.md)
 - **iBooks**
 	- [《Go语言项目开发上手指南》- 代码示例](https://github.com/XieWeiXie/GopherBook)
 	- [Go语言圣经-iBook（王飞介绍）](https://docs.hacknode.org/gopl-zh/index.html)
@@ -171,7 +172,7 @@ brew install go
 
 如果不知道是安装到了哪个目录可以通过如下查看：
 
-```
+```sh
 //可以查看go的安装目录
 brew list go
 ```
@@ -188,13 +189,13 @@ brew list go
 
 查看当前shell是zsh还是bash, 如果是bash选择编辑~/.bash_profile文件，如果是zsh选择编辑~/.zshrc 文件
 
-```
+```sh
  dscl . -read /Users/$USER UserShell
 ```
 
 根据上面的命令输出结果选择该编辑的配置文件。需要设置`GOROOT, GOPATH, PATH`三个环境变量。
 
-```
+```sh
 //指定SDK的安装路径
 export GOROOT=/usr/local/Cellar/go/1.16.5/libexec
 
@@ -216,7 +217,8 @@ GOROOT路径是go的安装路径，一般是`/usr/local/go`或者 `/opt/homebrew
 <br/><br/>
 
 我的电脑配置如下：
-```
+
+```sh
 #Go配置(https://blog.csdn.net/weixin_41850404/article/details/121682332, https://juejin.cn/post/7304959484828041227)
 
 export GOROOT=/opt/homebrew/Cellar/go/1.22.3/libexec #Go源代码安装目录(homebrew安装:brew info go)
@@ -230,12 +232,10 @@ export GOPROXY=https://goproxy.cn,direct
 #Go配置End
 ```
 
-
 <br/><br/>
-
 GOROOT下的部分文件用处：
 
-```
+```sh
 src 目录包含Go的源文件，它们被组织成包（每个目录都对应一个包），
 pkg 目录包含包对象，
 bin 目录包含可执行命令。
@@ -253,7 +253,7 @@ bin 目录包含可执行命令。
 
 **生效环境变量**
 
-```
+```sh
 source ~/.bash_profile　　# 如果是bash
 source ~/.zshrc　　# 如果是zsh
 ```
@@ -262,6 +262,34 @@ source ~/.zshrc　　# 如果是zsh
 > <h2 id="GOROOT环境变量路径下各个文件的意义">GOROOT环境变量路径下各个文件的意义</h2>
 
 ![go.0.0.80.png](./../Pictures/go.0.0.80.png)
+
+```sh
+% tree -L 3 go
+go
+└── 1.23.5
+    ├── INSTALL_RECEIPT.json
+    ├── LICENSE
+    ├── README.md
+    ├── bin
+    │   ├── go -> ../libexec/bin/go
+    │   └── gofmt -> ../libexec/bin/gofmt
+    ├── libexec
+    │   ├── CONTRIBUTING.md
+    │   ├── PATENTS
+    │   ├── SECURITY.md
+    │   ├── VERSION
+    │   ├── api
+    │   ├── bin
+    │   ├── codereview.cfg
+    │   ├── doc
+    │   ├── go.env
+    │   ├── lib
+    │   ├── misc
+    │   ├── pkg
+    │   ├── src
+    │   └── test
+    └── sbom.spdx.json
+```
 
 - api：用于存放依照 Go 版本顺序的 API 增量列表文件。这里所说的 API 包含公开的变量、常量、函数等。这些 API 增量列表文件用于 Go 语言 API 检查
 - bin：用于存放主要的标准命令文件（可执行文件），包含go、godoc、gofmt
@@ -283,7 +311,7 @@ source ~/.zshrc　　# 如果是zsh
 
 我Mac电脑配置的环境变量如下：
 
-```
+```sh
 export GOROOT=/opt/homebrew/Cellar/go/1.22.3/libexec #Go源代码安装目录(homebrew安装:brew info go- 俗称Go根目录)
 export GOPATH=$HOME/HGFiles/GitHub/GoProject	#项目程序目录
 export GOBIN=$GOPATH/bin	#Go执行目录(Go程序编译后生成的可执行文件存放目录)
@@ -292,7 +320,7 @@ export PATH=$PATH:$GOROOT/bin	#将go可执行文件加入PATH中，使GO命令�
 
 对于这种方式，开发者可以在任意目录下创建子目录作为项目程序的目录，使用的第三方库会下载至$GOPATH/pkg/mod目录下。
 
-```
+```sh
 cd /Users/ganghuang/HGFiles/GitHub/GoProject
 
 mkdir MLC_GO
@@ -300,7 +328,7 @@ mkdir MLC_GO
 
 此时只需要在go-anything目录下执行go mod init命令即可
 
-```
+```sh
 go mod init
 ```
 
@@ -310,7 +338,8 @@ go mod init
 
 ![go.0.0.6.png](./../Pictures/go.0.0.6.png)
 
-<br/><br/>
+<br/><br/><br/>
+> <h2 id="">GOPATH文件夹下src、bin、pkg文件夹作用</h2>
 
 - **Go的工作区目录结构有bin、pkg、src三个（在GOPATH目录下）：**
 
@@ -319,6 +348,54 @@ go mod init
 	- src：里面的每一个子目录，就是一个包，包内是Go的源码文件（库文件。）
 
 &emsp; 这些都是Go设计者的约定，只需按照这样的方式组织目录结构即可。GOPATH环境变量生效时个人项目可以在src目录下创建新目录，第三方库存放在src的github.com目录下。
+
+<br/><br/>
+
+**可以具体了解下pkg、bin文件夹的文件作用吗?**
+
+- **1.`bin`（Binary）**
+	- **用途**：存放 Go 编译生成的**可执行文件**（二进制程序）。
+	- **细节**：
+		- 当运行 `go install` 或 `go get` 安装一个 **main 包**（含 `main` 函数的程序）时，生成的可执行文件会保存到这里。
+		- 例如：安装 `golangci-lint` 后，它的二进制文件会出现在 `$GOPATH/bin/golangci-lint`。
+		- 可以将 `$GOPATH/bin` 添加到系统 `PATH` 环境变量中，方便直接运行这些工具。
+
+<br/>
+
+- **2.`pkg`（Package）**
+	- **用途**：存放 Go 编译生成的**静态库文件**（`.a` 文件），用于加速后续编译。
+	- **细节**：
+		- 当编译**非 main 包**（库或依赖）时，Go 会将编译后的中间结果（`.a` 文件）缓存到 `pkg` 目录。
+		- 例如：标准库 `fmt` 编译后的文件会存放在 `$GOPATH/pkg/<OS_ARCH>/fmt.a`。
+		- 这些 `.a` 文件是平台相关的，目录结构包含操作系统和架构（如 `linux_amd64`）。
+
+pkg 目录下存放的是 Go 编译后的包文件（.a 文件，即静态库文件）。编译前（源码）和编译后（.a 文件）的核心区别在于：源码是人类可读的代码，而 .a 文件是机器优化后的二进制中间产物。
+
+---		
+<br/>
+
+- **示例流程**
+1.**编译可执行程序**：
+
+```bash
+go install github.com/user/project/cmd/tool  # 生成 $GOPATH/bin/tool
+```
+
+<br/>
+
+2.**编译依赖包**：
+
+```bash
+go install github.com/user/project/pkg/lib   # 生成 $GOPATH/pkg/<OS_ARCH>/github.com/user/project/pkg/lib.a
+```
+
+---
+<br/>
+
+- **Go Modules 的差异**
+	- 使用 Go Modules（`go.mod`）后，依赖会存储在 `$GOPATH/pkg/mod` 目录，且项目不再强制要求放在 `$GOPATH/src` 下。
+	- 但 `bin` 和 `pkg` 的作用在传统 `GOPATH` 模式下依然有效。
+
 
 
 
@@ -335,11 +412,9 @@ go mod init
 
 <br/><br/><br/>
 > <h2 id="2种方式运行">2种方式运行</h2>
-
 Golang执行流程：
 
 ![go.0.0.4.png](./../Pictures/go.0.0.4.png)
-
 
 <br/>
 两者区别：
@@ -350,7 +425,7 @@ Golang执行流程：
 
 - **第一种：先编译在运行**
 
-```
+```sh
 cd /Users/ganghuang/HGFiles/GitHub/GoProject/src/GoCode/Project00_GO/main
 
 go build TestHell.go
@@ -360,24 +435,23 @@ go build TestHell.go
 
 接着：
 
-```
+```sh
 TestHello
 ```
 
 会打印：
 
-```
+```sh
 hello world
 ```
 
 一般发布的时候是这么做的
 
-
 <br/><br/>
 
 **第二种：**
 
-```
+```sh
 cd /Users/ganghuang/HGFiles/GitHub/GoProject/src/GoCode/Project00_GO/main
 
 go run TestHell.go
@@ -385,7 +459,7 @@ go run TestHell.go
 
 会打印：
 
-```
+```sh
 hello world
 ```
 
@@ -398,7 +472,7 @@ Go版本1.11以上支持设置GOROOT环境变量，在任意目录下创建项�
 
 安装Go语言开发系统后，内置的命令行工具常用的命令如下：
 
-```
+```sh
 go build：将程序编译成可执行文件。
 go run：将程序先编译成可执行文件，再运行程序。
 go fmt：格式化代码，比如换行、缩进等。
@@ -459,7 +533,7 @@ go install github.com/some/tool
 	- 无需手动设置 `GOPATH`，`go mod` 会自动管理依赖。
 	- 典型项目结构：
 
-```
+```sh
 my_project/
 ├── go.mod    # 模块依赖管理文件
 ├── go.sum    # 依赖校验文件
@@ -576,7 +650,7 @@ go env GO111MODULE
 
 [GO入门](https://blog.csdn.net/weixin_45440484/article/details/131692655)
 
-```
+```sh
 go build : 编译源代码包和依赖
 go run : 编译并运行 GO程序
 //go run xxx/hello.go //运行
@@ -637,8 +711,6 @@ func main() {
 	- 权限问题：
 		- macOS 系统保护机制可能限制对 /var/folders 的直接访问，建议通过 os.TempDir() 或终端命令查找。
 
-
-
 <br/><br/><br/>
 > <h2 id="goinstall的原理">go install的原理</h2>
 
@@ -647,6 +719,7 @@ func main() {
 ![go.0.0.22.png](./../Pictures/go.0.0.22.png)
 
 > <h2 id="goget的原理">go get的原理</h2>
+
 ![go.0.0.23.png](./../Pictures/go.0.0.23.png)
 ![go.0.0.24.png](./../Pictures/go.0.0.24.png)
 
@@ -656,8 +729,8 @@ func main() {
 <br/>
 
 > <h1 id="命令行工具">命令行工具</h1>
+<br/>
 
-<br/><br/><br/>
 > <h2 id="命令行工具-DockerDocker">命令行工具-DockerDocker</h2>
 
 [**docker部署go项目|docker项目部署精讲-B站Video**](https://www.bilibili.com/video/BV1HH4y1W7H4/?spm_id_from=333.337.search-card.all.click&vd_source=a7fe275f0ee54c4d2f691a823f8876b8)
@@ -679,8 +752,8 @@ Docker是一个容器化平台，用于打包、分发和运行应用程序。�
 
 <br/><br/><br/>
 > <h2 id="命令行的几种方式">命令行的几种方式</h2>
+<br/>
 
-<br/><br/>
 > <h2 id="内置的OS库">内置的OS库</h2>
 
 内置的os库提供与操作系统功能相关的函数(API)，它提供了对文件(os.Mkdir)或者路径(os.Getwd)的相关操作、读取环境变量(os.GetEnv)等操作。os库也可以用来保管命令行参数(os.Args)。
@@ -688,8 +761,6 @@ Docker是一个容器化平台，用于打包、分发和运行应用程序。�
 使用内置的os库来打造命令行工具，本质上就是读取命令行参数，对函数进行封装操作。
 
 需要注意的是，os.Args是一个列表，它的第一个参数（索引值为0）是文件名（命令名）​，所以用户在命令行中输入的参数是从命令行中索引值为1的位置开始的。
-
-<br/><br/>
 
 ```go
 package main
@@ -856,7 +927,8 @@ Saving session...
 如果是调试或正式的日志记录，建议使用 `log` 包，支持日志级别管理（如 `log.SetFlags`、`log.SetOutput`），更适合生产环境。
 
 <br/><br/><br/>
-> <h2 id="`fmt.Print`/`fmt.Println`">`fmt.Print`/`fmt.Println`</h2>
+
+> <h2 id="`fmt.Print`/`fmt.Println`">fmt.Print / fmt.Println</h2>
 - `fmt.Print(args...)`：直接输出，不会自动添加空格或换行。
 - `fmt.Println(args...)`：自动在参数之间添加空格，并在末尾添加换行符。
 
@@ -895,7 +967,8 @@ func main() {
 ```
 
 <br/><br/><br/>
-> <h2 id="`fmt.Printf`">`fmt.Printf`</h2>
+> <h2 id="`fmt.Printf`">fmt.Printf</h2>
+
 - `fmt.Printf(format, args...)`：使用格式化占位符（如 `%d`, `%s`, `%v`）输出内容，**不会自动换行**。
 
 - **示例：**
@@ -911,7 +984,8 @@ fmt.Printf("Name: %s, Age: %d\n", name, age)
 需要格式化输出，比如打印结构体、数字、日期等。
 
 <br/><br/><br/>
-> <h2 id="`log.Print`/`log.Println`/`log.Printf`">`log.Print`/`log.Println`/`log.Printf`</h2> 
+
+> <h2 id="`log.Print`/`log.Println`/`log.Printf`">log.Print / log.Println / log.Printf</h2> 
 - `log.Print(args...)`：类似 `fmt.Print`，但带有时间戳。
 - `log.Println(args...)`：类似 `fmt.Println`，但带有时间戳。
 - `log.Printf(format, args...)`：类似 `fmt.Printf`，但带有时间戳。
@@ -934,7 +1008,9 @@ log.Printf("Error: %s", "File not found")
 
 ***
 <br/>
+
 > <h1 id="工作目录的相对路径">工作目录的相对路径</h1>
+
 [Go 的相对路径问题](https://eddycjy.com/posts/go/talk/2018-03-13-golang-relatively-path/)
 
 在 Go 中使用 `os.ReadFile("example.txt")` 读取文件时，**相对路径是相对于程序的** **当前工作目录**（Current Working Directory, CWD），而 **不是** 相对于 `.go` 源文件的位置。
@@ -1073,7 +1149,7 @@ ganghuang@GangHuangs-MacBook-Pro PracticeGRPCExample % go run main.go server
 <br/><br/>
 > <h2 id="多个变量的声明和推导">多个变量的声明和推导</h2>
 
-```
+```go
 var name type
 ```
 
@@ -1084,7 +1160,7 @@ var name type
 - type：变量的类型。
 <br/>
 
-```
+```go
 func testVariable00(){//测试变量
 
     fmt.Println("\n<===================测试变量===================>")
@@ -1113,7 +1189,7 @@ func testVariable00(){//测试变量
 
 打印：
 
-```
+```sh
 <===================测试变量===================>
 你好啊 我创建了一个变量1111222
 
@@ -1129,7 +1205,7 @@ globalVar00= 100 globalVar01= 200 globalVar02= 全局变量V300
 <br/><br/><br/>
 > <h2 id="bool值字段有无判断">bool值字段有无判断</h2>
 
-```
+```go
 func testVariable01(){
     type Info struct {
         Name string `json:"name"`
@@ -1152,6 +1228,7 @@ func testVariable01(){
 ```
 
 打印：
+
 ```
 BOOL值测试--含有字段Name： true
 ```
@@ -1159,7 +1236,7 @@ BOOL值测试--含有字段Name： true
 <br/><br/>
 > <h2 id='短变量'>短变量</h2>
 
-```
+```go
 // 短变量声明并初始化
 func lowVar() {
 	fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
@@ -1190,7 +1267,7 @@ hp: 10, conn: %!s(<nil>), err: dial tcp 127.0.0.1:8080: connect: connection refu
 > <h2 id="复数类型">复数类型</h2>
 在计算机语言中，复数是由两个浮点数组成的。其中，一个浮点数表示实部；另一个浮点数表示虚部。Go语言提供两种复数类型，即complex64和complex128。其中，complex128类型是声明复数时的默认类型。声明复数的语法格式如下。
 
-```
+```go
 var name complex128 = complex(x, y)
 ```
 
@@ -1208,7 +1285,7 @@ var name complex128 = complex(x, y)
 
 字符类型。Go语言中有两种字符类型，即byte类型和rune类型。其中，byte类型同义于uint8类型，表示的是ASCII码的一个字符；rune类型同义于int32类型，表示的是Unicode码的一个字符。
 
-```
+```go
 func testStr(){
 	str := "张三 Hello"
 	str1 := str[0:2]
@@ -1223,20 +1300,73 @@ func testStr(){
 
 打印：
 
-```
+```sh
 str1 =  � 
 str2 = 张三
 ```
 
-<br/><br/><br/>
+<br/><br/>
 
+**ASCII码和Unicode码的区别是什么?**
+
+ASCII 和 Unicode 是两种不同的字符编码标准，主要区别在于**字符集的范围**和**存储方式**。
+
+---
+
+- **1️⃣ ASCII 码**
+	- 🔹 **全称**：American Standard Code for Information Interchange（美国信息交换标准代码）  
+	- 🔹 **字符范围**：主要用于**英文**和**控制字符**  
+	- 🔹 **编码长度**：
+		- **标准 ASCII（7 位）**：128 个字符（0 ~ 127）
+		- **扩展 ASCII（8 位）**：256 个字符（0 ~ 255）
+	- 🔹 **存储大小**：**1 个字节（8 bit）**  
+	- 🔹 **示例**：
+		- `'A'` → **65**（0x41）
+		- `'a'` → **97**（0x61）
+		- `'0'` → **48**（0x30）
+
+✅ **适用场景**：适用于**只包含英文字符**的环境，如早期计算机系统、文件编码、通信协议等。  
+❌ **局限性**：**无法表示中文、日文、韩文等非拉丁字符**。
+
+---
+
+- **2️⃣ Unicode 码**
+	- 🔹 **全称**：Universal Character Set（统一字符集）  
+	- 🔹 **字符范围**：**全球所有语言字符**（包括 ASCII、中文、日文、韩文、特殊符号、表情符号等）  
+	- 🔹 **编码方式**：
+		- **UTF-8**（变长编码，1~4 字节）
+		- **UTF-16**（变长编码，2 或 4 字节）
+		- **UTF-32**（固定 4 字节）
+	- 🔹**示例**：
+		- `'A'` 在 **ASCII 和 Unicode** 中都是 **U+0041**
+		- `'你'` 在 Unicode 中是 **U+4F60**
+		- `'😊'` 在 Unicode 中是 **U+1F60A**
+
+✅ **适用场景**：全球化应用、支持多语言的文本存储、互联网协议（如 HTML、XML、JSON）  
+❌ **局限性**：比 ASCII **占用更多存储空间**（如 UTF-16、UTF-32）
+
+---
+
+- **📌 总结**
+| 特性      | ASCII | Unicode |
+|-----------|-------|---------|
+| **字符集** | 仅支持英语 | 支持所有语言 |
+| **编码长度** | 7/8 位（1 字节） | 8/16/32 位（变长） |
+| **适用范围** | 英文文本、早期计算机 | 全球化、多语言应用 |
+| **存储大小** | 小（1 字节/字符） | 大（1~4 字节/字符） |
+
+🔹 **ASCII** 是 **Unicode** 的子集（Unicode 的前 128 个字符和 ASCII 完全相同）。  
+🔹 现代计算机**几乎都使用 Unicode（特别是 UTF-8）**，因为它兼容 ASCII 并支持所有语言。
+
+
+<br/><br/><br/>
 > <h2 id="格式化输出">格式化输出</h2>
 
 常用的字符串输出格式及其说明
 
 ![go.0.0.12.png](./../Pictures/go.0.0.12.png)
 
-```
+```go
 func testFormatLog() { //格式化输出
 	pi := 3.141592653589793
 	value1 := fmt.Sprintf("%v", pi)
@@ -1279,14 +1409,13 @@ Sprintf()函数只负责格式化数据，不负责输出格式化后的结果�
 > **说明** 
 > Go语言把&字符称作取地址操作符；把*字符称作取值操作符。取地址操作符和取值操作符是一对互补操作符。
 
-
 <br/>
 
 数据类型分类:
 
 ![go0_6.png](./../Pictures/go0_6.png)
 
-```
+```go
 // 从指针获取指针指向的值
 func pointTest1() {
 	fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
@@ -1307,7 +1436,7 @@ func pointTest1() {
 
 打印：
 
-```
+```go
 <=============== 🍎 🍎 🍎 ===============> 
 
 ptr type: *string
@@ -1319,7 +1448,7 @@ value: 🏠房屋 366——26-404
 <br/>
 指针地址的交换：变量值的交换Demo
 
-```
+```go
 // 函数的交换
 func chargeValue() {
 	fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
@@ -1360,7 +1489,7 @@ func swap(a, b *int) {
 
 <br/>
 
-```
+```go
 // 使用指针变量获取命令行的输入信息
 func point_flag() {
 	// 定义命令行参数
@@ -1388,7 +1517,7 @@ func main() {
 
 这个函数main.go的文件中，在终端执行：
 
-```
+```sh
 $  go run  ./main.go --mode=🍎 fast
 
 // 或
@@ -1412,15 +1541,17 @@ $ go run  ./main.go
 > <h2 id='类型别名'>类型别名</h2>
 Go1.9版本之前内建内型定义：
 
-```
+```go
 type byte unit8
 
 type rune int32
 ```
 
+<br/>
+
 Go 1.9版本之后变为
 
-```
+```go
 type byte = unit8
 
 type rune = int32
@@ -1428,10 +1559,7 @@ type rune = int32
 
 &emsp; 这个修改就是配合类型别名而进行的修改.
 
-
-&emsp; 这个修改就是配合类型别名而进行的修改:
-
-```
+```go
 type Type Alias = type
 ```
 
@@ -1452,7 +1580,7 @@ type Type Alias = type
 > <h2 id='数组'>数组</h2>
 **声明：**
 
-```
+```go
 var array_name [SIZE]array_type
 ```
 - **参数说明如下。**
@@ -1474,9 +1602,7 @@ var value = [7]int{1, 3, 5, 7, 9, 11, 13}
 var value = [...]int{1, 3, 5, 7, 9, 11, 13}
 ```
 
-
-
-
+<br/>
 初始化和遍历
 
 ```go
@@ -1517,7 +1643,7 @@ func init_array() {
 
 **声明：**
 
-```
+```go
 var slice_name []slice_type
 ```
 - **参数说明如下**
@@ -1525,6 +1651,7 @@ var slice_name []slice_type
 	- slice_type：切片中元素的类型
 
 <br/>
+
 **初始化：**
 
 ```go
@@ -1552,9 +1679,10 @@ fmt.Println("切片容量:", cap(slice))   // 切片容量: 10
 	- cap：切片的容量，可以省略。cap的值不影响size的值，只是提前分配内存空间。
 
 <br/>
+
 **空切片**
 
-```
+```go
 var numbers []int
 ```
 
@@ -1584,6 +1712,7 @@ func section_test() {
 ```
 
 <br/>
+
 **更简单Demo**
 
 ```go
@@ -1630,6 +1759,7 @@ fmt.Println("sr = ", sr) //sr = [123 456]
 通过创建切片的副本，你可以在副本上进行操作，而不会影响底层数组。可以使用 `copy` 函数来复制切片的内容到一个新的切片中。
 
 示例：
+
 ```go
 package main
 
@@ -1752,6 +1882,7 @@ S backward
 ```
 
 <br/><br/>
+
 > <h3 id="`map[string]interface{}`的意思">`map[string]interface{}`的意思</h3>
 
 `map[string]interface{}` 是一个键为字符串类型，值为空接口的 `map`。这意味着这个 `map` 的键是字符串类型，而值可以是任何类型。
@@ -1817,18 +1948,19 @@ func main() {
 
 通过声明初始化list:
 
-```
-var变量名list.List
+```go
+var 变量名list.List
 ```
 
 <br/>
 通过container/list包的New方法初始化list
 
-```
+```go
 变量名 := list.New()
 ```
 
 <br/>
+
 **列表的添加、删除、遍历**
 
 ```go
@@ -1933,8 +2065,8 @@ func multiplication_table() {
 > <h1 id='函数'>函数</h1>
 
 ![go.0.0.13.png](./../Pictures/go.0.0.13.png)
-
 <br/>
+
 > <h2 id='声明函数'>声明函数</h2>
 
 > 带有变量名的返回值
@@ -1947,7 +2079,7 @@ func 函数名(参数列表) (返回参数列表) {
 ```
 &emsp; 下面代码中的函数拥有两个整型返回值，函数声明时将返回值命名为a和b，因此可以在函数体中直接对函数返回值进行赋值。在命名的返回值方式的函数体中，在函数结束前需要显式地使用return语句进行返回，代码如下：
 
-```
+```go
 func named Ret Values() (a, b int) {
 	a = 1
 	b = 2
@@ -1973,6 +2105,7 @@ fmt.println(a,b) // 打印：1 2
 ```
 
 <br/>
+
 > 函数参数传递测试
 > &emsp; **`注意：`Go语言中传入和返回参数在调用和返回时都使用值传递，这里需要注意的是指针、切片和map等引用型对象指向的内容在参数传递中不会发生复制，而是将指针进行复制，类似于创建一次引用**
 
@@ -2061,13 +2194,14 @@ out ptr: 0x1400007a5d0
 > <h2 id='匿名函数'>匿名函数</h2>
 格式：
 
-```
+```go
 func(参数列表)(返回参数列表) {
 	函数体
 }
 ```
 
 <br/>
+
 **‌1). 在定义时调用匿名函数**
 
 ```go
@@ -2082,18 +2216,17 @@ func testAnonymousFunction() {
 ```
 打印：
 
-```
+```sh
 <=============== 🍎 🍎 🍎 ===============> 
 
 hello 100
 ```
 
-
-
 <br/>
+
 **2). 匿名函数赋值给变量**
 
-```
+```go
 fmt.Printf("\n\n <=============== 🍎 🍎 🍎 ===============> \n\n")
 
 // 将匿名函数体保存到f()
@@ -2114,9 +2247,10 @@ hello 100
 ```
 
 <br/>
+
 **3). 匿名函数用作回调函数**
 
-```
+```go
 //遍历切片的每个元素，通过给定函数进行元素访问
 // f声明一个匿名函数
 func visit(list []int, f func(int)) {
@@ -2147,8 +2281,8 @@ func testAnonymousFunction() {
 
 打印：
 
-```
- <=============== 🍎 🍎 🍎 ===============> 
+```sh
+<=============== 🍎 🍎 🍎 ===============> 
 
 1
 2
@@ -2161,7 +2295,7 @@ func testAnonymousFunction() {
 
 **4).匿名函数的封装**
 
-```
+```go
 /**
  * @description: 匿名函数封装
  * @param {*}
@@ -2211,7 +2345,7 @@ soldier run
 > <h2 id='函数类型实现接口'>函数类型实现接口</h2>
 **1). 结构体实现接口**
 
-```
+```go
 // 调用器接口
 // 这个接口需要实现Call()方法，调用时会传入一个interface{}类型的变量，这种类型的变量表示任意类型的值
 type Invoker interface {
@@ -2251,7 +2385,7 @@ fmt.Printf("\n<=============== 🍎 🍎 🍎 ===============> \n\n")
 
 打印：
 
-```
+```sh
 <=============== 🍎 🍎 🍎 ===============> 
 
 from struct 🍎 hello 函数实现接口
@@ -2259,14 +2393,11 @@ from struct 🍎 hello 函数实现接口
 <=============== 🍎 🍎 🍎 ===============> 
 ```
 
-
-
 <br/>
 
 **2). 函数体实现接口**
 
-
-```
+```go
 // 调用器接口
 type Invoker interface {
 	// 需要实现一个Call()方法
@@ -2306,7 +2437,6 @@ func testFuncImplInterface1() {
 // 调用
 testFuncImplInterface1()
 fmt.Printf("\n<=============== 🍑 🍑 🍑 ===============> ")
-
 ```
 
 打印：

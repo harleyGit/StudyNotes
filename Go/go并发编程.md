@@ -16,6 +16,8 @@
 		- [互斥锁](#互斥锁)
 		- [读写互斥锁](#读写互斥锁)
 		- [等待组](#等待组)
+	- [sync包学习](#sync包学习)
+		- [Once 执行一次](#Once执行一次)
 	
 
 <br/><br/><br/>
@@ -457,3 +459,43 @@ go run -race main.go
 
 &emsp; 等待组内部拥有一个计数器，计数器的值可以通过方法调用实现计数器的增加和减少。当我们添加了N个并发任务进行工作时，就将等待组的计数器值增加N。每个任务完成时，这个值减1。同时，在另外一个goroutine中等待这个等待组的计数器值为0时，表示所有任务已经完成。
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="sync包学习">sync包学习</h1>
+[](https://www.cnblogs.com/rickiyang/p/11074167.html)
+<br/>
+
+> <h1 id="Once 执行一次">Once 执行一次</h1>
+Once 的作用是多次调用但只执行一次，Once 只有一个方法，Once.Do()，向 Do 传入一个函数，这个函数在第一次执行 Once.Do() 的时候会被调用，以后再执行 Once.Do() 将没有任何动作，即使传入了其它的函数，也不会被执行，如果要执行其它函数，需要重新创建一个 Once 对象。
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+
+func main() {
+	var once sync.Once
+	onceBody := func() {
+		fmt.Println("我只会出现一次")
+	}
+	done := make(chan bool)
+	for i := 0; i < 3; i++ {
+		go func() {
+			once.Do(onceBody)
+			done <- true
+		}()
+	}
+	for i := 0; i < 3; i++ {
+		<-done
+	}
+}
+
+```

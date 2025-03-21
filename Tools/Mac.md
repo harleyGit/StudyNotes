@@ -5,6 +5,7 @@
 	- [XCode快捷键](#XCode快捷键)
 - [**终端**](#终端)
 	- [HTTPie-Web服务友好交互工具](#HTTPie-Web服务友好交互工具)
+	- [Mac全局优化设置DNS解析](#Mac全局优化设置DNS解析)
 - [**脚本构建**](#脚本构建)
 	- [AQG脚本构建](#AQG脚本构建)
 - [**💻终端命令**](#💻终端命令)
@@ -56,6 +57,7 @@
 		- [重置 root 密码](#重置root密码)
 		- [Charles使用](#Charles使用)
 		- [Mock本地json数据](#Mock本地json数据)
+	- [目录结构树tree](#目录结构树tree)
 	- [Wireshark🦈SIP](#Wireshark🦈SIP)
 	- [MacVim](#MacVim)
 	- [微信小助手扩展](#微信小助手扩展)
@@ -289,6 +291,46 @@ http --verbose GET https://jsonplaceholder.typicode.com/posts/1
 - **对比 cURL**
 
 HTTPie 的优势在于更易读和人性化，适合日常开发和调试。而 `curl` 提供更底层和复杂的选项，适合需要更多控制的场景。
+
+
+<br/><br/><br/>
+> <h2 id="Mac全局优化设置DNS解析">Mac全局优化设置DNS解析</h2>
+
+**更换 DNS 服务器**
+使用响应更快、更稳定的公共 DNS 服务，如：
+
+- Cloudflare：1.1.1.1、1.0.0.1
+- Google：8.8.8.8、8.8.4.4
+- OpenDNS：208.67.222.222、208.67.220.220
+修改方法：在「系统偏好设置 → 网络 → 高级 → DNS」中添加这些 DNS 地址。(这个只能现在针对于某个wifi设置)
+
+<br/><br/>
+
+**使用 networksetup 命令行工具（推荐）**
+
+networksetup 是 macOS 自带的网络配置工具，可以用来修改 DNS 服务器并应用到所有网络接口
+
+```sh
+# 查看可用的网络接口
+networksetup -listallnetworkservices
+
+An asterisk (*) denotes that a network service is disabled.
+AX88179A
+Thunderbolt Bridge
+Wi-Fi
+iPhone USB
+
+# 设置全局 DNS
+sudo networksetup -setdnsservers Wi-Fi 1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4 208.67.222.222 208.67.220.220
+
+
+#验证 DNS 配置
+networksetup -getdnsservers Wi-Fi
+
+#清除 DNS 缓存(如果修改后访问速度仍然较慢，尝试清除 DNS 缓存)
+sudo killall -HUP mDNSResponder
+```
+
 
 
 
@@ -2294,8 +2336,6 @@ brew services start mysql
 
 <br/><br/>
 
-
-
 ![go.0.0.37.png](./../Pictures/go.0.0.37.png)
 
 **my.cnf文件的配置**
@@ -2440,19 +2480,19 @@ sudo /usr/local/mysql/bin/mysqld_safe --skip-grant-tables &
 
 选择 MySQL 系统数据库：
 
-```
+```sh
 USE mysql;
 ```
 
 对于 MySQL 8.0 或更高版本，重置 root 用户密码（将 new_password 替换为你的新密码）：
 
-```
+```sh
 ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password';
 ```
 
 刷新权限：
 
-```
+```sh
 FLUSH PRIVILEGES;
 ```
 
@@ -2492,10 +2532,38 @@ EXIT;
 ![](./../Pictures/tool.0.0.8.png)
 
 
+<br/><br/><br/>
+> <h2 id="目录结构树tree">目录结构树tree</h2>
+生成类似如下目录结构:
+
+```sh
+.
+├── conf
+├── middleware
+├── models
+├── pkg
+├── routers
+└── runtime
+```
+
+<br/>
+
+用的是tree工具,先是安装:
+
+```bash
+brew install tree
+```
+
+<br/>
+
+如果你在 Linux 或 macOS（Windows 需要安装 tree 工具），可以直接使用 tree 命令：
+
+```sh
+tree -L 2  # 只显示两层目录
+```
+
 
 <br/><br/><br/>
-
-
 ># <h2 id='Wireshark🦈SIP'>Wireshark🦈SIP</h2>
 
 - [Wireshark使用教程](https://www.cnblogs.com/hls-code/p/16054209.html)
@@ -2515,7 +2583,7 @@ EXIT;
 
 - **1.安装**
 
-```
+```bash
 curl -o- -L https://omw.limingkai.cn/install.sh | bash -s
 
 omw -n

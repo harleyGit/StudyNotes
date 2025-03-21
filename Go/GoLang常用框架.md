@@ -16,9 +16,7 @@
 - [**`RESTful API设计模式`**](#RESTfulAPI设计模式)
 	- [**‌`net/http`库**](#`net/http`库)
 	- [**‌gin框架**](#‌gin框架)
-		- [Gin构建 `RESTful API`](#Gin构建RESTfulAPI)
-		- [把爬虫程序设置成Web服务](#把爬虫程序设置成Web服务)
-- [**‌cellnet网络库**](#cellnet网络库)
+	- [**‌cellnet网络库**](#cellnet网络库)
 - [**‌认证和授权JWT**](#‌认证和授权JWT)
 	- [JWT介绍](#JWT介绍)  
 	- [`jwt-go`库](#`jwt-go`库)
@@ -42,13 +40,7 @@
 - **数据库框架**
 	- [Redis](#Redis)
 	- [GORM和XORM详介](#GORM和XORM详介)
-		- [GORM框架](#GORM框架)
-			- [GORM定义模型](#GORM定义模型) 
-			- [GORM初始化数据库](#GORM初始化数据库) 
-			- [GORM插入数据](#GORM插入数据) 
-			- [GORM查询数据](#GORM查询数据) 
-			- [GORM更新数据](#GORM更新数据) 
-			- [GORM删除数据](#GORM删除数据)
+		- [Gorm框架](#Gorm框架)
 	- [XORM使用](#XORM使用)
 		- [XORM定义模型](#XORM定义模型) 
 		- [XORM初始化数据库](#XORM初始化数据库) 
@@ -1220,194 +1212,19 @@ func main() {
 ***
 <br/>
 
-> <h1 id="‌gin框架">‌gin框架</h1>
+> <h1 id="‌gin框架">‌[gin框架](./gin框架.md)</h1>
 
 获取gin框架的包：
 
 ```
 go get github.com/gin-gonic/gin
 ```
-<br/>
-
-<br/><br/><br/>
-> <h2 id="Gin构建 RESTfulAPI">Gin构建 RESTful API</h2>
-
-- **使用 `Gin` 构建 RESTful API**
-相比 `net/http`，`Gin` 更简洁高效：
-
-```go
-package main
-
-import (
-	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
-)
-
-type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-var users = []User{
-	{ID: 1, Name: "Alice", Email: "alice@example.com"},
-	{ID: 2, Name: "Bob", Email: "bob@example.com"},
-}
-
-func main() {
-	r := gin.Default()
-
-	// 获取所有用户
-	r.GET("/users", func(c *gin.Context) {
-		c.JSON(http.StatusOK, users)
-	})
-
-	// 获取单个用户
-	r.GET("/users/:id", func(c *gin.Context) {
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-			return
-		}
-
-		for _, user := range users {
-			if user.ID == id {
-				c.JSON(http.StatusOK, user)
-				return
-			}
-		}
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-	})
-
-	r.Run(":8080")
-}
-```
-- 运行后，访问：
-  - `GET http://localhost:8080/users`
-  - `GET http://localhost:8080/users/1`
 
 
 <br/><br/><br/>
-> <h2 id="把爬虫程序设置成Web服务">把爬虫程序设置成Web服务</h2>
-
-把爬虫程序设置成Web服务。具体修改如下：运行修改后的爬虫程序，打开浏览器，访问“本机IP：端口”​；当在网页上看到提示信息（​“已经把http://news.baidu.com的网页内容全部抓取下来，请查看当前项目目录下的news.txt文件！”​）时，说明已经把http://news.baidu.com的网页内容全部抓取下来，并存储在当前项目目录下的news.txt文件中。
-
-为了满足上述的修改要求，需要下载第三方包gin。如图19.8所示，下载gin包的步骤如下。
-
-```
-// 把爬虫程序设置成Web服务
-func testCrawlerAppointWebpageAndSaveTxtV2() {
-	// 初始化引擎
-	engine := gin.Default()
-	// 注册一个路由和处理函数
-	engine.Any("/", WebRoot)
-	// 绑定端口
-	engine.Run(":9200")
-}
-// 处理路由函数
-func WebRoot(context *gin.Context){
-	// 调用 testCrawlerAppointWebpageAndSaveTxt()函数
-	testCrawlerAppointWebpageAndSaveTxt("https://news.baidu.com")
-	// 设置网页上的文本内容
-	context.String(http.StatusOK, "已经把http://news.baidu.com 的网页内容全部抓取下来\n 请查看当前项目目录下的news.txt文本文件！")
-}
-
-// 存储爬虫文件
-func testCrawlerAppointWebpageAndSaveTxt(urls string) {
-	// 创建 Collector 对象
-	c := colly.NewCollector()
-	/* 
-	* 是否抓取指定链接的网页内容
-	* 初始设置为不抓取指定链接的网页内容
-	 */
-	visited := false
-	// 使用 Collector 对象抓取 URL
-	c.OnResponse(func (r *colly.Response)  {
-		if !visited {
-			visited = true
-			r.Request.Visit("/get?q=2")
-		}
-	})
-
-	// 文件的创建和持续写入
-	filename := "news.txt"	// 文件名
-	var f *os.File
-	var fileErr error 
-	if testCheckFileExist(filename) {	// 如果文件存在
-		f, fileErr = os.OpenFile(filename, os.O_APPEND | os.O_WRONLY, 0666)	// 打开文件
-		if fileErr != nil {
-			fmt.Printf("❌ 打开文件 news.txt 失败：%v\n", fileErr)
-		}
-	} else {
-		f,_ = os.Create(filename)	// 创建文件
-		fmt.Println("🍎 新建文件 news.txt")
-
-	}
-	defer f.Close()	// 关闭文件
-	write := bufio.NewWriter(f)
-	defer write.Flush()
-
-	// 对指定链接网页内容进行处理
-	c.OnHTML("a[href]", func (e *colly.HTMLElement)  {
-		href := e.Text	// 获取指定链接的网页内容
-		write.WriteString("🍒 "+href+"\n")
-		fmt.Println("🍎 网页内容：",href)	// 打印指定链接的网页内容
-	})
-
-
-	c.Visit(urls)	//访问指定链接
-}
-/* 检测文件是否存在
-* fileName 文件名
- */
-func testCheckFileExist(filename string) bool {
-	var exist = true
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		exist = false
-	}
-	return exist
-}
-```
-
-**Log:**
-
-```
-ganghuang@GangHuangs-MacBook-Pro TestCrawlerBaidu % go run test_crawler_baidu.go
-ganghuang@GangHuangs-MacBook-Pro TestCrawlerBaidu % go run test_crawler_baidu.go
-[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
-
-[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
- - using env:   export GIN_MODE=release
- - using code:  gin.SetMode(gin.ReleaseMode)
-
-[GIN-debug] GET    /                         --> main.WebRoot (3 handlers)
-[GIN-debug] POST   /                         --> main.WebRoot (3 handlers)
-[GIN-debug] PUT    /                         --> main.WebRoot (3 handlers)
-[GIN-debug] PATCH  /                         --> main.WebRoot (3 handlers)
-[GIN-debug] HEAD   /                         --> main.WebRoot (3 handlers)
-[GIN-debug] OPTIONS /                         --> main.WebRoot (3 handlers)
-[GIN-debug] DELETE /                         --> main.WebRoot (3 handlers)
-[GIN-debug] CONNECT /                         --> main.WebRoot (3 handlers)
-[GIN-debug] TRACE  /                         --> main.WebRoot (3 handlers)
-[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
-Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
-[GIN-debug] Listening and serving HTTP on :9200
-```
-
-<br/>
-
-此时，Mac系统弹出如图19.9所示的Mac安全警报。选中“公用网络”复选框，单击“允许访问”按钮。
-
-打开默认浏览器（比如：Safari浏览器），访问“本机IP：端口”​（即127.0.0.1:9200）​，即可看到如图19.10所示的提示信息。这段程序在当前项目目录下生成news.txt文件。单击news.txt，即可看到抓取的网页内容，如图所示。
-
-![go.0.0.57.png](./../Pictures/go.0.0.57.png)
-
-<br/>
 
 ***
-<br/><br/><br/>
+<br/>
 
 ># <h1 id="cellnet网络库">[cellnet网络库](https://github.com/davyxu/cellnet)</h1>
 
@@ -2644,72 +2461,8 @@ go get github.com/gomodule/redigo/redis
 ***
 <br/>
 
-># <h1 id="GORM框架">[GORM框架](https://learnku.com/docs/gorm/v2/write_plugins/9750)</h1>
-[编写插件和钩子](https://learnku.com/docs/gorm/v2/write_plugins/9750)
+> <h1 id="Gorm框架">[Gorm框架](./gorm框架.md)</h1>
 
-<br/><br/>
-> <h3 id="GORM定义模型"> GORM定义模型</h3>
-
-```go
-type User struct {
-    gorm.Model  // 提供 ID、CreatedAt、UpdatedAt、DeletedAt
-    Name  string `gorm:"size:100"`
-    Age   int
-}
-```
-
-<br/><br/>
-> <h3 id="GORM初始化数据库"> GORM 初始化数据库 </h3>
-
-```go
-db, err := gorm.Open(mysql.Open("root:password@tcp(127.0.0.1:3306)/test"), &gorm.Config{})
-if err != nil {
-    panic(err)
-}
-
-// 自动迁移
-db.AutoMigrate(&User{})
-```
-
-<br/><br/>
-> <h3 id="GORM插入数据"> GORM插入数据 </h3>
-
-```go
-user := User{Name: "Alice", Age: 25}
-db.Create(&user)
-```
-
-
-<br/><br/>
-> <h3 id="GORM查询数据"> GORM查询数据 </h3>
-
-```go
-var user User
-db.First(&user, "name = ?", "Alice")
-```
-
-<br/>
-
-**多条查询**
-
-```go
-var users []User
-db.Where("age > ?", 20).Find(&users)
-```
-
-<br/><br/>
-> <h3 id="GORM更新数据">GORM更新数据</h3>
-
-```go
-db.Model(&user).Update("age", 30)
-```
-
-<br/><br/>
-> <h3 id="GORM删除数据">GORM删除数据</h3>
-
-```go
-db.Delete(&user)
-```
 
 
 <br/><br/>
