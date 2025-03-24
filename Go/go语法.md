@@ -1,5 +1,6 @@
 ># <h0 id=''>[GoLang官网](https://go.dev/)</h2>
 - **GoLang官网资料**
+	- [**Go语言中文文档**](https://www.topgoer.com/)
 	- [GO指南](https://tour.go-zh.org/list)
 	- [GoLang中文网](https://studygolang.com/pkgdoc)
 	- [Go语言资料集合](https://github.com/LearnGolang/LearnGolang/tree/master/01-Golang资源/01-中文书籍)
@@ -115,7 +116,8 @@
 	- [二进制文件的写入、读取操作](#二进制文件的写入、读取操作)	
 		- [gob格式](#gob格式) 
 		- [自定义二进制格式](#自定义二进制格式)
-	- [JSON文件的写入、读取操作](#JSON文件的写入、读取操作  ) 
+	- [JSON文件的写入、读取操作](#JSON文件的写入、读取操作) 
+	- [yaml、mapstructure、json解析总结](#yaml、mapstructure、json解析总结)
 	- [文件锁操作](#文件锁操作)
 - [**网络编程**](#网络编程)
 	- [Socket编程](#Socket编程)
@@ -1640,6 +1642,16 @@ func init_array() {
 &emsp; Go语言切片的内部结构包含地址、大小和容量。切片一般用于快速地操作一块数据集合。如果将数据集合比作切糕的话，切片就是你要的“那一块”。切的过程包含从哪里开始（这个就是切片的地址）及切多大（这个就是切片的大小）。容量可以理解为装切片的口袋大小.
 
 ![go9.png](./../Pictures/go9.png)
+
+<br/>
+
+- **切片和数组区别**
+	- 切片（Slice）
+		- 语法是 []T（无固定长度），例如 []int、[]string。
+		- 切片是动态长度的、基于数组的抽象，支持自动扩容和子切片操作。
+- 数组（Array）
+	- 语法是 [N]T（有固定长度），例如 [3]int、[5]string。
+	- 数组长度在编译时确定，不可变。
 
 **声明：**
 
@@ -5479,6 +5491,110 @@ ganghuang@GangHuangs-MacBook-Pro TestJsonRW % go run test_json_rw.go
 解码成功
 [{Dave 29 Male} {Leon 32 Male}]
 ```
+
+
+<br/><br/><br/>
+> <h2 id="yaml、mapstructure、json解析总结">yaml、mapstructure、json解析总结</h2>
+
+**📍 结构体定义**
+
+```go
+type Server struct {
+	Zap    Zap    `mapstructure:"zap" json:"zap" yaml:"zap"`
+	System System `mapstructure:"system" json:"system" yaml:"system"`
+	Mysql  Mysql  `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
+}
+
+type System struct {
+	Env    string `mapstructure:"env" json:"env" yaml:"env"`
+	Addr   int    `mapstructure:"addr" json:"addr" yaml:"addr"`
+	DbType string `mapstructure:"db-type" json:"dbType" yaml:"db-type"`
+}
+```
+
+---
+
+**📌 结构体标签作用解析**
+- **1️⃣ `mapstructure:"xxx"`**
+	- **用于 `viper` 解析配置文件**（YAML/JSON 等）到 Go 结构体时，进行字段匹配。
+	- **作用：** 指定 `viper.Unmarshal()` 解析时，如何映射配置文件的键值。
+
+**示例：**
+
+```yaml
+system:
+  env: "production"
+  addr: 8080
+  db-type: "mysql"
+```
+✔ `viper.Unmarshal(&config.GVA_CONFIG)` 时：
+- `env` → `System.Env`
+- `addr` → `System.Addr`
+- `db-type` → `System.DbType`
+
+---
+
+- **2️⃣ `json:"xxx"`**
+	- **用于 JSON 序列化和反序列化（`json.Marshal()` 和 `json.Unmarshal()`）。**
+	- **作用：** 当 `json.Marshal(config.GVA_CONFIG)` 时，指定字段对应的 JSON key。
+
+**示例：**
+
+```go
+jsonData, _ := json.Marshal(config.GVA_CONFIG)
+fmt.Println(string(jsonData))
+```
+**输出：**
+
+```json
+{
+  "system": {
+    "env": "production",
+    "addr": 8080,
+    "dbType": "mysql"
+  }
+}
+```
+✔ 这里 `dbType`（`json:"dbType"`）**JSON key 变成了驼峰式**，即 `db-type` → `dbType`。
+
+---
+
+- **3️⃣ `yaml:"xxx"`**
+	- **用于 YAML 解析（`yaml.Unmarshal()` 和 `yaml.Marshal()`）。**
+	- **作用：** 指定结构体字段在 YAML 格式中的映射。
+
+**示例：**
+
+```go
+yamlData, _ := yaml.Marshal(config.GVA_CONFIG)
+fmt.Println(string(yamlData))
+```
+**输出：**
+
+```yaml
+system:
+  env: production
+  addr: 8080
+  db-type: mysql
+```
+✔ `yaml:"db-type"` **确保 YAML 文件中的 key 是 `db-type`**，而不是 `dbType`。
+
+---
+
+## **📌 结构体标签的对比**
+| 标签类型          | 作用领域                 | 示例映射 |
+|------------------|----------------------|--------|
+| `mapstructure`  | **Viper 解析 YAML/JSON** | `db-type → DbType` |
+| `json`          | **JSON 解析/生成**      | `dbType → dbType` |
+| `yaml`          | **YAML 解析/生成**      | `db-type → db-type` |
+
+---
+
+## **📌 总结**
+- **`mapstructure`**：用于 `viper` 解析 YAML/JSON 配置文件。
+- **`json`**：用于 `json.Marshal()` 生成 JSON 数据。
+- **`yaml`**：用于 `yaml.Marshal()` 生成 YAML 数据。
+- 这些标签**不会相互影响**，但可以共存，保证代码在不同场景（配置解析、API 传输等）中都能正确映射字段。
 
 
 <br/><br/><br/>
