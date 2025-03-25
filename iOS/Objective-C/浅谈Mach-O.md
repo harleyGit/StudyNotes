@@ -7,24 +7,17 @@
 
 
 
-
-
-
-
-<br/>
+<br/><br/><br/><br/>
 
 ***
 <br/>
 
-
-
-> <h1 id='进程与二进制格式'>[进程与二进制格式](https://www.desgard.com/macos%20kernel/objective-c/iosre/2017/10/07/iosre-1.html)</h1>
+># <h1 id='进程与二进制格式'>[进程与二进制格式](https://www.desgard.com/macos%20kernel/objective-c/iosre/2017/10/07/iosre-1.html)</h1>
 
 
 &emsp; 进程在众多操作系统中都有提及，它是作为一个正在执行的程序的实例，这是 UNIX 的一个基本概念。而进程的出现是特殊文件在内存中加载得到的结果，这种文件必须使用操作系统可以认知的格式，这样才对该文件引入依赖库，初始化运行环境以及顺利地执行创造条件。
 
 &emsp; Mach-O（Mach Object File Format）是 macOS 上的可执行文件格式，类似于 Linux 和大部分 UNIX 的原生格式 ELF（Extensible Firmware Interface）。为了更加全面的了解这块内容，我们看一下 macOS 支持的三种可执行格式：解释器脚本格式、通用二进制格式和 Mach-O 格式。
-
 
 <br/>
 
@@ -45,7 +38,6 @@
 
 > **Mach-O文件格式和用途**
 
-
 |  **可执行格式**  |  **magic** |  **用途** |
 |:--|:--|:--|
 |  脚本 | \x7FELF  | 主要用于 shell 脚本，但是也常用语其他解释器，如 Perl, AWK 等。也就是我们常见的脚本文件中在 #! 标记后的字符串，即为执行命令的指令方式，以文件的 stdin 来传递命令  |
@@ -53,20 +45,8 @@
 |  Mach-O |  0xfeedface（32 位） <br/>0xfeedfacf（64 位） | macOS 的原生二进制格式  |
 
 
-
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='通用二进制格式'>通用二进制格式</h2>
-
-
-<br/>
-
-
-
 &emsp; 这个格式在有些资料中也叫胖二进制格式（Fat Binary），Apple 提出这个概念是为了解决一些历史原因，macOS（更确切的应该说是 OS X）最早是构建于 PPC 架构之上，后来才移植到 Intel 架构（从 Mac OS X Tiger 10.4.7 开始），通用二进制格式的二进制文件可以在 PPC 和 x86 两种处理器上执行。
 
 &emsp; 说到底，通用二进制格式只不过是对多架构的二进制文件的打包集合文件，而 macOS 中的多架构二进制文件也就是适配不同架构的 Mach-O 文件。
@@ -114,17 +94,10 @@ struct fat_arch {
 ![没法看](./../../Pictures/ios_oc80.png)
 
 
-
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='Mach-O文件格式'>Mach-O 文件格式</h2>
 
-
-![>Mach-O 文件格式](./../../Pictures/ios_oc81.png)
-
+![Mach-O 文件格式](./../../Pictures/ios_oc81.png)
 
 - **Mach-O 主要由 3 部分组成:**
 
@@ -133,12 +106,8 @@ struct fat_arch {
 	- 数据区（Data）：Data 中每一个段（Segment）的数据都保存在此，段的概念和 ELF 文件中段的概念类似，都拥有一个或多个 Section ，用来存放数据和代码。
 
 
-<br/>
-
-
+<br/><br/>
 > <h3 id='Mach-O头'>Mach-O 头</h3>
-
-
 &emsp; 与 Mach-O 文件格式有关的结构体定义都可以从 /usr/include/mach-o/loader.h 中找到，也就是 <mach-o/loader.h> 头。以下只给出 64 位定义的代码，因为 32 位的区别是缺少了一个预留字段：
 
 ```
@@ -174,17 +143,13 @@ struct mach_header_64 {
 #define	MH_KEXT_BUNDLE	0xb		/* x86_64 内核扩展 */
 ```
 
-<br/>
-
-
+<br/><br/>
 > <h3 id='Mach-OData'>Mach-O Data</h3>
-
-
 &emsp; 加载命令在 Mach-O 文件加载解析时，会被内核加载器或者动态链接器调用。这些指令都采用 Type-Size-Value 这种格式，即：32 位的 cmd 值（表示类型），32 位的 cmdsize 值（32 位二级制位 4 的倍数，64 位位 8 的倍数），以及命令本身（由 cmdsize 指定的长度）。内核加载器使用的命令可以参看 xnu 源码来学习，其他命令则是由动态链接器处理的。
 
 在正式进入加载命令这一过程之前，先来学习一下 Mach-O 的 Data 区域，其中由 Segment 段和 Section 节组成。先来说 Segment 的组成，以下代码仍旧来自 loader.h：
 
- ```
+```
 #define	SEG_PAGEZERO	"__PAGEZERO" /* 当时 MH_EXECUTE 文件时，捕获到空指针 */
 #define	SEG_TEXT	"__TEXT" /* 代码/只读数据段 */
 #define	SEG_DATA	"__DATA" /* 数据段 */
@@ -212,7 +177,6 @@ struct segment_command_64 {
 
 <br/>
 
-
 &emsp; 部分的 Segment （主要指的 __TEXT 和 __DATA）可以进一步分解为 Section。之所以按照 Segment -> Section 的结构组织方式，是因为在同一个 Segment 下的 Section，可以控制相同的权限，也可以不完全按照 Page 的大小进行内存对其，节省内存的空间。而 Segment 对外整体暴露，在程序载入阶段映射成一个完整的虚拟内存，更好的做到内存对齐（可以继续参考 OS X & iOS Kernel Programming 一书的第一章内容）。下面给出 Section 具体的数据结构：
 
 ```
@@ -231,7 +195,6 @@ struct section_64 {
 	uint32_t	reserved3;	/* 保留字段3 */
 };
 ```
-
 
 <br/>
 
@@ -260,17 +223,15 @@ struct section_64 {
  |
 | __DATA.__objc_selfrefs | Objective-C self 引用 |
 | __DATA.__objc_protorefs	 | Objective-C 原型引用 |
-| __DATA.__objc_superrefs | Objective-C 超类引用
- |
+| __DATA.__objc_superrefs | Objective-C 超类引用|
 
 <br/>
-
 
 **验证实验**
 
 &emsp; 当了解了 Segment 和 Section 的定义之后，我们可以简单的探索一下 LC_SEGMENT 这个命令的过程。用 helloworld 来做个试验：
 
-```
+```objective-c
 // main.cpp
 #import <stdio.h>
 
@@ -282,19 +243,18 @@ int main() {
 
 &emsp; 使用 clang -g main.cpp -o main 生成执行文件。然后拖入到 MachOView 中来查看一下加载 Segment 的结构（当然使用 Synalyze It! 也能捕捉到这些信息的，但是 MachOView 更对结构的分层更加一目了然）：
 
-![图一](./../../Pictures/ios_oc82.jpg)
+**图一:**
 
+![ios_oc82.jpg](./../../Pictures/ios_oc82.jpg)
 <br/>
 
-![图二](./../../Pictures/ios_oc83.jpg)
+**图二:**
 
+![ios_oc83.jpg](./../../Pictures/ios_oc83.jpg)
 
 &emsp; 在 LC_SEGMENT_64 中有四个元素，分别是 __PAGEZERO、__TEXT、__DATA、__LINKEDIT 这四个 Segment。其中，__TEXT 的 __text Section 的加载是可以验证到的，我们从 Section 的实例中取出其 addr 来对比汇编之后代码的起始地址即可。使用 otool -vt main 来获取其汇编代码：
 
-
-
-
-```
+```sh
 $ otool -vt main
 main:
 (__TEXT,__text) section
@@ -321,9 +281,7 @@ _main:
 
 其对应的物理地址均为 0x100000F60，说明其 LC_SEGMENT 对于 Segment 和 Section 的加载与我们的预期完全一致。
 
-
-<br/>
-<br/>
+<br/><br/>
 
 **__TEXT.__stubs 的探究**
 
@@ -333,14 +291,14 @@ _main:
 将 Calculator 应用拖入到 Synalyze It! 和 Hopper Disassembler 中。首先使用 Synalyze It! 来查找一个 __stubs 地址：
 
 
-![图四](./../../Pictures/ios_oc85.jpg)
+![ios_oc85.jpg](./../../Pictures/ios_oc85.jpg)
 
 取出地址 0x100016450 并在 Hopper 中查找对应的代码，并以此双击进入：
 
-![图五](./../../Pictures/ios_oc86.jpg)
+![ios_oc86.jpg](./../../Pictures/ios_oc86.jpg)
 
 
-![图6](./../../Pictures/ios_oc87.jpg)
+![ios_oc87.jpg](./../../Pictures/ios_oc87.jpg)
 
 到达第二幅图的位置的时候，我们发现无法继续进入，因为 _CFRelease 中的代码是没有意义的。我们拿出 0x100031000 这个首地址，在 MachOView 中查找：
 	
@@ -357,59 +315,3 @@ _main:
 &emsp; 也就是说，__la_symbol_ptr 里面的所有表项的数据在开始时都会被 binding 成 __stub_helper。而在之后的调用中，虽然依旧会跳到 __stub 区域，但是 __la_symbol_ptr 中由于在之前的调用中获取到了对应方法的真实地址，所以无需在进入 dyld_stub_binder 阶段，并直接调用函数。这样就完成了一次近似于 lazy 思想的延时 binding 过程。（这个过程可以用 lldb 来加以验证，在之后会补充。）
 
 总结一下 Stub 机制。其实和 wikipedia 上的说法一致，设置函数占位符并采用 lazy 思想做成延迟 binding 的流程。在 macOS 中也是如此，外部函数引用在 __DATA 段的 __la_symbol_ptr 区域先生产一个占位符，当第一个调用启动时，就会进入符号的动态链接过程，一旦找到地址后，就将 __DATA Segment 中的 __la_symbol_ptr Section 中的占位符修改为方法的真实地址，这样就完成了只需要一个符号绑定的执行过程。
-
-
-
-
-	
-
-	
-	
-	
-	
-
-		
-
-	
-
-
-
-
-
-
-<br/>
-
-***
-<br/>
-
-
-
-> <h1 id=''></h1>
-
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id=''></h2>
-
-
-
-
-<br/>
-<br/>
-
-
-> <h2 id=''></h2>
-
-
-
-
-
-
-
-
-
-

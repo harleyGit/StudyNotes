@@ -21,6 +21,8 @@
 	- [无法批量删除解决](#无法批量删除解决)
 - **资料**
 	- [Gorm文档](https://gorm.io/zh_CN/docs/connecting_to_the_database.html)
+	- [golang最简单的gorm教程(枫枫知道-B站)-Video](https://www.bilibili.com/video/BV1xg411t7RZ?spm_id_from=333.788.player.switch&vd_source=a7fe275f0ee54c4d2f691a823f8876b8&p=6)
+		- [](https://www.fengfengzhidao.com/article/4NlbH4sBEG4v2tWkFmpL)
 
 
 
@@ -112,7 +114,7 @@ db, err := gorm.Open(mysql.New(mysql.Config{
 ```go
 type Config struct {
   SkipDefaultTransaction   bool
-  NamingStrategy           schema.Namer
+  NamingStrategy           schema.Namer // 命名前缀,对表名的设置 
   Logger                   logger.Interface
   NowFunc                  func() time.Time
   DryRun                   bool
@@ -125,15 +127,18 @@ type Config struct {
 ```
 
 **SkipDefaultTransaction**
-跳过默认开启事务模式。为了确保数据一致性，GORM 会在事务里执行写入操作（创建、更新、删除）。如果没有这方面的要求，可以在初始化时禁用它。
+跳过默认开启事务模式。为了确保数据一致性，GORM 会在事务里执行写入操作（创建、更新、删除）。如果没有这方面的要求，可以在初始化时禁用它。关掉它可以提高60%的性能,但是一般是开着的.
 
 ```go
 db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
   SkipDefaultTransaction: true,
+  NamingStrategy: schema.NamingStraztegy{
+	  TablePrefix: "f_", //表名前缀,
+	  SingularTable: true, //是否单数表名,
+	  NoLowerCase:true,  // 不要小写转换
+  }
 })
 ```
-
-<br/>
 
 **NamingStrategy**
 表名称的命名策略，下面会说。GORM 允许用户通过覆盖默认的NamingStrategy来更改命名约定，这需要实现接口 Namer：

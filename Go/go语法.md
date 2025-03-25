@@ -1,6 +1,6 @@
 ># <h0 id=''>[GoLang官网](https://go.dev/)</h2>
 - **GoLang官网资料**
-	- [**Go语言中文文档**](https://www.topgoer.com/)
+	- [**Go语言中文文档(框架、demo很丰富)**](https://www.topgoer.com/)
 	- [GO指南](https://tour.go-zh.org/list)
 	- [GoLang中文网](https://studygolang.com/pkgdoc)
 	- [Go语言资料集合](https://github.com/LearnGolang/LearnGolang/tree/master/01-Golang资源/01-中文书籍)
@@ -2080,8 +2080,8 @@ func multiplication_table() {
 <br/>
 
 > <h2 id='声明函数'>声明函数</h2>
+变量名的返回值
 
-> 带有变量名的返回值
 &emsp; 命名的返回值变量的默认值为类型的默认值，即数值为0，字符串为空字符串，布尔为false、指针为nil等。
 
 ```go
@@ -2119,14 +2119,15 @@ fmt.println(a,b) // 打印：1 2
 <br/>
 
 > 函数参数传递测试
-> &emsp; **`注意：`Go语言中传入和返回参数在调用和返回时都使用值传递，这里需要注意的是指针、切片和map等引用型对象指向的内容在参数传递中不会发生复制，而是将指针进行复制，类似于创建一次引用**
+
+&emsp; **`注意：`Go语言中传入和返回参数在调用和返回时都使用值传递，这里需要注意的是指针、切片和map等引用型对象指向的内容在参数传递中不会发生复制，而是将指针进行复制，类似于创建一次引用**
 
 ```go
 // 用于测试值传递效果的结构体
 type Data struct {
 	// 测试切片在参数传递中的效果
 	complax []int
-
+	
 	instance InnerData
 	// 实例分配的inner Data
 	ptr *InnerData
@@ -2462,9 +2463,7 @@ from function 🍓 函数接口 hello
 ```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='闭包'>闭包</h2>
 
 &emsp; 一个函数类型就像结构体一样，可以被实例化。函数本身不存储任何信息，只有与引用环境结合后形成的闭包才具有“记忆性”。函数是编译期静态的概念，而闭包是运行期动态的概念。
@@ -2475,6 +2474,7 @@ from function 🍓 函数接口 hello
 
 
 <br/>
+
 > 1). 闭包的记忆效应
 
 &emsp；被捕获到闭包中的变量让闭包本身拥有了记忆效应，闭包中的逻辑可以修改闭包捕获的变量，变量会跟随闭包生命期一直存在，闭包本身就如同变量一样拥有了记忆效应。
