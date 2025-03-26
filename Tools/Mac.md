@@ -32,6 +32,7 @@
 - [**配置**](#配置)
 	- [解决source保存配置](#解决source保存配置)
 	- [软链接](#软链接)
+- [VSCode](#VSCode)
 - [**Xcode**](#Xcode)
 	- [**调试**](#调试)
 	- [Xcode格式化代码工具](#Xcode格式化代码工具)
@@ -913,13 +914,10 @@ source ~/.bash_profile
 ```
 
 
-
-<br/>
-<br/>
-
+<br/><br/>
 <h2 id='软链接'>软链接</h2>
 
-```
+```sh
 // a 就是源文件，b是链接文件名,其作用是当进入b目录，实际上是链接进入了a目录
 // 值得注意的是执行命令的时候,应该是a目录已经建立，目录b没有建立。我最开始操作的是也把b目录给建立了, 结果就不对了
 ln -s a b
@@ -941,13 +939,210 @@ realpath /opt/homebrew/bin/doxygen
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="VSCode">VSCode</h1>
+
+**工作区配置**
+
+```json
+{
+    // 字体与外观
+    "editor.fontSize": 14,
+    "editor.lineHeight": 22,//行高
+    "editor.fontFamily": "'Fira Code', monospace, Consolas",
+
+    //主题外观
+    "workbench.colorTheme": "Default Light Modern",// 主题默认: Default Light Modern, 暗色: Default Dark+
+    "window.zoomLevel": 1,// 全局缩放（正数放大）0（默认大小）,1（放大 125%）,2（放大 150%）, -1（缩小 80%）
+    "editor.tabSize": 2,// Tab 缩进空格数
+    "editor.wordWrap": "on",// 自动换行
+    
+    // 编辑器行为
+    "editor.minimap.enabled": false,// 关闭右侧缩略图
+    "editor.renderWhitespace": "boundary",// 显示空格/制表符
+    "editor.cursorBlinking": "smooth",// 光标闪烁效果
+    "files.autoSave": "afterDelay",// 自动保存
+        
+    // 终端配置 
+    "terminal.integrated.fontFamily": "'Cascadia Code'",// 终端字体  
+    "terminal.integrated.cursorStyle": "underline",// 光标样式
+    "terminal.integrated.fontSize": 12,
+
+    //编程语言专属设置（如 Go）
+    "[go]": {
+        "editor.formatOnSave": true,// 保存时格式化
+        "editor.defaultFormatter": "golang.go"
+    },
+    "go.toolsManagement.checkForUpdates": "local"
+}
+```
+
+<br/><br/>
+
+`Comand+shift+P,`然后选择打开 **Open Workspace Settings(json)**
+
+**GO的launch.json配置**
+
+```json
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    // https://blog.csdn.net/love666666shen/article/details/88887086
+    "version": "0.2.0",
+    "configurations": [
+        { 
+            "name": "Launch MLC_GO",// 配置名称
+            "type": "go",// 调试类型（Go）
+            "request": "launch",// 启动模式（launch 或 attach）
+            "mode": "auto",// 调试模式（auto/debug/test）
+            "program": "${workspaceFolder}",// "${fileDirname}", // 调试当前文件所在目录
+            "args": ["-env=dev"],// 命令行参数
+            "env": {
+                "GOPATH": "${env:GOPATH}",
+                "MY_ENV": "debug"// 自定义环境变量
+            },
+            "showLog": true// 显示调试日志
+        }
+    ]
+}
+```
+
+<br/><br/>
+
+`Comand+shift+P,`然后选择打开 **Open User Settings(json)**
+
+```json
+{
+    "update.mode": "none",//禁止vscode更新
+    "dart.openDevTools": "flutter",
+    "git.autofetch": true,
+    "files.autoSave": "afterDelay",
+    "workbench.colorTheme": "Default Light+",
+    "dart.debugExternalLibraries": false,
+    "dart.debugSdkLibraries": false,
+    "terminal.integrated.scrollback": 1000000000,
+    "debug.inlineValues": true,
+    "editor.suggestSelection": "first",
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "java.semanticHighlighting.enabled": true,
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    },
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            80
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
+    },
+    "java.project.importOnFirstTimeStartup": "automatic",
+    "explorer.confirmDelete": false,
+    "C_Cpp.updateChannel": "Insiders",
+    "diffEditor.ignoreTrimWhitespace": true,
+    "files.autoGuessEncoding": true,
+    "dart.showInspectorNotificationsForWidgetErrors": false,
+    "settingsSync.ignoredSettings": [
+    
+    ],
+    "editor.codeActionsOnSave": {
+    
+    },
+    "redhat.telemetry.enabled": true,
+    "security.workspace.trust.untrustedFiles": "open",
+    "editor.unicodeHighlight.nonBasicASCII": false,
+    "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
+
+    /// Go配置
+    "go.useLanguageServer": true,
+    "go.toolsManagement.checkForUpdates": "local",
+    "go.alternateTools": {
+    },
+    "go.delveConfig": {
+    
+    },
+    "gopls": {
+        "staticcheck": true  // 可选：启用静态分析
+    },
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    }
+}
+```
+
+比如: Deepseek给的建议:
+
+```json
+{
+  "go.gopath": "/path/to/your/gopath",
+  "go.goroot": "/path/to/your/goroot",
+  "go.useLanguageServer": true,
+  "go.languageServerFlags": ["-remote=auto"],
+  
+  // 模块管理
+  "go.toolsEnvVars": {
+    "GO111MODULE": "auto",
+    "GOPROXY": "https://goproxy.cn,direct"
+  },
+  
+  // 代码格式化
+  "go.formatTool": "gofmt",
+  "editor.formatOnSave": true,
+  
+  // 测试相关
+  "go.testFlags": ["-v", "-count=1"],
+  "go.coverOnSave": false,
+  
+  // 代码分析
+  "go.lintFlags": ["--fast"],
+  "go.lintTool": "staticcheck",
+  
+  // 调试配置
+  "go.delveConfig": {
+    "debugAdapter": "dlv-dap",
+    "showRegisters": false,
+    "showGlobalVariables": false
+  },
+  
+  // 自动补全
+  "go.autocompleteUnimportedPackages": true,
+  
+  // 代码导航
+  "go.inferGopath": true,
+  "go.docsTool": "gogetdoc",
+  
+  // 构建标签
+  "go.buildTags": "",
+  
+  // 自动添加结构体标签
+  "go.addTags": {
+    "tags": "json,xml",
+    "promptForTags": false,
+    "transform": "snakecase"
+  }
+}
+```
+
+
+
 <br/>
 
 ***
 <br/>
-
-
-># <h1 id = "Xcode">Xcode</h1>
+><h1 id = "Xcode">Xcode</h1>
 
 > <h2 id='调试'>调试</h2>
 
