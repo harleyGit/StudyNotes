@@ -3,6 +3,9 @@
 	- [基本命令行](#基本命令行)
 	- [终端单行修改sql语句](#终端单行修改sql语句)
 	- [终端多行修改sql语句](#终端多行修改sql语句)
+- [**基本信息**](#基本信息)
+	- [查看创建表信息](#查看创建表信息)
+	- [查看表编码](#查看表编码)
 - [**关系模型**](#关系模型)
 	- [主键](#主键)
 	- [外键](#外键)
@@ -178,6 +181,168 @@ mysql> show table status from db_test;
 | 跳行首/行尾	| Ctrl+A/Ctrl+E	| 同 Ctrl+A/Ctrl+E ✅ | 
 | 删除到单词开头	| Ctrl+W	| Ctrl+W ✅ | 
 | 删除到行尾	| Ctrl+K	| Ctrl+K ✅ | 
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="基本信息">基本信息</h1>
+
+**创建数据库：**
+
+```sql
+create database HGDatabase;
+Query OK, 1 row affected (0.02 sec)
+
+ show databases;
++--------------------+
+| Database           |
++--------------------+
+| HGDatabase         |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+```
+
+<br/>
+
+**创建 employees 表**
+
+```sql
+ create table employees(id int, name varchar(15));
+Query OK, 0 rows affected (0.10 sec)
+
+mysql> show tables;
++----------------------+
+| Tables_in_hgdatabase |
++----------------------+
+| employees            |
++----------------------+
+1 row in set (0.00 sec)
+```
+
+<br/>
+
+**插入数据：**
+
+```sql
+insert into employees values(1001, 'Tom');
+
+insert into employees values(1002, 'shtart');
+
+insert into employees values(1003, '李白');
+
+```
+
+***
+<br/><br/>
+> <h3 id="查看创建表信息">查看创建表信息</h3>
+
+
+**展示创建表employees信息：**
+
+```sql
+show create table employees;
++-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table     | Create Table                                                                                                                                             |
++-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| employees | CREATE TABLE `employees` (
+  `id` int DEFAULT NULL,
+  `name` varchar(15) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
++-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.01 sec)
+```
+
+`CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci：` 表示表的编码，若不是utf8可能无法插入中文数据，要注意。
+
+***<br/><br/>
+> <h3 id="查看表编码">查看表编码</h3>
+
+
+**查看编码指令：**
+
+```sql
+mysql> show variables like 'character_%'
+    -> ;
++--------------------------+--------------------------------------------------------+
+| Variable_name            | Value                                                  |
++--------------------------+--------------------------------------------------------+
+| character_set_client     | utf8mb4                                                |
+| character_set_connection | utf8mb4                                                |
+| character_set_database   | utf8mb4                                                |
+| character_set_filesystem | binary                                                 |
+| character_set_results    | utf8mb4                                                |
+| character_set_server     | utf8mb4                                                |
+| character_set_system     | utf8                                                   |
+| character_sets_dir       | /usr/local/Cellar/mysql/8.0.23_1/share/mysql/charsets/ |
++--------------------------+--------------------------------------------------------+
+8 rows in set (0.05 sec)
+```
+
+<br/>
+
+
+```sql
+
+```
+
+<br/>
+
+
+
+```sql
+
+```
+
+<br/>
+
+
+```sql
+
+```
+
+<br/>
+
+
+```sql
+
+```
+
+<br/>
+
+
+
+```sql
+
+```
+
+<br/>
+
+
+
+```sql
+
+```
+
+<br/>
+
+
+```sql
+
+```
+
+<br/>
+
+
+
+
+
 
 <br/><br/><br/>
 > <h2 id="终端多行修改sql语句">终端多行修改sql语句</h2>
