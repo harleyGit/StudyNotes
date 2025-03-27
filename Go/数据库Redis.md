@@ -4,6 +4,7 @@
 	- [‌基本命令](#基本命令)
 - [**协议**](#协议)
 - [**操作Redis**](#操作Redis)
+	- [基本使用](#基本使用)
 
 
 <br/><br/><br/>
@@ -36,6 +37,16 @@ redis-cli 7.2.7
 % redis-server -v
 Redis server v=7.2.7 sha=00000000:0 malloc=libc bits=64 build=7f24f11dd7e42c58
 ```
+
+<br/>
+
+- Redis安装好后，默认有16个数据库，初始默认使用0号库，编号是0...15。
+	- 添加key-val[set]
+	- 查看当前redis的所有key[keys *]
+	- 获取key对应的值[get key];
+	- 切换redis数据库[select index];
+		- 如何查看当前数据库的key-val数量[dbsize];
+	- 清空当前数据库的key-val和清空所有数据库的key-val [flushdb flushall]
 
 
 <br/><br/><br/>
@@ -251,6 +262,11 @@ func RedisExamplePractice() {
 }
 
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="基本使用">基本使用</h2>
+
 
 
 

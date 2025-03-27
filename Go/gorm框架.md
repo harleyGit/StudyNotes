@@ -849,7 +849,7 @@ func main() {
 }
 ```
 
-**说明：**
+- **说明：**
 	- db.Migrator().HasTable(&UserModel{})：检查表是否已存在。
 	- db.Migrator().CreateTable(&UserModel{})：如果表不存在，使用 CreateTable 方法显式地创建表。
 
@@ -1081,9 +1081,6 @@ func UpsertOp(user GormUser) {
 | **`DoUpdates`** | 如果主键冲突，更新指定字段 | `clause.OnConflict{DoUpdates: clause.AssignmentColumns([]string{"name", "age"})}` |
 | **`UpdateAll`** | 如果主键冲突，更新所有字段（除主键） | `clause.OnConflict{UpdateAll: true}` |
 
-
-
-
 <br/><br/>
 > <h3 id="GORM查询数据"> GORM查询数据 </h3>
 **代码:**
@@ -1101,7 +1098,7 @@ type UserModel struct {
 var model UserModel
 err := db.Where(condition).First(&model).Error
 ```
-上述的**`condition`**条件可能是：
+上述的 **`condition`** 条件可能是：
 
 **字符串查询：**
 

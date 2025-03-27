@@ -271,6 +271,7 @@
 - [**常用框架**](./Go/GoLang常用框架.md)
 	- [数据库Redis](./Go/数据库Redis.md)
 - [**go实战进阶**](./Go/go实战进阶.md)
+- [**‌go设计模式**](#./Go/go设计模式.md)
 - [**优化**](./Go/go优化.md)
 - [go性能分析](./Go/go性能分析.md)
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
