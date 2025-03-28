@@ -21,8 +21,9 @@
 	- [无法批量删除解决](#无法批量删除解决)
 - **资料**
 	- [Gorm文档](https://gorm.io/zh_CN/docs/connecting_to_the_database.html)
-	- [golang最简单的gorm教程(枫枫知道-B站)-Video](https://www.bilibili.com/video/BV1xg411t7RZ?spm_id_from=333.788.player.switch&vd_source=a7fe275f0ee54c4d2f691a823f8876b8&p=6)
-		- [](https://www.fengfengzhidao.com/article/4NlbH4sBEG4v2tWkFmpL)
+	- [gorm实战教程(Video)--枫枫博客](https://www.fengfengzhidao.com/article/4NlbH4sBEG4v2tWkFmpL)
+		- [](https://www.bilibili.com/video/BV1xg411t7RZ?spm_id_from=333.788.player.switch&vd_source=a7fe275f0ee54c4d2f691a823f8876b8&p=6)
+	
 
 
 

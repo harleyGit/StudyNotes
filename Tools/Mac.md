@@ -87,6 +87,7 @@
 - [**Mac问题解决**](#Mac问题解决)
 	- [Mac蓝牙不可用](#Mac蓝牙不可用)
 	- [Mac清理内存](#Mac清理内存)
+	- [删除屏幕保护程序20G资源](#删除屏幕保护程序20G资源)
 	- [可删除的文件](#可删除的文件)
 	- [破解软件无法安装](#破解软件无法安装)
 - [**DNS**](#DNS)
@@ -2928,20 +2929,15 @@ omw -g
 7️⃣重启后，跟当初才激活电脑一样，根据激活配置，一步一步重新对其进行配置，在此过程中会要求我们重新创建一个管理员账号。
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
-
 ># <h1 id='Mac问题解决'>Mac问题解决</h1>
-
-
-
 <br/>
 
 > <h2 id='Mac蓝牙不可'>**Mac蓝牙不可用**</h2>
-
 
 `①  拔出与Mac连接的设备线；  `<br/>
 `② 关机;  `<br/>
@@ -2950,11 +2946,8 @@ omw -g
 `⑤  蓝牙菜单恢复正常；`<br/>
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='Mac清理内存'>Mac清理内存</h2>
-
 
 **`查看文件夹内的内存占用情况`**
 
@@ -2972,9 +2965,7 @@ sudo du -sh *
 $ du -hd 5 |grep -n '\dG' |sort
 ```
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h2 id='可删除的文件'>可删除的文件</h2>
 
 ```
@@ -3039,14 +3030,30 @@ rm -rf ~/Library/Caches/*
 
 [**Mac 清理软件集合**](https://blog.csdn.net/mandagod/article/details/89339544)
 
+<br/><br/>
+> <h3 id="删除屏幕保护程序20G资源">删除屏幕保护程序20G资源</h3>
 
+在 macOS 14 中，视频壁纸存放路径为：
 
+```sh
+/Library/Application Support/com.apple.idleassetsd/Customer/
+```
 
 <br/>
-<br/>
 
+其中，高清 4k 视频壁纸存放路径为：
+
+```
+/Library/Application Support/com.apple.idleassetsd/Customer/4KSDR240FPS
+```
+
+
+
+
+
+
+<br/><br/>
 > <h2 id='破解软件无法安装'>**破解软件无法安装**</h2>
-
 
 - 【安全隐私】没有权限安装来路不明的 App
 

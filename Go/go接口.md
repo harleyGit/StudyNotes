@@ -1,5 +1,5 @@
 - [**接口**](#接口)
-	- [空接口`interface{} `](#空接口`interface{}`)
+	- [空接口`interface{} `](#空接口interface{})
 	- [接口的实现](#接口的实现)
 	- [便于扩展的日志输出系统](#便于扩展的日志输出系统)
 	- [接口和类型间转换](#接口和类型间转换)
@@ -48,7 +48,7 @@ type writer interface {
 
 
 <br/><br/><br/>
-> <h2 id="空接口`interface{}`">空接口`interface{} `</h2>
+><h2 id="空接口interface{}">空接口interface{}</h2>
 interface{} 是 Go 中的一个空接口类型。它是 Go 中最通用的类型，可以代表任何类型。
 
 - **特点：**
@@ -123,13 +123,12 @@ Write Data: data
 
 <br/>
 
-
 > **接口中所有方法均被实现**
 
 
 <br/><br/>
 > <h2 id='便于扩展的日志输出系统'>便于扩展的日志输出系统</h2>
-> **日志对外接口**
+**日志对外接口**
 
 ```go
 type LogWriter interface {
@@ -265,7 +264,7 @@ func newConsoleWriter() *consoleWriter {
 
 > 使用日志
 
-```
+```go
 // 创建日志器
 func testInterface2() {
 	// 创建日志器
@@ -301,23 +300,17 @@ hello
 
 &emsp; 同时还有一个log.log文件生成，在`l.RegisterWriter(cw)`中，其意思是：使用日志器方法RegisterWriter()将一个日志写入器（LogWriter）注册到日志器（Logger）中。注册的意思就是将日志写入器的接口添加到write List中
 
-
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='接口和类型间转换'>接口和类型间转换</h2>
 
 > 类型断言的格式
 
-```
+```go
 t, ok := i.(T)
 ```
 
 &emsp; 如果发生接口未实现时，将会把ok置为false，t置为T类型的0值。正常实现时，ok为true。这里ok可以被认为是：i接口是否实现T类型的结果
-
 
 <br/>
 
@@ -328,7 +321,7 @@ t, ok := i.(T)
 **`interface{}类型表示空接口，意思就是这种接口可以保存为任意类型。`**
 
 
-```
+```go
 // 定义飞行动物接口
 type Flyer interface {
 	Fly()
@@ -431,10 +424,7 @@ p1=0x100602af8 p2=0x100602af8
 &emsp; 接口断言类似于流程控制中的if。但大量类型断言出现时，应使用更为高效的类型分支switch特性。
 
 
-
-
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id='空接口类型（interface{}）'>空接口类型（interface{}）</h2>
 
