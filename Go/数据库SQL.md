@@ -1,17 +1,21 @@
 > <h1 id=""></h1>
-- [**初级使用**](#初级使用)
-	- [目录结构](#目录结构)
-	- [特殊的NULL运算](#特殊的NULL运算)
-	- [创建employees表](#创建employees表)
-	- [employees表批量插入数据](#employees表批量插入数据)
-	- [查employees表](#查employees表)
-	- [运算符](#运算符)
-		- [<=>安全等于](#安全等于)
-		- [IN和WHERE使用](#IN和WHERE使用)
-		- [XOR异或](#XOR异或)
-	- [employees表排序和分页](#employees表排序和分页)
-		- [employees二级排序](#employees二级排序)
-	- 
+- [**目录结构**](#目录结构)
+- [**特殊的NULL运算**](#特殊的NULL运算)
+- [**创建employees表**](#创建employees表)
+- [**employees表批量插入数据**](#employees表批量插入数据)
+- [**查employees表**](#查employees表)
+- [**运算符**](#运算符)
+	- [<=>安全等于](#安全等于)
+	- [IN和WHERE使用](#IN和WHERE使用)
+	- [XOR异或](#XOR异或)
+- [** employees表排序和分页**](#employees表排序和分页)
+	- [employees二级排序](#employees二级排序)
+	- [分页limit](#分页limit)
+- [**多表查询**](#多表查询)
+	- [多表条件查询](#多表条件查询) 
+	- [自连接](#自连接) 
+	- [内连接vs外连接](#内连接vs外连接) 
+	- [UNION的使用](#UNION的使用)
 - [**mysql管理 ‌**](#mysql管理)
 	- [基本命令行](#基本命令行)
 	- [终端单行修改sql语句](#终端单行修改sql语句)
@@ -40,10 +44,7 @@
 ***
 <br/>
 
-> <h1 id="">初级使用</h1>
-<br/>
-
-> <h2 id="目录结构">目录结构</h2>
+> <h1 id="目录结构">目录结构</h1>
 
 | MySQL目录结构 | 说明 |
 |:--|:--|
@@ -79,7 +80,11 @@ DBMS: 数据库管理系统.(类似于word工具, wps工具等)
 
 
 <br/><br/><br/>
-> <h2 id="特殊的NULL运算">特殊的NULL运算</h2>
+
+***
+<br/>
+
+> <h1 id="特殊的NULL运算">特殊的NULL运算</h1>
 
 空值参与运算
 空值:null
@@ -89,8 +94,11 @@ null不等同于0, '', "null"?
 
 
 <br/><br/><br/>
-> <h2 id="创建employees表">创建employees表</h2>
 
+***
+<br/>
+
+> <h1 id="创建employees表">创建employees表</h1>
 
 **创建employees员工表:**
 
@@ -163,7 +171,11 @@ INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, 
 
 
 <br/><br/><br/>
-> <h2 id="查employees表">查employees表</h2>
+
+***
+<br/>
+
+> <h1 id="查employees表">查employees表</h1>
 
 **查看数据:**
 
@@ -247,7 +259,11 @@ mysql> SELECT "?尚硅谷", 1234, employee_id, last_name FROM employees where la
 
 
 <br/><br/><br/>
-> <h2 id="运算符">运算符</h2>
+
+***
+<br/>
+
+> <h1 id="运算符">运算符</h1>
 
 **DUAL是伪表**
 
@@ -357,7 +373,6 @@ WHERE  NOT commission_pct <=> NULL;
 | 266.16 |         781.87 |
 | 144.88 |         234.24 |
 ```
-
 
 <br/>
 
@@ -638,7 +653,7 @@ LIMIT 0, 10
 
 **部门表departments创建:**
 
-```
+```sql
 CREATE TABLE `departments` (
     `department_id` INT NOT NULL DEFAULT 0,
     `department_name` VARCHAR(40) NOT NULL,
@@ -709,7 +724,7 @@ CREATE TABLE `countries` (
 	- departments: 27条
 	- 107*27= 2889,每个部门与每个人都匹配,出现错误(出现了笛卡尔积错误).
 
-```
+```sql
 SELECT employee_id, department_name
 FROM employees, departments;
 # 或者等价于: FROM employees CROSS JOIN departments;
