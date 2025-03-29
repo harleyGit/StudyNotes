@@ -8,7 +8,7 @@
 	- [<=>安全等于](#安全等于)
 	- [IN和WHERE使用](#IN和WHERE使用)
 	- [XOR异或](#XOR异或)
-- [** employees表排序和分页**](#employees表排序和分页)
+- [**employees表排序和分页**](#employees表排序和分页)
 	- [employees二级排序](#employees二级排序)
 	- [分页limit](#分页limit)
 - [**多表查询**](#多表查询)
@@ -16,6 +16,9 @@
 	- [自连接](#自连接) 
 	- [内连接vs外连接](#内连接vs外连接) 
 	- [UNION的使用](#UNION的使用)
+	- [SQL99语法新特性](#SQL99语法新特性)
+		- [自然连接](#自然连接)
+		- [USING连接](#USING连接)
 - [**mysql管理 ‌**](#mysql管理)
 	- [基本命令行](#基本命令行)
 	- [终端单行修改sql语句](#终端单行修改sql语句)
@@ -640,7 +643,6 @@ LIMIT 0, 10
 10 rows in set (0.00 sec)
 ```
 
-
 <br/><br/><br/>
 > <h2 id="多表查询">多表查询</h2>
 
@@ -648,6 +650,14 @@ LIMIT 0, 10
 
 ![go.0.0.102.png](./../Pictures/go.0.0.102.png) 
 ![go.0.0.103.png](./../Pictures/go.0.0.103.png)
+
+<br/>
+
+**注意：**
+
+我们要`控制连接表的数量`。多表连接就相当于嵌套 for 循环一样，非常消耗资源，会让 SQL 查询性能下降得很严重，因此不要连接不必要的表。在许多 DBMS 中，也都会有最大连接表的限制。
+
+> 【强制】超过三个表禁止 join。需要 join 的字段，数据类型保持绝对一致；多表关联查询时， 保证被关联的字段需要有索引
 
 <br/><br/>
 
@@ -1012,8 +1022,7 @@ ON d.location_id = l.location_id;
 	- 满外连接:  **A+C+B‌**
 		- 两个表中在连接过程中除了返回满足连接条件的行以外,还返回左表中不满足条件的行,这种连接称为左外连接.
 
-
-<br/>
+<br/><br/>
 
 **1.左外连接(LEFT OUTER JOIN)语法：**
 
@@ -1032,7 +1041,7 @@ WHERE 等其他子句;
 SELECT e.last_name, e.department_id, d.department_name
 FROM   employees e
 LEFT OUTER JOIN departments d
-ON   (e.department_id = d.department_id) ;
+ON (e.department_id = d.department_id);
 
 +----------------------+---------------+------------------------+
 | last_name            | department_id | department_name        |
@@ -1070,10 +1079,6 @@ ON   (e.department_id = d.department_id) ;
 | 孔詩涵               |           619 | NULL                   |
 +----------------------+---------------+------------------------+
 120 rows in set (0.00 sec)
-```
-
-```sql
-
 ```
 
 <br/>
@@ -1121,7 +1126,74 @@ ON    (e.department_id = d.department_id) ;
 120 rows in set (0.00 sec)
 ```
 
-<br/>
+<br/><br/>
+
+**左中图:**
+
+![go.0.0.109.png](./../Pictures/go.0.0.109.png)
+
+```sql
+SELECT employee_id, department_name
+FROM   employees e  LEFT JOIN departments d
+ON e.department_id = d.department_id
+WHERE d.department_id IS NULL;
+
++-------------+-----------------+
+| employee_id | department_name |
++-------------+-----------------+
+|          54 | NULL            |
+|          24 | NULL            |
+|         108 | NULL            |
+|         101 | NULL            |
+|         100 | NULL            |
+...
+..
+.
+|          59 | NULL            |
+|          64 | NULL            |
+|          70 | NULL            |
+|          26 | NULL            |
+|          63 | NULL            |
++-------------+-----------------+
+104 rows in set (0.00 sec)
+```
+
+<br/><br/>
+
+**右中图:**
+
+![go.0.0.110.png](./../Pictures/go.0.0.102.png)
+
+```sql
+SELECT employee_id, department_name
+FROM   employees e  RIGHT JOIN departments d
+ON e.department_id = d.department_id
+WHERE e.department_id IS NULL;
+
++-------------+-----------------+
+| employee_id | department_name |
++-------------+-----------------+
+|          54 | NULL            |
+|          24 | NULL            |
+|         108 | NULL            |
+|         101 | NULL            |
+|         100 | NULL            |
+...
+..
+.
+|        NULL | 工程部                 |
+|        NULL | 採購部                 |
+|        NULL | 外销部                 |
+|        NULL | Marketing              |
+|        NULL | 研究及开发部           |
+|        NULL | 信息技术支持部         |
++-------------+------------------------+
+104 rows in set (0.00 sec)
+```
+
+<br/><br/>
+
+![go.0.0.111.png](./../Pictures/go.0.0.111.png)
 
 **满外连接(FULL OUTER JOIN)**
 
@@ -1159,58 +1231,186 @@ UNION [ALL]
 SELECT column,... FROM table2
 ```
 
-
 > 注意：执行UNION ALL语句时所需要的资源比UNION语句少。如果明确知道合并数据后的结果数据不存在重复数据，或者不需要去除重复的数据，则尽量使用UNION ALL语句，以提高数据查询的效率。
 
 
+***
 <br/>
 
-```sql
+**UNION解决满连接方法:**
 
+**方式一:** `左外连接 UNION ALL 右中图`
+
+```sql
+-- 满外连接
+-- 左外连接
+SELECT employee_id, department_name
+FROM   employees e LEFT OUTER JOIN departments d
+ON (e.department_id = d.department_id)
+UNION ALL
+-- 右中图的连接
+SELECT employee_id, department_name
+FROM   employees e RIGHT JOIN departments d
+ON (e.department_id = d.department_id)
+WHERE e.department_id IS NULL;
+
+
+
++-------------+------------------------+
+| employee_id | department_name        |
++-------------+------------------------+
+|        NULL | 採購部                 |
+|        NULL | 工程部                 |
+|        NULL | 会计及金融部           |
+|        NULL | 服务支持部             |
+|        NULL | 工程部                 |
+|        NULL | Marketing              |
+|        NULL | 生产部                 |
+...
+..
+.
+|        NULL | 工程部                 |
+|        NULL | 产品质量部             |
+|        NULL | Legal Department       |
+|        NULL | 工程部                 |
+|        NULL | 採購部                 |
+|        NULL | 外销部                 |
+|        NULL | Marketing              |
+|        NULL | 研究及开发部           |
+|        NULL | 信息技术支持部         |
++-------------+------------------------+
+224 rows in set (0.00 sec)
 ```
 
 <br/>
 
-```sql
-
-```
-
-
-<br/>
+**方法二:左中图 UNION ALL  右上图**
 
 ```sql
+-- 满外连接2.0
+-- 左中图
+SELECT employee_id, department_name
+FROM   employees e LEFT OUTER JOIN departments d
+ON (e.department_id = d.department_id)
+WHERE d.department_id IS NULL
+UNION ALL
+-- 右上图的连接
+SELECT employee_id, department_name
+FROM   employees e RIGHT JOIN departments d
+ON (e.department_id = d.department_id)
 
+
++-------------+------------------------+
+| employee_id | department_name        |
++-------------+------------------------+
+|          54 | NULL                   |
+|          24 | NULL                   |
+|         108 | NULL                   |
+|         101 | NULL                   |
+|         100 | NULL                   |
+|          69 | NULL                   |
+|          95 | NULL                   |
+|          28 | NULL                   |
+...
+..
+.
+|        NULL | 工程部                 |
+|        NULL | 採購部                 |
+|        NULL | 外销部                 |
+|        NULL | Marketing              |
+|        NULL | 研究及开发部           |
+|        NULL | 信息技术支持部         |
+|          65 | 采购部                 |
++-------------+------------------------+
+224 rows in set (0.01 sec)
 ```
 
+<br/><br/>
 
-<br/>
+![go.0.0.112.png](./../Pictures/go.0.0.112.png)
+
+**右下图: 左中图 UNION ALL 右上图**
 
 ```sql
+-- 右下图: 左中图 UNION ALL 右上图
+SELECT employee_id, department_name
+FROM   employees e LEFT OUTER JOIN departments d
+ON (e.department_id = d.department_id)
+WHERE d.department_id IS NULL
+UNION ALL
+SELECT employee_id, department_name
+FROM   employees e RIGHT JOIN departments d
+ON (e.department_id = d.department_id)
+WHERE e.department_id IS NULL;
 
+
++-------------+------------------------+
+| employee_id | department_name        |
++-------------+------------------------+
+|          54 | NULL                   |
+|          24 | NULL                   |
+|         108 | NULL                   |
+|         101 | NULL                   |
+|         100 | NULL                   |
+|          69 | NULL                   |
+|        NULL | Legal Department       |
+...
+..
+.
+|        NULL | 工程部                 |
+|        NULL | 採購部                 |
+|        NULL | 外销部                 |
+|        NULL | Marketing              |
+|        NULL | 研究及开发部           |
+|        NULL | 信息技术支持部         |
++-------------+------------------------+
+208 rows in set (0.00 sec)
 ```
 
-<br/>
+***
+<br/><br/><br/>
 
-```sql
+> <h2 id="SQL99语法新特性">SQL99语法新特性</h2>
 
+<br/><br/>
+> <h3 id="自然连接">自然连接</h3>
+
+SQL99 在 SQL92 的基础上提供了一些特殊语法，比如 `NATURAL JOIN` 用来表示自然连接。我们可以把自然连接理解为 SQL92 中的等值连接。它会帮你自动查询两张连接表中`所有相同的字段`，然后进行`等值连接`。
+
+在SQL92标准中：
+
+```mysql
+SELECT employee_id,last_name,department_name
+FROM employees e JOIN departments d
+ON e.`department_id` = d.`department_id`
+AND e.`manager_id` = d.`manager_id`;
 ```
 
-<br/>
+在 SQL99 中你可以写成(缺点: 简单但是不够灵活)：
 
-```sql
-
+```mysql
+SELECT employee_id,last_name,department_name
+FROM employees e NATURAL JOIN departments d;
 ```
 
+<br/><br/>
+> <h3 id="USING连接">USING连接</h3>
+当我们进行连接的时候，SQL99还支持使用 USING 指定数据表里的`同名字段`进行等值连接。但是只能配合JOIN一起使用。比如：
 
-
-<br/>
-
-
-```sql
-
+```mysql
+SELECT employee_id,last_name,department_name
+FROM employees e JOIN departments d
+USING (department_id);
 ```
 
+你能看出与自然连接 NATURAL JOIN 不同的是，USING 指定了具体的相同的字段名称，你需要在 USING 的括号 () 中填入要指定的同名字段。同时使用 `JOIN...USING` 可以简化 JOIN ON 的等值连接。它与下面的 SQL 查询结果是相同的：
 
+```mysql
+SELECT employee_id,last_name,department_name
+FROM employees e ,departments d
+WHERE e.department_id = d.department_id;
+-- USING进行了替换
+```
 
 <br/><br/><br/>
 
@@ -1487,68 +1687,9 @@ mysql> show variables like 'character_%'
 8 rows in set (0.05 sec)
 ```
 
-<br/>
-
-
-```sql
-
-```
-
-<br/>
-
-
-
-```sql
-
-```
-
-<br/>
-
-
-```sql
-
-```
-
-<br/>
-
-
-```sql
-
-```
-
-<br/>
-
-
-
-```sql
-
-```
-
-<br/>
-
-
-
-```sql
-
-```
-
-<br/>
-
-
-```sql
-
-```
-
-<br/>
-
-
-
-
-
 
 <br/><br/><br/>
 > <h2 id="终端多行修改sql语句">终端多行修改sql语句</h2>
-
 
 ```sh
 mysql> CREATE TABLE test_teacher00 (
