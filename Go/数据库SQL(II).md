@@ -1446,44 +1446,222 @@ SELECT 是先执行 FROM 这一步的。在这个阶段，如果是多张表联�
 同时因为 SQL 是一门类似英语的结构化查询语言，所以我们在写 SELECT 语句的时候，还要注意相应的关键字顺序，**所谓底层运行的原理，就是我们刚才讲到的执行顺序。**
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="子查询">子查询</h1>
+
+<img src="./../Pictures/go.0.0.124.png" alt="go.0.0.124.png" style="zoom:80%;" />
+
+谁的工资比**Tang Jialun**薪水高.
 
 ```mysql
+#方式一：
+SELECT salary
+FROM employees
+WHERE last_name = 'Tang Jialun';
 
+SELECT last_name,salary
+FROM employees
+WHERE salary > 11000;
 
+#方式二：自连接
+SELECT e2.last_name,e2.salary
+FROM employees e1,employees e2
+WHERE e1.last_name = 'Tang Jialun'
+AND e1.`salary` < e2.`salary`
+
+#方式三：子查询
+SELECT last_name,salary
+FROM employees
+WHERE salary > (
+		SELECT salary
+		FROM employees
+		WHERE last_name = 'Tang Jialun'
+		);
+		
++-----------------+--------+
+| last_name       | salary |
++-----------------+--------+
+| 方震南          | 898.13 |
+| 菊地陸          | 951.72 |
+| Tina Carter     | 961.96 |
+| 岡本健太        | 962.12 |
+| 顧小慧          | 919.50 |
+| Matsumoto Kaito | 933.77 |
+| Judith Woods    | 913.95 |
+| Tse Tsz Ching   | 959.99 |
+| 严云熙          | 989.71 |
+| 大野悠人        | 994.69 |
+| Shannon Torres  | 997.42 |
+| 渡辺聖子        | 968.77 |
+| 孔詩涵          | 922.72 |
++-----------------+--------+
+13 rows in set (0.00 sec)
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="查询的分类">查询的分类</h2>
+
+- **角度一:** 从查询返回的结果条目数分类:
+	- 单行返回一个结果的,叫做单行子查询;
+	- 返回多个结果的叫做多行子查询;
+
+- **角度二:** 哪查询是否执行多次
+	- 相关子查询
+	- 不相关子查询
+
+- **比如:** 
+	- 相关子查询的需求: 查询工资大于本部门平均工资的员工信息;
+	- 不相关子查询的需求: 查询工资大于本公司平均工资的员工信息. 
+
+<br/><br/>
+> <h3 id="多行子查询">多行子查询</h3>
 
 ```mysql
+-- 题目: 查询平均工资最低的部门ID
+-- MySQL 函数汇是不能嵌套使用的
+SELECT department_id
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) = (
+	SELECT MIN(avg_sal)
+	FROM (
+		SELECT AVG(salary) avg_sal
+		FROM employees
+		GROUP BY department_id
+	)t_dept_avg_sal
+);
 
-
++---------------+
+| department_id |
++---------------+
+|            45 |
++---------------+
+1 row in set (0.01 sec)
 ```
-
-```mysql
-
-```
-
 
 <br/>
 
-```mysql
+**代码解释:**
 
+```mysql
+(
+		SELECT AVG(salary) avg_sal
+		FROM employees
+		GROUP BY department_id
+	)t_dept_avg_sal
 ```
+- **avg_sal:** 平均薪水别名;
+- **t_dept_avg_sal:** 根据部门id字段`‌department_id`分组查明平均薪水后的表名;
+
+***
+
+```mysql
+SELECT MIN(avg_sal)
+```
+
+- **avg_sal:** 是表名`‌t_dept_avg_sal`的查询列名;
 
 <br/>
 
-```mysql
+上述的查明也可以写成如下:
 
+```mysql
+SELECT department_id
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) <= ALL (
+		SELECT AVG(salary) avg_sal
+		FROM employees
+		GROUP BY department_id
+)
+
++---------------+
+| department_id |
++---------------+
+|            45 |
++---------------+
+1 row in set (0.00 sec)
 ```
+
+<br/><br/>
+> <h3 id="相关子查询执行流程">相关子查询执行流程</h3>
+如果子查询的执行依赖于外部查询，通常情况下都是因为子查询中的表用到了外部的表，并进行了条件关联，因此每执行一次外部查询，子查询都要重新计算一次，这样的子查询就称之为`关联子查询`。
+
+相关子查询按照一行接一行的顺序执行，主查询的每一行都执行一次子查询。
+
+![go.0.0.125.png](./../Pictures/go.0.0.125.png)
+
+说明：**子查询中使用主查询中的列**
 
 <br/>
 
-```mysql
+**题目：查询员工中工资大于本部门平均工资的员工的last_name,salary和其department_id** 
 
+**方法一:**
+
+```mysql
+SELECT last_name, salary, department_id
+FROM employees e1
+WHERE salary > (
+	SELECT AVG(salary)
+	FROM employees e2
+	WHERE e1.department_id = e2.department_id
+);
+
++-----------------+--------+---------------+
+| last_name       | salary | department_id |
++-----------------+--------+---------------+
+| Chow Lai Yan    | 716.48 |           987 |
+| Jiang Shihan    | 714.16 |           443 |
+| 萧子韬          | 841.93 |           100 |
+| 斎藤聖子        | 744.90 |           283 |
+| 顧小慧          | 919.50 |           744 |
+| Matsumoto Kaito | 933.77 |           869 |
+| 周慧珊          | 706.84 |           477 |
+| 大塚詩乃        | 665.39 |           757 |
+| Shannon Torres  | 997.42 |           787 |
+| 渡辺聖子        | 968.77 |           133 |
+| Stanley Alvarez | 776.43 |           433 |
+| 大塚大輔        | 583.98 |           388 |
++-----------------+--------+---------------+
+12 rows in set (0.00 sec)
 ```
 
 <br/>
+**方法2️⃣**
 
 ```sql
+SELECT e.last_name, e.salary, e.department_id
+FROM employees e, (
+									SELECT department_id, AVG(salary) avg_sal
+									FROM employees
+									GROUP BY department_id
+								)t_dept_avg_sal
+WHERE e.department_id = t_dept_avg_sal.department_id
+AND e.salary > t_dept_avg_sal.avg_sal;
 
++-----------------+--------+---------------+
+| last_name       | salary | department_id |
++-----------------+--------+---------------+
+| 萧子韬          | 841.93 |           100 |
+| 渡辺聖子        | 968.77 |           133 |
+| 斎藤聖子        | 744.90 |           283 |
+| 大塚大輔        | 583.98 |           388 |
+| Stanley Alvarez | 776.43 |           433 |
+| Jiang Shihan    | 714.16 |           443 |
+| 周慧珊          | 706.84 |           477 |
+| 顧小慧          | 919.50 |           744 |
+| 大塚詩乃        | 665.39 |           757 |
+| Shannon Torres  | 997.42 |           787 |
+| Matsumoto Kaito | 933.77 |           869 |
+| Chow Lai Yan    | 716.48 |           987 |
++-----------------+--------+---------------+
+12 rows in set (0.00 sec)
 ```
 
 <br/>
