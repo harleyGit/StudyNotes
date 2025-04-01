@@ -18,6 +18,13 @@
 - [**SELECT的执行过程**](#SELECT的执行过程)
 	- [SELECT执行顺序](#SELECT执行顺序) 
 	- [SQL的执行原理](#SQL的执行原理)
+	- [**子查询**](#子查询) 
+		- [查询的分类](#查询的分类)
+			- [多行子查询](#多行子查询) 
+			- [相关子查询执行流程](#相关子查询执行流程)
+			- [EXISTS 与 NOT EXISTS关键字](#EXISTS与NOTEXISTS关键字)
+			- [相关更新](#相关更新)
+			- [相关删除](#相关删除)
 
 
 <br/><br/><br/>
@@ -1521,8 +1528,26 @@ WHERE salary > (
 <br/><br/>
 > <h3 id="多行子查询">多行子查询</h3>
 
+- 也称为集合比较子查询
+- 内查询返回多行
+- 使用多行比较操作符
+
+<br/><br/>
+
+**多行比较操作符**
+
+| 操作符 | 含义                                                         |
+| ------ | ------------------------------------------------------------ |
+| IN     | 等于列表中的**任意一个**                                     |
+| ANY    | 需要和单行比较操作符一起使用，和子查询返回的**某一个**值比较 |
+| ALL    | 需要和单行比较操作符一起使用，和子查询返回的**所有**值比较   |
+| SOME   | 实际上是ANY的别名，作用相同，一般常使用ANY                   |
+
+<br/>
+
+**题目: 查询平均工资最低的部门ID**
+
 ```mysql
--- 题目: 查询平均工资最低的部门ID
 -- MySQL 函数汇是不能嵌套使用的
 SELECT department_id
 FROM employees
@@ -1586,6 +1611,19 @@ HAVING AVG(salary) <= ALL (
 |            45 |
 +---------------+
 1 row in set (0.00 sec)
+```
+
+<br/>
+
+**题目:** 空值问题
+
+```mysql
+SELECT last_name
+FROM employees
+WHERE employee_id NOT IN (
+			SELECT manager_id
+			FROM employees
+			);
 ```
 
 <br/><br/>
@@ -1661,10 +1699,259 @@ AND e.salary > t_dept_avg_sal.avg_sal;
 | Matsumoto Kaito | 933.77 |           869 |
 | Chow Lai Yan    | 716.48 |           987 |
 +-----------------+--------+---------------+
-12 rows in set (0.00 sec)
+12 rows in set (0.00 sec) 
+```
+
+<br/><br/>
+
+在ORDER BY 中使用子查询：
+
+**题目：查询员工的id,salary,按照department_name 排序**
+
+```sql
+SELECT employee_id,salary
+FROM employees e
+ORDER BY (
+	  SELECT department_name
+	  FROM departments d
+	  WHERE e.`department_id` = d.`department_id`
+	);
+```
+
+<br/><br/>
+
+**题目：若employees表中employee_id与job_history表中employee_id相同的数目不小于2，输出这些相同id的员工的employee_id,last_name和其job_id**
+
+```
+SELECT e.employee_id, last_name,e.job_id
+FROM   employees e 
+WHERE  2 <= (SELECT COUNT(*)
+             FROM   job_history 
+             WHERE  employee_id = e.employee_id);
+```
+
+***
+<br/>
+
+**结论:** 在SELECT中,除了GROUP BY 和 LIMIT之外,其他位置都可以声明子查询!
+
+```sql
+SELECT ...., ...., ....(存在聚合函数)
+FROM ...(LEFT / RIGHT) JOIN ...ON 多表的连接条件
+(LEFT/ RIGHT)JOIN ... ON ....
+WHERE 不包含聚合函数的过滤条件
+GROUP BY ..., ...
+HAVING 包含聚合函数的过滤条件
+ORDER BY ...., ...(ASC/ DESC)
+LIMIT ..., ...
+```
+
+***
+<br/><br/><br/>
+> <h2 id="EXISTS与NOTEXISTS关键字">EXISTS 与 NOT EXISTS关键字</h2>
+
+- 关联子查询通常也会和 EXISTS操作符一起来使用，用来检查在子查询中是否存在满足条件的行。
+- **如果在子查询中不存在满足条件的行：**
+  - 条件返回 FALSE
+  - 继续在子查询中查找
+- **如果在子查询中存在满足条件的行：**
+  - 不在子查询中继续查找
+  - 条件返回 TRUE
+- NOT EXISTS关键字表示如果不存在某种条件，则返回TRUE，否则返回FALSE。
+
+**题目：查询公司管理者的employee_id，last_name，job_id，department_id信息**
+
+**方式一：**
+
+```sql
+SELECT employee_id, last_name, job_id, department_id
+FROM   employees e1
+WHERE  EXISTS ( SELECT *
+                 FROM   employees e2
+                 WHERE  e2.manager_id = 
+                        e1.employee_id);
+                        
++-------------+-----------------+------------+---------------+
+| employee_id | last_name       | job_id     | department_id |
++-------------+-----------------+------------+---------------+
+|          12 | 邵曉彤          | FDFeTtHEJM |           539 |
+|          24 | Billy Cole      | oEToZj7Moe |           133 |
+|          33 | Jiang Shihan    | rhFqgCLQEE |           443 |
+|          39 | Harada Misaki   | XchjhzQRpA |            45 |
+|          43 | 岡本健太        | ixewhBU2KY |            28 |
+|          46 | 關慧敏          | Jy8vcedDrl |           876 |
+|          52 | 郭慧琳          | upMt1HMptl |           548 |
+|          55 | 方安琪          | LnKwfbqof2 |           450 |
+|          56 | Jia Jialun      | YiFzHO812N |           100 |
+|          67 | Matsumoto Kaito | 6xhGoUXzgq |           869 |
+|          73 | Hui Wing Fat    | 0mXTVl7zpM |           511 |
+|          74 | Qian Yunxi      | 1TxquFG7no |           298 |
+|          96 | Lu Lan          | lDsKUZX93I |           693 |
+|         112 | Sugiyama Momoe  | Yfx3ol7Q4k |           107 |
+|         118 | Yu Jialun       | DjjowNeoj2 |           355 |
++-------------+-----------------+------------+---------------+
+15 rows in set (0.02 sec)                        
 ```
 
 <br/>
+
+**方式二：自连接**
+
+```sql
+SELECT DISTINCT e1.employee_id, e1.last_name, e1.job_id, e1.department_id
+FROM   employees e1 JOIN employees e2
+WHERE e1.employee_id = e2.manager_id;
+```
+
+<br/>
+
+**方式三：**
+
+```sql
+SELECT employee_id,last_name,job_id,department_id
+FROM employees
+WHERE employee_id IN (
+		     SELECT DISTINCT manager_id
+		     FROM employees
+		     );
+ 
++-------------+-----------------+------------+---------------+
+| employee_id | last_name       | job_id     | department_id |
++-------------+-----------------+------------+---------------+
+|          12 | 邵曉彤          | FDFeTtHEJM |           539 |
+|          24 | Billy Cole      | oEToZj7Moe |           133 |
+|          33 | Jiang Shihan    | rhFqgCLQEE |           443 |
+|          39 | Harada Misaki   | XchjhzQRpA |            45 |
+|          43 | 岡本健太        | ixewhBU2KY |            28 |
+|          46 | 關慧敏          | Jy8vcedDrl |           876 |
+|          52 | 郭慧琳          | upMt1HMptl |           548 |
+|          55 | 方安琪          | LnKwfbqof2 |           450 |
+|          56 | Jia Jialun      | YiFzHO812N |           100 |
+|          67 | Matsumoto Kaito | 6xhGoUXzgq |           869 |
+|          73 | Hui Wing Fat    | 0mXTVl7zpM |           511 |
+|          74 | Qian Yunxi      | 1TxquFG7no |           298 |
+|          96 | Lu Lan          | lDsKUZX93I |           693 |
+|         112 | Sugiyama Momoe  | Yfx3ol7Q4k |           107 |
+|         118 | Yu Jialun       | DjjowNeoj2 |           355 |
++-------------+-----------------+------------+---------------+
+15 rows in set (0.01 sec)
+```
+
+<br/><br/>
+
+**题目：查询departments表中，不存在于employees表中的部门的department_id和department_name**
+
+```sql
+SELECT department_id, department_name
+FROM departments d
+WHERE NOT EXISTS (SELECT 'X'
+                  FROM   employees
+                  WHERE  department_id = d.department_id);
+                  
+
++---------------+------------------------+
+| department_id | department_name        |
++---------------+------------------------+
+|             2 | 採購部                 |
+|             3 | 工程部                 |
+|             4 | 会计及金融部           |
+|             5 | 服务支持部             |
+|             6 | 工程部                 |
+|             7 | Marketing              |
+...
+..
+.
+|           113 | 工程部                 |
+|           114 | 採購部                 |
+|           115 | 外销部                 |
+|           116 | Marketing              |
+|           117 | 研究及开发部           |
+|           118 | 信息技术支持部         |
++---------------+------------------------+
+104 rows in set (0.00 sec)
+```
+
+<br/><br/>
+> <h3 id="相关更新">相关更新</h3>
+
+```sql
+UPDATE table1 alias1
+SET    column = (SELECT expression
+                 FROM   table2 alias2
+                 WHERE  alias1.column = alias2.column);
+```
+
+使用相关子查询依据一个表中的数据更新另一个表的数据。
+
+**题目：在employees中增加一个department_name字段，数据为员工对应的部门名称**
+
+```mysql
+# 1）
+ALTER TABLE employees
+ADD(department_name VARCHAR2(14));
+
+# 2）
+UPDATE employees e
+SET department_name =  (SELECT department_name 
+	                       FROM   departments d
+	                       WHERE  e.department_id = d.department_id);
+
+```
+
+<br/><br/>
+> <h3 id="相关删除">相关删除</h3>
+
+```sql
+ DELETE FROM table1 alias1
+ WHERE column operator (SELECT expression
+                        FROM   table2 alias2
+                        WHERE  alias1.column = alias2.column);
+```
+
+使用相关子查询依据一个表中的数据删除另一个表的数据。
+
+**题目：删除表employees中，其与emp_history表皆有的数据**
+
+```sql
+DELETE FROM employees e
+WHERE employee_id in  
+           (SELECT employee_id
+            FROM   emp_history 
+            WHERE  employee_id = e.employee_id);
+```
+
+<br/><br/>
+
+**抛一个思考题:** `谁的工资比Abel的高？`
+
+```mysql
+#方式1：自连接
+SELECT e2.last_name,e2.salary
+FROM employees e1,employees e2
+WHERE e1.last_name = 'Abel'
+AND e1.`salary` < e2.`salary`
+```
+
+<br/>
+
+```mysql
+#方式2：子查询
+SELECT last_name,salary
+FROM employees
+WHERE salary > (
+		SELECT salary
+		FROM employees
+		WHERE last_name = 'Abel'
+		);
+```
+
+**问题：** 以上两种方式有好坏之分吗？
+
+**解答：** 自连接方式好！
+
+题目中可以使用子查询，也可以使用自连接。一般情况建议你使用自连接，因为在许多 DBMS 的处理过程中，对于自连接的处理速度要比子查询快得多。
+
+可以这样理解：子查询实际上是通过未知表进行查询后的条件判断，而自连接是通过已知的自身数据表进行条件判断，因此在大部分 DBMS 中都对自连接处理进行了优化。
 
 ```sql
 

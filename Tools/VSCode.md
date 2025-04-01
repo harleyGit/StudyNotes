@@ -2,6 +2,14 @@
 > [**官方教程**](https://code.visualstudio.com)
 - [**配置**](#配置)
 - [**常用插件**](#常用插件)
+	- [koroFileHeader注释插件](#koroFileHeader注释插件)
+	- [fileheader-文件头注释](#fileheader-文件头注释)
+	- [vscode-icons](https://github.com/vscode-icons/vscode-icons)：文件图标插件；
+	- [Path Intellisense](https://github.com/ChristianKohler/PathIntellisense)：当引入文件和书写文件路径时，可自动填充文件；
+	- [Auto Rename Tag](https://github.com/formulahendry/vscode-auto-rename-tag)：修改HTML标签时，自动完成闭合标签的同步修改；
+	- [open in browser](https://github.com/SudoKillMe/vscode-extensions-open-in-browser)：右击HTML文件，选择Open In Default Browser，就会在默认浏览器中打开HTML文件
+	- Gitlens: 查看git提交记录
+	- [ts插件Deno](#ts插件Deno)
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
 	- [环境配置](#环境配置)
@@ -23,18 +31,17 @@
 
 
 
-<br/>
+<br/><br/><br/><br/>
 
 ***
 <br/>
 
 > <h1 id="配置">配置</h1>
-
->**修改字体大小**
+**修改字体大小**
 
 &emsp;打开VSCode,Command+shift+P,在弹出的输入框中输入**setting**,找到有JSON的一项进行设置:
 
-```
+```json
 //编辑器字体大小
 "editor.fontSize": 18,
 //窗体大小级别,可控制左边文件显示大小
@@ -44,24 +51,221 @@
 "terminal.integrated.fontWeight": "normal",
 ```
 
+<br/><br/>
+
+**工作区配置**
+
+```json
+{
+    // 字体与外观
+    "editor.fontSize": 14,
+    "editor.lineHeight": 22,//行高
+    "editor.fontFamily": "'Fira Code', monospace, Consolas",
+
+    //主题外观
+    "workbench.colorTheme": "Default Light Modern",// 主题默认: Default Light Modern, 暗色: Default Dark+
+    "window.zoomLevel": 1,// 全局缩放（正数放大）0（默认大小）,1（放大 125%）,2（放大 150%）, -1（缩小 80%）
+    "editor.tabSize": 2,// Tab 缩进空格数
+    "editor.wordWrap": "on",// 自动换行
+    
+    // 编辑器行为
+    "editor.minimap.enabled": false,// 关闭右侧缩略图
+    "editor.renderWhitespace": "boundary",// 显示空格/制表符
+    "editor.cursorBlinking": "smooth",// 光标闪烁效果
+    "files.autoSave": "afterDelay",// 自动保存
+        
+    // 终端配置 
+    "terminal.integrated.fontFamily": "'Cascadia Code'",// 终端字体  
+    "terminal.integrated.cursorStyle": "underline",// 光标样式
+    "terminal.integrated.fontSize": 12,
+
+    //编程语言专属设置（如 Go）
+    "[go]": {
+        "editor.formatOnSave": true,// 保存时格式化
+        "editor.defaultFormatter": "golang.go"
+    },
+    "go.toolsManagement.checkForUpdates": "local"
+}
+```
+
+<br/><br/>
+
+`Comand+shift+P,`然后选择打开 **Open Workspace Settings(json)**
+
+**GO的launch.json配置**
+
+```json
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    // https://blog.csdn.net/love666666shen/article/details/88887086
+    "version": "0.2.0",
+    "configurations": [
+        { 
+            "name": "Launch MLC_GO",// 配置名称
+            "type": "go",// 调试类型（Go）
+            "request": "launch",// 启动模式（launch 或 attach）
+            "mode": "auto",// 调试模式（auto/debug/test）
+            "program": "${workspaceFolder}",// "${fileDirname}", // 调试当前文件所在目录
+            "args": ["-env=dev"],// 命令行参数
+            "env": {
+                "GOPATH": "${env:GOPATH}",
+                "MY_ENV": "debug"// 自定义环境变量
+            },
+            "showLog": true// 显示调试日志
+        }
+    ]
+}
+```
+
+<br/><br/>
+
+`Comand+shift+P,`然后选择打开 **Open User Settings(json)**
+
+```json
+{
+    "update.mode": "none",//禁止vscode更新
+    "dart.openDevTools": "flutter",
+    "git.autofetch": true,
+    "files.autoSave": "afterDelay",
+    "workbench.colorTheme": "Default Light+",
+    "dart.debugExternalLibraries": false,
+    "dart.debugSdkLibraries": false,
+    "terminal.integrated.scrollback": 1000000000,
+    "debug.inlineValues": true,
+    "editor.suggestSelection": "first",
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "java.semanticHighlighting.enabled": true,
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    },
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            80
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
+    },
+    "java.project.importOnFirstTimeStartup": "automatic",
+    "explorer.confirmDelete": false,
+    "C_Cpp.updateChannel": "Insiders",
+    "diffEditor.ignoreTrimWhitespace": true,
+    "files.autoGuessEncoding": true,
+    "dart.showInspectorNotificationsForWidgetErrors": false,
+    "settingsSync.ignoredSettings": [
+    
+    ],
+    "editor.codeActionsOnSave": {
+    
+    },
+    "redhat.telemetry.enabled": true,
+    "security.workspace.trust.untrustedFiles": "open",
+    "editor.unicodeHighlight.nonBasicASCII": false,
+    "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
+
+    /// Go配置
+    "go.useLanguageServer": true,
+    "go.toolsManagement.checkForUpdates": "local",
+    "go.alternateTools": {
+    },
+    "go.delveConfig": {
+    
+    },
+    "gopls": {
+        "staticcheck": true  // 可选：启用静态分析
+    },
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    }
+}
+```
+
+比如: Deepseek给的建议:
+
+```json
+{
+  "go.gopath": "/path/to/your/gopath",
+  "go.goroot": "/path/to/your/goroot",
+  "go.useLanguageServer": true,
+  "go.languageServerFlags": ["-remote=auto"],
+  
+  // 模块管理
+  "go.toolsEnvVars": {
+    "GO111MODULE": "auto",
+    "GOPROXY": "https://goproxy.cn,direct"
+  },
+  
+  // 代码格式化
+  "go.formatTool": "gofmt",
+  "editor.formatOnSave": true,
+  
+  // 测试相关
+  "go.testFlags": ["-v", "-count=1"],
+  "go.coverOnSave": false,
+  
+  // 代码分析
+  "go.lintFlags": ["--fast"],
+  "go.lintTool": "staticcheck",
+  
+  // 调试配置
+  "go.delveConfig": {
+    "debugAdapter": "dlv-dap",
+    "showRegisters": false,
+    "showGlobalVariables": false
+  },
+  
+  // 自动补全
+  "go.autocompleteUnimportedPackages": true,
+  
+  // 代码导航
+  "go.inferGopath": true,
+  "go.docsTool": "gogetdoc",
+  
+  // 构建标签
+  "go.buildTags": "",
+  
+  // 自动添加结构体标签
+  "go.addTags": {
+    "tags": "json,xml",
+    "promptForTags": false,
+    "transform": "snakecase"
+  }
+}
+```
 
 
-
-<br/>
+<br/><br/>
 
 ***
 <br/>
 
 > <h1 id="常用插件">常用插件</h1>
 
-
+***
 <br/>
+
+> <h2 id="koroFileHeader注释插件">koroFileHeader注释插件</h2>
 
 - **koroFileHeader**在vscode中用于生成文件头部注释和函数注释的插件，经过多版迭代后，插件：支持所有主流语言,功能强大，灵活方便，文档齐。
 
+***<br/><br/><br/>
+> <h2 id="fileheader-文件头注释">fileheader-文件头注释</h2>
+
+
 **Code->首选项->设置->在搜索框中搜索 `fileheader`**，对其进行如下配置：
 
-```
+```json
  //文件头注释:ctrl+cmd+i
 "fileheader.customMade": {
         "Descripttion": "",
@@ -83,47 +287,121 @@
 ```
 
 
-<br/>
+
+***
+<br/><br/><br/>
+> <h2 id="ts插件Deno">ts插件Deno</h2>
+
+VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 JavaScript/TypeScript 运行时），它的作用包括：
+
+---
+
+## **1. 提供 TypeScript/JavaScript 语言支持**
+- **自动类型检查**：Deno 内置 TypeScript，不需要 `tsconfig.json`，插件能提供正确的类型提示。
+- **自动补全**：在 Deno 项目中，它能正确解析 `import`，提供 IntelliSense 支持。
+
+---
+
+## **2. 解析远程导入的模块**
+- Deno 没有 `node_modules`，它直接从 URL 导入依赖，例如：
+  
+  ```ts
+  import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+  ```
+- **VS Code 默认不认识 URL 导入**，但安装 Deno 插件后，编辑器能正确解析这些模块，提供跳转和补全。
+
+---
+
+## **3. 代码格式化**
+- 插件支持 `deno fmt`，可以自动格式化代码，类似 `Prettier`。
+- 例如：
+  
+  ```ts
+  console.log("Hello, Deno!")
+  ```
+  
+  格式化后：
+  
+  ```ts
+  console.log("Hello, Deno!");
+  ```
+
+---
+
+## **4. Lint 代码**
+- 提供 `deno lint`，帮助发现代码中的潜在问题，比如：
+  
+  ```ts
+  let unusedVar = 42; // ⚠️ 未使用的变量
+  ```
+- 安装插件后，VS Code 会自动标记问题，避免错误。
+
+---
+
+## **5. 运行 Deno 代码**
+- 你可以直接在 VS Code 终端运行 Deno 脚本，而不需要安装额外的 Node.js 依赖：
+  
+  ```sh
+  deno run --allow-net server.ts
+  ```
+
+---
+
+## **6. 调试 Deno 代码**
+- 插件支持 VS Code 的调试功能（断点、变量检查等）。
+- 你可以创建 `.vscode/launch.json` 进行 Deno 调试：
+  
+  ```json
+  {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Run Deno",
+        "type": "pwa-node",
+        "request": "launch",
+        "program": "${file}",
+        "cwd": "${workspaceFolder}",
+        "runtimeExecutable": "deno",
+        "runtimeArgs": ["run", "--inspect", "--allow-all"],
+        "attachSimplePort": 9229
+      }
+    ]
+  }
+  ```
+
+---
+
+## **7. 配置 Deno 插件**
+启用 Deno 插件后，需要在 `.vscode/settings.json` 里添加：
+
+```json
+{
+  "deno.enable": true
+}
+```
+这样，VS Code 就会把当前项目识别为 Deno 项目，而不会用 Node.js 的规则解析代码。
+
+---
+
+## **总结**
+| 功能 | 作用 |
+|------|------|
+| **类型支持** | 解析 Deno 代码的 TypeScript 类型 |
+| **远程模块解析** | 解析 `https://` 形式的导入 |
+| **代码格式化** | 运行 `deno fmt` 统一代码风格 |
+| **Lint** | 发现代码潜在错误 |
+| **运行 Deno 代码** | 直接运行 Deno 而不依赖 Node.js |
+| **调试支持** | VS Code 断点调试 |
 
 
-- [vscode-icons](https://github.com/vscode-icons/vscode-icons)：文件图标插件；
-
-- [Path Intellisense](https://github.com/ChristianKohler/PathIntellisense)：当引入文件和书写文件路径时，可自动填充文件；
-
-- [Auto Rename Tag](https://github.com/formulahendry/vscode-auto-rename-tag)：修改HTML标签时，自动完成闭合标签的同步修改；
-
-- [open in browser](https://github.com/SudoKillMe/vscode-extensions-open-in-browser)：右击HTML文件，选择Open In Default Browser，就会在默认浏览器中打开HTML文件
-- Gitlens: 查看git提交记录
 
 
 
-
-<br/>
-<br/>
-
-> <h2 id=""></h2>
-
-
-
-<br/>
-<br/>
-
-> <h2 id=""></h2>
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
-
-
-
 > <h1 id="Flutter配置">Flutter配置</h1>
-
-
 <br/>
 
 > <h2 id="快捷键">快捷键</h2>
@@ -132,8 +410,7 @@
 
 
 
-<br/>
-<br/>
+<br/><br/>
 
 > <h2 id="环境配置">环境配置</h2>
 
@@ -147,7 +424,7 @@
 
 执行如下命令在Terminal:
 
-```
+```sh
 $ ln -s /Users/harleyhuang/DevConfig/flutter/bin/flutter /usr/local/bin
 
 $ flutter

@@ -1,5 +1,8 @@
 - **资料**
+	- [前端少年汪-掘金笔记](https://juejin.cn/collection/7114526702730117127)
 	- [100道MySQL数据库经典面试题解析（收藏版）](https://juejin.cn/post/6844904166939164680)
 	- [oppo后端16连问](https://mp.weixin.qq.com/s?__biz=MzkyMzU5Mzk1NQ==&mid=2247506444&idx=1&sn=73473586c81c1bd44fe6cfd7edd62581&source=41#wechat_redirect)
 	- [记一次接口性能优化实践总结：优化接口性能的八个建议](https://mp.weixin.qq.com/s?__biz=MzkyMzU5Mzk1NQ==&mid=2247505910&idx=1&sn=232ef078235aa1ba1ed1551f3898323e&source=41#wechat_redirect)
 	- [后端程序员必备：书写高质量SQL的30条建议](https://mp.weixin.qq.com/s?__biz=MzkyMzU5Mzk1NQ==&mid=2247505878&idx=1&sn=c37653719ef771c13b681cc42366d8bd&source=41#wechat_redirect)
+	- [Go Channel（收藏以备面试）](https://juejin.cn/post/7004673581342785543)
+	- [推荐几个可以写到简历上的Go方向优质开源项目（需花点心思研究）](https://juejin.cn/post/7038967716459315208)
