@@ -1131,9 +1131,11 @@ GROUP BY department_id;
 
 <br/><br/>
 
-### 2.2 使用多个列分组
+**2.2 使用多个列分组**
 
 ![go.0.0.119.png](./../Pictures/go.0.0.119.png)
+
+这里需要注意一点,它们经过GROUP BY排序后,并不会将按照`department_id, job_id`放在一块,而是随便分散的.要是把它们归拢在一块,需要用到**窗口函数.**
 
 ```sql
 -- 查询各个department_id, job_id 的平均工资
@@ -1141,7 +1143,7 @@ GROUP BY department_id;
 
 SELECT   department_id dept_id, job_id, SUM(salary)
 FROM     employees
-GROUP BY department_id, job_id ;
+GROUP BY department_id, job_id;
 
 
 +---------+------------+-------------+
