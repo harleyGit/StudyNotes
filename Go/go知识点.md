@@ -9,6 +9,7 @@
 			- [带AUTO_INCREMENT约束的字段值是从1开始的吗？](#带AUTO_INCREMENT约束的字段值是从1开始的吗？)
 			- [并不是每个表都可以任意选择存储引擎？](#并不是每个表都可以任意选择存储引擎？)
 		- [sql执行流程可以说下嘛?](#sql执行流程可以说下嘛?)
+		- [MyIsam和InnoDB引擎的区别是什么?](#MyIsam和InnoDB引擎的区别是什么?)
 
 - **资料**
 	- [前端少年汪-掘金笔记](https://juejin.cn/collection/7114526702730117127)
@@ -76,6 +77,12 @@
 **sql服务器架构:**
 
 ![go.0.0.136.png](./../Pictures/go.0.0.136.png)
+
+***
+<br/><br/><br/>
+
+># <h2 id="MyIsam和InnoDB引擎的区别是什么?">[MyIsam和InnoDB引擎的区别是什么?](./数据库SQL(V).md#InnoDB和MyISAM引擎区别)</h2>
+
 
 
 
