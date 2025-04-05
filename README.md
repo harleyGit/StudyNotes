@@ -31,6 +31,7 @@
 	- [markdown语法测试](#markdown语法测试)
 	- [pdf打开](./Sources/2014考研英语二真题陌生单词.pdf)
 	- [dock打开](./Sources/2024考研救命300词.docx)
+	- [罗马数字](#罗马数字)
 
 
 <br/><br/><br/>
@@ -275,6 +276,7 @@
 		- [数据库SQL(II)](./Go/数据库SQL(II).md)
 		- [数据库SQL(III)](./Go/数据库SQL(III).md)
 		- [数据库SQL(IV)](./Go/数据库SQL(IV).md)
+		- [数据库SQL(V)](./Go/数据库SQL(V).md)
 		- [数据库SQL(VI)](./Go/数据库SQL(VI).md)
 - [**go实战进阶**](./Go/go实战进阶.md)
 - [**‌go设计模式**](#./Go/go设计模式.md)
@@ -688,4 +690,32 @@ section 项目实施
 section 发布验收
     发布: 2d
     验收: 3d
+```
+
+***
+<br/><br/><br/>
+> <h2 id="罗马数字">罗马数字</h2>
+
+```ini
+ 1  = I       21 = XXI     41 = XLI     61 = LXI     81 = LXXXI
+ 2  = II      22 = XXII    42 = XLII    62 = LXII    82 = LXXXII
+ 3  = III     23 = XXIII   43 = XLIII   63 = LXIII   83 = LXXXIII
+ 4  = IV      24 = XXIV    44 = XLIV    64 = LXIV    84 = LXXXIV
+ 5  = V       25 = XXV     45 = XLV     65 = LXV     85 = LXXXV
+ 6  = VI      26 = XXVI    46 = XLVI    66 = LXVI    86 = LXXXVI
+ 7  = VII     27 = XXVII   47 = XLVII   67 = LXVII   87 = LXXXVII
+ 8  = VIII    28 = XXVIII  48 = XLVIII  68 = LXVIII  88 = LXXXVIII
+ 9  = IX      29 = XXIX    49 = XLIX    69 = LXIX    89 = LXXXIX
+10  = X       30 = XXX     50 = L       70 = LXX     90 = XC
+11  = XI      31 = XXXI    51 = LI      71 = LXXI    91 = XCI
+12  = XII     32 = XXXII   52 = LII     72 = LXXII   92 = XCII
+13  = XIII    33 = XXXIII  53 = LIII    73 = LXXIII  93 = XCIII
+14  = XIV     34 = XXXIV   54 = LIV     74 = LXXIV   94 = XCIV
+15  = XV      35 = XXXV    55 = LV      75 = LXXV    95 = XCV
+16  = XVI     36 = XXXVI   56 = LVI     76 = LXXVI   96 = XCVI
+17  = XVII    37 = XXXVII  57 = LVII    77 = LXXVII  97 = XCVII
+18  = XVIII   38 = XXXVIII 58 = LVIII   78 = LXXVIII 98 = XCVIII
+19  = XIX     39 = XXXIX   59 = LIX     79 = LXXIX   99 = XCIX
+20  = XX      40 = XL      60 = LX      80 = LXXX    100 = C
+
 ```

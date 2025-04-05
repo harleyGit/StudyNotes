@@ -224,9 +224,7 @@ FLUSH PRIVILEGES;
 >注意：不推荐通过DELETE方式进行删除，**系统会有残留信息保留**。而drop user命令会删除用户以及对应的权限，执行命令后mysql.user表和mysql.db表的相应记录都消失了。
 
 <br/><br/>
-> <h2 id="查看创建用户的语句
-">查看创建用户的语句
-</h2>
+> <h2 id="查看创建用户的语句">查看创建用户的语句</h2>
 
 ```mysql
 SHOW create user <username>;
