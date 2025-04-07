@@ -31,8 +31,8 @@
 	- [查看表编码](#查看表编码)
 - [**关系模型**](#关系模型)
 	- [主键](#主键)
-	- 外键
-	- 索引
+	- [外键](./数据库SQL(III).md#外键约束foreignkey)
+	- [索引](./数据库SQL(VI).md#索引的创建与设计)
 - [**数据库**](#数据库) 
 	- [数据类型](#数据类型)
 		- [整数类型适用场景](#整数类型适用场景) 
@@ -65,7 +65,7 @@
 - [**更新数据**](#更新数据)
 - [**删除数据**](#删除数据)
 - [MySQL8新特性：计算列](#MySQL8新特性：计算列)
-	- **资料**
+- **资料**
 	- [学习数据库](https://github.com/lliuql/learn_db/blob/master/mysql/learn_mysql/01_mysql架构/mysql架构.md)
 	- [《面试笔记》——MySQL终结篇（30问与答）-- 已上线阿里](https://mp.weixin.qq.com/s?__biz=MzkxMjE5NzUxNQ==&mid=2247483876&idx=1&sn=3ba83e9184f850c49a0b98e6e49513b3&chksm=c111d300f6665a16af6199d869d715186e969df0a9c207b0c216b91ed299f5f006cdea188a4b&token=1231184118&lang=zh_CN#rd)
 	- [廖雪峰SQL教程-(可以执行sql语句查看结果)](https://liaoxuefeng.com/books/sql/relational/foreign-key/index.html)
@@ -2227,7 +2227,26 @@ mysql> SELECT UNIX_TIMESTAMP();
 
 每个汉字占3个字节,从Mysql5.0以后VARCHAR后面括号内的数字表示占用多少个字符,比如: VARCHAR(5),汉字可以5个字符.
 
-但是实际上VARCHAR(65535)并不能存65535个字符,而是(65535/3)个字符.
+但是实际上VARCHAR(65535)并不能存65535个字符,而是(65535/3)个字符(这个也是不准确的,因为varchar列有隐藏其他配置需要占用数据,底层有描述,它们大概在3个字节).
+
+**2种极限情况:**
+
+```sql
+-- 有空标识符
+CREATE TABLE varchar_size_demo(
+	c VARCHAR(65532) # 65532 + 2个字节的变长字段长度 + 1 NULL值标识符号
+)
+
+
+-- 无空标识符
+CREATE TABLE varchar_size_demo1(
+	c VARCHAR(65533) # 65532 + 2个字节的变长字段长度
+)
+```
+
+但是上述创建表是可以的,但是真要存储这么多也是不可以的.在底层的InnoDB中每页的大小是**16KB**,`16*1024 = 16384字节`,但是VARCHAR(M)类型最多可以存储65535个字节.出现一个页无法存储这么多数据,这种现象称为**行溢出**. 
+
+<br/>
 
 **哪些情况使用 CHAR 或 VARCHAR 更好**
 

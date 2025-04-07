@@ -2,10 +2,10 @@
 - [**Git提交规范**](#git提交规范)
 	- [模块图片相对路径](#模块图片相对路径)
 - [**C语言**](#c-language)
+- [**Go**](#go)
 - [**iOS开发**](#ios开发)
 	- [**Objective-C**](#objective-c)
 	- [**Swift**](#swift)
-- [**Go**](#go)
 - [**Flutter**](#flutter)
 - [**Android**](#android)
 - [**JavaScript**](#java-script)
@@ -125,6 +125,37 @@
 *	[类的高级应用](./C/C2类的高级应用.md)
 *	[异常处理](./C/C2异常处理.md)
 *	[C2Exercise(I)](./C/C2Exercise(I).md)
+
+
+
+<br/><br/><br/><br/>
+
+***
+<br/>
+
+**Go学习路线:**
+
+![go.0.0.0.0.png.png](./Pictures/go.0.0.0.0.png)
+> <h1 id = 'go'>Go</h1>
+- [**go语法**](./Go/go语法.md)
+- [**并发编程**](./Go/并发编程.md)
+- [**数据存储**](./Go/数据存储.md)
+- [**常用框架**](./Go/GoLang常用框架.md)
+	- [数据库Redis](./Go/数据库Redis.md)
+	- **SQL数据库**
+		- [数据库SQL(I)](./Go/数据库SQL(I).md)
+		- [数据库SQL(II)](./Go/数据库SQL(II).md)
+		- [数据库SQL(III)](./Go/数据库SQL(III).md)
+		- [数据库SQL(IV)](./Go/数据库SQL(IV).md)
+		- [数据库SQL(V)](./Go/数据库SQL(V).md)
+		- [数据库SQL(VI)](./Go/数据库SQL(VI).md)
+		- [数据库SQL(VII)](./Go/数据库SQL(VII).md)
+- [**go实战进阶**](./Go/go实战进阶.md)
+- [**‌go设计模式**](#./Go/go设计模式.md)
+- [**优化**](./Go/go优化.md)
+- [go性能分析](./Go/go性能分析.md)
+- [**go_swagger(API文档编写)**](./Go/go_swagger.md)
+
 
 
 
@@ -256,33 +287,6 @@
 	* [Then库](./iOS/Swift/Then库.md)
 	* [PromiseKit](./iOS/Swift/PromiseKit.md)
 
-
-<br/><br/><br/>
-
-***
-<br/>
-
-**Go学习路线:**
-
-![go.0.0.0.0.png.png](./Pictures/go.0.0.0.0.png)
-> <h1 id = 'go'>Go</h1>
-- [**go语法**](./Go/go语法.md)
-- [**并发编程**](./Go/并发编程.md)
-- [**数据存储**](./Go/数据存储.md)
-- [**常用框架**](./Go/GoLang常用框架.md)
-	- [数据库Redis](./Go/数据库Redis.md)
-	- **SQL数据库**
-		- [数据库SQL(I)](./Go/数据库SQL(I).md)
-		- [数据库SQL(II)](./Go/数据库SQL(II).md)
-		- [数据库SQL(III)](./Go/数据库SQL(III).md)
-		- [数据库SQL(IV)](./Go/数据库SQL(IV).md)
-		- [数据库SQL(V)](./Go/数据库SQL(V).md)
-		- [数据库SQL(VI)](./Go/数据库SQL(VI).md)
-- [**go实战进阶**](./Go/go实战进阶.md)
-- [**‌go设计模式**](#./Go/go设计模式.md)
-- [**优化**](./Go/go优化.md)
-- [go性能分析](./Go/go性能分析.md)
-- [**go_swagger(API文档编写)**](./Go/go_swagger.md)
 
 
 <br/><br/><br/>
