@@ -21,6 +21,11 @@
 			- [哪些情况不适合创建索引](#哪些情况不适合创建索引)
 		- [**B+树**](#B+树)
 			- [InnoDB需要知道的注意事项](#InnoDB需要知道的注意事项)
+		- [**优化策略**](#优化策略)
+			- [EXISTS和IN的区分](#EXISTS和IN的区分)	
+			- [COUNT(\*)与COUNT(具体字段)效率](#COUNT(\*)与COUNT(具体字段)效率) 
+			- [关于SELECT(\*)](#关于SELECT(\*))    
+			- [LIMIT 1 对优化的影响](#LIMIT1对优化的影响)
 
 
 - **资料**
@@ -150,6 +155,42 @@
 <br/>
 
 ># <h3 id="InnoDB需要知道的注意事项">[InnoDB需要知道的注意事项](#./数据库SQL(VI).md#InnoDB需要知道的注意事项)</h3>
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="优化策略">优化策略</h1>
+
+***
+<br/><br/><br/>
+
+># <h2 id="EXISTS和IN的区分">[EXISTS和IN的区分](./数据库SQL(VI).md#EXISTS和IN的区分)</h2>
+
+
+***
+<br/><br/><br/>
+
+># <h2 id="COUNT(\*)与COUNT(具体字段)效率">[COUNT(\*)与COUNT(具体字段)效率](./数据库SQL(VI).md#COUNT(\*)与COUNT(具体字段)效率)</h2>
+
+
+***
+<br/><br/><br/>
+
+># <h2 id="关于SELECT(\*)">[关于SELECT(\*)](./数据库SQL(VI).md#关于SELECT(\*))</h2>
+
+***
+<br/><br/><br/>
+
+> <h2 id="LIMIT1对优化的影响">[LIMIT 1 对优化的影响](./数据库SQL(VI).md#LIMIT1对优化的影响)</h2>
+
+
+***
+<br/><br/><br/>
+
+> <h2 id="多使用COMMIT">[多使用COMMIT](./数据库SQL(VI).md#多使用COMMIT)</h2>
 
 
 

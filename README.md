@@ -674,6 +674,9 @@
 
 ![](./Pictures/bf0_1.jpg)
 
+<img src="./../Pictures/bf0_0x.png" alt="bf0_0x.png" style="zoom: 100%;"/>
+
+
 
 <br/><br/>
 ># <h2 id='甘特图'>[甘特图](https://www.zybuluo.com/mdeditor?url=https://www.zybuluo.com/static/editor/md-help.markdown#cmd-markdown-%E7%AE%80%E6%98%8E%E8%AF%AD%E6%B3%95%E6%89%8B%E5%86%8C)</h2>
