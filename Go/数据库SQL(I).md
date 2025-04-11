@@ -66,6 +66,7 @@
 - [**删除数据**](#删除数据)
 - [MySQL8新特性：计算列](#MySQL8新特性：计算列)
 - **资料**
+	- 关于分表分库、主从复制可以看下Mycat的SQL中间件
 	- [学习数据库](https://github.com/lliuql/learn_db/blob/master/mysql/learn_mysql/01_mysql架构/mysql架构.md)
 	- [《面试笔记》——MySQL终结篇（30问与答）-- 已上线阿里](https://mp.weixin.qq.com/s?__biz=MzkxMjE5NzUxNQ==&mid=2247483876&idx=1&sn=3ba83e9184f850c49a0b98e6e49513b3&chksm=c111d300f6665a16af6199d869d715186e969df0a9c207b0c216b91ed299f5f006cdea188a4b&token=1231184118&lang=zh_CN#rd)
 	- [廖雪峰SQL教程-(可以执行sql语句查看结果)](https://liaoxuefeng.com/books/sql/relational/foreign-key/index.html)

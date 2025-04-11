@@ -466,8 +466,7 @@ possible_keys: idx_sno
 
 ***
 <br/><br/><br/>
-> <h2 id="类型转换导致索引失效
-">类型转换导致索引失效</h2>
+> <h2 id="类型转换导致索引失效">类型转换导致索引失效</h2>
 
 ```mysql
 EXPLAIN SELECT SQL_NO_CACHE * FROM student WHERE name='123';# 使用到索引
