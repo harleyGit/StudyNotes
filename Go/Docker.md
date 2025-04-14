@@ -1,14 +1,13 @@
 > <h1 ></h3>
 - [**Docker**](#Docker)
 	- [介绍](#介绍)
-		- [Docker使用](#Docker使用)
-		- [docker大致命令介绍](#docker大致命令介绍)
-		- [加快镜像下载,配置国内镜像](#加快镜像下载,配置国内镜像)
-		- [自定义网络](#自定义网络)
+	- [docker大致命令介绍](#docker大致命令介绍)
+	- [Docker使用](#Docker使用)
+	- [加快镜像下载,配置国内镜像](#加快镜像下载,配置国内镜像)
+	- [自定义网络](#自定义网络)
 - [**镜像**](#镜像)
 	- [制作镜像](#制作镜像)
 	- [`docker images`详解](#dockerimages详解)
-	- [镜像分层存储](#镜像分层存储)
 	- [镜像分层存储](#镜像分层存储)
 - [**容器**](#容器)
 	- [容器命令](#容器命令)
@@ -42,11 +41,16 @@
 ># <h1 id="Docker">[Docker](https://yeasy.gitbook.io/docker_practice/install/mac)</h1>
 [Docker各个版本下载包](https://gist.github.com/kupietools/2f9f085228d765da579f0f0702bec33c)
 
+Docker 是一个**容器化**平台，主要用于**构建、打包、分发和运行**应用程序。它的核心作用是让应用程序及其依赖项一起封装在一个**轻量级、可移植的容器**中，从而确保应用能够在不同的环境（如开发、测试、生产）中一致运行。
 
+
+***
+<br/><br/><br/>
+> <h2 id="介绍">介绍</h2>
 我们接触Docker后,首先看到的是一个鲸鱼🐳驮着集装箱在蓝色大海里游,这个表示什么意思?
-- 蓝色的大海----- 宿主机系统 MacOS系统
-- 鲸鱼🐳------ docker
-- 集装箱------ 容器示例 ..... from 来自我们的镜像模版
+- **蓝色的大海----- 宿主机系统 MacOS系统**
+- **鲸鱼🐳------ docker**
+- **集装箱------ 容器示例 ..... from 来自我们的镜像模版**
 
 <br/>
 
@@ -118,9 +122,7 @@ CMD [ "bash", "-c", "/go/GopherBook/chapter11/votes;" ]
 
 &emsp; 对于个人开发者，如果有自己私有的服务器，那么可以配合DaoCloud(https://www.daocloud.io/)搭建流水线，自动同步远端代码进行测试、构建等环节，自动构建镜像、部署容器。
 
-<br/><br/>
-> <h2 id="介绍">介绍</h2>
-Docker 是一个**容器化**平台，主要用于**构建、打包、分发和运行**应用程序。它的核心作用是让应用程序及其依赖项一起封装在一个**轻量级、可移植的容器**中，从而确保应用能够在不同的环境（如开发、测试、生产）中一致运行。
+
 
 ***
 <br/><br/><br/>
@@ -130,7 +132,7 @@ Docker 是一个**容器化**平台，主要用于**构建、打包、分发和�
 
 <br/><br/>
 
-| **用途** | **命令** | **举例** | **描述** | 
+| **用途** | **命令** | **举例** | **说明** | 
 |--|--|--|--|
 | **检索镜像** | `docker search [OPTIONS] 镜像名字` <br/> <br/> `--no-trun `显示完整的镜像描述;<br/>`-s` 列出收藏数不小于指定值的镜像;<br/>`--automated` 只列出 automated build类型的镜像 | `‌docker search image_name:tag(镜像名: tag号)` <br/><br/> `docker search -s 30 tomcat‌` |  |
 | **拉取镜像** | `docker pull image_name(镜像名)` |  |  |
@@ -139,12 +141,12 @@ Docker 是一个**容器化**平台，主要用于**构建、打包、分发和�
 | **返回指定镜像信息** | `docker inspect <image>` |  | 返回指定镜像的详细元数据，内容较为详细，以 JSON 格式输出，适合查看镜像的配置、层次、环境变量等信息。 |
 | 显示镜像的构建历史 | `docker history <image>` |  | 显示镜像的构建历史，按层次列出镜像的每一层及其大小、命令和创建时间等。 |
 | 列出所有“悬空”镜像 | `docker images -f "dangling=true"`  |  | 列出所有“悬空”镜像（即没有标签且不被任何容器使用的镜像）。这些镜像通常是构建过程中产生的中间镜像。 |
-| **删除镜像** | `docker rmi <image_name_or_id>` <br/><br/> `‌docker image prune (删除未使用的镜像)` | 删除单个镜像: `docker rmi my_image`  <br/><br/> 删除单个镜像:`docker rmi a1b2c3d4e5f6` <br/><br/> 删除多个镜像: `docker rm -f 镜像名1:TAG 镜像名2:TAG` <br/><br/>  删除多个 :`docker rmi -f ${docker images -qa}` | 删除的镜像 ID 或镜像的名称（标签）<br/><br/> 有的镜像无法停止,是因为容器正在运行,你需要先停掉容器,然后再删除镜像  |
+| **删除镜像** | `docker rmi <image_name_or_id>` <br/><br/> `‌docker image prune (删除未使用的镜像)` <br/><br/> 强制删除镜像:`‌docker rmi -f 镜像ID` <br/><br/> **优化:** 删除镜像前先确认有哪些容器用了这个镜像:`‌docker ps -a --filter ancestor=ccc8e7cf9efa` | 删除单个镜像: `docker rmi my_image`  <br/><br/> 删除单个镜像:`docker rmi a1b2c3d4e5f6` <br/><br/> 强制删除镜像:`‌docker rmi -f ccc8e7cf9efa` <br/><br/> 删除多个镜像: `docker rm -f 镜像名1:TAG 镜像名2:TAG` <br/><br/>  删除多个 :`docker rmi -f ${docker images -qa}` | 删除的镜像 ID 或镜像的名称（标签）<br/><br/> 有的镜像无法停止,是因为容器正在运行,你需要先停掉容器,然后再删除镜像  |
 | **运行容器** | `docker run [OPTIONS] IMAGE [COMMAND][ARG...]` | `‌docker run -itd --name mysql-test -p 3306:3306 -e MYSQL_ROOT_PASSWORD=hh109 mysql` | `docker run`:	启动一个新的容器（并基于指定镜像）<br/><br/>`‌-itd`: <br/>-i：interactive，保持容器的标准输入; <br/>（stdin）开启; <br/>-t：tty，分配一个伪终端（适合交互）; <br/> -d：detached，后台运行容器，不会卡在前台 <br/><br/> --name mysql-test	给这个容器起个名字叫 mysql-test <br/><br/> -p 3306:3306	端口映射：本机3306 → 容器内部3306（MySQL 默认端口）<br/><br/>-e MYSQL_ROOT_PASSWORD=hh109	设置 MySQL 的 root 用户密码为 hh109 <br/><br/>  mysql	使用的镜像名是 mysql（默认是 Docker 官方 MySQL 镜像的最新版） |
-| 查看谁占用了 3306端口 | `‌lsof -i :3306` |  | 当启动容器的时候需要指定端口号,若是这时容器端口号与之前相同,可能无法启动,这时需要查看,然后停掉不需要的端口号:`‌brew services stop mysql` |
-| 查看当前正在运行的容器 | `docker ps -a` <br/><br/> `docker ps‌` |  |  |
-| 停止该容器 | docker stop 容器ID | `‌docker stop 9493ee378e55` |  |
-| 删除容器 | `docker rm 镜像名` | `‌docker rm 9493ee378e55` <br/><br/> 强制删除容器：`‌docker rm -f 9493ee378e55`|  |
+| **查看谁占用了 3306端口** | `‌lsof -i :3306` |  | 当启动容器的时候需要指定端口号,若是这时容器端口号与之前相同,可能无法启动,这时需要查看,然后停掉不需要的端口号:`‌brew services stop mysql` |
+| **查看当前正在运行的容器** | **查看所有容器（包括已停止的）：** `docker ps -a` <br/><br/> `docker ps‌` |  |  |
+| **停止该容器** | docker stop 容器ID | `‌docker stop 9493ee378e55` |  |
+| **删除容器** | `docker rm 镜像名` | `‌docker rm 9493ee378e55` <br/><br/> 强制删除容器：`‌docker rm -f 9493ee378e55`|  |
 | 删除已停止的所有容器（谨慎使用） | `‌docker container prune` |  |  |
 | 查看哪些容器依赖该镜像 |  | `‌docker ps -a --filter ancestor=c87a062484a3` | 这将列出所有使用该镜像的容器（无论是正在运行的还是已停止的） |
 | 启动2个容器进行连接 | `‌docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>` | `‌docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker` | `docker run：`用于运行一个新的容器实例 <br/><br/> `--name gin-blog-docker`：为运行的容器指定一个自定义名称（在这个例子中是 gin-blog-docker）<br/><br/> `--link hhmysql:mysql：`将 hhmysql 容器连接到当前容器，并为它设置别名 <br/><br/> `mysql -p 8000:8000`：将容器内部的端口映射到宿主机的端口 <br/><br/> `-d`：让容器在后台运行（detached mode） <br/><br/>  gin-blog-docker： 指定要运行的 Docker 镜像  |
@@ -152,9 +154,9 @@ Docker 是一个**容器化**平台，主要用于**构建、打包、分发和�
 |  |  |  |  |
 
 
-
-<br/><br/>
-> <h3  id="Docker使用">Docker使用</h3>
+***
+<br/><br/><br/>
+> <h2  id="Docker使用">Docker使用</h2>
 我们以官方的教学镜像作为简单示例。启动Desktop后，在电脑的终端上运行如下命令：
 
 ```sh
@@ -182,10 +184,9 @@ docker run -d -p 80:80 docker/getting-started
 	- 轻量级容器启动速度快，适合微服务架构。  
 	- 可在本地开发，直接打包部署到云端或服务器。
 
-
-<br/><br/>
+***
+<br/><br/><br/>
 > <h3 id="加快镜像下载,配置国内镜像">加快镜像下载,配置国内镜像</h3>
-
 我用的是MacPro,下载的桌面端.打开**docker.desktop**,然后点击设置,在**Docker Engine**中进行如下配置:
 
 ```json
@@ -248,6 +249,14 @@ docker run -d -p 80:80 docker/getting-started
 
 <br/><br/><br/>
 > <h2 id="镜像">镜像</h2>
+ CentOS 8 停止维护后，官方推荐使用 CentOS Stream.CentOS 官方镜像不再托管在 **Docker Hub**而是托管[在Red Hat的quay.io上 CentOS](https://quay.io/repository/centos/centos?tab=info),拉取最新CentOS:
+
+```sh
+ ‌docker pull quay.io/centos/centos
+```
+ 
+<br/>
+
 Docker镜像(lmage)就是-一个只读的模板。镜像可以用来创建Docker容器，个镜像可以创建很多容器
 - **镜像（Image）**：  
 	- 类似于“模板”，包含应用及其环境的所有内容。  
@@ -390,7 +399,7 @@ Docker利用容器(Container)独立运行的一个活一组应用.**容器是用
 > <h2 id="容器命令">容器命令</h2>
 <br/>
 
-> <h3 id="新建并启动容器 "> 新建并启动容器 </h3>
+> <h3 id="新建并启动容器">新建并启动容器 </h3>
 
 ```sh
 docker run [OPTIONS] IMAGE [COMMAND][ARG]
@@ -414,6 +423,10 @@ ip::containerPort
 hostPort:containerPort
 containerPort
 ```
+
+**下面需要注意下:**
+
+![go.0.0.180.png](./../Pictures/go.0.0.180.png)
 
 <br/><br/>
 
@@ -525,10 +538,12 @@ docker ps -a -q | xargs docker rm
 
 <br/><br/>
 > <h3 id="启动守护式容器">启动守护式容器</h3>
+**提问:** 我只想服务运行,不需要跟容器的伪终端进行交互怎么办?
+
 **使用镜像centos:latest以后台模式启动一个容器**
 
 ```sh
-docker run -d centos
+docker run -d centos(容器名)
 ```
 
 问题:然后`docker ps -a`进行查看,**会发现容器已经退出**
@@ -557,6 +572,7 @@ docker logs -f -t --tail 容器ID
 
 <br/><br/>
 > <h3 id="查看容器内部信息">查看容器内部信息</h3>
+
 **查看容器内的进程**
 
 ```sh
@@ -588,9 +604,13 @@ docker exec -it 容器ID bashShell
 上述两个区别
 
 ```sh
-attach 直接进入容器启动命令的终端，不会启动新的进程
+attach 直接进入容器启动命令的伪终端，不会启动新的进程
 
-exec 实在容器中打开新的终端，并且可以穷的那个新的进程
+
+
+exec 是在容器中打开新的终端，并且可以启动新的进程,可以在宿主机中肢解返回结果
+
+比如在宿主机中执行: docker exec -t 10b9a35858588 ls -l /tmp
 ```
 
 <br/>
@@ -599,22 +619,21 @@ exec 实在容器中打开新的终端，并且可以穷的那个新的进程
 
 ```sh
 docker cp 容器ID:容器内路径 目的主机路径
+
+#在宿主机上: 比如将redis容器下的yun.log日志拷贝到主机的 root文件夹下
+docker cp 10b9a888s0a1:/tmp/yum.log /root
 ```
 
 ![go.0.0.178.png](./../Pictures/go.0.0.178.png)
 
+<br/>
+
+**Docker容器常用命令总结,如下图:**
+
 ![go.0.0.179.png](./../Pictures/go.0.0.179.png)
+![go.0.0.181.png](./../Pictures/go.0.0.181.png)
 
-
-
-
-
-
-
-
-
-
-
+***
 <br/><br/><br/>
 > <h2 id="DockerCompose批量管理容器">Docker Compose批量管理容器</h2>
 
@@ -806,6 +825,7 @@ docker-compose restart
 
 ***
 <br/>
+
 > <h1 id="数据卷">数据卷</h1>
 
 **Mysql 挂载数据卷**

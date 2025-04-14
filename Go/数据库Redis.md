@@ -6,6 +6,8 @@
 - [**操作Redis**](#操作Redis)
 	- [基本使用](#基本使用)
 - **资料**
+	- [Redis资料-尚硅谷](https://github.com/harleyGit/Learning-in-practice/tree/master/Redis)
+	- [Redis在线测试](https://try.redis.io/)
 	- [go-redis使用入门](https://juejin.cn/post/7202521955366879288)
 
 
@@ -51,9 +53,13 @@ Redis server v=7.2.7 sha=00000000:0 malloc=libc bits=64 build=7f24f11dd7e42c58
 	- 清空当前数据库的key-val和清空所有数据库的key-val [flushdb flushall]
 
 
+***
 <br/><br/><br/>
-> <h2 id="基本命令"> 基本命令 </h2>
-> [Redis命令参考](http://doc.redisfans.com/index.html)
+
+># <h2 id="基本命令"> [基本命令](https://www.redis.net.cn/order/) </h2>
+[**Redis命令参考**](http://doc.redisfans.com/index.html)
+
+<br/>
 
 **启动服务器命令:**
 
@@ -119,6 +125,15 @@ ps xua | grep redis
 
 ```sh
 redis-cli -h 127.0.0.1 -p 6379
+
+// 单实例关闭: redis-cli -a 密码 shutdown
+redis-cli -a 123456 shutdown，如果在Redis服务器里面可以直接使用shutdown命令
+shutdown // 停止redis服务 
+quit // 退出redis-cli 的交互模式
+
+
+// 多实例关闭,指定端口关闭: redis-cli -p 端口 shutdown
+redis-cli -p 6379 shutdown
 ```
 
 <br/>
@@ -130,8 +145,6 @@ keys * // 查询所有key
 get [key] // 获取一条
 flushall // 删除所有
 set [key] [value] // 设置一条
-
-quit // 退出redis-cli 的交互模式
 ```
 
 
