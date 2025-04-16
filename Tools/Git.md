@@ -2,6 +2,7 @@
 
 
 ># <h2 id=''>[Git命令大全](https://blog.csdn.net/weixin_49851451/article/details/123944431)</h2>
+- [下载仓库中某个指定文件代码](#下载仓库中某个指定文件代码)
 - [**指令工作流**](#指令工作流)
 	- [基本操作](#基本操作)
 	- [分支的操作](#分支的操作)
@@ -50,6 +51,43 @@
 	- [合并多次提交](https://github.com/zuopf769/how_to_use_git/blob/master/使用git%20rebase合并多次commit.md)
 
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="下载仓库中某个指定文件代码">下载仓库中某个指定文件代码</h1>
+
+下载如下仓库中的**Redis**文件下的所有文件:
+
+![tool.10.0.0.0.png](./../Pictures/tool.10.0.0.0.png)
+
+```sh
+# 在桌面建立一个 “尚硅谷Reids[周阳]” 文件夹
+cd /Users/ganghuang/Desktop/尚硅谷Reids\[周阳\]
+
+# git clone --filter=blob:none --no-checkout https://github.com/用户名/仓库名.git
+git clone --filter=blob:none --no-checkout https://github.com/harleyGit/Learning-in-practice.git
+Cloning into 'Learning-in-practice'...
+remote: Enumerating objects: 13918, done.
+remote: Counting objects: 100% (4075/4075), done.
+remote: Compressing objects: 100% (196/196), done.
+remote: Total 13918 (delta 3973), reused 3879 (delta 3879), pack-reused 9843 (from 2)
+Receiving objects: 100% (13918/13918), 1.04 MiB | 1.29 MiB/s, done.
+Resolving deltas: 100% (7234/7234), done.
+
+# cd 仓库名
+cd Learning-in-practice
+
+git sparse-checkout init --cone
+
+#git sparse-checkout set 路径/到/你要的文件夹
+git sparse-checkout set ./Redis
+
+# git checkout 分支名
+git checkout master 
+```
 
 
 

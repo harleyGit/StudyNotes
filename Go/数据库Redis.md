@@ -4,7 +4,10 @@
 	- [‌基本命令](#基本命令)
 - [**协议**](#协议)
 - [**操作Redis**](#操作Redis)
-	- [基本使用](#基本使用)
+- [**十大数据类型**](#十大数据类型)
+	- [Redis流(Stream)](#Redis流(Stream))
+- [**Redis的MQ中间件**](#Redis的MQ中间件)  
+	- [kafka消息队列](#kafka消息队列)
 - **资料**
 	- [Redis资料-尚硅谷](https://github.com/harleyGit/Learning-in-practice/tree/master/Redis)
 	- [Redis在线测试](https://try.redis.io/)
@@ -38,6 +41,7 @@ brew install redis
 ```sh
 % redis-cli -v
 redis-cli 7.2.7
+
 % redis-server -v
 Redis server v=7.2.7 sha=00000000:0 malloc=libc bits=64 build=7f24f11dd7e42c58
 ```
@@ -51,6 +55,47 @@ Redis server v=7.2.7 sha=00000000:0 malloc=libc bits=64 build=7f24f11dd7e42c58
 	- 切换redis数据库[select index];
 		- 如何查看当前数据库的key-val数量[dbsize];
 	- 清空当前数据库的key-val和清空所有数据库的key-val [flushdb flushall]
+
+<br/><br/>
+
+因为通过brew安装的redis,所以可以查看redis的信息:
+
+```sh
+brew info redis
+
+==> redis: stable 7.2.7 (bottled), HEAD
+Persistent key-value database, with built-in net interface
+https://redis.io/
+Conflicts with:
+  valkey (because both install `redis-*` binaries)
+Installed
+/opt/homebrew/Cellar/redis/7.2.7 (15 files, 2.4MB) *
+  Poured from bottle using the formulae.brew.sh API on 2025-03-13 at 15:11:58
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/r/redis.rb
+License: BSD-3-Clause AND BSD-2-Clause AND BSL-1.0 AND MIT AND (CC0-1.0 OR BSD-2-Clause)
+==> Dependencies
+Required: openssl@3 ✔
+==> Options
+--HEAD
+	Install HEAD version
+==> Caveats
+To restart redis after an upgrade:
+  brew services restart redis
+Or, if you don't want/need a background service you can just run:
+  /opt/homebrew/opt/redis/bin/redis-server /opt/homebrew/etc/redis.conf
+==> Analytics
+install: 20,112 (30 days), 67,377 (90 days), 278,498 (365 days)
+install-on-request: 20,029 (30 days), 67,145 (90 days), 275,783 (365 days)
+build-error: 40 (30 days)
+```
+
+上述redis并不是在下载 Redis 本身，而是执行了一些联网行为**来获取最新信息.**
+
+**查看redis的配置信息:**
+
+```sh
+open /opt/homebrew/etc/redis.conf
+```
 
 
 ***
@@ -278,9 +323,38 @@ func RedisExamplePractice() {
 
 ```
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="十大数据类型">十大数据类型</h1>
+
+
 ***
 <br/><br/><br/>
-> <h2 id="基本使用">基本使用</h2>
+
+> <h2 id="Redis流(Stream)">Redis流(Stream)</h2>
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Redis的MQ中间件">Redis的MQ中间件</h1>
+
+![go.0.0.181.png](./../Pictures/go.0.0.181.png)
+
+***
+<br/><br/><br/>
+
+> <h2 id="kafka消息队列">kafka消息队列</h2>
+
+
+
+
+
+
 
 
 

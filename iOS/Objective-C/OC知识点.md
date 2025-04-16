@@ -2292,6 +2292,49 @@ NSData *eachImgData = UIImageJPEGRepresentation(image, 0.5);
 ```
 这样双重压缩，完美解决图片压缩问题。
 
+在 iOS 中上传图片时，压缩大小和分辨率之间的关系，其实是一个质量与数据体积的权衡问题.
+
+分辨率是**图片的像素宽高**，比如 4032×3024（iPhone 拍照原图）。分辨率越高，图片越清晰，文件也越大。
+
+**压缩大小**是图片经过压缩算法后的文件大小，和格式有关（如 JPEG、HEIC、PNG）。iOS 通常使用 JPEG 或 HEIC。
+
+- 压缩大小受以下因素影响：
+  - 图片的分辨率（像素越多数据越多）
+  - 图片的压缩质量（JPEG 的 quality 参数，如 0.8、0.6）
+  - 图片的内容复杂度（纯色比复杂图案更容易压缩）
+  - 编码方式（HEIC 相较 JPEG 体积更小，质量相近）
+
+<br/>
+
+- **两者关系总结**
+  - 高分辨率 + 高压缩质量 → 文件最大，清晰度最好
+  - 低分辨率 + 高压缩质量 → 文件较小，但清晰度有限
+  - 高分辨率 + 低压缩质量 → 文件仍较大，但会有压缩痕迹
+  - 低分辨率 + 低压缩质量 → 文件最小，但图片模糊压缩严重
+
+<br/>
+
+**实际开发中怎么做？**
+- 限制图片最大边长（比如最大宽高不超过 1280px），即先缩放分辨率；
+- 设置 JPEG 压缩质量（如 0.7）；
+
+这样上传前图片一般控制在 100~300KB 左右，适合网络传输。
+
+
+```swift
+func compressImage(_ image: UIImage, maxWidth: CGFloat = 1280, quality: CGFloat = 0.7) -> Data? {
+    let size = image.size
+    let scale = min(maxWidth / size.width, maxWidth / size.height, 1.0)
+    let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+    
+    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+    image.draw(in: CGRect(origin: .zero, size: newSize))
+    let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    return resizedImage?.jpegData(compressionQuality: quality)
+}
+```
 
 <br/>
 

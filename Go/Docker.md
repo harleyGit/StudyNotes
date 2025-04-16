@@ -142,15 +142,15 @@ CMD [ "bash", "-c", "/go/GopherBook/chapter11/votes;" ]
 | 显示镜像的构建历史 | `docker history <image>` |  | 显示镜像的构建历史，按层次列出镜像的每一层及其大小、命令和创建时间等。 |
 | 列出所有“悬空”镜像 | `docker images -f "dangling=true"`  |  | 列出所有“悬空”镜像（即没有标签且不被任何容器使用的镜像）。这些镜像通常是构建过程中产生的中间镜像。 |
 | **删除镜像** | `docker rmi <image_name_or_id>` <br/><br/> `‌docker image prune (删除未使用的镜像)` <br/><br/> 强制删除镜像:`‌docker rmi -f 镜像ID` <br/><br/> **优化:** 删除镜像前先确认有哪些容器用了这个镜像:`‌docker ps -a --filter ancestor=ccc8e7cf9efa` | 删除单个镜像: `docker rmi my_image`  <br/><br/> 删除单个镜像:`docker rmi a1b2c3d4e5f6` <br/><br/> 强制删除镜像:`‌docker rmi -f ccc8e7cf9efa` <br/><br/> 删除多个镜像: `docker rm -f 镜像名1:TAG 镜像名2:TAG` <br/><br/>  删除多个 :`docker rmi -f ${docker images -qa}` | 删除的镜像 ID 或镜像的名称（标签）<br/><br/> 有的镜像无法停止,是因为容器正在运行,你需要先停掉容器,然后再删除镜像  |
-| **运行容器** | `docker run [OPTIONS] IMAGE [COMMAND][ARG...]` | `‌docker run -itd --name mysql-test -p 3306:3306 -e MYSQL_ROOT_PASSWORD=hh109 mysql` | `docker run`:	启动一个新的容器（并基于指定镜像）<br/><br/>`‌-itd`: <br/>-i：interactive，保持容器的标准输入; <br/>（stdin）开启; <br/>-t：tty，分配一个伪终端（适合交互）; <br/> -d：detached，后台运行容器，不会卡在前台 <br/><br/> --name mysql-test	给这个容器起个名字叫 mysql-test <br/><br/> -p 3306:3306	端口映射：本机3306 → 容器内部3306（MySQL 默认端口）<br/><br/>-e MYSQL_ROOT_PASSWORD=hh109	设置 MySQL 的 root 用户密码为 hh109 <br/><br/>  mysql	使用的镜像名是 mysql（默认是 Docker 官方 MySQL 镜像的最新版） |
+| **运行容器** | `docker run [OPTIONS] IMAGE [COMMAND][ARG...]` | `‌docker run -itd --name mysql-test -p 3306:3306 -e MYSQL_ROOT_PASSWORD=hh109 mysql` <br/><br/> 后台启动tomcat:`docker run -d -p 6666:8080 tomcat` | `docker run`:	启动一个新的容器（并基于指定镜像）<br/><br/>`‌-itd`: <br/>-i：interactive，保持容器的标准输入; <br/>（stdin）开启; <br/>-t：tty，分配一个伪终端（适合交互）; <br/> -d：detached，后台运行容器，不会卡在前台 <br/><br/> --name mysql-test	给这个容器起个名字叫 mysql-test <br/><br/> -p 3306:3306	端口映射：本机3306 → 容器内部3306（MySQL 默认端口）<br/><br/>-e MYSQL_ROOT_PASSWORD=hh109	设置 MySQL 的 root 用户密码为 hh109 <br/><br/>  mysql	使用的镜像名是 mysql（默认是 Docker 官方 MySQL 镜像的最新版） |
 | **查看谁占用了 3306端口** | `‌lsof -i :3306` |  | 当启动容器的时候需要指定端口号,若是这时容器端口号与之前相同,可能无法启动,这时需要查看,然后停掉不需要的端口号:`‌brew services stop mysql` |
 | **查看当前正在运行的容器** | **查看所有容器（包括已停止的）：** `docker ps -a` <br/><br/> `docker ps‌` |  |  |
 | **停止该容器** | docker stop 容器ID | `‌docker stop 9493ee378e55` |  |
 | **删除容器** | `docker rm 镜像名` | `‌docker rm 9493ee378e55` <br/><br/> 强制删除容器：`‌docker rm -f 9493ee378e55`|  |
-| 删除已停止的所有容器（谨慎使用） | `‌docker container prune` |  |  |
-| 查看哪些容器依赖该镜像 |  | `‌docker ps -a --filter ancestor=c87a062484a3` | 这将列出所有使用该镜像的容器（无论是正在运行的还是已停止的） |
-| 启动2个容器进行连接 | `‌docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>` | `‌docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker` | `docker run：`用于运行一个新的容器实例 <br/><br/> `--name gin-blog-docker`：为运行的容器指定一个自定义名称（在这个例子中是 gin-blog-docker）<br/><br/> `--link hhmysql:mysql：`将 hhmysql 容器连接到当前容器，并为它设置别名 <br/><br/> `mysql -p 8000:8000`：将容器内部的端口映射到宿主机的端口 <br/><br/> `-d`：让容器在后台运行（detached mode） <br/><br/>  gin-blog-docker： 指定要运行的 Docker 镜像  |
-|  |  |  |  |
+| **删除已停止的所有容器（谨慎使用）** | `‌docker container prune` |  |  |
+| **查看哪些容器依赖该镜像** |  | `‌docker ps -a --filter ancestor=c87a062484a3` | 这将列出所有使用该镜像的容器（无论是正在运行的还是已停止的） |
+| **启动2个容器进行连接** | `‌docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>` | `‌docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker` | `docker run：`用于运行一个新的容器实例 <br/><br/> `--name gin-blog-docker`：为运行的容器指定一个自定义名称（在这个例子中是 gin-blog-docker）<br/><br/> `--link hhmysql:mysql：`将 hhmysql 容器连接到当前容器，并为它设置别名 <br/><br/> `mysql -p 8000:8000`：将容器内部的端口映射到宿主机的端口 <br/><br/> `-d`：让容器在后台运行（detached mode） <br/><br/>  gin-blog-docker： 指定要运行的 Docker 镜像  |
+| 自定义镜像 |  | `docker commit -a="huanggang" -m="del tomcat wihthout docs" d52569ces2355 yufei/tomcat02:1.2` | 自己提交生成一个镜像:`-a`是作者名, `-m`提交信息, `‌yufei/tomcat02:1.2`是包名+`/`+镜像名+版本号 |
 |  |  |  |  |
 
 
