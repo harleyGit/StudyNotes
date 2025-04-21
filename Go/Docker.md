@@ -1,21 +1,33 @@
 > <h1 ></h3>
-- [**Docker**](#Docker)
-	- [介绍](#介绍)
-	- [docker大致命令介绍](#docker大致命令介绍)
-	- [Docker使用](#Docker使用)
-	- [加快镜像下载,配置国内镜像](#加快镜像下载,配置国内镜像)
-	- [自定义网络](#自定义网络)
+- [**Docker介绍**](#Docker介绍)
+- [docker大致命令介绍](#docker大致命令介绍)
+- [Docker使用](#Docker使用)
+- [加快镜像下载,配置国内镜像](#加快镜像下载,配置国内镜像)
+- [自定义网络](#自定义网络)
 - [**镜像**](#镜像)
-	- [制作镜像](#制作镜像)
+	- [镜像常用命令](#镜像常用命令)
+		- [检索镜像](#检索镜像) 
+		- [拉取镜像](#拉取镜像) 
+		- [构建镜像](#构建镜像) 
+		- [列出本地所有镜像](#列出本地所有镜像) 
+		- [返回指定镜像信息](#返回指定镜像信息) 
+		- [显示镜像的构建历史](#显示镜像的构建历史) 
+		- [列出所有“悬空”镜像](#列出所有“悬空”镜像)
+		- [删除镜像](#删除镜像)
+		- [镜像提交](#镜像提交)
+		- [制作镜像](#制作镜像)
 	- [`docker images`详解](#dockerimages详解)
 	- [镜像分层存储](#镜像分层存储)
 - [**容器**](#容器)
 	- [容器命令](#容器命令)
 		- [新建并启动容器](#新建并启动容器) 
+		- [启动2个容器进行连接](#启动2个容器进行连接)
 		- [列出当前所有正在运行的容器](#列出当前所有正在运行的容器) 
+		- [查看哪些容器依赖该镜像](#查看哪些容器依赖该镜像)
 		- [退出容器](#退出容器) 
 		- [启动容器](#启动容器) 
 		- [停止容器](#停止容器) 
+		- [删除已停止的容器](#删除已停止的容器)
 		- [启动守护式容器](#启动守护式容器) 
 		- [查看容器日志](#查看容器日志) 
 		- [查看容器内部信息](#查看容器内部信息)
@@ -38,15 +50,13 @@
 ***
 <br/>
 
-># <h1 id="Docker">[Docker](https://yeasy.gitbook.io/docker_practice/install/mac)</h1>
+># <h1 id="Docker介绍">[Docker介绍](https://yeasy.gitbook.io/docker_practice/install/mac)</h1>
 [Docker各个版本下载包](https://gist.github.com/kupietools/2f9f085228d765da579f0f0702bec33c)
 
 Docker 是一个**容器化**平台，主要用于**构建、打包、分发和运行**应用程序。它的核心作用是让应用程序及其依赖项一起封装在一个**轻量级、可移植的容器**中，从而确保应用能够在不同的环境（如开发、测试、生产）中一致运行。
 
+<br/><br/>
 
-***
-<br/><br/><br/>
-> <h2 id="介绍">介绍</h2>
 我们接触Docker后,首先看到的是一个鲸鱼🐳驮着集装箱在蓝色大海里游,这个表示什么意思?
 - **蓝色的大海----- 宿主机系统 MacOS系统**
 - **鲸鱼🐳------ docker**
@@ -122,37 +132,11 @@ CMD [ "bash", "-c", "/go/GopherBook/chapter11/votes;" ]
 
 &emsp; 对于个人开发者，如果有自己私有的服务器，那么可以配合DaoCloud(https://www.daocloud.io/)搭建流水线，自动同步远端代码进行测试、构建等环节，自动构建镜像、部署容器。
 
-
-
 ***
 <br/><br/><br/>
 > <h2 id="docker大致命令介绍">docker大致命令介绍</h2>
 
 ![go.0.0.75.png](./../Pictures/go.0.0.75.png)
-
-<br/><br/>
-
-| **用途** | **命令** | **举例** | **说明** | 
-|--|--|--|--|
-| **检索镜像** | `docker search [OPTIONS] 镜像名字` <br/> <br/> `--no-trun `显示完整的镜像描述;<br/>`-s` 列出收藏数不小于指定值的镜像;<br/>`--automated` 只列出 automated build类型的镜像 | `‌docker search image_name:tag(镜像名: tag号)` <br/><br/> `docker search -s 30 tomcat‌` |  |
-| **拉取镜像** | `docker pull image_name(镜像名)` |  |  |
-| **构建镜像** | `‌docker build -t <image_name> <path>` | `‌docker build -t gin-blog-docker .` | `‌-t <image_name>：` 为构建的镜像指定一个名称（和可选的标签）。<br/><br/> `. (路径)：`作用：指定构建上下文的路径。构建上下文是指 Docker build 命令需要用来构建镜像的文件和目录。<br/> `. `表示当前目录（即你运行命令的目录），它告诉 Docker 从当前目录开始查找 Dockerfile 文件以及构建镜像所需要的其他资源 |
-| **列出本地所有镜像** | `docker images [OPTIONS]` 或 `docker image ls` <br/><br/> `-a` 列出本地所有的镜像(含中间映射层); <br/>`-q` 只显示镜像ID; <br/>`--digests` 显示镜像的摘要信息;<br/>`--no-trunc` 显示完整的镜像信息 | `docker images --digests` | 列出本地的所有镜像，包括镜像的名称、标签、ID、创建时间和大小等信息。|
-| **返回指定镜像信息** | `docker inspect <image>` |  | 返回指定镜像的详细元数据，内容较为详细，以 JSON 格式输出，适合查看镜像的配置、层次、环境变量等信息。 |
-| 显示镜像的构建历史 | `docker history <image>` |  | 显示镜像的构建历史，按层次列出镜像的每一层及其大小、命令和创建时间等。 |
-| 列出所有“悬空”镜像 | `docker images -f "dangling=true"`  |  | 列出所有“悬空”镜像（即没有标签且不被任何容器使用的镜像）。这些镜像通常是构建过程中产生的中间镜像。 |
-| **删除镜像** | `docker rmi <image_name_or_id>` <br/><br/> `‌docker image prune (删除未使用的镜像)` <br/><br/> 强制删除镜像:`‌docker rmi -f 镜像ID` <br/><br/> **优化:** 删除镜像前先确认有哪些容器用了这个镜像:`‌docker ps -a --filter ancestor=ccc8e7cf9efa` | 删除单个镜像: `docker rmi my_image`  <br/><br/> 删除单个镜像:`docker rmi a1b2c3d4e5f6` <br/><br/> 强制删除镜像:`‌docker rmi -f ccc8e7cf9efa` <br/><br/> 删除多个镜像: `docker rm -f 镜像名1:TAG 镜像名2:TAG` <br/><br/>  删除多个 :`docker rmi -f ${docker images -qa}` | 删除的镜像 ID 或镜像的名称（标签）<br/><br/> 有的镜像无法停止,是因为容器正在运行,你需要先停掉容器,然后再删除镜像  |
-| **运行容器** | `docker run [OPTIONS] IMAGE [COMMAND][ARG...]` | `‌docker run -itd --name mysql-test -p 3306:3306 -e MYSQL_ROOT_PASSWORD=hh109 mysql` <br/><br/> 后台启动tomcat:`docker run -d -p 6666:8080 tomcat` | `docker run`:	启动一个新的容器（并基于指定镜像）<br/><br/>`‌-itd`: <br/>-i：interactive，保持容器的标准输入; <br/>（stdin）开启; <br/>-t：tty，分配一个伪终端（适合交互）; <br/> -d：detached，后台运行容器，不会卡在前台 <br/><br/> --name mysql-test	给这个容器起个名字叫 mysql-test <br/><br/> -p 3306:3306	端口映射：本机3306 → 容器内部3306（MySQL 默认端口）<br/><br/>-e MYSQL_ROOT_PASSWORD=hh109	设置 MySQL 的 root 用户密码为 hh109 <br/><br/>  mysql	使用的镜像名是 mysql（默认是 Docker 官方 MySQL 镜像的最新版） |
-| **查看谁占用了 3306端口** | `‌lsof -i :3306` |  | 当启动容器的时候需要指定端口号,若是这时容器端口号与之前相同,可能无法启动,这时需要查看,然后停掉不需要的端口号:`‌brew services stop mysql` |
-| **查看当前正在运行的容器** | **查看所有容器（包括已停止的）：** `docker ps -a` <br/><br/> `docker ps‌` |  |  |
-| **停止该容器** | docker stop 容器ID | `‌docker stop 9493ee378e55` |  |
-| **删除容器** | `docker rm 镜像名` | `‌docker rm 9493ee378e55` <br/><br/> 强制删除容器：`‌docker rm -f 9493ee378e55`|  |
-| **删除已停止的所有容器（谨慎使用）** | `‌docker container prune` |  |  |
-| **查看哪些容器依赖该镜像** |  | `‌docker ps -a --filter ancestor=c87a062484a3` | 这将列出所有使用该镜像的容器（无论是正在运行的还是已停止的） |
-| **启动2个容器进行连接** | `‌docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>` | `‌docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker` | `docker run：`用于运行一个新的容器实例 <br/><br/> `--name gin-blog-docker`：为运行的容器指定一个自定义名称（在这个例子中是 gin-blog-docker）<br/><br/> `--link hhmysql:mysql：`将 hhmysql 容器连接到当前容器，并为它设置别名 <br/><br/> `mysql -p 8000:8000`：将容器内部的端口映射到宿主机的端口 <br/><br/> `-d`：让容器在后台运行（detached mode） <br/><br/>  gin-blog-docker： 指定要运行的 Docker 镜像  |
-| 自定义镜像 |  | `docker commit -a="huanggang" -m="del tomcat wihthout docs" d52569ces2355 yufei/tomcat02:1.2` | 自己提交生成一个镜像:`-a`是作者名, `-m`提交信息, `‌yufei/tomcat02:1.2`是包名+`/`+镜像名+版本号 |
-|  |  |  |  |
-
 
 ***
 <br/><br/><br/>
@@ -247,15 +231,14 @@ docker run -d -p 80:80 docker/getting-started
 	- 通过 `docker-compose` 方便管理多个容器。
 
 
-<br/><br/><br/>
-> <h2 id="镜像">镜像</h2>
- CentOS 8 停止维护后，官方推荐使用 CentOS Stream.CentOS 官方镜像不再托管在 **Docker Hub**而是托管[在Red Hat的quay.io上 CentOS](https://quay.io/repository/centos/centos?tab=info),拉取最新CentOS:
 
-```sh
- ‌docker pull quay.io/centos/centos
-```
- 
+<br/><br/><br/>
+
+***
 <br/>
+
+> <h1 id="镜像">镜像</h1>
+
 
 Docker镜像(lmage)就是-一个只读的模板。镜像可以用来创建Docker容器，个镜像可以创建很多容器
 - **镜像（Image）**：  
@@ -270,10 +253,17 @@ Docker镜像(lmage)就是-一个只读的模板。镜像可以用来创建Docker
 | 容器 | 对象 |
 | 镜像 | 类 |
 
-<br/>
+<br/><br/>
 
 [**镜像资源:**](https://hub.docker.com/search)
+
 ![go.0.0.68.png](./../Pictures/go.0.0.68.png)
+
+ CentOS 8 停止维护后，官方推荐使用 CentOS Stream.CentOS 官方镜像不再托管在 **Docker Hub**而是托管[在Red Hat的quay.io上 CentOS](https://quay.io/repository/centos/centos?tab=info),拉取最新CentOS:
+
+```sh
+ ‌docker pull quay.io/centos/centos
+```
 
 <br/>
 
@@ -293,6 +283,162 @@ Docker镜像(lmage)就是-一个只读的模板。镜像可以用来创建Docker
 - **Docker Host（Docker主机）：**
 
 - **Registry（应用市场）：**
+
+***
+<br/><br/><br/>
+> <h2 id="镜像常用命令">镜像常用命令</h2>
+
+<br/><br/>
+> <h3 id="检索镜像">检索镜像</h3>
+
+```sh
+docker search [OPTIONS] 镜像名字
+```
+
+- 可选参数OPTIONS:
+	- `--no-trun `显示完整的镜像描述;
+	- `-s` 列出收藏数不小于指定值的镜像;
+	- `--automated` 只列出 automated build类型的镜像
+
+```sh
+‌docker search image_name:tag(镜像名: tag号)
+
+docker search -s 30 tomcat
+```
+
+<br/><br/>
+> <h3 id="拉取镜像">拉取镜像</h3>
+
+```sh
+docker pull image_name(镜像名)
+```
+
+<br/><br/>
+> <h3 id="构建镜像">构建镜像</h3>
+
+
+```sh
+‌docker build -t <image_name> <path> 
+```
+
+<br/>
+
+```sh
+docker build -t gin-blog-docker .
+```
+
+- **参数:**
+	- `‌-t <image_name>：` 为构建的镜像指定一个名称（和可选的标签）。
+	- `. (路径)：`作用：指定构建上下文的路径。构建上下文是指 Docker build 命令需要用来构建镜像的文件和目录。
+		-  `. `表示当前目录（即你运行命令的目录），它告诉 Docker 从当前目录开始查找 Dockerfile 文件以及构建镜像所需要的其他资源 
+
+<br/><br/>
+> <h3 id="列出本地所有镜像">列出本地所有镜像</h3>
+
+```sh
+docker images [OPTIONS]
+```
+
+- **OPTIONS可选:**
+	- `-a` 列出本地所有的镜像(含中间映射层); 
+	- `-q` 只显示镜像ID; 
+	- `--digests` 显示镜像的摘要信息;
+	- `--no-trunc` 显示完整的镜像信息
+
+<br/>
+列出本地的所有镜像，包括镜像的名称、标签、ID、创建时间和大小等信息。
+
+```sh
+docker image ls
+```
+
+<br/>
+
+```sh
+docker images --digests
+```
+
+<br/><br/>
+> <h3 id="返回指定镜像信息">返回指定镜像信息</h3>
+
+```sh
+docker inspect <image> 
+```
+
+返回指定镜像的详细元数据，内容较为详细，以 JSON 格式输出，适合查看镜像的配置、层次、环境变量等信息。 
+
+<br/><br/>
+> <h3 id="显示镜像的构建历史">显示镜像的构建历史</h3>
+
+```sh
+docker history <image>
+```
+显示镜像的构建历史，按层次列出镜像的每一层及其大小、命令和创建时间等。 
+
+<br/><br/>
+> <h3 id="列出所有“悬空”镜像">列出所有“悬空”镜像</h3>
+
+```sh
+docker images -f "dangling=true"  
+```
+
+列出所有“悬空”镜像（即没有标签且不被任何容器使用的镜像）。这些镜像通常是构建过程中产生的中间镜像。
+
+<br/><br/>
+> <h3 id="删除镜像">删除镜像</h3>
+
+```sh
+# <image_name_or_id>: 删除的镜像 ID 或镜像的名称（标签
+# 有的镜像无法停止,是因为容器正在运行,你需要先停掉容器,然后再删除镜像
+docker rmi <image_name_or_id>
+
+‌docker image prune (删除未使用的镜像)
+
+# 强制删除镜像:‌docker rmi -f 镜像ID
+‌docker rmi -f ccc8e7cf9efa`
+```
+
+- **优化:** 删除镜像前先确认有哪些容器用了这个镜像:`‌docker ps -a --filter ancestor=ccc8e7cf9efa`
+- 删除单个镜像: `docker rmi my_image`,比如: `docker rmi a1b2c3d4e5f6`
+
+<br/>
+
+**删除多个镜像:**
+
+```sh
+docker rm -f 镜像名1:TAG 镜像名2:TAG
+```
+
+<br/>  
+
+**删除多个:** 
+
+```sh
+docker rmi -f ${docker images -qa} 
+```
+
+
+<br/><br/>
+> <h3 id="镜像提交">镜像提交</h3>
+`docker commit` 提交容器副本使之称为一个新的镜像.
+
+```sh
+docker commit -m="提交的描述信息" -a="作者" 容器ID 要创建的目标镜像名:[标签名]
+```
+
+<br/>
+
+```
+docker commit -a="huanggang" -m="del tomcat wihthout docs" d52569ces2355 yufei/tomcat02:1.2 
+```
+
+- **自己提交生成一个镜像:**
+	- `-a`是作者名;
+	- `-m`提交信息;
+	- `‌yufei/tomcat02:1.2`是包名+`/`+镜像名+版本号
+
+
+
 
 
 <br/><br/>
@@ -320,6 +466,8 @@ Docker镜像(lmage)就是-一个只读的模板。镜像可以用来创建Docker
 | USER |  | 指定用户和用户组 |
 | WORKDIR | WORKDIR <工作目录路径> ｜ 指定默认工作目录 |
 | ARG |  | 指定构建参数 |
+
+<br/><br/>
 
 **Docker File文件如下：**
 
@@ -395,34 +543,61 @@ Docker利用容器(Container)独立运行的一个活一组应用.**容器是用
 
 ***
 <br/><br/><br/>
-
 > <h2 id="容器命令">容器命令</h2>
 <br/>
 
 > <h3 id="新建并启动容器">新建并启动容器 </h3>
 
 ```sh
-docker run [OPTIONS] IMAGE [COMMAND][ARG]
+docker run [OPTIONS] IMAGE [COMMAND][ARG...]
 ```
+- ​**OPTIONS 说明** 
+	- `--name="容器新名字"`:为容器指定一个名称;
+	- `-d`:后台运行容器，并返回容器ID， 也即启动守护式容器;
+	- `-i`:以交互模式运行容器，通常与-t同时使用;
+	- `-t`:为容器重新分配一个伪输入终端，通常与-i同时使用;
+	- `-P`:随机端口映射;
+	- `-p`:指定端口映射，有以下四种格式
+	- `ip`:hostPort:containerPort
+	- `ip:`:containerPort
+	- `hostPort`:containerPort
+
+<br/>
+**运行容器:**
+
+```sh
+‌docker run -itd --name mysql-test -p 3306:3306 -e MYSQL_ROOT_PASSWORD=hh109 mysql
+
+# 后台启动tomcat
+docker run -d -p 6666:8080 tomcat
+```
+- **命令解释:**
+	- `docker run`:	启动一个新的容器（并基于指定镜像）
+	- `‌-itd`: 
+		- `-i`：interactive，保持容器的标准输入; 
+		- （stdin）开启; 
+	- `-t`：tty，分配一个伪终端（适合交互）; 
+	- `-d`：detached，后台运行容器，不会卡在前台 
+	- `--name`: mysql-test	给这个容器起个名字叫 mysql-test 
+	- `-p 3306:3306`:	端口映射：本机3306 → 容器内部3306（MySQL 默认端口）
+	- `-e MYSQL_ROOT_PASSWORD=hh109`:	设置 MySQL 的 root 用户密码为 hh109 
+		- mysql	使用的镜像名是 mysql（默认是 Docker 官方 MySQL 镜像的最新版） |
 
 <br/>
 
-​**OPTIONS 说明** 
-
-OPTIONS说明(常用) :有些是一个减号，有些是两个减号
+当启动容器的时候,可能会出现端口被占用的情况,**查看谁占用了 3306端口**:
 
 ```sh
---name="容器新名字":为容器指定一个名称;
--d:后台运行容器，并返回容器ID， 也即启动守护式容器;
--i:以交互模式运行容器，通常与-t同时使用;
--t:为容器重新分配一个伪输入终端，通常与-i同时使用;
--P:随机端口映射;
--p:指定端口映射，有以下四种格式
-ip:hostPort:containerPort
-ip::containerPort
-hostPort:containerPort
-containerPort
+‌lsof -i :3306
 ```
+
+当时查看的时候发现是mysql占用了`3306`端口. 当启动tomcat容器的时候指定这个端口号,然后指定的容器端口号与之前相同,无法启动,这时需要查看,然后停掉不需要的端口号:
+
+```sh
+brew services stop mysql
+```
+
+<br/>
 
 **下面需要注意下:**
 
@@ -463,19 +638,59 @@ docker run -d -p 8080:80 nginx
 ```
 访问 `http://localhost:8080` 就能看到 Nginx 页面。
 
+<br/><br/>
+> <h3 id="启动2个容器进行连接">启动2个容器进行连接</h3>
+
+```sh
+‌docker run --name <container_name> --link <container_name>:<alias> -p <host_port>:<container_port> -d <image_name>
+```
+
+<br/>
+
+```sh
+docker run --name gin-blog-docker --link hhmysql:mysql -p 8000:8000 -d gin-blog-docker 
+```
+
+- **指令解释:**
+- `docker run`：`用于运行一个新的容器实例 
+- `--name gin-blog-docker `：为运行的容器指定一个自定义名称（在这个例子中是 gin-blog-docker）;
+-  `--link hhmysql:mysql `：`将 hhmysql 容器连接到当前容器，并为它设置别名;
+-  `mysql -p 8000:8000`：将容器内部的端口映射到宿主机的端口;
+-  `-d`：让容器在后台运行（detached mode）;
+-  `gin-blog-docker`： 指定要运行的 Docker 镜像
+
 
 <br/><br/>
 > <h3 id="列出当前所有正在运行的容器">列出当前所有**正在运行**的容器</h3>
 
 ```sh
 docker ps [OPTIONS]
+```
 
-#OPTIONS说明(常用) :
--a :列出当前所有正在运行的容器+历史上运行过的
--|:显示最近创建的容器。
--n:显示最近n个创建的容器。
--q :静默模式，只显示容器编号。
---no-trunc :不截断输出。
+- **OPTIONS说明(常用) :**
+	- `-a `:列出当前所有正在运行的容器+历史上运行过的
+	- `-l`:显示最近创建的容器。
+	- `-n`:显示最近n个创建的容器。
+	- `-q` :静默模式，只显示容器编号。
+	- `--no-trunc` :不截断输出。
+
+<br/>
+
+**查看所有容器（包括已停止的）：** 
+
+```sh
+docker ps -a
+
+docker ps‌
+```
+
+<br/><br/>
+> <h3 id="查看哪些容器依赖该镜像">查看哪些容器依赖该镜像</h3>
+
+**列出所有使用该镜像的容器（无论是正在运行的还是已停止的）:**
+
+```sh
+‌docker ps -a --filter ancestor=c87a062484a3
 ```
 
 <br/><br/>
@@ -508,6 +723,8 @@ docker restart 容器ID或容器签名
 
 ```sh
 docker stop 容器ID或容器签名
+
+‌docker stop 9493ee378e55
 ```
 
 <br/>
@@ -518,12 +735,23 @@ docker stop 容器ID或容器签名
 docker kill 容器ID或容器签名
 ```
 
-<br/>
-
-**删除已停止的容器**
+<br/><br/>
+> <h3 id="删除已停止的容器">删除已停止的容器</h3>
 
 ```sh
-docker rm 容器ID  -f
+docker rm 镜像名
+
+‌docker rm 9493ee378e55
+```
+
+<br/>
+
+**强制删除容器:**
+
+```sh
+docker rm -f 容器ID
+
+docker rm -f 9493ee378e55
 ```
 
 <br/>
@@ -534,6 +762,14 @@ docker rm 容器ID  -f
 docker rm -f $(docker ps -a -q)
 
 docker ps -a -q | xargs docker rm
+```
+
+<br/>
+
+**删除已停止的所有容器（谨慎使用）**
+
+```sh
+‌docker container prune
 ```
 
 <br/><br/>
@@ -605,8 +841,6 @@ docker exec -it 容器ID bashShell
 
 ```sh
 attach 直接进入容器启动命令的伪终端，不会启动新的进程
-
-
 
 exec 是在容器中打开新的终端，并且可以启动新的进程,可以在宿主机中肢解返回结果
 
@@ -832,8 +1066,6 @@ docker-compose restart
 
 倘若不做任何干涉，在每次启动一个 Mysql 容器时，数据库都是空的。另外容器删除之后，数据就丢失了（还有各类意外情况），非常糟糕！
 <br/>
-
-**数据卷**
 
 **数据卷** 是被设计用来持久化数据的，它的生命周期独立于容器，Docker 不会在容器被删除后自动删除 数据卷，并且也不存在垃圾回收这样的机制来处理没有任何容器引用的 数据卷。如果需要在删除容器的同时移除数据卷。可以在删除容器的时候使用 docker rm -v 这个命令
 

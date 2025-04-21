@@ -1,15 +1,21 @@
 > <h2 id=""></h2>
-> [**官方教程**](https://code.visualstudio.com)
+- [**官方教程**](https://code.visualstudio.com)
 - [**配置**](#配置)
+	- [短语快捷键配置](#短语快捷键配置)
+	- [修改字体大小](#修改字体大小) 
+	- [工作区配置](#工作区配置) 
+	- [GO的launch.json配置](#GO的launch.json配置) 
+	- [用户配置](#用户配置)
 - [**常用插件**](#常用插件)
+	- [Markdown All in One 插件](#MarkdownAllinOne插件)
 	- [koroFileHeader注释插件](#koroFileHeader注释插件)
 	- [fileheader-文件头注释](#fileheader-文件头注释)
-	- [vscode-icons](https://github.com/vscode-icons/vscode-icons)：文件图标插件；
-	- [Path Intellisense](https://github.com/ChristianKohler/PathIntellisense)：当引入文件和书写文件路径时，可自动填充文件；
-	- [Auto Rename Tag](https://github.com/formulahendry/vscode-auto-rename-tag)：修改HTML标签时，自动完成闭合标签的同步修改；
-	- [open in browser](https://github.com/SudoKillMe/vscode-extensions-open-in-browser)：右击HTML文件，选择Open In Default Browser，就会在默认浏览器中打开HTML文件
-	- Gitlens: 查看git提交记录
-	- [ts插件Deno](#ts插件Deno)
+	- [文件图标插件](#文件图标插件)
+	- [自动填充引入文件路径](#自动填充引入文件路径)	
+	- [完成HTML闭合标签](#完成HTML闭合标签) 
+	- [查看HTML效果](#查看HTML效果)
+	- [Gitlens: 查看git提交记录](#Gitlens:查看git提交记录)
+	- [插件Deno-安全的JavaScript/TypeScript运行时](#插件Deno-安全的JavaScript/TypeScript运行时)
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
 	- [环境配置](#环境配置)
@@ -37,8 +43,98 @@
 <br/>
 
 > <h1 id="配置">配置</h1>
-**修改字体大小**
 
+***
+<br/><br/><br/>
+
+> <h2 id="短语快捷键配置">短语快捷键配置</h2>
+
+**原因 ：** VS Code 不是原生 macOS 文本框
+
+VS Code 是基于 Electron 的跨平台应用，它使用的是 Chromium 渲染引擎，所以它的输入框（包括编辑区）不是 macOS 系统级的原生输入框。
+
+<br/>
+
+- 首先打开**设置**,把点击Tab的**启用Tab补全**给打开(默认是关闭的)
+
+```
+Edigor: Tab Completion
+```
+
+
+<br/>
+
+- 打开控制面板: **Command+shift+P**,然后输入`‌snippets`,选择中`Snippets: Configure snippets`;
+- 然后选择markdown.json,打开进行配置如下:
+
+```json
+{
+	"Picture Link Snippet": {
+		"prefix": "p",
+		"body": [
+			"![](./../Pictures/)"
+		],
+		"description": "其他笔记图片链接"
+	},
+	"Picture Link1 Snippet": {
+		"prefix": "pi",
+		"body": [
+			"![](./../../Pictures/)"
+		],
+		"description": "iOS笔记图片链接"
+	},
+	"H1 Snippet": {
+		"prefix": "h1",
+		"body": [
+			"<br/><br/><br/>***<br/>> <h1 id=""></h1>"
+		],
+		"description": "h1标题"
+	},
+	"H2 Snippet": {
+		"prefix": "h2",
+		"body": [
+			"***<br/><br/><br/>> <h2 id=""></h2>"
+		],
+		"description": "h2标题"
+	},
+	"H3 Snippet": {
+		"prefix": "h3",
+		"body": [
+			"<br/><br/>> <h3 id=""></h3>"
+		],
+		"description": "h3标题"
+	},
+	"Code Qute Snippet": {
+		"prefix": "c",
+		"body": [
+			"``"
+		],
+		"description": "代码引入"
+	},
+	"Code Qute1 Snippet": {
+		"prefix": "cc",
+		"body": [
+			"```json```"
+		],
+		"description": "代码引入"
+	},
+	"Test Snippet": {
+		"prefix": "hello",
+		"body": [
+			"Hello, world!"
+		],
+		"description": "Say hello"
+	}
+}
+```
+
+比如测试: `Test Snippet`时可以输入: `hello+Tab`即可
+
+
+***
+<br/><br/><br/>
+
+> <h2 id="修改字体大小">修改字体大小</h2>
 &emsp;打开VSCode,Command+shift+P,在弹出的输入框中输入**setting**,找到有JSON的一项进行设置:
 
 ```json
@@ -51,9 +147,10 @@
 "terminal.integrated.fontWeight": "normal",
 ```
 
-<br/><br/>
+***
+<br/><br/><br/>
 
-**工作区配置**
+> <h2 id="工作区配置">工作区配置</h2>
 
 ```json
 {
@@ -88,11 +185,12 @@
 }
 ```
 
-<br/><br/>
+***
+<br/><br/><br/>
+
+> <h2 id="GO的launch.json配置">GO的launch.json配置</h2>
 
 `Comand+shift+P,`然后选择打开 **Open Workspace Settings(json)**
-
-**GO的launch.json配置**
 
 ```json
 {
@@ -119,8 +217,10 @@
 }
 ```
 
-<br/><br/>
+***
+<br/><br/><br/>
 
+> <h2 id="用户配置">用户配置</h2>
 `Comand+shift+P,`然后选择打开 **Open User Settings(json)**
 
 ```json
@@ -252,14 +352,79 @@
 
 > <h1 id="常用插件">常用插件</h1>
 
+
 ***
+<br/><br/><br/>
+
+> <h2 id="MarkdownAllinOne插件">Markdown All in One插件</h2>
+
+Markdown文档插件.
+
+
+ ✅ Markdown All in One 插件：Mac 快捷键总览
+
+| 功能 | 快捷键（Mac） | 说明 |
+|------|----------------|------|
+| **切换预览** | `Cmd + K V` (**先是Cmd+K组合键,然后敲击V即可**)| 打开 Markdown 预览（侧边）<br>⚠️ 是序列键：先按 `Cmd+K`，松手，再按 `V` |
+| **切换预览（主区）** | `Cmd + Shift + V` | 在当前编辑区中打开预览 |
+| **同步滚动（预览和编辑）** | 自动启用 | 可在设置中禁用 |
+| **切换任务列表项 [ ] <-> [x]** | `Cmd + Shift + L` | 在待办项中打勾/取消勾选 |
+| **自动完成列表项** | 自动 | 输入 `-` 或 `*` 后按空格，自动生成列表 |
+| **插入粗体** | `Cmd + B` | 插入 `**加粗**` |
+| **插入斜体** | `Cmd + I` | 插入 `*斜体*` |
+| **插入标题（#）** | 自动 | 输入 `#` 后空格自动转换为标题 |
+| **插入链接** | `Cmd + K` | 插入 `[链接文本](url)` |
+| **插入代码块** | 自动 | 输入 ```` ``` ```` 后自动补全代码块 |
+| **插入表格** | 无默认快捷键 | 可使用命令面板执行 |
+| **列表缩进** | `Tab` / `Shift + Tab` | 增加/减少缩进层级 |
+| **格式化文档** | `Shift + Option + F` | 格式化整个 Markdown 文档（使用 Prettier 或其他格式器） |
+
 <br/>
+
+🧭 命令面板可执行的 Markdown 命令
+
+按下 `Cmd + Shift + P` 打开命令面板，然后输入关键词：
+
+| 命令 | 说明 |
+|------|------|
+| Markdown: Open Preview to the Side | 打开预览 |
+| Markdown: Toggle List | 插入或切换有序/无序列表 |
+| Markdown: Toggle Task List | `[ ]` <-> `[x]` |
+| Markdown: Print Current Document to HTML | 导出 HTML |
+| Markdown: Show TOC | 显示目录（如果你启用了 TOC 功能） |
+| Markdown: Create Table of Contents | 生成目录（基于标题） |
+
+<br/>
+
+📌 小技巧：查看/修改快捷键
+
+你可以在 VS Code 中这样查看和修改快捷键：
+
+1. `Cmd + K Cmd + S` 打开快捷键设置
+2. 搜索 "markdown"
+3. 找到 Markdown All in One 插件的命令，自定义绑定喜欢的快捷键 🎯
+
+<br/>
+
+ 🧩 推荐搭配插件：
+
+- **Prettier**：自动格式化 Markdown 文档
+- **Markdown Preview Enhanced**：支持公式、流程图、幻灯片
+- **Markdown TOC**：自动生成目录（和 Markdown All in One 也集成了 TOC 功能）
+
+
+
+
+***
+<br/><br/><br/>
 
 > <h2 id="koroFileHeader注释插件">koroFileHeader注释插件</h2>
 
 - **koroFileHeader**在vscode中用于生成文件头部注释和函数注释的插件，经过多版迭代后，插件：支持所有主流语言,功能强大，灵活方便，文档齐。
 
-***<br/><br/><br/>
+***
+<br/><br/><br/>
+
 > <h2 id="fileheader-文件头注释">fileheader-文件头注释</h2>
 
 
@@ -286,35 +451,75 @@
         
 ```
 
+***
+<br/><br/><br/>
+
+> <h2 id="文件图标插件">文件图标插件</h2>
+
+[vscode-icons](https://github.com/vscode-icons/vscode-icons)：文件图标插件；
+
 
 
 ***
 <br/><br/><br/>
-> <h2 id="ts插件Deno">ts插件Deno</h2>
+
+> <h2 id="自动填充引入文件路径">自动填充引入文件路径</h2>
+
+[Path Intellisense](https://github.com/ChristianKohler/PathIntellisense)：当引入文件和书写文件路径时，可自动填充文件；
+
+
+
+***
+<br/><br/><br/>
+
+> <h2 id="完成HTML闭合标签">完成HTML闭合标签</h2>
+
+[Auto Rename Tag](https://github.com/formulahendry/vscode-auto-rename-tag)：修改HTML标签时，自动完成闭合标签的同步修改；
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="查看HTML效果">查看HTML效果</h2>
+
+[open in browser](https://github.com/SudoKillMe/vscode-extensions-open-in-browser)右击HTML文件，选择Open In Default Browser，就会在默认浏览器中打开HTML文件
+
+
+
+
+***
+<br/><br/><br/>
+
+> <h2 id="Gitlens:查看git提交记录">Gitlens: 查看git提交记录</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="插件Deno-安全的JavaScript/TypeScript运行时"> 插件Deno-安全的JavaScript/TypeScript运行时</h2>
 
 VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 JavaScript/TypeScript 运行时），它的作用包括：
 
----
+<br/>
 
-## **1. 提供 TypeScript/JavaScript 语言支持**
-- **自动类型检查**：Deno 内置 TypeScript，不需要 `tsconfig.json`，插件能提供正确的类型提示。
-- **自动补全**：在 Deno 项目中，它能正确解析 `import`，提供 IntelliSense 支持。
+- **1. 提供 TypeScript/JavaScript 语言支持**
+	- **自动类型检查**：Deno 内置 TypeScript，不需要 `tsconfig.json`，插件能提供正确的类型提示。
+	- **自动补全**：在 Deno 项目中，它能正确解析 `import`，提供 IntelliSense 支持。
 
----
+<br/>
 
-## **2. 解析远程导入的模块**
-- Deno 没有 `node_modules`，它直接从 URL 导入依赖，例如：
+- **2.解析远程导入的模块**
+	- Deno 没有 `node_modules`，它直接从 URL 导入依赖，例如：
   
   ```ts
   import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
   ```
 - **VS Code 默认不认识 URL 导入**，但安装 Deno 插件后，编辑器能正确解析这些模块，提供跳转和补全。
 
----
+<br/>
 
-## **3. 代码格式化**
-- 插件支持 `deno fmt`，可以自动格式化代码，类似 `Prettier`。
-- 例如：
+- **3.代码格式化**
+	- 插件支持 `deno fmt`，可以自动格式化代码，类似 `Prettier`。
+	- 例如：
   
   ```ts
   console.log("Hello, Deno!")
@@ -326,30 +531,30 @@ VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 Jav
   console.log("Hello, Deno!");
   ```
 
----
+<br/>
 
-## **4. Lint 代码**
-- 提供 `deno lint`，帮助发现代码中的潜在问题，比如：
+- **4.Lint 代码**
+	- 提供 `deno lint`，帮助发现代码中的潜在问题，比如：
   
   ```ts
   let unusedVar = 42; // ⚠️ 未使用的变量
   ```
 - 安装插件后，VS Code 会自动标记问题，避免错误。
 
----
+<br/>
 
-## **5. 运行 Deno 代码**
-- 你可以直接在 VS Code 终端运行 Deno 脚本，而不需要安装额外的 Node.js 依赖：
+- **5. 运行 Deno 代码**
+	- 你可以直接在 VS Code 终端运行 Deno 脚本，而不需要安装额外的 Node.js 依赖：
   
   ```sh
   deno run --allow-net server.ts
   ```
 
----
+<br/>
 
-## **6. 调试 Deno 代码**
-- 插件支持 VS Code 的调试功能（断点、变量检查等）。
-- 你可以创建 `.vscode/launch.json` 进行 Deno 调试：
+- **6.调试 Deno 代码**
+	- 插件支持 VS Code 的调试功能（断点、变量检查等）。
+	- 你可以创建 `.vscode/launch.json` 进行 Deno 调试：
   
   ```json
   {
@@ -369,9 +574,9 @@ VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 Jav
   }
   ```
 
----
+<br/>
 
-## **7. 配置 Deno 插件**
+- **7.配置 Deno 插件**
 启用 Deno 插件后，需要在 `.vscode/settings.json` 里添加：
 
 ```json
@@ -381,9 +586,10 @@ VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 Jav
 ```
 这样，VS Code 就会把当前项目识别为 Deno 项目，而不会用 Node.js 的规则解析代码。
 
----
+<br/>
 
-## **总结**
+- **总结**
+
 | 功能 | 作用 |
 |------|------|
 | **类型支持** | 解析 Deno 代码的 TypeScript 类型 |
@@ -392,9 +598,6 @@ VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 Jav
 | **Lint** | 发现代码潜在错误 |
 | **运行 Deno 代码** | 直接运行 Deno 而不依赖 Node.js |
 | **调试支持** | VS Code 断点调试 |
-
-
-
 
 
 <br/><br/><br/>

@@ -1,4 +1,11 @@
 > <h1 id=""></h1>
+- [**‌数据库语句**](#数据库语句)
+	- [ALTER语句](#ALTER语句)
+	- [索引语句](#索引语句)
+		- [添加索引](#添加索引) 
+		- [删除索引](#删除索引) 
+		- [查看索引](#查看索引) 
+		- [创建带有默认值、列别名表](#创建带有默认值、列别名表)
 - [**目录结构**](#目录结构)
 - [**特殊的NULL运算**](#特殊的NULL运算)
 - [**创建employees表**](#创建employees表)
@@ -71,6 +78,96 @@
 	- [《面试笔记》——MySQL终结篇（30问与答）-- 已上线阿里](https://mp.weixin.qq.com/s?__biz=MzkxMjE5NzUxNQ==&mid=2247483876&idx=1&sn=3ba83e9184f850c49a0b98e6e49513b3&chksm=c111d300f6665a16af6199d869d715186e969df0a9c207b0c216b91ed299f5f006cdea188a4b&token=1231184118&lang=zh_CN#rd)
 	- [廖雪峰SQL教程-(可以执行sql语句查看结果)](https://liaoxuefeng.com/books/sql/relational/foreign-key/index.html)
 	- [SQL-菜鸟教程](https://www.runoob.com/sql/sql-tutorial.html)
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="数据库语句">数据库语句</h1>
+
+**删除若是存在的表**
+
+```sql
+DROP TABLE IF EXISTS test1;
+```
+
+***
+<br/><br/><br/>
+
+> <h2 id="ALTER语句">ALTER语句</h2>
+
+[**修改表名**](https://www.runoob.com/mysql/mysql-alter.html)
+
+```sql
+ALTER TABLE old_table_name
+RENAME TO new_table_name;
+```
+
+
+***
+<br/><br/><br/>
+
+> <h2 id="索引语句">索引语句</h2>
+
+
+<br/><br/>
+> <h3 id="添加索引">添加索引</h3>
+
+```sql
+ALTER TABLE table_name 
+ADD [UNIQUE | FULLTEXT | SPATIAL] [INDEX | KEY]
+[index_name](col_name[length],...) [ASC | DESC]
+
+CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name 
+ON table_name(col_name[length],...) [ASC | DESC]
+```
+
+
+<br/><br/>
+> <h3 id="删除索引">删除索引</h3>
+
+```sql
+ALTER TABLE table_name DROP INDEX index_name;
+//删除索引id 
+ALTER TABLE student DROP id;
+
+DROP INDEX index_name ON table_name;
+```
+
+
+<br/><br/>
+
+> <h3 id="查看索引">查看索引</h3>
+
+```sql
+SHOW CREATE TABLE table_name;
+
+SHOW CREATE TABLE table_name\G
+
+SHOW INDEX FROM table_name;
+```
+
+
+<br/><br/>
+
+> <h3 id="创建带有默认值、列别名表">创建带有默认值、列别名表</h3>
+
+```sql
+CREATE TABLE practiceIndex_student_info(
+	id INT(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+	student_id INT NOT NULL DEFAULT '-1' COMMENT '学生ID',
+	name VARCHAR(20) DEFAULT '-.-' COMMENT '学生姓名',
+	course_id INT(11) DEFAULT '-1' COMMENT '课程ID',
+	class_id INT(11) DEFAULT '-1'  COMMENT '班级ID',
+	create_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+	PRIMARY KEY (id)
+)ENGINE=INNODB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+```
+
+
 
 
 
