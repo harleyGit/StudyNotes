@@ -39,10 +39,18 @@
 		- [Golang + Mysql](#Golang+Mysql)
 	- [自动CI/CD](#自动CI/CD)
 - **资料**
+	- [手把手教你基于Docker部署Go项目超简单](https://juejin.cn/post/7137592961855914015)
+	- [Docker Compose-(go zero docs)](https://go-zero.dev/docs/tutorials/ops/docker/compose)
+	- [Docker使用教程-博客园](https://www.cnblogs.com/jbtys/tag/docker/default.html?page=3)
+	- [Docker部署Go+Mysql+Redis ](https://www.cnblogs.com/wylshkjj/p/16694290.html)
+	- [Docker compose部署Golang服务](https://blog.csdn.net/John_rush/article/details/135737565)
+	- [如何使用Docker部署Go Web应用](https://www.liwenzhou.com/posts/Go/deploy-in-docker/)
+	- [Go服务部署-Docker部署](https://blog.yiqiesuifeng.cn/archives/274/)
+	- [使用Docker部署Go项目](https://blog.csdn.net/qq_46079238/article/details/131456417)
 	- [](https://www.yuque.com/li.xx/open/docker)
 		- [](https://www.bilibili.com/video/BV1Ls411n7mx?spm_id_from=333.788.player.switch&vd_source=a7fe275f0ee54c4d2f691a823f8876b8&p=4)
 		- [阿里云镜像](https://home.console.aliyun.com/home/dashboard/ProductAndService)
-> [Docker实战教程（docker教程天花板）](https://www.bilibili.com/video/BV1gr4y1U7CY?spm_id_from=333.788.videopod.episodes&vd_source=a7fe275f0ee54c4d2f691a823f8876b8&p=30)
+	- [Docker实战教程（docker教程天花板）](https://www.bilibili.com/video/BV1gr4y1U7CY?spm_id_from=333.788.videopod.episodes&vd_source=a7fe275f0ee54c4d2f691a823f8876b8&p=30)
 
 
 <br/><br/><br/>
