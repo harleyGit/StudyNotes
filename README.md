@@ -141,7 +141,9 @@
 - [**并发编程**](./Go/并发编程.md)
 - [**数据存储**](./Go/数据存储.md)
 - [**常用框架**](./Go/GoLang常用框架.md)
-	- [数据库Redis](./Go/数据库Redis.md)
+	- **Redis数据库**
+		- [数据库Redis(I)](./Go/数据库Redis(I).md)
+		- [数据库Redis (II)](./Go/数据库Redis(II).md)
 	- **SQL数据库**
 		- [数据库SQL(I)](./Go/数据库SQL(I).md)
 		- [数据库SQL(II)](./Go/数据库SQL(II).md)
@@ -155,6 +157,7 @@
 - [**优化**](./Go/go优化.md)
 - [go性能分析](./Go/go性能分析.md)
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
+- [**‌分布式协调服务ZooKeeper**](./Go/分布式协调服务ZooKeeper.md)
 
 
 
