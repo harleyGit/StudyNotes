@@ -19,6 +19,9 @@
 	- [小端字节序还原成一个uint16_t类型的整数](#小端字节序还原成一个uint16_t类型的整数)
 	- [读取一段字节数据范围中的某个字节的某一位bool值](#读取一段字节数据范围中的某个字节的某一位bool值)
 	- [字节范围取值](#字节范围取值)
+	- [判断某一个字节是否为1](#判断某一个字节是否为1)
+	- [连续Byte某段bit的十进制值](#连续Byte某段bit的十进制值)
+	- [16字节转化为16进制的数字符串](#16字节转化为16进制的数字符串)
 
 
 
@@ -1493,6 +1496,38 @@ print("第 2 字节，第 1 位是否为 1:", isBitSet(in: data, byteIndex: 2, b
 第 2 字节，第 1 位是否为 1: false    // 0b01010101 的第 2 位是 0
 ```
 
+<br/><br/>
+
+**改进一步:** 让 `isBitSet(...)` 返回 `0 或 1`
+
+```swift
+/// 获取某个字节某个 bit 的值（0 或 1）
+public func bitValue(byteIndex: Int, bitIndex: Int, data: Data) -> Int {
+    guard data.count > byteIndex, bitIndex >= 0, bitIndex < 8 else {
+        print("错误：索引越界")
+        return 0
+    }
+
+    let byte = data[byteIndex]
+    return (byte & (1 << bitIndex)) != 0 ? 1 : 0
+}
+```
+
+***
+
+示例调用:
+
+```swift
+let data = Data([0b10101010, 0b11001100, 0xFF, 0x00] + Array(repeating: 0, count: 12))
+let analyzer = AKAnalyByteData()
+
+let bits = analyzer.bitsInRange(startByteIndex: 0, endByteIndex: 1, data: data)
+print("Bits: \(bits)")  // 输出类似：[0,1,0,1,0,1,0,1,0,0,1,1,0,0,1,1]
+
+let bit3 = analyzer.bitValue(byteIndex: 0, bitIndex: 3, data: data)
+print("byte[0] 第3位 bit 值：\(bit3)")  // 输出：1
+```
+
 
 ***
 <br/><br/><br/>
@@ -1622,6 +1657,299 @@ for (int i = 0; i < bitValues.count; i++) {
     NSLog(@"Bit[%d] = %@", i, bitValues[i].boolValue ? @"1" : @"0");
 }
 ```
+
+***
+<br/><br/>
+
+**修改: 将 [Bool] 改为 [Int]（返回 0 或 1）**
+
+**方法一:**
+
+```
+@objcMembers
+open class AKAnalyByteData: NSObject {
+
+    /// 提取指定字节范围内所有 bit（以 0/1 表示）
+    public func bitsInRange(startByteIndex: Int, endByteIndex: Int, data: Data) -> [Int] {
+        guard data.count == 16 else {
+            print("错误：输入数据不是 16 字节")
+            return []
+        }
+
+        guard startByteIndex >= 0, endByteIndex < 16, startByteIndex <= endByteIndex else {
+            print("错误：字节索引无效")
+            return []
+        }
+
+        var bits: [Int] = []
+
+        for byteIndex in startByteIndex...endByteIndex {
+            let byte = data[byteIndex]
+            for bitIndex in 0..<8 {
+                let bit = (byte & (1 << bitIndex)) != 0 ? 1 : 0
+                bits.append(bit)
+            }
+        }
+
+        return bits
+    }
+}
+```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="判断某一个字节是否为1">判断某一个字节是否为1</h2>
+
+**判断某一字节（`byte`）中第 `bitIndex` 位是否为 1** 的标准写法:
+
+```swift
+(byte & (1 << bitIndex)) != 0
+```
+
+---
+
+- **✅ 分解解释：**
+
+| 表达式             | 作用                                                                |
+| --------------- | ----------------------------------------------------------------- |
+| `1 << bitIndex` | 将 `1` 左移 `bitIndex` 位，生成一个掩码。例如 `bitIndex = 3` 时，结果是 `0b00001000` |
+| `byte & 掩码`     | 和掩码按位与，仅当 `byte` 中该位为 1，结果才非零                                     |
+| `!= 0`          | 最终判断该位是否为 1（true）或 0（false）                                       |
+
+---
+
+**🔍 举个例子**
+
+假设：
+
+```swift
+let byte: UInt8 = 0b00001101 // 十进制 13
+```
+
+对应二进制：
+
+```
+bit7  bit6  bit5  bit4  bit3  bit2  bit1  bit0
+ 0     0     0     0     1     1     0     1
+```
+
+逐位判断：
+
+| bitIndex | 掩码 (1 << bitIndex) | byte & 掩码  | 是否为 1 (`!= 0`) |
+| -------- | ------------------ | ---------- | -------------- |
+| 0        | `00000001`         | `00000001` | ✅ true         |
+| 1        | `00000010`         | `00000000` | ❌ false        |
+| 2        | `00000100`         | `00000100` | ✅ true         |
+| 3        | `00001000`         | `00001000` | ✅ true         |
+| 4\~7     | ...                | `0`        | ❌ false        |
+
+***
+<br/><br/><br/>
+> <h2 id="">连续Byte某段bit的十进制值</h2>
+
+**🔢 如果你想获取一个连续 bit 段的“十进制整数值”怎么做？**
+
+**✅ 举例说明**
+
+假设你有以下 `Data`（2 字节）：
+
+```swift
+let bytes: [UInt8] = [0b10101100, 0b11010010]
+let data = Data(bytes)
+```
+
+现在你要取从第 0 字节开始，到第 1 字节结束的所有位，共 16 位，然后取其中 **第 4 到第 11 位**，转为十进制整数。
+
+---
+
+**✅ 实现方法（Swift）**
+
+```swift
+@objcMembers
+open class AKAnalyByteData: NSObject {
+
+    /// 从某段字节范围中提取 bit 范围内的值（返回十进制整数）
+    /// - Parameters:
+    ///   - startByteIndex: 起始字节（含）
+    ///   - endByteIndex: 结束字节（含）
+    ///   - startBitIndex: 起始 bit（相对于整个段，例如第 4 位）
+    ///   - bitLength: 提取的位数（如 8）
+    ///   - data: 输入数据（必须 >= endByteIndex）
+    /// - Returns: 十进制整数值
+    public func extractBitsAsInt(startByteIndex: Int, endByteIndex: Int, startBitIndex: Int, bitLength: Int, data: Data) -> Int {
+        guard data.count >= endByteIndex + 1 else {
+            print("错误：数据长度不足")
+            return 0
+        }
+
+        // 提取指定字节范围所有 bits（低位在前）
+        var allBits: [Bool] = []
+        for byteIndex in startByteIndex...endByteIndex {
+            let byte = data[byteIndex]
+            for bitIndex in 0..<8 {
+                let isSet = (byte & (1 << bitIndex)) != 0
+                allBits.append(isSet)
+            }
+        }
+
+        // 获取指定 bit 范围
+        let bitsToUse = Array(allBits[startBitIndex..<startBitIndex + bitLength])
+
+        // 转成整数（低位在前）
+        var value = 0
+        for (i, bit) in bitsToUse.enumerated() {
+            if bit {
+                value |= (1 << i)
+            }
+        }
+        return value
+    }
+}
+```
+
+---
+
+**✅ 示例调用**
+
+```swift
+let bytes: [UInt8] = [0b10101100, 0b11010010] // 0xAC, 0xD2
+let data = Data(bytes)
+
+let analyzer = AKAnalyByteData()
+let result = analyzer.extractBitsAsInt(startByteIndex: 0, endByteIndex: 1, startBitIndex: 4, bitLength: 8, data: data)
+print("提取值（十进制）: \(result)")
+```
+
+---
+
+**✅ 解析过程（可视化）**
+
+从这 16 个 bit 中：
+
+```
+byte[0] = 0b10101100 → bits[0~7]  = [0, 0, 1, 1, 0, 1, 0, 1]
+byte[1] = 0b11010010 → bits[8~15] = [0, 1, 0, 0, 1, 1, 0, 1]
+                ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+             第4位→bit[4] 到 bit[11]（共8位） = 01101001 → 十进制 105
+```
+
+---
+
+**✅ 输出结果：**
+
+```text
+提取值（十进制）: 105
+```
+
+***
+
+**但是`bit[4]` 到 `bit[11]` 是 `01101001` 是怎么得到的?**
+
+**首先是如何编号的？**
+
+如下2个字节编号:
+
+```byte
+byte[0] = 0b10101100
+byte[1] = 0b11010010
+```
+
+我们按惯例从 **左到右（高位到低位）编号 bit：**
+
+| Byte     | 二进制        | Bit 索引      | 对应 bit 值（从左到右）    |
+| -------- | ---------- | ----------- | ----------------- |
+| byte\[0] | `10101100` | bit\[0\~7]  | `1 0 1 0 1 1 0 0` |
+| byte\[1] | `11010010` | bit\[8\~15] | `1 1 0 1 0 0 1 0` |
+
+***
+
+**bit[4] 到 bit[11] 是哪些值？**
+
+按上面顺序取出 bit[4] 到 bit[11] 共 8 位：
+
+```arduino
+bit[4]  = byte[0] 的第5位（从左数） → 1
+bit[5]  = byte[0] 的第6位           → 1
+bit[6]  = byte[0] 的第7位           → 0
+bit[7]  = byte[0] 的第8位           → 0
+bit[8]  = byte[1] 的第1位           → 1
+bit[9]  = byte[1] 的第2位           → 1
+bit[10] = byte[1] 的第3位           → 0
+bit[11] = byte[1] 的第4位           → 1
+```
+<br/>
+组合在一起得到:
+
+```
+bit[4~11] = 1 1 0 0 1 1 0 1 = 0b11001100 = 105
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="16字节转化为16进制的数字符串">16字节转化为16进制的数字符串</h2>
+
+将一个 16 字节的 `Data` 对象转为 16 进制字符串非常简单且常用。
+
+
+**✅ 方法一：使用 `map` 和 `String(format:)`**
+
+```swift
+let data: Data = ... // 16 字节的 Data
+let hexString = data.map { String(format: "%02X", $0) }.joined()
+print(hexString)
+```
+
+---
+
+🔍 示例代码
+
+```swift
+let bytes: [UInt8] = [
+    0x12, 0x34, 0x56, 0x78,
+    0x9A, 0xBC, 0xDE, 0xF0,
+    0x11, 0x22, 0x33, 0x44,
+    0x55, 0x66, 0x77, 0x88
+]
+let data = Data(bytes)
+
+let hexString = data.map { String(format: "%02X", $0) }.joined()
+print("16字节十六进制字符串：\(hexString)")
+```
+
+---
+
+🧾 输出结果
+
+```
+16字节十六进制字符串：123456789ABCDEF01122334455667788
+```
+
+---
+
+✅ 方法封装（可复用）
+
+你也可以封装成一个通用方法：
+
+```swift
+@objcMembers
+open class AKAnalyByteData: NSObject {
+    
+    /// 将 Data 转换为十六进制字符串（大写）
+    /// - Parameter data: 输入的 Data
+    /// - Returns: 十六进制字符串
+    public func hexString(from data: Data) -> String {
+        return data.map { String(format: "%02X", $0) }.joined()
+    }
+}
+```
+
+
+
+
+
 
 
 
