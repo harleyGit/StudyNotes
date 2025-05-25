@@ -22,6 +22,7 @@
 	- [判断某一个字节是否为1](#判断某一个字节是否为1)
 	- [连续Byte某段bit的十进制值](#连续Byte某段bit的十进制值)
 	- [16字节转化为16进制的数字符串](#16字节转化为16进制的数字符串)
+	- [蓝牙数据分包](#蓝牙数据分包)
 
 
 
@@ -104,6 +105,13 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             print("蓝牙开启，开始扫描")
             
             let serviceUUID = CBUUID(string: "180D") // 示例：心率服务
+            // 若是options: nil,则即使蓝牙外设多次发广播（比如你按了 K3 键），iOS 只会在第一次发现时触发一次 didDiscoverPeripheral，后续不会再收到，即使广播内容变了
+            // 只扫描包含特定 Service Data（如 FE95）的 BLE 设备,需要设置[serviceUUIDs],如小米的:[@"FE95"]
+            // [self.centralManager scanForPeripheralsWithServices:serviceUUIDs
+                                            options:@{CBCentralManagerScanOptionAllowDuplicatesKey: @(YES)}];
+                                            
+
+
             centralManager.scanForPeripherals(withServices: [serviceUUID], options: nil)
         } else {
             print("蓝牙不可用")
@@ -704,7 +712,7 @@ NSData *data = serviceData[fe95UUID];
 
 **🎯 三、完整使用流程图解**
 
-```mermaid
+```sh
 graph LR
 A[CBCentralManager 初始化] --> B{蓝牙开启？}
 B -- 是 --> C[开始扫描设备]
@@ -740,6 +748,10 @@ class BLEManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state == .poweredOn {
             print("蓝牙已开启，开始扫描设备")
+            // 若是options: nil,则即使蓝牙外设多次发广播（比如你按了 K3 键），iOS 只会在第一次发现时触发一次 didDiscoverPeripheral，后续不会再收到，即使广播内容变了
+            // [self.centralManager scanForPeripheralsWithServices:serviceUUIDs
+                                            options:@{CBCentralManagerScanOptionAllowDuplicatesKey: @(YES)}];
+
             centralManager.scanForPeripherals(withServices: nil, options: nil)
         }
     }
@@ -1945,6 +1957,86 @@ open class AKAnalyByteData: NSObject {
     }
 }
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="蓝牙数据分包">蓝牙数据分包</h2>
+
+在与蓝牙外设（BLE）通信时，**数据包的大小是非常关键的**，因为 BLE 通常有最大传输限制（一般为 20 字节／MTU 为 23 时），而你说的“65 字节数据包（第一字节是长度，后 64 字节是内容）”是一个非常典型的“**自定义分包协议**”。
+
+---
+
+- **🧾 需求分析**
+	- 有一段字符串内容（最长 64 字节）。
+	- 打包成 65 字节数据：
+		- 第 1 字节表示“内容长度”，如：64。
+		- 后 64 字节是真正的 UTF-8 编码字符串。
+	* 这个数据需要发给蓝牙外设。
+
+---
+
+## 🧠 BLE 通信限制简述
+
+* 通常默认单次 BLE 传输最大 **20 字节**（实际 MTU 为 23，去掉协议开销后可用 20）。
+* 如果你要传输 > 20 字节，需要**手动分包**，并且蓝牙外设要支持“连续接收”。
+
+---
+
+## ✅ Swift 中构建 65 字节数据的方法（使用 `Data` 最合适）
+
+```swift
+func buildBLEPacket(from string: String) -> Data? {
+    // 限制最大长度 64 字节（以 UTF-8 编码计）
+    guard let stringData = string.data(using: .utf8), stringData.count <= 64 else {
+        return nil
+    }
+
+    var packet = Data()
+    
+    // 第一个字节：长度
+    packet.append(UInt8(stringData.count))
+    
+    // 后续字节：字符串数据
+    packet.append(stringData)
+    
+    // 如果不足 64 字节，补 0
+    if stringData.count < 64 {
+        let padding = Data(repeating: 0, count: 64 - stringData.count)
+        packet.append(padding)
+    }
+
+    return packet
+}
+```
+
+📦 这样你构造出了一个固定 **65 字节** 的数据包：
+
+* `[长度(1 byte)] + [字符串内容(≤64 bytes)]`
+* 字符串内容不足 64 字节时，用 `0x00` 补齐
+
+---
+
+**🔁 BLE 分包发送（每次 20 字节）**
+
+你可以这样将这个 Data 按 20 字节一段发送出去：
+
+```swift
+func sendBLEPacket(_ packet: Data, write: (Data) -> Void) {
+    let mtu = 20
+    var offset = 0
+
+    while offset < packet.count {
+        let end = min(offset + mtu, packet.count)
+        let chunk = packet.subdata(in: offset..<end)
+        write(chunk) // 你的蓝牙 write 方法，如 peripheral.writeValue
+        offset = end
+    }
+}
+```
+
+
+
+
 
 
 
