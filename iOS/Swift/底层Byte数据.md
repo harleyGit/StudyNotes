@@ -6,6 +6,7 @@
 	- [不同字节数的数字拼接](#不同字节数的数字拼接)
 		- [传入的值为十进制数转成不同字节数值](#传入的值为十进制数转成不同字节数值)
 		- [将十进制64存储为4字节](#将十进制64存储为4字节)
+		- [固定范围字节转化成UInt类型](#固定范围字节转化成UInt类型)
 - [**类型UInt8**](#类型UInt8)
 - [Data在Int、字符串、结构体、json、图片、音频文件转化](#Data在Int、字符串、结构体、json、图片、音频文件转化)
 	- [结构体进行封装字节数据并拼接](#结构体进行封装字节数据并拼接)
@@ -978,21 +979,16 @@ let soundData = try Data(contentsOf: url)
 <br/><br/>
 > <h3 id="结构体进行封装字节数据并拼接">结构体进行封装字节数据并拼接</h3>
 
-明白了，你是希望**定义一个结构体**来表示这 6 个字节的数据格式，然后将结构体转换为字节数据用于蓝牙发送，而且这套逻辑需要在 **Swift 和 Objective-C 都能使用**。
+**`需求:`** 定义一个结构体表示这 6 个字节的数据格式，将结构体转换为字节数据用于蓝牙发送。
 
-我们可以这样做：
-
----
-
-### ✅ 步骤概览：
-
-1. 定义结构体 `BLEHeader` 表示 6 字节字段。
-2. 提供一个方法，将 `BLEHeader` 转换为 `Data`。
-3. 封装为 `@objcMembers` 的类，使其能在 OC 中调用。
+- **✅ 步骤概览：**
+	1. 定义结构体 `BLEHeader` 表示 6 字节字段。
+	2. 提供一个方法，将 `BLEHeader` 转换为 `Data`。
+	3. 封装为 `@objcMembers` 的类，使其能在 OC 中调用。
 
 ---
 
-### ✅ Swift 中定义结构体并封装转换逻辑
+ **✅ Swift 中定义结构体并封装转换逻辑**
 
 ```swift
 import Foundation
@@ -1032,16 +1028,16 @@ public class BLEPacketBuilder: NSObject {
 
 ---
 
-### ✅ 使用示例
-
-#### Swift 中调用：
+**Swift 中调用：**
 
 ```swift
 let packet = BLEPacketBuilder.buildPacket(sequence: 0x1234, type: 0x01, mode: 0x02, length: 0x0040)
 // 发送 packet 到蓝牙
 ```
 
-#### Objective-C 中调用：
+<br/>
+
+**Objective-C 中调用：**
 
 ```objc
 NSData *packet = [BLEPacketBuilder buildPacketWithSequence:0x1234
@@ -1053,7 +1049,7 @@ NSData *packet = [BLEPacketBuilder buildPacketWithSequence:0x1234
 
 ---
 
-### ✅ 结构体的作用
+**✅ 结构体的作用:**
 
 虽然结构体 `BLEHeader` 本身不是 Objective-C 兼容类型（它不继承自 NSObject），但它作为内部封装的结构，可以清晰地表达数据模型，同时封装为类方法提供 OC 调用方式。
 
@@ -1061,17 +1057,14 @@ NSData *packet = [BLEPacketBuilder buildPacketWithSequence:0x1234
 
 如果你希望在 OC 中也能直接定义和使用 `BLEHeader` 结构体（比如跨语言直接构造结构体），那就需要定义成 C 结构体并结合 Swift 的桥接。但多数情况下，用 Swift 管理内部结构体再封装为类方法是最实用的做法。
 
-是否还需要我加上蓝牙写入（CoreBluetooth）部分代码？
 
 ***
 
-是的，你完全可以传入**十进制**数据，和传入十六进制本质上是一样的，Swift 中的 `UInt8`、`UInt16` 等整数类型都支持十进制、十六进制、八进制、二进制等多种写法。
+你也可以传入**十进制**数据，和传入十六进制本质上是一样的，Swift 中的 `UInt8`、`UInt16` 等整数类型都支持十进制、十六进制、八进制、二进制等多种写法。
 
 ---
 
-### ✅ 举个例子
-
-这两种写法是完全等效的：
+**这两种写法是完全等效的：**
 
 ```swift
 // 十六进制写法
@@ -1084,13 +1077,89 @@ let packet2 = BLEPacketBuilder.buildPacket(sequence: 4660, type: 1, mode: 2, len
 let packet3 = BLEPacketBuilder.buildPacket(sequence: 86, type: 12, mode: 34, length: 66)
 ```
 
+
+
+***
+<br/><br/><br/>
+> <h2 id="固定范围字节转化成UInt类型">固定范围字节转化成UInt类型</h2>
+
+**从任意 `Data` 中按指定范围读取 1\~4 个字节，并根据字节序（大端/小端）转换为 `UInt` 类型。**
+
 ---
 
-### ✅ 最终生成的 `Data` 数据是二进制，与输入进制无关：
+**✅ 通用字节读取工具（支持 UInt8 / UInt16 / UInt32）**
 
-无论你传 `0x12`（十六进制）还是 `18`（十进制），它在内存中都会变成同样的一个字节 `0x12`，这就是所谓的 *数值与表示无关*。
+```swift
+enum Endian {
+    case little
+    case big
+}
 
-所以放心用十进制 👍。
+/// 从 Data 中读取整数（支持 1～4 字节，小端或大端）
+/// - Parameters:
+///   - data: 原始 Data
+///   - range: 要读取的字节范围（如 0..<2）
+///   - endian: 字节序（默认小端）
+/// - Returns: UInt 值（UInt8 / UInt16 / UInt32）
+func readUInt(from data: Data, range: Range<Int>, endian: Endian = .little) -> UInt {
+    let subdata = data[range]
+    
+    guard (1...4).contains(subdata.count) else {
+        fatalError("只支持 1~4 字节读取")
+    }
+    
+    var value: UInt = 0
+    let bytes = Array(subdata)
+    
+    switch endian {
+    case .little:
+        for (i, byte) in bytes.enumerated() {
+            value |= UInt(byte) << (8 * i)
+        }
+    case .big:
+        for (i, byte) in bytes.reversed().enumerated() {
+            value |= UInt(byte) << (8 * i)
+        }
+    }
+    
+    return value
+}
+```
+
+---
+
+**✅ 使用示例：**
+
+```swift
+let data = Data([0x78, 0x56, 0x34, 0x12])
+
+// 读取第0~1字节，小端 → UInt16
+let val1 = readUInt(from: data, range: 0..<2, endian: .little)
+print("前2字节（小端） UInt16: \(val1)")  // 输出：22136
+
+// 读取第2~4字节，大端 → UInt24（转为 UInt）
+let val2 = readUInt(from: data, range: 1..<4, endian: .big)
+print("第1~3字节（大端） UInt24: \(val2)")  // 输出：5649428
+
+// 读取全部4字节，小端 → UInt32
+let val3 = readUInt(from: data, range: 0..<4)
+print("全部4字节（小端） UInt32: \(val3)")  // 输出：305419896
+```
+
+---
+
+## ✅ 支持范围：
+
+| 字节数 | 返回类型       | 实际 Swift 类型      |
+| --- | ---------- | ---------------- |
+| 1   | `UInt8`    | `UInt`（<= 255）   |
+| 2   | `UInt16`   | `UInt`（<= 65535） |
+| 3   | `UInt24`模拟 | `UInt`（<= 16M）   |
+| 4   | `UInt32`   | `UInt`（<= 4G）    |
+
+> ❗如果你需要严格区分返回类型（如必须是 `UInt16`、`UInt32`），可以再加一个泛型版本，我也可以为你写。
+
+
 
 
 
