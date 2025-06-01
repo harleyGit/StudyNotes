@@ -18,6 +18,8 @@
 - [**解析字节数据**](#解析字节数据)
 	- [大端和小端区别](#大端和小端区别)
 	- [Byte数组构造BLE蓝牙发送指令](#Byte数组构造BLE蓝牙发送指令)
+	- [自描述式二进制数据包格式](#自描述式二进制数据包格式)
+	- [结构体解包数据](#结构体解包数据)
 	- [小端字节序还原成一个uint16_t类型的整数](#小端字节序还原成一个uint16_t类型的整数)
 	- [读取一段字节数据范围中的某个字节的某一位bool值](#读取一段字节数据范围中的某个字节的某一位bool值)
 	- [字节范围取值](#字节范围取值)
@@ -1347,6 +1349,203 @@ NSLog(@"发送数据: %@", dataToSend); // 输出: <aa0100ab>
 | 应用       | 蓝牙、网络、音频、图片处理、自定义协议               |
 | 搭配使用     | 一般与 `NSData`、`NSMutableData` 搭配使用 |
 | 优势       | 精确控制每个字节，适用于嵌入式通信或 C 库交互          |
+
+
+***
+<br/><br/><br/>
+> <h2 id="自描述式二进制数据包格式">自描述式二进制数据包格式</h2>
+如下是一个非常常见的**自描述式二进制数据包格式**，结构如下所示（我们以 ASCII 图示来表达）：
+
+```
+| aLen: UInt8 | aData: [UInt8] | bLen: UInt8 | bData: [UInt8] | ...
+```
+
+也就是说：
+
+* 每段数据前面 **先跟一个长度字段**（`1 字节 UInt8`），
+* 然后跟对应长度的数据内容。
+* 重复这个结构。
+
+---
+
+**✅ Swift 完整示例代码**
+
+```swift
+import Foundation
+
+func parsePacket(_ packetData: Data) -> [Data] {
+    var result: [Data] = []
+    var index = 0
+
+    while index < packetData.count {
+        // 1. 先取长度字节（UInt8）
+        let length = Int(packetData[index])
+        index += 1
+
+        // 2. 检查是否还有足够的数据
+        guard index + length <= packetData.count else {
+            print("❌ 数据长度不足，无法继续解析")
+            break
+        }
+
+        // 3. 取出这一段数据
+        let subData = packetData.subdata(in: index ..< index + length)
+        result.append(subData)
+
+        // 4. 移动指针
+        index += length
+    }
+
+    return result
+}
+```
+
+---
+
+**✅ 举个例子:**
+
+```swift
+// 模拟二进制数据： aLen = 3, a = 0x01 0x02 0x03
+//                 bLen = 2, b = 0xAA 0xBB
+let rawBytes: [UInt8] = [
+    0x03, 0x01, 0x02, 0x03,
+    0x02, 0xAA, 0xBB
+]
+let packetData = Data(rawBytes)
+
+let sections = parsePacket(packetData)
+
+for (i, section) in sections.enumerated() {
+    print("Section \(i): \(section as NSData)")
+}
+```
+
+**输出：**
+
+```
+Section 0: <010203>
+Section 1: <aabb>
+```
+
+***
+<br/><br/><br/>
+> <h2 id="结构体解包数据">结构体解包数据</h2>
+
+
+如果你知道你最多有几个字段（例如 a, b, c），你也可以改为返回命名字段：
+
+```swift
+struct Packet {
+    var aData: UInt8 = 0
+    var bData: UInt16 = 0
+    var cData: UInt32 = 0
+}
+```
+
+<br/>
+
+-  **✅ 1.通用解包方法**
+
+```swift
+import Foundation
+
+struct Packet {
+    var aData: UInt8
+    var bData: UInt16
+    var cData: UInt32
+
+    init?(from data: Data) {
+        guard data.count >= MemoryLayout<UInt8>.size +
+                            MemoryLayout<UInt16>.size +
+                            MemoryLayout<UInt32>.size else {
+            return nil
+        }
+
+        var offset = 0
+
+        // 解析 UInt8
+        self.aData = data.withUnsafeBytes {
+            $0.load(fromByteOffset: offset, as: UInt8.self)
+        }
+        offset += MemoryLayout<UInt8>.size
+
+        // 解析 UInt16（小端字节序）
+        self.bData = data.withUnsafeBytes {
+            $0.load(fromByteOffset: offset, as: UInt16.self).littleEndian
+        }
+        offset += MemoryLayout<UInt16>.size
+
+        // 解析 UInt32（小端字节序）
+        self.cData = data.withUnsafeBytes {
+            $0.load(fromByteOffset: offset, as: UInt32.self).littleEndian
+        }
+    }
+}
+```
+
+---
+
+**🔁 示例用法：**
+
+```swift
+let rawBytes: [UInt8] = [
+    0x01,                   // aData: UInt8
+    0x34, 0x12,             // bData: UInt16 -> 0x1234 = 4660
+    0x78, 0x56, 0x34, 0x12  // cData: UInt32 -> 0x12345678 = 305419896
+]
+
+let data = Data(rawBytes)
+
+if let packet = Packet(from: data) {
+    print("aData = \(packet.aData)") // 1
+    print("bData = \(packet.bData)") // 4660
+    print("cData = \(packet.cData)") // 305419896
+} else {
+    print("数据不足或格式错误")
+}
+```
+
+---
+
+- **📌 注意事项：**
+
+- 1.**字节序问题（Endian）**：
+	* 通常 BLE、网络协议中用的是小端（Little Endian），Swift 默认读取的是系统字节序，所以建议调用 `.littleEndian`。
+	* 若是大端（Big Endian）则使用 `.bigEndian`。
+
+- 2.**Data 长度校验**：
+	* 注意你要先校验 `Data.count` 是否足够再读取。
+
+---
+
+**✅ 可选：更通用的解包器函数**
+
+如果你有多个不同结构体，可以写一个通用读取函数：
+
+```swift
+extension Data {
+    func read<T>(from offset: inout Int) -> T {
+        let value = self.withUnsafeBytes {
+            $0.load(fromByteOffset: offset, as: T.self)
+        }
+        offset += MemoryLayout<T>.size
+        return value
+    }
+}
+```
+
+然后在结构体中这样用：
+
+```swift
+init?(from data: Data) {
+    var offset = 0
+    guard data.count >= 7 else { return nil }
+    self.aData = data.read(from: &offset)
+    self.bData = data.read(from: &offset).littleEndian
+    self.cData = data.read(from: &offset).littleEndian
+}
+```
+
 
 
 ***

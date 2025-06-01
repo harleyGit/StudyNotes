@@ -4,10 +4,18 @@
 	- [UnsafeMutableRawPointer和Data的关系](#UnsafeMutableRawPointer和Data的关系)
 - [**类型Data**](#类型Data)
 	- [不同字节数的数字拼接](#不同字节数的数字拼接)
-		- [传入的值为十进制数转成不同字节数值](#传入的值为十进制数转成不同字节数值)
-		- [将十进制64存储为4字节](#将十进制64存储为4字节)
-		- [固定范围字节转化成UInt类型](#固定范围字节转化成UInt类型)
+		- [多个字节拼接](#多个字节拼接)
+		- [`Data(repeating:count:)`用法详解](#`Data(repeating:count:)`用法详解)
+	- [传入的值为十进制数转成不同字节数值](#传入的值为十进制数转成不同字节数值)
+	- [将十进制64存储为4字节](#将十进制64存储为4字节)
+	- [固定范围字节转化成UInt类型](#固定范围字节转化成UInt类型)
+	- [SHA256字节签名](#SHA256字节签名)
+	- [byte以16进制打印](#byte以16进制打印)
 - [**类型UInt8**](#类型UInt8)
+	- [数组类型截取二进制data数据](#数组类型截取二进制data数据)
+	- [类型UInt64变量转化为UInt8如何做?](#类型UInt64变量转化为UInt8如何做?)
+		- [将4字节写入Data](#将4字节写入Data)
+		- [`withUnsafeBytes(of:)` 方法详解](#`withUnsafeBytes(of:)`方法详解)
 - [Data在Int、字符串、结构体、json、图片、音频文件转化](#Data在Int、字符串、结构体、json、图片、音频文件转化)
 	- [结构体进行封装字节数据并拼接](#结构体进行封装字节数据并拼接)
 - **资料**
@@ -522,6 +530,136 @@ print(packet.map { String(format: "%02X", $0) }.joined(separator: " "))
 | 用什么类型拼接？          | `Data` 是最方便的。你可以随意 append 任意长度数据片段      |
 | 字节序要注意什么？         | 通常使用小端（little endian），特别是 BLE 这类通信协议里   |
 
+<br/><br/>
+> <h3 id="多个字节拼接">多个字节拼接</h3>
+
+**比如实现如下字节拼接:**
+
+```swift
+newPacketData = [signatureLength] + signatureData + [randNumLength] + randNum
+```
+
+```swift
+let signatureLength: UInt8 = 32
+let randNumLength: UInt8 = 84  // 注意：类型应该是 UInt8，不是 Uint8
+
+let signatureData = Data(repeating: 0xAB, count: Int(signatureLength)) // 示例数据
+let randNum = Data(repeating: 0xCD, count: Int(randNumLength))         // 示例数据
+
+// 构建数据包
+let newPacketData = Data([signatureLength]) + signatureData + Data([randNumLength]) + randNum
+```
+
+---
+
+**🔍 分析说明：**
+
+| 部分                        | 内容           | 类型     |
+| ------------------------- | ------------ | ------ |
+| `Data([signatureLength])` | 将长度作为第一个字节写入 | `Data` |
+| `signatureData`           | 签名内容（32字节）   | `Data` |
+| `Data([randNumLength])`   | 再写入随机数的长度    | `Data` |
+| `randNum`                 | 随机数内容（84字节）  | `Data` |
+
+---
+
+**✅ 最终结果：**
+
+你得到的 `newPacketData` 会是这样的结构（总共 `1 + 32 + 1 + 84 = 118` 字节）：
+
+```swift
+[1字节 signatureLength] + [32字节 signatureData] + [1字节 randNumLength] + [84字节 randNum]
+
+
+// 检查拼接结果
+print("newPacketData count: \(newPacketData.count)")  // 应该是 118
+print("newPacketData (hex): \(newPacketData.map { String(format: "%02x", $0) }.joined())")
+```
+
+
+
+👉 **如何使用一个 `UInt8` 数值创建一个只包含一个字节的 `Data` ?**
+
+**✅ 举例说明：**
+
+```swift
+let randNumLength: UInt8 = 84
+let lengthData = Data([randNumLength])
+```
+
+这段代码的含义是：
+
+* `randNumLength` 是一个 `UInt8` 类型的值，值为 `84`
+* `[randNumLength]` 是一个数组，包含一个元素 `[84]`
+* `Data([randNumLength])` 把这个数组变成一个 **Data 对象**，也就是一个长度为 1 的字节序列
+
+---
+
+**🧾 内存表示（十六进制）：**
+
+```swift
+print(lengthData as NSData)  // <54>
+```
+
+其中 `<54>` 是十六进制的 84（即 0x54），表示这个 `Data` 对象中只有一个字节，值为 84。
+
+---
+
+**✅ 总结：**
+
+| 表达式                     | 含义                 | 类型           |
+| ----------------------- | ------------------ | ------------ |
+| `[randNumLength]`       | 创建一个 `UInt8` 数组    | `[UInt8]`    |
+| `Data([randNumLength])` | 用这个数组生成 1 字节的二进制数据 | `Data`，长度为 1 |
+
+
+<br/><br/>
+> <h3 id="`Data(repeating:count:)`用法详解">`Data(repeating:count:)`用法详解</h3>
+
+
+```swift
+Data(repeating: 0xAB, count: Int(signatureLength))
+```
+
+这行代码是在创建一个 **固定内容、固定长度的 Data（二进制数据）对象**，我们逐个拆开讲：
+
+---
+
+**🧱 拆解说明**
+
+| 部分                            | 含义                                                    |
+| ----------------------------- | ----------------------------------------------------- |
+| `0xAB`                        | 一个十六进制的字节值（即十进制的 171），用于填充                            |
+| `repeating: 0xAB`             | 表示要重复这个值来填充 Data                                      |
+| `count: Int(signatureLength)` | 指定重复多少次。这里 `signatureLength` 是 `UInt8`，需要转换成 `Int` 类型 |
+| `Data(...)`                   | 创建一个 Swift 的 `Data` 对象，用这些字节填充                        |
+
+---
+
+**✅ 举例**
+
+假设：
+
+```swift
+let signatureLength: UInt8 = 4
+```
+
+那么执行：
+
+```swift
+let signatureData = Data(repeating: 0xAB, count: Int(signatureLength))
+```
+
+就等价于创建了这样的二进制数据：
+
+```
+<ab ab ab ab>
+```
+
+也就是 4 个字节，每个字节都是十六进制的 AB（十进制 171）。
+
+
+
 
 <br/><br/>
 > <h3 id="传入的值为十进制数转成不同字节数值">传入的值为十进制数转成不同字节数值</h3>
@@ -787,6 +925,174 @@ packet.append(contentsOf: withUnsafeBytes(of: UInt32(64).littleEndian) { Array($
 	- withUnsafeBytes 获取的是 UInt32 的 4 字节内存视图
 
 
+
+***
+<br/><br/><br/>
+> <h2 id="SHA256字节签名"> SHA256字节签名</h2>
+
+使用 `HMAC-SHA256` 算法和指定的共享密钥 `sharedKeyStr` 对字符串进行签名。
+
+---
+
+**✅ 示例：Swift 中的 `String` 扩展（HMAC-SHA256 签名）**
+
+```swift
+import Foundation
+import CommonCrypto
+
+extension String {
+    /// 使用 HMAC-SHA256 加密字符串，返回十六进制字符串签名
+    func hmacSHA256(key sharedKeyStr: String) -> String? {
+        guard let keyData = sharedKeyStr.data(using: .utf8),
+              let messageData = self.data(using: .utf8) else {
+            return nil
+        }
+
+        var digest = Data(count: Int(CC_SHA256_DIGEST_LENGTH))
+
+        digest.withUnsafeMutableBytes { digestBytes in
+            keyData.withUnsafeBytes { keyBytes in
+                messageData.withUnsafeBytes { messageBytes in
+                    CCHmac(CCHmacAlgorithm(kCCHmacAlgSHA256),
+                           keyBytes.baseAddress, keyData.count,
+                           messageBytes.baseAddress, messageData.count,
+                           digestBytes.baseAddress)
+                }
+            }
+        }
+
+        // 返回 hex 格式的字符串
+        return digest.map { String(format: "%02hhx", $0) }.joined()
+    }
+}
+```
+
+---
+
+**✅ 用法示例：**
+
+```swift
+let message = "This is a message"
+let sharedKey = "my_secret_key"
+
+if let signature = message.hmacSHA256(key: sharedKey) {
+    print("签名结果：\(signature)")
+}
+```
+
+---
+
+**✅ 输出格式说明**
+
+这个方法返回的是 **十六进制字符串格式的签名**，可根据需要修改为 `Base64` 编码：
+
+```swift
+return digest.base64EncodedString()
+```
+
+***
+<br/><br/><br/>
+> <h2 id="字符串扩充到指定字节数,不够补0">字符串扩充到指定字节数,不够补0</h2>
+
+- 任意字符串字节长度（比如 16、18、20、32 等）不足对其进行：
+	* 选择补零（`0x00`）或截断；
+	* 输出十六进制字符串查看。
+
+---
+
+**✅ 封装方法：将字符串转换为固定长度的 Data（自动补 0）**
+
+```swift
+extension String {
+    /// 将字符串转为固定长度的 Data，不足补 0x00，超出则截断
+    /// - Parameter length: 目标字节数
+    /// - Returns: 固定长度的 Data
+    func toFixedLengthData(_ length: Int) -> Data {
+        var data = self.data(using: .utf8) ?? Data()
+        if data.count < length {
+            data.append(contentsOf: Array(repeating: 0x00, count: length - data.count))
+        } else if data.count > length {
+            data = data.prefix(length)
+        }
+        return data
+    }
+}
+
+extension Data {
+    /// 十六进制字符串打印（每字节空一格）
+    func hexString(spaced: Bool = true, uppercased: Bool = true) -> String {
+        let format = uppercased ? "%02X" : "%02x"
+        return self.map { String(format: format, $0) }.joined(separator: spaced ? " " : "")
+    }
+}
+```
+
+---
+
+**🧪 使用示例：**
+
+```swift
+let str = "123456"
+
+// 转成 16 字节 Data
+let data16 = str.toFixedLengthData(16)
+print("16字节: \(data16.hexString())")
+
+// 转成 18 字节 Data
+let data18 = str.toFixedLengthData(18)
+print("18字节: \(data18.hexString())")
+
+// 转成 32 字节 Data
+let data32 = str.toFixedLengthData(32)
+print("32字节: \(data32.hexString())")
+```
+
+---
+
+**🔎 示例输出：**
+
+```
+16字节: 31 32 33 34 35 36 00 00 00 00 00 00 00 00 00 00
+18字节: 31 32 33 34 35 36 00 00 00 00 00 00 00 00 00 00 00 00
+32字节: 31 32 33 34 35 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="byte以16进制打印">byte以16进制打印</h2>
+
+```swift
+extension Data {
+    func hexString(spaced: Bool = true, uppercased: Bool = true) -> String {
+        let format = uppercased ? "%02X" : "%02x"
+        return self.map { String(format: format, $0) }.joined(separator: spaced ? " " : "")
+    }
+}
+```
+
+- **📌 说明：**
+	* `map { String(format: "%02X", $0) }`: 把每个字节（`UInt8`）格式化为两位大写十六进制字符串；
+	* `joined(separator: " ")`: 用空格连接每个字符串；
+	* `%02X`: 表示十六进制，大写，不足两位补零, 用 `%02x` 输出小写结果。
+***
+
+**用法：**
+
+```swift
+let data: Data = Data([0x01, 0xAB, 0x34, 0xFF])
+
+print(data.hexString()) // 默认大写并加空格
+```
+
+🧾 输出结果：
+
+```
+01 AB 34 FF
+```
+
+
+
 <br/><br/><br/>
 
 ***
@@ -857,6 +1163,358 @@ print(byte) // 输出 255
 ```
 
 虽然你用 `0xFF` 写出来，但它就是一个 255 的 `UInt8` 值，内存里就是二进制 `11111111`。
+
+
+***
+<br/><br/><br/>
+> <h2 id="数组类型截取二进制data数据">数组类型截取二进制data数据</h2>
+
+通过 **「数组下标+范围」** 的方式提取 `Data` 字节字段，而不是位移（`<<`、`|`）操作。适合你后续维护、调试和查错。
+
+---
+
+ ✅ 假设数据为**一个 16 字节的 Data 包（小端格式）** 结构（示例）：
+
+| 字节范围   | 字段名       | 字节数 | 说明        |
+| ------ | --------- | --- | --------- |
+| 0..1   | version   | 2   | UInt16，小端 |
+| 2      | type      | 1   | UInt8     |
+| 3..6   | timestamp | 4   | UInt32，小端 |
+| 7..10  | deviceID  | 4   | UInt32，小端 |
+| 11..15 | reserved  | 5   | 保留/其他字段   |
+
+使用 `Data.subdata(in:)` 提取子字节段，然后用 `withUnsafeBytes {}` 加载为整数值。**不需要移位操作。**
+
+```swift
+import Foundation
+
+enum Endian {
+    case little
+    case big
+}
+
+struct MyParsedPacket {
+    let version: UInt16
+    let type: UInt8
+    let timestamp: UInt32
+    let deviceID: UInt32
+    let reserved: Data
+
+    init?(data: Data) {
+        guard data.count >= 6 else {
+            print("数据长度不足")
+            return nil
+        }
+
+        // version: bytes 0..2, 使用2个字节的UInt16表示
+        let versionData = data.subdata(in: 0..<2)
+        self.version = versionData.withUnsafeBytes { $0.load(as: UInt16.self) }
+
+        // type: byte 2
+        self.type = data[2]
+
+        // timestamp: bytes 3..7 使用4个字节的UInt32表示
+        let timestampData = data.subdata(in: 3..<7)
+        self.timestamp = timestampData.withUnsafeBytes { $0.load(as: UInt32.self) }
+
+        // deviceID: bytes 7..11
+        let deviceIDData = data.subdata(in: 7..<11)
+        self.deviceID = deviceIDData.withUnsafeBytes { $0.load(as: UInt32.self) }
+	  }
+
+    func printFields() {
+        print("Version: \(version)")
+        print("Type: \(type)")
+        print("Timestamp: \(timestamp)")
+        print("Device ID: \(deviceID)")
+    }
+}
+```
+
+---
+
+**✅ 调用**：
+
+```swift
+let packetData = Data([
+    0x01, 0x00,       // version = 1
+    0x02,             // type = 2
+    0x78, 0x56, 0x34, 0x12, // timestamp = 0x12345678
+    0xDE, 0xAD, 0xBE, 0xEF, // deviceID = 0xEFBEADDE
+    0x11, 0x22, 0x33, 0x44, 0x55 // reserved
+])
+
+if let parsed = MyParsedPacket(data: packetData) {
+    parsed.printFields()
+}
+```
+
+---
+
+**输出结果（十进制为主）：**
+
+```
+Version: 1
+Type: 2
+Timestamp: 305419896
+Device ID: 4022250974
+Reserved (Hex): 11 22 33 44 55
+```
+
+- **✅ 说明总结：**	
+	* 使用 `.subdata(in:)` 提取范围，避免了位运算逻辑。
+	* 用 `.withUnsafeBytes { $0.load(as:) }` 转换为整数（自动按小端）。
+	* 结构清晰，字段位置一目了然。
+	* Reserved 这种保留字段保留为原始 Data，你可以根据需要转为字符串、Hex、Base64 等。
+
+***
+
+&emsp; 若是想从一个 `Data` 对象中 **截取第 45 到 100 字节之间的数据**，在 Swift 中你可以直接使用 **`subdata(in:)`** 或 **`data[range]`** 来操作
+
+如直接用**数组切片（Swift 5+）**
+
+```swift
+let subData = data[45..<101]
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="private(set)访问控制+自定义方法">private(set)访问控制+自定义方法 </h2>
+
+在 Swift 中，如果你想实现一个属性：
+
+* ✅ **可以通过点语法读取（get）**；
+* ❌ **不能通过点语法写入（set）**；
+* ✅ **只能通过类内特定方法赋值**；
+
+你可以通过 **`private(set)` 访问控制 + 自定义方法** 来实现。
+
+---
+
+## ✅ 示例：属性只能通过方法赋值
+
+```swift
+class MyClass {
+    // 外部和本类都可以读取，但只有本类可以写入
+    private(set) var status: String = "initial"
+    
+    // 本类中提供专门的赋值方法
+    func updateStatus(to newValue: String) {
+        status = newValue
+    }
+}
+```
+
+---
+
+## ✅ 使用方式：
+
+```swift
+let obj = MyClass()
+
+// ✅ 外部可以读取
+print(obj.status)
+
+// ❌ 外部不能直接赋值，会报错
+// obj.status = "new value"  // ❌ Error
+
+// ✅ 通过方法修改
+obj.updateStatus(to: "updated")
+print(obj.status)
+```
+
+---
+
+## ✅ 限制更严格：只能本类内写入，连子类也不能赋值？
+
+将属性声明为 `private var`（而不是 `private(set)`），就只有当前类内可以访问和修改：
+
+```swift
+class MyClass {
+    private var status: String = "initial"
+
+    var currentStatus: String {
+        return status // 公开只读接口
+    }
+
+    func updateStatus(to newValue: String) {
+        status = newValue
+    }
+}
+```
+
+---
+
+需要我补充这个设计模式在更复杂对象或枚举状态下的用法吗？例如状态机、只读配置、网络连接状态等。
+
+
+***
+<br/><br/><br/>
+> <h2 id="类型UInt64变量转化为UInt8如何做?">类型UInt64变量转化为UInt8如何做?</h2>
+
+```swift
+enum RegisterCode: UInt64 {
+    case start         = 0x10
+    case success       = 0x11
+    case failed        = 0x12
+    case verifySuccess = 0x13
+    case verifyFail    = 0x14
+}
+
+
+let result: RegisterCode = .success
+print(result.rawValue) // 输出 0x11
+```
+
+***
+
+Uint64转换成UInt8字节的,会报错,如下:
+
+```swift
+// 将result转换为一个字节,如下:
+let status = RegisterCode.start 
+let value = status.rawValue  // 是 UInt64 类型
+let msgData = Data([RegisterCode.success.rawValue])   // 期望的是 [UInt8]
+// 报错: Cannot convert value of type 'UInt64' to expected element type 'UInt8
+```
+
+
+**解决方法：显式类型转换**
+你需要将 UInt64 转换为 UInt8，前提是值不能超过 UInt8 的范围（0~255）：
+
+```swift
+let byte: UInt8 = UInt8(status.rawValue & 0xFF) // 只取低 8 位
+let msgData = Data([byte])
+```
+
+或者更直接写成：
+
+```swift
+let msgData = Data([UInt8(status.rawValue & 0xFF)])
+```
+
+<br/>
+
+但是要注意的是,上述转化不太准确因为你要确定`status.rawValue` 的值在 `0...255` 之间，这样做是安全的。
+
+如果你希望将整个 UInt64（8 字节）编码进 Data，你应该用：
+
+```swift
+var value = status.rawValue
+let msgData = withUnsafeBytes(of: &value) { Data($0) }
+```
+这会生成一个包含完整 8 字节数据的 Data。
+
+<br/><br/>
+> <h3 id="将4字节写入Data">将4字节写入Data</h3>
+
+如果你要将一个 UInt32 写入 Data：
+
+```swift
+var num: UInt32 = 0x12345678
+let data = withUnsafeBytes(of: &num) { Data($0) }
+// data.count == 4
+```
+⚠️ 注意这个是 小端字节序，如果需要固定字节序（比如大端），可以用：
+
+```swift
+let bigEndianValue = num.bigEndian
+let data = withUnsafeBytes(of: bigEndianValue) { Data($0) }
+```
+
+<br/><br/>
+> <h3 id="`withUnsafeBytes(of:)`方法详解">`withUnsafeBytes(of:)` 方法详解</h3>
+
+- **这个方法做什么的？**
+
+**`withUnsafeBytes(of:)` 是 Swift 提供的一种把任意值的内存表示转换为 `UnsafeRawBufferPointer` 的方法。**
+
+- **通常用于：**
+	* 将整数、结构体等 **转成 `Data`**；
+	* 用于进行 **低层数据访问（比如蓝牙/网络包）**；
+	* 避免自己手动 byte-by-byte 拼数据。
+
+---
+
+- **✅ 基本语法：**
+
+```swift
+var value: SomeType = ...
+let data = withUnsafeBytes(of: &value) { Data($0) }
+
+// 完整写法
+let data = withUnsafeBytes(of: &type) { rawBuffer in
+    return Data(rawBuffer)
+}
+```
+-  “把变量 `value` 占用的内存区域原封不动复制为 `Data` 类型，适合用于序列化或底层通信”。
+	* `&value`：传的是变量地址（必须是 `var`）。
+	* `$0`：是 `UnsafeRawBufferPointer`，可以像 byte 数组一样访问。
+	* `Data($0)`：初始化 `Data`，把这些原始字节收集成 Swift 的 `Data` 对象。
+
+---
+
+**✅ 举个例子：将一个 `UInt32` 写入 `Data`**
+
+```swift
+var number: UInt32 = 0x12345678
+let data = withUnsafeBytes(of: &number) { Data($0) }
+
+print(data as NSData) // 输出: <78563412> （小端序）
+```
+
+👉 输出的 `Data` 为：
+
+```
+0x78 0x56 0x34 0x12
+```
+
+这说明 Swift 默认用 **小端字节序（little-endian）** 存储整数。
+
+---
+
+**✅ 如果想用大端字节序：**
+
+```swift
+var number = UInt32(0x12345678).bigEndian
+let data = withUnsafeBytes(of: &number) { Data($0) }
+
+print(data as NSData) // 输出: <12345678>
+```
+
+---
+
+**✅ 常见用途**
+
+多个字段拼接成 `Data`
+
+```swift
+var type: UInt8 = 0x01
+var length: UInt16 = 0x0020
+var checksum: UInt8 = 0xFF
+
+var data = Data()
+data.append(contentsOf: withUnsafeBytes(of: &type) { Data($0) })
+data.append(contentsOf: withUnsafeBytes(of: &length) { Data($0) })
+data.append(contentsOf: withUnsafeBytes(of: &checksum) { Data($0) })
+```
+
+> 最终 `data` 就是一个按字段顺序拼好的二进制流。
+
+---
+
+**⚠️ 注意事项**
+
+| 注意点           | 说明                                         |
+| ------------- | ------------------------------------------ |
+| 必须是 `var`     | 因为需要拿变量的内存地址                               |
+| 不适用于 class 类型 | 只适合值类型，比如 `struct`、整数等                     |
+| 字节序           | 默认是小端，小心跨平台或通信协议需要                         |
+| 安全性           | `withUnsafeBytes` 是“安全地使用不安全内存”，但不等于你能越界访问 |
+
+
+
 
 
 <br/><br/><br/>
