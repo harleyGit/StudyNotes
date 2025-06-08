@@ -2292,7 +2292,7 @@ do {
 ```
 在上面的例子中，throwingFunction函数被标记为throws，并且抛出了一个自定义的错误CustomError.someError。在调用这个函数时，我们使用do-catch块来处理可能的错误。
 
-值得注意的是，throws关键字只能用于函数、方法和闭包的声明中。在函数内部，你使用throw语句来抛出实际的错误。
+值得注意的是，**`throws`是将函数标记为可抛出的方式来进行实现**.`throws`关键字只能用于**函数、方法和闭包的声明**中。在函数内部，你使用throw语句来抛出实际的错误。
 
 <br/>
 
@@ -2352,11 +2352,66 @@ Error: Division by zero is not allowed.
 - try? 不处理异常,返回一个可选值类型,出现异常返回nil
 - try! 不让异常继续传播,一旦出现异常程序停止,类似NSAssert()
 
+```swift
+public static func practiceException01() {
+    print("<<<<<<<<<< 异常捕获前")
+    do {
+        let newTitle = try? self.practiceException01_00()
+        if let netTitle = newTitle {
+            print("🍎 00: \(netTitle)")
+        }
+        
+        
+        let finalTitle = try self.practiceException01_01()
+        print("🍎 01: \(finalTitle)")
+        
+        print("🍎 02: 师兄啊师兄- 菩提珠饰!!!!")
+    }catch {
+        print("❌ 捕获到异常错误:\(error.localizedDescription)")
+    }
+    print("<<<<<<<<<< 异常捕获后")
+    print("🌵 异常下继续执行")
+}
+// throws将函数标记为可抛出的方式来进行实现
+public static func practiceException01_01() throws -> String {
+    let isActive: Bool = true
+    
+    if isActive {
+        return "师兄啊师兄- 太白金星!!!!"
+    } else {
+        throw URLError(.badServerResponse)
+    }
+}
+
+public static func practiceException01_00() throws -> String {
+    let isActive: Bool = false
+    
+    if isActive {
+        return "师兄啊师兄- 云霄!!!!"
+    } else {
+        throw URLError(.appTransportSecurityRequiresSecureConnection)
+    }
+}
+```
+
+***
+使用:
+
+```sh
+<<<<<<<<<< 异常捕获前
+❌ 捕获到异常错误:The operation couldn’t be completed. (NSURLErrorDomain error -1011.)
+<<<<<<<<<< 异常捕获后
+🌵 异常下继续执行
+```
+
+- **结合代码和运行结果看到:**
+	- 可以看到执行捕获异常`do{} catch{}`代码块后,代码会继续执行;
+	- 在`do{}`代码块内, 即使我们使用`try?`捕获到异常后,因为`try?`会使结果为nil,所以代码可以继续执行;
+	- 在捕获到异常后,`do{}`内的代码不会再执行了.
 
 
 <br/><br/>
-
->## <h2 id='try?的使用'>**try? 的使用**</h2>
+> <h2 id='try?的使用'>**try? 的使用**</h2>
 
 **`try?`**, 如果不想处理异常那么可以用这个关键字,使用这个关键字返回一个可选值类型,如果有异常出现,返回nil.如果没有异常,则返回可选值
 
@@ -2374,7 +2429,6 @@ func testFunc(str: String) throws -> String  {
 
 let str = try? testFunc(str: "three")
 print(str)
-
 ```
 打印：
 

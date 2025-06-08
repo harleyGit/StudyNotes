@@ -9,7 +9,8 @@
 	- [描述蓝牙UUID的服务特征类CBUUID](#描述蓝牙UUID的服务特征类CBUUID)
 - [**连接成功的蓝牙外围设备-Peripheral**](#连接成功的蓝牙外围设备-Peripheral)
 	- [代理方法CBPeripheralDelegate](#代理方法CBPeripheralDelegate)
-- [**连接蓝颜外设**](#连接蓝颜外设)
+	- [启动连接蓝牙外设](#启动连接蓝牙外设)
+- [**连接蓝牙外设**](#连接蓝牙外设)
 	- [连接温度计设备](#连接温度计设备)
 	- [向蓝牙外设发送数据](#向蓝牙外设发送数据)
 	- [接收蓝牙外设发送数据](#接收蓝牙外设发送数据)
@@ -836,13 +837,164 @@ extension Data {
 * `CBPeripheralDelegate` 和 `CBCentralManagerDelegate` 要设置好代理，不然不会触发回调。
 
 
+
+***
+<br/><br/><br/>
+> <h2 id="启动连接蓝牙外设">启动连接蓝牙外设</h2>
+
+```swift
+func retrievePeripherals(withIdentifiers identifiers: [UUID]) -> [CBPeripheral]
+```
+
+**上述方法**是 CoreBluetooth 框架中 `CBCentralManager` 的一个方法，用于：
+
+> 🔍 **根据设备的 UUID 获取之前连接过的蓝牙外设对象（CBPeripheral）**。
+
+---
+
+- **🧠 使用场景**
+	* **不再扫描周围设备**；
+	* **直接恢复并获取你之前连接过的目标蓝牙设备**；
+	* 适用于“已知设备”，如你在 App 中保存了该设备的 `UUID`；
+	* 可以配合后台重连、断线重连、App 重启恢复连接等场景。
+
+---
+
+**📦 示例用法（Swift）**
+
+```swift
+
+**✅ 搭配使用建议**
+
+你可以在连接成功后保存设备 UUID：
+
+```swift
+let uuidString = peripheral.identifier.uuidString
+UserDefaults.standard.set(uuidString, forKey: "LastConnectedPeripheral")
+```
+
+下次启动时用：
+
+```swift
+if let uuidString = UserDefaults.standard.string(forKey: "LastConnectedPeripheral"),
+   let uuid = UUID(uuidString: uuidString) {
+    let peripherals = centralManager.retrievePeripherals(withIdentifiers: [uuid])
+   
+    // 连接逻辑
+    if let targetPeripheral = peripherals.first {
+	    targetPeripheral.delegate = self
+	    centralManager.connect(targetPeripheral, options: nil)
+    }
+}
+```
+
+---
+
+**📌 注意事项**
+
+| 点        | 说明                                             |
+| -------- | ---------------------------------------------- |
+| UUID 来源  | 这个 UUID 必须是 iOS 系统曾经为你连接过的设备生成的（不能是设备的 MAC 地址） |
+| 跨设备      | 不支持跨 iPhone 使用（UUID 是 iOS 为当前设备生成的）            |
+| 扫描 vs 恢复 | 它不会主动扫描，只是从系统的“缓存”中恢复已知设备                      |
+| 常用于      | App 重启后自动重连、后台唤醒自动重连等场景                        |
+
+---
+
+**🚫 不能做的事**
+
+| 想法             | 是否可行                                                |
+| -------------- | --------------------------------------------------- |
+| 用设备 MAC 地址恢复连接 | ❌ iOS 不支持公开 MAC 地址,但是你的蓝牙设备你可以加上MAC地址                                  |
+| 从未连接过的设备恢复     | ❌ 系统无缓存，无法返回                                        |
+| 获取所有已连接设备      | ✅ 请使用 `retrieveConnectedPeripherals(withServices:)` |
+
+
+***
+<br/>
+
+在 Objective-C 中，可以使用 `retrievePeripheralsWithIdentifiers:` 方法来恢复连接之前已知 UUID 的蓝牙设备。
+
+**✅ 示例：Objective-C 恢复已知设备并连接**
+
+```objc
+#import <CoreBluetooth/CoreBluetooth.h>
+
+- (void)restorePeripheralWithUUID {
+    // 创建一个已知的 NSUUID（假设你之前保存过）
+    NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:@"E2C56DB5-DFFB-48D2-B060-D0F5A71096E0"];
+
+    // 调用 CBCentralManager 的 retrieve 方法
+    NSArray<CBPeripheral *> *peripherals = [self.centralManager retrievePeripheralsWithIdentifiers:@[uuid]];
+
+    if (peripherals.count > 0) {
+        CBPeripheral *targetPeripheral = peripherals.firstObject;
+        targetPeripheral.delegate = self;
+        [self.centralManager connectPeripheral:targetPeripheral options:nil];
+        NSLog(@"🔗 尝试连接已知设备 %@", targetPeripheral.name);
+    } else {
+        NSLog(@"⚠️ 未找到已知 UUID 对应的设备");
+    }
+}
+```
+
+---
+
+**NSUserDefaults保存 UUID（首次连接成功时）**
+
+你可以在连接成功的回调中保存 `peripheral.identifier`：
+
+```objc
+- (void)centralManager:(CBCentralManager *)central
+  didConnectPeripheral:(CBPeripheral *)peripheral {
+    NSLog(@"✅ 已连接设备：%@", peripheral.name);
+
+    NSString *uuidString = peripheral.identifier.UUIDString;
+    [[NSUserDefaults standardUserDefaults] setObject:uuidString forKey:@"SavedPeripheralUUID"];
+}
+```
+
+---
+
+**✅ 启动时恢复连接**
+
+在初始化 `CBCentralManager` 并状态变为 `PoweredOn` 时，执行：
+
+```objc
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central {
+    if (central.state == CBManagerStatePoweredOn) {
+        NSString *uuidString = [[NSUserDefaults standardUserDefaults] stringForKey:@"SavedPeripheralUUID"];
+        if (uuidString) {
+            NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:uuidString];
+            NSArray<CBPeripheral *> *peripherals = [central retrievePeripheralsWithIdentifiers:@[uuid]];
+            if (peripherals.count > 0) {
+                CBPeripheral *peripheral = peripherals.firstObject;
+                peripheral.delegate = self;
+                [central connectPeripheral:peripheral options:nil];
+            }
+        }
+    }
+}
+```
+
+---
+
+**📌 小结**
+
+| 步骤        | 方法                                                     |
+| --------- | ------------------------------------------------------ |
+| 保存设备 UUID | `peripheral.identifier.UUIDString` 存入 `NSUserDefaults` |
+| 恢复设备对象    | `retrievePeripheralsWithIdentifiers:`                  |
+| 连接设备      | `connectPeripheral:options:`                           |
+
+
 <br/><br/><br/>
 
 ***
 
 <br/>
 
-> <h1 id="连接蓝颜外设">连接蓝颜外设</h1>
+> <h1 id="连接蓝牙外设">连接蓝🦷外设</h1>
 
 **🔧 方法定义**
 
@@ -956,7 +1108,6 @@ didFailToConnectPeripheral:(CBPeripheral *)peripheral
 
 ***
 <br/><br/><br/>
-
 > <h2 id="连接温度计设备">连接温度计设备</h2>
 
 假设你的设备有一个温度服务 `UUID: FFE0`，服务下的特征是温度值 `UUID: FFE1`：
