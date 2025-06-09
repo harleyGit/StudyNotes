@@ -9,6 +9,10 @@
 - [**逃逸闭包转换为支持async/await的现代异步方法**](#逃逸闭包转换为支持async/await的现代异步方法)
 - [**线程安全类Actor**](#线程安全类Actor)
 	- [结构体值类型新理解](#结构体值类型新理解)
+	- [传统线程安全和actor隔离比较](#传统线程安全和actor隔离比较)
+- [**全局隔离机制@globalActor**](#全局隔离机制@globalActor)
+- [**‌ 核心安全协议Sendable**](#核心安全协议Sendable)
+	- [@unchecked作用和意义](#@unchecked作用和意义)
 
 
 
@@ -690,6 +694,20 @@ Actor 是 Swift 5.5（随着 Swift 并发引入）提供的一个 结构化并�
 
 **它为什么是安全的?**
 > 对 actor 内部状态的访问是 **串行的（serial）**，即任何时候只有一个执行体可以访问它的属性或方法。
+> actor 的内部状态是 **“隔离的”**, 只能通过 actor 的 `async` 方法间接访问，且编译器确保**不会并发同时读写内部属性**。
+
+***
+
+**📦 什么是“安全隔离”？**
+
+每个 actor 背后都有一个 **串行执行上下文**（可以理解成一个内部任务队列），它：
+
+* 所有对 actor 的调用，会通过 `await` 进入这个队列
+* 任务在队列中 **一个个串行执行**
+* 不存在同时多个任务修改状态的情况
+
+
+
 
 **✅ 特性：**
 
@@ -849,3 +867,565 @@ struct2 = CustomStruct(title: "Title2")
 ```
 
 
+***
+<br/><br/><br/>
+> <h2 id="传统线程安全和actor隔离比较">传统线程安全和actor隔离比较</h2>
+
+下面用到关键字**`nonisolated`**,它是用来做什么的呢?
+
+- nonisolated 是 Swift 并发中用来声明一个 不受 actor 隔离规则约束的成员。
+	- ❗默认情况下，actor 的方法和属性只能被 await 调用，因为编译器需要确保线程安全。
+
+<br/>
+
+- **使用** nonisolated **声明的函数或属性：**
+	- 不需要 await 或 Task 就能访问
+	- 不会访问 actor 的内部状态
+	- 可以从 actor 外部线程同步安全地访问
+	
+
+```swift
+// MARK: -- 隔离与传统线程安全比较
+fileprivate class HGPraiceMyDataManager {
+    static let instance = HGPraiceMyDataManager()
+    private init() {}
+    
+    var data: [String] = []
+    private let lock = DispatchQueue.init(label: "com.HG.HGPraceMulThread")
+    
+    func getRandomData(completionHandler: @escaping(_ title: String?) -> ()) {
+        lock.async {
+            self.data.append(UUID().uuidString)
+            print("🍎 当前传统线程打印: \(Thread.current)")
+            completionHandler(self.data.randomElement())
+        }
+    }
+}
+
+actor HGPraiceActorDataManager {
+    static let instance = HGPraiceActorDataManager()
+    private init() {}
+    
+    var data: [String] = []
+    
+    nonisolated let myRandomText = "但转眼一年过去，不仅国区的我们依然没有吃到这块苹果馅的大饼，已上线地区的反馈也难言乐观，传说中的「升级版 Siri 智能体」更是推进乏力"
+    
+    func getRandom() -> String? {  // ❗必须 await 调用
+        self.data.append(UUID().uuidString)
+        print("🍎 当前actor 安全打印: \(Thread.current)")
+        
+        return self.data.randomElement()
+    }
+    
+    nonisolated func getSavedData() -> String { // ✅ 可以同步调用, 不需要 await 使用
+        return "新的数据📊"
+    }
+}
+```
+
+***
+**调用:**
+
+```swift
+/// 传统线程安全保护 & 使用演员Actor 比较
+public static func practiceMulThread01() {
+    // 传统
+    let manager00 = HGPraiceMyDataManager.instance
+    DispatchQueue.global(qos: .background).async {
+        manager00.getRandomData(completionHandler: { title in
+            if let data = title {
+                DispatchQueue.main.async {
+                    print("🍎 传统打印值: \(data)")
+                }
+            }
+        })
+    }
+    
+    // 传统
+    let manager10 = HGPraiceActorDataManager.instance
+    Task {
+        if let data = await manager10.getRandom() { // 正常调用
+            await MainActor.run(body: {
+                print("🍎 actor打印值: \(data)")
+            })
+        }
+    }
+    // 不需要放在task内
+    let netTxt = manager10.myRandomText
+    let newStr = manager10.getSavedData() // 不需要 await
+    print("🍎 不需要放在task内 newTxt: \(netTxt), newStr: \(newStr)")
+    
+}
+```
+
+***
+
+**打印:**
+
+```sh
+🍎 不需要放在task内 newTxt: 但转眼一年过去，不仅国区的我们依然没有吃到这块苹果馅的大饼，已上线地区的反馈也难言乐观，传说中的「升级版 Siri 智能体」更是推进乏力, newStr: 新的数据📊
+🍎 当前actor 安全打印: <NSThread: 0x3028b9ac0>{number = 7, name = (null)}
+🍎 当前传统线程打印: <NSThread: 0x3028a02c0>{number = 8, name = (null)}
+🍎 actor打印值: 47F619C3-C70F-4162-8894-384586E8A771
+🍎 传统打印值: 741129F1-18D1-405A-85ED-5A21A326CEF3
+```
+
+***
+
+**❗为什么需要 `nonisolated`？, 它解决两个问题：**
+
+| 问题                 | `nonisolated` 的作用      |
+| ------------------ | ---------------------- |
+| ✅ 无需访问 actor 的内部状态 | 可直接从 actor 外调用         |
+| ✅ 提高性能             | 避免 async/await 的开销     |
+| ✅ 支持协议实现           | 使 actor 实现 `Sync` 协议成员 |
+
+***
+
+**✅ 使用场景**
+
+| 场景                                         | 适用理由            |
+| ------------------------------------------ | --------------- |
+| 打印静态日志、版本号等                                | 无需访问内部状态        |
+| 实现 `CustomStringConvertible.description`   | 需要同步访问          |
+| 实现某些 `Equatable`, `Hashable` 的 protocol 方法 | 防止这些函数被 async 化 |
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="全局隔离机制@globalActor">全局隔离机制@globalActor</h1>
+
+ **`@globalActor` 和 `@MainActor`** 是 Swift 并发模型中非常核心的“**全局隔离（Global Isolation）机制**”。
+
+它们的设计初衷是：
+
+> 🛡️ **在并发环境下，自动管理代码在哪个线程或上下文执行，从而避免数据竞争、UI 崩溃、线程错误等问题。**
+
+---
+
+**🧠 一、什么是 `@globalActor`？**
+
+**✅ 简单定义：**
+
+`@globalActor` 用于定义一个“**全局共享的 Actor 隔离上下文**”，你可以将某些代码（函数、属性等）标记为属于这个 Actor，Swift 就会自动把它们的执行安排到这个全局上下文上。
+
+换句话说，它让你控制：
+
+> ❗“这段代码必须在某个全局上下文下运行”
+
+---
+
+**🛠️ 示例：自定义 Global Actor**
+
+```swift
+import Foundation
+
+@globalActor
+struct FileActor {
+    static let shared = FileActorActor()
+}
+
+actor FileActorActor {
+    // 内部串行隔离
+}
+```
+
+使用：
+
+```swift
+@FileActor
+func writeToFile() {
+    // 自动在 FileActor 的隔离上下文下执行
+    print("writing file...")
+}
+```
+
+---
+
+**🟢 为什么要用 Global Actor？**
+
+| 目的         | 说明                                   |
+| ---------- | ------------------------------------ |
+| 🔒 控制并发上下文 | 保证一组相关任务都在同一线程或执行上下文                 |
+| ✅ 保证线程安全   | 自动串行调度，无需写锁                          |
+| 🔁 跨模块共享资源 | 比如所有的文件操作、日志操作、数据库操作都由同一个 actor 串行处理 |
+
+---
+
+**🟩 二、`@MainActor` 是最常用的全局 Actor**
+
+**✅ 什么是 `@MainActor`**
+
+`@MainActor` 是 Swift 内置的全局 Actor，表示：
+
+> **这个函数/变量必须在主线程上执行**（UI 线程）
+
+你可以理解成 Swift 并发中用于替代 `DispatchQueue.main.async` 的高级语法。
+
+---
+
+**📱 示例：UI 操作必须在主线程**
+
+```swift
+@MainActor
+func updateUILabel() {
+    label.text = "Updated!"
+}
+```
+
+或者：
+
+```swift
+@MainActor class ViewModel {
+    var name: String = "Hello"
+}
+```
+
+> 这样，所有 `ViewModel` 实例的属性访问都必须在主线程上进行。
+
+---
+
+**⏱️ 延伸：你也可以用 `@MainActor` 做跳线程**
+
+```swift
+Task {
+    let result = await fetchData()
+
+    await MainActor.run {
+        label.text = result.title // ✅ 安全地回到主线程
+    }
+}
+```
+
+---
+
+**🧱 三、为什么要有这些 Actor 隔离机制？**
+
+| 问题           | Actor 隔离解决方案             |
+| ------------ | ------------------------ |
+| UI 操作不能在子线程  | 用 `@MainActor` 保证        |
+| 数据库/文件写入不能并发 | 自定义 `@globalActor` 来串行处理 |
+| 跨模块资源访问冲突    | 同一个全局 Actor 统一调度         |
+
+---
+
+**✅ 总结对比**
+
+| 标注             | 功能          | 应用场景                |
+| -------------- | ----------- | ------------------- |
+| `@MainActor`   | 主线程执行       | UI 更新、UIKit/SwiftUI |
+| `@globalActor` | 自定义执行上下文    | 文件、数据库、日志等串行管理      |
+| `actor`        | 实例级线程安全     | 多个独立任务访问同一资源        |
+| `nonisolated`  | 取消 actor 隔离 | 同步访问、安全代码外露         |
+
+---
+
+ **🧩 替代方式？**
+
+可以，但更麻烦：
+
+| 用法             | 替代写法                                |
+| -------------- | ----------------------------------- |
+| `@MainActor`   | `DispatchQueue.main.async { ... }`  |
+| `@globalActor` | 使用 `DispatchQueue(label:)` + 手动控制访问 |
+
+
+---
+
+**🧪 Bonus 示例：混合使用**
+
+```swift
+@MainActor
+class ViewModel {
+    @Published var name: String = ""
+
+    func fetchName() async {
+        let name = await NetworkManager.shared.fetchName()
+        self.name = name // ✅ 自动在主线程更新
+    }
+}
+```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="核心安全协议Sendable">核心安全协议Sendable</h1>
+
+你问得非常好！`Sendable` 是 Swift 并发编程中一个**核心安全协议**，目的是：
+
+> 🛡️ **确保跨线程传递的数据是安全的，不会造成数据竞争或崩溃。**
+
+---
+
+## ✅ 一、什么是 `Sendable`？
+
+`Sendable` 是 Swift 并发引入的一个协议，表示：
+
+> "这个类型的值可以**在线程之间安全传递**，因为它是不可变的，或者是线程安全的。"
+
+```swift
+protocol Sendable { }
+```
+
+> 编译器通过它检查：**你传给异步任务的数据是不是安全的。**
+
+---
+
+## 🔥 举个生活中的例子理解
+
+你在多线程中传递一个值，比如传给 `Task`：
+
+```swift
+let name = "Alice"
+Task {
+    print(name) // ⛔ name 是 String，没问题
+}
+```
+
+这没问题，因为 `String` 是值类型、不可变，**可以安全发送**，它实现了 `Sendable`。
+
+但如果你传的是一个自定义类，那就得小心了：
+
+```swift
+class User {
+    var name = "Alice"
+}
+```
+
+```swift
+let user = User()
+Task {
+    print(user.name) // ⚠️ 不安全，可能多个线程访问 user.name
+}
+```
+
+> Swift 会 **警告或报错**，提醒你这个 `User` 类型不符合 `Sendable`，这样传入 Task 是不安全的！
+
+---
+
+## 🛠️ 二、如何让自己的类型符合 `Sendable`？
+
+### ✅ 方法1：结构体（值类型）+ `@unchecked Sendable`（或默认自动）
+
+```swift
+struct SafeUser: Sendable {
+    let name: String
+}
+```
+
+这个就没问题，因为是不可变的 `struct`，所有成员都自动是 `Sendable`。
+
+---
+
+### ✅ 方法2：类（引用类型）手动声明
+
+```swift
+final class SafeUser: @unchecked Sendable {
+    let name: String
+
+    init(name: String) {
+        self.name = name
+    }
+}
+```
+
+这里用了 `@unchecked Sendable` 表示：
+
+> 我承诺我不会在线程间并发读写这个对象，但编译器无法检查，需要我自己保证。
+
+---
+
+## 🧪 示例：使用不安全类型会报错
+
+```swift
+class NotSafe {
+    var counter = 0
+}
+
+func doSomething() {
+    let obj = NotSafe()
+    
+    Task {
+        obj.counter += 1 // ❗⚠️ 警告：'NotSafe' does not conform to 'Sendable'
+    }
+}
+```
+
+解决方法之一：
+
+```swift
+final class SafeClass: @unchecked Sendable {
+    let counter: Int
+    init(counter: Int) { self.counter = counter }
+}
+```
+
+---
+
+## 🎯 三、什么时候需要关心 `Sendable`？
+
+| 场景                      | 是否要考虑 `Sendable`       |
+| ----------------------- | ---------------------- |
+| `Task { ... }` 里使用外部变量  | ✅ 是的，编译器检查它是否 Sendable |
+| `actor` 之间传值            | ✅ 要 Sendable           |
+| 多线程中传值（如 async closure） | ✅ 一定要是 Sendable        |
+| 普通同步函数                  | ❌ 不需要 Sendable         |
+
+---
+
+## ✅ 总结记忆口诀
+
+> **"Sendable 是并发世界的安全通行证"**
+> 只要你**跨线程传递数据**，就要保证它是 `Sendable`！
+
+| 类型                               | 默认 Sendable 吗？                   |
+| -------------------------------- | -------------------------------- |
+| `String`, `Int`, `Array`, `Bool` | ✅ 是                              |
+| 自定义 `struct` (只包含 Sendable 成员)   | ✅ 是                              |
+| 自定义 `class`                      | ❌ 不是，需要你声明 `@unchecked Sendable` |
+| `actor`                          | ✅ 天然线程安全，不用标记 Sendable（除非被传出去）   |
+
+---
+
+## 🙋 小白建议怎么做？
+
+* 自定义类型推荐用 `struct` + `let` 属性 → 自动是 `Sendable`
+* 遇到编译器警告说 "not Sendable"，先检查是不是在多线程中用了引用类型（class）
+* 不要急着加 `@unchecked Sendable`，加了你就要自己负责线程安全了
+
+---
+
+需要我针对你的实际代码判断哪些类型要变成 `Sendable`、怎么改，我可以帮你分析优化！
+
+***
+<br/><br/><br/>
+> <h2 id="@unchecked作用和意义">@unchecked作用和意义</h2>
+很好，我们来详细解释你提到的 Swift 中的 `@unchecked` 关键字，特别是在 `@unchecked Sendable` 这种用法中的作用和意义。
+
+---
+
+## 🧠 `@unchecked` 是什么？
+
+### ✅ 简单定义：
+
+`@unchecked` 是 Swift 用于**声明你承诺某个类型符合某协议，但不让编译器强制检查的关键字**。
+
+常见搭配是：
+
+```swift
+final class MyClass: @unchecked Sendable {
+    ...
+}
+```
+
+---
+
+## 🔒 为什么有这个关键字？
+
+在 Swift 并发中，`Sendable` 协议要求：
+
+> 类型的值必须是可以安全地在不同线程之间传递的。
+
+**但是：**
+
+* 对于 `struct` 和 `enum`，编译器可以自动检查是否所有成员都是 `Sendable`；
+* 对于 `class`（引用类型），Swift 没法判断你是否正确管理了并发访问（线程安全），所以默认不符合 `Sendable`。
+
+如果你知道你自己的类不会被多个线程同时访问（比如只读、外部加锁等），你就可以自己承诺：
+
+```swift
+final class MySafeClass: @unchecked Sendable {
+    let value: String
+
+    init(value: String) {
+        self.value = value
+    }
+}
+```
+
+这就告诉编译器：
+
+> ❗**我自己负责线程安全，请不要报错，我知道我在做什么。**
+
+---
+
+## ⚠️ 为什么要小心使用？
+
+`@unchecked` 的意思就是：
+
+> 我**跳过编译器的检查**，你别管了。
+
+这很强大，但也有风险：
+
+| 优点                             | 缺点                    |
+| ------------------------------ | --------------------- |
+| 解锁一些不能默认 Sendable 的场景（如 class） | 有可能会引入线程安全问题（数据竞争、崩溃） |
+| 更灵活                            | 编译器无法保护你，完全靠你自己保证安全   |
+
+---
+
+## ✅ 使用场景总结
+
+| 场景                         | 是否需要 `@unchecked`                  |
+| -------------------------- | ---------------------------------- |
+| `struct`、只包含 `Sendable` 成员 | ❌ 不需要，自动符合                         |
+| `class`，你**能自己保证线程安全**     | ✅ 可以使用 `@unchecked Sendable`       |
+| `class`，包含可变数据，多个线程访问      | ❌ 不要用 `@unchecked`，建议改为 `actor` 或锁 |
+
+---
+
+## 🧪 示例：何时使用与不使用
+
+### ✅ 使用场景：只读不可变类
+
+```swift
+final class ReadOnlyUser: @unchecked Sendable {
+    let name: String
+
+    init(name: String) {
+        self.name = name
+    }
+}
+```
+
+这里没问题，因为你从不修改 `name`，线程之间传递时也不会有数据竞争。
+
+---
+
+### ❌ 不建议场景：有可变属性
+
+```swift
+final class Counter: @unchecked Sendable {
+    var count = 0  // ⚠️ 非线程安全
+}
+```
+
+这种写法是危险的，你应该改成 `actor` 或加锁机制。
+
+---
+
+## 🚫 不推荐乱用 `@unchecked`
+
+Swift 用它不是鼓励你忽略安全，而是说：
+
+> 在某些高级用法下（如库开发者、系统底层逻辑），你可以用它优化性能、打破限制，但你要完全负责线程安全。
+
+---
+
+## ✅ 最佳实践
+
+* 如果你不确定要不要 `@unchecked`，就不要用
+* 先尽量让类型自动符合 `Sendable`
+* 若是 `class` 类型，考虑换成 `actor`、`struct`、或其他线程安全方式
+* 用 `@unchecked Sendable` 时一定加注释解释**为什么它是安全的**
+
+---
+
+需要我帮你看你自己的类是否应该加 `@unchecked`，或者怎么重写成不需要加这个关键字的方式，我可以手把手给你改。
