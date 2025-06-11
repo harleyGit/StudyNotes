@@ -1158,15 +1158,13 @@ class ViewModel {
 
 > <h1 id="核心安全协议Sendable">核心安全协议Sendable</h1>
 
-你问得非常好！`Sendable` 是 Swift 并发编程中一个**核心安全协议**，目的是：
+`Sendable` 是 Swift 并发编程中一个**核心安全协议**，目的是：
 
 > 🛡️ **确保跨线程传递的数据是安全的，不会造成数据竞争或崩溃。**
 
 ---
 
-## ✅ 一、什么是 `Sendable`？
-
-`Sendable` 是 Swift 并发引入的一个协议，表示：
+**✅ 一、`Sendable`是 Swift 并发引入的一个协议**
 
 > "这个类型的值可以**在线程之间安全传递**，因为它是不可变的，或者是线程安全的。"
 
@@ -1178,7 +1176,7 @@ protocol Sendable { }
 
 ---
 
-## 🔥 举个生活中的例子理解
+**🔥 举个生活中的例子理解**
 
 你在多线程中传递一个值，比如传给 `Task`：
 
@@ -1191,7 +1189,7 @@ Task {
 
 这没问题，因为 `String` 是值类型、不可变，**可以安全发送**，它实现了 `Sendable`。
 
-但如果你传的是一个自定义类，那就得小心了：
+如果你传的是一个自定义类，那就得小心了：
 
 ```swift
 class User {
@@ -1210,9 +1208,9 @@ Task {
 
 ---
 
-## 🛠️ 二、如何让自己的类型符合 `Sendable`？
+**🛠️ 二、如何让自己的类型符合 `Sendable`？**
 
-### ✅ 方法1：结构体（值类型）+ `@unchecked Sendable`（或默认自动）
+**✅ 方法1：结构体（值类型）+ `@unchecked Sendable`（或默认自动）**
 
 ```swift
 struct SafeUser: Sendable {
@@ -1224,7 +1222,7 @@ struct SafeUser: Sendable {
 
 ---
 
-### ✅ 方法2：类（引用类型）手动声明
+**✅ 方法2：类（引用类型）手动声明**
 
 ```swift
 final class SafeUser: @unchecked Sendable {
@@ -1242,7 +1240,7 @@ final class SafeUser: @unchecked Sendable {
 
 ---
 
-## 🧪 示例：使用不安全类型会报错
+**🧪 示例：使用不安全类型会报错**
 
 ```swift
 class NotSafe {
@@ -1278,44 +1276,16 @@ final class SafeClass: @unchecked Sendable {
 | 多线程中传值（如 async closure） | ✅ 一定要是 Sendable        |
 | 普通同步函数                  | ❌ 不需要 Sendable         |
 
----
 
-## ✅ 总结记忆口诀
 
-> **"Sendable 是并发世界的安全通行证"**
-> 只要你**跨线程传递数据**，就要保证它是 `Sendable`！
-
-| 类型                               | 默认 Sendable 吗？                   |
-| -------------------------------- | -------------------------------- |
-| `String`, `Int`, `Array`, `Bool` | ✅ 是                              |
-| 自定义 `struct` (只包含 Sendable 成员)   | ✅ 是                              |
-| 自定义 `class`                      | ❌ 不是，需要你声明 `@unchecked Sendable` |
-| `actor`                          | ✅ 天然线程安全，不用标记 Sendable（除非被传出去）   |
-
----
-
-## 🙋 小白建议怎么做？
-
-* 自定义类型推荐用 `struct` + `let` 属性 → 自动是 `Sendable`
-* 遇到编译器警告说 "not Sendable"，先检查是不是在多线程中用了引用类型（class）
-* 不要急着加 `@unchecked Sendable`，加了你就要自己负责线程安全了
-
----
-
-需要我针对你的实际代码判断哪些类型要变成 `Sendable`、怎么改，我可以帮你分析优化！
 
 ***
 <br/><br/><br/>
 > <h2 id="@unchecked作用和意义">@unchecked作用和意义</h2>
-很好，我们来详细解释你提到的 Swift 中的 `@unchecked` 关键字，特别是在 `@unchecked Sendable` 这种用法中的作用和意义。
 
----
+**🧠 `@unchecked` 是什么？**
 
-## 🧠 `@unchecked` 是什么？
-
-### ✅ 简单定义：
-
-`@unchecked` 是 Swift 用于**声明你承诺某个类型符合某协议，但不让编译器强制检查的关键字**。
+&emsp; `@unchecked` 是 Swift 用于**声明你承诺某个类型符合某协议，但不让编译器强制检查的关键字**。
 
 常见搭配是：
 
@@ -1327,9 +1297,8 @@ final class MyClass: @unchecked Sendable {
 
 ---
 
-## 🔒 为什么有这个关键字？
-
-在 Swift 并发中，`Sendable` 协议要求：
+- **🔒 为什么有这个关键字？**
+	- 在 Swift 并发中，`Sendable` 协议要求：
 
 > 类型的值必须是可以安全地在不同线程之间传递的。
 
@@ -1338,7 +1307,7 @@ final class MyClass: @unchecked Sendable {
 * 对于 `struct` 和 `enum`，编译器可以自动检查是否所有成员都是 `Sendable`；
 * 对于 `class`（引用类型），Swift 没法判断你是否正确管理了并发访问（线程安全），所以默认不符合 `Sendable`。
 
-如果你知道你自己的类不会被多个线程同时访问（比如只读、外部加锁等），你就可以自己承诺：
+如果你知道你自己的类不会被多个线程同时访问（比如只读、外部加锁等），你就**可以自己承诺**：
 
 ```swift
 final class MySafeClass: @unchecked Sendable {
@@ -1356,7 +1325,7 @@ final class MySafeClass: @unchecked Sendable {
 
 ---
 
-## ⚠️ 为什么要小心使用？
+**⚠️ 为什么要小心使用？**
 
 `@unchecked` 的意思就是：
 
@@ -1371,7 +1340,7 @@ final class MySafeClass: @unchecked Sendable {
 
 ---
 
-## ✅ 使用场景总结
+**✅ 使用场景总结**
 
 | 场景                         | 是否需要 `@unchecked`                  |
 | -------------------------- | ---------------------------------- |
@@ -1381,9 +1350,7 @@ final class MySafeClass: @unchecked Sendable {
 
 ---
 
-## 🧪 示例：何时使用与不使用
-
-### ✅ 使用场景：只读不可变类
+**🧪 ✅ 使用场景：只读不可变类**
 
 ```swift
 final class ReadOnlyUser: @unchecked Sendable {
@@ -1399,7 +1366,7 @@ final class ReadOnlyUser: @unchecked Sendable {
 
 ---
 
-### ❌ 不建议场景：有可变属性
+**❌ 不建议场景：有可变属性**
 
 ```swift
 final class Counter: @unchecked Sendable {
@@ -1409,23 +1376,3 @@ final class Counter: @unchecked Sendable {
 
 这种写法是危险的，你应该改成 `actor` 或加锁机制。
 
----
-
-## 🚫 不推荐乱用 `@unchecked`
-
-Swift 用它不是鼓励你忽略安全，而是说：
-
-> 在某些高级用法下（如库开发者、系统底层逻辑），你可以用它优化性能、打破限制，但你要完全负责线程安全。
-
----
-
-## ✅ 最佳实践
-
-* 如果你不确定要不要 `@unchecked`，就不要用
-* 先尽量让类型自动符合 `Sendable`
-* 若是 `class` 类型，考虑换成 `actor`、`struct`、或其他线程安全方式
-* 用 `@unchecked Sendable` 时一定加注释解释**为什么它是安全的**
-
----
-
-需要我帮你看你自己的类是否应该加 `@unchecked`，或者怎么重写成不需要加这个关键字的方式，我可以手把手给你改。
