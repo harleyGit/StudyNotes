@@ -1,12 +1,15 @@
 
-- **构造简单App**
+- [**构造简单App**](#构造简单App)
+- [属性包装器@StateObject](#属性包装器@StateObject)
+- [预览视图PreviewProvider](#预览视图PreviewProvider)
 
-<br/>
+
+<br/><br/><br/><br/>
 
 ***
 <br/>
 
-># 构造简单App
+> <h1 id="构造简单App">构造简单App</h1> 
 
 - 默认情况下， SwiftUI view 文件声明了两个结构体。第一个结构体遵循 View 协议，描述 view 的内容和布局。第二个结构体声明该 view 的预览。
 
@@ -151,6 +154,50 @@ struct DetailView_Previews: PreviewProvider {
 <br/>
 
 
+***
+<br/><br/><br/>
+> <h2 id="属性包装器@StateObject">属性包装器@StateObject</h2>
+
+
+- **✅`@StateObject`（SwiftUI 专用）**:是SwiftUI 的属性包装器，用于在 `View` 中持有 `ObservableObject` 的生命周期。
+
+- **用途：**
+
+	* **确保 SwiftUI 界面在对象变化时自动更新**
+	* 避免重复创建对象
+
+- **示例：**
+
+```swift
+struct ContentView: View {
+    @StateObject var viewModel = MyModel()
+    ...
+}
+```
+
+- **✅ 只能用于 SwiftUI 的 View 中，不能在普通类中用。**
+
+***
+<br/><br/><br/>
+> <h2 id="预览视图PreviewProvider">预览视图PreviewProvider</h2>
+
+
+- **✅`PreviewProvider`:** 用于 SwiftUI 预览面板的协议，用来提供一个预览视图。
+
+- **用途：**
+	* 在 Xcode 中提供 `Canvas` 预览（实时显示 UI）
+
+- **示例：**
+
+```swift
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
+```
+
+✅ **仅用于 SwiftUI，且主要用于开发时预览视图 UI**
 
 
 

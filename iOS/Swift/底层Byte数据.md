@@ -6,6 +6,7 @@
 	- [不同字节数的数字拼接](#不同字节数的数字拼接)
 		- [多个字节拼接](#多个字节拼接)
 		- [`Data(repeating:count:)`用法详解](#`Data(repeating:count:)`用法详解)
+	- [自描述式二进制数据包格式拆包解析](#自描述式二进制数据包格式拆包解析)
 	- [传入的值为十进制数转成不同字节数值](#传入的值为十进制数转成不同字节数值)
 	- [将十进制64存储为4字节](#将十进制64存储为4字节)
 	- [固定范围字节转化成UInt类型](#固定范围字节转化成UInt类型)
@@ -611,6 +612,103 @@ print(lengthData as NSData)  // <54>
 | ----------------------- | ------------------ | ------------ |
 | `[randNumLength]`       | 创建一个 `UInt8` 数组    | `[UInt8]`    |
 | `Data([randNumLength])` | 用这个数组生成 1 字节的二进制数据 | `Data`，长度为 1 |
+
+***
+<br/><br/><br/>
+> <h2 id="自描述式二进制数据包格式拆包解析">自描述式二进制数据包格式拆包解析</h2>
+
+下面是一个非常常见的**自描述式二进制数据包格式**，结构如下所示（我们以 ASCII 图示来表达）：
+
+```
+| aLen: UInt8 | aData: [UInt8] | bLen: UInt8 | bData: [UInt8] | ...
+```
+
+也就是说：
+
+* 每段数据前面 **先跟一个长度字段**（`1 字节 UInt8`），
+* 然后跟对应长度的数据内容。
+* 重复这个结构。
+
+---
+
+ **✅ 从 `Data` 类型的 `packetData` 中按顺序解析出 `aData`, `bData`, `cData` 代码:**
+
+**✅ Swift 完整示例代码**
+
+```swift
+import Foundation
+
+func parsePacket(_ packetData: Data) -> [Data] {
+    var result: [Data] = []
+    var index = 0
+
+    while index < packetData.count {
+        // 1. 先取长度字节（UInt8）
+        let length = Int(packetData[index])
+        index += 1
+
+        // 2. 检查是否还有足够的数据
+        guard index + length <= packetData.count else {
+            print("❌ 数据长度不足，无法继续解析")
+            break
+        }
+
+        // 3. 取出这一段数据
+        let subData = packetData.subdata(in: index ..< index + length)
+        result.append(subData)
+
+        // 4. 移动指针
+        index += length
+    }
+
+    return result
+}
+```
+
+---
+
+**✅ 模拟数据测试：**
+
+```swift
+// 模拟二进制数据： aLen = 3, a = 0x01 0x02 0x03
+//                 bLen = 2, b = 0xAA 0xBB
+let rawBytes: [UInt8] = [
+    0x03, 0x01, 0x02, 0x03,
+    0x02, 0xAA, 0xBB
+]
+let packetData = Data(rawBytes)
+
+let sections = parsePacket(packetData)
+
+for (i, section) in sections.enumerated() {
+    print("Section \(i): \(section as NSData)")
+}
+```
+
+**输出：**
+
+```
+Section 0: <010203>
+Section 1: <aabb>
+```
+
+---
+
+ **✅ 提示**
+
+如果你知道你最多有几个字段（例如 a, b, c），你也可以改为返回命名字段：
+
+```swift
+struct Packet {
+    let aData: Data
+    let bData: Data
+    let cData: Data
+}
+```
+
+> 这个格式常见于 BLE、串口、嵌入式通信、或自定义数据协议中，解包时务必注意长度校验。
+
+
 
 
 <br/><br/>
