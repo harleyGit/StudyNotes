@@ -1,5 +1,5 @@
 ># <h0 id=''>[GoLang官网](https://go.dev/)</h2>
-- **GoLang官网资料**
+- [**GoLang官网资料【中文API文档】**](https://studygolang.com/pkgdoc)
 	- [**Go语言中文文档(框架、demo很丰富)**](https://www.topgoer.com/)
 	- [GO指南](https://tour.go-zh.org/list)
 	- [GoLang中文网](https://studygolang.com/pkgdoc)

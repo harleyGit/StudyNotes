@@ -29,6 +29,7 @@
 	- [16字节转化为16进制的数字符串](#16字节转化为16进制的数字符串)
 	- [蓝牙数据分包](#蓝牙数据分包)
 	- [多个字节转成UInt类型数字](#多个字节转成UInt类型数字)
+- [蓝牙外设写入数据调度器](#蓝牙外设写入数据调度器)
 - [**调试**](#调试)
 	- [串口调试](#串口调试)
 
@@ -2570,6 +2571,218 @@ let sharedKey = YourClass.createSharedKeyPairWithPrivateKey(withPrivateKey: priv
 ---
 
 如果你需要对 Swift/ObjC 互调方式、数据格式（Data to NSData）也封装成 Swift-friendly 接口，我也可以帮你完成 👍
+
+
+***
+<br/><br/><br/>
+> <h2 id="蓝牙外设写入数据调度器">蓝牙外设写入数据调度器</h2>
+
+下面给一个 **BLE 写入队列调度器** 的 **Objective-C** 版本示例，包含：
+
+1. **AKBLEWriteItem** — 写入请求模型
+2. **AKBLEWriteQueue** — 写入队列调度器
+3. 示例用法（ViewController 里调用）
+
+> ⚠️ 仅演示核心思路，生产代码可再按需要做日志／错误码封装、线程安全加强等。
+
+<br/>
+
+**1️⃣  AKBLEWriteItem.h / .m**
+
+```objc
+//  AKBLEWriteItem.h
+#import <Foundation/Foundation.h>
+#import <CoreBluetooth/CoreBluetooth.h>
+
+typedef void (^AKBLEWriteCompletion)(NSError * _Nullable error);
+
+@interface AKBLEWriteItem : NSObject
+@property (nonatomic, strong) NSData              *data;
+@property (nonatomic, strong) CBCharacteristic    *characteristic;
+@property (nonatomic)         CBCharacteristicWriteType type;
+@property (nonatomic)         NSUInteger          retryCount;   // 剩余重试次数
+@property (nonatomic, copy)   AKBLEWriteCompletion completion;
++ (instancetype)itemWithData:(NSData *)data
+               characteristic:(CBCharacteristic *)charac
+                        type:(CBCharacteristicWriteType)type
+                  retryCount:(NSUInteger)retry
+                  completion:(AKBLEWriteCompletion)block;
+@end
+```
+
+<br/>
+
+```objc
+//  AKBLEWriteItem.m
+#import "AKBLEWriteItem.h"
+@implementation AKBLEWriteItem
++ (instancetype)itemWithData:(NSData *)data
+               characteristic:(CBCharacteristic *)charac
+                        type:(CBCharacteristicWriteType)type
+                  retryCount:(NSUInteger)retry
+                  completion:(AKBLEWriteCompletion)block
+{
+    AKBLEWriteItem *item = [AKBLEWriteItem new];
+    item.data           = data;
+    item.characteristic = charac;
+    item.type           = type;
+    item.retryCount     = retry;
+    item.completion     = block;
+    return item;
+}
+@end
+```
+
+<br/>
+
+**2️⃣  AKBLEWriteQueue.h / .m**
+
+```objc
+//  AKBLEWriteQueue.h
+#import <Foundation/Foundation.h>
+#import <CoreBluetooth/CoreBluetooth.h>
+#import "AKBLEWriteItem.h"
+
+@interface AKBLEWriteQueue : NSObject <CBPeripheralDelegate>
+@property (nonatomic, weak,   readonly) CBPeripheral *peripheral;
++ (instancetype)queueWithPeripheral:(CBPeripheral *)peripheral;
+- (void)enqueueWrite:(AKBLEWriteItem *)item;
+- (void)clearQueue;          // 可手动清空
+@end
+```
+
+```objc
+//  AKBLEWriteQueue.m
+#import "AKBLEWriteQueue.h"
+
+@interface AKBLEWriteQueue ()
+@property (nonatomic, weak)   CBPeripheral   *peripheral;
+@property (nonatomic, strong) NSMutableArray<AKBLEWriteItem *> *queue;
+@property (nonatomic, assign) BOOL              busy;
+@property (nonatomic, strong) dispatch_queue_t  syncQ;   // 串行同步队列
+@end
+
+@implementation AKBLEWriteQueue
+
++ (instancetype)queueWithPeripheral:(CBPeripheral *)peripheral {
+    AKBLEWriteQueue *q  = [AKBLEWriteQueue new];
+    q->_peripheral      = peripheral;
+    q->_queue           = [NSMutableArray array];
+    q->_syncQ           = dispatch_queue_create("ak.ble.writequeue", DISPATCH_QUEUE_SERIAL);
+    peripheral.delegate = q;      // ⚠️ 若已有 delegate，需要转发
+    return q;
+}
+
+- (void)enqueueWrite:(AKBLEWriteItem *)item {
+    dispatch_async(self.syncQ, ^{
+        [self.queue addObject:item];
+        [self tryWriteNext];
+    });
+}
+
+- (void)clearQueue {
+    dispatch_async(self.syncQ, ^{
+        [self.queue removeAllObjects];
+        self.busy = NO;
+    });
+}
+
+#pragma mark - Internal
+- (void)tryWriteNext {
+    if (self.busy || self.queue.count == 0) return;
+    self.busy = YES;
+    AKBLEWriteItem *item = self.queue.firstObject;
+    [self.peripheral writeValue:item.data
+               forCharacteristic:item.characteristic
+                            type:item.type];
+    // 无响应写需人为 call finish
+    if (item.type == CBCharacteristicWriteWithoutResponse) {
+        [self finishWriteWithError:nil];
+    }
+}
+
+- (void)finishWriteWithError:(NSError *)err {
+    AKBLEWriteItem *item = self.queue.firstObject;
+    if (!item) { self.busy = NO; return; }
+    
+    if (err && item.retryCount > 0) {          // 失败且可重试
+        item.retryCount--;
+        // 简易重试：0.2 秒后重写
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), self.syncQ, ^{
+            self.busy = NO;
+            [self tryWriteNext];
+        });
+        return;
+    }
+    // 完成或放弃
+    if (item.completion) item.completion(err);
+    [self.queue removeObjectAtIndex:0];
+    self.busy = NO;
+    [self tryWriteNext];                       // 继续下一条
+}
+
+#pragma mark - CBPeripheralDelegate
+- (void)peripheral:(CBPeripheral *)peripheral
+didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
+             error:(NSError *)error
+{
+    dispatch_async(self.syncQ, ^{
+        [self finishWriteWithError:error];
+    });
+}
+@end
+```
+
+<br/>
+
+**3️⃣  使用示例（ViewController）**
+
+```objc
+// 假设 self.peripheral 已连接 & self.writeChar 已发现
+self.writeQueue = [AKBLEWriteQueue queueWithPeripheral:self.peripheral];
+
+// 发送一条 带响应 写
+NSData *data = [NSData dataWithBytes:(uint8_t[]){0x01,0x02} length:2];
+AKBLEWriteItem *item = [AKBLEWriteItem itemWithData:data
+                                      characteristic:self.writeChar
+                                               type:CBCharacteristicWriteWithResponse
+                                         retryCount:2
+                                         completion:^(NSError * _Nullable err) {
+    if (err) {
+        NSLog(@"❌ 写入失败 %@", err);
+    } else {
+        NSLog(@"✅ 写入成功");
+    }
+}];
+[self.writeQueue enqueueWrite:item];
+
+// 无响应写
+AKBLEWriteItem *item2 = [AKBLEWriteItem itemWithData:data
+                                       characteristic:self.writeChar
+                                                type:CBCharacteristicWriteWithoutResponse
+                                          retryCount:0
+                                          completion:nil];
+[self.writeQueue enqueueWrite:item2];
+```
+
+<br/>
+
+**✨ 关键点回顾**
+
+| 功能             | 实现要点                                       |
+| -------------- | ------------------------------------------ |
+| **串行队列**       | `dispatch_queue_t syncQ` 保证线程安全            |
+| **busy 标记**    | 同时只发 1 条写请求                                |
+| **带响应写**       | 等 `didWriteValueForCharacteristic` 回调再发下一条 |
+| **无响应写**       | 写后立即 `finishWriteWithError:nil`            |
+| **重试机制**       | `retryCount` 控制剩余重试次数                      |
+| **completion** | 单条写结果回调，成功 `error=nil`                     |
+
+> 生产环境建议再：
+> • 把 `delegate` 转发给业务层，避免覆盖；
+> • 根据特征属性自动选择 `.type`（前面已讲）；
+> • 对长包自动分片。
+
 
 
 

@@ -4,6 +4,7 @@
 - [makeConstraints和remakeConstraints区别](#makeConstraints和remakeConstraints区别)
 - [snapkit适配屏幕](#snapkit适配屏幕)
 	- [fit适配屏幕](#fit适配屏幕)
+- [**‌Snapkit实现图层圆圈进度**](#Snapkit实现图层圆圈进度)
 
 
 
@@ -581,6 +582,153 @@ class DemoViewController: UIViewController {
 }
 
 ```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "Snapkit实现图层圆圈进度">Snapkit实现图层圆圈进度</h1>
+
+- 想实现的是一个**圆形进度条**，可以**多次传入进度值**，比如：
+
+	* 第一次传入 0.3 → 显示 30%；
+	* 第二次传入 0.6 → 在当前基础上加 30%，累计到 60%。
+
+**✅ 圆形进度条组件实现（Swift + UIKit）**
+
+```swift
+class CircleProgressView: UIView {
+
+    private let trackLayer = CAShapeLayer()
+    private let progressLayer = CAShapeLayer()
+
+    private var hasSetup = false
+    private var currentProgress: CGFloat = 0.0
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        // 避免重复设置
+        if !hasSetup {
+            setupLayers()
+            hasSetup = true
+        }
+    }
+
+    private func setupLayers() {
+        let centerPoint = CGPoint(x: bounds.midX, y: bounds.midY)
+        let radius = min(bounds.width, bounds.height) / 2 - 10
+
+        let circlePath = UIBezierPath(arcCenter: centerPoint,
+                                      radius: radius,
+                                      startAngle: -.pi / 2,
+                                      endAngle: 1.5 * .pi,
+                                      clockwise: true)
+
+        // 轨道层
+        trackLayer.path = circlePath.cgPath
+        trackLayer.strokeColor = UIColor.lightGray.cgColor
+        trackLayer.fillColor = UIColor.clear.cgColor
+        trackLayer.lineWidth = 8
+        layer.addSublayer(trackLayer)
+
+        // 进度层
+        progressLayer.path = circlePath.cgPath
+        progressLayer.strokeColor = UIColor.blue.cgColor
+        progressLayer.fillColor = UIColor.clear.cgColor
+        progressLayer.lineWidth = 8
+        progressLayer.strokeEnd = 0
+        layer.addSublayer(progressLayer)
+    }
+
+    func addProgress(_ delta: CGFloat, animated: Bool = true) {
+        let newProgress = min(currentProgress + delta, 1.0)
+        setProgress(to: newProgress, animated: animated)
+    }
+
+    func setProgress(to progress: CGFloat, animated: Bool = true) {
+        let clamped = min(max(progress, 0), 1)
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.fromValue = progressLayer.strokeEnd
+        animation.toValue = clamped
+        animation.duration = animated ? 0.3 : 0
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+
+        progressLayer.strokeEnd = clamped
+        progressLayer.add(animation, forKey: "progress")
+
+        currentProgress = clamped
+    }
+
+    func resetProgress() {
+        setProgress(to: 0, animated: false)
+    }
+}
+```
+
+<br/>
+
+**✅ 使用方式（在 ViewController 中）**
+
+```swift
+class ViewController: UIViewController {
+    let circleProgress = CircleProgressView()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+
+        circleProgress.frame = CGRect(x: 100, y: 200, width: 150, height: 150)
+        view.addSubview(circleProgress)
+
+        // 示例：加 0.3，然后再加 0.3
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            self.circleProgress.addProgress(0.3)
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.circleProgress.addProgress(0.3)
+        }
+    }
+}
+```
+
+- ✅ 效果说明：
+
+	* 画的是一个圆形的路径；
+	* 使用 `strokeEnd` 控制当前绘制的百分比；
+	* `addProgress` 支持累计增加；
+	* `setProgress` 可设置任意进度（非累加）；
+	* 动画使用 `CABasicAnimation` 平滑过渡。
+
+```
+
+---
+
+## ✅ 使用时（SnapKit 示例）
+
+```swift
+let circle = CircleProgressView()
+view.addSubview(circle)
+circle.snp.makeConstraints {
+    $0.center.equalToSuperview()
+    $0.size.equalTo(CGSize(width: 150, height: 150))
+}
+```
+
+你不需要在外部手动调用 `setupLayers()`，当布局完成后 `layoutSubviews()` 会自动触发一次构建。
+
+---
+
+- **❗注意事项**
+
+	* 圆形路径依赖于 `bounds`，所以路径要延迟到布局后再创建；
+	* 不建议在 `init` 中直接访问 `bounds`；
+	* 如果 `layoutSubviews` 可能被多次调用（如旋转屏幕、改 frame），你可以加 `hasSetup` 判断避免重复创建。
+
+
 
 
 

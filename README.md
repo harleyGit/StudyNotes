@@ -293,6 +293,8 @@
 	* [SnapKit](./iOS/Swift/SnapKit.md)
 	* [Then库](./iOS/Swift/Then库.md)
 	* [PromiseKit](./iOS/Swift/PromiseKit.md)
+	* [Swinject解耦](./iOS/Swift/Swinject.md)
+	* [RN桥接Native](./iOS/Swift/RN桥接Native.md)
 
 
 
@@ -354,6 +356,9 @@
 - [create-react-app流程分析](./React/create-react-app流程分析.md)
 - [性能优化]()
 	- [性能优化(I)](./React/性能优化(I).md) 
+- **库**
+	- [阿里UI库AntDesign](./React/AntDesign.md)
+	- [Umi](./React/Umi.md)
 - **知识综合**
 	- [**ES6入门教程**](https://es6.ruanyifeng.com/)
 	- [XKBKnowledge(I)](./React/XKBKnowledge(I).md)

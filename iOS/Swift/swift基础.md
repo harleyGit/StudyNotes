@@ -19,6 +19,11 @@
 	- [枚举原始值](#枚举原始值)
 	- [枚举关联值](#枚举关联值)
 	- [枚举范型调用](#枚举范型调用)
+	- [枚举运算](#枚举运算)
+	- [二进制枚举位移掩码原理细解](#二进制枚举位移掩码原理细解)
+	- [位移掩码枚举代码落实](#位移掩码枚举代码落实) 
+	- [不同位移掩码枚举类型转换](#不同位移掩码枚举类型转换)
+	- [主枚举包含多个子枚举](#主枚举包含多个子枚举)
 - [**结构体**](#结构体)
 - [**集合**](#集合)
 	- [Set集合与NSArray、Dictionary区别](#Set集合与NSArray、Dictionary区别)
@@ -1223,6 +1228,576 @@ apple.onCompleted()
 - **事件流**：如 `RxSwift` 中 `Observer` 处理 `.completed` 事件
 - **数据流管理**：避免 `.completed` 或 `.error` 事件被重复触发
 - **异步任务控制**：防止任务完成后多次回调
+
+***
+<br/><br/><br/>
+> <h2 id="枚举运算">枚举运算</h2>
+
+| 枚举成员                    | 二进制        | 十进制 |
+| ----------------------- | ---------- | --- |
+| `functionA`             | `00000001` | 1   |
+| `functionB`             | `00000010` | 2   |
+| `functionC`             | `00000100` | 4   |
+| `functionA + functionC` | `00000101` | 5   |
+
+<br/>
+
+- **✅ 一、使用 `enum` + 手动位运算组合示例**
+
+```swift
+enum DisplacementFunction: UInt8, CaseIterable, CustomStringConvertible {
+    case none      = 0
+    case functionA = 1 << 0  // 00000001 = 1
+    case functionB = 1 << 1  // 00000010 = 2
+    case functionC = 1 << 2  // 00000100 = 4
+
+    var description: String {
+        switch self {
+        case .none: return "None"
+        case .functionA: return "Function A"
+        case .functionB: return "Function B"
+        case .functionC: return "Function C"
+        }
+    }
+}
+```
+
+- **📝 解读：**
+	- RawValue 是 UInt8，代表二进制标志。
+
+	- 用位移 1 << n 分别设置每个功能的唯一位。
+
+	- .description 是给人看的名字。
+
+<br/>
+
+- **✅ 二、定义组合类型（手动组合 `UInt8`）**
+
+```swift
+struct DisplacementFunctionSet: CustomStringConvertible {
+    private(set) var rawValue: UInt8 = 0
+
+    init(_ functions: [DisplacementFunction]) {
+        for function in functions {
+            rawValue |= function.rawValue  // 用或运算累加
+        }
+    }
+
+    func contains(_ function: DisplacementFunction) -> Bool {
+        return (rawValue & function.rawValue) != 0  // 判断某位是否被设置
+    }
+
+    mutating func insert(_ function: DisplacementFunction) {
+        rawValue |= function.rawValue  // 添加功能
+    }
+
+    mutating func remove(_ function: DisplacementFunction) {
+        rawValue &= ~function.rawValue // 移除功能
+    }
+
+    var description: String {
+        if rawValue == 0 { return "None" }
+        return DisplacementFunction.allCases
+            .filter { $0 != .none && self.contains($0) }
+            .map { $0.description }
+            .joined(separator: ", ")
+    }
+    
+    // 这是16进制的二进制显示
+    var binaryString: String {
+        let bin = String(rawValue, radix: 2)
+        return String(repeating: "0", count: 16 - bin.count) + bin
+    }
+}
+```
+
+- **📝 解读：**
+	- rawValue 是当前的组合状态，例如值为 5 就代表 A+C。
+
+	- insert() 通过或运算 | 添加功能。
+
+	- remove() 通过与反码 & ~ 移除功能。
+
+	- contains() 检查功能是否包含。
+
+---
+<br/>
+
+- **✅ 三、使用示例**
+
+```swift
+var activeFunctions = DisplacementFunctionSet([.functionA, .functionC])
+
+print("启用功能: \(activeFunctions)") // 输出: 启用功能: Function A, Function C
+print("原始值: \(activeFunctions.rawValue)") // 输出: 原始值: 5
+
+// 判断功能
+if activeFunctions.contains(.functionB) {
+    print("包含 B")
+} else {
+    print("不包含 B")
+}
+
+// 添加功能 B
+activeFunctions.insert(.functionB)
+print("添加后: \(activeFunctions)") // 输出: Function A, Function B, Function C
+```
+
+---
+
+- **✅ 四、额外说明**
+
+	* 你使用 `enum` 的好处是类型安全、可枚举。
+	* `DisplacementFunctionSet` 就是你的组合结构，可以看作是简易版 `OptionSet`。
+	* 原始值操作 `rawValue` 是 `UInt8`，支持最多 8 个功能。
+
+---
+
+- **✅ 五、完整输出示例**
+
+```swift
+let combination = DisplacementFunctionSet([.functionA, .functionC])
+print("组合功能值: \(combination.rawValue)")      // 输出: 5
+print("功能列表: \(combination)")                // 输出: Function A, Function C
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="二进制枚举位移掩码原理细解">二进制枚举位移掩码原理细解</h2>
+
+-  **二进制掩码位** 如何实现的？
+
+功能组合是通过 **每个功能使用一个独立的“二进制位”** 来表示是否启用。我们使用 `UInt8`（8 位无符号整数），每一位都可以表示一个功能：
+
+```
+UInt8 的每个位：
+
+位索引:  7 6 5 4 3 2 1 0
+值:      128 64 32 16 8 4 2 1
+```
+
+---
+
+**✅ 示例：定义功能掩码（bitmask）**
+
+| 功能名         | 表示位        | 二进制        | 十进制 |
+| ----------- | ---------- | ---------- | --- |
+| `functionA` | bit 0      | `00000001` | 1   |
+| `functionB` | bit 1      | `00000010` | 2   |
+| `functionC` | bit 2      | `00000100` | 4   |
+| 组合 A + C    | bits 0+2   | `00000101` | 5   |
+| 全部功能（ABC）   | bits 0+1+2 | `00000111` | 7   |
+
+---
+<br/>
+
+- **🔧 原理解释：掩码 + 按位运算**
+
+	- **✅ 1. 添加功能（OR `|=`）**
+
+```swift
+rawValue |= function.rawValue
+```
+
+* 示例：已有 `00000100`（functionC）
+* 插入 `.functionA`（值是 `00000001`）
+* 运算后结果：`00000100 | 00000001 = 00000101`（A+C）
+
+<br/>
+
+- **✅ 2. 判断功能是否存在（AND `&`）**
+
+```swift
+(rawValue & function.rawValue) != 0
+```
+
+* 当前状态：`00000101`（A+C）
+* 检查是否包含 `functionA`（`00000001`）
+* `00000101 & 00000001 = 00000001` ≠ 0 → 表示包含
+
+<br/>
+
+- **✅ 3. 移除功能（AND 反码 `& ~`）**
+
+```swift
+rawValue &= ~function.rawValue
+```
+
+* 当前状态：`00000101`（A+C）
+* 移除 `functionA`（反码是 `11111110`）
+* `00000101 & 11111110 = 00000100` → 只剩 C
+
+<br/>
+
+- **🎯 为什么掩码位可以组合多个功能？**
+
+因为每一个功能只占一位（bit），不会重叠，所以你可以**用一个整数同时表示多个功能**是否开启：
+
+```swift
+// 同时打开 A + C
+rawValue = functionA.rawValue | functionC.rawValue // = 1 | 4 = 5
+```
+
+这就是为什么用位运算的枚举（或者 `OptionSet`）可以轻松表达组合状态的核心原理。
+
+---
+
+- **✅ 举例：掩码位表示法可扩展到几位？**
+
+	* `UInt8`：最多 8 个功能（使用 8 位）
+	* `UInt16`：最多 16 个功能
+	* `UInt32`：最多 32 个功能
+	* `UInt64`：最多 64 个功能
+
+可以修改枚举原始值类型来支持更多功能，例如：
+
+```swift
+enum MyFunction: UInt16 { ... } // 支持最多 16 个功能
+```
+
+<br/>
+
+- **🧪 补充调试函数（打印二进制）**
+
+为了更清晰地看到每个组合的掩码，可以添加一个工具函数来打印 rawValue 的二进制：
+
+```swift
+extension DisplacementFunctionSet {
+    var binaryString: String {
+        let binary = String(rawValue, radix: 2)
+        return String(repeating: "0", count: 8 - binary.count) + binary
+    }
+}
+```
+
+使用：
+
+```swift
+print("当前功能二进制: \(functionSet.binaryString)") 
+// 输出: 当前功能二进制: 00000101 （表示 functionA + functionC）
+```
+
+---
+
+**✅ 总结一下**
+
+| 操作    | 对应位运算                        | 作用说明       |          |
+| ----- | ---------------------------- | ---------- | -------- |
+| 添加功能  | \`                           | =\`        | 把某位设置为 1 |
+| 检查功能  | `&`                          | 检查某位是否为 1  |          |
+| 移除功能  | `& ~`                        | 把某位清零（置 0） |          |
+| 功能组合  | 多个 \`                        | \`         | 多功能合成一个值 |
+| 二进制表示 | `String(rawValue, radix: 2)` | 直观显示掩码状态   |          |
+
+
+***
+<br/><br/><br/>
+> <h2 id="位移掩码枚举代码落实"> 位移掩码枚举代码落实 </h2>
+
+Swift **本身的 enum** 不支持 `|` 这种位运算符组合，因为枚举是单值类型。
+
+但你想要的效果，**用类似 `.scan | .pair` 这样写法**，在 Swift 里是用 `OptionSet` 类型实现的。
+
+<br/>
+
+- **用 `OptionSet` 实现 `.scan | .pair` 组合示例**
+
+```swift
+struct ProcessStatus: OptionSet {
+    let rawValue: UInt8
+
+    static let none      = ProcessStatus(rawValue: 0)
+    static let scan      = ProcessStatus(rawValue: 1 << 0) // 1
+    static let pair      = ProcessStatus(rawValue: 1 << 1) // 2
+    static let bind      = ProcessStatus(rawValue: 1 << 2) // 4
+    static let reconnect = ProcessStatus(rawValue: 1 << 3) // 8
+    static let activator = ProcessStatus(rawValue: 1 << 4) // 16
+}
+```
+
+---
+
+- **使用：**
+
+```swift
+let aa: ProcessStatus = [.scan, .pair]       // Swift 推荐写法，语法糖
+// 或者用位运算符
+let bb = ProcessStatus.scan.union(.pair)     // 用 union()
+let cc = ProcessStatus.scan.formUnion(.pair) // 改变变量
+let dd = ProcessStatus.scan.rawValue | ProcessStatus.pair.rawValue // 得到原始位值 UInt8
+
+// 你也可以这样写，手动用位运算符：
+let ee = ProcessStatus(rawValue: ProcessStatus.scan.rawValue | ProcessStatus.pair.rawValue)
+```
+
+---
+
+- **判断是否包含：**
+
+```swift
+if aa.contains(.scan) {
+    print("包含 scan")
+}
+```
+
+---
+
+- **小结**
+
+	* `enum` 不支持 `|`，因为它是单值
+	* `OptionSet` 是 Swift 专门设计的位掩码结构，支持位运算符组合和多选
+	* 使用时推荐 `.scan, .pair` 写法或手动用 `.union()`，或者直接操作 `.rawValue`
+
+---
+<br/>
+
+**正确写法示例:**
+
+```swift
+public struct ProcessStatus: OptionSet {
+    public let rawValue: UInt8
+
+    // 这里必须写成 public，满足 public 协议要求
+    public init(rawValue: UInt8) {
+        self.rawValue = rawValue
+    }
+
+    public static let none      = ProcessStatus(rawValue: 0)
+    public static let scan      = ProcessStatus(rawValue: 1 << 0)
+    public static let pair      = ProcessStatus(rawValue: 1 << 1)
+    public static let bind      = ProcessStatus(rawValue: 1 << 2)
+}
+```
+
+---
+
+- **重点总结**
+
+	* 结构体、属性、方法、初始化器只要想公开给模块外使用，都要声明 `public`
+	* `OptionSet` 协议要求必须实现 `init(rawValue:)`，所以它的访问级别也必须和结构体一致（`public`）
+	* 这条规则是 Swift 的访问控制机制决定的
+
+***
+<br/><br/><br/>
+> <h2 id="不同位移掩码枚举类型转换"> 不同位移掩码枚举类型转换 </h2>
+
+不同位移掩码枚举类型转换错误：
+
+> `Cannot convert value of type 'ProcessStatus' to expected argument type 'ModelProcessStatus'`
+
+意思是：我想把一个 `ProcessStatus` 类型传给一个要求是 `ModelProcessStatus` 类型的参数，但它们是**两个不同的类型**，即使结构相似，**Swift 不允许隐式转换**。
+
+---
+
+- **✅ 解决方案：确保统一使用同一个类型！**
+
+	- **✅ 方法 1：改方法参数为同一个类型**
+
+如果 `ProcessStatus` 和 `ModelProcessStatus` 其实是一样的结构（例如都是 `OptionSet<UInt8>`），那建议只保留一个，比如统一使用 `ProcessStatus`：
+
+```swift
+// 定义 OptionSet
+public struct ProcessStatus: OptionSet {
+    public let rawValue: UInt8
+
+    public init(rawValue: UInt8) {
+        self.rawValue = rawValue
+    }
+
+    public static let none      = ProcessStatus(rawValue: 0)
+    public static let scan      = ProcessStatus(rawValue: 1 << 0)
+    public static let pair      = ProcessStatus(rawValue: 1 << 1)
+    public static let bind      = ProcessStatus(rawValue: 1 << 2)
+}
+
+// 使用统一类型
+public func willBindBlePeripheral(needProcess: ProcessStatus) {
+    Peripheral(needProcess: needProcess)
+}
+
+func Peripheral(needProcess: ProcessStatus) {
+    // 继续使用 needProcess
+}
+```
+
+---
+<br/>
+
+- **✅ 方法 2：如果必须保留两个类型（例如用于兼容 OC 与 Swift）**
+
+```swift
+public struct ModelProcessStatus: OptionSet {
+   
+    public let rawValue: UInt8
+    public init(rawValue: UInt8) {
+        self.rawValue = rawValue
+    }
+
+    public static let none      = ModelProcessStatus(rawValue: 0)
+    public static let scan      = ModelProcessStatus(rawValue: 1 << 0)
+    public static let pair      = ModelProcessStatus(rawValue: 1 << 1)
+    public static let bind      = ModelProcessStatus(rawValue: 1 << 2)
+}
+
+// 显式转换 rawValue
+public func willBindBlePeripheral(needProcess: ProcessStatus) {
+    
+    let converted = ModelProcessStatus(rawValue: needProcess.rawValue)
+    Peripheral(needProcess: converted)
+}
+
+func Peripheral(needProcess: ModelProcessStatus) {
+    print(needProcess)
+}
+```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="主枚举包含多个子枚举">主枚举包含多个子枚举</h2>
+
+若是想实现“**一个主枚举下面包含多个子枚举**”，例如：
+
+```swift
+enum DeviceCategory {
+    enum Phone: String {
+        case iPhone = "iPhone"
+        case android = "Android"
+    }
+
+    enum Tablet: String {
+        case iPad = "iPad"
+        case androidPad = "AndroidPad"
+    }
+}
+```
+
+这种语法**是允许的**，但你无法直接使用 `DeviceCategory` 本身来遍历所有子枚举的 case，Swift 不支持多层嵌套的枚举做 CaseIterable。
+
+---
+<br/>
+
+- **✅ 推荐做法一：扁平化设计 + 属性分组： “父分类+子项”的结构**
+
+-  **1.定义带主分类的枚举**
+
+```swift
+enum DeviceType: String, CaseIterable {
+    // Phone 类别
+    case iPhone = "iPhone"
+    case androidPhone = "Android Phone"
+    
+    // Tablet 类别
+    case iPad = "iPad"
+    case androidTablet = "Android Tablet"
+    
+    // Laptop 类别
+    case macBook = "MacBook"
+    case windowsLaptop = "Windows Laptop"
+
+    // 返回主分类
+    var category: Category {
+        switch self {
+        case .iPhone, .androidPhone:
+            return .phone
+        case .iPad, .androidTablet:
+            return .tablet
+        case .macBook, .windowsLaptop:
+            return .laptop
+        }
+    }
+
+    enum Category: String {
+        case phone = "Phone"
+        case tablet = "Tablet"
+        case laptop = "Laptop"
+    }
+}
+```
+
+<br/>
+
+**使用:**
+
+```swift
+let device: DeviceType = .iPad
+print(device.rawValue)           // 输出: iPad
+print(device.category.rawValue)  // 输出: Tablet
+```
+
+---
+<br/>
+
+
+- **✅ 推荐做法二：主枚举 + 关联值（更接近嵌套）**
+
+如果你确实想模拟“子枚举”结构，可以用主枚举 + 关联值来实现：
+
+```swift
+enum DeviceCategory {
+    case phone(PhoneType)
+    case tablet(TabletType)
+
+    enum PhoneType: String {
+        case iPhone = "iPhone"
+        case android = "Android"
+    }
+
+    enum TabletType: String {
+        case iPad = "iPad"
+        case androidPad = "AndroidPad"
+    }
+
+    var rawValue: String {
+        switch self {
+        case .phone(let type): return type.rawValue
+        case .tablet(let type): return type.rawValue
+        }
+    }
+}
+```
+
+**使用：**
+
+```swift
+let myDevice = DeviceCategory.phone(.iPhone)
+print(myDevice.rawValue)  // 输出: iPhone
+```
+
+> ⚠️ 不支持 `CaseIterable` 自动列出所有情况，你可以手动维护静态方法列出所有组合。
+
+---
+<br/>
+
+- **✅字典 + 分组枚举（用于 UI 显示结构）**
+
+```swift
+let allGrouped: [DeviceType.Category: [DeviceType]] = Dictionary(
+    grouping: DeviceType.allCases,
+    by: \.category
+)
+
+for (category, items) in allGrouped {
+    print("Category: \(category.rawValue)")
+    for item in items {
+        print(" - \(item.rawValue)")
+    }
+}
+```
+
+---
+<br/>
+
+- **✅ 总结**
+
+| 需求        | 推荐做法                               |
+| --------- | ---------------------------------- |
+| 扁平结构 + 分组 | 单一枚举 + `.category` 属性              |
+| 子枚举嵌套     | 使用主枚举 + 关联值                        |
+| 获取所有项     | 使用 `CaseIterable` + `.allCases` 分组 |
+| 复杂结构      | 用 struct/class + enum 做组合          |
 
 
 <br/><br/><br/>

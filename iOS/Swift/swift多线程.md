@@ -8,8 +8,10 @@
 	- [简单任务组](#简单任务组)
 - [**逃逸闭包转换为支持async/await的现代异步方法**](#逃逸闭包转换为支持async/await的现代异步方法)
 - [**线程安全类Actor**](#线程安全类Actor)
+	- [actor初步认识](#actor初步认识)
 	- [结构体值类型新理解](#结构体值类型新理解)
 	- [传统线程安全和actor隔离比较](#传统线程安全和actor隔离比较)
+	- [并发隔离属性:nonisolated、actor](#并发隔离属性:nonisolated、actor)
 - [**全局隔离机制@globalActor**](#全局隔离机制@globalActor)
 - [**‌ 核心安全协议Sendable**](#核心安全协议Sendable)
 	- [@unchecked作用和意义](#@unchecked作用和意义)
@@ -838,6 +840,135 @@ Task {
 		- 堆是在线程间共享的
 		 - 每个线程都有自己的栈,每个线程都没有自己的堆,线程共享堆.因为堆需要和那些类进行同步,和那些actor进行同步.
 
+
+***
+<br/><br/><br/>
+> <h2 id="actor初步认识">actor初步认识</h2>
+
+`actor` 是 Swift 5.5（随着 Swift 并发引入）提供的一个 **结构化并发模型中的线程安全引用类型**。它用于**解决并发环境下的数据竞争问题**。
+
+---
+
+- **🧠 简单解释：`actor` 是什么？**
+
+可以把 `actor` 看作一种特殊的类（class），它的**内部状态只能被一个线程在某一时刻访问**，从而自动实现**线程安全（thread-safe）**。
+
+```swift
+actor Counter {
+    private var value = 0
+    
+    func increment() {
+        value += 1
+    }
+
+    func getValue() -> Int {
+        return value
+    }
+}
+```
+
+<br/>
+
+- **🔐 为什么 `actor` 是线程安全的？**
+
+因为 Swift 编译器保证：
+
+> 对 actor 内部状态的访问是 **串行的（serial）**，即任何时候只有一个执行体可以访问它的属性或方法。
+
+<br/>
+
+- **✅ 特性：**
+
+| 特性      | 说明                        |
+| ------- | ------------------------- |
+| ✅ 串行访问  | 同一时间只能一个任务访问其内部数据         |
+| ✅ 自动同步  | 无需使用 `DispatchQueue` 或锁   |
+| ✅ 编译器保护 | 不能直接跨线程访问内部属性，除非用 `await` |
+
+<br/>
+
+**🔥 特别之处 vs. Class**
+
+| 对比点            | class   | actor             |
+| -------------- | ------- | ----------------- |
+| 共享数据是否线程安全     | ❌ 默认不是  | ✅ 默认是             |
+| 是否支持并发写        | ❌ 需手动同步 | ✅ 自动串行            |
+| async/await 支持 | 不需要     | 调用方法时通常需要 `await` |
+
+<br/>
+
+**📌 调用方式**
+
+```swift
+let counter = Counter()
+
+Task {
+    await counter.increment()
+    let current = await counter.getValue()
+    print("Counter is \(current)")
+}
+```
+
+---
+
+## ⏱️ actor 适合用于什么时候？
+
+使用 `actor` 的典型场景包括：
+
+| 场景           | 示例                                          |
+| ------------ | ------------------------------------------- |
+| ✅ 管理共享状态     | 全局缓存、配置对象、连接池等                              |
+| ✅ 并发写操作      | 多任务同时更新一个对象                                 |
+| ✅ 替代锁机制      | 不再需要手动写 `DispatchQueue`、`NSLock`            |
+| ✅ 和结构化并发结合使用 | Swift Concurrency（`Task`、`await`）结构中保护状态很自然 |
+
+<br/>
+
+- **🧪 示例：缓存系统**
+
+```swift
+actor ImageCache {
+    private var cache: [URL: Data] = [:]
+    
+    func set(_ data: Data, for url: URL) {
+        cache[url] = data
+    }
+    
+    func get(for url: URL) -> Data? {
+        return cache[url]
+    }
+}
+```
+
+使用：
+
+```swift
+let cache = ImageCache()
+
+Task {
+    if let data = await cache.get(for: imageURL) {
+        print("Loaded from cache")
+    } else {
+        let data = try await fetchImageData(from: imageURL)
+        await cache.set(data, for: imageURL)
+    }
+}
+```
+
+---
+
+- **✅ 总结**
+
+| 问题           | 答案                                |
+| ------------ | --------------------------------- |
+| `actor` 是什么？ | 一种自动线程安全的引用类型，用于并发模型              |
+| 为什么线程安全？     | 编译器强制串行访问内部状态                     |
+| 何时用？         | 需要并发访问共享数据时                       |
+| 替代方案？        | `DispatchQueue`, `NSLock`, 但更复杂易错 |
+
+
+
+
 ***
 <br/><br/><br/>
 > <h2 id="结构体值类型新理解">结构体值类型新理解</h2>
@@ -989,6 +1120,142 @@ public static func practiceMulThread01() {
 | 打印静态日志、版本号等                                | 无需访问内部状态        |
 | 实现 `CustomStringConvertible.description`   | 需要同步访问          |
 | 实现某些 `Equatable`, `Hashable` 的 protocol 方法 | 防止这些函数被 async 化 |
+
+
+***
+<br/><br/><br/>
+> <h2 id="并发隔离属性:nonisolated、actor">并发隔离属性:nonisolated、actor</h2>
+
+Swift 并发模型中的关键字：`nonisolated`、`actor` **都是表示隔离性（isolation）, 它的属性是线程安全的**。
+
+<br/>
+
+- **🧩 一、什么是 `nonisolated`？**
+
+	- **✅ `nonisolated` 是 Swift 并发中用来声明一个 不受 actor 隔离规则约束的成员。**
+
+> ❗默认情况下，**actor 的方法和属性只能被 `await` 调用**，因为编译器需要确保线程安全。
+
+<br/>
+
+- 而使用 `nonisolated` 声明的函数或属性：
+
+	* 不需要 `await` 或 `Task` 就能访问
+	* **不会访问 actor 的内部状态**
+	* 可以从 actor 外部线程同步安全地访问
+
+<br/>
+
+- **✍ 示例对比：**
+
+```swift
+actor Logger {
+    var name = "Default Logger"
+
+    func log(_ message: String) {
+        print("[\(name)] \(message)") // ❗必须 await 调用
+    }
+
+    nonisolated func metadata() -> String {
+        return "Logger v1.0" // ✅ 可以同步调用
+    }
+}
+```
+
+**调用：**
+
+```swift
+let logger = Logger()
+
+Task {
+    await logger.log("hello")      // 正常调用
+    print(logger.metadata())       // ✅ 不需要 await
+}
+```
+
+---
+
+- **❗为什么需要 `nonisolated`？**
+
+它解决两个问题：
+
+| 问题                 | `nonisolated` 的作用      |
+| ------------------ | ---------------------- |
+| ✅ 无需访问 actor 的内部状态 | 可直接从 actor 外调用         |
+| ✅ 提高性能             | 避免 async/await 的开销     |
+| ✅ 支持协议实现           | 使 actor 实现 `Sync` 协议成员 |
+
+---
+
+**✅ 使用场景**
+
+| 场景                                         | 适用理由            |
+| ------------------------------------------ | --------------- |
+| 打印静态日志、版本号等                                | 无需访问内部状态        |
+| 实现 `CustomStringConvertible.description`   | 需要同步访问          |
+| 实现某些 `Equatable`, `Hashable` 的 protocol 方法 | 防止这些函数被 async 化 |
+
+
+---
+<br/>
+
+- **🧠 二、actor 为什么是线程安全的？**
+
+	- **✅ 核心原因：安全隔离（data isolation）**
+
+<br/>
+
+Swift actor 的内部状态是 **“隔离的”**：
+
+> 只能通过 actor 的 `async` 方法间接访问，且编译器确保**不会并发同时读写内部属性**。
+
+---
+<br/>
+
+- **📦 什么是“安全隔离”？**
+
+	- 每个 actor 背后都有一个 **串行执行上下文**（可以理解成一个内部任务队列），它：
+
+		* 所有对 actor 的调用，会通过 `await` 进入这个队列
+		* 任务在队列中 **一个个串行执行**
+		* 不存在同时多个任务修改状态的情况
+
+---
+
+- **🚫 编译器保护示例：**
+
+```swift
+actor Bank {
+    var balance: Int = 1000
+    
+    func withdraw(amount: Int) {
+        balance -= amount  // ✅ 通过 actor 内部访问
+    }
+}
+
+let bank = Bank()
+bank.balance = 999 // ❌ 编译器报错：Cannot assign to actor-isolated property
+```
+
+---
+
+- **✅ 总结对比：关键点理解**
+
+| 特性              | 解释                               |
+| --------------- | -------------------------------- |
+| `actor`         | 一种线程安全的引用类型，内部状态是隔离的             |
+| 默认成员            | 只能通过 `await` 异步访问                |
+| `nonisolated`   | 标记为“非隔离”的方法/属性，可以同步访问            |
+| 安全隔离（Isolation） | 编译器保证 actor 状态只能被一个任务同时访问，防止数据竞争 |
+
+---
+
+- **🎯 何时用 `nonisolated`？**
+
+	* 你实现的函数**不会也不应该访问 actor 的状态**
+	* 想让这个函数在协议中保持 `sync` 签名（如 `description`, `id`, `hashValue` 等）
+	* 追求性能优化，避免不必要的 `await`
+
 
 
 
