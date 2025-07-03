@@ -8,6 +8,8 @@
 	- [模态框组件-Modal](#模态框组件-Modal)
 	- [弹框提示组件message](#弹框提示组件message)
 	- [Form表单](#Form表单)
+- [Button组件](#Button组件)
+- [**Upload图片上传组件**](#Upload图片上传组件)
 
 
 
@@ -1026,5 +1028,329 @@ message.config({
 ```
 请输入产品名称
 ```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Button组件">Button组件</h1>
+
+```jsx
+disabled={true}     // 明确写法
+disabled={!isActive} // 动态控制
+disabled             // 等同于 true（简写）
+```
+
+<br/>
+
+**1.`disabled={1}` ❌（⚠️写法错误）**
+
+* `disabled` 表示按钮是否为“禁用”状态，**应该是一个布尔值**（`true` / `false`）。
+* 你写的 `disabled={1}` 虽然在 JavaScript 中等同于 `true`，但**不是推荐写法**。
+
+<br/>
+
+**2.`type="primary"`**
+
+* 按钮的类型，用于**设置颜色和样式风格**
+* 可选值有：
+
+| 类型          | 说明        |
+| ----------- | --------- |
+| `"primary"` | 主要按钮（蓝色）  |
+| `"default"` | 默认按钮      |
+| `"dashed"`  | 虚线按钮      |
+| `"text"`    | 文字按钮（无背景） |
+| `"link"`    | 超链接样式按钮   |
+
+<br/>
+
+**3. `size="small"`**
+
+* 设置按钮的大小
+* 可选值有：
+
+| 值          | 大小说明 |
+| ---------- | ---- |
+| `"large"`  | 较大按钮 |
+| `"middle"` | 默认大小 |
+| `"small"`  | 较小按钮 |
+
+---
+<br/>
+
+**✅ 示例代码（推荐写法）**
+
+```jsx
+import { Button } from 'antd';
+
+function Demo() {
+  const isDisabled = true;
+
+  return (
+    <Button
+      disabled={isDisabled}
+      type="primary"
+      size="small"
+    >
+      确认
+    </Button>
+  );
+}
+```
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="鼠标悬停或聚焦显示组件Tooltip">鼠标悬停或聚焦显示组件Tooltip</h1>
+
+
+`Tooltip` 是一个**悬浮提示组件**，通常包裹在按钮、图标、文字等外部，当用户悬停时显示提示信息。
+
+<br/>
+
+**✅ 基本用法**
+
+```jsx
+import { Tooltip, Button } from 'antd';
+
+function Demo() {
+  return (
+    <Tooltip title="这是提示内容">
+      <Button>悬停我</Button>
+    </Tooltip>
+  );
+}
+```
+
+**🔍 效果：**
+
+* 鼠标悬停在按钮上时，会显示一个小的浮层文字：“这是提示内容”。
+
+---
+<br/>
+
+**🧩 常用属性说明**
+
+| 属性名         | 类型          | 说明            |
+| ----------- | ----------- | ------------- |
+| `title`     | `ReactNode` | 要显示的提示内容（必填）  |
+| `placement` | `string`    | 提示框出现的位置（见下方） |
+| `color`     | `string`    | 提示框的背景颜色（可选）  |
+| `arrow`     | `boolean`   | 是否显示箭头，默认显示   |
+
+<br/>
+
+**✅ `placement` 可选值**
+
+| 值                                | 含义    |
+| -------------------------------- | ----- |
+| `top`, `bottom`, `left`, `right` | 四个方向  |
+| `topLeft`, `topRight` 等          | 更具体位置 |
+
+<br/>
+
+**🔁 示例：多个 Tooltip 用法**
+
+```jsx
+import { Tooltip, Button, Space } from 'antd';
+
+function TooltipExample() {
+  return (
+    <Space direction="vertical" size="middle">
+      {/* 默认 top */}
+      <Tooltip title="默认提示">
+        <Button>默认</Button>
+      </Tooltip>
+
+      {/* 指定位置 */}
+      <Tooltip title="提示在右侧" placement="right">
+        <Button>右侧提示</Button>
+      </Tooltip>
+
+      {/* 自定义颜色 */}
+      <Tooltip title="红色提示" color="red">
+        <Button>自定义颜色</Button>
+      </Tooltip>
+
+      {/* 包裹文本 */}
+      <Tooltip title="这是一个很长的说明">
+        <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+          悬停查看说明
+        </span>
+      </Tooltip>
+    </Space>
+  );
+}
+```
+
+---
+<br/>
+
+ **小技巧**
+
+**1.`Tooltip` 不要包裹 disabled 的按钮，建议用 `<span>` 外层包一下：**
+
+   ```jsx
+   <Tooltip title="按钮已禁用">
+     <span>
+       <Button disabled>禁用按钮</Button>
+     </span>
+   </Tooltip>
+   ```
+
+2. **`Tooltip` 也支持 `trigger="click"`、`focus`，但默认是 `hover`**
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Upload图片上传组件">Upload图片上传组件</h1>
+
+
+**`<Upload>` 组件结构**
+
+```jsx
+<Upload
+  name="avatar"
+  disabled={!isEditing}
+  style={{ width: 104, height: 104 }}
+  accept=".png"
+  listType="picture-card"
+  className="avatar-uploader"
+  showUploadList={false}
+  beforeUpload={(file) => {
+    return this.beforeUploadImg(file).catch(() => Upload.LIST_IGNORE);
+  }}
+  onChange={this.handleChange}
+>
+  <img src={url} />
+</Upload>
+```
+
+<br/>
+
+**✅ 属性详解：**
+
+| 属性                                    | 类型                                          | 说明 |
+| ------------------------------------- | ------------------------------------------- | -- |
+| `name="avatar"`                       | 上传的字段名（后端接收的字段）                             |    |
+| `disabled={!isEditing}`               | 控制是否禁用（不可点击），编辑模式下才可上传                      |    |
+| `style={{ width: 104, height: 104 }}` | 自定义上传区域的宽高                                  |    |
+| `accept=".png"`                       | 仅允许上传 `.png` 格式的文件                          |    |
+| `listType="picture-card"`             | 上传列表样式为“图片卡片”形式                             |    |
+| `className="avatar-uploader"`         | 自定义样式类名                                     |    |
+| `showUploadList={false}`              | 不显示上传后的文件列表（只展示你手动插入的 img）                  |    |
+| `beforeUpload={(file) => ...}`        | 上传前钩子，返回 `false` 或 `Promise.reject()` 会阻止上传 |    |
+| `onChange={this.handleChange}`        | 上传状态改变后的回调，比如获取 `file.url`、状态更新             |    |
+
+
+<br/>
+
+**🧩 第二部分：上传前校验方法 `beforeUploadImg`**
+
+```js
+beforeUploadImg = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    // 把 file 读取为 base64 编码（DataURL）
+    reader.readAsDataURL(file);
+
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e?.target?.result; // base64 结果
+
+      img.onload = () => {
+        // 图片加载完成，可拿到宽高等信息
+        // 你可以在这里校验尺寸、大小、格式等
+
+        resolve(); // 放行上传
+      };
+
+      img.onerror = () => {
+        reject(new Error('图片加载失败'));
+      };
+    };
+
+    reader.onerror = () => {
+      reject(new Error('文件读取失败'));
+    };
+  });
+};
+```
+
+<br/> 
+
+**✅ 这个方法做了什么？**
+
+| 步骤                               | 说明                          |
+| -------------------------------- | --------------------------- |
+| `FileReader.readAsDataURL(file)` | 将用户选择的文件读取为 base64          |
+| `reader.onload`                  | 文件读取成功，拿到 base64 字符串        |
+| `new Image().src = base64`       | 创建 `<img>` 元素尝试加载 base64 图片 |
+| `img.onload`                     | 图片加载成功，你可以：                 |
+
+* 拿到图片宽高
+* 检查是否符合规范
+* 决定是否允许上传
+  \| `resolve()` | 放行上传 |
+  \| `reject()` | 阻止上传（配合 `Upload.LIST_IGNORE`）|
+
+<br/> 
+
+**🔁 结合整体逻辑**
+
+```js
+beforeUpload={(file) => {
+  return this.beforeUploadImg(file).catch(() => Upload.LIST_IGNORE);
+}}
+```
+
+* 如果 `beforeUploadImg()` **校验成功** → 上传继续
+* 如果 `beforeUploadImg()` **校验失败** → 触发 `catch`，返回特殊值 `Upload.LIST_IGNORE`，**阻止上传**
+
+<br/> 
+
+**✅ 你可能会在 `img.onload` 中做什么？**
+
+```js
+if (img.width > 1024 || img.height > 1024) {
+  reject(new Error('图片太大'));
+} else {
+  resolve();
+}
+```
+
+也可以在这里压缩、画到 canvas 里等等。
+
+---
+<br/>
+
+
+**📌 总结流程图**
+
+```
+用户选择图片
+     ↓
+beforeUploadImg(file)
+     ↓
+FileReader 读为 base64
+     ↓
+new Image() 加载该 base64 图片
+     ↓
+img.onload → 判断宽高、大小、格式
+     ↓
+满足条件 → resolve() → 上传
+不满足 → reject() → Upload.LIST_IGNORE → 阻止上传
+```
+
 
 
