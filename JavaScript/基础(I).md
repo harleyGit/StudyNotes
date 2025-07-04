@@ -12,6 +12,8 @@
 	- [使用构造函数调用函数](#使用构造函数调用函数)
 	- [作为函数方法调用函数](#作为函数方法调用函数)
 	- [JavaScript闭包](#JavaScript闭包)
+	- [举例复杂函数声明demo](#举例复杂函数声明demo)
+		- [语法简写特性-返回值参数和行参相同](#语法简写特性-返回值参数和行参相同)
 - [**对象高级使用**](#对象高级使用)
 	- [创建 JavaScript 对象](#创建JavaScript对象)
 	- 	[使用Object生成对象](#使用Object生成对象)
@@ -22,12 +24,14 @@
 	- 	[JavaScript 类](#JavaScript类)
 	- 	[JavaScript 的对象是可变的](#JavaScript的对象是可变的)
 	- [	new 和不 new的区别](#new和不new的区别)
+- [**Promise**](#Promise)
+	- [Promise链式调用demo](#Promise链式调用demo)
+	- [延迟Promise代码详解](#延迟Promise代码详解)
 - [**HTML的DOM**](#HTML的DOM)
 	- [改变CSS样式](#改变CSS样式)
 - [**打印Console**](#打印Console)
 	- [类型信息输出](#类型信息输出)
 	- [格式化输出](#格式化输出)
-- [**数组**](#数组)
 - **参考资料：**
 	- [面试资料I](https://dragon-li.gitee.io/my-wiki/)
 
@@ -658,11 +662,9 @@ myArray = [10, 2];
 myObject = myFunction.apply(myObject, myArray);  // 返回 20
 ```
 
-
-<br/>
-
-
-> <h2 id="JavaScript闭包">**JavaScript 闭包**</h2>
+***
+<br/><br/><br/>
+> <h2 id="JavaScript闭包">JavaScript闭包</h2>
 
 ```
 var add = (function () {
@@ -678,6 +680,198 @@ add();
 ```
 
 
+***
+<br/><br/><br/>
+> <h2 id="">举例复杂函数声明demo</h2>
+
+```js
+在xx.tsx文件中有如下代码：
+
+export async function getInitialState(): Promise<{
+  settings?: Partial<LayoutSettings>;
+  currentUser?: API.CurrentUser;
+  loading?: boolean;
+  fetchUserInfo?: () => Promise<T>;
+}> {
+  const fetchUserInfo = async () => {
+    try {
+      const msg = await getTenantInfo();
+      return msg.result;
+    } catch (error) {
+      history.push(loginPath);
+    }
+    return undefined;
+  };
+  // 如果不是登录页面，执行
+  const { location } = history;
+
+	// 省略1万行代码
+	....
+	..
+	,
+	
+	return {
+		fetchUserInfo,
+		currentUser,
+		settings,
+		loading,
+  };
+}
+```
+
+
+- **解释**
+	* `export async function getInitialState()`：声明一个**异步函数**，用于导出供其他模块调用。
+	* 返回值是一个 `Promise`，其解析结果是一个对象，包含四个可选字段：
+	
+		* `settings`: 页面布局设置（Partial 表示只传部分字段也可以）
+		* `currentUser`: 当前用户信息
+		* `loading`: 加载状态布尔值
+		* `fetchUserInfo`: 一个函数，返回 Promise，表示“异步获取用户信息的函数”
+
+<br/>
+
+**函数体,从这里起 都是 getInitialState 函数体内的代码**
+
+```ts
+  const fetchUserInfo = async () => {
+    try {
+      const msg = await getTenantInfo();
+      return msg.result;
+    } catch (error) {
+      history.push(loginPath);
+    }
+    return undefined;
+  };
+```
+
+- **✅ 解释：**
+	
+	* `fetchUserInfo` 是一个定义在 `getInitialState` 函数内部的 **局部函数**。
+	* `getTenantInfo()` 是一个 API 调用，返回包含 `result` 字段的数据。
+	* 如果发生异常，则跳转到 `loginPath`（即登录页）。
+	* 最后，如果出错或返回不成功，返回 `undefined`。
+
+
+***
+<br/><br/><br/>
+> <h2 id="语法简写特性-返回值参数和行参相同">语法简写特性-返回值参数和行参相同</h2>
+
+- ✅ **返回值是可以缺损（少返回字段）吗？**
+
+可以，只要这些字段是可选的（加了 `?`）
+
+```ts
+Promise<{
+  settings?: Partial<LayoutSettings>;
+  currentUser?: API.CurrentUser;
+  loading?: boolean;
+  fetchUserInfo?: () => Promise<T>;
+}>
+```
+
+所有字段都是可选的（`?`），所以你可以只返回其中一部分，例如：
+
+```ts
+return {
+  fetchUserInfo,
+};
+```
+
+这也是合法的，其他字段可以省略（即为 `undefined`）。
+
+<br/>
+
+**✅  `fetchUserInfo` 对应的是哪一部分？**
+
+你问“为什么 fetchUserInfo 对应的没有看到”，其实你已经定义并返回了，只是它是函数体内定义的变量。
+
+```ts
+const fetchUserInfo = async () => {
+  try {
+    const msg = await getTenantInfo();
+    return msg.result;
+  } catch (error) {
+    history.push(loginPath);
+  }
+  return undefined;
+};
+```
+
+<br/>
+
+然后你在 return 时写了：
+
+```ts
+return {
+  fetchUserInfo,
+  currentUser,
+  settings,
+  loading,
+};
+```
+
+所以 `fetchUserInfo` 是作为属性之一被返回了，和你声明的返回类型中这个字段一一对应：
+
+```ts
+fetchUserInfo?: () => Promise<T>;
+```
+
+也就是说你返回的是：
+
+```ts
+{
+  fetchUserInfo: () => Promise<T>,
+  // 其他字段可能为 undefined 或未定义
+}
+```
+
+
+<br/><br/>
+
+**语法简写：**
+
+✅ 你说的“应该是 `fetchUserInfo: fetchUserInfo`”是完全对的！
+
+当我们写：
+
+```ts
+return {
+  fetchUserInfo: fetchUserInfo
+};
+```
+
+这是标准的对象字面量写法，表示返回的对象有一个字段叫 `fetchUserInfo`，它的值是变量 `fetchUserInfo` 的值。
+
+<br/>
+
+**✅ 那为什么能简写成 `fetchUserInfo` 呢？**
+
+这是 JavaScript 中的 **对象属性简写（Property shorthand）** 语法：
+
+当对象属性的 **键（key）和变量名一致时**，你可以省略 `key: value` 的写法，直接写变量名，表示 `key` 和 `value` 是同一个名字。
+
+
+**✅ 更直观的例子：**
+
+```ts
+const name = 'Harley';
+const age = 18;
+
+const person = {
+  name, // 等价于 name: name
+  age   // 等价于 age: age
+};
+```
+
+最终 `person` 是：
+
+```ts
+{
+  name: 'Harley',
+  age: 18
+}
+```
 
 
 
@@ -1012,9 +1206,540 @@ this 输出 window 对象
 ```
 
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="Promise">Promise</h1>
+
+**1️⃣. Promise介绍：**
+
+> `Promise` 是 JavaScript 提供的一种异步编程解决方案，用于表示一个\*\*异步操作最终完成（fulfilled）或失败（rejected）\*\*并返回结果的对象。
+
+<br/>
+
+**✅ 二、基本语法**
+
+```js
+const promise = new Promise((resolve, reject) => {
+  // 执行异步操作
+  if (成功) {
+    resolve(成功结果);
+  } else {
+    reject(失败原因);
+  }
+});
+```
+
+- **说明：**
+
+	* `resolve()`：表示成功，结果会传给 `.then()`
+	* `reject()`：表示失败，错误会传给 `.catch()`
+
+<br/>
+
+ **三、常见示例**
+
+```js
+const fetchData = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    const success = true;
+    if (success) {
+      resolve('获取数据成功');
+    } else {
+      reject('获取数据失败');
+    }
+  }, 1000);
+});
+
+fetchData
+  .then((result) => {
+    console.log('成功：', result);
+  })
+  .catch((error) => {
+    console.log('失败：', error);
+  });
+```
+
+- **执行顺序：**
+
+	- 1.创建 `Promise` 时立即执行 `new Promise(...)` 中的代码（同步）
+	- 2.1 秒后 `setTimeout` 回调触发，调用 `resolve()` 或 `reject()`
+	- 3.`.then()` 或 `.catch()` 接收结果（异步触发，进入微任务队列）
+
+<br/>
+
+ **四、Promise 状态说明**
+
+Promise 有三种状态：
+
+| 状态          | 描述                  |
+| ----------- | ------------------- |
+| `pending`   | 初始状态，进行中            |
+| `fulfilled` | 已成功，调用了 `resolve()` |
+| `rejected`  | 已失败，调用了 `reject()`  |
+
+> 一旦从 `pending` 转为 `fulfilled` 或 `rejected`，状态就不能再改变。
+
+<br/>
+
+**五、链式调用与执行顺序**
+
+```js
+new Promise((resolve) => {
+  console.log('1. 执行 Promise 内代码');
+  resolve('OK');
+})
+  .then((res) => {
+    console.log('2. then 第一次', res);
+    return 'next';
+  })
+  .then((res) => {
+    console.log('3. then 第二次', res);
+  });
+
+console.log('4. 同步代码执行完毕');
+```
+
+<br/>
+
+**输出顺序：**
+
+```
+1. 执行 Promise 内代码
+4. 同步代码执行完毕
+2. then 第一次 OK
+3. then 第二次 next
+```
+
+<br/>
+
+- **原因：**
+
+	* `new Promise()` 内代码立即执行（同步）
+	* `.then()` 会被放入“微任务队列”，等同步代码执行完再执行
+
+<br/>
+
+**✅ 六、async / await 是 Promise 的语法糖**
+
+```js
+function getData() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('数据来了');
+    }, 1000);
+  });
+}
+
+async function main() {
+  console.log('开始请求');
+  const result = await getData(); // 等待 Promise 完成
+  console.log('结果是：', result);
+}
+
+main();
+```
+
+<br/>
+
+**输出：**
+
+```
+开始请求
+（1秒后）结果是： 数据来了
+```
+
+* `await` 会“暂停” async 函数，直到 Promise 被 resolve。
+* `async` 函数总是返回一个 Promise。
+
+<br/>
+
+**✅ 七、错误处理**
+
+```js
+async function main() {
+  try {
+    const result = await fetch('wrong-url');
+    console.log(result);
+  } catch (err) {
+    console.error('捕获错误：', err);
+  }
+}
+```
+
+<br/>
+
+
+**✅ 八、并发 Promise 示例（常用于多个请求）**
+
+```js
+const p1 = Promise.resolve(1);
+const p2 = new Promise((resolve) => setTimeout(() => resolve(2), 1000));
+const p3 = Promise.resolve(3);
+
+Promise.all([p1, p2, p3]).then((res) => {
+  console.log('全部完成', res); // [1, 2, 3]
+});
+```
+
+<br/>
+
+**✅ 总结一张图理解执行顺序：**
+
+```
+1. new Promise(...): 同步执行
+2. resolve()/reject(): 注册回调
+3. then/catch/finally: 异步执行（微任务队列）
+4. await：暂停函数，等 Promise 完成
+```
+
+---
+<br/>
+
+**✅ 快速测试题：**
+
+```js
+console.log('A');
+
+new Promise((resolve) => {
+  console.log('B');
+  resolve();
+}).then(() => {
+  console.log('C');
+});
+
+console.log('D');
+```
+
+输出顺序是：
+
+```
+A
+B
+D
+C
+```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="Promise链式调用demo">Promise链式调用demo</h2>
+
+下面是一个\*\*「登录 → 获取用户信息 + 个性化设置 → 渲染首页」\*\*的完整 Demo，既包含 *Promise 链式写法*，也包含 *async/await* 写法，并穿插大量日志来演示 **执行顺序**。
+
+---
+<br/>
+
+- **1.场景与接口设计**
+
+| 接口                         | 模拟耗时   | 入参 / 返回值                          | 说明       |
+| -------------------------- | ------ | --------------------------------- | -------- |
+| `login(credentials)`       | 600 ms | `POST {name, pwd}` → `{token}`    | 登录，返回令牌  |
+| `fetchUserProfile(token)`  | 400 ms | `GET /me` → `{id, name, role}`    | 获取个人资料   |
+| `fetchUserSettings(token)` | 800 ms | `GET /settings` → `{theme, lang}` | 获取用户偏好   |
+| `renderHome(state)`        | —      | 把所有数据渲染到页面                        | 最终 UI 渲染 |
+
+---
+<br/>
+
+**2.工具函数：模拟接口返回 & 日志助手**
+
+```ts
+// utils.ts -------------------------------------------------------------
+export const delay = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+export function log(step: string, data?: unknown) {
+  console.log(
+    `%c${new Date().toISOString().slice(11, 23)} ${step}`,
+    'font-weight:bold;color:#4e88fe',
+    data ?? ''
+  );
+}
+```
+
+<br/>
+
+**3.Promise 链式版 (一步步 then / catch / finally)**
+
+```ts
+// login-chain.ts -------------------------------------------------------
+import { delay, log } from './utils';
+
+function login(credentials: { name: string; pwd: string }) {
+  log('① 调 login');
+  return delay(600).then(() => ({ token: 'mock-jwt-token' as const }));
+}
+
+function fetchUserProfile(token: string) {
+  log('② 调 fetchUserProfile');
+  return delay(400).then(() => ({
+    id: 1,
+    name: 'Harley',
+    role: 'admin',
+  }));
+}
+
+function fetchUserSettings(token: string) {
+  log('③ 调 fetchUserSettings');
+  return delay(800).then(() => ({
+    theme: 'dark',
+    lang: 'zh-CN',
+  }));
+}
+
+function renderHome(state: { profile: any; settings: any }) {
+  log('⑦ 渲染首页', state);
+  // 这里可把数据写入 React/Vue 状态管理，再更新 UI
+}
+
+// --- 正式流程 --------------------------------------------------------
+log('--- Promise 链式 DEMO 开始 ---');
+
+login({ name: 'harley', pwd: '123456' }) // ①
+  .then((loginRes) => {
+    log('④ 登录成功，拿到 token', loginRes);
+    // ② + ③ 并发
+    return Promise.all([
+      fetchUserProfile(loginRes.token),
+      fetchUserSettings(loginRes.token),
+    ]);
+  })
+  .then(([profile, settings]) => {
+    log('⑤ 两个请求都 OK');
+    renderHome({ profile, settings }); // ⑦
+  })
+  .catch((err) => {
+    log('❌ 流程失败', err);
+  })
+  .finally(() => {
+    log('⑥ finally：隐藏全局 Loading');
+  });
+```
+
+<br/>
+
+**预期控制台顺序**
+
+```
+--- Promise 链式 DEMO 开始 ---
+① 调 login
+④ 登录成功，拿到 token                 (0.6s)
+② 调 fetchUserProfile
+③ 调 fetchUserSettings
+⑤ 两个请求都 OK                       (0.6s + 0.8s ≈ 1.4s)
+⑦ 渲染首页
+⑥ finally：隐藏全局 Loading
+```
+
+> * **①** 的内部同步代码立刻执行
+> * **then** 回调按微任务顺序排队
+> * `Promise.all` 确保两个并发请求都完成后再进入下一步
+> * **finally** 总在链尾执行
+
+<br/>
+
+**4.async / await 版（更贴近日常写法）**
+
+```ts
+// login-async.ts -------------------------------------------------------
+import { delay, log } from './utils';
+
+async function login(credentials: { name: string; pwd: string }) {
+  log('① 调 login');
+  await delay(600);
+  return { token: 'mock-jwt-token' as const };
+}
+
+async function fetchUserProfile(token: string) {
+  log('② 调 fetchUserProfile');
+  await delay(400);
+  return { id: 1, name: 'Harley', role: 'admin' };
+}
+
+async function fetchUserSettings(token: string) {
+  log('③ 调 fetchUserSettings');
+  await delay(800);
+  return { theme: 'dark', lang: 'zh-CN' };
+}
+
+async function renderHome(state: { profile: any; settings: any }) {
+  log('⑦ 渲染首页', state);
+}
+
+export async function main() {
+  log('--- async/await DEMO 开始 ---');
+  try {
+    const { token } = await login({ name: 'harley', pwd: '123456' }); // ①
+
+    // ② & ③ 并发：用 Promise.all + await
+    const [profile, settings] = await Promise.all([
+      fetchUserProfile(token),
+      fetchUserSettings(token),
+    ]);
+
+    await renderHome({ profile, settings }); // ⑦
+  } catch (err) {
+    log('❌ 流程失败', err);
+  } finally {
+    log('⑥ finally：隐藏全局 Loading');
+  }
+}
+
+main();
+```
+
+> **async / await** 只是语法糖——本质上还是用 `Promise.then` 构建微任务，但极大提升可读性。
+> `Promise.all([...])` 保证 **两个请求并发 & 都成功** 才继续；若有一个失败即跳去 `catch`。
+
+<br/>
+
+**5.扩展：失败重试 + 指数退避**
+
+实际开发中网络不稳，我们常给关键接口做重试：
+
+```ts
+async function retry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delayMs = 500
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (retries === 0) throw err;
+    await delay(delayMs);
+    return retry(fn, retries - 1, delayMs * 2); // 指数退避
+  }
+}
+
+// 用法：三次机会拿设置
+const settings = await retry(() => fetchUserSettings(token), 2, 300);
+```
+
+<br/>
+
+**6.核心执行顺序再回顾**
+
+```
+┌ new Promise(...)   ← 加入微任务前的同步阶段
+├ resolve / reject
+│   └───► .then/.catch  回调排进「微任务队列」
+└ 浏览器 / Node 事件循环
+    ├ 先清空同步栈
+    ├ 执行所有微任务（Promise 回调）
+    └ 再执行宏任务（setTimeout 回调等）
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="延迟Promise代码详解">延迟Promise代码详解</h2>
+
+**原代码**
+
+```ts
+export const delay = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+```
+
+<br/>
+
+**✅ 1.`delay(20)` 为什么能直接调用？它是个变量？**
+
+我们看到的是一个**箭头函数表达式赋值给变量**的写法：
+
+```ts
+const delay = (ms) => { ... }
+```
+
+也可以写成标准函数：
+
+```ts
+function delay(ms) {
+  ...
+}
+```
+
+在这段代码中：
+
+```ts
+export const delay = (ms: number) => new Promise(...);
+```
+
+就是定义了一个变量 `delay`，它是一个函数，接收 `ms: number` 毫秒，返回一个 Promise。因此你可以像 `delay(20)` 这样调用它，完全合法。
+
+<br/>
+
+**✅ 2.`Promise<void>` 中的 `void` 是什么意思？**
+
+这是 **TypeScript 中 Promise 的泛型参数**，表示：
+
+> 这个 Promise **成功（resolve）时不返回任何值**，即返回值是 `undefined`。
+
+**对比：**
+
+```ts
+const a: Promise<number> = Promise.resolve(123); // resolve(123)，返回数字
+
+const b: Promise<void> = Promise.resolve();      // resolve(undefined)，没有值
+```
+
+对于 `delay` 来说，它的目的是“等一段时间”，并不返回什么结果值，所以写 `Promise<void>`。
+
+<br/>
+
+**✅ 3.`(resolve) => setTimeout(resolve, ms)` 是什么意思？**
+
+这段代码里是构造 Promise 的关键：
+
+```ts
+new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+```
+
+<br/>
+
+- **解释：**
+
+	* `new Promise(...)` 需要一个函数作为参数，这个函数会在 Promise 执行时被调用
+	* 这个函数有两个参数：`resolve` 和 `reject`（只用了 `resolve`）
+	* 你传进去的函数是 `(resolve) => { setTimeout(resolve, ms) }`
+	* `setTimeout(resolve, ms)` 的意思是：**等 `ms` 毫秒后调用 `resolve()`**，表示 Promise 成功完成
+
+> 这个技巧常用于「等待一段时间」的场景，比如节流、防抖、动画延迟、等待加载等。
 
 
 <br/>
+
+
+**✅ 补充一个完整使用场景：**
+
+```ts
+async function main() {
+  console.log('开始等待');
+  await delay(2000);  // 等 2 秒
+  console.log('2 秒过去了');
+}
+```
+
+<br/>
+
+输出：
+
+```
+开始等待
+（2 秒后）
+2 秒过去了
+```
+
+你可以把 `delay` 当成一个通用的“延迟函数”。
+
+
+<br/><br/><br/>
 
 ***
 <br/>
