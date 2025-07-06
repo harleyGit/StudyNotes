@@ -18,7 +18,9 @@
 	- [构造函数constructor](#构造函数constructor)
 	- [React Hooks](#ReactHooks)
 		- [useState](#useState)
+			- [函数组件中添加状态useState ](#函数组件中添加状态useState)
 		- [useEffect](#useEffect)
+			- [副作用useEffect3种使用场景](#副作用useEffect3种使用场景)
 		- [useCallBack](#useCallBack)
 		- [useMemo](#useMemo)
 			- [长轮询案例](#长轮询案例)
@@ -897,17 +899,12 @@ export default App;
 
 
 
-
-<br/>
-<br/>
-<br/>
-
+***
+<br/><br/><br/>
 > <h2 id='ReactHooks'>React Hooks</h2>
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='useState'>useState</h3>
 
 
@@ -974,13 +971,58 @@ export function TestHOC2() {
 ![react35](./../Pictures/react35.png)
 
 
+<br/><br/>
+> <h3 id="函数组件中添加状态useState">函数组件中添加状态useState</h3>
 
+React 中的 **`useState` Hook 语法**，用于在函数组件中添加状态（state）。
 
 <br/>
+
+```js
+const [状态变量, 设置状态的函数] = useState(初始值);
+```
+
+例如：
+
+
+```js
+const [locale, setLocale] = useState('en');
+```
+
+就是：
+
+* `locale` 就是当前的语言（比如当前en）
+* `setLocale()` 是改变这个状态的方法
+* 每次你调用 `setLocale()`，React 会**重新渲染这个组件**
+	* 创建一个状态 `locale`（当前语言）
+	* 初始值是 `'en'`
+	* 使用 `setLocale('zh')` 可以把语言变成中文
+	
 <br/>
 
+**🔁 状态使用示例：切换语言**
+
+```jsx
+function App() {
+  const [locale, setLocale] = useState('en'); // 当前语言
+
+  const switchLang = () => {
+    setLocale(locale === 'en' ? 'zh' : 'en'); // 点击切换
+  };
+
+  return (
+    <div>
+      <p>当前语言: {locale}</p>
+      <button onClick={switchLang}>切换语言</button>
+    </div>
+  );
+}
+```
+
+
+
+<br/><br/>
 > <h3 id='useEffect'>useEffect</h3>
-
 
 &emsp;Effect翻译成专业术语称之为副作用。网络请求、DOM操作都是副作用的一种，useEffect就是专门用来处理副作用的。在类组件中副作用通常在componentDid-Mount和componentDidUpdate中进行处理，而useEffect就相当于componentDidMount、componentDidUpdate和componentWillUnmount的集合体。useEffect包括两个参数执行时的回调函数和依赖参数，并且回调函数还有一个返回函数
 
@@ -1060,13 +1102,129 @@ export function TestHOC3() {
 
 ③componentDidUpdate。只检测更新相对比较麻烦，需要区分更新还是挂载需要检测依赖数据和初始值是否一致，如果当前的数据和初始数据保持一致就说明是挂载阶段，当然安全起见应和上一次的值进行对比，若当前的依赖数据和上一次的依赖数据完全一样，则说明组件没有更新
 
+<br/><br/>
+> <h3 id="副作用useEffect3种使用场景"> 副作用useEffect3种使用场景</h3>
+
+**`useEffect()`** 是一个常用 Hook，用于**处理副作用（side effects）**，比如：
+
+* 页面加载时执行某些操作
+* 监听某个状态变化
+* 订阅/清理定时器、事件、网络请求等
+
+***
+<br/>
+
+**✅ 1.页面加载时执行某些操作（如获取数据）**
+
+```jsx
+import { useEffect } from 'react';
+
+function PageLoadExample() {
+  useEffect(() => {
+    console.log('📦 页面加载完成时运行一次');
+
+    // 模拟数据请求
+    fetch('https://jsonplaceholder.typicode.com/posts/1')
+      .then(res => res.json())
+      .then(data => console.log('数据:', data));
+  }, []); // 👈 空数组：只在初始加载时执行一次
+
+  return <h2>页面加载示例</h2>;
+}
+```
+
+<br/>
+
+**2.监听某个状态变化（如语言、搜索词）**
+
+```js
+import { useEffect, useState } from 'react';
+
+function App() {
+  const [locale, setLocale] = useState('en');
+
+  useEffect(() => {
+    console.log(`语言变化为：${locale}`);
+  }, [locale]); // 👈 当 locale 变化时会触发这个函数
+
+  return (
+    <div>
+      <button onClick={() => setLocale(locale === 'en' ? 'zh' : 'en')}>
+        切换语言
+      </button>
+    </div>
+  );
+}
+```
+
+<br/>
+
+**总结：Hooks 小抄表**
+
+| Hook          | 用途            | 示例                                      |
+| ------------- | ------------- | --------------------------------------- |
+| `useState()`  | 定义组件内的状态      | `const [count, setCount] = useState(0)` |
+| `useEffect()` | 处理副作用（如加载、监听） | `useEffect(() => {}, [依赖])`  
+
+<br/>
+
+**✅3.订阅/清理定时器、事件、WebSocket 等**
+
+```jsx
+import { useEffect, useState } from 'react';
+
+function TimerExample() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    console.log('⏱ 启动定时器');
+    const timer = setInterval(() => {
+      setCount(c => c + 1);
+      
+      /** 执行1000次停止的逻辑
+      setCount(c => {
+	      if (c >= 1000) {
+	        clearInterval(timer); // ✅ 手动清理定时器
+	        return c;
+	      }
+	      return c + 1;
+	    });
+      */
+    }, 1000); // 每隔 1000 毫秒（即 1 秒）执行一次这个回调函数，注意： 不是执行1000次就停止定时器
+    
+    // useEffect 中的**“清理函数”（cleanup function），它的执行时机并不是由业务逻辑控制（比如计数到 1000）**，而是由 React 控制组件生命周期。
+    return () => {
+      console.log('🧹 清除定时器');
+       // 当下次 useEffect 执行前，先清理旧的副作用
+      clearInterval(timer);
+    };
+  }, []); // 👈 只在首次加载时设置定时器，并在卸载时清除
+
+  return <h2>计数：{count}</h2>;
+}
+```
+
+**✅ 总结：**
+
+* `setInterval()`/`addEventListener()` 等副作用需要在 `useEffect` 中设置
+* 在 `return` 中编写清理函数（卸载组件或重新执行前会自动调用）
+* 类似类组件的 `componentWillUnmount`
 
 
 <br/>
-<br/>
+***
 
+**整体总结表：**
+
+| 场景               | `useEffect` 形式                                  | 用途说明          |
+| ---------------- | ----------------------------------------------- | ------------- |
+| 页面加载时运行一次        | `useEffect(() => { ... }, [])`                  | 获取数据、初始化      |
+| 状态/props 变化时运行   | `useEffect(() => { ... }, [value])`             | 响应式监听状态变化     |
+| 订阅/定时器/事件绑定 + 清理 | `useEffect(() => { ...; return () => {} }, [])` | 生命周期内安全处理外部资源 |     
+
+
+<br/><br/>
 > <h3 id='useCallback'>useCallback</h3>
-
 
 **useCallback(fn,deps):**
 - fn就是是一个函数，把你想要做的事放到函数中

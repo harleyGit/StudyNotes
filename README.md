@@ -362,6 +362,7 @@
 - **库**
 	- [阿里UI库AntDesign](./React/AntDesign.md)
 	- [Umi](./React/Umi.md)
+	- [加密库crypto-js](./React/crypto-js.md)
 - **知识综合**
 	- [**ES6入门教程**](https://es6.ruanyifeng.com/)
 	- [XKBKnowledge(I)](./React/XKBKnowledge(I).md)
