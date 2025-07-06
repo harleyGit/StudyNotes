@@ -1,15 +1,4 @@
 ># <h0 id=''>[GoLang官网](https://go.dev/)</h2>
-- [**GoLang官网资料【中文API文档】**](https://studygolang.com/pkgdoc)
-	- [**Go语言中文文档(框架、demo很丰富)**](https://www.topgoer.com/)
-	- [GO指南](https://tour.go-zh.org/list)
-	- [GoLang中文网](https://studygolang.com/pkgdoc)
-	- [Go语言资料集合](https://github.com/LearnGolang/LearnGolang/tree/master/01-Golang资源/01-中文书籍)
-	- [Go开发者路线图](https://github.com/darius-khll/golang-developer-roadmap/blob/master/i18n/zh-CN/ReadMe-zh-CN.md)
-- **iBooks**
-	- [《Go语言项目开发上手指南》- 代码示例](https://github.com/XieWeiXie/GopherBook)
-	- [Go语言圣经-iBook（王飞介绍）](https://docs.hacknode.org/gopl-zh/index.html)
-	- [Go学习路线-王飞介绍](https://mp.weixin.qq.com/s/o1KxHuHyr32F7pQyKNLedw)
-- [命名规则](https://www.cnblogs.com/rickiyang/p/11074174.html)
 - [**安装配置**](#安装配置)
 	- [GOROOT环境变量路径下各个文件的意义](#GOROOT环境变量路径下各个文件的意义)
 - [**项目初创建**](#项目初创建)
@@ -154,6 +143,20 @@
 - [**知识拓展**](#知识拓展)
 	- [裸机和租用服务器系统辨识分类](#裸机和租用服务器系统辨识分类)
 		- [阿里云和腾讯云安转的是什么系统](#阿里云和腾讯云安转的是什么系统)
+- **资料**
+	- [**GoLang官网资料【中文API文档】**](https://studygolang.com/pkgdoc)
+	- [**Go语言中文文档(框架、demo很丰富)**](https://www.topgoer.com/)
+	- [GO指南](https://tour.go-zh.org/list)
+	- [GoLang中文网](https://studygolang.com/pkgdoc)
+	- [Go语言资料集合](https://github.com/LearnGolang/LearnGolang/tree/master/01-Golang资源/01-中文书籍)
+	- [Go开发者路线图](https://github.com/darius-khll/golang-developer-roadmap/blob/master/i18n/zh-CN/ReadMe-zh-CN.md)
+	- [Go语言学习【rickiyang很值得看，都是干货】](https://www.cnblogs.com/rickiyang/category/1487722.html)
+	- [《Go学习路线图》让你少走弯路，Let's Go ！持续更新中...](https://juejin.cn/post/7119123646471208968)
+	- **iBooks**
+		- [《Go语言项目开发上手指南》- 代码示例](https://github.com/XieWeiXie/GopherBook)
+		- [Go语言圣经-iBook（王飞介绍）](https://docs.hacknode.org/gopl-zh/index.html)
+		- [Go学习路线-王飞介绍](https://mp.weixin.qq.com/s/o1KxHuHyr32F7pQyKNLedw)
+	- [命名规则](https://www.cnblogs.com/rickiyang/p/11074174.html)
 
 
 <br/>
