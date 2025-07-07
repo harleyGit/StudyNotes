@@ -9,9 +9,11 @@
 - [umi框架生成react入口文件](#umi框架生成react入口文件) 
 	- [umijs生成首页](#umijs生成首页)
 	- [入口文件中的app.tsx没有看到layout调用？](#入口文件中的app.tsx没有看到layout调用？)    
-- [ProLayout布局属性](#ProLayout布局属性)  
-	- [全局主题配置](#全局主题配置) 
-	- [Breadcrumb显示当前导航路径](#Breadcrumb显示当前导航路径)
+- [**阿里Antd框架-UI**](#阿里Antd框架-UI)
+	- [ProLayout布局属性](#ProLayout布局属性)  
+		- [全局主题配置](#全局主题配置) 
+		- [Breadcrumb显示当前导航路径](#Breadcrumb显示当前导航路径)
+	- [**Modal弹窗表格属性介绍**](#Modal弹窗表格属性介绍)
 
 
 
@@ -1631,4 +1633,154 @@ import { PageContainer } from '@ant-design/pro-components';
 
 效果图：
 ![react0.0.0.0.png](./../Pictures/react0.0.0.0.png)
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="Modal弹窗表格属性介绍">Modal弹窗表格属性介绍</h2>
+
+```js
+const ModelPageView = ({
+  isVisible,
+  onCancel,
+  onOk,
+  productId,
+  productVersionId,
+  moduleData,
+  title,
+  ...restProps
+}) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [form] = Form.useForm();
+  const intl = useIntl();
+
+  useEffect(() => {
+    form.setFieldsValue(moduleData);
+    argusLog('moduleData', moduleData);
+  }, [moduleData]);
+
+	return (
+		<div></div>
+	)
+ );
+};
+
+export default ModelPageView;
+```
+
+这段代码是一个典型的 **React 函数组件**，用于渲染一个弹窗、表单或编辑视图的页面（猜测可能是弹窗形式的模块编辑或详情查看页面），它使用了 **Ant Design 的 Form、React Hook 和国际化工具**。
+
+<br/>
+
+**✅ 1. 组件定义部分**
+
+```tsx
+const ModelPageView = ({
+  isVisible,
+  onCancel,
+  onOk,
+  productId,
+  productVersionId,
+  moduleData,
+  title,
+  ...restProps
+}) => {
+```
+
+<br/>
+
+**🔍 解释：**
+
+这是一个 **函数组件（Function Component）**，名叫 `ModelPageView`，它接收一组 props（属性），解构参数如下：
+
+| 参数名                | 说明                                        |
+| ------------------ | ----------------------------------------- |
+| `isVisible`        | 控制弹窗是否显示（比如 `<Modal visible={isVisible}`） |
+| `onCancel`         | 点击“取消”按钮时的回调函数                            |
+| `onOk`             | 点击“确定”按钮时的回调函数                            |
+| `productId`        | 产品 ID（业务参数）                               |
+| `productVersionId` | 产品版本 ID（业务参数）                             |
+| `moduleData`       | 模块数据（用于表单初始值）                             |
+| `title`            | 弹窗标题或页面标题                                 |
+| `...restProps`     | 其他透传属性                                    |
+
+<br/>
+
+**✅ 2. 状态和表单初始化**
+
+```tsx
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [form] = Form.useForm();
+const intl = useIntl();
+```
+
+
+**🔍 解释：**
+
+| 变量             | 类型              | 说明                                                                 |
+| -------------- | --------------- | ------------------------------------------------------------------ |
+| `isSubmitting` | `boolean` 状态    | 控制“提交中”按钮 loading 状态                                               |
+| `form`         | Ant Design 表单实例 | 用于绑定 `<Form form={form}>` 表单                                       |
+| `intl`         | 国际化对象           | 来自 `react-intl` 或 `umi` 的 `useIntl()`，用于 `formatMessage()` 获取多语言内容 |
+
+<br/>
+
+
+**✅ 3. useEffect：当 `moduleData` 变化时更新表单内容**
+
+```tsx
+useEffect(() => {
+  form.setFieldsValue(moduleData);
+  argusLog('moduleData', moduleData);
+}, [moduleData]);
+```
+
+
+**🔍 解释：**
+
+* `useEffect(..., [moduleData])`：监听 `moduleData` 变化；
+* `form.setFieldsValue()`：将模块数据设置进表单中；
+* `argusLog(...)`：用于打点日志或调试（自定义的日志函数）。
+
+<br/> 
+
+**✅ 4. 返回部分（未实现 UI）**
+
+
+这段代码中的返回 JSX 是空的 `<div>`，说明 **UI 部分还没写**。实际中你会看到类似如下结构：
+
+```tsx
+return (
+  <Modal
+    visible={isVisible}
+    title={title}
+    onCancel={onCancel}
+    onOk={handleSubmit}
+    confirmLoading={isSubmitting}
+    {...restProps}
+  >
+    <Form form={form} layout="vertical">
+      <Form.Item name="name" label="模块名称">
+        <Input />
+      </Form.Item>
+    </Form>
+  </Modal>
+);
+```
+
+<br/>
+
+ 5. **总结整体功能：**
+
+这个组件 **ModelPageView** 是一个用于显示模块信息的 UI 页面，可能是一个表单弹窗，有以下用途：
+
+| 功能      | 实现                               |
+| ------- | -------------------------------- |
+| 数据展示或编辑 | 通过 `moduleData` 传入已有数据           |
+| 表单处理    | 使用 `form.setFieldsValue()` 设置初始值 |
+| 用户操作    | 通过 `onOk`、`onCancel` 控制交互        |
+| 国际化     | 使用 `useIntl()` 支持多语言文本           |
+| 提交状态    | `isSubmitting` 控制按钮 loading 效果   |
+
 

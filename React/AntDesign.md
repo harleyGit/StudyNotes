@@ -1,4 +1,5 @@
 > <h1 id=""></h1>
+- [** AntDesign 组件总览**](https://ant.design/components/tag-cn)
 - [**阿里开源ReactUI组件库AntDesign**](#阿里开源ReactUI组件库AntDesign)
 	- [Table组件使用](#Table组件使用)
 		- [pagination、expandable属性使用](#pagination、expandable属性使用)
@@ -14,6 +15,8 @@
 - [Menu组件做侧边栏菜单](#Menu组件做侧边栏菜单)
 - [加载组件Spin](#加载组件Spin)
 - [骨架屏Skeleton组件](#骨架屏Skeleton组件)
+- [标签组件Tag](#标签组件Tag)
+
 
 
 
@@ -1946,3 +1949,175 @@ return (
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="标签组件Tag">标签组件Tag</h1>
+
+ `<Tag>` 标签组件用于展示简洁的 **状态、分类、标签内容、标识性信息** 等内容，广泛用于后台系统的状态标记、文章分类、标签管理等场景。
+
+<br/>
+
+**✅ 一、Tag 是什么？**
+
+> `<Tag>` 是 Ant Design 的轻量级标签组件，支持不同颜色、关闭操作、图标、可选择等功能。
+
+📎 官方文档地址：[https://ant.design/components/tag-cn/](https://ant.design/components/tag-cn/)
+
+<br/>
+
+**✅ 二、Tag 的常见用法**
+
+**✅ 基础使用：**
+
+```tsx
+import { Tag } from 'antd';
+
+<Tag>默认标签</Tag>
+<Tag color="magenta">粉色</Tag>
+<Tag color="green">绿色</Tag>
+<Tag color="#f50">自定义颜色</Tag>
+```
+
+<br/>
+
+**✅ 可关闭标签（带 x 关闭按钮）：**
+
+```tsx
+<Tag closable onClose={() => console.log('标签被关闭')}>
+  可关闭标签
+</Tag>
+```
+
+> 提示：被关闭的标签不会自动消失，你需要在父组件中删除对应数据项。
+
+<br/>
+
+**✅ 循环渲染多个标签：**
+
+```tsx
+const tags = ['React', 'Vue', 'Angular'];
+
+{tags.map(tag => (
+  <Tag key={tag}>{tag}</Tag>
+))}
+```
+
+<br/>
+
+**✅ 标签颜色状态用途：**
+
+Ant Design 提供了一些语义化颜色（默认内置），如：
+
+* `success` ✅ 成功
+* `processing` 🔄 处理中
+* `error` ❌ 错误
+* `warning` ⚠️ 警告
+* `default` 默认灰色
+
+```tsx
+<Tag color="success">已完成</Tag>
+<Tag color="error">失败</Tag>
+<Tag color="warning">待处理</Tag>
+```
+
+<br/>
+
+**✅ 动态选择标签（CheckableTag）**
+
+```tsx
+import { Tag } from 'antd';
+const { CheckableTag } = Tag;
+
+const options = ['Apple', 'Banana', 'Orange'];
+const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+return (
+  <>
+    {options.map(tag => (
+      <CheckableTag
+        key={tag}
+        checked={selectedTags.includes(tag)}
+        onChange={checked => {
+          const next = checked
+            ? [...selectedTags, tag]
+            : selectedTags.filter(t => t !== tag);
+          setSelectedTags(next);
+        }}
+      >
+        {tag}
+      </CheckableTag>
+    ))}
+  </>
+);
+```
+
+✅ **场景**：多选标签、文章标签筛选、兴趣偏好等。
+
+<br/>
+
+**✅ 标签中添加图标：**
+
+```tsx
+import { Tag } from 'antd';
+import { SmileOutlined } from '@ant-design/icons';
+
+<Tag icon={<SmileOutlined />} color="success">
+  带图标的标签
+</Tag>
+```
+
+<br/>
+
+**✅ 标签组 + 展示控制：**
+
+```tsx
+<Tag.Group>
+  <Tag color="blue">开发</Tag>
+  <Tag color="gold">测试</Tag>
+  <Tag color="lime">上线</Tag>
+</Tag.Group>
+```
+
+<br/>
+
+**✅ 三、在表格中使用 Tag（状态展示经典场景）**
+
+```tsx
+const columns = [
+  {
+    title: '状态',
+    dataIndex: 'status',
+    render: (text) => {
+      let color = text === '完成' ? 'green' : text === '异常' ? 'red' : 'blue';
+      return <Tag color={color}>{text}</Tag>;
+    },
+  },
+];
+```
+
+<br/>
+
+ **✅ 四、自定义颜色支持**
+
+你可以使用任意颜色（16进制或颜色名）：
+
+```tsx
+<Tag color="#87d068">自定义颜色</Tag>
+```
+
+<br/>
+
+ **✅ 五、常见场景总结：**
+
+| 场景       | 示例                                |
+| -------- | --------------------------------- |
+| 状态标记     | <Tag color="success">成功</Tag>     |
+| 类别标识     | <Tag color="blue">前端</Tag>        |
+| 标签选择     | <CheckableTag>可选标签</CheckableTag> |
+| 可关闭的动态标签 | <Tag closable>移除我</Tag>           |
+| 数据渲染配合   | 表格、卡片、表单内标注                       |
+
+
+	
