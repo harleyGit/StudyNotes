@@ -3,6 +3,7 @@
 	- [Table组件使用](#Table组件使用)
 		- [pagination、expandable属性使用](#pagination、expandable属性使用)
 			- [expandable中常用属性：columnWidth、expandIcon](#expandable中常用属性：columnWidth、expandIcon)
+			- [表中行展开细节](#表中行展开细节)
 	- [下拉组件Select](#下拉组件Select)
 	- [加载指示器组件Spin](#加载指示器组件Spin)
 	- [模态框组件-Modal](#模态框组件-Modal)
@@ -12,6 +13,7 @@
 - [**Upload图片上传组件**](#Upload图片上传组件)
 - [Menu组件做侧边栏菜单](#Menu组件做侧边栏菜单)
 - [加载组件Spin](#加载组件Spin)
+- [骨架屏Skeleton组件](#骨架屏Skeleton组件)
 
 
 
@@ -320,6 +322,179 @@ import { Table, Button } from 'antd';
 | ---------------- | --------- | ---------------------- | ------------ |
 | `columnWidth: 0` | 隐藏默认展开图标列 | ⚠️ 需配合 `expandIcon` 使用 | 自定义图标样式      |
 | `expandIcon`     | 自定义展开图标   | ✅ 常用                   | 替换成按钮、图标、文字等 |
+
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="表中行展开细节">表中行展开细节</h2>
+
+`<Table>` 中的 `pagination` 和 `expandable` 是两个常用的功能属性，分别用于 **分页** 和 **可展开行**。
+
+<br/>
+
+ **✅ 一、`pagination`（分页）属性详解：** 控制表格分页行为 —— 显示分页器、切换页码、页面大小等。
+
+<br/>
+
+**Table的基本属性：**
+
+```tsx
+<Table
+  dataSource={data}
+  columns={columns}
+  pagination={{
+    current: 1,
+    pageSize: 10,
+    total: 100,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    onChange: (page, pageSize) => {
+      // 切页回调
+    },
+  }}
+/>
+```
+
+<br/> 
+
+**🔍 属性说明：**
+
+| 属性名               | 类型                         | 说明         |
+| ----------------- | -------------------------- | ---------- |
+| `current`         | `number`                   | 当前页码       |
+| `pageSize`        | `number`                   | 每页显示条数     |
+| `total`           | `number`                   | 总数据条数      |
+| `showSizeChanger` | `boolean`                  | 是否允许切换每页条数 |
+| `showQuickJumper` | `boolean`                  | 是否允许快速跳页   |
+| `onChange`        | `(page, pageSize) => void` | 分页变化时触发    |
+
+---
+<br/>
+
+
+**🛠 示例（分页 + 请求数据）：**
+
+```tsx
+const [data, setData] = useState([]);
+const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+
+const fetchData = async (page = 1, pageSize = 10) => {
+  const res = await request(`/api/list?page=${page}&size=${pageSize}`);
+  setData(res.list);
+  setPagination({ current: page, pageSize, total: res.total });
+};
+
+useEffect(() => {
+  fetchData(pagination.current, pagination.pageSize);
+}, []);
+
+<Table
+  dataSource={data}
+  columns={columns}
+  pagination={{
+    ...pagination,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    onChange: (page, pageSize) => {
+      fetchData(page, pageSize);
+    },
+  }}
+/>
+```
+
+<br/>
+
+ **✅ 二、`expandable`（可展开行）属性：** 用于显示“可展开的子行内容”，例如：点击某一行可展开更多详情信息（嵌套视图、子表格、额外描述等）。
+
+
+```tsx
+<Table
+  dataSource={data}
+  columns={columns}
+  expandable={{
+    expandedRowRender: (record) => <p>{record.description}</p>,
+    rowExpandable: (record) => record.expandable !== false,
+  }}
+/>
+```
+
+<br/>
+
+ **🔍 属性说明：**
+
+| 属性名                 | 类型                           | 说明             |
+| ------------------- | ---------------------------- | -------------- |
+| `expandedRowRender` | `(record) => ReactNode`      | 渲染展开行内容        |
+| `rowExpandable`     | `(record) => boolean`        | 判断某一行是否允许展开    |
+| `onExpand`          | `(expanded, record) => void` | 展开/收起时触发       |
+| `expandedRowKeys`   | `string[] \| number[]`       | 控制当前展开的行（受控模式） |
+
+---
+<br/>
+
+**🛠 示例（点击展开详情）：**
+
+```tsx
+const columns = [
+  { title: '姓名', dataIndex: 'name' },
+  { title: '年龄', dataIndex: 'age' },
+];
+
+const data = [
+  { key: 1, name: '张三', age: 32, description: '张三的详细信息...' },
+  { key: 2, name: '李四', age: 28, description: '李四的详细信息...' },
+];
+
+<Table
+  dataSource={data}
+  columns={columns}
+  expandable={{
+    expandedRowRender: (record) => (
+      <div style={{ margin: 0, padding: 8 }}>{record.description}</div>
+    ),
+  }}
+/>
+```
+
+---
+<br/>
+
+**🧩 高级示例：展开行中嵌套子表格**
+
+```tsx
+expandable={{
+  expandedRowRender: (record) => (
+    <Table
+      columns={[{ title: '订单号', dataIndex: 'orderId' }]}
+      dataSource={record.orders}
+      pagination={false}
+    />
+  ),
+  rowExpandable: (record) => record.orders?.length > 0,
+}}
+```
+
+<br/>
+
+ **✅ 三、分页 + 展开行组合使用**
+
+你可以同时使用两个属性，它们互不冲突：
+
+```tsx
+<Table
+  dataSource={data}
+  columns={columns}
+  pagination={paginationConfig}
+  expandable={{
+    expandedRowRender: (record) => <p>{record.description}</p>,
+  }}
+/>
+```
+
+
+
 
 
 ***
@@ -1648,8 +1823,126 @@ export default function Page() {
 这表示：`loading === true` 时，`YourContentComponent` 会被模糊遮罩并显示加载中动画。
 
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="骨架屏Skeleton组件">骨架屏Skeleton组件</h1>
+
+`<Skeleton />` 是 Ant Design 提供的一个 **骨架屏（Skeleton Screen）组件**，用于在数据加载过程中，展示“灰色占位图”，提升用户的视觉体验。
+
+<br/>
+
+✅ 一句话定义：
+
+> **Skeleton 是一种“占位图”组件，用于在数据未加载完成时，先显示结构轮廓，等数据加载完成后再替换为真实内容。**
+
+<br/>
+
+- **✅ Skeleton 的好处：**
+
+	* 让用户感觉页面结构已经准备好；
+	* 减少“白屏”感；
+	* 提前预览页面骨架，提高感知性能；
+	* 常见于：**社交流、文章列表、卡片、图文内容加载**
+
+<br/>
+
+ **✅ 最基础：**
+
+```tsx
+import { Skeleton } from 'antd';
+
+<Skeleton active />
+```
+
+* `active`: 是否展示动画
+* 默认显示三行段落
+
+<br/>
+
+**页面加载数据时使用**
+
+```tsx
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  setTimeout(() => setLoading(false), 2000); // 模拟请求
+}, []);
+
+return (
+  <div>
+    {loading ? (
+      <Skeleton active />
+    ) : (
+      <div>
+        <h3>真实标题</h3>
+        <p>真实内容段落</p>
+      </div>
+    )}
+  </div>
+);
+```
+
+***
+<br/>
+
+ ✅ 进阶用法：自定义头像、标题、段落
+
+```tsx
+<Skeleton
+  avatar={{ size: 'large' }}
+  title={{ width: '50%' }}
+  paragraph={{ rows: 3 }}
+  active
+/>
+```
+
+| 属性          | 类型        | 说明       |               |
+| ----------- | --------- | -------- | ------------- |
+| `avatar`    | \`boolean | object\` | 是否显示头像        |
+| `title`     | \`boolean | object\` | 是否显示标题（可设宽度）  |
+| `paragraph` | \`boolean | object\` | 是否显示段落（行数、宽度） |
+
+<br/>
+
+ **✅ 配合数据使用：Skeleton.Button / Skeleton.Input / Skeleton.Image 等**
+
+```tsx
+<Skeleton.Button active size="large" shape="round" />
+<Skeleton.Input active size="default" style={{ width: 200 }} />
+<Skeleton.Image style={{ width: 200 }} />
+```
+
+<br/>
+
+ **✅ 搭配 `loading` 的语法糖：`<Skeleton loading={loading} >...</Skeleton>`**
+
+```tsx
+<Skeleton loading={loading} active>
+  <Card title="真实数据" />
+</Skeleton>
+```
+
+* loading 为 true：显示骨架；
+* loading 为 false：显示 children 内容。
+
+<br/>
+
+ **✅ 配合列表使用（Skeleton.List）**
+
+```tsx
+{loading
+  ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} active avatar paragraph={{ rows: 2 }} />)
+  : realList.map(item => <ListItem key={item.id} data={item} />)}
+```
 
 
+<br/>
+
+**✅ 总结：**
+
+> `Skeleton` 是一个用于“等待数据加载”期间的占位组件，让用户**更快感知页面结构**，比单纯的 `<Spin>` 动画更优雅，广泛用于内容型产品和后台系统页面。
 
 
 
