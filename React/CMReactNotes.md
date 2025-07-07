@@ -1,10 +1,13 @@
-> <h1 id= ""></h1>
+
 - [**管理Node版本的NVM**](#管理Node版本的NVM)
 - [**新建一个React项目**](#新建一个React项目)
-	- ss
 - [Flex布局](#Flex布局)
 - [清理缓存导致的错误](#清理缓存导致的错误)
 - [跨域造成无法请求解决](#跨域造成无法请求解决)
+- [控制菜单展开和选中项](#控制菜单展开和选中项)
+- [react入口文件](#react入口文件)
+- [umi框架生成react入口文件](#umi框架生成react入口文件) 
+	- [umijs生成首页](#umijs生成首页)
 
 
 
@@ -543,4 +546,1085 @@ async fetchIP() {
 ```
 
 
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="控制菜单展开和选中项">控制菜单展开和选中项</h1>
+
+```js
+const location = useLocation();
+const queryParams = new URLSearchParams(location.search);
+const [openKeys, setOpenKeys] = useState([])
+// 特殊菜单指定菜单选中
+const specialMenu: { [key: string]: string } = {
+'/product/argusProductNetwork': '/product',}
+```
+
+&emsp; 这段 React 代码，主要用于**控制菜单展开和选中项**。
+
+<br/>
+
+**✅ 1. `const location = useLocation();`**
+
+这是来自 `react-router-dom` 的 hook，用来获取**当前路由信息**。
+
+```ts
+import { useLocation } from 'react-router-dom';
+```
+
+
+👇 它返回的是一个 location 对象，类似这样：
+
+```ts
+{
+  pathname: '/product/argusProductNetwork',
+  search: '?type=detail&id=123',
+  hash: '',
+  state: null,
+  key: 'abc123'
+}
+```
+
+你可以理解为“当前页面的完整 URL 信息”。
+
+<br/>
+
+**✅ 2. `const queryParams = new URLSearchParams(location.search);`**
+
+这句用原生 `URLSearchParams` 来解析 **查询参数**（`?xxx=yyy`）。
+
+```ts
+const queryParams = new URLSearchParams('?type=detail&id=123');
+console.log(queryParams.get('type')); // "detail"
+console.log(queryParams.get('id'));   // "123"
+```
+
+在实际页面中，如果 URL 是：
+
+```
+https://example.com/product/argusProductNetwork?type=detail&id=123
+```
+
+那么 `location.search` 是 `?type=detail&id=123`，这个代码就能获取参数中的内容。
+
+<br/>
+
+**✅ 3. `const [openKeys, setOpenKeys] = useState([])`**
+
+这是 React 的 `useState` 用法，用来保存**当前展开的菜单项 key 数组**。
+
+```ts
+const [openKeys, setOpenKeys] = useState<string[]>([]);
+```
+
+* `openKeys` 表示“菜单展开的 key”（如 `/product`）
+* `setOpenKeys` 是用于修改这个状态的方法
+
+比如用在 Ant Design 的 `<Menu>` 组件中：
+
+```jsx
+<Menu openKeys={openKeys} onOpenChange={setOpenKeys} />
+```
+
+用户展开哪个菜单，就更新 `openKeys`。
+
+<br/>
+
+**✅ 4. `const specialMenu: { [key: string]: string } = { ... }`**
+
+定义一个**特殊菜单项的映射表**，主要用于处理“子页面选中时，强制让父菜单也展开”。
+
+```ts
+const specialMenu: { [key: string]: string } = {
+  '/product/argusProductNetwork': '/product',
+};
+```
+
+* 意思是：如果当前路径是 `/product/argusProductNetwork`，那它实际归属的主菜单是 `/product`
+* 因为很多时候路由是多级的，菜单只渲染一级或两级，但你需要根据子页面反推出父菜单
+
+
+***
+<br/>
+
+**✅ 举个完整应用场景：**
+当前页面路径是 `/product/argusProductNetwork`，但这个页面 **并不在菜单中有对应项**，所以你需要手动告诉菜单“当前路径属于 `/product` 菜单”。
+
+**示例伪代码（完整逻辑可能长这样）：**
+
+```tsx
+useEffect(() => {
+  const path = location.pathname;
+  const rootPath = specialMenu[path] || path.split('/')[1]; // 获取应该展开的菜单
+  setOpenKeys([rootPath]);
+}, [location.pathname]);
+```
+
+<br/>
+
+**✅ 可视化理解**
+
+```text
+实际页面路径: /product/argusProductNetwork
+
+菜单结构:
+- /product
+  - /product/list
+  - /product/create
+
+你要做的是：
+➡️ 当路径为 /product/argusProductNetwork 时
+➡️ 手动设置 openKeys = ['/product']
+```
+
+
+使用[Ant Design 的 <Menu /> 组件做侧边栏菜单](./AntDesign.md#Menu组件做侧边栏菜单)
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="umi框架生成react入口文件"> umi框架生成react入口文件 </h1>
+
+
+ **✅ 一、React 入口文件一定是 `App.js` 吗？**
+
+**不是。**
+
+React 的“入口文件”可以是任何文件名，比如：
+
+* `App.js`
+* `App.tsx`
+* `Main.tsx`
+* `Root.tsx`
+
+关键不在于文件名，而在于这个文件被谁引用。
+
+<br/>
+
+**✅ 真实的 React 启动流程是：**
+
+通常在 `index.tsx` 或 `main.tsx` 中，像这样：
+
+```tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
+```
+
+* `App` 是你自己命名的主组件，它叫什么都行（不必叫 `App.js`）。
+* 如果你用的是 **TypeScript 项目**，文件后缀就是 `.tsx` 而不是 `.js`。
+
+所以你的项目用的是 `app.tsx` 是完全正常的，只是文件名不同而已。
+
+---
+<br/>
+
+**✅ 二、那这个 `export const layout: RunTimeLayoutConfig = (...)` 是什么东西？**
+
+这不是 React 标准用法，是 **UmiJS + Ant Design Pro 框架的特有扩展功能**，也叫：
+
+> **运行时配置（Runtime Configuration）**
+
+它允许你在运行时动态配置页面 Layout，比如：
+
+* 是否显示侧边栏
+* 用户信息如何获取
+* 菜单如何渲染
+* 页面标题、权限控制等
+
+<br/>
+
+ **✅ 使用位置**
+
+通常写在文件：`src/app.tsx` 或 `src/app.ts` 中。
+
+这个文件不是 React 入口组件，而是 umi 框架**自动加载的运行时配置文件**。
+
+<br/>
+
+ ✅ 示例代码解读
+
+```tsx
+import { RunTimeLayoutConfig } from '@umijs/max';
+
+export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+  return {
+    title: '我的后台系统',
+    layout: 'mix',
+    contentWidth: 'Fluid',
+    fixedHeader: true,
+    onPageChange: () => {
+      const { currentUser } = initialState || {};
+      if (!currentUser?.name) {
+        // 如果未登录，跳转到登录页
+        history.push('/login');
+      }
+    },
+    logout: async () => {
+      // 清空登录状态
+      setInitialState({ ...initialState, currentUser: undefined });
+      history.push('/login');
+    },
+  };
+};
+```
+
+<br/>
+
+ **✅ 这些是umi 自动调用，用于生成 **ProLayout 的配置项**，包括：**
+
+
+| 字段                | 作用                                |
+| ----------------- | --------------------------------- |
+| `title`           | 页面标题                              |
+| `layout`          | 布局类型，如 `'side'`, `'top'`, `'mix'` |
+| `contentWidth`    | 内容宽度：固定/流式                        |
+| `onPageChange`    | 页面切换时触发，用于权限控制                    |
+| `logout`          | 点击退出时触发的回调                        |
+| `initialState`    | 从 `getInitialState` 中返回的初始数据      |
+| `setInitialState` | 修改初始状态的方法                         |
+
+<br/>
+
+ ✅ 整体运行流程图：
+
+```text
+用户访问页面
+  ↓
+umi 先调用 src/app.ts 中的 getInitialState()
+  ↓
+返回初始状态 initialState（比如当前用户信息）
+  ↓
+umi 再调用 layout({ initialState, setInitialState })
+  ↓
+生成 ProLayout 配置
+  ↓
+自动渲染页面布局，控制菜单、面包屑、权限等
+```
+
+<br/>
+
+ **✅ getInitialState 是什么？**
+
+这是另一个 Umi 框架扩展函数，一般也写在 `src/app.ts` 中：
+
+```ts
+export async function getInitialState() {
+  const currentUser = await fetchCurrentUser();
+  return {
+    currentUser,
+    settings: defaultSettings,
+  };
+}
+```
+
+返回值会传入 `layout()` 函数，让你控制 layout 的内容（如用户权限判断、菜单渲染等）。
+
+<br/> 
+
+**✅ 快速总结**
+
+| 你看到的内容                        | 解释                                      |
+| ----------------------------- | --------------------------------------- |
+| `app.tsx`                     | 是 umi 框架的运行时配置文件（不等于 React 的 `App.tsx`） |
+| `layout: RunTimeLayoutConfig` | 用于动态配置页面的布局                             |
+| `initialState`                | 是 `getInitialState()` 返回的数据（如当前用户信息）    |
+| umi / antd-pro 的 layout 配置    | 控制菜单、布局、标题、权限等 UI 行为                    |
+
+---
+<br/>
+
+
+**✅ 要上手怎么做？**
+
+你只需要掌握这 2 个关键文件：
+
+- 1.**`src/app.ts`** 或 `app.tsx`
+
+	* 写 `getInitialState()` 获取全局数据（如用户信息）
+	* 写 `layout()` 动态控制页面布局行为
+
+- 2.**页面中用到的用户信息，可以从 initialState 拿**
+
+```tsx
+import { useModel } from '@umijs/max';
+
+const { initialState } = useModel('@@initialState');
+console.log(initialState?.currentUser);
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="umijs生成首页">umijs生成首页</h2>
+
+下面一套 **「最小可运行 + 结构完整 + 流程详细」** 的 **Umi 4 / @umijs/max + Ant Design Pro 布局** Demo。
+
+按下面目录建好文件，`pnpm dev`（或 npm/yarn）即可看到登录页 → 登录后自动跳转首页，并且侧边栏菜单会根据用户权限动态渲染。所有关键点都在注释里标出来，方便你照猫画虎修改。
+
+> ⚙️ Demo 基于 2025 年 6 月最新版 `@umijs/max`，官方文档示例保持一致。([umijs.org][1], [github.com][2], [beta-pro.ant.design][3])
+
+<br/>
+
+
+**1.项目结构一览**
+
+```
+my-umi-app/
+├─ package.json
+├─ .umirc.ts          # Umi 配置（也可用 config/config.ts）
+├─ src/
+│  ├─ app.tsx         # ❶ 运行时配置：getInitialState + layout
+│  ├─ access.ts       # ❷ 权限定义（可选）
+│  ├─ models/
+│  │   └─ global.ts   # ❸ 其他 model 示例
+│  ├─ pages/
+│  │   ├─ Login.tsx
+│  │   ├─ Dashboard.tsx
+│  │   └─ Welcome.tsx
+│  └─ services/
+│      └─ user.ts     # ❹ 模拟请求
+└─ tsconfig.json
+```
+
+- **为什么没有 `App.tsx`？**
+
+	* **Umi 自动生成根组件**，`src/app.tsx` 只用来写运行时钩子，不当入口。真正挂载点在 `.umi` 目录的临时代码里。([umijs.org][4])
+
+<br/>
+
+**从 Umi 4 开始，推荐将配置写在：**
+
+```sh
+config/config.ts
+```
+
+而不是旧版本的 .umirc.ts，但它们作用完全一样，都用于配置路由、插件、model、layout 等功能。
+
+所以：你用的是 config/config.ts，不是你没写，而是更新了写法。
+
+<br/>
+
+**2.关键文件逐个看**
+
+**2‑1 `.umirc.ts` （路由 & 插件配置）**
+
+```ts
+import { defineConfig } from '@umijs/max';
+
+export default defineConfig({
+  npmClient: 'pnpm',
+  // 开启内置 layout、initialState、model、access 等功能
+  plugins: ['@umijs/plugins/dist/antd'],
+  antd: {},          // 自动按需引入 antd@5
+  model: {},         // 启用 useModel
+  initialState: {},  // 启用 getInitialState
+  access: {},        // 启用权限
+  layout: {},        // 启用 ProLayout
+  routes: [
+    { path: '/login', component: 'Login', layout: false },
+    {
+      path: '/',
+      component: 'Dashboard',
+      access: 'canViewDashboard',   // 用 access.ts 校验
+    },
+    { path: '/welcome', component: 'Welcome' },
+  ],
+});
+```
+
+<br/>
+
+**2‑2 `src/services/user.ts` （模拟接口）**
+
+```ts
+export async function fakeLogin(body: { user: string; pwd: string }) {
+  return new Promise<{ token: string }>((res) =>
+    setTimeout(() => res({ token: 'jwt-token' }), 600),
+  );
+}
+
+export async function fetchCurrentUser() {
+  return new Promise<{ name: string; role: 'admin' | 'guest' }>((res) =>
+    setTimeout(() => res({ name: 'Harley', role: 'admin' }), 500),
+  );
+}
+```
+
+<br/>
+
+ **2‑3 `src/app.tsx` — 核心：getInitialState + layout**
+
+```tsx
+import type { RunTimeLayoutConfig } from '@umijs/max';
+import { history } from '@umijs/max';
+import { fetchCurrentUser } from '@/services/user';
+
+// ❶ 全局初始化 —— 页面首次加载会阻塞，拉取用户信息
+export async function getInitialState() {
+  const { location } = history;
+  if (location.pathname !== '/login') {
+    try {
+      const currentUser = await fetchCurrentUser();
+      return { currentUser };
+    } catch {
+      history.push('/login');
+    }
+  }
+  return { currentUser: undefined };
+}
+
+// ❷ Layout 运行时配置 —— 动态标题 / 退出 / 权限跳转
+export const layout: RunTimeLayoutConfig = ({
+  initialState,
+  setInitialState,
+}) => {
+  return {
+    title: '演示后台',
+    fixSiderbar: true,
+    // 每次路由变化触发
+    onPageChange: () => {
+      const { location } = history;
+      // 没登陆就强制去 login
+      if (!initialState?.currentUser && location.pathname !== '/login') {
+        history.push('/login');
+      }
+    },
+    // 退出登录
+    logout: async () => {
+      setInitialState({ currentUser: undefined });
+      history.push('/login');
+    },
+    // 右上角头像、国际化等扩展见官方 API
+  };
+};
+```
+
+> * `initialState` 就是 `getInitialState` 返回值
+> * `setInitialState` 可以在任意组件刷新全局数据（例如退出登录后清空）
+> * 所有布局可用属性详见 ProLayout 文档。([umijs.org][1])
+
+<br/> 
+
+**2‑4 `src/access.ts` （权限函数）**
+
+```ts
+import { InitialState } from '@umijs/max';
+
+export default (initialState: InitialState) => ({
+  canViewDashboard: !!initialState?.currentUser, // 只要登录就能看
+});
+```
+
+<br/> 
+
+**2‑5 `src/pages/Login.tsx`**
+
+```tsx
+import { Button, Form, Input, message } from 'antd';
+import { history, useModel } from '@umijs/max';
+import { fakeLogin } from '@/services/user';
+
+export default () => {
+  const { setInitialState } = useModel('@@initialState');
+
+  const onFinish = async (values: { user: string; pwd: string }) => {
+    try {
+      await fakeLogin(values);
+      // 模拟拿到用户信息
+      setInitialState({ currentUser: { name: values.user, role: 'admin' } });
+      history.push('/');
+    } catch {
+      message.error('登录失败');
+    }
+  };
+
+  return (
+    <Form onFinish={onFinish} style={{ maxWidth: 300, margin: '120px auto' }}>
+      <Form.Item name="user">
+        <Input placeholder="用户名" />
+      </Form.Item>
+      <Form.Item name="pwd">
+        <Input.Password placeholder="密码" />
+      </Form.Item>
+      <Button type="primary" htmlType="submit" block>
+        登录
+      </Button>
+    </Form>
+  );
+};
+```
+
+<br/> 
+
+**2‑6 `src/pages/Dashboard.tsx`**
+
+```tsx
+import { PageContainer } from '@ant-design/pro-components';
+import { useModel } from '@umijs/max';
+
+export default () => {
+  const { initialState } = useModel('@@initialState');
+  return (
+    <PageContainer>
+      <h2>欢迎 {initialState?.currentUser?.name}</h2>
+    </PageContainer>
+  );
+};
+```
+
+<br/> 
+
+**3.运行 & 体验**
+
+```bash
+pnpm i
+pnpm dev
+```
+
+1. 先跳转到 `/login`
+2. 登录成功后写入 `initialState.currentUser`
+3. Layout `onPageChange` 检测到已登录，正常进入 `/`
+4. 退出登录触发 `layout.logout`，重置状态并回到登录页
+
+<br/>
+
+ **4.关键概念串联**
+
+```
+getInitialState      ——>  页面首屏阻塞请求，全局数据（用户）
+            │
+            ↓
+ layout()   ——>  读取 initialState，决定 Layout 行为（标题 / 权限 / 菜单）
+            │
+            ↓
+ useModel('@@initialState')  ——>  任意组件读 / 写 全局状态
+```
+
+这一套是 **Umi Max Data Flow 插件**（initial‑state + model + layout）的完整闭环。([umijs.org][4])
+
+<br/> 
+
+**5.下一步能做什么？**
+
+| 需求         | 思路                                                                    |
+| ---------- | --------------------------------------------------------------------- |
+| 动态菜单（后端返回） | 把 `menu` 定义写进 `layout()`：`menu: { request: async () => fetchMenu() }` |
+| 细粒度权限      | 在 `access.ts` 多返回几个函数，在路由 `access:` 字段绑定                              |
+| SSR / SSG  | Umi 4 默认内建，可在 `config exportStatic / ssr` 开关                          |
+| 国际化        | 插件 `@umijs/plugins/dist/locale`，结合 ProLayout `locale: true`           |
+
+
+***
+<br/><br/><br/>
+> <h2 id="入口文件中的app.tsx没有看到layout调用？">入口文件中的app.tsx没有看到layout调用？</h2>
+
+**提问：** `export const layout: RunTimeLayoutConfig = (...)` 这个东西 **“在哪用的？”**，**为什么我在项目中没看到它被调用，但它却生效了？**
+
+<br/>
+
+这是 **Umi / @umijs/max 框架的运行时钩子函数**，你 **不会在项目中手动调用它**，它是由框架自动调用的。
+只要你写在 `src/app.ts` 或 `src/app.tsx` 中，**Umi 就会自动识别并在运行时调用它**。
+
+<br/>
+
+**✅ 背后逻辑：Umi 的插件机制做了这件事**
+
+Umi 框架内置了 `@umijs/plugin-layout` 插件，这个插件在项目构建时：
+
+1. 检查你是否启用了 layout 功能（`layout: {}` 在 `.umirc.ts` 或 `config/config.ts`）
+2. 自动加载 `src/app.ts` 文件
+3. 找到你导出的这个 `layout` 函数
+4. 自动将你返回的对象合并进 Ant Design ProLayout 的配置中
+
+<br/>
+
+**✅ 所以它就这样生效了：**
+
+你不需要显式调用：
+
+```ts
+layout(); // ❌ 不需要你写！
+```
+
+但实际 Umi 在内部会执行类似这样的流程（伪代码）：
+
+```ts
+import { getInitialState, layout as layoutRuntime } from './app.tsx';
+
+const initialState = await getInitialState();
+
+const layoutConfig = layoutRuntime({ initialState, setInitialState });
+
+render(<ProLayout {...layoutConfig} />);
+```
+
+<br/>
+
+ **✅ layout() 能做哪些事？**
+
+你返回的对象，会直接传给 Ant Design Pro 的 `<ProLayout />`，所以你可以配置非常多东西：
+
+| 配置项                  | 作用                           |
+| -------------------- | ---------------------------- |
+| `title`              | 页面标题                         |
+| `logo`               | 左上角 Logo                     |
+| `onPageChange`       | 每次路由变化时触发（可用于权限检测）           |
+| `menu`               | 自定义菜单渲染逻辑（如动态菜单）             |
+| `layout`             | 布局结构（`side` / `mix` / `top`） |
+| `logout`             | 点击退出登录后执行的动作                 |
+| `rightContentRender` | 顶部右侧渲染（头像、语言等）               |
+| `waterMarkProps`     | 水印设置（如显示用户名）                 |
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="ProLayout布局属性">ProLayout布局属性</h2>
+
+
+## ✅ layout() 返回的属性详解（含案例）
+
+这些属性会传入 [ProLayout](https://procomponents.ant.design/components/layout) 组件，用来控制页面布局外观、行为、菜单、头部、底部等等。
+
+---
+
+### 1. `rightContentRender`
+
+👉 控制右上角区域（如头像、语言、退出按钮）
+
+```ts
+rightContentRender: () => <div>👤 用户</div>,
+```
+
+常见写法：
+
+```tsx
+rightContentRender: () => <Avatar src="/avatar.png" />
+```
+
+---
+
+### 2. `selectedKeys` / `openKeys`
+
+👉 手动控制菜单的选中项 / 展开项（如果你不用自动菜单）
+
+```ts
+selectedKeys: ['/product/list'],
+openKeys: ['/product'],
+```
+
+多数时候你不需要手动设置，默认能根据 `location.pathname` 匹配。
+
+---
+
+### 3. `disableContentMargin`
+
+👉 是否关闭页面内容的默认 padding（默认为 true）
+
+```ts
+disableContentMargin: true,
+```
+
+配合自定义 `contentStyle` 可做全屏页面。
+
+---
+
+### 4. `logo`
+
+👉 设置左上角 logo（可传 URL、组件或 false）
+
+```ts
+logo: '/logo.svg',
+// 或 logo: () => <img src="/logo.svg" />
+```
+
+设置为 `false` 可以隐藏。
+
+---
+
+### 5. `bgLayoutImgList`
+
+👉 设置背景图水印，常用于花哨登录页（少用）
+
+```ts
+bgLayoutImgList: [
+  {
+    src: '/bg1.png',
+    left: 85,
+    bottom: 100,
+    height: '303px',
+  },
+]
+```
+
+---
+
+### 6. `links`
+
+👉 设置菜单左下角的链接区域（常用于文档、API、支持）
+
+```ts
+links: [
+  <a href="/docs" key="doc">文档</a>,
+  <a href="/api" key="api">API</a>
+]
+```
+
+---
+
+### 7. `menuHeaderRender`
+
+👉 自定义整个 logo 区 + 标题 的渲染
+
+```ts
+menuHeaderRender: (logoDom, titleDom, props) => (
+  <div onClick={() => history.push('/')}>
+    {logoDom} {titleDom}
+  </div>
+)
+```
+
+你可以点击 logo 自动回首页等。
+
+---
+
+### 8. `collapsedButtonRender`
+
+👉 自定义收起菜单按钮的渲染
+
+```ts
+collapsedButtonRender: (collapsed) => (
+  <span>{collapsed ? '👉 展开' : '👈 收起'}</span>
+)
+```
+
+---
+
+### 9. `onOpenChange`
+
+👉 菜单展开项变化时触发，可用于缓存菜单状态
+
+```ts
+onOpenChange: (keys) => {
+  localStorage.setItem('openKeys', JSON.stringify(keys));
+}
+```
+
+---
+
+### 10. `menuDataRender`
+
+👉 自定义菜单结构（如权限过滤）
+
+```ts
+menuDataRender: (menuData) =>
+  menuData.filter((item) => item.name !== '隐藏菜单'),
+```
+
+可以结合用户角色进行过滤：
+
+```ts
+menuDataRender: (menuData) =>
+  menuData.filter((item) =>
+    item.roles?.includes(initialState?.currentUser?.role),
+  ),
+```
+
+---
+
+### 11. `childrenRender`
+
+👉 自定义整个页面内容的渲染方式（嵌套水印、背景、切换动画等）
+
+```tsx
+childrenRender: (dom) => (
+  <div style={{ background: '#fafafa', padding: 16 }}>
+    {dom}
+  </div>
+)
+```
+
+---
+
+### 12. `...initialState`
+
+👉 解构注入 layout 配置中的值，用于读取 `settings` 等（如主题、颜色等）
+
+```ts
+return {
+  ...initialState?.settings,
+  title: '我的系统',
+};
+```
+
+---
+
+### 13. `footerRender`
+
+👉 自定义页面底部 Footer 的渲染
+
+```tsx
+footerRender: () => (
+  <div style={{ textAlign: 'center' }}>©2025 Harley 版权所有</div>
+)
+```
+
+---
+
+### 14. `contentStyle`
+
+👉 控制 `PageContainer` 外层内容的样式（padding、背景）
+
+```ts
+contentStyle: {
+  margin: 0,
+  padding: 24,
+  background: '#f5f5f5',
+},
+```
+
+---
+
+### 15. `token`
+
+👉 自定义 ProLayout 的主题 Token（例如侧边栏颜色、字体等）
+
+```ts
+token: {
+  header: {
+    colorBgHeader: '#ffffff',
+    colorTextRightActionsItem: '#000000',
+  },
+  sider: {
+    colorMenuBackground: '#001529',
+    colorTextMenuSelected: '#1890ff',
+  },
+}
+```
+
+---
+
+## ✅ layout() 中属性大分类归纳
+
+| 分类      | 属性                                                           | 示例                  |
+| ------- | ------------------------------------------------------------ | ------------------- |
+| 布局结构    | `layout`, `fixedHeader`, `fixSiderbar`                       | `layout: 'mix'`     |
+| 标题 Logo | `title`, `logo`, `menuHeaderRender`                          | `logo: '/logo.svg'` |
+| 页面内容    | `contentStyle`, `disableContentMargin`, `childrenRender`     |                     |
+| 顶部右侧    | `rightContentRender`                                         | 自定义头像/退出按钮          |
+| 菜单行为    | `selectedKeys`, `openKeys`, `onOpenChange`, `menuDataRender` |                     |
+| 背景图     | `bgLayoutImgList`                                            |                     |
+| 底部      | `footerRender`                                               |                     |
+| 权限控制    | `onPageChange`, `access`, `logout`                           |                     |
+| 主题风格    | `token`, `...initialState?.settings`                         |                     |
+
+---
+
+## ✅ 示例：返回一套完整配置（简化版）
+
+```ts
+export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => ({
+  title: '后台系统',
+  layout: 'mix',
+  fixSiderbar: true,
+  rightContentRender: () => <Avatar src="/avatar.jpg" />,
+  menuDataRender: (menu) => menu.filter((item) => item.name !== '隐藏'),
+  onPageChange: () => {
+    if (!initialState?.currentUser) {
+      history.push('/login');
+    }
+  },
+  logout: async () => {
+    setInitialState({ currentUser: undefined });
+    history.push('/login');
+  },
+  footerRender: () => <div>©2025 Harley</div>,
+  token: {
+    header: {
+      colorBgHeader: '#fff',
+    },
+    sider: {
+      colorMenuBackground: '#001529',
+    },
+  },
+});
+```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="全局主题配置">全局主题配置</h1>
+
+
+ **✅ 一、`<ConfigProvider theme={theme}>`**
+
+🔹 作用：全局主题配置
+
+Ant Design v5 起支持“**全局主题定制**”，使用 `<ConfigProvider theme={...}>` 你可以：
+
+* 设置系统主色（primaryColor）
+* 启用暗黑模式
+* 控制圆角、字体、颜色等 Token
+* 控制组件默认行为（如 Form、Button 等）
+
+<br/>
+
+**✅ 使用方法**
+
+ **1. 导入：**
+
+```tsx
+import { ConfigProvider } from 'antd';
+```
+
+<br/>
+
+**2. 包裹你的根组件：**
+
+```tsx
+const App = () => {
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#1890ff',
+          borderRadius: 6,
+          colorBgContainer: '#f0f2f5',
+        },
+        components: {
+          Button: {
+            colorPrimary: '#52c41a',
+            borderRadius: 4,
+          },
+        },
+      }}
+    >
+      <YourRoutesOrLayout />
+    </ConfigProvider>
+  );
+};
+```
+
+<br/>
+
+**✅ 常用配置项**
+
+| 配置位置         | 示例                                           | 说明                     |
+| ------------ | -------------------------------------------- | ---------------------- |
+| `token`      | `colorPrimary` / `fontSize` / `borderRadius` | 设置全局样式变量               |
+| `components` | 针对某个组件单独定制样式                                 | 如 Button、Input、Table 等 |
+
+> ✅ 这可以让你的整个系统拥有统一风格，非常适合后台系统统一定制。
+
+
+***
+<br/><br/><br/>
+> <h2 id="Breadcrumb显示当前导航路径">Breadcrumb显示当前导航路径</h2>
+
+- **🔹 作用：显示当前位置的路径导航**
+
+它用于帮助用户明确当前页面在站点结构中的位置。
+
+比如：
+`首页 / 产品管理 / 产品详情`
+
+<br/>
+
+**✅ 基本用法**
+
+```tsx
+import { Breadcrumb } from 'antd';
+import { HomeOutlined } from '@ant-design/icons';
+
+<Breadcrumb
+  items={[
+    {
+      title: <HomeOutlined />,
+      href: '/',
+    },
+    {
+      title: '产品管理',
+    },
+    {
+      title: '产品详情',
+    },
+  ]}
+/>
+```
+
+<br/>
+
+**✅ 搭配 Umi 自动面包屑（ProLayout）**
+
+如果你使用的是 `@umijs/max` + `layout()`，并启用了路由的 `name` 字段，系统会**自动渲染面包屑**。
+
+
+```ts
+{
+  path: '/product',
+  name: '产品管理',
+  routes: [
+    {
+      path: '/product/list',
+      name: '产品列表',
+      component: './ProductList',
+    },
+  ],
+}
+```
+
+<br/>
+
+**页面顶部就会自动出现：**
+
+```
+产品管理 / 产品列表
+```
+
+<br/>
+
+**✅ 自定义面包屑（在页面中）**
+
+如果你想在页面中自定义，也可以：
+
+```tsx
+import { PageContainer } from '@ant-design/pro-components';
+
+<PageContainer
+  breadcrumb={{
+    items: [
+      { title: '首页', href: '/' },
+      { title: '产品管理' },
+      { title: '产品列表' },
+    ],
+  }}
+>
+  {/* 页面内容 */}
+</PageContainer>
+```
+
+<br/>
+
+**✅ 效果图说明**
+
+| 组件                          | 作用              | 常见位置          |
+| --------------------------- | --------------- | ------------- |
+| `<ConfigProvider theme={}>` | 设置整个系统的颜色、圆角、样式 | App 根组件       |
+| `<Breadcrumb />`            | 显示页面路径导航        | 页面顶部、Header 下 |
+
+
+效果图：
+![react0.0.0.0.png](./../Pictures/react0.0.0.0.png)
 

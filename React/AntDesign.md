@@ -10,6 +10,8 @@
 	- [Form表单](#Form表单)
 - [Button组件](#Button组件)
 - [**Upload图片上传组件**](#Upload图片上传组件)
+- [Menu组件做侧边栏菜单](#Menu组件做侧边栏菜单)
+- [加载组件Spin](#加载组件Spin)
 
 
 
@@ -1351,6 +1353,303 @@ img.onload → 判断宽高、大小、格式
 满足条件 → resolve() → 上传
 不满足 → reject() → Upload.LIST_IGNORE → 阻止上传
 ```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="Menu组件做侧边栏菜单">Menu组件做侧边栏菜单</h1>
+
+使用 **Ant Design 的 `<Menu />`** 组件做侧边栏菜单， 点击菜单展开和选中。
+
+---
+<br/>
+
+- **需求：**
+
+	* 使用 `react-router-dom` 控制页面跳转
+	* URL 路径可能是二级或三级（如 `/product/argusProductNetwork`）
+	* 菜单结构中，部分子路径没有直接出现在菜单中
+	* 你希望菜单能自动识别当前路径，**展开正确的父级**，并且**高亮选中项**
+
+<br/> 
+
+
+**✅ 菜单结构示意（假设）**
+
+```tsx
+const menuItems = [
+  {
+    key: '/dashboard',
+    label: '首页',
+  },
+  {
+    key: '/product',
+    label: '产品管理',
+    children: [
+      { key: '/product/list', label: '产品列表' },
+      { key: '/product/create', label: '创建产品' },
+    ],
+  },
+  {
+    key: '/user',
+    label: '用户管理',
+    children: [
+      { key: '/user/list', label: '用户列表' },
+      { key: '/user/roles', label: '角色权限' },
+    ],
+  },
+];
+```
+
+<br/>
+
+**✅ `specialMenu` 特殊路由映射**
+
+这是为了解决**非菜单路由也能正确展开父级菜单**的关键：
+
+```ts
+const specialMenu: { [key: string]: string } = {
+  '/product/argusProductNetwork': '/product',
+  '/user/settings': '/user',
+};
+```
+
+<br/>
+
+**✅ 完整组件代码**
+
+```tsx
+import { Menu } from 'antd';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
+// 特殊子页面映射到其父菜单
+// { [key: string]: string }： 是 TypeScript 中的 索引签名类型（Index Signature），它的意思是：
+// 这个对象的键（key）必须是字符串类型，对应的值（value）也是字符串类型。
+const specialMenu: { [key: string]: string } = {
+  '/product/argusProductNetwork': '/product',
+  '/user/settings': '/user',
+};
+
+// 菜单项定义
+const menuItems = [
+  {
+    key: '/dashboard',
+    label: '首页',
+  },
+  {
+    key: '/product',
+    label: '产品管理',
+    children: [
+      { key: '/product/list', label: '产品列表' },
+      { key: '/product/create', label: '创建产品' },
+    ],
+  },
+  {
+    key: '/user',
+    label: '用户管理',
+    children: [
+      { key: '/user/list', label: '用户列表' },
+      { key: '/user/roles', label: '角色权限' },
+    ],
+  },
+];
+
+const SidebarMenu = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // 当路径变化时更新菜单状态
+  useEffect(() => {
+    const path = location.pathname;
+
+    // 选中项：直接使用 pathname
+    setSelectedKeys([path]);
+
+    // 展开项：优先从 specialMenu 映射，找不到则取前两级路径
+    const matchedOpenKey =
+      specialMenu[path] || '/' + path.split('/').slice(1, 2).join('');
+    setOpenKeys([matchedOpenKey]);
+  }, [location.pathname]);
+
+  // 点击菜单跳转页面
+  const handleMenuClick = (e: { key: string }) => {
+    navigate(e.key);
+  };
+
+  return (
+    <Menu
+      mode="inline"
+      style={{ width: 240 }}
+      items={menuItems}
+      openKeys={openKeys}
+      selectedKeys={selectedKeys}
+      onOpenChange={(keys) => setOpenKeys(keys)}
+      onClick={handleMenuClick}
+    />
+  );
+};
+
+export default SidebarMenu;
+```
+
+<br/>
+
+**✅ 路由示例（React Router 配置）**
+
+```tsx
+<BrowserRouter>
+  <SidebarMenu />
+  <Routes>
+    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/product/list" element={<ProductList />} />
+    <Route path="/product/create" element={<ProductCreate />} />
+    <Route path="/product/argusProductNetwork" element={<SpecialProduct />} />
+    <Route path="/user/list" element={<UserList />} />
+    <Route path="/user/settings" element={<UserSettings />} />
+  </Routes>
+</BrowserRouter>
+```
+
+<br/>
+
+**✅ 效果说明**
+
+| 当前路径                           | 展开菜单                         | 选中菜单项                          |
+| ------------------------------ | ---------------------------- | ------------------------------ |
+| `/product/list`                | `/product`                   | `/product/list`                |
+| `/product/argusProductNetwork` | `/product`（通过 `specialMenu`） | `/product/argusProductNetwork` |
+| `/user/settings`               | `/user`（通过 `specialMenu`）    | `/user/settings`               |
+
+<br/> 
+
+✅ 补充建议
+
+* 如果你后期有**动态菜单数据（后端返回）**，也可以结合路由和菜单 key 做匹配
+* 对于**路径参数**如 `/user/detail/123`，可使用正则或 startsWith 来模糊匹配菜单项
+* 如果使用的是 `antd@5`，可以考虑新的 `items` API + `useMemo` 优化
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="加载组件Spin">加载组件Spin</h1>
+
+
+```tsx
+<Spin spinning={loading} style={{ height: 'calc(100vh - 88px)' }} />
+```
+
+是使用了 Ant Design 中的 **加载中动画组件 `<Spin>`**，结合 React 状态 `loading` 来显示一个 **全屏的加载指示器**。我们来逐个详细解释：
+
+<br/>
+
+✅ **1.`<Spin />` 是 Ant Design 的 加载中状态组件**，通常用于网络请求、异步操作时显示“旋转的小圆圈”，表示“数据加载中”。
+
+官方文档地址（含示例）：
+📎 [https://ant.design/components/spin-cn/](https://ant.design/components/spin-cn/)
+
+<br/>
+
+- **✅ 2.`spinning={loading}` 用法：**
+	
+	* `loading === true` 时：显示转圈动画；
+	* `loading === false` 时：不显示。
+
+`loading` 通常是 React 里的状态变量，比如：
+
+```tsx
+const [loading, setLoading] = useState(true);
+```
+
+当你完成数据加载后：
+
+```tsx
+setLoading(false);
+```
+
+<br/>
+
+**✅ 3.`style={{ height: 'calc(100vh - 88px)' }}` 是什么意思？**
+
+这是给 `<Spin />` 设置了一个内联样式：
+
+```css
+height: calc(100vh - 88px);
+```
+
+- **📐 解释：**
+
+	* `100vh` 表示 **浏览器可视窗口的高度**；
+	* `88px` 是某个顶部元素的高度（比如导航栏、高度为 88px）；
+	* 所以这个计算是：让 `<Spin>` 的高度等于 **除去顶部栏之后的剩余高度**，以便让 loading 居中展示在“有效页面内容区域”中。
+
+<br/>
+
+**✅ 4.实际效果示意：**
+
+如果你页面上方有个固定头部（比如 `<Header>` 高度 88px），那么这个 `<Spin>` 会填满剩下的内容区域并居中显示转圈：
+
+```
+┌────────────── 88px Header ──────────────┐
+│                                          │
+├───────────── <Spin /> 居中 ─────────────┤
+│                                          │
+│        ⏳ Loading... 数据加载中...        │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+<br/>
+
+**✅ 5.使用示例（完整）**
+
+```tsx
+import { Spin } from 'antd';
+import { useEffect, useState } from 'react';
+
+export default function Page() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 模拟接口请求
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+  }, []);
+
+  return (
+    <Spin
+      spinning={loading}
+      style={{ height: 'calc(100vh - 88px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      {!loading && <div>页面内容加载完成</div>}
+    </Spin>
+  );
+}
+```
+
+<br/>
+
+**✅ 如果你想更美观些，还可以使用嵌套方式：**
+
+```tsx
+<Spin spinning={loading}>
+  <YourContentComponent />
+</Spin>
+```
+
+这表示：`loading === true` 时，`YourContentComponent` 会被模糊遮罩并显示加载中动画。
+
+
+
+
 
 
 
