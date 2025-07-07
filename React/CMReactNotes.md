@@ -8,6 +8,10 @@
 - [react入口文件](#react入口文件)
 - [umi框架生成react入口文件](#umi框架生成react入口文件) 
 	- [umijs生成首页](#umijs生成首页)
+	- [入口文件中的app.tsx没有看到layout调用？](#入口文件中的app.tsx没有看到layout调用？)    
+- [ProLayout布局属性](#ProLayout布局属性)  
+	- [全局主题配置](#全局主题配置) 
+	- [Breadcrumb显示当前导航路径](#Breadcrumb显示当前导航路径)
 
 
 
