@@ -52,7 +52,10 @@
 	- [**MLC_GO中的PracticeGenExample**](#MLC_GO中的PracticeGenExample)
 		- [`map[string]interface{}`用法](#`map[string]interface{}`用法)
 	- [**DeepSeek本地Mac电脑部署**](#DeepSeek本地Mac电脑部署)
-- [错误记录](#错误记录)
+- [**错误记录**](#错误记录)
+	- [Go的SDK与工具链版本不匹配导致VSCode的Debug测试出错](#Go的SDK与工具链版本不匹配导致VSCode的Debug测试出错)   
+	- [go.mod中可以设置工具链版本吗](#go.mod中可以设置工具链版本吗) 
+	- [VSCode中debug模式终端输入报错](#VSCode中debug模式终端输入报错)
 - **优秀资源**
 	- [盘点 GitHub 那些标星超过 20 K 的 Golang 优质开源项目](https://blog.csdn.net/yuzhou_1shu/article/details/127066562)
 	- [Go实战项目（简书-Leo丶Dicaprio）](https://www.jianshu.com/u/151e4eccc2e2)
