@@ -308,8 +308,11 @@ Edigor: Tab Completion
   "go.useLanguageServer": true,
   "go.toolsManagement.checkForUpdates": "local",
   // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
+  // "go.alternateTools" 是 VS Code 中 Go 插件的一个可选配置项，用来显式指定使用哪个 Go 工具的可执行文件路径，防止插件自动找错版本或路径。
   "go.alternateTools": {
-    "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
+	  // 1.1固定使用这个路径下的 go 命令
+	  // 1.2若是配置出错可能导致VSCode中的GO插件拓展无法激活、调试失败
+	  "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
   },
   "go.toolsEnvVars": {
     "GO111MODULE": "on",

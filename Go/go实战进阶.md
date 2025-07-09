@@ -52,6 +52,7 @@
 	- [**MLC_GO中的PracticeGenExample**](#MLC_GO中的PracticeGenExample)
 		- [`map[string]interface{}`用法](#`map[string]interface{}`用法)
 	- [**DeepSeek本地Mac电脑部署**](#DeepSeek本地Mac电脑部署)
+- [错误记录](#错误记录)
 - **优秀资源**
 	- [盘点 GitHub 那些标星超过 20 K 的 Golang 优质开源项目](https://blog.csdn.net/yuzhou_1shu/article/details/127066562)
 	- [Go实战项目（简书-Leo丶Dicaprio）](https://www.jianshu.com/u/151e4eccc2e2)
@@ -2350,6 +2351,408 @@ print(outputs[0].outputs[0].text)
 
 根据你的具体需求（数据敏感性、预算、响应时间要求），可以选择最适合的方案。如需进一步优化Mac端训练性能，可以参考[Apple MLX最佳实践指南](https://github.com/ml-explore/mlx-examples)。
 
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="错误记录">错误记录</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="Go的SDK与工具链版本不匹配导致VSCode的Debug测试出错">Go的SDK与工具链版本不匹配导致VSCode的Debug测试出错</h2>
+
+```sh
+Mac中使用VSCode中的左上角按钮【运行和调试】go然后控制台出现如下错误：
+
+Starting: /Users/ganghuang/HGFiles/GitHub/GoProject/bin/dlv dap --log=true --log-output=debugger --listen=127.0.0.1:50252 --log-dest=3 from /Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO
+DAP server listening at: 127.0.0.1:50252
+
+Build Error: go build -o /Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO/__debug_bin3506086051 -gcflags all=-N -l .
+# internal/byteorder
+compile: version "go1.23.5" does not match go tool version "go1.24.1"
+。。。
+。。
+，
+# MLC_GO/pkg/hg_response
+compile: version "go1.23.5" does not match go tool version "go1.24.1" (exit status 1)
+```
+
+
+🎯 **本质是 —— 你项目编译时的 Go 版本 (go tool) 与代码声明或标准库版本不一致！**
+
+<br/>
+
+- **VS Code 使用的 go 实际是 Go 1.23.5，但：**
+
+	- 项目用了 Go 1.24.1 的标准库（如 /pkg/mod/golang.org/toolchain@v0.0.1-go1.24.1）
+
+	- 编译工具链（go tool compile）来自 1.24.1
+
+	- VS Code 中你设置了 "go.alternateTools" 指向的是 1.23.5
+
+所以冲突了：代码依赖了 Go 1.24.1 的工具链，编译器却用了 Go 1.23.5
+
+**这个可以通过使用如下2个命令进行查看：**
+
+```sh
+ which go
+/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go
+
+go version
+go version go1.24.1 darwin/arm64
+```
+
+**环境出现了「Go 版本混乱」的问题：**
+
+🧩 当前状况总结：
+
+| 工具/路径                    | 实际版本                                                                      |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `go version`（执行 `go` 命令） | ✅ `go1.24.1`                                                              |
+| `which go`（找到的是哪个执行文件）   | ❌ `/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go` ← 仍旧指向 1.23.5 的 `go` 路径 |
+
+这说明**当前 shell 的 PATH 变量优先找到了旧版本的 `go` 命令（1.23.5）**，但运行后由于 `go.mod` 或 `toolchain` 使用了 1.24.1，所以命令执行的是 1.24.1 的 toolchain 代理程序。
+
+这在 VSCode、Delve 等场景中**容易导致 "version mismatch" 的问题。**
+
+<br/>
+
+下面3种方式可以做到统一，我选择了**第一种**：
+
+ ✅ 目标：统一为 Go 1.24.1
+
+**方案一：最推荐 ✅ —— 设置环境变量 `GOTOOLCHAIN=local`**
+
+告诉 Go 工具链“不要自动用 go.mod 的 toolchain version”，避免 1.23.5 调用 1.24.1：
+
+- **步骤**
+	- 打开 VS Code
+	- 按下 `Cmd + Shift + P`（Mac 上）
+	- 输入并选择：Preferences: Open Settings (JSON)
+	- 在打开的 settings.json 中，添加以下内容：
+
+```jsonc
+// VSCode settings.json 加：
+"go.toolsEnvVars": {
+  "GOTOOLCHAIN": "local", // 使用本地sdk的工具链版本
+  "GO111MODULE": "on",
+  "GOPROXY": "https://goproxy.cn,direct"
+}
+```
+
+最后 **保存文件，重启 VS Code**
+
+
+<br/>
+
+**方案二：从 shell 层统一 `go` 路径（长期方案）**
+
+**1️⃣ 找到 1.24.1 安装在哪儿**
+
+执行：
+
+```bash
+ls /opt/homebrew/Cellar/go/
+```
+
+你会看到所有版本，比如：
+
+```
+1.23.5
+1.24.1
+```
+
+那就执行：
+
+```bash
+ls -l /opt/homebrew/bin/go
+```
+
+看看 `go` 指向哪个版本，应该是一个链接：
+
+```bash
+/opt/homebrew/bin/go -> ../Cellar/go/1.23.5/libexec/bin/go
+```
+
+❌ **如果指向 1.23.5，就错了！**
+
+<br/>
+
+**2️⃣ 改成软链接指向 1.24.1（推荐）**
+
+执行如下命令替换掉旧链接：
+
+```bash
+brew unlink go@1.23.5
+brew link go@1.24.1
+```
+
+然后重新验证：
+
+```bash
+which go
+# 应该输出：/opt/homebrew/bin/go
+
+go version
+# 应该输出：go version go1.24.1 darwin/arm64
+```
+
+<br/>
+
+**✅ 补：VS Code 中配置同步为 1.24.1**
+
+```jsonc
+"go.goroot": "/opt/homebrew/Cellar/go/1.24.1/libexec",
+"go.alternateTools": {
+  "go": "/opt/homebrew/bin/go"
+},
+"go.delveConfig": {
+  "dlvPath": "/opt/homebrew/bin/dlv",
+  "debugAdapter": "dlv-dap",
+  "apiVersion": 2,
+  "showGlobalVariables": true
+},
+"go.toolsEnvVars": {
+  "GO111MODULE": "on",
+  "GOTOOLCHAIN": "auto"
+}
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="go.mod中可以设置工具链版本吗">go.mod中可以设置工具链版本吗</h2>
+
+**go.mod 文件中**有：
+
+```sh
+module MLC_GO
+go 1.24.1
+```
+
+**提问：** 那么这个 `‌go 1.24.1`指的是工具链版本吗？
+
+
+<br/>
+
+ **✅ `go.mod` 中的 `go 1.24.1` ≠ 自动使用 `toolchain`**
+
+当你在 `go.mod` 中写：
+
+```go
+module MLC_GO
+go 1.24.1
+```
+
+这**并不等于**启用了 `toolchain` 模式。
+
+<br/>
+
+**那什么情况下会自动拉起 toolchain？**
+
+从 Go 1.21 起，Go 引入了 **Toolchain 机制**，只有当你在 `go.mod` 中**明确写出**以下形式时，才会自动触发 toolchain 下载或切换：
+
+```go
+toolchain go1.24.1
+```
+
+这行才是真正启用 Toolchain 的关键：
+
+<br/>
+
+**✅ 开启 Toolchain：**
+
+```go
+toolchain go1.24.1
+```
+
+<br/>
+
+🔁 **不会触发 Toolchain**：
+
+```go
+go 1.24.1 // 只是声明语法最低版本
+```
+
+<br/>
+
+**🚨 但为什么你还是触发了 Toolchain 的错误？**
+
+因为你的本地 Go 是 1.23.5，**它看到 `go 1.24.1` 后，为了兼容，自动帮你“偷偷”拉起了 1.24.1 的 Toolchain 模式。**
+
+这属于 Go 1.21+ 的一个**智能行为**。
+
+<br/>
+
+**✅ 怎么避免自动拉起 Toolchain（不建议降级）**
+
+你可以通过设置环境变量来关闭这个行为：
+
+<br/>
+
+**在 VS Code 设置里加：**
+
+```jsonc
+"go.toolsEnvVars": {
+  "GOTOOLCHAIN": "local"
+}
+```
+
+<br/>
+
+**或在终端设置（临时有效）：**
+
+```bash
+export GOTOOLCHAIN=local
+```
+
+<br/> 
+
+**🧩 总结一句话：**
+
+| 你写的 `go.mod`           | 是否自动拉 Toolchain | 说明                |
+| ---------------------- | --------------- | ----------------- |
+| `go 1.24.1`            | ✅ 可能自动拉         | 你的本地是 1.23.5，版本不够 |
+| `toolchain go1.24.1`   | ✅ 一定自动拉         | 显式要求用 1.24.1 工具链  |
+| 设置 `GOTOOLCHAIN=local` | ❌ 不再自动拉         | 强制使用本地 go         |
+
+***
+<br/><br/><br/>
+> <h2 id="VSCode中debug模式终端输入报错">VSCode中debug模式终端输入报错</h2>
+
+当我在VSCode的点击左上角**运行和调试（Cmd+Shif+D）**时，因为`main.go`入口函数中有`fmt.Scanf()`函数输入时出现如下错误：
+
+```sh
+❗Unable to process 'evaluate': debuggee is running
+```
+
+**这个错误**是在 VS Code 调试 Go 程序时，你尝试在“不允许断点”的时机进行变量查看或表达式求值（Evaluate） 引起的。
+
+- **本质原因**
+	- 你点击调试时，程序还 正在运行中，没有暂停在断点或暂停状态，这时候你在控制台、变量窗口或悬浮框中输入了调试表达式，比如：
+
+```go
+someVar + 1
+```
+或者尝试查看变量，但程序此时还在跑（没有停），所以调试器（Delve）拒绝求值。
+
+<br/>
+
+**修改 `.vscode/launch.json`：**
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Go Program",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "stopOnEntry": true // 这个属性会导致debug模式下在路口函数暂停
+    }
+  ]
+}
+```
+这样你点击“启动调试”按钮后程序就立即暂停在入口，可以立即 Evaluate 表达式。
+
+**但是上述还是不行，还是会报上述的错误，那该如何解决呢？**
+
+***
+<br/><br/>
+
+**遇到的问题是 VS Code 中 调试控制台 (`Debug Console`) ≠ 标准输入 (`stdin`)**，所以：
+
+> ❌ **你不能在调试控制台中输入 `fmt.Scanf()` 要求的用户输入！**
+
+<br/>
+
+ **原因详解**
+
+```go
+var functionModule int
+fmt.Scanf("%d\n", &functionModule)
+```
+
+要求从 **标准输入（stdin）** 获取用户输入。但 VS Code 的调试控制台并不会自动把你的输入传给正在运行的程序的 stdin，因此就会导致程序卡住，或者提示你：
+
+> `Unable to process 'evaluate': debuggee is running`
+
+因为：
+
+* 程序正在阻塞等待输入
+* 你在 **调试控制台输入的不是 stdin 内容，而是调试表达式**
+* 所以失败
+
+<br/>
+
+**解决方式 1：使用 VS Code 的“集成终端”启动调试（推荐）**
+
+修改 `.vscode/launch.json` 文件，让程序在**集成终端中运行**，从而允许输入 `fmt.Scanf` 内容：
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Go (with stdin)",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "console": "integratedTerminal"  // 👈 关键：使用集成终端
+    }
+  ]
+}
+```
+
+然后点击“运行和调试”按钮：
+
+➡️ 会在 VS Code 下方打开一个终端窗口
+➡️ 程序在终端中运行，你就可以输入 `1`，回车
+➡️ `fmt.Scanf` 能成功接收
+
+<br/>
+
+**✅ 方式 2：临时用 `os.Args` 替代 `fmt.Scanf`（适合测试）**
+
+如果你只是测试，可以暂时不用 `Scan`，改用传参：
+
+```go
+import (
+    "fmt"
+    "os"
+    "strconv"
+)
+
+func main() {
+    if len(os.Args) < 2 {
+        fmt.Println("Please pass number as argument.")
+        return
+    }
+    functionModule, _ := strconv.Atoi(os.Args[1])
+    fmt.Println("Received:", functionModule)
+}
+```
+
+然后修改 launch.json 加参数：
+
+```json
+"args": ["1"]
+```
+
+---
+
+### 🚫 不推荐的方式（但经常有人误会）
+
+> ❌ 你不能在 **“调试控制台”** 中输入 `1` 期望给 `fmt.Scanf` 读到。
+
+调试控制台是用来执行表达式或 evaluate，不是 stdin！
 
 
 
