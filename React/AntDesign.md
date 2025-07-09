@@ -2,6 +2,7 @@
 - [** AntDesign 组件总览**](https://ant.design/components/tag-cn)
 - [**阿里开源ReactUI组件库AntDesign**](#阿里开源ReactUI组件库AntDesign)
 	- [Table组件使用](#Table组件使用)
+		- [表单属性](#表单属性)
 		- [pagination、expandable属性使用](#pagination、expandable属性使用)
 			- [expandable中常用属性：columnWidth、expandIcon](#expandable中常用属性：columnWidth、expandIcon)
 			- [表中行展开细节](#表中行展开细节)
@@ -147,6 +148,31 @@ const columns = [
   cursor: pointer;
 }
 ```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="表单属性">表单属性</h2>
+
+```tsx
+<Form
+  {...layout}
+  form={form}
+  onFinish={handleFinish}
+  onFinishFailed={handleFinishFailed}
+>
+```
+
+| 属性               | 类型     | 说明                          |
+| ---------------- | ------ | --------------------------- |
+| `{...layout}`    | Object | 表单布局控制，设置标签列宽与内容列宽          |
+| `form`           | 实例     | 表单控制实例（来自 `Form.useForm()`） |
+| `onFinish`       | 函数     | 表单提交成功时触发（校验通过）             |
+| `onFinishFailed` | 函数     | 表单提交失败（校验不通过）时触发            |
+
+
+
 
 ***
 <br/><br/>
@@ -844,6 +870,34 @@ const Demo = () => {
 centered={props.centered !== undefined ? props.centered : true}
 ```
 
+<br/>
+
+**举例：**
+
+```tsx
+<Modal
+  title="新增用户"
+  open={isVisible}
+  maskClosable={false}
+  onCancel={handleCancel}
+  confirmLoading={loading}
+  onOk={handleOk}
+>
+  弹窗内容
+</Modal>
+```
+
+| 属性名                 | 类型          | 说明                | 示例                                |
+| ------------------- | ----------- | ----------------- | --------------------------------- |
+| `title`             | `ReactNode` | 弹窗标题              | `title="新增用户"`                    |
+| `open`（以前叫 visible） | `boolean`   | 是否显示弹窗            | `open={true}`                     |
+| `maskClosable`      | `boolean`   | 点击遮罩是否关闭弹窗        | `maskClosable={false}`            |
+| `onCancel`          | `function`  | 点击取消按钮或遮罩时触发      | `onCancel={() => setOpen(false)}` |
+| `onOk`              | `function`  | 点击确定按钮时触发         | `onOk={submitForm}`               |
+| `confirmLoading`    | `boolean`   | 确定按钮是否 loading 状态 | `confirmLoading={loading}`        |
+
+
+
 ---
 <br/>
 
@@ -1208,6 +1262,42 @@ message.config({
 ```
 请输入产品名称
 ```
+
+
+<br/><br/>
+> <h3 id="Form.Item属性详解">Form.Item属性详解</h3>
+
+`<Form.Item>` 是表单的单个字段容器，用于显示标签和控件。
+
+```tsx
+<Form.Item
+  name="username"
+  label="用户名"
+  rules={[{ required: true, message: '请输入用户名' }]}
+>
+  <Input />
+</Form.Item>
+```
+
+| 属性      | 说明                  | 示例                                          |
+| ------- | ------------------- | ------------------------------------------- |
+| `name`  | 字段名，用于数据提交绑定        | `name="username"` 提交时 `{ username: 'xxx' }` |
+| `label` | 左侧显示的字段名称           | `label="用户名"`                               |
+| `rules` | 校验规则数组（支持必填、长度、格式等） | `rules={[{ required: true }]}`              |
+
+---
+
+## 🛠 常见校验规则 rules：
+
+```tsx
+rules={[
+  { required: true, message: '不能为空' },
+  { min: 3, message: '最少3个字符' },
+  { type: 'email', message: '邮箱格式不正确' },
+]}
+```
+
+
 
 
 <br/><br/><br/>

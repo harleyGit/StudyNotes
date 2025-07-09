@@ -194,100 +194,179 @@ Edigor: Tab Completion
 
 ```json
 {
-    // 使用 IntelliSense 了解相关属性。 
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
-    // https://blog.csdn.net/love666666shen/article/details/88887086
-    "version": "0.2.0",
-    "configurations": [
-        { 
-            "name": "Launch MLC_GO",// 配置名称
-            "type": "go",// 调试类型（Go）
-            "request": "launch",// 启动模式（launch 或 attach）
-            "mode": "auto",// 调试模式（auto/debug/test）
-            "program": "${workspaceFolder}",// "${fileDirname}", // 调试当前文件所在目录
-            "args": ["-env=dev"],// 命令行参数
-            "env": {
-                "GOPATH": "${env:GOPATH}",
-                "MY_ENV": "debug"// 自定义环境变量
-            },
-            "showLog": true// 显示调试日志
-        }
-    ]
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch MLC_GO", // 配置名称
+      "type": "go", // 调试类型（Go）
+      "request": "launch", // 启动模式（launch 或 attach）
+      "mode": "auto", // 调试模式（auto/debug/test）
+      "program": "${workspaceFolder}", // "${fileDirname}", // 调试当前文件所在目录
+      "args": ["-env=dev"], // 命令行参数
+      "env": {
+        "GOPATH": "${env:GOPATH}",
+        "MY_ENV": "debug" // 自定义环境变量
+      },
+      "showLog": true, // 显示调试日志
+      "console": "integratedTerminal", // 👈 关键：使用集成终端,解决在vscode中debug【调试控制台】无法输入，使其【调试控制台】与终端大致合并
+      //"stopOnEntry": true //“启动调试”按钮后程序就立即暂停在入口（main函数），可以立即 Evaluate 表达式
+    },
+    {
+      //针对包的调试配置
+      "name": "Launch Package",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${fileDirname}" //调试当前文件所在的包
+    },
+    {
+      //测试调试配置
+      "name": "Debug test",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}",
+      "args": ["-test.run", "MyTestFunction"]
+    },
+    {
+      //带参数的调试
+      "name": "Launch with args",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}", //调试工作区根目录（适用于有 main 包的项目）
+      "args": ["--port=8080", "--env=dev"]
+    },
+    {
+      //基本调试配置（适用于单个文件）
+      "name": "Launch current file",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${file}" //调试当前打开的文件
+    }
+  ]
 }
 ```
 
+
+
+
 ***
 <br/><br/><br/>
-
 > <h2 id="用户配置">用户配置</h2>
-`Comand+shift+P,`然后选择打开 **Open User Settings(json)**
+
+**`Comand+shift+P,`（或者‌`Cmd+,`，然后选择扩展下的某个功能）** 然后选择打开 **Open User Settings(json)**
 
 ```json
 {
-    "update.mode": "none",//禁止vscode更新
-    "dart.openDevTools": "flutter",
-    "git.autofetch": true,
-    "files.autoSave": "afterDelay",
-    "workbench.colorTheme": "Default Light+",
-    "dart.debugExternalLibraries": false,
-    "dart.debugSdkLibraries": false,
-    "terminal.integrated.scrollback": 1000000000,
-    "debug.inlineValues": true,
+  "update.mode": "none", //禁止更新
+  "dart.openDevTools": "flutter",
+  "git.autofetch": true,
+  "files.autoSave": "afterDelay",
+  "workbench.colorTheme": "Default Light+",
+  "dart.debugExternalLibraries": false,
+  "dart.debugSdkLibraries": false,
+  "terminal.integrated.scrollback": 1000000000,
+  "debug.inlineValues": true,
+  "editor.suggestSelection": "first",
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "java.semanticHighlighting.enabled": true,
+  "files.exclude": {
+    "**/.classpath": true,
+    "**/.project": true,
+    "**/.settings": true,
+    "**/.factorypath": true
+  },
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [80],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
     "editor.suggestSelection": "first",
-    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-    "java.semanticHighlighting.enabled": true,
-    "files.exclude": {
-        "**/.classpath": true,
-        "**/.project": true,
-        "**/.settings": true,
-        "**/.factorypath": true
-    },
-    "[dart]": {
-        "editor.formatOnSave": true,
-        "editor.formatOnType": true,
-        "editor.rulers": [
-            80
-        ],
-        "editor.selectionHighlight": false,
-        "editor.suggest.snippetsPreventQuickSuggestions": false,
-        "editor.suggestSelection": "first",
-        "editor.tabCompletion": "onlySnippets",
-        "editor.wordBasedSuggestions": "off"
-    },
-    "java.project.importOnFirstTimeStartup": "automatic",
-    "explorer.confirmDelete": false,
-    "C_Cpp.updateChannel": "Insiders",
-    "diffEditor.ignoreTrimWhitespace": true,
-    "files.autoGuessEncoding": true,
-    "dart.showInspectorNotificationsForWidgetErrors": false,
-    "settingsSync.ignoredSettings": [
-    
-    ],
-    "editor.codeActionsOnSave": {
-    
-    },
-    "redhat.telemetry.enabled": true,
-    "security.workspace.trust.untrustedFiles": "open",
-    "editor.unicodeHighlight.nonBasicASCII": false,
-    "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "explorer.confirmDelete": false,
+  "C_Cpp.updateChannel": "Insiders",
+  "diffEditor.ignoreTrimWhitespace": true,
+  "files.autoGuessEncoding": true,
+  "dart.showInspectorNotificationsForWidgetErrors": false,
+  "settingsSync.ignoredSettings": [],
+  "editor.codeActionsOnSave": {},
+  "redhat.telemetry.enabled": true,
+  "security.workspace.trust.untrustedFiles": "open",
+  "editor.unicodeHighlight.nonBasicASCII": false,
+  "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
+  "go.goroot": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go",
+  "go.gopath": "/Users/ganghuang/HGFiles/GitHub/GoProject",
+  "go.useLanguageServer": true,
+  "go.toolsManagement.checkForUpdates": "local",
+  // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
+  "go.alternateTools": {
+    "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
+  },
+  "go.toolsEnvVars": {
+    "GO111MODULE": "on",
+    "GOPROXY": "https://goproxy.cn,direct",
+    "GOTOOLCHAIN": "local"//很重要，使其工具链版本和本地go sdk保持一致，不会和go.mod保持一致，避免工具链和sdk不统一导致无法使用vscode的debugprint调试
+  },
+  // 调试配置
+  "go.delveConfig": {
+    "showRegisters": false,
+    "debugAdapter": "dlv-dap",
+    "apiVersion": 2,
+    "showGlobalVariables": true
+  },
+  "gopls": {
+    "staticcheck": true // 可选：启用静态分析
+  },
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  // 代码格式化
+  "go.formatTool": "gofmt",
+  "editor.formatOnSave": true,
+  // 代码分析
+  "go.lintFlags": ["--fast"],
+  "go.lintTool": "staticcheck",
+  // 自动补全
+  "go.autocompleteUnimportedPackages": true,
+  // 代码导航
+  "go.inferGopath": true,
+  "go.docsTool": "gogetdoc",
+  // 构建标签
+  "go.buildTags": "",
+  "editor.tabCompletion": "on",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
 
-    /// Go配置
-    "go.useLanguageServer": true,
-    "go.toolsManagement.checkForUpdates": "local",
-    "go.alternateTools": {
-    },
-    "go.delveConfig": {
-    
-    },
-    "gopls": {
-        "staticcheck": true  // 可选：启用静态分析
-    },
-    "editor.quickSuggestions": {
-        "other": true,
-        "comments": false,
-        "strings": true
-    }
+  // 启用 CSS 和 SCSS 支持
+  "css.validate": true,
+  "scss.validate": true,
+  "less.validate": true,
+  // 启用 JavaScript 和 CSS 文件跳转
+  "javascript.implicitProjectConfig.checkJs": true,
+  "css.lint.validProperties": "all",
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "docker.extension.enableComposeLanguageServer": false,
+  "makefile.configureOnOpen": true
 }
 ```
 
@@ -349,7 +428,6 @@ Edigor: Tab Completion
 
 ***
 <br/>
-
 > <h1 id="常用插件">常用插件</h1>
 
 
