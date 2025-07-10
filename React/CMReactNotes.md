@@ -14,6 +14,8 @@
 		- [全局主题配置](#全局主题配置) 
 		- [Breadcrumb显示当前导航路径](#Breadcrumb显示当前导航路径)
 	- [**Modal弹窗表格属性介绍**](#Modal弹窗表格属性介绍)
+	- [Form表格使用](#Form表格使用)
+	- [ProTable列表拖拽排序](#ProTable列表拖拽排序)
 
 
 
@@ -1784,6 +1786,57 @@ return (
 | 提交状态    | `isSubmitting` 控制按钮 loading 效果   |
 
 
+***
+<br/><br/><br/>
+> <h2 id="Form表格使用">Form表格使用</h2>
+
+**有如下代码使用：**
+
+```js
+<Form
+  form={form1}
+  labelCol={{ span: 6 }}
+  wrapperCol={{ span: 18 }}
+  onFinish={onFinish}
+  onValuesChange={({ isUniversal }) => {
+    setIsUniversal(isUniversal);
+  }}
+>
+```
+
+上述的**Form**表单属性如何使用？[**请看这里**](./CMReactNotes.md#Form表单基本属性讲解)
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="ProTable列表拖拽排序">ProTable列表拖拽排序</h1>
+
+这种列表可以适应嵌套的数据结构，并显示。提供的列表数据如下：
+
+```json
+{
+  categoryCode: "ipc",
+  categoryId: "1823258198548017154",
+  categoryName: "摄像机",
+  children: [
+    {
+      categoryCode: "ipc",
+      categoryId: "1937718753170132993",
+      categoryName: "云台摄像机",
+      children: [
+	      ...
+	      ..
+	      ,
+      ]
+    }
+  ]
+}
+```
+
+[**详细请看这里**](./CMReactNotes.md#ProTable列表拖拽排序)
 
 
 

@@ -6,11 +6,14 @@
 		- [pagination、expandable属性使用](#pagination、expandable属性使用)
 			- [expandable中常用属性：columnWidth、expandIcon](#expandable中常用属性：columnWidth、expandIcon)
 			- [表中行展开细节](#表中行展开细节)
-	- [下拉组件Select](#下拉组件Select)
-	- [加载指示器组件Spin](#加载指示器组件Spin)
-	- [模态框组件-Modal](#模态框组件-Modal)
-	- [弹框提示组件message](#弹框提示组件message)
-	- [Form表单](#Form表单)
+- [**ProTable列表拖拽排序 ‌**](#ProTable列表拖拽排序)
+- [下拉组件Select](#下拉组件Select)
+- [加载指示器组件Spin](#加载指示器组件Spin)
+- [模态框组件-Modal](#模态框组件-Modal)
+- [弹框提示组件message](#弹框提示组件message)
+- [**Form表单**](#Form表单)
+	- [Form.Item属性详解](#Form.Item属性详解)
+	- [Form表单基本属性讲解](#Form表单基本属性讲解)
 - [Button组件](#Button组件)
 - [**Upload图片上传组件**](#Upload图片上传组件)
 - [Menu组件做侧边栏菜单](#Menu组件做侧边栏菜单)
@@ -525,10 +528,577 @@ expandable={{
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="ProTable列表拖拽排序">ProTable列表拖拽排序</h1>
+
+**列表的json数据结构如下：**
+
+```js
+{
+  categoryCode: "ipc",
+  categoryId: "1823258198548017154",
+  categoryName: "摄像机",
+  children: [
+    {
+      categoryCode: "ipc",
+      categoryId: "1937718753170132993",
+      categoryName: "云台摄像机"
+    }
+  ]
+}
+```
+
+
+<br/><br/>
+
+**完整代码如下：**
+
+```jsx
+import React, { useState, useMemo } from 'react';
+import ProTable from '@ant-design/pro-table';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+/// 这个是自定义的拖拽行所在按钮，是必须的，否则无法拖拽
+const DraggableRow = (props) => {
+  const { record, className, style, children, ...restProps } = props;
+
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: record.categoryId, // 这个相当于没放的标记ID，是json数据的一个字段
+  });
+
+  const rowStyle = {
+    ...style,
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const enhancedChildren = React.Children.map(children, (child, index) => {
+    if (index === 0) {
+      return React.cloneElement(child, {
+        children: (
+          <span
+            style={{ cursor: 'grab', userSelect: 'none' }}
+            {...attributes}
+            {...listeners}
+          >
+            ☰
+          </span>
+        ),
+      });
+    }
+    return child;
+  });
+
+  return (
+    <tr ref={setNodeRef} style={rowStyle} className={className} {...restProps}>
+      {enhancedChildren}
+    </tr>
+  );
+};
+
+
+/// 显示的列表
+export default function CategoryTreeTable() {
+  const [isSorting, setIsSorting] = useState(false);
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+
+  const [dataSource, setDataSource] = useState([
+    {
+      categoryId: "1823258198548017154",
+      categoryCode: "ipc",
+      categoryName: "摄像机",
+      children: [
+        {
+          categoryId: "1937718753170132993",
+          categoryCode: "ipc",
+          categoryName: "云台摄像机",
+        },
+        {
+          categoryId: "1937718753170132994",
+          categoryCode: "ipc",
+          categoryName: "球形摄像机",
+        },
+      ],
+    },
+    {
+      categoryId: "1823258198548017155",
+      categoryCode: "ipc",
+      categoryName: "门铃",
+    },
+  ]);
+
+  // 👉 拍平成 parentId-aware 的数组
+  const flatten = (list, parentId = null) => {
+    return list.reduce((acc, item) => {
+      acc.push({ ...item, parentId });
+      if (item.children) {
+        acc.push(...flatten(item.children, item.categoryId));
+      }
+      return acc;
+    }, []);
+  };
+
+  const flatList = flatten(dataSource);
+
+	// 拖拽事件
+	const onDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+
+    const oldItem = flatList.find(item => item.categoryId === active.id);
+    const overItem = flatList.find(item => item.categoryId === over.id);
+
+    if (!oldItem || !overItem || oldItem.parentId !== overItem.parentId) return;
+
+    const parentId = oldItem.parentId;
+
+    const updateList = (list) => {
+      if (parentId === null) {
+        const oldIndex = list.findIndex(i => i.categoryId === active.id);
+        const newIndex = list.findIndex(i => i.categoryId === over.id);
+        return arrayMove(list, oldIndex, newIndex);
+      }
+
+      return list.map(item => {
+        if (item.categoryId === parentId && item.children) {
+          const oldIndex = item.children.findIndex(i => i.categoryId === active.id);
+          const newIndex = item.children.findIndex(i => i.categoryId === over.id);
+          item.children = arrayMove(item.children, oldIndex, newIndex);
+        }
+        return item;
+      });
+    };
+
+    setDataSource(updateList(dataSource));
+  };
+
+  const columns = [
+    ...(isSorting
+      ? [{
+          title: '',
+          dataIndex: 'drag',
+          width: 40,
+          render: () => <span>☰</span>,
+        }]
+      : []),
+    {
+      title: '分类名称',
+      dataIndex: 'categoryName',
+    },
+  ];
+
+  const tableDom = (
+    <ProTable
+      columns={columns}
+      dataSource={dataSource}
+      rowKey="categoryId"
+      pagination={false}
+      search={false}
+      expandable={{
+        columnIndex: isSorting ? 1 : 0, // 👈 控制展开图标列
+        expandedRowKeys,
+        onExpandedRowsChange: setExpandedRowKeys,
+        childrenColumnName: 'children',
+      }}
+      onRow={(record) => ({ record })}
+      components={isSorting ? { body: { row: DraggableRow } } : undefined}
+      toolBarRender={() => [
+        <button
+          key="sort"
+          onClick={() => {
+            if (isSorting) {
+              console.log('🚀 排序后的结构:', dataSource);
+            }
+            setIsSorting(!isSorting);
+          }}
+        >
+          {isSorting ? '完成排序' : '排序'}
+        </button>
+      ]}
+    />
+  );
+
+  return isSorting ? (
+    <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext
+        items={flatList.map(i => i.categoryId)}
+        strategy={verticalListSortingStrategy}
+      >
+        {tableDom}
+      </SortableContext>
+    </DndContext>
+  ) : tableDom;
+}
+```
+
+**调用：**
+
+```jsx
+import DragSortCategoryTable from './components/DragSortCategoryTable';
+
+const yourData = [/* category 数据 */];
+
+<DragSortCategoryTable
+  dataSource={yourData}
+  onSave={(sortedData) => {
+    console.log('最终排序数据', sortedData);
+    // 可调用 API 保存到后端
+  }}
+/>
+```
+
+***
+<br/><br/>
+
+**上述代码进行解读：**
+
+
+**✅ 1. `flatList = useMemo(() => flatten(data), [data])` 是干什么的？**
+
+这个是 React 的性能优化写法。
+
+**🔍 `useMemo` 作用**
+
+它的作用是“记住计算结果”，只有当依赖项 `[data]` 发生变化时，才重新计算 `flatten(data)`。
+
+这样做的好处是避免在每次渲染组件时都重复执行耗时操作，比如递归遍历 `data`，提高性能。
+
+<br/>
+
+ **🔍 假设你的 `data` 是如下结构：**
+
+```js
+[
+  {
+    categoryId: "1",
+    categoryName: "摄像机",
+    children: [
+      {
+        categoryId: "1-1",
+        categoryName: "云台摄像机"
+      },
+      {
+        categoryId: "1-2",
+        categoryName: "智能摄像机"
+      }
+    ]
+  },
+  {
+    categoryId: "2",
+    categoryName: "门铃"
+  }
+]
+```
+
+<br/>
+
+执行完 `flatList = flatten(data)` 后结果是：
+
+```js
+[
+  { categoryId: "1", categoryName: "摄像机", parentId: null },
+  { categoryId: "1-1", categoryName: "云台摄像机", parentId: "1" },
+  { categoryId: "1-2", categoryName: "智能摄像机", parentId: "1" },
+  { categoryId: "2", categoryName: "门铃", parentId: null }
+]
+```
+
+<br/>
+
+**✅ 2. `flatten` 函数是干嘛的？怎么理解？**
+
+这是一个递归函数，用来把树形结构「拍平」为一维数组，并标记每一项的 `parentId`。
+
+```js
+const flatten = (list, parentId = null) => {
+  return list.reduce((acc, item) => {
+    acc.push({ ...item, parentId }); // 当前节点加入结果数组
+    if (item.children) {
+      acc.push(...flatten(item.children, item.categoryId)); // 子节点继续递归处理
+    }
+    return acc;
+  }, []);
+};
+```
+
+你可以理解为：把 `tree -> flat`，并记录每项属于哪个父节点。
+
+<br/>
+
+**✅ 3. `onDragEnd` 函数的参数哪里来的？做了什么？**
+
+这个是由 `DndContext` 触发事件自动提供的：
+
+```jsx
+<DndContext onDragEnd={onDragEnd} />
+```
+
+当你拖拽完成时，`dnd-kit` 会自动传一个对象给 `onDragEnd`，这个对象中包含了：
+
+* `active.id`: 当前拖动的元素 id
+* `over.id`: 放下时目标元素的 id
+
+<br/>
+
+ **👇 举例说明业务逻辑：**
+
+假设拖动的是「云台摄像机」，即 `categoryId: 1-1`，拖动到「智能摄像机」上面（`categoryId: 1-2`）
+
+那么：
+
+```js
+active.id === '1-1'
+over.id === '1-2'
+```
+
+你希望只在**同一父级**下移动才生效，所以：
+
+```js
+const oldItem = flatList.find(i => i.categoryId === active.id); // 1-1
+const overItem = flatList.find(i => i.categoryId === over.id);  // 1-2
+
+if (oldItem.parentId !== overItem.parentId) return; // 不同父级不处理
+```
+
+然后通过 `arrayMove` 调整顺序：
+
+* 若是顶层父级：就直接 `arrayMove(data, ...)`
+* 若是某个父级下的子项：就只 `arrayMove(parent.children, ...)`
+
+<br/><br/>
+
+**`4.const onDragEnd = ({active, over}) => { }`函数细致理解阅读：**
+
+<br/>
+
+**4.1下面的这段代码什么意思？**
+
+```js
+if (!over || active.id === over.id) {
+  console.log('未拖拽到目标或目标与自身相同，忽略操作');
+  return;
+}
+```
+
+- **分解说明：**
+
+	* `!over`：
+
+		* 表示用户拖拽时没有“落到”另一个合法的行上。
+		* 可能是松手时鼠标在空白区域，找不到目标元素。
+
+	* `active.id === over.id`：
+
+		* 表示你把某一行拖到了它自己身上。
+		* 这种情况不需要变动顺序。
+
+<br/>
+
+**✅ 作用：**
+
+这是一个“提前退出”的判断，用于避免不必要的处理逻辑，提高健壮性。
+
+<br/>
+
+**🧪 举例：**
+
+假设你拖动的是分类项 `"云台摄像机"`，它的 `id = "1-2"`：
+
+* 如果你松手时没有对准其他行 → `!over` 为 `true`，不会排序。
+* 如果你松手时又放回自己位置 → `active.id === over.id` 为 `true`，也不会排序。
+
+<br/>
+
+**4.2扁平数组中找到原始数据**
+
+如下两行代码：
+
+```js
+const oldItem = flatList.find(item => item.categoryId === active.id);
+const overItem = flatList.find(item => item.categoryId === over.id);
+```
+
+<br/>
+
+**🔍 它们的作用是：**
+
+在拖拽结束时，`dnd-kit` 提供了：
+
+* `active.id`：被拖动的行的 ID（拖拽源）
+* `over.id`：放下时目标行的 ID（拖拽目标）
+
+<br/>
+
+这两行代码用来在 `flatList` 这个「扁平化数组」中找到：
+
+* 被拖动的原始数据项（`oldItem`）
+* 被放下的目标数据项（`overItem`）
+
+<br/>
+
+**📘 举个例子说明：**
+
+假设你拖动的是「云台摄像机」（`categoryId: "1-2"`），目标是「智能摄像机」（`categoryId: "1-1"`）
+
+那么：
+
+```js
+active.id === "1-2"
+over.id === "1-1"
+```
+
+<br/>
+
+你就会从 `flatList` 中找到：
+
+```js
+oldItem = { categoryId: "1-2", categoryName: "云台摄像机", parentId: "1" }
+overItem = { categoryId: "1-1", categoryName: "智能摄像机", parentId: "1" }
+```
+
+这些对象后续会用来判断：
+
+* 是否是同一个父级（`parentId` 相等）
+* 是哪一层级的排序
+* 要不要执行 `arrayMove()` 排序
+
+
+<br/><br/>
+
+**4.3更新原始数据结构函数**
+
+```js
+const updateList = (list) => {
+	....
+	..
+	.
+}
+```
+
+这是一个更新数据的函数，接收当前的 `list`（即表格的数据）作为参数，返回排序后的新列表。
+
+<br/>
+
+**第一种情况：顶层排序**
+
+```js
+if (parentId === null) {
+  const oldIndex = list.findIndex(i => i.categoryId === active.id);
+  const newIndex = list.findIndex(i => i.categoryId === over.id);
+  console.log('顶层拖拽排序:', oldIndex, '=>', newIndex);
+  return arrayMove(list, oldIndex, newIndex);
+}
+```
+
+* `parentId === null` 说明拖动的是“顶层分类”。
+* `list.findIndex(...)` 找到被拖动项和目标项在数组中的下标。
+* `arrayMove(list, oldIndex, newIndex)` 表示：将 `oldIndex` 的项移动到 `newIndex` 位置。
+* ✅ 直接返回新的顶层顺序数组。
+
+<br/>
+
+**第二种情况：子项排序**
+
+```js
+return list.map(item => {
+  if (item.categoryId === parentId && item.children) {
+    const oldIndex = item.children.findIndex(i => i.categoryId === active.id);
+    const newIndex = item.children.findIndex(i => i.categoryId === over.id);
+    console.log(`子项拖拽排序 [parentId=${parentId}]`, oldIndex, '=>', newIndex);
+    item.children = arrayMove(item.children, oldIndex, newIndex);
+  }
+  return item;
+});
+```
+
+* 如果拖动的是“某个父分类下的子项”，则 `parentId !== null`。
+* 遍历 `list`，找出哪个父分类的 `categoryId === parentId`，也就是当前子项的所属父类。
+* 使用 `arrayMove` 排序这个父分类下的 `children` 数组。
+
+<br/><br/>
+
+**🧪 举个完整例子：**
+
+假设你的数据结构如下：
+
+```js
+[
+  {
+    categoryId: "1",
+    categoryName: "摄像机",
+    children: [
+      { categoryId: "1-1", categoryName: "云台摄像机" },
+      { categoryId: "1-2", categoryName: "智能摄像机" }
+    ]
+  },
+  {
+    categoryId: "2",
+    categoryName: "门铃"
+  }
+]
+```
+
+<br/>
+
+**情况 1：拖动“摄像机”到“门铃”下面（顶层）**
+
+```js
+parentId === null
+list = 原始数组
+active.id = "1"
+over.id = "2"
+```
+
+<br/>
+
+返回：
+
+```js
+[
+  { categoryId: "2", ... },
+  { categoryId: "1", ... }
+]
+```
+
+
+<br/>
+
+**情况 2：拖动“云台摄像机”到“智能摄像机”上（子项）**
+
+```js
+parentId === "1"
+item.categoryId === "1"
+item.children = [ {1-1}, {1-2} ]
+```
+
+<br/>
+
+结果：
+
+```js
+item.children = [ {1-2}, {1-1} ]
+```
+
+
+
+
+
+
+
+<br/><br/><br/>
 
 ***
 <br/><br/><br/>
-> <h2 id="下拉组件Select">下拉组件Select</h2>
+> <h1 id="下拉组件Select">下拉组件Select</h1>
 
 **Select组件原代码，如下：**
 
@@ -1129,9 +1699,14 @@ message.config({
 ```
 
 
+
+
+
+<BR/><BR/><BR/><BR/>
+
 ***
-<BR/><BR/><BR/>
-> <H2 ID="Form表单">Form表单</H2>
+<BR/>
+># <H1 ID="Form表单">[Form表单](https://ant.design/components/form-cn#form-demo-basic)</H1>
 
 [Ant Design](https://ant.design) 的表单组件 `<Form />` 和 `<Form.Item />`，再配合 `<Input />` 输入框实现一个带有**表单验证**和**国际化提示**的输入区域。
 
@@ -1296,6 +1871,143 @@ rules={[
   { type: 'email', message: '邮箱格式不正确' },
 ]}
 ```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="Form表单基本属性讲解">Form表单基本属性讲解</h2>
+
+**基本使用如下：**
+
+```jsx
+<Form
+  form={form1}
+  labelCol={{ span: 6 }}
+  wrapperCol={{ span: 18 }}
+  onFinish={onFinish}
+  onValuesChange={({ isUniversal }) => {
+    setIsUniversal(isUniversal);
+  }}
+>
+```
+
+上述`<Form>` 表单组件，它封装了很多表单逻辑，比如输入校验、布局、表单状态管理等。
+
+<br/>
+
+**1.`form={form1}`**
+
+* **含义**：使用外部通过 `Form.useForm()` 创建的 form 实例 `form1`。
+* **作用**：可以操作表单，比如重置、获取值、设置值等。
+* **示例**：
+
+  ```js
+  const [form1] = Form.useForm();
+
+  form1.setFieldsValue({ name: "张三" }); // 设置某个字段的值
+  form1.resetFields(); // 重置表单
+  form1.getFieldsValue(); // 获取所有表单字段的值
+  ```
+
+<br/>
+
+**2.`labelCol={{ span: 6 }}`**
+
+* **含义**：label（标签）的列宽占 6 份（共 24 格栅格系统）。
+* **作用**：控制表单中每一行左侧“字段名称”部分的宽度。
+* **示例效果**：
+
+  * “用户名”四个字会占 6/24 的宽度
+  * 如果设置为 `span: 4` 就更窄，`span: 8` 就更宽
+
+<br/>
+
+**3.`wrapperCol={{ span: 18 }}`**
+
+* **含义**：输入框部分的宽度占 18 格。
+* **作用**：与 `labelCol` 配合实现布局（6 + 18 = 24，刚好一整行）
+* **注意**：这两个一般要配合调整成总数不超过 24，否则会换行错乱。
+
+<br/>
+
+**4.`onFinish={onFinish}`**
+
+* **含义**：表单校验通过后，点击“提交”会调用 `onFinish` 函数。
+* **作用**：收集提交数据的地方。
+* **示例**：
+
+  ```js
+  const onFinish = (values) => {
+    console.log("提交的表单数据:", values);
+  };
+  ```
+
+<br/>
+
+**5.`onValuesChange={({ isUniversal }) => { setIsUniversal(isUniversal); }}`**
+
+* **含义**：当表单中任意字段的值发生变化时触发。
+* **作用**：可以监听变化做联动，比如某个字段勾选后，其他字段显示/隐藏。
+* **举例说明**：
+
+  假设你有一个表单字段：
+
+  ```jsx
+  <Form.Item name="isUniversal" label="通用设置" valuePropName="checked">
+    <Switch />
+  </Form.Item>
+  ```
+
+  然后你写了：
+
+  ```js
+  const [isUniversal, setIsUniversal] = useState(false);
+  ```
+
+  每次 `Switch` 的开关状态改变时，`setIsUniversal` 就会更新，UI 就能联动其他部分（比如显示额外字段）。
+
+
+---
+<br/>
+
+**✅ 组合使用场景示例：**
+
+```jsx
+<Form
+  form={form1}
+  labelCol={{ span: 6 }}
+  wrapperCol={{ span: 18 }}
+  onFinish={(values) => {
+    console.log("提交成功:", values);
+  }}
+  onValuesChange={({ isUniversal }) => {
+    setIsUniversal(isUniversal);
+  }}
+>
+  <Form.Item
+    name="username"
+    label="用户名"
+    rules={[{ required: true, message: "请输入用户名" }]}
+  >
+    <Input />
+  </Form.Item>
+
+  <Form.Item
+    name="isUniversal"
+    label="是否通用"
+    valuePropName="checked"
+  >
+    <Switch />
+  </Form.Item>
+
+  <Form.Item wrapperCol={{ offset: 6, span: 18 }}>
+    <Button type="primary" htmlType="submit">提交</Button>
+  </Form.Item>
+</Form>
+```
+
+
 
 
 
