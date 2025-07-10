@@ -16,6 +16,7 @@
 	- [**Modal弹窗表格属性介绍**](#Modal弹窗表格属性介绍)
 	- [Form表格使用](#Form表格使用)
 	- [ProTable列表拖拽排序](#ProTable列表拖拽排序)
+		- [修改某一方按钮的点击状态](#修改某一方按钮的点击状态)
 
 
 
@@ -1837,6 +1838,150 @@ return (
 ```
 
 [**详细请看这里**](./CMReactNotes.md#ProTable列表拖拽排序)
+
+***
+<br/><br/><br/>
+> <h2 id="修改某一方按钮的点击状态">修改某一方按钮的点击状态</h2>
+
+场景是：`ProTable`的任意一行点击其中的按钮，将按钮的标题由**上架**变成**下架**，通过一**Bool**值进行判断，但是遇到问题是： 改变一个其他的都改变了，怎么办？？
+
+<br/>
+
+通过每一方的 `record`数据对 没有 `isPutaway` 字段，想实现“**每一行按钮状态独立**”的功能，你可以使用一个外部状态对象（Map 或普通对象）来记录每一行的状态，根据 `record.categoryId` 来索引。
+
+<br/>
+
+**✅ 使用 JavaScript 编码方式（没有 `isPutaway` 字段的做法）**
+
+```jsx
+// 初始化状态：用 categoryId 映射是否上架
+const [putawayMap, setPutawayMap] = useState({});
+```
+
+<br/>
+
+**🔁 渲染列中的按钮：**
+
+```jsx
+const [putawayMap, setPutawayMap] = useState({});
+
+const columns = [
+  {
+    title: '操作',
+    key: 'action',
+    valueType: 'option',
+    render: (text, record) => {
+      const isPutaway = putawayMap?.[record.categoryId] ?? true;
+
+      return [
+        <a
+          key={'putaway' + record.categoryId}
+          onClick={() => {
+            setPutawayMap(prev => ({
+              ...prev,
+              [record.categoryId]: !isPutaway,
+            }));
+          }}
+        >
+          {isPutaway ? '下架' : '上架'}
+        </a>,
+      ];
+    },
+  },
+];
+```
+
+<br/>
+
+**✅ 效果说明：**
+
+* `putawayMap` 是一个状态对象，结构如下：
+
+  ```js
+  {
+    1: true,   // categoryId = 1 是上架
+    2: false,  // categoryId = 2 是下架
+  }
+  ```
+* 每一行通过 `categoryId` 查找状态，互相不影响。
+
+
+<br/>
+
+**语法不懂地方：**
+
+下面一段代码是一个 **函数式更新写法**，用于 React 的 `useState` 更新。
+
+```js
+setPutawayMap(prev => ({
+  ...prev,
+  [record.categoryId]: !isPutaway,
+}));
+```
+
+这里的 `prev` 是 **`putawayMap` 的当前值（之前的值）**。React 会把旧的状态值传入 `setPutawayMap` 的回调函数。
+
+这叫做\*\*“函数式更新”**，优点是可以**避免异步更新带来的状态不一致问题\*\*。
+
+<br/>
+
+**🔍 二、`...prev` 是什么意思？**
+
+这是 JavaScript 的**对象扩展运算符（展开符）**，作用是复制对象的所有属性：
+
+```js
+{
+  ...prev,               // 保留原来的所有键值对
+  [record.categoryId]: newValue // 更新某个键的值
+}
+```
+
+等价于：
+
+```js
+const newMap = Object.assign({}, prev);
+newMap[record.categoryId] = !isPutaway;
+```
+
+<br/>
+
+**假设原来状态是这样：**
+
+```js
+putawayMap = {
+  1: true,
+  2: false,
+}
+```
+
+现在点击了 `categoryId = 2` 的行，那么：
+
+```js
+setPutawayMap(prev => ({
+  ...prev,
+  2: true
+}));
+```
+
+更新后状态变为：
+
+```js
+{
+  1: true,
+  2: true, // 原来的 false 被更新了
+}
+```
+
+<br/>
+
+**✅ 为什么不直接写 `setPutawayMap({ ...putawayMap, ... })`？**
+
+因为 `setPutawayMap({...putawayMap, ...})` 是直接用当前变量，而**状态更新是异步的**，如果你在多个地方快速连续点击按钮，可能读到的还是旧值。
+
+用 `prev => {}` 函数式写法可以**确保你永远拿到的是最新状态**，这是官方推荐写法。
+
+
+
 
 
 
