@@ -17,6 +17,8 @@
 	- [Form表格使用](#Form表格使用)
 	- [ProTable列表拖拽排序](#ProTable列表拖拽排序)
 		- [修改某一方按钮的点击状态](#修改某一方按钮的点击状态)
+	- [Radio.Group单选按钮](#Radio.Group单选按钮)
+	- [Select组件初步使用](#Select组件初步使用)
 
 
 
@@ -1979,6 +1981,42 @@ setPutawayMap(prev => ({
 因为 `setPutawayMap({...putawayMap, ...})` 是直接用当前变量，而**状态更新是异步的**，如果你在多个地方快速连续点击按钮，可能读到的还是旧值。
 
 用 `prev => {}` 函数式写法可以**确保你永远拿到的是最新状态**，这是官方推荐写法。
+
+
+***
+<br/><br/><br/>
+> <h2 id="Radio.Group单选按钮">Radio.Group单选按钮</h2>
+
+**单选按钮简单实用，如下：**
+
+```js
+<Radio.Group
+  name="type"
+  options={typeOption}
+  onChange={handleFormChange}
+  optionType="button"
+  buttonStyle="solid"
+/>
+```
+
+针对它的使用，[**请移步这里**](./AntDesign.md#Radio.Group单选按钮)
+
+
+***
+<br/><br/><br/>
+> <h2 id="Select组件初步使用">Select组件初步使用</h2>
+
+**使用时有如下Code**
+
+```js
+<Select
+  onChange={actionSelectChange}
+  options={dataList}
+  placeholder={intl.formatMessage({ id: 'pages.action.select.placeholder' })}
+/>
+```
+
+具体使用，[**请看这里**](./AntDesign.md#下拉组件Select)
 
 
 

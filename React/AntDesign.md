@@ -8,11 +8,16 @@
 			- [表中行展开细节](#表中行展开细节)
 - [**ProTable列表拖拽排序 ‌**](#ProTable列表拖拽排序)
 - [下拉组件Select](#下拉组件Select)
+	- [onChange函数](#onChange函数) 
+	- [options数据源，加入数据](#options数据源，加入数据) 
+	- [下拉提示文案placeholder](#下拉提示文案placeholder)
 - [加载指示器组件Spin](#加载指示器组件Spin)
 - [模态框组件-Modal](#模态框组件-Modal)
 - [弹框提示组件message](#弹框提示组件message)
 - [**Form表单**](#Form表单)
 	- [Form.Item属性详解](#Form.Item属性详解)
+	- [默认值initialValue](#默认值initialValue)   
+	- [rules校验规则详解](#rules校验规则详解)
 	- [Form表单基本属性讲解](#Form表单基本属性讲解)
 - [Button组件](#Button组件)
 - [**Upload图片上传组件**](#Upload图片上传组件)
@@ -20,7 +25,7 @@
 - [加载组件Spin](#加载组件Spin)
 - [骨架屏Skeleton组件](#骨架屏Skeleton组件)
 - [标签组件Tag](#标签组件Tag)
-
+- [Radio.Group单选按钮](#Radio.Group单选按钮)
 
 
 
@@ -1091,9 +1096,6 @@ item.children = [ {1-2}, {1-1} ]
 
 
 
-
-
-
 <br/><br/><br/>
 
 ***
@@ -1124,11 +1126,51 @@ declare const Select: (<ValueType = any, OptionType extends BaseOptionType | Def
 	* `SECRET_COMBOBOX_MODE_DO_NOT_USE`（私有 API，不建议用）
 	* `_InternalPanelDoNotUseOrYouWillBeFired`（内部 API）
 
+***
+<br/><br/><br/>
+> <h2 id="onChange函数">onChange函数</h2>
+
+**`onChange={handleSelectChange}`**
+
+- **作用：**当用户选择某一项时触发这个函数。
+- **函数参数：**
+
+```
+js
+const handleSelectChange = (value, option) => {
+  console.log("选中的值:", value);
+  console.log("选项对象:", option);
+};
+```
+- value 是选中项的值（value 字段）
+- option 是选中项的完整对象，包含 label、value、等额外数据
+
+***
+<br/><br/><br/>
+> <h2 id="options数据源，加入数据">options数据源，加入数据</h2>
+
+**`options={dataTypeList}`**
+
+* **作用**：快速通过数组渲染出下拉选项
+
+* **数组格式要求**：
+
+```js
+const dataTypeList = [
+{ label: '文本类型', value: 'text' },
+{ label: '数字类型', value: 'number' },
+{ label: '日期类型', value: 'date' },
+];
+```
+
+* 每一项都必须包含：
+
+* `label`：用户看到的文字
+* `value`：用户选择后拿到的值
+
+> ⚠️ 注意：`Select` 会根据 `value` 唯一标识项。
+
 <br/>
-
-**用法示例**
-
-### 1. 引入组件
 
 ```tsx
 import React from 'react';
@@ -1163,6 +1205,7 @@ const MySelect = () => {
 ```
 
 选择后会调用 `handleChange` 输出选中值。
+
 
 <br/><br/>
 
@@ -1287,7 +1330,43 @@ const MyGroupedSelect = () => (
 
 ***
 <br/><br/><br/>
-> <h2 id="加载指示器组件Spin"> 加载指示器组件Spin</h2>
+> <h2 id="下拉提示文案placeholder">下拉提示文案placeholder</h2>
+
+**`placeholder={intl.formatMessage(...)}`**
+
+* **作用**：下拉框未选择时显示的提示文本。
+
+* `intl.formatMessage(...)` 是国际化方法，用于根据语言包翻译内容。
+
+* 如果你不使用国际化，可以直接写：
+
+```jsx
+placeholder="请选择数据类型"
+```
+
+* 使用 `react-intl` 国际化框架的写法如下：
+
+```js
+placeholder={intl.formatMessage({ id: 'pages.message.select.placeholder' })}
+```
+
+配套语言包中必须有：
+
+```json
+{
+"pages.message.select.placeholder": "请选择数据类型"
+}
+```
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/><br/><br/>
+> <h1 id="加载指示器组件Spin"> 加载指示器组件Spin</h1>
 
  **`<Spin />`** 是一个**加载指示器组件**，用于在页面或组件正在加载时，给用户一个\*\*“加载中”反馈\*\*，通常是一个旋转的图标（类似 Loading 圈）。
  
@@ -1860,9 +1939,9 @@ message.config({
 | `label` | 左侧显示的字段名称           | `label="用户名"`                               |
 | `rules` | 校验规则数组（支持必填、长度、格式等） | `rules={[{ required: true }]}`              |
 
----
+<br/>
 
-## 🛠 常见校验规则 rules：
+**🛠 常见校验规则 rules：**
 
 ```tsx
 rules={[
@@ -1871,6 +1950,106 @@ rules={[
   { type: 'email', message: '邮箱格式不正确' },
 ]}
 ```
+
+
+ <br/><br/>
+> <h3 id="默认值initialValue">默认值initialValue</h3>
+
+* **作用**：为这个字段设置一个默认值。
+* **示例**：
+
+  ```jsx
+  <Form.Item name="age" initialValue={18} label="年龄">
+    <InputNumber />
+  </Form.Item>
+  ```
+
+  页面加载时，表单中 `age` 字段就自动显示 `18`。
+
+> ⚠️ 注意：如果 `Form` 本身使用了 `form.setFieldsValue()` 设置默认值，则 `initialValue` 会被覆盖。
+
+<br/><br/>
+> <h3 id="rules校验规则详解">rules校验规则详解</h3>
+
+下面这段代码是一个**自定义校验函数**，用于表单联动校验 —— 比如“最小值不能大于最大值”。
+
+```jsx
+<Form form={form} layout="vertical">
+  <Form.Item name="maxValue" label="最大值" rules={[{ required: true, message: '请输入最大值' }]}>
+    <Input />
+  </Form.Item>
+
+  <Form.Item
+    name="minValue"
+    label="最小值"
+    rules={[
+      ({ getFieldValue }) => ({
+        validator(_, value) {
+          if (
+            value &&
+            getFieldValue('maxValue') &&
+            Number(value) >= Number(getFieldValue('maxValue'))
+          ) {
+            return Promise.reject(new Error('最小值不能大于或等于最大值'));
+          }
+          return Promise.resolve();
+        },
+      }),
+    ]}
+  >
+    <Input />
+  </Form.Item>
+</Form>
+```
+
+**💡 效果：**
+
+* 当用户输入的最小值 `>=` 最大值时，会报错“不合法”；
+* 否则就通过校验。
+
+
+<br/>
+
+**🧩 `({ getFieldValue }) => ({ validator(...) })`**
+
+* `getFieldValue` 是 antd 内部提供的方法，可以获取其他字段的当前值。
+* 它在 **写联动验证逻辑时非常有用**。
+
+<br/> 
+
+**🧩 `validator(_, value) { ... }`**
+
+* `validator` 是一个异步函数，你可以写任意逻辑进行校验。
+* `_` 表示当前字段的 `rule` 配置（我们不使用它所以用 `_` 占位）
+* `value` 是当前字段输入的值（即最小值的输入框里的内容）
+
+<br/>
+
+**🚫 核心逻辑是：**
+
+```js
+if (
+  value && // 当前字段有输入
+  getFieldValue('maxValue') && // maxValue 也有值
+  Number(value) >= Number(getFieldValue('maxValue')) // 最小值 ≥ 最大值
+)
+```
+
+就会报错：
+
+```js
+return Promise.reject(new Error('最小值不能大于或等于最大值'));
+```
+
+否则验证通过：
+
+```js
+return Promise.resolve();
+```
+
+
+
+
 
 
 
@@ -2922,4 +3101,128 @@ const columns = [
 | 数据渲染配合   | 表格、卡片、表单内标注                       |
 
 
-	
+<br/><br/><br/>
+
+***
+<br/>
+> <h1 id="Radio.Group单选按钮">Radio.Group单选按钮</h1>
+
+```jsx
+import { Form, Radio } from 'antd';
+
+const typeOptions = [
+  { label: '个人用户', value: 'person' },
+  { label: '企业用户', value: 'company' },
+];
+
+const handleFormChange = (e) => {
+  console.log('你选中了:', e.target.value);
+};
+
+export default function Demo() {
+  return (
+    <Form>
+      <Form.Item name="type" label="用户类型">
+        <Radio.Group
+          name="type"
+          options={typeOptions}
+          onChange={handleFormChange}
+          optionType="button"
+          buttonStyle="solid"
+        />
+      </Form.Item>
+    </Form>
+  );
+}
+```
+
+- **✅ 效果：**
+	* 会渲染两个按钮【个人用户】【企业用户】；
+	* 点按钮后会在控制台输出选中的值；
+	* 表单提交时，字段 `type` 对应当前选中值（如 `'company'`）；
+
+<br/>
+
+**1.`name="type"`**
+
+* **作用**：字段的名称，用于标识这个输入字段的 key。
+* **使用场景**：当这个 `Radio.Group` 被放进 `<Form.Item name="type">` 里时，它就会自动对应这个字段。
+
+🔸 示例：
+
+```jsx
+<Form.Item name="type" label="类型">
+  <Radio.Group name="type" options={...} />
+</Form.Item>
+```
+
+<br/>
+
+ **2.`options={typeOption}`**
+
+* **作用**：快速生成一组单选按钮，而不用手动写 `<Radio>`。
+* **格式要求**：`typeOption` 必须是一个数组，数组中每项是一个对象，常见结构如下：
+
+```js
+const typeOption = [
+  { label: '苹果', value: 'apple' },
+  { label: '香蕉', value: 'banana' },
+  { label: '橘子', value: 'orange', disabled: true }, // 可禁用某项
+];
+```
+
+* **效果**：会自动生成对应的按钮。
+
+<br/>
+
+**3.`onChange={handleFormChange}`**
+
+* **作用**：当选择的单选项发生变化时，触发这个回调。
+* **事件对象结构**：
+
+```js
+const handleFormChange = (e) => {
+  console.log('当前选中的值:', e.target.value);
+};
+```
+
+* **常用场景**：当选中某项后，动态控制其他表单字段的显示/隐藏、联动等。
+
+<br/>
+
+ **4.`optionType="button"`**
+
+* **作用**：改变单选按钮的展示样式，渲染为按钮风格，而不是传统的圆圈选项。
+
+* **取值**：
+
+  * `"default"`：传统样式（圆圈）
+  * `"button"`：按钮样式 ✅（你现在用的）
+
+* **对比图**：
+
+| optionType | 效果                                                                |
+| ---------- | ----------------------------------------------------------------- |
+| default    | ![默认圆圈样式](https://ant.design/components/radio/img/radio.svg)      |
+| button     | ![按钮样式](https://ant.design/components/radio/img/radio-button.svg) |
+
+<br/> 
+
+5. **`buttonStyle="solid"`**
+
+* **作用**：控制按钮选中时的样式。
+* **取值**：
+
+  * `"solid"`：选中后填充背景（强调）
+  * `"outline"`：选中后只是边框加粗（不填充）
+
+🔸 示例区别：
+
+```jsx
+<Radio.Group buttonStyle="solid" />
+// vs
+<Radio.Group buttonStyle="outline" />
+```
+
+
+
