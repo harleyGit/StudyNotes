@@ -305,7 +305,7 @@ Edigor: Tab Completion
   "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
   "go.goroot": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go",
   "go.gopath": "/Users/ganghuang/HGFiles/GitHub/GoProject",
-  "go.useLanguageServer": true,
+  "go.useLanguageServer": true,//与Go的自动导入包有关，需要配合gopls(下载安装：go install golang.org/x/tools/gopls@latest)
   "go.toolsManagement.checkForUpdates": "local",
   // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
   // "go.alternateTools" 是 VS Code 中 Go 插件的一个可选配置项，用来显式指定使用哪个 Go 工具的可执行文件路径，防止插件自动找错版本或路径。
