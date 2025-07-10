@@ -5,6 +5,8 @@
 - [snapkit适配屏幕](#snapkit适配屏幕)
 	- [fit适配屏幕](#fit适配屏幕)
 - [**‌Snapkit实现图层圆圈进度**](#Snapkit实现图层圆圈进度)
+- **资料**
+	- [Swift自动布局SnapKit的详细使用介绍](https://blog.csdn.net/m0_38013946/article/details/115545956)
 
 
 
