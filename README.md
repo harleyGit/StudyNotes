@@ -358,7 +358,8 @@
 - [**插件发布**](./React/插件发布.md)
 - [create-react-app流程分析](./React/create-react-app流程分析.md)
 - [性能优化]()
-	- [性能优化(I)](./React/性能优化(I).md) 
+	- [性能优化(I)](./React/性能优化(I).md)
+	- [架构模式](./React/架构模式.md)
 - **库**
 	- [阿里UI库AntDesign](./React/AntDesign.md)
 	- [Umi](./React/Umi.md)
