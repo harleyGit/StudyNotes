@@ -21,8 +21,10 @@
 			- [函数组件中添加状态useState ](#函数组件中添加状态useState)
 		- [useEffect](#useEffect)
 			- [副作用useEffect3种使用场景](#副作用useEffect3种使用场景)
-		- [useCallBack](#useCallBack)
+			- [副作用钩子useEffect末尾3种参数使用方法](#副作用钩子useEffect末尾3种参数使用方法)
+		- [useCallback](#useCallback)
 		- [useMemo](#useMemo)
+			- [useMemo的依赖数组](#useMemo的依赖数组)
 			- [长轮询案例](#长轮询案例)
 	- [React Router](#ReactRouter)
 		- [路由Demo](#路由Demo)
@@ -1223,6 +1225,13 @@ function TimerExample() {
 | 订阅/定时器/事件绑定 + 清理 | `useEffect(() => { ...; return () => {} }, [])` | 生命周期内安全处理外部资源 |     
 
 
+
+
+<br/><br/>
+># <h3 id="副作用钩子useEffect末尾3种参数使用方法">[副作用钩子useEffect末尾3种参数使用方法](./架构模式.md#副作用钩子useEffect末尾3种参数使用方法)</h3>
+
+
+
 <br/><br/>
 > <h3 id='useCallback'>useCallback</h3>
 
@@ -1293,9 +1302,7 @@ export default TestApp1
 
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='useMemo'>useMemo</h3>
 
 &emsp; useMemo、useCallback用法都差不多，都会在第一次渲染的时候执行，之后会在其依赖的变量发生改变时再次执行，并且这两个hooks都返回缓存的值，useMemo返回缓存的变量，useCallback返回缓存的函数。
@@ -1358,9 +1365,12 @@ export default TestApp1
 
 总结:在子组件不需要父组件的值和函数的情况下，只需要使用memo函数包裹子组件即可。而在使用函数的情况，需要考虑有没有函数传递给子组件使用useCallback。而在值有所依赖的项，并且是对象和数组等值的时候而使用useMemo（当返回的是原始数据类型如字符串、数字、布尔值，就不要使用useMemo了）。不要盲目使用这些hooks
 
+***
+<br/><br/><br/>
+># <h2 id="useMemo的依赖数组">[useMemo的依赖数组](./架构模式.md#useMemo的依赖数组)</h2>
+
 
 <br/>
-
 
 > Hooks的使用规则
 
@@ -1376,9 +1386,7 @@ export default TestApp1
 &emsp； 在使用自定义Hook时，同样需要遵守Hooks的使用规则，另外注意React要求自定义Hook的命名也必须以use开始，以区别于其他函数。
 
 
-<br/>
-<br/>
-
+<br/><br/>
 > <h3 id='长轮询案例'>[长轮询案例](https://codeantenna.com/a/veVh4iDVA7)</h3>
 
 ```
