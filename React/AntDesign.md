@@ -19,6 +19,7 @@
 	- [默认值initialValue](#默认值initialValue)   
 	- [rules校验规则详解](#rules校验规则详解)
 	- [Form表单基本属性讲解](#Form表单基本属性讲解)
+	- [Form提交填写的数据字段值](#Form提交填写的数据字段值)
 - [Button组件](#Button组件)
 - [**Upload图片上传组件**](#Upload图片上传组件)
 - [Menu组件做侧边栏菜单](#Menu组件做侧边栏菜单)
@@ -2187,6 +2188,148 @@ return Promise.resolve();
 ```
 
 
+
+***
+<br/><br/><br/>
+> <h2 id="Form提交填写的数据字段值">Form提交填写的数据字段值</h2>
+
+**表单组件部分：**
+
+```tsx
+<Form
+  onFinish={(values) => {
+    handleFinish(values);
+  }}
+>
+```
+
+* `Form` 是 Ant Design 提供的表单组件；
+* `onFinish` 是提交回调函数，当用户点击提交按钮且表单校验通过时会触发；
+* 此处 `onFinish` 接收到的参数 `values` 是表单中收集的所有字段的值对象；
+* `handleFinish(values)` 就是自定义处理逻辑的函数。
+
+<br/>
+
+**表单提交处理函数：**
+
+```js
+const handleFinish = (values) => {
+  setIsSubmitting(true); // 标记正在提交（比如为了禁用按钮）
+  argusLog('Received values of form: ', values); // 打印日志
+
+  let parmas = {
+    productModuleWithId: productModuleWithId, // 父模块 ID
+    thingId: values.thingId, // 表单中 thingId 字段
+    name: values.name, // 表单中 name 字段
+    identifier: values.identifier, // 标识符
+    type: values.type, // 类型（会被后面覆盖）
+    productId: productId, // 产品 ID
+    description: values.description, // 描述
+    type: 'action', // 👈 强制设置 type 为 'action'（前面那个 values.type 会被覆盖）
+  };
+
+  // 添加动作参数（输入输出）
+  parmas.action = {
+    inputParams: paramsList, // 输入参数数组
+    outputParams: outList,   // 输出参数数组
+  };
+
+  // 如果是“编辑模式”，追加函数 ID
+  if (functionData) {
+    parmas.productModuleWithFunctionId = productModuleWithFunctionId;
+  }
+
+  // 下一步通常会提交 parmas 到接口
+  // submitFunctionDefinition(parmas);
+};
+```
+
+<br/>
+
+**✅ 各变量解释**
+
+| 变量名                           | 含义                       | 来源            |
+| ----------------------------- | ------------------------ | ------------- |
+| `values`                      | 表单填写的字段值对象               | AntD 自动收集     |
+| `productModuleWithId`         | 当前模块 ID                  | 外部传入          |
+| `thingId`                     | 表单字段                     | 用户填写          |
+| `name`                        | 表单字段                     | 用户填写          |
+| `identifier`                  | 表单字段（标识符）                | 用户填写          |
+| `type`                        | 表单字段，但最后被硬编码为 `'action'` | ✅ 主要用于定义功能点类型 |
+| `productId`                   | 产品 ID                    | 外部传入          |
+| `description`                 | 表单字段                     | 用户填写          |
+| `paramsList`                  | 输入参数                     | 可能由其他组件收集     |
+| `outList`                     | 输出参数                     | 同上            |
+| `functionData`                | 是否是“编辑模式”的标志             | 外部状态          |
+| `productModuleWithFunctionId` | 编辑模式下要传的函数 ID            | 外部传入          |
+
+<br/>
+
+ **比如你有一个“功能点添加”表单，填写后点击【提交】：**
+
+```jsx
+<Form onFinish={(values) => handleFinish(values)}>
+  <Form.Item name="thingId" label="Thing ID">
+    <Input />
+  </Form.Item>
+  <Form.Item name="name" label="名称">
+    <Input />
+  </Form.Item>
+  <Form.Item name="identifier" label="标识符">
+    <Input />
+  </Form.Item>
+  <Form.Item name="type" label="类型">
+    <Select options={[{ label: '操作', value: 'action' }]} />
+  </Form.Item>
+  <Form.Item name="description" label="描述">
+    <Input.TextArea />
+  </Form.Item>
+  <Button htmlType="submit">提交</Button>
+</Form>
+```
+
+<br/>
+
+用户输入如下：
+
+```json
+{
+  "thingId": "thing_123",
+  "name": "启动电源",
+  "identifier": "start_power",
+  "type": "event", // 表单写的是 event
+  "description": "用于启动电源功能"
+}
+```
+
+<br/>
+
+当用户点击【提交】，则 `handleFinish(values)` 被触发。
+
+此时 `parmas` 最终被构造为：
+
+```js
+{
+  productModuleWithId: 'module_xxx',
+  thingId: 'thing_123',
+  name: '启动电源',
+  identifier: 'start_power',
+  type: 'action', // ✅ 即使用户写的是 'event'，这里被强制为 'action'
+  productId: 'product_001',
+  description: '用于启动电源功能',
+  action: {
+    inputParams: [...], // 外部传入的输入参数
+    outputParams: [...], // 外部传入的输出参数
+  },
+  productModuleWithFunctionId: 'func_001' // 若处于编辑状态时
+}
+```
+
+然后你可能会把 `parmas` 作为入参发给接口：
+
+```js
+await submitFunctionDefinition(parmas);
+```
 
 
 

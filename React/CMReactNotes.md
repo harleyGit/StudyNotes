@@ -1,6 +1,11 @@
 
 - [**管理Node版本的NVM**](#管理Node版本的NVM)
 - [**新建一个React项目**](#新建一个React项目)
+- [**JavaScript陌生语法**](#JavaScript陌生语法)
+	- [函数结构参数 method（value,({ typeSpecDic }) => {}）](#函数结构参数)
+	- [类的内部方法、单例编码](#类的内部方法、单例编码)
+		- [为什么这就是单例](#为什么这就是单例)
+	- [组件模块导出](#组件模块导出)
 - [Flex布局](#Flex布局)
 - [清理缓存导致的错误](#清理缓存导致的错误)
 - [跨域造成无法请求解决](#跨域造成无法请求解决)
@@ -15,10 +20,13 @@
 		- [Breadcrumb显示当前导航路径](#Breadcrumb显示当前导航路径)
 	- [**Modal弹窗表格属性介绍**](#Modal弹窗表格属性介绍)
 	- [Form表格使用](#Form表格使用)
+		- [表单提交数据](#表单提交数据)
 	- [ProTable列表拖拽排序](#ProTable列表拖拽排序)
 		- [修改某一方按钮的点击状态](#修改某一方按钮的点击状态)
 	- [Radio.Group单选按钮](#Radio.Group单选按钮)
 	- [Select组件初步使用](#Select组件初步使用)
+- [**CSS样式**](#CSS样式)
+	- [样式模块化](#样式模块化)
 
 
 
@@ -316,6 +324,40 @@ code .
 
 是否需要我也演示一下用 Vite 创建更轻量更快的 React 项目？（更现代、更推荐）
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="JavaScript陌生语法">JavaScript陌生语法</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="函数结构参数">函数结构参数 method（value,({ typeSpecDic }) => {}）</h2>
+
+[详解请看这里](./../JavaScript/基础(I).md#函数结构参数)
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="类的内部方法、单例编码">类的内部方法、单例编码</h2>
+
+[**请看这里**](./React/基础(II).md#类的方法)
+
+***
+<br/><br/><br/>
+> <h3 id="为什么这就是单例">为什么这就是单例</h3>
+
+[**单例请看这里**](./React/基础(II).md#单例类)
+
+***
+<br/><br/><br/>
+> <h2 id="组件模块导出">组件模块导出</h2>
+
+
+将一个组件导出，[**请看这里**](./React/基础(II).md#组件模块化导出)
+
 
 
 <br/><br/><br/>
@@ -327,7 +369,7 @@ code .
 
 横轴和纵轴布局通常指的是使用 **Flexbox** 或 **Grid** 布局实现的一维（横向或纵向排列）或二维（同时控制横轴和纵轴）布局。最常用的两种方式是 **Flexbox** 布局和 **CSS Grid** 布局。
 
-### 1. **Flexbox 布局**
+**1.Flexbox 布局**
 
 **Flexbox** 布局是一个一维的布局模型，它可以在横向或纵向上排列子元素。通过设置 `flex-direction` 来控制横轴（主轴）和纵轴（交叉轴）的方向。`flex-direction` 可以是以下几种值：
 
@@ -336,6 +378,8 @@ code .
 * `row-reverse`：元素按横向（从右到左）排列。
 * `column-reverse`：元素按纵向（从下到上）排列。
 
+<br/>
+
 **Flexbox 的基础属性**：
 
 * `justify-content`: 控制主轴（横轴方向）上的对齐方式。
@@ -343,7 +387,9 @@ code .
 * `flex-direction`: 设置主轴方向。
 * `flex-wrap`: 控制子元素是否换行。
 
-### 示例：横轴和纵轴布局（Flexbox）
+<br/>
+
+**示例：横轴和纵轴布局（Flexbox）**
 
 ```jsx
 import React from 'react';
@@ -370,16 +416,22 @@ class FlexboxExample extends React.Component {
 export default FlexboxExample;
 ```
 
-### 解释：
+<br/>
+
+**解释：**
 
 * `display: 'flex'`：启用 Flexbox 布局。
 * `flexDirection: 'row'`：设置主轴为横轴，子项将按横向排列。
 * `justifyContent: 'space-between'`：设置横轴上的项目之间的间距均匀分布。
 * `alignItems: 'center'`：设置纵轴（交叉轴）上的项目居中对齐。
 
-### 2. **CSS Grid 布局**
+<br/>
+
+**2.CSS Grid 布局**
 
 **Grid 布局** 是一个二维的布局模型，能够同时控制横轴和纵轴上的元素排列。通过设置 `grid-template-columns` 和 `grid-template-rows` 来定义网格的列和行。
+
+<br/>
 
 **Grid 的基本属性**：
 
@@ -387,7 +439,9 @@ export default FlexboxExample;
 * `grid-template-rows`: 定义网格行的数量和高度。
 * `grid-gap`: 定义行与列之间的间距。
 
-### 示例：横轴和纵轴布局（CSS Grid）
+<br/>
+
+**示例：横轴和纵轴布局（CSS Grid）**
 
 ```jsx
 import React from 'react';
@@ -416,22 +470,21 @@ class GridExample extends React.Component {
 export default GridExample;
 ```
 
-### 解释：
+<br/>
+
+**解释：**
 
 * `display: 'grid'`：启用 Grid 布局。
 * `gridTemplateColumns: 'repeat(3, 1fr)'`：设置三列，每列宽度相等（`1fr` 表示等分的宽度）。
 * `gridTemplateRows: '100px 100px'`：设置两行，每行的高度为 100px。
 * `gap: '10px'`：设置行和列之间的间隔。
 
-### 总结
+<br/>
+
+**总结**
 
 * **Flexbox**：适用于一维布局（横轴或纵轴），可以控制单行或单列的排列，常用于处理简单的排列，如水平或垂直居中。
 * **Grid**：适用于二维布局，能够同时控制横轴和纵轴上的元素布局，适合复杂的布局，如网格布局、杂志样式的内容。
-
-### 选择使用哪个布局？
-
-* 如果你只需要控制一行或一列，Flexbox 是最简单的选择。
-* 如果你需要更复杂的布局（例如，多个行和列的排列），Grid 是更合适的选择。
 
 
 <br/><br/><br/>
@@ -441,13 +494,15 @@ export default GridExample;
 
 > <h1 id="清理缓存导致的错误">清理缓存导致的错误</h1>
 
-#### 1. **删除构建缓存**
+**1.删除构建缓存**
 
 ```bash
 rm -rf node_modules/.cache
 ```
 
-#### 2. **重启开发服务器**
+<br/>
+
+**2.重启开发服务器**
 
 先关闭当前运行的 `npm run dev` 或 `npm start`，然后重新启动：
 
@@ -457,18 +512,24 @@ npm run start
 npm run dev
 ```
 
-#### 3. **清理浏览器缓存（如果有问题出现在浏览器）**
+<br/>
+
+**3.清理浏览器缓存（如果有问题出现在浏览器）**
 
 可以尝试强制刷新页面：
 
 * Windows: `Ctrl + Shift + R`
 * Mac: `Cmd + Shift + R`
 
-#### 4. **确保编辑器也没缓存语法分析错误**
+<br/>
+
+**4.确保编辑器也没缓存语法分析错误**
 
 有些编辑器（如 VS Code）可能自己缓存了 ESLint 报错提示，重启编辑器可以排除这个问题。
 
-#### 5. **检查 ESLint 缓存（如果项目用了 ESLint）**
+<br/>
+
+**5.检查 ESLint 缓存（如果项目用了 ESLint）**
 
 运行：
 
@@ -1811,6 +1872,13 @@ return (
 
 
 
+***
+<br/><br/><br/>
+> <h2 id="表单提交数据">表单提交数据</h2>
+
+对于antd中的Form组件，你是如何提交表单中的所有字段值呢？[**请看这里**](./CMReactNotes.md#Form提交填写的数据字段值)
+
+
 <br/><br/><br/>
 
 ***
@@ -2023,6 +2091,32 @@ setPutawayMap(prev => ({
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="">CSS样式</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="模块化样式">[样式模块化](./../CSS/样式.md#模块化样式)</h2>
+
+**React** 中有`index.less`文件如下代码：
+
+```css
+.powerType {
+  :global {
+    .ant-radio-wrapper {
+      line-height: 36px;
+    }
+  }
+}
+```
+
+
+这段css样式代码什么意思？css中如何写？如何使用？[请看这里](./../CSS/样式.md#模块化样式)
 
 
 

@@ -5,6 +5,10 @@
 - [**React基础**](#React基础)
 	- [**props**](#props)
 	- [生命周期](#生命周期)
+- [模块类](#模块类)
+	- [类的方法](#类的方法)
+	- [单例类](#单例类)
+	- [组件模块化导出](#组件模块化导出)
 - [**高阶组件**](#高阶组件)
 	- [引用子组件的属性ref](#引用子组件的属性ref)
 - [**网络请求**](#网络请求)
@@ -262,41 +266,277 @@ Class App extends Component {
 ```
 
 
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-
-<br/>
-<br/>
-
-
-
-> <h2 id=''></h2>
-
-
-
-
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
+> <h1 id="模块类">模块类</h1>
 
+
+***
+<br/><br/><br/>
+> <h2 id="类的方法">类的方法</h2>
+
+
+**ModalViewVM.jsx文件**
+
+
+```jsx
+import { getUnitLists } from './yourApiFilePath'; // 替换为真实路径
+
+class ModalViewVM {
+
+	//若是支持 ES6+ 的环境，也可以在类内部直接用 static，这和 静态属性 等价的
+	static dataTypeList = [
+    { label: '文本', value: 'text' },
+    { label: '数字', value: 'number' },
+    { label: '布尔值', value: 'boolean' },
+    { label: '日期', value: 'date' },
+  ];
+  
+  // 静态方法（可在类外部通过 ModalLogicVM.getDisableWithType 调用）
+  static getDisableWithType(thingData, type) {
+    console.log('getDisableWithType--', thingData, type);
+    if (!thingData || typeof thingData !== 'object' || Object.keys(thingData).length === 0) {
+      return false;
+    }
+    return thingData.type !== type;
+  }
+  
+  // 方法：返回 Promise，让外部调用时可使用 async/await 或 .then()
+  fetchUnitList() {
+    return getUnitLists()
+      .then(res => {
+        if (res.code === 0) {
+          return res.result || [];
+        } else {
+          return []; // 或者 throw new Error("错误提示")
+        }
+      })
+      .catch(error => {
+        console.error('fetchUnitList error:', error);
+        return []; // 出错也返回空数组，避免调用出错
+      });
+  }
+  
+  
+  async fetchUnitList00() {
+    try {
+      const res = await getUnitLists();
+      if (res.code === 0) {
+        this.unitList = res.result || [];
+        return this.unitList;
+      }
+      return [];
+    } catch (error) {
+      console.error('fetchUnitList error:', error);
+      return [];
+    }
+  }
+}
+
+// ✅ 静态属性，直接挂在类上，可以调用，调用上面的getDisableWithType静态方法
+ModalViewVM.dataTypeList = [
+  {
+    label: '文本',
+    value: 'text',
+    get disabled() {
+      return ModalLogicVM.getDisableWithType(someThingData, 'text');
+    }
+  },
+  {
+    label: '数字',
+    value: 'number',
+    get disabled() {
+      return ModalLogicVM.getDisableWithType(someThingData, 'number');
+    }
+  },
+];
+
+// ✅ 1.单例导出
+export default new ModalViewVM(); // 使用单例模式
+
+/* 另一种单例写法
+const instance = new ModalViewVM();
+export default instance;
+*/
+
+// ✅ 2.或者命名导出
+const instance = new ModalViewVM();
+export { instance };
+
+// ✅ 3.支持多个实例，导出类
+export class ModalViewVM { ... }
+
+```
+
+
+- **静态属性为什么这么做是合理的？**
+	- dataTypeList 是一组常量，和具体实例状态无关；
+	- 挂在类上（static 属性或类外赋值）更符合语义；
+	- 不需要每次创建实例就带着这组静态数据。
+
+
+<br/>
+
+**AnotherComponent.jsx文件调用：**
+
+
+```jsx
+
+// AnotherComponent.jsx
+
+import React, { useEffect, useState } from 'react';
+// 如果用了默认导出：
+import modalViewVM from './modalViewVM';
+
+// 如果用了命名导出：
+import { instance as modalViewVM } from './modalViewVM';
+
+
+
+
+const AnotherComponent = () => {
+  const [unitList, setUnitList] = useState([]);
+
+  useEffect(() => {
+    // 调用 VM 的方法获取数据
+    modalViewVM.fetchUnitList().then(data => {
+      setUnitList(data);
+    });
+  }, []);
+  
+  //或者这样调用
+  async function fetchData() {
+	  const data = await viewModel.requestUnitList();
+	  console.log('拿到单位列表', data);
+}
+
+  return (
+    <div>
+      <h3>单位列表：</h3>
+      <ul>
+        {unitList.map((item, index) => (
+          <li key={index}>{item.name}</li> // 假设每项有 name 字段
+        ))}
+      </ul>
+      {/* 使用函数的静态属性 */}
+      <Select options={ModalLogicVM.dataTypeList} />
+    </div>
+  );
+};
+
+export default AnotherComponent;
+
+
+function requestListMethod() {
+	// 调用
+	fetchData();
+}
+```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id='单例类'>单例类</h2>
+
+**✅ 为什么这就是单例？**
+
+这是因为 JavaScript 的 **模块（module）是单例的**：
+
+* 每个模块（比如 `modalViewVM.js`）在第一次被引入时，会 **执行一次代码并缓存导出结果**。
+* 之后其他文件再 `import` 这个模块时，得到的都是**同一个导出的对象引用**。
+* 因为单例模式就是全局共享一个对象实例，所以你在任何地方修改它的属性，其他地方都会看到改变。
+
+所以：
+
+```js
+// modalViewVM.jsx
+class ModalViewVM {
+  ...
+}
+export default new ModalViewVM(); // 创建一个实例并导出
+```
+
+在其他组件中使用：
+
+```js
+import modalViewVM from './modalViewVM';
+
+modalViewVM.fetchUnitList();
+```
+
+得到的 `modalViewVM` 就是**唯一的、同一个实例**，这就实现了“单例”的效果。
+
+
+
+***
+<br/><br/><br/>
+> <h2 id='组件模块化导出'>组件模块化导出</h2>
+
+```js
+export default AnotherComponent;
+```
+
+意思是：将组件 `AnotherComponent` 作为模块的**默认导出**。
+
+<br/>
+
+```js
+// AnotherComponent.jsx
+const AnotherComponent = () => {
+  return <div>Hello</div>;
+};
+
+export default AnotherComponent;
+```
+
+在别的文件中就可以这么导入它：
+
+```js
+import AnotherComponent from './AnotherComponent';
+```
+
+<br/> 
+
+- **❌ 这不是单例**
+
+	* `AnotherComponent` 是一个**函数组件**（或类组件），`export default` 只是默认导出方式；
+	* 每次 React 渲染时，都会 **调用一次该函数组件**，可能会创建多个实例（比如你在多个地方使用这个组件）；
+	* 所以，它 **不是单例对象**，也**没有共享任何状态**，除非你在外部模块中封装了状态（比如 VM、Store、Context）。
+
+<br/>
+
+
+ **✅ 那什么是单例？**
+
+单例的关键是：**模块中创建的对象，只创建一次，并在整个程序中共享使用**，比如：
+
+```js
+// modalViewVM.js
+class ModalViewVM {
+  ...
+}
+const instance = new ModalViewVM();
+export default instance; // ✅ 这是单例
+```
+
+
+
+
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
 
 > <h1 id='高阶组件'>高阶组件</h1>
-
 
 **App.js**
 
@@ -349,10 +589,8 @@ export class MyComponent extends Component {
 ![29](./../Pictures/react29.png)
 
 
-
-<br/>
-<br/>
-
+***
+<br/><br/><br/>
 > <h2 id='组件状态提升'>组件状态提升</h2>
 
 

@@ -15,6 +15,7 @@
 	- [JavaScript闭包](#JavaScript闭包)
 	- [举例复杂函数声明demo](#举例复杂函数声明demo)
 		- [语法简写特性-返回值参数和行参相同](#语法简写特性-返回值参数和行参相同)
+	- [函数结构参数 method（value,({ typeSpecDic }) => {}）](#函数结构参数)
 - [**对象高级使用**](#对象高级使用)
 	- [创建 JavaScript 对象](#创建JavaScript对象)
 	- 	[使用Object生成对象](#使用Object生成对象)
@@ -986,7 +987,125 @@ const person = {
 
 
 
+***
+<br/><br/><br/>
+> <h2 id="函数结构参数">函数结构参数 method（value,({ typeSpecDic }) => {}）</h2>
+
+**我写的是：**
+
+```js
+static transformSubmitParam = (type, values, { typeSpecDic }) => {}
+```
+
+然后这样调用：
+
+```js
+const formDic = modalViewModel.getModalFormData(values, values.dataType);
+const params = StardFunionPointManageVM.transformSubmitParam(type, values, formDic);
+```
+
 <br/>
+
+**❌ 这样写是错误的！**
+
+为什么？
+
+你写的是函数解构参数：
+
+```js
+({ typeSpecDic }) => {}
+```
+
+这表示：**第三个参数应该是一个对象，并且里面要有字段 `typeSpecDic`**。
+
+但你传的是：
+
+```js
+formDic // 👈 可能是个普通对象，不一定有字段叫 `typeSpecDic`
+```
+
+<br/> 
+
+**✅ 正确写法 1：直接传整个对象 `{ typeSpecDic: formDic }`**
+
+如果你希望使用结构语法 `{ typeSpecDic }`，那你调用时要这么写：
+
+```js
+const formDic = modalViewModel.getModalFormData(values, values.dataType);
+
+const params = StardFunionPointManageVM.transformSubmitParam(type, values, {
+  typeSpecDic: formDic,
+});
+```
+
+<br/>
+
+这时函数接收到的是：
+
+```js
+(type, values, { typeSpecDic }) => {
+  // typeSpecDic 现在是 formDic 的内容
+}
+```
+
+---
+<br/>
+
+**✅ 正确写法 2：不解构，直接传值**
+
+你也可以把 `typeSpecDic` 作为一个普通参数：
+
+```js
+static transformSubmitParam = (type, values, typeSpecDic) => {
+  // 使用 typeSpecDic
+};
+```
+
+<br/>
+
+调用时就可以直接：
+
+```js
+const formDic = modalViewModel.getModalFormData(values, values.dataType);
+const params = StardFunionPointManageVM.transformSubmitParam(type, values, formDic);
+```
+
+---
+<br/>
+
+ **✅ 第二部分：`{ typeSpecDic }` 是什么意思？**
+
+这是 **参数解构** 的语法。具体解释如下：
+
+```js
+function fn({ a }) {
+  console.log(a);
+}
+```
+
+<br/>
+
+等价于：
+
+```js
+function fn(obj) {
+  const a = obj.a;
+}
+```
+
+所以：
+
+```js
+function fn(x, y, { typeSpecDic }) { ... }
+```
+
+表示函数的第三个参数必须是一个对象，且从中取出 `typeSpecDic`。
+
+
+
+
+
+<br/><br/><br/>
 
 ***
 <br/>
@@ -995,10 +1114,7 @@ const person = {
 
 
 <br/>
-
 <h3 id="创建JavaScript对象">**1）.创建 JavaScript 对象**</h3>
-
-
 
 通过 JavaScript，您能够定义并创建自己的对象。
 

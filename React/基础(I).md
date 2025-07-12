@@ -21,6 +21,8 @@
 			- [函数组件中添加状态useState ](#函数组件中添加状态useState)
 		- [useEffect](#useEffect)
 			- [副作用useEffect3种使用场景](#副作用useEffect3种使用场景)
+			- [useEffect中多个网络请求实例编码](#useEffect中多个网络请求实例编码)
+			- [useEffect中执行多个网络请求](#useEffect中执行多个网络请求)
 			- [副作用钩子useEffect末尾3种参数使用方法](#副作用钩子useEffect末尾3种参数使用方法)
 		- [useCallback](#useCallback)
 		- [useMemo](#useMemo)
@@ -1104,6 +1106,9 @@ export function TestHOC3() {
 
 ③componentDidUpdate。只检测更新相对比较麻烦，需要区分更新还是挂载需要检测依赖数据和初始值是否一致，如果当前的数据和初始数据保持一致就说明是挂载阶段，当然安全起见应和上一次的值进行对比，若当前的依赖数据和上一次的依赖数据完全一样，则说明组件没有更新
 
+
+
+
 <br/><br/>
 > <h3 id="副作用useEffect3种使用场景"> 副作用useEffect3种使用场景</h3>
 
@@ -1225,12 +1230,233 @@ function TimerExample() {
 | 订阅/定时器/事件绑定 + 清理 | `useEffect(() => { ...; return () => {} }, [])` | 生命周期内安全处理外部资源 |     
 
 
+<br/><br/>
+> <h3 id="useEffect中多个网络请求实例编码">useEffect中多个网络请求实例编码</h3>
+
+当 `viewModel`、`viewModel11`、`viewModel12` 中的某个实例变化时，重新执行请求。
+
+你写的：
+
+```jsx
+useEffect(() => {
+  viewModel.fetchUnitList().then(data => {
+    setUnitList(data);
+  });
+  viewModel11.fetchUnitList11().then(data => {
+    setUnitList(data);
+  });
+  viewModel12.fetchUnitList12().then(data => {
+    setUnitList(data);
+  });
+}, [viewModel, viewModel11, viewModel12]);
+```
+
+-  **✅ 可行性分析：**
+
+	- 1.✅ 这确实能做到当依赖数组中某个 `viewModel` 发生变化时重新执行副作用（网络请求）。
+	- 2.❌ 但 `setUnitList` 被你连续三次调用，**后者会覆盖前者的结果**，最终只有 `viewModel12` 的数据留下。
+
+---
+<br/>
+
+
+**✅ 正确优雅的做法（分离状态，或合并数据）**
+
+ **✅ 方式一：多个 State，分别存每个请求的结果**
+
+```jsx
+const [unitList, setUnitList] = useState([]);
+const [unitList11, setUnitList11] = useState([]);
+const [unitList12, setUnitList12] = useState([]);
+
+useEffect(() => {
+  viewModel.fetchUnitList().then(setUnitList);
+  viewModel11.fetchUnitList11().then(setUnitList11);
+  viewModel12.fetchUnitList12().then(setUnitList12);
+}, [viewModel, viewModel11, viewModel12]);
+```
+
+这样每组数据独立存储，不会覆盖。
+
+<br/>
+
+**✅ 方式二：一个状态里合并多个结果**
+
+```jsx
+const [allData, setAllData] = useState({
+  main: [],
+  list11: [],
+  list12: [],
+});
+
+useEffect(() => {
+  Promise.all([
+    viewModel.fetchUnitList(),
+    viewModel11.fetchUnitList11(),
+    viewModel12.fetchUnitList12(),
+  ]).then(([main, list11, list12]) => {
+    setAllData({ main, list11, list12 });
+  });
+}, [viewModel, viewModel11, viewModel12]);
+```
+
+- **优点：**
+	* 请求是并发的；
+	* 状态整合成一个对象，管理更方便；
+	* 页面渲染可以这样写：
+
+```jsx
+<ul>
+  {allData.main.map(...)}
+</ul>
+<ul>
+  {allData.list11.map(...)}
+</ul>
+```
+
+<br/>
+
+**✅ 方式三：若你只希望在“初次渲染”时调用，不依赖变化**
+
+```jsx
+useEffect(() => {
+  // 只执行一次
+}, []);
+```
+
+<br/>
+
+ **🚫 错误示例：不要这样做！**
+
+```jsx
+// 这样会丢数据
+setUnitList(data); // 被后面的 setUnitList 覆盖
+```
+
+
+
+
+<br/><br/>
+> <h3 id="useEffect中执行多个网络请求">useEffect中执行多个网络请求</h3>
+
+
+**✅ 🌟 写法一：并行请求（多个接口同时请求）**
+
+```js
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      const [userRes, productRes] = await Promise.all([
+        fetch('/api/user'),
+        fetch('/api/products')
+      ]);
+
+      const user = await userRes.json();
+      const products = await productRes.json();
+
+      setUser(user);
+      setProducts(products);
+    } catch (error) {
+      console.error('出错了:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+```
+
+<br/>
+
+
+**✅ 🌟 写法二：串行请求（第二个请求依赖第一个结果）**
+
+```js
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      const userRes = await fetch('/api/user');
+      const user = await userRes.json();
+      setUser(user);
+
+      const productRes = await fetch(`/api/products?userId=${user.id}`);
+      const products = await productRes.json();
+      setProducts(products);
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+```
+
+<br/>
+
+ ✅ **2.useEffect 中监听多个变量怎么写？**
+
+
+
+```js
+useEffect(() => {
+  // 逻辑或网络请求
+}, [username, password, token]);
+```
+
+**✅ 意思：**
+
+> 当 `username`、`password` 或 `token` 中任意一个值发生变化时，`useEffect` 会重新执行。
+
+<br/>
+
+-  ❗ 注意点：
+
+	* 如果你写成空数组 `[]`，意味着这个 `useEffect` **只执行一次（初始挂载）**。
+	* 如果你依赖了某个值却没放入数组，会出现“闭包引用旧值”的 bug。
+
+---
+<br/>
+
+
+**✅ 综合示例：多个依赖 + 多个请求**
+
+```js
+useEffect(() => {
+  const fetchAll = async () => {
+    try {
+      setLoading(true);
+
+      const userRes = await fetch(`/api/user?name=${username}`);
+      const user = await userRes.json();
+      setUser(user);
+
+      const productRes = await fetch(`/api/products?token=${token}`);
+      const products = await productRes.json();
+      setProducts(products);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAll();
+}, [username, token]); // ✅ 多个依赖
+```
+
+
 
 
 <br/><br/>
 ># <h3 id="副作用钩子useEffect末尾3种参数使用方法">[副作用钩子useEffect末尾3种参数使用方法](./架构模式.md#副作用钩子useEffect末尾3种参数使用方法)</h3>
-
-
 
 <br/><br/>
 > <h3 id='useCallback'>useCallback</h3>
