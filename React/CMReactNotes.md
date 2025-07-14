@@ -23,6 +23,8 @@
 		- [表单提交数据](#表单提交数据)
 	- [ProTable列表拖拽排序](#ProTable列表拖拽排序)
 		- [修改某一方按钮的点击状态](#修改某一方按钮的点击状态)
+	- [列表Table](#列表Table)
+		- [分页回调函数](#分页回调函数)
 	- [Radio.Group单选按钮](#Radio.Group单选按钮)
 	- [Select组件初步使用](#Select组件初步使用)
 - [**CSS样式**](#CSS样式)
@@ -2051,6 +2053,47 @@ setPutawayMap(prev => ({
 用 `prev => {}` 函数式写法可以**确保你永远拿到的是最新状态**，这是官方推荐写法。
 
 
+
+***
+<br/><br/><br/>
+> <h2 id="列表Table">列表Table</h2>
+
+
+<br/><br/>
+> <h3 id="分页回调函数">分页回调函数</h3>
+
+下面代码中涉及到使用分页，在`pagination`属性中调用网络请求进行分页，如下：
+
+```js
+<Table 
+pagination={{
+		current,// 当前第几页
+		pageSize,//每页有多少条数据
+		total,//总共有多少页
+		onChange: this.handlePaginationChange, // 点击分页时，进行跳转调用网络接口函数
+		onShowSizeChange: this.handlePaginationChange,
+	}}
+/>
+
+handlePaginationChange = (page, pageSize) => {
+	this.setState(
+	  {
+	    current: page,
+	    pageSize: pageSize,
+	  },
+	  () => {
+	    this.loadData(page, pageSize);
+	  },
+	);
+};
+```
+
+[**回调函数请看这里**](./../JavaScript/基础(II).md#回调函数)
+
+
+
+
+
 ***
 <br/><br/><br/>
 > <h2 id="Radio.Group单选按钮">Radio.Group单选按钮</h2>
@@ -2085,9 +2128,6 @@ setPutawayMap(prev => ({
 ```
 
 具体使用，[**请看这里**](./AntDesign.md#下拉组件Select)
-
-
-
 
 
 

@@ -16,6 +16,7 @@
 	- [举例复杂函数声明demo](#举例复杂函数声明demo)
 		- [语法简写特性-返回值参数和行参相同](#语法简写特性-返回值参数和行参相同)
 	- [函数结构参数 method（value,({ typeSpecDic }) => {}）](#函数结构参数)
+	- [回调函数](#回调函数)
 - [**对象高级使用**](#对象高级使用)
 	- [创建 JavaScript 对象](#创建JavaScript对象)
 	- 	[使用Object生成对象](#使用Object生成对象)
@@ -1101,6 +1102,107 @@ function fn(x, y, { typeSpecDic }) { ... }
 
 表示函数的第三个参数必须是一个对象，且从中取出 `typeSpecDic`。
 
+
+***
+<br/><br/><br/>
+> <h2 id="回调函数">回调函数</h2>
+
+在 React（使用 JavaScript）中，\*\*回调函数（callback）\*\*是一种在事件发生或操作完成后，由另一个函数“回调”的函数。它常用于：
+
+* 子组件通知父组件
+* 异步操作完成后的处理
+* 事件监听（点击、输入等）
+
+<br/><br/>
+
+**按钮点击事件中的回调函数**
+
+**1️⃣ 定义一个回调函数**
+
+```js
+handleClick = () => {
+  console.log('按钮被点击了！');
+}
+```
+
+<br/>
+
+**2️⃣ 传给组件或绑定事件**
+
+```jsx
+<button onClick={this.handleClick}>点击我</button>
+```
+
+> 当按钮被点击，`handleClick` 会被 **React 自动调用（回调）**，你不需要自己写 `handleClick()`。
+
+<br/>
+
+**✅ 子组件回调父组件函数示例（经典用法）**
+
+**🧩 父组件：传入回调**
+
+```js
+import React, { Component } from 'react';
+import Child from './Child';
+
+class Parent extends Component {
+  // 定义回调函数
+  handleChildClick = (msg) => {
+    console.log('子组件触发了回调：', msg);
+  };
+
+  render() {
+    return <Child onButtonClick={this.handleChildClick} />;
+  }
+}
+
+export default Parent;
+```
+
+<br/> 
+
+**🧩 子组件：触发回调**
+
+```js
+import React, { Component } from 'react';
+
+class Child extends Component {
+  render() {
+    return (
+      <button onClick={() => this.props.onButtonClick('Hello from child')}>
+        点我触发回调
+      </button>
+    );
+  }
+}
+
+export default Child;
+```
+
+<br/> 
+
+**✅ 执行流程说明**
+
+1. 父组件将 `handleChildClick` 作为 `props` 传递给子组件 `Child`
+2. 子组件内部点击按钮时，调用 `this.props.onButtonClick(...)`
+3. `handleChildClick` 被调用，完成回调操作
+
+<br/> 
+
+✅ 带参数的回调函数（事件 + 自定义参数）
+
+```js
+handleClick = (id, event) => {
+  console.log('点击了 id =', id);
+  console.log('事件对象:', event);
+};
+
+render() {
+  return <button onClick={(e) => this.handleClick(123, e)}>点击</button>;
+}
+```
+
+> 用箭头函数 `() => this.handleClick(...)` 是为了控制参数传递，否则会立即执行。
 
 
 
