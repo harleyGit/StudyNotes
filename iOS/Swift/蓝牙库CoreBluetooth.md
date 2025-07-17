@@ -31,7 +31,9 @@
 	- [多个字节转成UInt类型数字](#多个字节转成UInt类型数字)
 - [蓝牙外设写入数据调度器](#蓝牙外设写入数据调度器)
 - [**调试**](#调试)
-	- [串口调试](#串口调试)
+	- [MobaXterm在Windows系统上的集成终端工具](#MobaXterm在Windows系统上的集成终端工具)
+	- [screen终端工具串口调试](#screen终端工具串口调试)
+	- [minicom终端串口工具](#minicom终端串口工具)
 - **借鉴资料**
 	- [iOS 蓝牙（中心模式连接外设）](https://juejin.cn/post/7129891777783267342)
 
@@ -2794,7 +2796,51 @@ AKBLEWriteItem *item2 = [AKBLEWriteItem itemWithData:data
 
 ***
 <br/><br/><br/>
-> <h2 id="串口调试">串口调试</h2>
+> <h2 id="MobaXterm在Windows系统上的集成终端工具">MobaXterm在Windows系统上的集成终端工具</h2>
+
+**MobaXterm** 是一款功能强大的终端工具，广泛用于连接远程服务器或设备，**但它本身并不直接支持串口通信（Serial Terminal）**。不过有些用户会通过内置的 `minicom` 或者通过插件方式曲线实现串口通信。
+
+---
+<br/>
+
+**🔍 一、MobaXterm 是什么？**
+
+**MobaXterm** 是一个运行在 Windows 系统上的集成终端工具，主要特点包括：
+
+* 支持多种协议：SSH、X11、RDP、VNC、FTP、SFTP、Serial（有限支持）等
+* 内置 Linux 环境（Cygwin）
+* 多标签终端
+* 图形界面友好
+* 支持 SSH 登录远程服务器
+* 可以执行远程桌面等操作
+
+<br/>
+
+**二、它支持串口终端（Serial Terminal）吗？**
+
+**默认并不强项在串口通信上**，但：
+
+* 可以通过内置的 `minicom` 或 `screen` 等 Linux 工具来进行串口通信（需要一定设置）
+* 更多情况下，用户会结合外部串口工具，如 PuTTY 或 TeraTerm 实现串口通信
+
+<br/> 
+
+**🍏 三、Mac 能安装 MobaXterm 吗？**
+
+**不能直接安装**，因为：
+
+* MobaXterm 是专为 **Windows 平台** 开发的应用
+* Mac 没有对应的版本
+* Mac 上有替代方案：
+	* [CoolTerm（推荐串口终端工具）：图形界面，适合与串口设备通信（如 Arduino、嵌入式设备）](https://freeware.the-meiers.org/)
+	* **screen** 命令（内建工具）
+	* **minicom** 终端命令工具；
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="screen终端工具串口调试">screen终端工具串口调试</h2>
 
 &emsp; 在开发蓝牙外设的时候,可以能与硬件同学进行联调,这个时候可能就需要查看蓝牙外设传给你的数据了.
 
@@ -2840,9 +2886,103 @@ screen /dev/cu.HC-05-DevB 9600
 
 
 
+***
+<br/><br/><br/>
+> <h2 id="minicom终端串口工具">minicom终端串口工具</h2>
+---
+
+## ✅ 三、使用 `minicom`（终端串口工具）
+
+### 🧪 安装 minicom（需 Homebrew）：
+
+```bash
+brew install minicom
+```
+
+---
+
+### 🔌 查看串口设备路径：
+
+```bash
+ls /dev/tty.*
+```
+
+---
+
+### ⚙️ 初次配置：
+
+```bash
+sudo minicom -s
+```
+
+进入设置菜单后：
+
+1. 选择 `Serial port setup`
+2. 设置：
+
+   * A: `/dev/tty.usbserial-1410`
+   * E: `115200` 波特率
+3. 保存并退出：选择 `Save setup as dfl`（默认配置）
+
+---
+
+### ▶️ 启动 minicom 串口：
+
+```bash
+sudo minicom
+```
+
+开始串口通信。
+
+---
+
+### 🔚 退出 minicom：
+
+按下：`Ctrl + A`，然后按 `Z`
+再按 `X` 退出 minicom
+
+---
+
+## ✅ 推荐对比总结：
+
+| 工具       | 类型   | 优点          | 适用人群 |
+| -------- | ---- | ----------- | ---- |
+| screen   | 终端   | 系统自带，无需安装   | 快速测试 |
+| CoolTerm | 图形界面 | 直观、易用，适合初学者 | 推荐新手 |
+| minicom  | 终端   | 更强功能，支持菜单配置 | 高级用户 |
+
+---
+
+如果你告诉我你使用的是哪种设备，我可以帮你确认设备路径并给出专门命令！也可以给你录屏演示操作方式。是否要继续？
 
 
+***
+<br/><br/><br/>
+> <h2 id="图形工具CoolTerm">图形工具CoolTerm</h2>
 
+**📥 安装 CoolTerm：**
+
+- 官网下载页面：
+	- 👉 [https://freeware.the-meiers.org/](https://freeware.the-meiers.org/)
+- 下载安装后直接运行。
+
+<br/>
+
+- **📡 配置串口通信：**
+	- 1.打开 CoolTerm
+	- 2.点击 `Options`（选项）
+	- 3.在 **Serial Port** 下拉列表中，选择你的串口设备
+   （如 `/dev/tty.usbserial-1410`）
+	- 4.设置波特率（Baudrate），一般是 `115200`
+	- 5.点击 `OK`
+	- 6.点击 `Connect` 开始通信
+
+<br/>
+
+-  **🔄 使用说明：**
+	* 你可以看到串口打印信息
+	* 可以手动发送指令或调试命令
+	* 支持自动重连、换行配置等
 
 
 
