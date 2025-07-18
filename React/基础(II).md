@@ -11,6 +11,7 @@
 	- [组件模块化导出](#组件模块化导出)
 - [**高阶组件**](#高阶组件)
 	- [引用子组件的属性ref](#引用子组件的属性ref)
+	- [组件触发函数传递单个or多个参数](#组件触发函数传递单个or多个参数)
 - [**网络请求**](#网络请求)
 	- [网络请求fetch](#网络请求fetch)
 	- [网络请求fetch的本质](#网络请求fetch的本质)
@@ -812,6 +813,120 @@ const BaseInfo = React.forwardRef((props, ref) => {
 | `ref={this.baseInfoRef}`   | 告诉 React 把组件或 DOM 的引用赋值给这个 ref    |
 | `this.baseInfoRef.current` | 就是你拿到的组件实例 或 DOM 节点               |
 | 可用于做什么？                    | 调用子组件方法、操作 DOM、获取值等               |
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="组件触发函数传递单个or多个参数">组件触发函数传递单个or多个参数</h2>
+
+<br/>
+
+**为什么有些组件属性可以直接写 `onFinishFailed={this.onFinishFailed}`，而有些却要用 `onChange={(value) => this.handleFormItemChange('category', value)}`？**
+
+这其实是 **React 事件传参机制 + 函数调用方式 + 组件回调签名** 的综合体现。我们一起来拆解。
+
+<br/>
+
+ **✅ 一、什么情况下可以直接写 `this.onXXX`**
+
+```jsx
+onFinishFailed={this.onFinishFailed}
+```
+
+**条件：**
+
+* 你不需要额外传入参数；
+* 函数本身的签名就满足组件回调需要；
+* 比如：
+
+  ```js
+  onFinishFailed(errorInfo) {
+    console.log('失败:', errorInfo);
+  }
+  ```
+
+等同于：
+
+```js
+const onFinishFailed = (errorInfo) => { ... }
+```
+
+所以，AntD 的 `Form` 组件在触发 `onFinishFailed` 时会自动传入 `errorInfo` 参数，React 会自动把事件绑定给你。
+
+<br/>
+
+**✅ 二、什么时候必须写成箭头函数（或 bind）**
+
+```jsx
+onChange={(value) => this.handleFormItemChange('category', value)}
+```
+
+**这是为了手动传入额外的参数！**
+
+如果你直接写：
+
+```js
+onChange={this.handleFormItemChange}
+```
+
+React 会把 `value` 当成第一个参数传入函数中，但你需要同时传入 `'category'` 和 `value`，所以你需要手动包一层：
+
+```js
+(value) => this.handleFormItemChange('category', value)
+```
+
+> 这是函数“柯里化”或“闭包”的用法，创建一个带参数的函数包装器。
+
+<br/>
+
+**写法一（无需额外参数）：**
+
+```js
+handleChange(value) {
+  console.log('选中的值是:', value);
+}
+
+<Select onChange={this.handleChange} />
+```
+
+<br/>
+
+**写法二（需要额外参数）：**
+
+```js
+handleFormItemChange(field, value) {
+  console.log(`字段 ${field} 的值变为: ${value}`);
+}
+
+<Select onChange={(value) => this.handleFormItemChange('category', value)} />
+```
+
+---
+
+<br/> 
+
+**✅ 三、总结对比表**
+
+| 写法                              | 场景                 | 是否需要传参 |
+| ------------------------------- | ------------------ | ------ |
+| `onChange={this.xxx}`           | 直接调用已有函数           | ❌ 否    |
+| `onChange={(v) => this.xxx(v)}` | 需要额外加工或控制参数        | ✅ 是    |
+| `onClick={this.xxx.bind(this)}` | 手动绑定 this（class 中） | ✅（旧写法） |
+| `onClick={() => this.xxx()}`    | 简洁传参或与当前上下文绑定      | ✅      |
+
+<br/>
+
+**✅ 补充建议**
+
+在类组件中，推荐你提前 **箭头函数定义方法**，避免 `this` 绑定问题：
+
+```js
+handleChange = (field, value) => {
+  // 自动绑定 this，无需 bind
+}
+```
+
 
 
 
