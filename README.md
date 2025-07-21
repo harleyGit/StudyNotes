@@ -158,6 +158,7 @@
 - [go性能分析](./Go/go性能分析.md)
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
 - [**‌分布式协调服务ZooKeeper**](./Go/分布式协调服务ZooKeeper.md)
+- [**‌发版**](./Go/发版.md)
 - **库**
 	- [Go标准库](./Go/Go标准库.md)
 	- [go-svc](./Go/go-svc.md)
