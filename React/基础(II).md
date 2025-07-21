@@ -22,6 +22,11 @@
 - [**‌语言国际化**](#语言国际化)
 	- [react-intl库-国际化](#react-intl库-国际化)
 	- [react-intl多语言demo](#react-intl多语言demo)
+- [**打包**](#打包)
+	- [线上发版](#线上发版) 
+		- [环境变量配置](#环境变量配置) 
+		- [打包注意事项](#打包注意事项)
+	- [本地打包测试](#本地打包测试)
 
 
 
@@ -1886,3 +1891,183 @@ npm install react-intl
 yarn add react-intl
 ```
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="打包">打包</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="线上发版">线上发版</h2>
+
+**`React`**项目开发完成后，就可以本地打包测试完成后，然后就可以打包上线了。
+
+<br/><br/>
+> <h3 id="环境变量配置">环境变量配置</h3>
+
+在 React 项目中（特别是使用 Create React App 或 Vite 等脚手架工具搭建的项目），你可以通过设置环境变量来区分不同环境（如开发 `development`、测试 `staging`、生产 `production`），并根据环境配置资源路径、接口地址等。
+
+<br/>
+
+**1.在项目根目录创建 `.env` 文件：**
+
+| 文件名                | 说明       |
+| ------------------ | -------- |
+| `.env.development` | 开发环境     |
+| `.env.production`  | 生产环境     |
+| `.env.staging`     | 测试环境（可选） |
+
+<br/>
+
+**2. 在每个文件中添加变量（以 `REACT_APP_` 开头）：**
+
+例如 `.env.production`:
+
+```env
+REACT_APP_API_BASE=https://api.yourdomain.com
+REACT_APP_PUBLIC_PATH=/your-project/
+```
+
+<br/>
+
+`.env.development`:
+
+```env
+REACT_APP_API_BASE=http://localhost:3000
+REACT_APP_PUBLIC_PATH=/
+```
+
+> ✅ **注意：CRA（Create React App）默认只支持以 `REACT_APP_` 开头的变量。**
+
+<br/>
+
+**3.在代码中使用环境变量**
+
+```js
+const baseURL = process.env.REACT_APP_API_BASE;
+const publicPath = process.env.REACT_APP_PUBLIC_PATH;
+
+console.log('当前环境 API:', baseURL);
+```
+
+
+<br/><br/>
+> <h3 id="打包注意事项">打包注意事项</h3>
+
+在继续下面的任务前，你需要**配置好上面所说的环境变量。切记！！**
+
+1️⃣首先你要确定你用的是hash路由还是history路由。
+
+ ![react0.0.0.1.png](./../Pictures/react0.0.0.1.png)
+ 
+ <br/>
+ 
+ 2️⃣ 配置资源路径
+ 若是你使用的是CRA（Create React App脚手架工具搭建项目），在`package.json`中配置**`homepage`**字段，他会影响`build`后的静态资源路径。
+ 
+ ![react0.0.0.2.png](./../Pictures/react0.0.0.2.png)
+ 
+ 然后执行打包命令：
+ 
+```sh
+ npm run build
+```
+
+会生成 `build/` 目录，包含生产部署所需文件。
+
+- **上传 build 目录到服务器或 CDN**
+- 如果部署在子路径，确保服务器配置也支持此路径，例如 Nginx：
+
+```nginx
+location /your-project/ {
+  root /var/www/html;
+  try_files $uri /your-project/index.html;
+}
+```
+
+
+ 
+<br/>
+  
+3️⃣ 查看打包后的资源路径
+  
+   ![react0.0.0.3.png](./../Pictures/react0.0.0.3.png)
+
+<br/>
+
+
+**进阶：多环境打包命令**
+
+你可以在 `package.json` 的 `scripts` 中添加不同环境的打包命令：
+
+```json
+"scripts": {
+  "start": "react-scripts start",
+  "build:dev": "env-cmd -f .env.development react-scripts build",
+  "build:prod": "env-cmd -f .env.production react-scripts build",
+  "build:staging": "env-cmd -f .env.staging react-scripts build"
+}
+```
+
+需要安装 `env-cmd`：
+
+```bash
+npm install env-cmd --save-dev
+```
+
+然后：
+
+```bash
+npm run build:prod
+```
+
+<br/>
+
+**✅ 小结**
+
+| 功能    | 方法                                |
+| ----- | --------------------------------- |
+| 环境变量  | `.env.[env]` 文件 + `REACT_APP_` 前缀 |
+| 路径配置  | `homepage` 字段或 Vite 中的 `base`     |
+| 多环境打包 | `env-cmd` + 多套 `.env` 文件          |
+| 部署路径  | 服务器配置路径或 CDN 子路径                  |
+
+
+
+<br/><br/><br/>
+<h2 id="本地打包测试">本地打包测试</h2>
+
+**环境变量配置后（去人线上、测试）、package.json、路由设置**，然后执行：
+
+```sh
+npm run build
+```
+
+直接双击`build/index.html`不能正确运行，需要用本地服务器。
+
+<br/>
+
+**1.安装serve静态服务器**
+
+```bash
+npm install -g serve
+```
+
+<br/>
+
+**2.预览build目录**
+
+进入**项目根目录（注意：不是进入到build目录，否则会出现404错误）**，执行：
+
+```bash
+serve -s ./build
+```
+
+- 默认在`http://localhost:3000`可预览你的打包网站（地址在终端有提示）。
+- 这个方式模拟正式环境效果[4][7][5]。
+
+> **注意：** 如果打开后页面是空白，可能需要在`package.json`里加上一行：  
+> `"homepage": "."`，保存后重新打包[7]。
