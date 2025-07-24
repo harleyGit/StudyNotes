@@ -259,10 +259,27 @@ Edigor: Tab Completion
 <br/><br/><br/>
 > <h2 id="用户配置">用户配置</h2>
 
+- **VSCode配置有这几种**
+	* **Open User Settings (JSON)**
+	  → 这是全局用户配置文件，修改它会影响你用这台机器上的所有 VS Code 项目（全局生效）
+	
+	* **Open Workspace Settings (JSON)**
+	  → 这是当前打开项目的工作区配置，修改它只影响当前这个项目（针对项目的局部配置）
+	
+	* **Open Default Settings (JSON)**
+  → 这是 VS Code 默认配置，通常不修改，用来参考默认值
+
+<br/>
+
+这里配置用的**`‌Open User Settings (JSON)`**
+
 **`Comand+shift+P,`（或者‌`Cmd+,`，然后选择扩展下的某个功能）** 然后选择打开 **Open User Settings(json)**
 
 ```json
 {
+  "editor.fontSize": 14,              // 代码编辑器字体大小
+  "terminal.integrated.fontSize": 12, // 终端字体大小
+  "window.zoomLevel": 2,               // 界面整体缩放，0是默认，正数放大，负数缩小
   "update.mode": "none", //禁止更新
   "dart.openDevTools": "flutter",
   "git.autofetch": true,
@@ -305,14 +322,11 @@ Edigor: Tab Completion
   "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
   "go.goroot": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go",
   "go.gopath": "/Users/ganghuang/HGFiles/GitHub/GoProject",
-  "go.useLanguageServer": true,//与Go的自动导入包有关，需要配合gopls(下载安装：go install golang.org/x/tools/gopls@latest)
+  "go.useLanguageServer": true,
   "go.toolsManagement.checkForUpdates": "local",
   // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
-  // "go.alternateTools" 是 VS Code 中 Go 插件的一个可选配置项，用来显式指定使用哪个 Go 工具的可执行文件路径，防止插件自动找错版本或路径。
   "go.alternateTools": {
-	  // 1.1固定使用这个路径下的 go 命令
-	  // 1.2若是配置出错可能导致VSCode中的GO插件拓展无法激活、调试失败
-	  "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
+    "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
   },
   "go.toolsEnvVars": {
     "GO111MODULE": "on",
