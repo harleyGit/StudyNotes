@@ -88,6 +88,7 @@
 	- [goinstall命令](#goinstall命令) 
 	- [goget命令](#goget命令) 
 	- [gopprof命令](#gopprof命令)
+	- [解析终端命令行参数](#解析终端命令行参数)
 - [**反射**](#反射)
 	- [反射概述](#反射概述)
 	- [类型（Type）与种类（Kind）](#类型（Type）与种类（Kind）)
@@ -4484,6 +4485,87 @@ Launchpad(Bazaar)
 
 &emsp; 为此，很多第三方包基于系统包runtime.pprof进行便利性封装，让整个测试过程更为方便。
 
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="解析终端命令行参数">解析终端命令行参数</h2>
+
+若是直接在终端输入命令，比如：
+
+```sh
+go run main.go --version --port=8081
+```
+
+但是我通过VSCode的 **‌ ▶️“运行和调试”**进行运行的，那如何传递参数呢？
+
+打开 `.vscode/launch.json` 文件，如果你还没有这个文件，可以点击左侧的 → 选择“创建一个 `launch.json` 文件”
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Go Program",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",     // 或 "debug"
+      "program": "${workspaceFolder}/main.go",
+      "args": ["--version=true", "--port=8081"], 
+    }
+  ]
+}
+```
+
+<br/>
+
+ **保存并点击“运行和调试”按钮（F5）**
+
+这时候你的 Go 程序就会像这样被运行：
+
+```bash
+go run main.go --version --port=8081
+```
+
+<br/>
+
+**读取输入参数解析：**
+
+```go
+/* 命令行参数解析 */
+func (this *NSQPracticeV1) NSQPraCMDParse() {
+
+	// 创健一个参数解析器
+	flagSet := flag.NewFlagSet("HuangGang_CMD1009", flag.ExitOnError)
+
+	//定义参数
+	version := flagSet.Bool("version", false, "print version string")
+	port := flagSet.Int("port", 8080, "set port")
+
+	logHG.DebugInfo("当前命令行参数：", os.Args)
+
+	// 正确跳过 os.Args[0]，只解析你想传的参数。
+	// 解析传入的命令行参数
+	flagSet.Parse(os.Args[1:])
+
+	// 使用参数值
+	if *version {//因为在lauch.json设置为false，所以不打印
+		logHG.DebugInfo("版本显示：",*version,"MLC_GO version V1.0.0.0")
+		//os.Exit(0)
+	}
+
+	logHG.DebugInfo("启动端口：", *port)
+}
+```
+
+因为我在运行时，需要先通过`fmt.Scanf(&key)`输入数字，比如：**6**，然后再执行`‌func (this *NSQPracticeV1) NSQPraCMDParse() {}`这个函数，这时候只需要再回车【`Enter`】健即可，如下打印结果：
+
+```sh
+2025/07/25 11:51:21 🔥 [当前命令行参数： [/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO/__debug_bin728366815 --version=true --port=8081]]
+2025/07/25 11:51:21 🔥 [版本显示： true MLC_GO version V1.0.0.0]
+2025/07/25 11:51:21 🔥 [启动端口： 8081]
+```
 
 <br/>
 

@@ -1,4 +1,6 @@
 - [**‌启动配置文件options.go**](#‌启动配置文件options.go)
+	- [标识不同的nsqd实例](#标识不同的nsqd实例)
+	- [nsqdFlagSet()解析命令行参数](#nsqdFlagSet()解析命令行参数)
 
 <br/><br/><br/>
 
@@ -204,3 +206,20 @@ logging.DebugInfo("域名 hostname:", hostname, "md5 h:", h.Sum(nil),
 | 用途场景 | nsqd 节点编号（如 topic 分布、路由标识等）          |
 
 
+***
+<br/><br/><br/>
+> <h2 id="nsqdFlagSet()解析命令行参数">nsqdFlagSet()解析命令行参数</h2>
+
+通过输入终端参数，然后获取命令的参数，如下：
+
+```sh
+flagSet := flag.NewFlagSet("nsqd", flag.ExitOnError)
+
+// basic options
+// --version：是否打印版本信息
+flagSet.Bool("version", false, "print version string")
+// --config：指定配置文件路径
+flagSet.String("config", "", "path to config file")
+```
+
+[**具体使用和解析请看这里**](./go语法.md#解析终端命令行参数)
