@@ -3,7 +3,10 @@
 	- [nsqdFlagSet()解析命令行参数](#nsqdFlagSet()解析命令行参数)
 	- [命令行参数和配置文件映射到结构体字段](#命令行参数和配置文件映射到结构体字段)
 	- [命令行参数的反射解析](#命令行参数的反射解析)
-	- [枚举常量定义](#枚举常量定义)
+	- [枚举常量定义-iota](#枚举常量定义-iota)
+	- [strconv.ParseBool()-配置文件读取bool值](#strconv.ParseBool()-配置文件读取bool值)
+	- [路径](#路径)
+	- [打印格式](#打印格式)
 
 <br/><br/><br/>
 
@@ -458,7 +461,7 @@ type NSQDOptions struct {
 
 ***
 <br/><br/><br/>
-> <h2 id="枚举常量定义">枚举常量定义</h2>
+> <h2 id="枚举常量定义-iota">枚举常量定义-iota</h2>
 
 看到这几种变量定义：
 
@@ -479,3 +482,114 @@ const (
 [**请看这里**](./go语法.md#枚举常量)
 
 
+***
+<br/><br/><br/>
+> <h2 id="strconv.ParseBool()-配置文件读取bool值">strconv.ParseBool()-配置文件读取bool值</h2>
+
+遇到的代码是：
+
+```go
+s = strings.ToLower(s)
+required, err := strconv.ParseBool(s)
+```
+
+<br/>
+
+```go
+s = strings.ToLower(s)
+```
+
+作用是把字符串 `s` 转换成 **小写形式**，比如：
+
+* `"True"` → `"true"`
+* `"FALSE"` → `"false"`
+* `"Yes"` → `"yes"`
+
+✅ 这样做的目的是：**不区分大小写地解析字符串的布尔值**。
+
+<br/>
+
+```go
+required, err := strconv.ParseBool(s)
+```
+
+Go 标准库 `strconv.ParseBool(s)` 会尝试把字符串 `s` 转换为布尔值。支持的字符串如下（不区分大小写）：
+
+| 字符串值      | 返回结果    |
+| --------- | ------- |
+| `"1"`     | `true`  |
+| `"t"`     | `true`  |
+| `"true"`  | `true`  |
+| `"T"`     | `true`  |
+| `"TRUE"`  | `true`  |
+| `"0"`     | `false` |
+| `"f"`     | `false` |
+| `"false"` | `false` |
+| `"F"`     | `false` |
+| `"FALSE"` | `false` |
+
+返回值：
+
+* `required`: 是解析后的布尔值（`true` 或 `false`）
+* `err`: 如果字符串不能被识别为布尔值，则返回错误（`err != nil`）
+
+<br/>
+
+举个完整例子：
+
+```go
+package main
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+func main() {
+	s := "TRUE"
+
+	s = strings.ToLower(s) // 转为 "true"
+	required, err := strconv.ParseBool(s)
+	if err != nil {
+		fmt.Println("❌ 解析失败:", err)
+	} else {
+		fmt.Println("✅ 解析结果:", required)
+	}
+}
+```
+
+输出：
+
+```
+✅ 解析结果: true
+```
+
+<br/>
+
+常见于从 **配置文件**、**环境变量**、**命令行参数** 中读取布尔值，比如 NSQ 的 `tls_required` 设置（字符串类型）会被解析成布尔值以决定是否启用 TLS。
+
+
+&emsp; **如果**你是在读 NSQ 源码，那这一段逻辑的目标就是把用户传入的配置 `"true"` / `"false"` / `"1"` 等字符串，转换成 Go 的布尔值 `true` 或 `false` 来进行条件判断。是否要进一步结合 NSQ 的实际字段来看？我可以帮你对应起来。
+
+
+***
+<br/><br/><br/>
+> <h2 id="路径">路径</h2>
+
+```go
+cwd, _ := os.Getwd()
+```
+
+[**请看这里**](./go语法.md#拼接)
+
+
+***
+<br/><br/><br/>
+> <h2 id="打印格式">打印格式</h2>
+
+```go
+opts.Logger = log.New(os.Stderr, opts.LogPrefix, log.Ldate|log.Ltime|log.Lmicroseconds)
+```
+
+[**请看这里**](./go语法(II).md#日志格式)

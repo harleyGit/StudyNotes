@@ -30,6 +30,7 @@
 		- [短变量](#短变量)
 		- [字符类型](#字符类型)
 		- [枚举常量](#枚举常量)
+			- [连续常量值关键字iota](#连续常量值关键字iota)
 	- [**指针**](#指针)
 	- [**类型别名**](#类型别名)
 	- [**容器：存储和组织数据的方式**](#容器：存储和组织数据的方式)
@@ -113,6 +114,8 @@
 	- [二进制文件的写入、读取操作](#二进制文件的写入、读取操作)	
 		- [gob格式](#gob格式) 
 		- [自定义二进制格式](#自定义二进制格式)
+	- [路径](#路径)
+		- [拼接](#拼接)
 	- [JSON文件的写入、读取操作](#JSON文件的写入、读取操作) 
 	- [yaml、mapstructure、json解析总结](#yaml、mapstructure、json解析总结)
 	- [文件锁操作](#文件锁操作)
@@ -1643,6 +1646,133 @@ const (
 ```
 
 这个 `Kind` 就是 `reflect.Value.Kind()` 的返回类型，用于表示一个变量的实际类型。你这个代码风格正是模拟了这种机制。需要我演示 `reflect.Kind` 的实际用途也可以告诉我。
+
+
+<br/><br/>
+> <h3 id="连续常量值关键字iota">连续常量值关键字iota</h3>
+
+ `iota`用于生成**连续常量值**的一个关键字，通常配合 `const` 使用，非常适合定义枚举类型。你贴出的这段代码：
+
+```go
+const (
+	TLSNotRequired = iota
+	TLSRequiredExceptHTTP
+	TLSRequired
+)
+```
+
+<br/>
+
+**它的作用：**
+
+`iota` 在 `const` 块中从 0 开始，每换一行，自动加 1。因此上述定义等价于：
+
+```go
+const (
+	TLSNotRequired        = 0
+	TLSRequiredExceptHTTP = 1
+	TLSRequired           = 2
+)
+```
+
+<br/>
+
+ **它的用途：**
+
+这种方式常用于定义具有枚举语义的常量，例如：
+
+* 日志级别：`LogDebug`, `LogInfo`, `LogWarn`, `LogError`
+* 网络协议：`ProtoTCP`, `ProtoUDP`
+* 权限设置：`Read`, `Write`, `Execute`
+* NSQ 中 TLS 的配置要求（你贴的例子）
+
+<br/>
+
+**为什么使用 `iota` 而不是直接赋值？**
+
+* **简洁**：避免手动写数字
+* **自动递增**：容易维护，插入或删除时不需要改后面的值
+* **可读性强**：和 `enum` 的语义一致
+
+<br/>
+
+**延伸：可以用 `iota` 进行位运算**
+
+```go
+const (
+	Read = 1 << iota // 1 << 0 == 1
+	Write            // 1 << 1 == 2
+	Execute          // 1 << 2 == 4
+)
+```
+
+这种方式常用于定义位掩码（bitmask），组合权限值。
+
+
+<br/>
+
+**比如：**
+
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+// 定义 TLS 策略枚举
+const (
+	TLSNotRequired = iota
+	TLSRequiredExceptHTTP
+	TLSRequired
+)
+
+// 模拟一个配置结构体
+type ServerConfig struct {
+	TLSMode int
+}
+
+// 启动服务时根据 TLSMode 进行判断
+func startServer(cfg ServerConfig, isHTTP bool) {
+	switch cfg.TLSMode {
+	case TLSNotRequired:
+		fmt.Println("🔓 TLS 不需要，所有协议都使用明文")
+	case TLSRequiredExceptHTTP:
+		if isHTTP {
+			fmt.Println("⚠️ HTTP 不启用 TLS，其他协议启用")
+		} else {
+			fmt.Println("🔒 启用 TLS（非 HTTP 协议）")
+		}
+	case TLSRequired:
+		fmt.Println("🔒 所有协议都必须启用 TLS")
+	default:
+		fmt.Println("❌ 无效的 TLS 设置")
+	}
+}
+
+func main() {
+	// 示例 1：完全不启用 TLS
+	cfg1 := ServerConfig{TLSMode: TLSNotRequired}
+	startServer(cfg1, true)
+
+	// 示例 2：只 HTTP 不用 TLS，其他协议要用
+	cfg2 := ServerConfig{TLSMode: TLSRequiredExceptHTTP}
+	startServer(cfg2, false)
+
+	// 示例 3：强制所有协议都用 TLS
+	cfg3 := ServerConfig{TLSMode: TLSRequired}
+	startServer(cfg3, true)
+}
+```
+
+log：
+
+```sh
+🔓 TLS 不需要，所有协议都使用明文
+🔒 启用 TLS（非 HTTP 协议）
+🔒 所有协议都必须启用 TLS
+```
 
 
 
@@ -6259,8 +6389,97 @@ ganghuang@GangHuangs-MacBook-Pro TestBinaryReadAndWrite % go run test_binary_rw.
 ```
 
 
-<br/><br/>
 
+***
+<br/><br/><br/>
+> <h2 id="路径">路径</h2>
+
+
+<br/><br/>
+> <h3 id="拼接">拼接</h3>
+`os.Getwd()` 是 Go 标准库 `os` 包中提供的一个函数，用来获取 **当前工作目录（Current Working Directory）**。
+
+<br/> 
+
+`os.Getwd()` 的作用：
+
+```go
+cwd, err := os.Getwd()
+```
+
+* 返回值：
+
+  * `cwd` 是一个字符串，表示当前的**工作目录**路径
+  * `err` 是可能发生的错误
+
+<br/>
+
+ **❓“当前工作目录”指的是什么？**
+
+它是程序**运行时所在的目录**，而不是源码文件所在的目录。
+
+<br/>
+
+**假设你有如下目录结构：**
+
+```
+/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO
+  ├── main.go
+```
+
+你在终端中这样运行程序：
+
+```bash
+cd /Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO
+go run main.go
+```
+
+此时 `os.Getwd()` 返回的是：
+
+```
+/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO
+```
+
+不管 `main.go` 实际在什么路径，**只要你是在那个目录运行程序，`os.Getwd()` 就返回那个目录**。
+
+<br/>
+
+* **构造相对路径，例如：读取当前目录下的配置文件：**
+
+  ```go
+  configPath := filepath.Join(cwd, "TestNotes/unfamiliar_grammar_practice/nsq_project_practice", "NSQ_README.md")
+	logHG.DebugFInfo("路径为：%+v", configPath)
+	
+	打印： 路径为：/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO/TestNotes/unfamiliar_grammar_practice/nsq_project_practice/NSQ_README.md
+  ```
+* 日志初始化时打印当前目录，方便调试部署路径问题。
+* 在 NSQ 中，它常用来组合默认的数据路径，如 `dataPath := cwd + "/data"`
+
+<br/>
+
+**`filepath.Join(...) `**是什么？
+
+这是 Go 标准库 path/filepath 提供的函数，作用是：
+
+将多个路径片段拼接成一个符合当前操作系统规则的完整路径。
+
+它会自动添加正确的路径分隔符（/ 或 \）并规范化路径。
+
+
+<br/>
+
+| 场景        | 推荐方式                                             |
+| --------- | ------------------------------------------------ |
+| 拼接路径      | ✅ 用 `filepath.Join(...)`                         |
+| 获取文件扩展名   | ✅ 用 `filepath.Ext(path)`                         |
+| 获取父目录或文件名 | ✅ 用 `filepath.Dir(path)` / `filepath.Base(path)` |
+
+
+
+
+
+
+<br/><br/>
 > <h2 id="JSON文件的写入、读取操作"> JSON文件的写入、读取操作 </h2>
 
 ```

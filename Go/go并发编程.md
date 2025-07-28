@@ -11,6 +11,7 @@
 		- [通道接收数据](#通道接收数据)
 		- [单向通道](#单向通道) 
 		- [带缓冲的通道](#带缓冲的通道)
+		- [select防止通道阻塞](#select防止通道阻塞)
 	- [轻量级线程](#轻量级线程)
 	- [线程锁](#线程锁)
 		- [互斥锁](#互斥锁)
@@ -359,6 +360,215 @@ name := make(chan type, num)
 如果有缓冲的通道存储数据的数量为零，那么执行接收数据操作的goroutine将被持续阻塞，直到执行发送数据操作的goroutine使用有缓冲的通道发送数据。
 
 在使用有缓冲的通道完成发送与接收数据的操作时，不强制要求执行发送数据操作的goroutine和执行接收数据操作的goroutine同时准备就绪。
+
+
+***
+<br/><br/><br/>
+> <h2 id="select防止通道阻塞">select防止通道阻塞</h2>
+
+ **`select {}` 是一个阻塞结构，通常用于：**
+
+<br/>
+
+**场景 1：等待多个 channel 的事件发生（常见）**
+
+```go
+select {
+case msg := <-ch1:
+	fmt.Println("收到 ch1 的消息:", msg)
+case <-ch2:
+	fmt.Println("ch2 有事件发生")
+}
+```
+
+> `select` 会等待**其中一个 case 的 channel 有事件发生**。多个 case 可随机选一个执行。
+
+<br/>
+
+ **场景 2：监听 `context.Context` 的取消信号（你提到的最典型用法）**
+
+```go
+ctx, cancel := context.WithCancel(context.Background())
+
+go func() {
+	select {
+	case <-ctx.Done():
+		fmt.Println("✅ 收到取消信号:", ctx.Err())
+	}
+}()
+
+time.Sleep(2 * time.Second)
+cancel() // 发出取消信号
+```
+
+<br/>
+
+ 输出：
+
+```
+✅ 收到取消信号: context canceled
+```
+
+这里 `select { case <-ctx.Done(): ... }` 表示：**等待 context 被取消（cancel）**，然后执行后面的逻辑。
+
+<br/>
+
+**场景 3：`select {}` 空结构体（永远阻塞主线程）**
+
+```go
+func main() {
+	go func() {
+		fmt.Println("🚀 goroutine 启动")
+	}()
+
+	select {}
+}
+```
+
+* `select {}` 是**永远阻塞**的（因为没有 case），可以用来让主程序“挂起”，等待 goroutine 自行运行。
+* 类似 `for {}` 死循环，但更优雅（不会占 CPU）
+
+<br/>
+
+
+🧪 最实用例子：配合 `context` 优雅关闭
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			fmt.Println("✅ 任务结束，收到取消信号:", ctx.Err())
+		}
+	}()
+
+	time.Sleep(2 * time.Second)
+	fmt.Println("⛔ 主程序调用 cancel()")
+	cancel()
+
+	time.Sleep(1 * time.Second) // 等 goroutine 打印
+}
+```
+
+**log：**
+
+```sh
+2025/07/28 21:09:49 🔥 [⛔ 手动取消任务]
+2025/07/28 21:09:49 🔥 ✅ 收到取消信号:%!(EXTRA *errors.errorString=context canceled)
+```
+
+<br/><br/>
+
+**给出一个 goroutine + `select` + `context.WithCancel()`**，模拟一个服务：
+
+<br/> 
+
+**🎯 示例目标：**
+
+* 主程序启动多个 goroutine（模拟任务处理器）
+* 每个任务协程监听自己的消息 channel
+* 主程序等待 5 秒后，调用 `cancel()`，所有 goroutine 都能感知取消信号，然后退出
+* 使用 `select` 来监听 **多路通道** 和退出信号
+
+<br/>
+
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+func startWorker(ctx context.Context, id int, jobs <-chan string) {
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Printf("🛑 Worker %d 接收到退出信号，退出中...\n", id)
+			return
+		case job := <-jobs:
+			fmt.Printf("👷 Worker %d 开始处理任务：%s\n", id, job)
+			time.Sleep(1 * time.Second) // 模拟处理耗时
+			fmt.Printf("✅ Worker %d 完成任务：%s\n", id, job)
+		}
+	}
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// 创建三个任务通道
+	jobChan1 := make(chan string)
+	jobChan2 := make(chan string)
+
+	// 启动两个 worker
+	go startWorker(ctx, 1, jobChan1)
+	go startWorker(ctx, 2, jobChan2)
+
+	// 发送任务
+	go func() {
+		for i := 1; i <= 5; i++ {
+			jobChan1 <- fmt.Sprintf("任务A-%d", i)
+			jobChan2 <- fmt.Sprintf("任务B-%d", i)
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+
+	// 主程序等待 5 秒后 cancel
+	time.Sleep(5 * time.Second)
+	fmt.Println("⛔ 主程序调用 cancel()，通知所有 worker 停止工作")
+	cancel()
+
+	// 给协程一些时间完成打印
+	time.Sleep(2 * time.Second)
+	fmt.Println("🎉 所有任务完成，主程序退出")
+}
+```
+
+<br/>
+
+**示例输出（部分）：**
+
+```
+👷 Worker 1 开始处理任务：任务A-1
+👷 Worker 2 开始处理任务：任务B-1
+✅ Worker 1 完成任务：任务A-1
+✅ Worker 2 完成任务：任务B-1
+...
+⛔ 主程序调用 cancel()，通知所有 worker 停止工作
+🛑 Worker 1 接收到退出信号，退出中...
+🛑 Worker 2 接收到退出信号，退出中...
+🎉 所有任务完成，主程序退出
+```
+
+<br/>
+
+ **总结本例用法亮点：**
+
+| 技术点                  | 用法目的                |
+| -------------------- | ------------------- |
+| `go func()`          | 启动并发任务（goroutine）   |
+| `context.WithCancel` | 可控制的协程生命周期控制        |
+| `select {}`          | 同时监听多个通道（任务 / 退出信号） |
+| `<-ctx.Done()`       | 协程监听取消信号，优雅退出       |
+| `<-jobChan`          | 任务监听通道，处理具体任务       |
+
+
+
+
+
 
 <br/><br/><br/>
 > <h2 id='轻量级线程'>轻量级线程</h2>
