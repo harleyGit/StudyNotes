@@ -67,7 +67,7 @@ func main() {
 	var stu  = model.NewStudent("tom~", 88.8)
 	
 	fmt.Println(*stu) //&{...}
-	fmt.Println("name=", stu.Name, "score=", &stu.getScore())
+	fmt.Println("name=", stu.Name, "score=", &stu.getScore() cxxdcxZ)
 }
 ```
 
