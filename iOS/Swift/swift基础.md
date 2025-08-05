@@ -3,6 +3,8 @@
 - [**属性**](#属性)
 	- [属性包装器](#属性包装器)
 	- [属性包装器中的 `projectedValue`（呈现值）](#属性包装器中的projectedValue呈现值)
+- [**数组**](#数组)
+	- [一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性](#一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性)
 - [**类**](#类)
 	- [流式API](#流式API)
 - [**值引用类型**](#值引用类型)
@@ -279,6 +281,250 @@ if let person = Person(name: "John", age: 30) {
 | 聚合构造器（Failable）| 初始化可能失败，返回可选类型 `nil`。                        |
 
 通过不同的构造方法，你可以根据需求选择最合适的初始化方式来确保对象创建的安全性和灵活性。
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="数组">数组</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性">一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性</h2>
+
+**数据结构对象：**
+
+```swift
+public struct DeviceProductInfo {
+    var productNo: String
+    var name: String
+    var icon: String
+}
+
+public struct DeviceCategoryInfo {
+    var id: Int
+    var title: String
+}
+
+public struct DeviceProductSection {
+    var section: DeviceCategoryInfo
+    var items: [DeviceProductInfo]
+}
+
+public class SurroundingDeviceViewModel {
+    var productId: String
+    var displayName: String = ""
+    var iconUrl: String = ""
+    
+    init(productId: String) {
+        self.productId = productId
+    }
+}
+
+```
+
+<br/>
+
+**匹配对应：**
+
+```swift
+func mapDeviceInfoToViewModelsFast(
+    dataModels: [DeviceProductSection],
+    surroundingDevices: [SurroundingDeviceViewModel]
+) {
+    // 建立 productNo -> DeviceProductInfo 映射表
+    let productMap = dataModels
+        .flatMap { $0.items }
+        .reduce(into: [String: DeviceProductInfo]()) { result, product in
+            result[product.productNo] = product
+        }
+    
+    for viewModel in surroundingDevices {
+        if let product = productMap[viewModel.productId] {
+            viewModel.displayName = product.name
+            viewModel.iconUrl = product.icon
+        }
+    }
+}
+
+```
+
+- **总结**
+	- 使用 flatMap 将嵌套数组拉平
+	- 用 first(where:) 或 Dictionary 匹配更高效
+	- 赋值时直接对 ViewModel 成员进行设置
+
+<br/>
+
+```swift
+let productMap = dataModels
+    .flatMap { $0.items }
+    .reduce(into: [String: DeviceProductInfo]()) { result, product in
+        result[product.productNo] = product
+    }
+```
+
+**作用：**
+&emsp; 从 dataModels 中提取出所有的 DeviceProductInfo，然后把它们按照 productNo 建立成一个字典，方便后续通过 productNo 快速查找。
+
+
+当然可以，这行代码比较浓缩，我们来 **分段解释** 并给出 **简单例子** 来帮助你理解。
+
+<br/><br/>
+
+**1.`dataModels.flatMap { $0.items }`**
+
+```swift
+let dataModels = [
+    DeviceProductSection(section: ..., items: [p1, p2]),
+    DeviceProductSection(section: ..., items: [p3])
+]
+```
+
+执行 `flatMap { $0.items }` 后：
+
+```swift
+let allProducts = [p1, p2, p3]  // 展平成一个数组
+```
+
+<br/>
+
+**2.`.reduce(into: [:]) { result, product in ... }`**
+
+这一步是将 `[DeviceProductInfo]` 转成字典：
+
+```swift
+var result: [String: DeviceProductInfo] = [:]
+for product in allProducts {
+    result[product.productNo] = product
+}
+```
+
+<br/>
+
+最终结果是：
+
+```swift
+[
+  "abc123": DeviceProductInfo(productNo: "abc123", ...),
+  "def456": DeviceProductInfo(productNo: "def456", ...)
+]
+```
+
+<br/>
+
+假设我们有这个结构：
+
+```swift
+struct DeviceProductInfo {
+    let productNo: String
+    let name: String
+}
+
+struct DeviceProductSection {
+    let section: String
+    let items: [DeviceProductInfo]
+}
+```
+
+<br/>
+
+然后这样用：
+
+```swift
+let dataModels = [
+    DeviceProductSection(section: "A", items: [
+        DeviceProductInfo(productNo: "p1", name: "灯泡"),
+        DeviceProductInfo(productNo: "p2", name: "空调")
+    ]),
+    DeviceProductSection(section: "B", items: [
+        DeviceProductInfo(productNo: "p3", name: "风扇")
+    ])
+]
+```
+
+
+<br/>
+
+使用那一行代码：
+
+```swift
+let productMap = dataModels
+    .flatMap { $0.items }
+    .reduce(into: [String: DeviceProductInfo]()) { result, product in
+        result[product.productNo] = product
+    }
+```
+
+
+<br/>
+
+最终 `productMap` 是这个字典：
+
+```swift
+[
+    "p1": DeviceProductInfo(productNo: "p1", name: "灯泡"),
+    "p2": DeviceProductInfo(productNo: "p2", name: "空调"),
+    "p3": DeviceProductInfo(productNo: "p3", name: "风扇")
+]
+```
+
+<br/>
+
+这样你就可以通过：
+
+```swift
+let fan = productMap["p3"]
+```
+
+快速拿到风扇信息了。
+
+<br/>
+
+**最后经过修改最终的代码：**
+
+```swift
+// 假设你已有的模型
+public struct DeviceProductInfo {
+    public var productNo: Int?
+    public var name: String
+}
+
+public struct DeviceProductSection {
+    var section: String
+    var items: [DeviceProductInfo]
+}
+
+// 示例数据
+let dataModels: [DeviceProductSection] = [
+    .init(section: "A", items: [
+        .init(productNo: 101, name: "A1"),
+        .init(productNo: nil, name: "A2")
+    ]),
+    .init(section: "B", items: [
+        .init(productNo: 202, name: "B1")
+    ])
+]
+
+// 构建映射关系：productNo => DeviceProductInfo
+let productMap = dataModels
+    .flatMap { $0.items } // ✅ 这一行必须返回数组
+    .compactMap { product -> (Int, DeviceProductInfo)? in
+        guard let no = product.productNo else { return nil }
+        return (no, product)
+    }
+    .reduce(into: [Int: DeviceProductInfo]()) { result, pair in
+        let (no, product) = pair
+        result[no] = product
+    }
+
+print(productMap)
+```
+
 
 
 <br/><br/><br/>

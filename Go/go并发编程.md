@@ -148,6 +148,11 @@ go func(parameter) {
 
 <br/><br/><br/>
 > <h2 id="channel（通道）">channel（通道）</h2>
+
+**直白点：** `通道（channnel）`就是为了解决在携程中数据的安全性，之前使用锁是可以解决的，但是不够优雅不够好，使用起来比较麻烦。
+
+<br/>
+
 通道是Go语言在两个或多个goroutine之间的一种通信方式。通道可以让一个goroutine给另一个goroutine发送消息。当需要在goroutine之间共享一个数据资源时，通道是确保同步交换数据资源的方法。goroutine与通道的关系如图11.2所示。
 
 ![go.0.0.16.png](./../Pictures/go.0.0.16.png)
