@@ -19,13 +19,21 @@
 	- [withCheckedContinuation桥接旧的回调式API到async/await模式](#withCheckedContinuation桥接旧的回调式API到async/await模式)
 	- [拼接公共域名+接口路径](#拼接公共域名+接口路径)
 	- [自定义简易观察者](#自定义简易观察者)
+	- [字符串转枚举](#字符串转枚举)
+- [**UI组件**](#UI组件)
+	- [label宽度自适应](#label宽度自适应)
+	- [弹窗播放视频](#弹窗播放视频)
+	- [一段代码搞定播放音频，优化内存释放](#一段代码搞定播放音频，优化内存释放)
 - [**系统蓝牙库CoreBluetooth**](#系统蓝牙库CoreBluetooth)
+	- [精确获取当前蓝牙开启状态](#精确获取当前蓝牙开启状态)
+	- [轮询连接蓝牙设备](#轮询连接蓝牙设备)
 - [**依赖注入库Swinject**](#依赖注入库Swinject)
 - [**实时音视频通信WebRTC**](#实时音视频通信WebRTC)
 - [**日志库SwiftyBeaver**](#日志库SwiftyBeaver)
 	- [完整的日志封装类](#完整的日志封装类)
 - [**‌alamofire库**](#**‌alamofire库**)
 	- [拦截器](#拦截器)
+	- [json数据本地库解析](#json数据本地库解析) 
 - [**本地数据库RealmSwift**](#本地数据库RealmSwift)
 	- [RealmSwift简单实用Demo](#RealmSwift简单实用Demo)
 - [**Git操作**](#Git操作)
@@ -981,6 +989,28 @@ URL(string: "abc", relativeTo: base)!.absoluteString
 ```
 
 
+***
+<br/><br/><br/>
+># <h2 id="字符串转枚举">[字符串转枚举](./../Swift/swift基础.md##字符串转枚举)</h2>
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="UI组件">UI组件</h1>
+
+
+***
+<br/>
+># <h2 id="label宽度自适应">[label宽度自适应](./../Swift/UI组件.md#宽度自适应)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="弹窗播放视频">[弹窗播放视频](./../Swift/UI组件.md#弹窗播放视频)</h2>
+
 
 ***
 <br/><br/><br/>
@@ -1210,6 +1240,76 @@ class LoginViewController: UIViewController {
 **注意:** 不建议上述这么做,因为当业务复杂的时候将观察者放入数组中后,后面排查问题很难排查了.因为你不知道哪些注册观察者,哪些没有注册观察者.
 
 
+***
+<br/><br/><br/>
+> <h2 id="一段代码搞定播放音频，优化内存释放">一段代码搞定播放音频，优化内存释放</h2>
+
+```swift
+
+import Foundation
+import AVFoundation
+private let TAG = "VoicePlayer"
+
+public class VoicePlayer: NSObject {
+    
+    private static let shared = VoicePlayer()
+    private(set) static var player: AVAudioPlayer?
+        
+    public static func playScanVoice() {
+        
+        guard let url = ResourceBundles.scanVoiceFilePath() else {
+            return
+        }
+        
+        self.preparePlayVoice(url: url)
+    }
+    
+    public static func playSuggestHandVoice() {
+    
+        guard let url = ResourceBundles.suggestHandVoiceFilePath() else {
+            return
+        }
+        
+        self.preparePlayVoice(url: url)
+    }
+}
+
+extension BleVoicePlayer: AVAudioPlayerDelegate {
+    
+    private static func preparePlayVoice(url: URL) {
+        
+        do {
+            self.player = try AVAudioPlayer(contentsOf: url)
+            self.player?.delegate = self.shared
+            self.player?.prepareToPlay()
+            self.player?.play()
+        } catch {
+            AKLog.e(module: TAG, message: "playScanVoice error: \(error)")
+        }
+    }
+    
+    // 播放完成释放
+    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {// 优化的地方
+        BleVoicePlayer.player = nil
+    }
+}
+```
+
+<br/>
+
+**调用**
+
+```swift
+
+VoicePlayer.playScanVoice()
+            
+DispatchQueue.main.asyncAfter(deadline: .now() + 20) {
+    VoicePlayer.playSuggestHandVoice()
+}
+```
+
+
+
 
 <br/><br/><br/>
 
@@ -1217,6 +1317,114 @@ class LoginViewController: UIViewController {
 <br/>
 
 ># <h1 id="系统蓝牙库CoreBluetooth">[系统蓝牙库CoreBluetooth](./../Swift/蓝牙库CoreBluetooth.md)</h1>
+
+***
+<br/><br/><br/>
+># <h2 id="精确获取当前蓝牙开启状态">[精确获取当前蓝牙开启状态](./../蓝牙库CoreBluetooth.md#轮询获取蓝牙开启状态)</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="轮询连接蓝牙设备">[轮询连接蓝牙设备](./../蓝牙库CoreBluetooth.md#优化轮询连接蓝牙外设)</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="">一段代码检测蓝牙状态，优化内存泄露</h2>
+
+
+```swift
+import AppUIKit
+import AAUtil
+import ActivatorKit
+
+public class PopupViewUntil {
+    
+    private static var bleActivator: BleActivator?
+    
+    deinit{ }
+    
+    public static func showOpenBlePopupView(onOffBlock:@escaping (_ isOn: Bool)->Void) {
+        
+        self.checkBleSwitchStatus(completeBlock: { isOnStatus in
+            
+            if isOnStatus {
+                onOffBlock(isOnStatus)
+                return
+            }
+            
+            let pop = BottomTipPopView(title:"提示", contentTip: "请先打开手机蓝牙，以便查找附近蓝牙设备",
+                                            cancelText:"取消", okText:"前往开启", btnLayout: .horizontal)
+            pop.isDismissBack = false
+            pop.okClickBlock = { () in
+                pop.hidden()
+                
+                self.openBleSettingsSmartly()
+            }
+            pop.show()
+        })
+    }
+}
+
+extension PopupViewUntil {
+    
+    private static func checkBleSwitchStatus(completeBlock:@escaping (_ isOn: Bool) -> Void) {
+        
+        self.bleActivator = BleActivator(processStatus:.none)
+        Permission.bluetooth.request {
+            let authorized = Permission.bluetooth.authorized
+            if !authorized {
+                self.openSystemSettingSmartly()
+                completeBlock(false)
+                return
+            }
+                    
+            //self.bleActivator = BleActivator(processStatus:.none)
+            self.bleActivator?.checkBluetoothSwitchStatus(completionBlock:{ isOn in
+                completeBlock(isOn)
+                if isOn {
+                    // 释放 activator（避免内存泄漏）
+                    self.bleActivator?.bleActivatorFree()
+                    self.bleActivator = nil
+                    return
+                }
+            }) 
+        }
+    }
+    
+    public static func openBleSettingsSmartly() {
+        
+        if #available(iOS 11.0, *) {
+            self.openSystemSettingSmartly()
+        } else {
+            if let bluetoothURL = URL(string: "App-Prefs:root=Bluetooth"),
+               UIApplication.shared.canOpenURL(bluetoothURL) {
+                UIApplication.shared.open(bluetoothURL)
+            }
+        }
+    }
+    
+    private static func openSystemSettingSmartly() {
+        if let url = URL(string: UIApplication.openSettingsURLString),
+           UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
+    }
+}
+```
+
+<br/>
+
+**调用：**
+
+```swift
+PopupViewUntil.showOpenBlePopupView { [weak self] isAuth in
+    if isAuth {
+        self?.scanAction()
+    }
+}
+
+```
 
 
 <br/><br/><br/>
@@ -2253,6 +2461,17 @@ session.request("https://api.example.com/user/profile")
 ---
 
 是否需要我将这个写成支持 **Swift Concurrency (`async/await`) 全流程** 的版本？适用于 iOS 15+ 项目结构更现代。
+
+
+
+
+***
+<br/><br/><br/>
+># <h2 id="json数据本地库解析">[json数据本地库解析](./../数据.md#Codable与数据模型的转换)</h2>
+
+当进行网络请求时，除了使用成熟的解析库，比如： **SwiftJson**，我们还可以使用**Swift**自带的解析库`Cotobal`
+
+
 
 
 <br/><br/><br/>

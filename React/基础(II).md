@@ -13,6 +13,7 @@
 	- [引用子组件的属性ref](#引用子组件的属性ref)
 	- [组件触发函数传递单个or多个参数](#组件触发函数传递单个or多个参数)
 - [**网络请求**](#网络请求)
+	- [接口字符串掺入占位符](#接口字符串掺入占位符)
 	- [网络请求fetch](#网络请求fetch)
 	- [网络请求fetch的本质](#网络请求fetch的本质)
 	- [fetch请求数据的解析](#fetch请求数据的解析)
@@ -941,6 +942,65 @@ handleChange = (field, value) => {
 <br/>
 
 > <h1 id="网络请求">网络请求</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="接口字符串掺入占位符">接口字符串掺入占位符</h2>
+
+在接口路径里给 `taskId` 做 **占位符**，然后在方法里传参时替换。有如下几种做法：
+
+<br/>
+
+✅ 模板字符串（最直观）
+
+```js
+function getTaskDetail(taskId) {
+  return request.get(`/v1.0/imilab-02/cam/production-manage/task/${taskId}/detail`);
+}
+```
+
+调用：
+
+```js
+getTaskDetail("12345");
+```
+
+实际请求路径：
+
+```
+/v1.0/imilab-02/cam/production-manage/task/12345/detail
+```
+
+<br/>
+
+**✅ 占位符 + replace**
+
+如果你喜欢先写个固定模板：
+
+```js
+const urlTemplate = "/v1.0/imilab-02/cam/production-manage/task/{taskId}/detail";
+
+function getTaskDetail(taskId) {
+  const url = urlTemplate.replace("{taskId}", taskId);
+  return request.get(url);
+}
+```
+
+<br/>
+
+ **✅ 结合 axios 封装**
+
+如果你项目里统一用 axios 或 request 封装，可以这样：
+
+```js
+export function getTaskDetail(taskId) {
+  return request({
+    url: `/v1.0/imilab-02/cam/production-manage/task/${taskId}/detail`,
+    method: 'get'
+  });
+}
+```
+
 
 
 ***

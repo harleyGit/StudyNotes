@@ -26,6 +26,7 @@
 	- [位移掩码枚举代码落实](#位移掩码枚举代码落实) 
 	- [不同位移掩码枚举类型转换](#不同位移掩码枚举类型转换)
 	- [主枚举包含多个子枚举](#主枚举包含多个子枚举)
+	- [字符串转枚举](#字符串转枚举)
 - [**结构体**](#结构体)
 - [**集合**](#集合)
 	- [Set集合与NSArray、Dictionary区别](#Set集合与NSArray、Dictionary区别)
@@ -2044,6 +2045,67 @@ for (category, items) in allGrouped {
 | 子枚举嵌套     | 使用主枚举 + 关联值                        |
 | 获取所有项     | 使用 `CaseIterable` + `.allCases` 分组 |
 | 复杂结构      | 用 struct/class + enum 做组合          |
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="字符串转枚举">字符串转枚举</h2>
+
+在 `compactMap` 里直接把 `mode` 转成 `LinkWayType`，
+最后返回去重后的 `[LinkWayType]`。
+
+可以这样写：
+
+```swift
+private func getPairModes(models: [DevicePairingNetGuideModel]?) -> [LinkWayType] {
+    guard let models = models else { return [] }
+    let uniqueModes: Set<LinkWayType> = Set(
+        models.compactMap { model in
+            guard let modeStr = model.mode else { return nil }
+            return LinkWayType(linkWay: modeStr)
+        }
+    )
+    return Array(uniqueModes)
+}
+```
+
+<br/>
+
+**你的枚举 `LinkWayType` 要改成支持所有情况**
+
+目前你的 `init(linkWay:)` 里只写了部分 case，而且还没有 `sn` 和 `ble` 的 case 定义。
+我帮你补完整：
+
+```swift
+internal enum LinkWayType: String {
+    case none = "None"
+    case ap = "AP"
+    case wired = "WN"
+    case sn = "SN"
+    case ble = "BLUETOOTH"
+
+    init(linkWay: String) {
+        switch linkWay.uppercased() {
+        case "SN":
+            self = .sn
+        case "BLUETOOTH":
+            self = .ble
+        case "AP":
+            self = .ap
+        case "WN":
+            self = .wired
+        default:
+            self = .none
+        }
+    }
+}
+```
+
+这样你的 `getPairModes` 方法就能直接返回一个去重后的 `[LinkWayType]`，
+而且 nil 和非法字符串都会自动变成 `.none`。
+
+
 
 
 <br/><br/><br/>

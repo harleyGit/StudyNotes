@@ -10,6 +10,7 @@
 - [**连接成功的蓝牙外围设备-Peripheral**](#连接成功的蓝牙外围设备-Peripheral)
 	- [代理方法CBPeripheralDelegate](#代理方法CBPeripheralDelegate)
 	- [启动连接蓝牙外设](#启动连接蓝牙外设)
+	- [轮询获取蓝牙开启状态](#轮询获取蓝牙开启状态)
 - [**连接蓝牙外设**](#连接蓝牙外设)
 	- [连接温度计设备](#连接温度计设备)
 	- [向蓝牙外设发送数据](#向蓝牙外设发送数据)
@@ -991,10 +992,383 @@ if let uuidString = UserDefaults.standard.string(forKey: "LastConnectedPeriphera
 | 连接设备      | `connectPeripheral:options:`                           |
 
 
+***
+<br/><br/><br/>
+> <h2 id="轮询获取蓝牙开启状态">轮询获取蓝牙开启状态</h2>
+
+轮询查看蓝牙是否开启，因为蓝牙的状态是异步的，获取的时候并不能准确获取。为了获取到准确的状态，只能通过比较准确的轮询进行获取其状态。
+
+```swift
+func pollBluetoothStateOnce(timeout: TimeInterval = 1.0, check: @escaping (Bool) -> Void) {
+    let interval: TimeInterval = 0.2 // 1 秒查询 5 次
+    var elapsedTime: TimeInterval = 0
+    let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
+    
+    timer.schedule(deadline: .now(), repeating: interval)
+    timer.setEventHandler {
+        let state = CBCentralManager().state // 改成你自己的获取蓝牙状态的方法
+        
+        if state == .poweredOn {
+            timer.cancel()
+            DispatchQueue.main.async { check(true) }
+        } else if state == .poweredOff {
+            timer.cancel()
+            DispatchQueue.main.async { check(false) }
+        } else {
+            elapsedTime += interval
+            if elapsedTime >= timeout {
+                timer.cancel()
+                DispatchQueue.main.async { check(false) }
+            }
+        }
+    }
+    
+    timer.resume()
+}
+```
+
+用法：
+
+```swift
+pollBluetoothStateOnce { isOn in
+    print("蓝牙状态：\(isOn ? "开" : "关")")
+}
+```
+
+特点：
+
+* 每秒检查 5 次（间隔 0.2 秒）
+* 总时长 1 秒（可调）
+* 一旦检测到蓝牙**开**或**关**就会立刻结束
+* 超时后返回 **false**
+
+
+***
+<br/><br/><br/>
+> <h2 id="优化轮询连接蓝牙外设">优化轮询连接蓝牙外设</h2>
+
+
+在开发时遇到这样的场景：**先扫描→按 MAC 存字典→立刻尝试连接**。若此时还没扫到该外设，就要**用 GCD 轮询**去找并连接；一旦**连接成功就停止轮询**；若**超时**则**停止扫描和连接**并回调结果。
+
+下面给你一套可直接用的 **Objective-C** 实现（纯 `dispatch_queue_t/dispatch_source_t`，不使用 `NSTimer`）。
+
+
+<br/>
+
+**头文件（示例）**
+
+```objc
+// AKBLEConnector.h
+#import <Foundation/Foundation.h>
+#import <CoreBluetooth/CoreBluetooth.h>
+
+typedef void(^AKBLEConnectCompletion)(BOOL success, CBPeripheral * _Nullable peripheral, NSError * _Nullable error);
+
+@interface AKBLEConnector : NSObject <CBCentralManagerDelegate>
+
+@property (nonatomic, strong, readonly) CBCentralManager *central;
+/// 扫描阶段把发现的设备按“规范化后的 MAC”放这里（例如去掉冒号并大写）
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, CBPeripheral *> *peripheralsByMAC;
+
+- (instancetype)initWithQueue:(dispatch_queue_t _Nullable)queue;
+
+/// 轮询按 MAC 连接
+/// @param mac 目标设备 MAC（支持带冒号或不带）
+/// @param timeout 超时时长（秒）
+/// @param retriesPerSecond 每秒轮询次数（传 5 即每 0.2s 一次）
+/// @param completion 结果回调（主线程）
+- (void)connectByMAC:(NSString *)mac
+             timeout:(NSTimeInterval)timeout
+    retriesPerSecond:(NSInteger)retriesPerSecond
+          completion:(AKBLEConnectCompletion)completion;
+
+/// 外部扫描时在 didDiscover 里调用，把发现的外设放到字典
+- (void)cacheDiscoveredPeripheral:(CBPeripheral *)peripheral mac:(NSString *)mac;
+
+@end
+```
+
+<br/>
+
+ **实现文件**
+
+```objc
+// AKBLEConnector.m
+#import "AKBLEConnector.h"
+
+@interface AKBLEConnector ()
+@property (nonatomic, strong) CBCentralManager *central;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, CBPeripheral *> *peripheralsByMAC;
+
+@property (nonatomic, strong) dispatch_source_t connectTimer;
+@property (nonatomic, copy)   AKBLEConnectCompletion connectCompletion;
+
+@property (nonatomic, strong) CBPeripheral *connectingPeripheral;
+@property (atomic, assign)    BOOL isConnecting;
+@property (atomic, assign)    BOOL didFinish; // 防重复回调
+@end
+
+@implementation AKBLEConnector
+
+#pragma mark - Init
+
+- (instancetype)initWithQueue:(dispatch_queue_t)queue {
+    self = [super init];
+    if (self) {
+        _peripheralsByMAC = [NSMutableDictionary dictionary];
+        _central = [[CBCentralManager alloc] initWithDelegate:self queue:queue];
+    }
+    return self;
+}
+
+#pragma mark - Public
+
+- (void)cacheDiscoveredPeripheral:(CBPeripheral *)peripheral mac:(NSString *)mac {
+    if (!peripheral || mac.length == 0) return;
+    NSString *key = [self.class normalizedMAC:mac];
+    @synchronized (self.peripheralsByMAC) {
+        self.peripheralsByMAC[key] = peripheral;
+    }
+}
+
+- (void)connectByMAC:(NSString *)mac
+             timeout:(NSTimeInterval)timeout
+    retriesPerSecond:(NSInteger)retriesPerSecond
+          completion:(AKBLEConnectCompletion)completion
+{
+    if (mac.length == 0) {
+        if (completion) {
+            NSError *err = [NSError errorWithDomain:@"AKBLE"
+                                               code:-1000
+                                           userInfo:@{NSLocalizedDescriptionKey:@"MAC 为空"}];
+            dispatch_async(dispatch_get_main_queue(), ^{ completion(NO, nil, err); });
+        }
+        return;
+    }
+
+    // 准备
+    self.didFinish = NO;
+    self.isConnecting = NO;
+    self.connectingPeripheral = nil;
+    self.connectCompletion = completion;
+
+    // 若蓝牙没开，直接失败
+    if (self.central.state != CBManagerStatePoweredOn) {
+        [self finishWithSuccess:NO peripheral:nil
+                          error:[NSError errorWithDomain:@"AKBLE"
+                                                   code:-1001
+                                               userInfo:@{NSLocalizedDescriptionKey:@"蓝牙未开启"}]];
+        return;
+    }
+
+    // 开始扫描（允许重复回调，尽快拿到外设）
+    NSDictionary *scanOpts = @{ CBCentralManagerScanOptionAllowDuplicatesKey : @YES };
+    [self.central scanForPeripheralsWithServices:nil options:scanOpts];
+
+    // 轮询定时器（GCD）
+    NSTimeInterval interval = (retriesPerSecond > 0) ? (1.0 / retriesPerSecond) : 0.2; // 默认 5 次/秒
+    __block NSTimeInterval elapsed = 0;
+
+    dispatch_queue_t timerQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    self.connectTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, timerQueue);
+    dispatch_source_set_timer(self.connectTimer,
+                              dispatch_time(DISPATCH_TIME_NOW, 0),
+                              (uint64_t)(interval * NSEC_PER_SEC),
+                              0);
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_source_set_event_handler(self.connectTimer, ^{
+        __strong typeof(self) self_ = weakSelf;
+        if (!self_ || self_.didFinish) return;
+
+        // 已连接？（更快：依赖 delegate；这里做兜底）
+        if (self_.connectingPeripheral.state == CBPeripheralStateConnected) {
+            [self_ finishWithSuccess:YES peripheral:self_.connectingPeripheral error:nil];
+            return;
+        }
+
+        // 查找目标外设
+        NSString *key = [self.class normalizedMAC:mac];
+        __block CBPeripheral *target = nil;
+        @synchronized (self_.peripheralsByMAC) {
+            target = self_.peripheralsByMAC[key];
+        }
+
+        // 拿到外设后，若尚未发起连接 → 发起连接
+        if (target) {
+            if (self_.connectingPeripheral != target) {
+                self_.connectingPeripheral = target;
+                self_.connectingPeripheral.delegate = nil; // 如需用到，外部自行设置
+                self_.isConnecting = YES;
+
+                NSDictionary *opts = @{
+                    CBConnectPeripheralOptionNotifyOnConnectionKey: @YES,
+                    CBConnectPeripheralOptionNotifyOnDisconnectionKey: @YES
+                };
+                [self_.central connectPeripheral:target options:opts];
+            } else {
+                // 已经在连，如果处于断开状态可重试发起
+                if (!self_.isConnecting &&
+                    (target.state == CBPeripheralStateDisconnected))
+                {
+                    self_.isConnecting = YES;
+                    [self_.central connectPeripheral:target options:nil];
+                }
+            }
+        }
+
+        // 超时
+        elapsed += interval;
+        if (elapsed >= timeout) {
+            // 停止扫描与连接
+            if (self_.connectingPeripheral) {
+                [self_.central cancelPeripheralConnection:self_.connectingPeripheral];
+            }
+            [self_ finishWithSuccess:NO peripheral:self_.connectingPeripheral
+                               error:[NSError errorWithDomain:@"AKBLE"
+                                                        code:-1002
+                                                    userInfo:@{NSLocalizedDescriptionKey:@"连接超时"}]];
+        }
+    });
+
+    dispatch_resume(self.connectTimer);
+}
+
+#pragma mark - Helpers
+
++ (NSString *)normalizedMAC:(NSString *)mac {
+    // 统一成大写且去掉非十六进制字符（: - 空格等）
+    NSCharacterSet *set = [[NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEFabcdef"] invertedSet];
+    NSString *raw = [[mac componentsSeparatedByCharactersInSet:set] componentsJoinedByString:@""];
+    return raw.uppercaseString;
+}
+
+- (void)finishWithSuccess:(BOOL)success
+               peripheral:(CBPeripheral * _Nullable)peripheral
+                    error:(NSError * _Nullable)error
+{
+    if (self.didFinish) return;
+    self.didFinish = YES;
+
+    // 停止轮询 & 扫描
+    if (self.connectTimer) {
+        dispatch_source_cancel(self.connectTimer);
+        self.connectTimer = nil;
+    }
+    [self.central stopScan];
+
+    // 回到主线程回调一次
+    if (self.connectCompletion) {
+        AKBLEConnectCompletion block = self.connectCompletion;
+        self.connectCompletion = nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            block(success, peripheral, error);
+        });
+    }
+
+    // 清理状态
+    self.isConnecting = NO;
+}
+
+#pragma mark - CBCentralManagerDelegate
+
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central {
+    // 可按需处理蓝牙状态变化
+}
+
+- (void)centralManager:(CBCentralManager *)central
+  didDiscoverPeripheral:(CBPeripheral *)peripheral
+      advertisementData:(NSDictionary<NSString *,id> *)advertisementData
+                   RSSI:(NSNumber *)RSSI
+{
+    // 如果你能从广播中解析出 MAC，就放进字典（这里留接口给外部）
+    // NSString *mac = [self parseMACFromAdvertisement:advertisementData];
+    // if (mac) { [self cacheDiscoveredPeripheral:peripheral mac:mac]; }
+}
+
+- (void)centralManager:(CBCentralManager *)central
+ didConnectPeripheral:(CBPeripheral *)peripheral
+{
+    // 连接成功 → 立即结束轮询并回调
+    if (self.didFinish) return;
+    if (peripheral == self.connectingPeripheral) {
+        [self finishWithSuccess:YES peripheral:peripheral error:nil];
+    }
+}
+
+- (void)centralManager:(CBCentralManager *)central
+didFailToConnectPeripheral:(CBPeripheral *)peripheral
+                 error:(NSError *)error
+{
+    // 连接失败：不立刻回调失败，继续在超时时间内轮询重试
+    if (peripheral == self.connectingPeripheral) {
+        self.isConnecting = NO; // 允许下一轮轮询再次发起连接
+    }
+}
+
+- (void)centralManager:(CBCentralManager *)central
+didDisconnectPeripheral:(CBPeripheral *)peripheral
+                 error:(NSError *)error
+{
+    // 若在连接窗口内发生断开，也允许轮询逻辑重新尝试（不直接回调失败）
+    if (!self.didFinish && peripheral == self.connectingPeripheral) {
+        self.isConnecting = NO;
+    }
+}
+
+@end
+```
+
+<br/>
+
+**使用示例**
+
+```objc
+AKBLEConnector *connector = [[AKBLEConnector alloc] initWithQueue:nil];
+
+// 1) 开始扫描（示例）
+[connector.central scanForPeripheralsWithServices:nil
+                                          options:@{ CBCentralManagerScanOptionAllowDuplicatesKey:@YES }];
+
+// 2) 在 didDiscover 里解析出 MAC 后缓存
+// [connector cacheDiscoveredPeripheral:peripheral mac:macFromADV];
+
+// 3) 立刻按 MAC 发起“轮询连接”
+[connector connectByMAC:@"AA:BB:CC:11:22:33"
+                timeout:10
+       retriesPerSecond:5
+             completion:^(BOOL success, CBPeripheral * _Nullable p, NSError * _Nullable err) {
+    if (success) {
+        NSLog(@"✅ 已连接：%@", p.name);
+    } else {
+        NSLog(@"❌ 失败：%@", err.localizedDescription);
+    }
+}];
+```
+
+<br/>
+
+**说明与要点**
+
+* **轮询频率**：`retriesPerSecond=5` → 每 0.2s 一次；你可传 2、10 等自定义频率。
+* **连接策略**：
+
+  * 未发现目标外设 → 持续扫描 + 轮询字典；
+  * 一旦发现外设 → 发起一次连接；若失败，在超时窗口内允许再次发起；
+  * 一旦 `didConnect` 到达 → 立刻**停止扫描与轮询**并回调成功；
+  * 超时 → **停止扫描与连接**并回调失败。
+* **线程安全**：`peripheralsByMAC` 用 `@synchronized` 简单保护；如果你有更高并发需求可换成自定义并发队列或 `NSLock`。
+* **MAC 规范化**：调用 `normalizedMAC:`，确保字典与查询键一致（去符号、转大写）。
+* 你现有解析广播报中 MAC 的逻辑保持不变，只需在 `didDiscover` 里调用 `cacheDiscoveredPeripheral:mac:` 即可。
+
+
+当然上述方法只是具体轮询连接蓝牙外设，实际项目需要结合自己的项目和架构。
+
+
+
 <br/><br/><br/>
 
 ***
-
 <br/>
 
 > <h1 id="连接蓝牙外设">连接蓝🦷外设</h1>
