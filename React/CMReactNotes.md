@@ -30,6 +30,8 @@
 	- [Select组件初步使用](#Select组件初步使用)
 - [**网络**](#网络)
 	- [接口里掺入参数](#接口里掺入参数)
+- [**路由**](#路由)
+	- [路径参数跳转](#路径参数跳转)
 - [**CSS样式**](#CSS样式)
 	- [模块化样式](#模块化样式)
 	- [antd中Radio.Group组件无法修改样式](#antd中Radio.Group组件无法修改样式)
@@ -2154,6 +2156,74 @@ handlePaginationChange = (page, pageSize) => {
 ># <h2 id="接口里掺入参数">[接口里掺入参数](./基础(I).md#接口字符串掺入占位符)</h2>
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="路由">路由</h1>
+
+***
+<br/>
+> <h2 id="路径参数跳转">路径参数跳转</h2>
+
+**1.安装 history 包**
+
+```sh
+npm install history
+```
+
+<br/>
+
+**2.创建一个 history.js**
+
+```SH
+// history.js
+import { createBrowserHistory } from "history";
+
+const history = createBrowserHistory();
+
+export default history;
+```
+
+<br/>
+
+**在一个按钮组件中，点击后触发路由跳转，如下：**
+
+```js
+onClick={() => {
+  history.push(
+    '/productionManage/product_task/NewProductOrderView?taskId=' + record.taskId,
+  ); //T001
+}}
+
+```
+
+<br/>
+
+**类组件中获取路由参数：**
+
+```js
+constructor(props) {
+    super(props);
+		const searchParams = new URLSearchParams(window.location.search);
+		    const params = Object.fromEntries(searchParams.entries());
+		    this.taskId = searchParams.get('taskId');
+}
+```
+
+<br/>
+
+**函数组件中获取路由参数：**
+
+```js
+onst argusResourceList = () => {
+  const queryParams = new URLSearchParams(location.search);
+  const resourceGroupKey = queryParams.get('resourceGroupKey');
+}
+```
+
+
 
 <br/><br/><br/>
 
@@ -2242,3 +2312,8 @@ render() {
 
 
 
+
+---
+注释: 0,40963 SHA-256 ccf0d661333f89adb010473d8ea95ae0  
+@HuangGang <harley.smessage@icloud.com>: 1000,37 39113,96 39223,2 39226,7 39252,4 39257,7 39265,2 39284,2 39287,7 39421,47 39598,15 39624,9 39673,2 39741,2 39806,2 39856,14 39882,9 40050,4 40055  
+...
