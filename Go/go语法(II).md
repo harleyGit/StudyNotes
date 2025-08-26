@@ -87,6 +87,173 @@ logger01.Println("写入日志文件---------实打实的发送哈")
 不过这个文件有点问题，它会覆盖上一个打印的日志。
 
 
+***
+<br/><br/><br/>
+> <h2 id="错误格式选择">错误格式选择</h2>
+
+* `errors.New("...")`：生成一个**固定文本**的错误（常用于“哨兵错误 / sentinel error”）。
+* `fmt.Errorf("...")`：像 `Sprintf` 一样**格式化**错误信息；若用 **`%w`** 包含另一个错误，就变成**包装（wrapping）**，便于后续用 `errors.Is/As` 判断原因。
+
+<br/>
+
+| 场景                  | 用法                                                            | 说明                                                 |
+| ------------------- | ------------------------------------------------------------- | -------------------------------------------------- |
+| 固定语义的可判定错误（包级常量/变量） | `var ErrNodeIDRange = errors.New("node-id must be [0,1024)")` | 作为“哨兵错误”在包外可被判定（`errors.Is(err, ErrNodeIDRange)`）。 |
+| 给错误增加上下文（不关心底层类型）   | `fmt.Errorf("failed to lock %q", path)`                       | 只生成一条描述信息，不保留“因果链”。                                |
+| 给错误增加上下文且**保留因果链**  | `fmt.Errorf("failed to lock %q: %w", path, err)`              | 用 **`%w`** 包装底层错误，之后可用 `errors.Is/As/Unwrap` 追溯。   |
+| 动态信息但仍想可判定          | `fmt.Errorf("%w: got %d", ErrNodeIDRange, id)`                | 在哨兵错误外再附加细节。                                       |
+
+> `fmt.Errorf("failed to lock data-path: %v", err)` **只拼文案**，不会建立可判定的“因果链”。若要后续判断底层错误，请改为 **`%w`**：
+> `fmt.Errorf("failed to lock data-path: %w", err)`。
+
+<br/>
+
+**示例**
+
+**1)校验 ID：哨兵错误 + 可判定**
+
+```go
+package node
+
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrNodeIDRange = errors.New("node-id must be [0,1024)")
+
+func ValidateNodeID(id int) error {
+	if id < 0 || id >= 1024 {
+		// 保留可判定的语义（ErrNodeIDRange），同时携带细节
+		return fmt.Errorf("%w: got %d", ErrNodeIDRange, id)
+	}
+	return nil
+}
+```
+
+<br/>
+
+调用方：
+
+```go
+if err := node.ValidateNodeID(2048); err != nil {
+	if errors.Is(err, node.ErrNodeIDRange) {
+		// 明确知道是“范围错误”
+		// 可以返回 400、提示用户、或走特定分支
+	}
+	// 记录日志时打印完整文本
+	// log.Printf("validate failed: %v", err) // node-id must be [0,1024): got 2048
+}
+```
+
+<br/> 
+
+**2) 加锁失败：保留根因（用 `%w` 包装）**
+
+```go
+package locker
+
+import (
+	"fmt"
+	"os"
+)
+
+func Lock(path string) error {
+	// 假设底层返回的是某个具体错误（例如 os.ErrExist）
+	if err := doLock(path); err != nil {
+		return fmt.Errorf("lock %q: %w", path, err) // 用 %w 才能被 Is/As 判断
+	}
+	return nil
+}
+
+func doLock(path string) error {
+	// 仅示意：返回一个具体根因
+	return os.ErrExist
+}
+```
+
+<br/>
+
+调用方可精确分支：
+
+```go
+err := locker.Lock("/data/nsqd")
+if err != nil {
+	switch {
+	case errors.Is(err, os.ErrExist):
+		// 目录/锁已存在（比如已有进程占用）
+	case errors.Is(err, os.ErrPermission):
+		// 权限问题
+	default:
+		// 其他未知问题
+	}
+}
+```
+
+> 如果这里用了 `%v`：`fmt.Errorf("lock %q: %v", path, err)`，**`errors.Is(err, os.ErrExist)` 将会失败**，因为没有建立“包装链”。
+
+<br/> 
+
+**3) `errors.As`：提取具体错误类型**
+
+有时你关心**类型**而不是等值：
+
+```go
+type ErrRemote struct {
+	Code int
+	Msg  string
+}
+func (e *ErrRemote) Error() string { return fmt.Sprintf("remote: %d %s", e.Code, e.Msg) }
+
+func call() error {
+	return fmt.Errorf("rpc failed: %w", &ErrRemote{Code: 502, Msg: "bad gateway"})
+}
+
+if err := call(); err != nil {
+	var r *ErrRemote
+	if errors.As(err, &r) {
+		// 拿到结构化信息 r.Code / r.Msg
+	}
+}
+```
+
+<br/> 
+
+**4) 多个根因（Go 1.20+）：`errors.Join`**
+
+```go
+if e1 != nil && e2 != nil {
+	return errors.Join(e1, e2) // 两个都是真根因
+}
+```
+
+`errors.Is/As` 会对 join 后的错误逐个匹配。
+<br/>
+
+**规则/细节你可能会用到**
+
+* **只在需要“可判定根因”时用 `%w`**；否则 `%v` 就够（例如仅日志用）。
+* **一个 `fmt.Errorf` 格式串里只能有一个 `%w`**。
+* `errors.New` 适合做**包级**哨兵错误（`var ErrXxx = errors.New("...")`）。不要在每次返回时都新建一个 `errors.New("...")` 再拿来比较，**那样比较会失败**；要和同一个包级变量比或用 `errors.Is`。
+* 错误信息遵循 Go 惯例：**不用首字母大写**、**不以句号结尾**（日志行会拼接更多上下文）。
+
+<br/>
+
+**你给的两行对比（推荐写法）**
+
+```go
+// ✅ 推荐：保留根因
+return fmt.Errorf("failed to lock data-path %q: %w", dataPath, err)
+
+// ✅ 作为哨兵（包级变量）
+var ErrNodeIDRange = errors.New("node-id must be [0,1024)")
+// 返回时带细节但保持可判定性
+return fmt.Errorf("%w: got %d", ErrNodeIDRange, id)
+```
+
+
+
+
 <br/><br/><br/>
 
 ***

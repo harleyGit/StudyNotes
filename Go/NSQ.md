@@ -6,7 +6,17 @@
 	- [枚举常量定义-iota](#枚举常量定义-iota)
 	- [strconv.ParseBool()-配置文件读取bool值](#strconv.ParseBool()-配置文件读取bool值)
 	- [路径](#路径)
+- [日志打印](#日志打印)
 	- [打印格式](#打印格式)
+	- [2种制造错误方式](#2种制造错误方式)
+- [**nsqd**](#nsqd)
+- [网络编程](#网络编程)
+	- [传输层http.Transport](#传输层http.Transport)
+	- [保存多个客户端链接用sync.Map](#保存多个客户端链接用sync.Map)
+- [并发编程](#并发编程)
+	- [并发安全容器-原子操作](#并发安全容器-原子操作)
+- [安全](#安全)
+	- [签名证书](#签名证书)
 
 <br/><br/><br/>
 
@@ -584,6 +594,14 @@ cwd, _ := os.Getwd()
 [**请看这里**](./go语法.md#拼接)
 
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="日志打印">日志打印</h1>
+
 ***
 <br/><br/><br/>
 > <h2 id="打印格式">打印格式</h2>
@@ -593,3 +611,195 @@ opts.Logger = log.New(os.Stderr, opts.LogPrefix, log.Ldate|log.Ltime|log.Lmicros
 ```
 
 [**请看这里**](./go语法(II).md#日志格式)
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="2种制造错误方式">2种制造错误方式</h2>
+
+```go
+fmt.Errorf("failed to lock data-path: %v", err)
+
+errors.New("--node-id must be [0,1024)")
+```
+
+[**2种错误方式有啥区别，如何选择？？**](./go语法(II).md#错误格式选择)
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="nsqd">nsqd</h1>
+
+`nsqd` 是 **NSQ** 的核心服务进程（消息队列节点）。
+
+**nsqd**中的启动函数在**`main.go`**文件中。
+
+
+***
+<br/><br/><br/>
+> <h2 id="网络编程">网络编程</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="传输层http.Transport">[传输层http.Transport](./网络.md#http.Transport)</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="保存多个客户端链接用sync.Map">保存多个客户端链接用sync.Map</h2>
+
+```go
+conns sync.Map
+```
+
+这个干嘛的？有啥用？[请看这里](/网络.md#安全保存多个客户端链接)
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="并发编程">并发编程</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="并发安全容器-原子操作">并发安全容器-原子操作</h2>
+
+```go
+
+type NSQD struct {
+。。。
+。。
+
+lookupPeers atomic.Value
+
+。。
+。
+}
+
+n := &NSQD{ .... }
+n.lookupPeers.Store([]*lookupPeer{})
+```
+
+Go 标准库 sync/atomic 里有个结构体 atomic.Value
+，它是一个 并发安全的容器，用来存储和读取某个值。[详细请看这里](./go并发编程.md#原子读写)
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="安全">安全</h1>
+
+
+***
+<br/>
+> <h2 id="签名证书">签名证书</h2>
+
+```go
+tlsClientAuthPolicy := tls.VerifyClientCertIfGiven
+
+cert, err := tls.LoadX509KeyPair(opts.TLSCert, opts.TLSKey)
+
+tlsConfig = &tls.Config{
+	Certificates: []tls.Certificate{cert},
+	ClientAuth:   tlsClientAuthPolicy,
+	MinVersion:   opts.TLSMinVersion,
+}
+
+tlsCertPool := x509.NewCertPool()
+caCertFile, err := os.ReadFile(opts.TLSRootCAFile)
+
+
+if !tlsCertPool.AppendCertsFromPEM(caCertFile) {
+	return nil, errors.New("failed to append certificate to pool")
+}
+tlsConfig.ClientCAs = tlsCertPool
+```
+
+这段部分代码的作用是：**加载服务器证书/私钥 → 设定客户端证书验证策略 → 构建一个包含受信任 CA 的证书池 → 把 ClientCAs 放到 tls.Config 以便在握手中验证客户端证书**。配合 `MinVersion`、`Certificates`，就完成了服务端 TLS 基础配置；客户端则对称地使用 `RootCAs` 和可选的 `Certificates` 来验证服务器与提供客户端证书，实现单向 TLS 或双向（mutual）TLS。
+
+<br/>
+
+上述涉及到签名证书之类的，进行详解。
+
+<br/>
+
+```go
+tlsClientAuthPolicy := tls.VerifyClientCertIfGiven
+```
+
+* `tls.ClientAuthType` 的一种。控制服务端对**客户端证书**（client cert）的要求或验证策略。常用值有：
+
+  * `tls.NoClientCert`：不要求客户端证书（默认）。
+  * `tls.RequestClientCert`：如果客户端有证书就请求，但不强制验证链（一般会提供证书但不会失败）。
+  * `tls.RequireAnyClientCert`：要求客户端提供证书，但不验证证书链。
+  * `tls.VerifyClientCertIfGiven`：如果客户端提供证书就验证其证书链（空的话仍允许连接）。
+  * `tls.RequireAndVerifyClientCert`：强制客户端必须提供证书且验证通过（Mutual TLS）。
+* 你用的是 `VerifyClientCertIfGiven`：**客户端可以不提供证书；如果提供了，服务端会校验证书链**（前提是 `tls.Config.ClientCAs` 有信任的 CA）。
+
+<br/>
+
+```go
+cert, err := tls.LoadX509KeyPair(opts.TLSCert, opts.TLSKey)
+```
+
+* 从两个 PEM 文件（证书 `.crt` / `.pem` 和私钥 `.key`）加载一对证书+私钥，返回 `tls.Certificate`。
+* 要求：
+	* 证书文件中通常包含 **leaf（服务器证书）**，如果有中间证书要拼接在 leaf 之后；
+	* 私钥必须和证书匹配（公私钥对）。
+* 返回的 `cert` 会被放到 `tls.Config.Certificates`，供服务器在 TLS 握手中出示。
+
+<br/>
+
+```go
+tlsConfig = &tls.Config{
+    Certificates: []tls.Certificate{cert},
+    ClientAuth:   tlsClientAuthPolicy,
+    MinVersion:   opts.TLSMinVersion,
+}
+```
+
+* `Certificates`: 服务器（或客户端）在握手中用于证明自己的证书链与私钥。
+
+  * 若包含中间证书，顺序应该是：**leaf first, then intermediates**。
+* `ClientAuth`: 上面的客户端证书策略（是否要客户端证书及是否验证）。
+* `MinVersion`: TLS 的最低协议版本（例如 `tls.VersionTLS12` 或 `tls.VersionTLS13`）。出于安全考虑一般至少用 TLS 1.2。
+
+<br/>
+
+```go
+tlsCertPool := x509.NewCertPool()
+caCertFile, err := os.ReadFile(opts.TLSRootCAFile)
+
+if !tlsCertPool.AppendCertsFromPEM(caCertFile) {
+    return nil, errors.New("failed to append certificate to pool")
+}
+tlsConfig.ClientCAs = tlsCertPool
+```
+
+* `x509.NewCertPool()`：创建一个空的证书池（`*x509.CertPool`），用于保存可信任的 CA 证书。
+* `AppendCertsFromPEM`：把 PEM 格式的 CA 证书（或若干个 PEM）加入证书池。返回 `false` 表示 PEM 里没有有效的证书（或解析失败）。
+* `tlsConfig.ClientCAs`：
+	* 对服务端生效，用作**验证客户端证书**时的信任根（client cert 必须能链到该 pool 中的根 CA）。
+	* 如果 `ClientAuth` 要求验证（例如 `VerifyClientCertIfGiven` / `RequireAndVerifyClientCert`），`ClientCAs` 需要包含可信的 CA，否则验证会失败。
+* 注意：`RootCAs` 是客户端用来验证**服务器证书**的池；`ClientCAs` 是服务端用来验证**客户端证书**的池。
+
+
+
+<br/>
+
+[**详细请看这里**](./网络.md证书签名常用概念)
+
+

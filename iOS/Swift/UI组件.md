@@ -19,6 +19,13 @@
 - [**UILabel**](#UILabel)
 	- [宽度自适应](#宽度自适应)
 - [**‌弹窗播放视频**](#弹窗播放视频)
+- [**UIButton**](#UIButton)
+	- [文字和图片布局](#文字和图片布局)
+		- [示意图详解布局](#示意图详解布局) 
+		- [内部局部示意图](#内部局部示意图) 
+		- [直接设置右边距](#直接设置右边距) 
+		- [同时有文字+图片](#同时有文字+图片) 
+		- [通用公式（动态计算）](#通用公式（动态计算）)
 
 
 
@@ -421,6 +428,323 @@ class ViewController: UIViewController {
 * **背景不透明**（黑色遮罩层）。
 * **性能优化**：`automaticallyWaitsToMinimizeStalling` 减少卡顿，播放器在弹出后才播放。
 * **点击手势触发**，可以绑定到任何 `UIView`。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="UIButton">UIButton</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="文字和图片布局">文字和图片布局</h2>
+
+**比如有如下的一段代码：**
+
+```swift
+button.imageEdgeInsets = UIEdgeInsetsMake(0, 130, 0, -130);
+```
+
+结果：图片 紧贴最右边。
+
+- **原因：**
+	- **UIButton** 的 `imageEdgeInsets` 其实是 相对 `contentRect` 的偏移量，并不是绝对位置。
+	- 所以像你这种大数值`130`会直接把图片推到最右侧。
+
+<br/><br/><br/> 
+
+**UIButton默认排版**
+
+- 一个 `UIButton` 内部有两个子视图：
+	* `imageView` → 显示图片
+	* `titleLabel` → 显示文字
+
+它们默认是 **左右并排** 的，按钮会把它们整体居中显示。
+
+<br/>
+
+**`UIEdgeInsets` 的作用**
+
+`UIEdgeInsets` 的四个参数（top, left, bottom, right），其实就是在 **原本的位置基础上再加偏移量**。
+
+* `imageEdgeInsets` → 控制 `imageView` 相对于它原本位置的偏移
+* `titleEdgeInsets` → 控制 `titleLabel` 相对于它原本位置的偏移
+
+**注意 ⚠️：**
+这些 inset **不会改变按钮本身的大小**，只是调整子控件（图片、文字）在按钮里的位置。
+
+<br/><br/>
+
+**假设按钮宽度是 `200pt`，文字宽度 `50pt`，图片宽度 `20pt`，间距 4pt。**
+
+**默认效果**
+
+```
+[   image   ][  spacing  ][   title   ]   ← 中间居中
+```
+
+<br/>
+
+**设置**
+
+```objc
+_deviceAddButton.imageEdgeInsets = UIEdgeInsetsMake(0, 20, 0, -20);
+```
+
+意思是：
+
+* 图片的 **左边界 +20** → 图片往右移
+* 图片的 **右边界 -20** → 效果等价于「整体往右推」
+
+<br/><br/>
+
+**为什么要两个 inset 都改？**
+
+因为 inset 是相对于「按钮 contentRect」算的，不是单独水平偏移量。
+要想「整体往左 / 往右」移动，必须同时调节 `left` 和 `right`，这样大小不变，只是平移。
+
+<br/><br/>
+
+ **我的场景（右边距 10pt）**
+
+当你写：
+
+```objc
+_deviceAddButton.imageEdgeInsets = UIEdgeInsetsMake(0, 165-5, 0, -165+5);
+```
+
+本质就是在 **原来居中的基础上，图片整体往左挪 5pt**。
+如果原来贴在右边，现在就会距离右边 10pt 左右。
+
+<br/>
+
+- **✅ 总结：**
+
+	* `imageEdgeInsets` / `titleEdgeInsets` 是控制 **相对于按钮内容区域的偏移**。
+	* `left/right` 是加减距离，组合起来决定图片 / 文字在按钮里的最终位置。
+	* 如果你要「距离右边固定 10pt」，更推荐用 **按钮宽度 - 图片宽度 - 间距 - 文字宽度 - 10** 来算，这样不会受文字长短影响。
+
+
+<br/><br/>
+> <h3 id="示意图详解布局">示意图详解布局</h3>
+
+**默认情况下（UIButton 内部布局）**
+
+假设按钮宽 200pt，左边是图片（20pt），右边是文字（50pt），两者之间 4pt 间距：
+
+```
+|<----------- 200pt (button) ----------->|
+
+       [img 20pt]--4pt--[title 50pt]       
+```
+
+👉 默认它们会整体居中。
+
+<br/>
+
+**如果设置**
+
+```objc
+button.imageEdgeInsets = UIEdgeInsetsMake(0, 10, 0, -10);
+```
+
+意思就是：
+
+* **left = 10** → 图片相对原来往右移动 10pt
+* **right = -10** → 维持大小不变，只是整体平移
+
+结果：
+
+```
+|<----------- 200pt (button) ----------->|
+
+             [    img 20pt ]--4pt--[title 50pt]       
+```
+
+（图片比原来更靠右）
+
+<br/>
+
+**如果你想让 图片距离右边正好 10pt**
+
+你就要 **用按钮总宽度来计算**：
+
+```
+imageX = buttonWidth - rightMargin - imageWidth
+```
+
+例如按钮宽 200pt，图片宽 20pt，想要右边距 = 10pt：
+
+```
+imageX = 200 - 10 - 20 = 170pt
+```
+
+所以你的 inset 要设置成「让图片最终放到 x=170」的位置。
+
+<br/>
+
+✅ 推荐做法：
+与其写死 `165+2-5` 这种 magic number，不如：
+
+```objc
+CGFloat buttonWidth = _deviceAddButton.bounds.size.width;
+CGFloat imageWidth = _deviceAddButton.imageView.bounds.size.width;
+CGFloat rightMargin = 10;
+
+CGFloat move = buttonWidth - rightMargin - imageWidth - _deviceAddButton.imageView.frame.origin.x;
+_deviceAddButton.imageEdgeInsets = UIEdgeInsetsMake(0, move, 0, -move);
+```
+
+这样就无论按钮宽度还是图片大小变不变，始终保持 **图片距右边 10pt**。
+
+
+<br/><br/>
+> <h3 id="内部局部示意图">内部局部示意图</h3>
+
+
+**按钮宽度 = 200pt，高度忽略**
+
+默认布局（左边图片 20pt，右边文字 50pt，中间 4pt）：
+
+```
+┌─────────────────────────────── UIButton (200pt) ───────────────────────────────┐
+|                                                                               |
+|   x=0             x=20        x=24                          x=74              |
+|   ┌───────┐       ↑           ↑                             ↑                 |
+|   |  IMG  | (20pt)|   4pt      |       ┌─────────────┐      | TITLE (50pt)    |
+|   └───────┘       |           |       |   "Title"    |      |                 |
+|                   |           |       └─────────────┘      |                 |
+|                   |<-- imageRight -->|                                      |
+|                                                                               |
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+👉 默认情况下：
+
+* 图片起点 `x=0`，宽度 20pt
+* 文本起点 `x=24`，宽度 50pt
+
+<br/>
+
+**如果你设置**
+
+```objc
+button.imageEdgeInsets = UIEdgeInsetsMake(0, 10, 0, -10);
+```
+
+解释：
+
+* `left = 10` → 图片相对原始位置 **整体右移 10pt**
+* `right = -10` → 保持对称（否则图片会被压缩）
+
+结果：
+
+```
+┌─────────────────────────────── UIButton (200pt) ───────────────────────────────┐
+|                                                                               |
+|             x=10             x=30        x=34                 x=84            |
+|             ┌───────┐        ↑           ↑                    ↑               |
+|             |  IMG  |        |           |   ┌─────────────┐   | TITLE         |
+|             └───────┘        |   4pt     |   |   "Title"    |   |             |
+|                               |           └─────────────┘   |                 |
+|                               |<-- imageRight (缩短) -->|                       |
+|                                                                               |
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+📌 效果：图片往右 10pt，和标题的距离还是 4pt。
+
+
+<br/><br/>
+
+ **如果要让图片 距离按钮右边正好 10pt**
+
+假设按钮宽 200pt，图片宽 20pt：
+
+```
+目标位置 = 按钮宽度 - 图片宽度 - 右边距 = 200 - 20 - 10 = 170pt
+```
+
+<br/>
+
+那么你要计算一个 `move` 值：
+
+```objc
+CGFloat buttonWidth = button.bounds.size.width;
+CGFloat imageWidth = button.imageView.bounds.size.width;
+CGFloat rightMargin = 10;
+
+// 当前图片起点位置
+CGFloat currentX = button.imageView.frame.origin.x;
+
+// 需要移动的量
+CGFloat move = (buttonWidth - rightMargin - imageWidth) - currentX;
+
+button.imageEdgeInsets = UIEdgeInsetsMake(0, move, 0, -move);
+```
+
+👉 这样写，无论按钮宽度、文字长度怎么变，**图片都能保持距右边 10pt**。
+
+
+
+<br/><br/>
+> <h3 id="直接设置右边距">直接设置右边距</h3>
+
+
+如果你按钮宽度固定，可以这样：
+
+```objc
+button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
+button.imageEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 9);
+```
+
+这样图片就会 **靠右对齐，距离右边 9pt**。
+
+<br/><br/>
+> <h3 id="同时有文字+图片">同时有文字 + 图片</h3>
+
+
+如果按钮还有文字，需要让文字靠左，图片靠右：
+
+```objc
+button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
+
+// 让图片距离右边 9pt
+button.imageEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 9);
+
+// 让文字距离左边 9pt
+button.titleEdgeInsets = UIEdgeInsetsMake(0, 9, 0, 0);
+```
+
+<br/><br/>
+> <h3 id="通用公式（动态计算）">通用公式（动态计算）</h3>
+
+如果你想精确控制「图片距离右边 X」：
+
+```objc
+CGFloat spacing = 9;
+CGFloat imageWidth = button.imageView.frame.size.width;
+CGFloat buttonWidth = button.bounds.size.width;
+
+CGFloat leftInset = buttonWidth - imageWidth - spacing;
+button.imageEdgeInsets = UIEdgeInsetsMake(0, leftInset, 0, -leftInset);
+```
+
+---
+
+⚠️ **推荐写法**：
+如果只是要「右边留 9pt」，直接用 **方法一** 就够了。
+如果按钮里同时有文字，建议用 **方法二**。
+
+---
+
+要不要我给你整理一个 **UIButton 分类**（比如 `setImageRight(padding:)`），以后你只要写一句就能把图片放右边并控制间距？
+
+
+
 
 
 

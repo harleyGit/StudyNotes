@@ -35,6 +35,7 @@
 - [**CSS样式**](#CSS样式)
 	- [模块化样式](#模块化样式)
 	- [antd中Radio.Group组件无法修改样式](#antd中Radio.Group组件无法修改样式)
+	- [字符串超出浮窗显示](#字符串超出浮窗显示)
 
 
 
@@ -2302,9 +2303,50 @@ render() {
 
 [**原因如下请看这里**](./../CSS/样式.md#局部模块和全局模块化样式区别和影响)
 
+***
+<br/><br/><br/>
+> <h2 id="字符串超出浮窗显示">字符串超出浮窗显示</h2>
 
+**遇到场景：** 列表中有一列要求显示**10字符串内容**，超出末尾省略号，鼠标停留有弹窗出现，显示出所有内容。
 
+<br/>
 
+用 antd 的 `Tooltip` / `Popover` 并把浮层挂到 `document.body`
+
+AntD 的 `Tooltip`/`Popover` 有 `getPopupContainer`，可以把弹层渲染到 `body`，这样完全不受 table cell 的 `overflow` 限制，也不用改表格 CSS。代码更简单、也更兼容。
+
+```jsx
+import { Tooltip } from 'antd';
+
+{
+  title: '...',
+  dataIndex: 'checkItems',
+  key: 'checkItems',
+  render: (checkItems) => {
+    const display = ProductTaskVM.getDisplayString({ arr: checkItems });
+    const full = checkItems.join('、');
+
+    return (
+      <Tooltip
+        title={<div style={{ maxWidth: 300, whiteSpace: 'normal', wordBreak: 'break-word' }}>{full}</div>}
+        placement="topLeft"
+        getPopupContainer={() => document.body} // ← 关键：渲染在 body，避免被表格裁剪
+        overlayInnerStyle={{ padding: 10, fontSize: 14, borderRadius: 8 }}
+      >
+        <span style={{ cursor: 'pointer' }}>{display}</span>
+      </Tooltip>
+    );
+  }
+}
+```
+
+**优点**：
+
+* 不用改表格 `td` 的 CSS；
+* antd 的 Tooltip 会处理遮挡、定位、动画、移动端行为等；
+* 可通过 `overlayInnerStyle` 或 `title` 的内联样式自定义字体、
+
+若是不用这个组件[，可以使用css的hover解决](../CSS/样式.md#浮窗hover效果)
 
 
 
@@ -2314,6 +2356,6 @@ render() {
 
 
 ---
-注释: 0,40963 SHA-256 ccf0d661333f89adb010473d8ea95ae0  
-@HuangGang <harley.smessage@icloud.com>: 1000,37 39113,96 39223,2 39226,7 39252,4 39257,7 39265,2 39284,2 39287,7 39421,47 39598,15 39624,9 39673,2 39741,2 39806,2 39856,14 39882,9 40050,4 40055  
+注释: 0,42117 SHA-256 c6f7de64d52517f0d3284bfb80697bff  
+@HuangGang <harley.smessage@icloud.com>: 1000,37 1135,27 39140,96 39250,2 39253,7 39279,4 39284,7 39292,2 39311,2 39314,7 39448,47 39625,15 39651,9 39700,2 39768,2 39833,2 39883,14 39909,9 40077,4 40082 40978,126 42057,36 42098 42108  
 ...

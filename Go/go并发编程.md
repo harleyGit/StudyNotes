@@ -17,6 +17,8 @@
 		- [互斥锁](#互斥锁)
 		- [读写互斥锁](#读写互斥锁)
 		- [等待组](#等待组)
+		- [原子读写](#原子读写)
+			- [goroutine并发读写流程图](#goroutine并发读写流程图)
 	- [sync包学习](#sync包学习)
 		- [Once 执行一次](#Once执行一次)
 	
@@ -673,6 +675,318 @@ go run -race main.go
 ![go12](https://raw.githubusercontent.com/harleyGit/StudyNotes/master/Pictures/go12.jpeg)
 
 &emsp; 等待组内部拥有一个计数器，计数器的值可以通过方法调用实现计数器的增加和减少。当我们添加了N个并发任务进行工作时，就将等待组的计数器值增加N。每个任务完成时，这个值减1。同时，在另外一个goroutine中等待这个等待组的计数器值为0时，表示所有任务已经完成。
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="原子读写">原子读写</h2>
+
+
+**1.`atomic.Value` 是什么？**
+
+Go 标准库 `sync/atomic` 里有个结构体 [`atomic.Value`](https://pkg.go.dev/sync/atomic#Value)，它是一个 **并发安全的容器**，用来存储和读取某个值。
+
+特点：
+
+* **读写操作是原子的**（不会读到一半的数据，也不会数据竞争）。
+* 可以安全地在多个 goroutine 中同时调用 `Load` 和 `Store`。
+* 存储的值必须是**同一类型**（Go 运行时会在第一次 `Store` 后固定类型，后续 `Store` 必须相同类型）。
+
+典型用途：
+
+* 配置热更新（写一次，多处读）。
+* 保存状态/快照（避免加锁读写）。
+* 跨 goroutine 共享只读数据。
+
+<br/>
+
+**2.代码里的 `lookupPeers`**
+
+```go
+lookupPeers atomic.Value
+```
+
+这是某个结构体（比如 `NSQD`）里的一个字段。它用来存储 `lookupPeer` 的数组，`lookupPeer` 代表和 **nsqlookupd 节点** 的连接。
+
+即：`lookupPeers` 保存了当前所有已知的 lookup 节点连接列表。
+
+<br/>
+
+**3.`lookupPeers.Store([]*lookupPeer{})`**
+
+这行代码的作用是：
+
+* 把一个 **空的 `lookupPeer` 切片** 存到 `lookupPeers` 里。
+* 这是初始化，保证后续 `Load` 时不会拿到 `nil`。
+
+后续逻辑中，当有新的 lookup 节点连接上时，代码会做类似：
+
+```go
+peers := lookupPeers.Load().([]*lookupPeer) // 读出当前切片
+newPeers := append(peers, newPeer)          // 加入新节点
+lookupPeers.Store(newPeers)                 // 原子替换
+```
+
+这样就能保证：
+
+* 写入是原子的（一次替换整块切片）。
+* 读取时永远拿到的是一个“快照”（不可变切片）。
+* 多个 goroutine 并发访问时，不会数据竞争。
+
+<br/>
+
+**4.为什么不用 `sync.Mutex`？**
+
+假如用普通切片 `[]*lookupPeer`，就要用锁保护：
+
+```go
+mu.Lock()
+peers = append(peers, newPeer)
+mu.Unlock()
+```
+
+读的时候也要加 `mu.RLock()`。
+
+而用 `atomic.Value`：
+
+* **写的时候**，创建一个新切片并 `Store`（整个替换）。
+* **读的时候**，直接 `Load`（无锁，且 O(1)）。
+
+这样能极大提高并发读性能，特别适合 **读多写少** 的场景。
+
+<br/>
+
+**✅ 总结**
+
+* `atomic.Value` = 一个并发安全的“值容器”。
+* `lookupPeers` 是一个成员变量，用来保存 `[]*lookupPeer`（lookup 节点连接列表）。
+* `Store([]*lookupPeer{})` 的意义是初始化为一个 **空切片**，避免后续 `Load` 返回 `nil`。
+* 后续操作里，新增/删除节点时会整体替换切片，读的时候就能拿到最新快照。
+
+
+***
+<br/><br/><br/>
+> <h2 id="goroutine并发读写流程图"> goroutine并发读写流程图</h2>
+
+**下面是一个 `goroutine` 并发` Load / Store` 的原子性（**`atomic.Value` + `lookupPeers`**）读写流程图，能够避免锁竞争**
+
+
+<br/> 
+
+**lookupPeers (atomic.Value) 读写流程**
+
+假设 `lookupPeers` 存的是 `[]*lookupPeer`，多个 goroutine 同时读写。
+
+```
+           ┌───────────────────────────────────────────┐
+           │                 主结构体 NSQD             │
+           │                                           │
+           │  lookupPeers: atomic.Value                │
+           │     └─> 存储 []*lookupPeer （快照）       │
+           └───────────────────────────────────────────┘
+                              │
+                  ┌───────────┴───────────┐
+                  │                       │
+              Goroutine A             Goroutine B
+             （读取列表）             （写入新列表）
+```
+
+<br/> 
+
+ **写入流程（Store）**
+
+```
+Goroutine B:
+  1. peers := lookupPeers.Load().([]*lookupPeer)
+         （取当前快照，例如 [peer1, peer2]）
+
+  2. newPeers := append(peers, newPeer)
+         （创建新切片，例如 [peer1, peer2, peer3]）
+
+  3. lookupPeers.Store(newPeers)
+         （一次性替换快照）
+```
+
+* 这个写入是 **原子的**，不会和读取交错导致“读到半拉数据”。
+* 旧切片依然安全存在（因为没有 goroutine 会再改它）。
+
+<br/> 
+
+ **读取流程（Load）**
+
+```
+Goroutine A:
+  1. peers := lookupPeers.Load().([]*lookupPeer)
+
+  2. 使用 peers（比如遍历、建立连接）
+```
+
+* 读取时拿到的是某一时刻的 **快照**。
+* 即使 B 正在写入，A 依然拿到一份完整切片，不会出错。
+
+<br/> 
+
+ **多个读写同时进行**
+
+```
+时间线 →
+┌─────────────────────────────┐
+│ Goroutine A 读 [peer1, peer2]   │
+│ Goroutine B 写 [peer1, peer2, peer3] │
+│ Goroutine C 读 [peer1, peer2, peer3] │
+└─────────────────────────────┘
+```
+
+* A 读到的是 **旧版本**（写之前的快照）。
+* B 写入时生成 **新切片** 并原子替换。
+* C 随后读到的是 **新版本**。
+* 不会出现一半是旧数据、一半是新数据的情况。
+
+<br/> 
+
+ **总结（对比加锁方式）**
+
+* **加锁方式**：每次读/写都要 `mu.Lock()/mu.RLock()`，性能瓶颈在读多写少的场景明显。
+* **atomic.Value**：
+
+  * 写：整体替换新切片（写少，开销可接受）。
+  * 读：无锁，O(1)，高并发下性能更好。
+  * 特别适合 NSQ 这种 **“lookupPeers 写少、读多”** 的集群状态管理。
+
+<br/><br/>
+
+下面是一个 **小实验 demo**（几十行 Go 代码），演示多个 goroutine 同时读写 `lookupPeers`，并对比用 `sync.RWMutex` 和 `atomic.Value` 的性能差异。
+
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+type lookupPeer struct {
+	id int
+}
+
+func withRWMutex() {
+	var mu sync.RWMutex
+	peers := []*lookupPeer{}
+
+	// 写协程
+	go func() {
+		for i := 0; i < 5; i++ {
+			mu.Lock()
+			peers = append(peers, &lookupPeer{id: i})
+			mu.Unlock()
+			time.Sleep(200 * time.Millisecond)
+		}
+	}()
+
+	// 读协程
+	for j := 0; j < 5; j++ {
+		go func(id int) {
+			for {
+				mu.RLock()
+				snapshot := peers
+				if len(snapshot) > 0 {
+					fmt.Printf("[RWMutex][Reader %d] peers: %v\n", id, ids(snapshot))
+				}
+				mu.RUnlock()
+				time.Sleep(100 * time.Millisecond)
+			}
+		}(j)
+	}
+}
+
+func withAtomicValue() {
+	var peers atomic.Value
+	peers.Store([]*lookupPeer{}) // 初始化
+
+	// 写协程
+	go func() {
+		for i := 0; i < 5; i++ {
+			oldPeers := peers.Load().([]*lookupPeer)
+			newPeers := append(oldPeers, &lookupPeer{id: i})
+			peers.Store(newPeers) // 一次性替换
+			time.Sleep(200 * time.Millisecond)
+		}
+	}()
+
+	// 读协程
+	for j := 0; j < 5; j++ {
+		go func(id int) {
+			for {
+				snapshot := peers.Load().([]*lookupPeer)
+				if len(snapshot) > 0 {
+					fmt.Printf("[Atomic][Reader %d] peers: %v\n", id, ids(snapshot))
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+		}(j)
+	}
+}
+
+func ids(peers []*lookupPeer) []int {
+	res := make([]int, len(peers))
+	for i, p := range peers {
+		res[i] = p.id
+	}
+	return res
+}
+
+func main() {
+	fmt.Println("==== RWMutex Demo ====")
+	withRWMutex()
+	time.Sleep(2 * time.Second)
+
+	fmt.Println("\n==== Atomic Demo ====")
+	withAtomicValue()
+	time.Sleep(2 * time.Second)
+}
+```
+
+<br/>
+
+ **运行结果示例**
+
+运行后你会看到两段输出：
+
+**1.使用 RWMutex**
+
+```
+==== RWMutex Demo ====
+[RWMutex][Reader 0] peers: [0]
+[RWMutex][Reader 2] peers: [0,1]
+[RWMutex][Reader 3] peers: [0,1,2]
+...
+```
+
+<br/>
+
+**2.使用 Atomic**
+
+```
+==== Atomic Demo ====
+[Atomic][Reader 1] peers: [0]
+[Atomic][Reader 4] peers: [0,1]
+[Atomic][Reader 2] peers: [0,1,2]
+...
+```
+
+<br/>
+
+**对比结论**
+
+* **RWMutex**：每次读写都要加锁解锁，读多时可能产生锁竞争。
+* **atomic.Value**：读是 **无锁** 的，性能更高，写是整体替换，不会影响读。
+* 适合 NSQ 这种 **“写少读多”** 的场景。
+
+
 
 
 <br/><br/><br/>
