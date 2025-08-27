@@ -13,6 +13,8 @@
 - [网络编程](#网络编程)
 	- [传输层http.Transport](#传输层http.Transport)
 	- [保存多个客户端链接用sync.Map](#保存多个客户端链接用sync.Map)
+	- [TCP地址判断](#TCP地址判断)
+	- [普通和安全监听区别](#普通和安全监听区别)
 - [并发编程](#并发编程)
 	- [并发安全容器-原子操作](#并发安全容器-原子操作)
 - [安全](#安全)
@@ -661,6 +663,56 @@ conns sync.Map
 这个干嘛的？有啥用？[请看这里](/网络.md#安全保存多个客户端链接)
 
 
+***
+<br/><br/><br/>
+> <h2 id="TCP地址判断">[TCP地址判断](./网络.md#TCP地址判断)</h2>
+
+```go
+func TypeOfAddr(addr string) string {
+	if _, _, err := net.SplitHostPort(addr); err == nil {
+		return "tcp"
+	}
+	return "unix"
+}
+```
+
+逻辑是：
+
+* 如果 `addr` 能成功拆成 `"host:port"`，说明它是 **TCP 地址**，返回 `"tcp"`。
+  例如 `"127.0.0.1:8080"`、`"[::1]:3306"`。
+* 否则认为它不是 `"host:port"` 格式，可能是一个 **Unix 域套接字路径**（比如 `"/tmp/app.sock"`），返回 `"unix"`。
+
+
+
+***
+<br/><br/><br/>
+># <h2 id="普通和安全监听区别">[普通和安全监听区别](./go并发编程.md#加密和非加密监听)</h2>
+
+```go
+n.tcpListener, err = net.Listen(util.TypeOfAddr(opts.TCPAddress), opts.TCPAddress)
+```
+
+1. `util.TypeOfAddr(opts.TCPAddress)`
+
+	* 如果 `opts.TCPAddress` 是 `"127.0.0.1:8080"` → 返回 `"tcp"`。
+	* 如果是 `"/tmp/app.sock"` → 返回 `"unix"`。
+
+2. `net.Listen("tcp", "127.0.0.1:8080")`
+
+	* 就会在 TCP 8080 端口监听。
+
+   或者 `net.Listen("unix", "/tmp/app.sock")`
+	
+	* 就会创建一个 Unix domain socket 监听器。
+
+<br/>
+
+```go
+//加密监听区别
+n.httpsListener, err = tls.Listen("tcp", opts.HTTPSAddress, n.tlsConfig)
+```
+
+**`tls.Listen` 是在 TCP 上加了一层 TLS 加密，适合做 HTTPS / 安全通信。**
 
 
 <br/><br/><br/>
@@ -693,6 +745,8 @@ n.lookupPeers.Store([]*lookupPeer{})
 
 Go 标准库 sync/atomic 里有个结构体 atomic.Value
 ，它是一个 并发安全的容器，用来存储和读取某个值。[详细请看这里](./go并发编程.md#原子读写)
+
+
 
 
 <br/><br/><br/>
