@@ -686,7 +686,7 @@ func TypeOfAddr(addr string) string {
 
 ***
 <br/><br/><br/>
-># <h2 id="普通和安全监听区别">[普通和安全监听区别](./go并发编程.md#加密和非加密监听)</h2>
+># <h2 id="普通和安全监听区别">[普通和安全监听区别](./网络.md#加密和非加密监听)</h2>
 
 ```go
 n.tcpListener, err = net.Listen(util.TypeOfAddr(opts.TCPAddress), opts.TCPAddress)
