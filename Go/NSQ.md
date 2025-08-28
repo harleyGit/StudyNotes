@@ -1,3 +1,6 @@
+- [**基础**](基础)
+	- [安全拼接字符串](#安全拼接字符串)
+	- [正则表达式匹配判断](#正则表达式匹配判断)
 - [**‌启动配置文件options.go**](#‌启动配置文件options.go)
 	- [标识不同的nsqd实例](#标识不同的nsqd实例)
 	- [nsqdFlagSet()解析命令行参数](#nsqdFlagSet()解析命令行参数)
@@ -15,10 +18,159 @@
 	- [保存多个客户端链接用sync.Map](#保存多个客户端链接用sync.Map)
 	- [TCP地址判断](#TCP地址判断)
 	- [普通和安全监听区别](#普通和安全监听区别)
+	- [网络地址类型判断](#网络地址类型判断)
 - [并发编程](#并发编程)
 	- [并发安全容器-原子操作](#并发安全容器-原子操作)
+	- [waitGroup等待所有goroutine全部退出/完成后再继续执行](#waitGroup等待所有goroutine全部退出/完成后再继续执行)
 - [安全](#安全)
 	- [签名证书](#签名证书)
+
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="基础">基础</h1>
+
+***
+<br/>
+> <h2 id="安全拼接字符串">安全拼接字符串</h2>
+
+
+```go
+func newMetadataFile(opts *Options) string {
+    return path.Join(opts.DataPath, "nsqd.dat")
+}
+```
+
+`path.Join` 在 Go 里就是**安全地拼接路径字符串**的方法，不过它比直接字符串拼接（`+`）更智能。
+
+<br/>
+
+**作用是：**
+* `opts.DataPath` 可能是某个目录路径，比如 `/var/lib/nsqd`
+* `"nsqd.dat"` 是文件名
+* `path.Join` 会拼接出最终的文件路径，比如：
+
+  ```
+  /var/lib/nsqd/nsqd.dat
+  ```
+
+<br/>
+
+**和普通字符串拼接的区别**
+
+如果你用 `+` 来拼接：
+
+```go
+file := opts.DataPath + "/nsqd.dat"
+```
+
+可能会出现以下问题：
+
+* 如果 `opts.DataPath` 已经以 `/` 结尾，结果就是 `"/var/lib/nsqd//nsqd.dat"`，多了一个 `/`
+* 如果 `opts.DataPath` 没有 `/`，结果才是正常的
+
+而 `path.Join` 会自动处理这些情况，保证路径拼接是正确的：
+
+```go
+path.Join("var/lib/nsqd/", "nsqd.dat")   // => "var/lib/nsqd/nsqd.dat"
+path.Join("var/lib/nsqd", "nsqd.dat")    // => "var/lib/nsqd/nsqd.dat"
+```
+
+<br/>
+
+**注意事项**
+
+* `path` 适用于 **URL 或非本地文件路径**（统一用 `/`）
+* 对于**本地文件系统路径**（尤其是 Windows 上 `\` 路径分隔符），应该用 `filepath.Join`
+
+例如：
+
+```go
+import "path/filepath"
+
+file := filepath.Join(opts.DataPath, "nsqd.dat")
+```
+
+这样跨平台（Linux/Windows/macOS）都会正常。
+
+
+***
+<br/><br/><br/>
+> <h2 id="正则表达式匹配判断">正则表达式匹配判断</h2>
+
+ **用正则表达式校验字符串是否合法**
+
+<br/>
+
+```go
+var validTopicChannelNameRegex = regexp.MustCompile(`^[.a-zA-Z0-9_-]+(#ephemeral)?$`)
+
+valid := validTopicChannelNameRegex.MatchString(name)
+```
+
+<br/>
+
+**各部分含义**
+
+1. **`regexp.MustCompile(...)`**
+	
+	* Go 里正则的编译方法。
+	* `MustCompile` 表示：如果正则写错了，直接 **panic**，程序启动不了（比 `Compile` 更严格）。
+
+2. **正则 `^[.a-zA-Z0-9_-]+(#ephemeral)?$`**
+	
+	* `^` ：字符串开头
+	* `[.a-zA-Z0-9_-]+` ：至少一个字符，只能是
+		 * `.`（点号）
+		 * `a-z` 小写字母
+		 * `A-Z` 大写字母
+		 * `0-9` 数字
+		 * `_` 下划线
+	* `-` 中划线
+		* `(#ephemeral)?` ：可选部分，意思是“字符串最后可以带上 `#ephemeral` 这个固定单词”，`?` 表示 0 次或 1 次。
+	* `$` ：字符串结尾。
+
+<br/>
+
+**👉 合法字符串示例：**
+
+   * `"abc123"`
+   * `"test_topic"`
+   * `"my-channel-01"`
+   * `"chatroom#ephemeral"`
+
+<br/>
+
+   **❌ 非法示例：**
+
+   * `"中文名"`（包含非英文字符）
+   * `"abc@123"`（有不允许的 `@`）
+   * `"room#ephemeralXYZ"`（`#ephemeral` 后面不能多余字符）
+
+3. **`validTopicChannelNameRegex.MatchString(name)`**
+
+   * 用正则去匹配字符串 `name`。
+   * 返回 `true` 表示 `name` 符合上面定义的规则，否则 `false`。
+
+<br/>
+
+**用途**
+
+这个一般用于 **消息队列 / Pub-Sub 系统**（比如 NSQ）里：
+
+* **topic 名字** 或 **channel 名字** 只能由特定字符组成，不能乱写。
+* 支持临时频道 `xxx#ephemeral`（客户端断开后就销毁）。
+* 通过这种正则统一限制命名规则，避免非法输入。
+
+
+
 
 <br/><br/><br/>
 
@@ -715,6 +867,66 @@ n.httpsListener, err = tls.Listen("tcp", opts.HTTPSAddress, n.tlsConfig)
 **`tls.Listen` 是在 TCP 上加了一层 TLS 加密，适合做 HTTPS / 安全通信。**
 
 
+***
+<br/><br/><br/>
+># <h2 id="网络地址类型判断">[网络地址类型判断](./网络.md#网络地址类型)</h2>
+
+```go
+tcpAddr, ok := n.RealHTTPAddr().(*net.TCPAddr)
+tcpAddr, ok := n.RealTCPAddr().(*net.TCPAddr)
+```
+
+这里涉及到 接口断言、TCP 地址对象 和 节点地址封装，我们分层讲。
+
+<br/>
+
+ **`n.RealHTTPAddr()` 和 `n.RealTCPAddr()`**
+
+从命名看，这是某个 **节点对象（n）的方法**，返回一个“真实的地址”：
+
+* `n.RealHTTPAddr()` → 可能返回一个实现了 `net.Addr` 的 **HTTP 服务监听地址**
+* `n.RealTCPAddr()` → 可能返回一个实现了 `net.Addr` 的 **TCP 节点通信地址**
+
+它们的返回值大概率是 `net.Addr` 接口类型。
+
+<br/>
+
+**类型断言 `.(*net.TCPAddr)`**
+
+Go 的接口返回值需要**类型断言**才能拿到具体类型：
+
+```go
+tcpAddr, ok := n.RealHTTPAddr().(*net.TCPAddr)
+```
+
+意思是：
+
+* 尝试把 `n.RealHTTPAddr()` 返回的 `net.Addr` 接口值转换为 `*net.TCPAddr`
+* 如果成功，`ok == true`，`tcpAddr` 就是一个 `*net.TCPAddr`
+* 如果失败，`ok == false`，说明这个地址不是 TCP 地址（比如可能是 UDP、Unix 域）
+
+<br/>
+
+**为什么要这样用？**
+
+因为很多时候代码只关心 TCP 地址信息（IP 和 Port），必须拿到 `*net.TCPAddr`，否则没法操作。
+举个例子：
+
+```go
+if tcpAddr, ok := n.RealHTTPAddr().(*net.TCPAddr); ok {
+    fmt.Println("HTTP 服务地址:", tcpAddr.IP.String(), tcpAddr.Port)
+}
+
+if tcpAddr, ok := n.RealTCPAddr().(*net.TCPAddr); ok {
+    fmt.Println("节点直连地址:", tcpAddr.IP.String(), tcpAddr.Port)
+}
+```
+
+这样就可以根据不同场景，获取 HTTP 服务监听端口，或者 TCP 直连端口。
+
+
+
+
 <br/><br/><br/>
 
 ***
@@ -745,6 +957,40 @@ n.lookupPeers.Store([]*lookupPeer{})
 
 Go 标准库 sync/atomic 里有个结构体 atomic.Value
 ，它是一个 并发安全的容器，用来存储和读取某个值。[详细请看这里](./go并发编程.md#原子读写)
+
+
+***
+<br/><br/><br/>
+># <h2 id="waitGroup等待所有goroutine全部退出/完成后再继续执行">[waitGroup等待所有goroutine全部退出/完成后再继续执行](./网络.md#类似栅栏的线程隔离)</h2>
+
+有一样这样的代码：
+
+```go
+waitGroup util.WaitGroupWrapper
+t.waitGroup.Wait()
+```
+
+
+**意思就是：**
+
+* `t.waitGroup` 里可能已经有一些 goroutine 在跑。
+* `t.waitGroup.Wait()` 会阻塞，直到所有 goroutine 全部结束。
+
+通常用于 **优雅退出服务** 的场景：
+
+* 启动时用 `t.waitGroup.Run(...)` 开很多 worker/goroutine。
+* 退出时调用 `t.waitGroup.Wait()` 等全部 goroutine 干完再关。
+
+<br/>
+
+✅ 总结一下：
+
+* `sync.WaitGroup` 是 Go 标准库里的 goroutine 同步工具。
+* `util.WaitGroupWrapper` 是项目里封装的版本，简化 goroutine 启动和管理。
+* `t.waitGroup.Wait()` 就是：**等待所有 goroutine 全部退出/完成后再继续执行**。
+
+
+
 
 
 

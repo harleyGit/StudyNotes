@@ -5,6 +5,7 @@
 	- [goroutine](#goroutine)
 		- [为普通函数创建goroutine](#为普通函数创建goroutine)
 		- [匿名函数创建goroutine](#匿名函数创建goroutine)
+		- [类似栅栏的线程隔离](类似栅栏的线程隔离)
 	- [channel（通道）](#channel（通道）)
 		- [通道的声明和创建](#通道的声明和创建)
 		- [通道发送数据](#通道发送数据) 
@@ -146,6 +147,82 @@ go func(parameter) {
 - parameter：参数列表。
 - func field：匿名函数的实现代码。
 - para：匿名函数被调用时所需设置的参数。
+
+
+***
+<br/><br/><br/>
+> <h2 id="类似栅栏的线程隔离">类似栅栏的线程隔离</h2>
+
+**`sync.WaitGroup`**
+
+Go 里标准库有个 **`sync.WaitGroup`**，它的作用是：
+
+* 等待一组 goroutine 全部完成后，再继续往下执行。
+* 通常用来做 **并发控制和同步**。
+
+用法一般是：
+
+```go
+var wg sync.WaitGroup
+
+wg.Add(1) // 计数器 +1
+go func() {
+    defer wg.Done() // 计数器 -1
+    fmt.Println("工作完成")
+}()
+
+wg.Wait() // 阻塞，直到计数器为 0
+```
+
+效果：主 goroutine 会等子 goroutine 全部结束才继续。
+
+<br/>
+
+
+有 **`util.WaitGroupWrapper`**
+
+在一些项目（比如 NSQ、etcd 等）里，作者会写一个 **封装**，让 `WaitGroup` 用起来更方便。
+
+大概长这样（简化版）：
+
+```go
+package util
+
+import "sync"
+
+type WaitGroupWrapper struct {
+    sync.WaitGroup
+}
+
+// Run 可以直接起一个 goroutine，并自动管理 WaitGroup
+func (w *WaitGroupWrapper) Run(fn func()) {
+    w.Add(1)
+    go func() {
+        defer w.Done()
+        fn()
+    }()
+}
+```
+
+<br/>
+
+这样用起来就很顺手了：
+
+```go
+var wg util.WaitGroupWrapper
+
+wg.Run(func() {
+    fmt.Println("任务1")
+})
+
+wg.Run(func() {
+    fmt.Println("任务2")
+})
+
+wg.Wait() // 等待所有任务执行完
+fmt.Println("全部完成")
+```
+
 
 
 <br/><br/><br/>
