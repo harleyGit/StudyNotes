@@ -35,6 +35,8 @@
 	- [MobaXterm在Windows系统上的集成终端工具](#MobaXterm在Windows系统上的集成终端工具)
 	- [screen终端工具串口调试](#screen终端工具串口调试)
 	- [minicom终端串口工具](#minicom终端串口工具)
+- [硬件自带Wi-Fi](#硬件自带Wi-Fi)
+	- [App加入设备Wi-Fi网络](#App加入设备Wi-Fi网络)
 - **借鉴资料**
 	- [iOS 蓝牙（中心模式连接外设）](https://juejin.cn/post/7129891777783267342)
 
@@ -3360,6 +3362,297 @@ sudo minicom
 
 
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="硬件自带Wi-Fi">硬件自带Wi-Fi</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="App加入设备Wi-Fi网络"> App加入设备Wi-Fi网络 </h2>
+
+ **`NEHotspotConfiguration` 与 `NEHotspotConfigurationManager.shared.apply(...)`**
+
+* 用来**在 App 内为设备添加/应用 Wi-Fi 配置**（SSID、密码、EAP 等），由系统弹出同意对话后尝试加入该网络（无需用户手动去设置 App 切换到系统 Wi-Fi 设置）。([Apple Developer][1])
+
+<br/>
+
+- **常用场景**
+	* 配置并连接到设备自带的 Wi-Fi（IoT 配件）、在 App 引导下自动加入用户指定热点、把临时热点（`joinOnce = true`）只用于本次连接等。([Apple Developer][1])
+
+<br/>
+
+- **重要属性/方法**
+	* `NEHotspotConfiguration(ssid: String, passphrase: String, isWEP: Bool)` — 构造器
+	* `config.joinOnce = true` 
+		* 只在本次会话使用（系统不持久保存）；`false` 则会保存到系统已知网络中。([Apple Developer][1])
+	* `NEHotspotConfigurationManager.shared.apply(config) { error in ... }` 
+		* 发起配置并尝试加入。完成处理器的 `error == nil` 并不总是代表“已经完全连上并可通行”，只是表示系统接受了请求 / 没有立即返回错误（实际连接状态仍建议额外验证）。
+	* `NEHotspotConfigurationManager.shared.removeConfiguration(forSSID:)` 
+		* 删除**本 App**之前添加的配置（不能删除用户/其他 App 添加的）。([Apple Developer][4])
+
+<br/>
+
+**常见错误和处理（示例）**
+
+* `NEHotspotConfigurationError.userDenied`：用户拒绝授权。
+* `NEHotspotConfigurationError.alreadyAssociated`：设备已经连接该 SSID。
+* `NEHotspotConfigurationError.internal` 等（有时会出现“internal error”或 helper 通信错误，需调试或重启设备）。([Apple Developer][5], [Stack Overflow][6])
+
+**示例（Swift）**
+
+```swift
+import NetworkExtension
+
+func connectToWifi(ssid: String, passphrase: String) {
+    let config = NEHotspotConfiguration(ssid: ssid, passphrase: passphrase, isWEP: false)
+    config.joinOnce = true // 或 false，按需求
+
+    NEHotspotConfigurationManager.shared.apply(config) { error in
+        if let error = error as NSError? {
+            // NEHotspotConfigurationError.code 可比较 enum rawValue
+            if error.domain == NEHotspotConfigurationErrorDomain {
+                let code = NEHotspotConfigurationError(rawValue: error.code)
+                switch code {
+                case .userDenied:
+                    print("用户拒绝")
+                case .alreadyAssociated:
+                    print("已经连接")
+                default:
+                    print("hotspot 配置错误：", error)
+                }
+            } else {
+                print("其它错误：", error)
+            }
+        } else {
+            print("apply 没有返回错误 —— 系统接受了请求（不代表已完全可用），可进一步验证连接状态。")
+            // 建议用下面的 fetchCurrent 或 NWPathMonitor 等方式再次确认当前连接
+        }
+    }
+}
+```
+
+**调试建议 / 常见坑**
+
+* 在模拟器不可用：必须在真机测试。
+* 即使 `apply` completion 没有错误，也不总是立刻能通信，最好在 `apply` 后用 `NEHotspotNetwork.fetchCurrent` 或 `NWPathMonitor` /实际 socket 测试来确认。
+
+<br/>
+
+**2) `NEHotspotNetwork.fetchCurrent(...)`**
+
+* 在 iOS 14+（以及较新 SDK）中，用来**读取当前 Wi-Fi 网络的信息**（`ssid`, `bssid`, `signalStrength` 等），返回 `NEHotspotNetwork?`。这是替代旧的 CaptiveNetwork/CNCopyCurrentNetworkInfo 的现代 API。([Apple Developer][8])
+
+<br/>
+
+**重要限制（关键）**
+`fetchCurrent` **并不总会返回非 nil**；Apple 文档和社区说明：只有当你的 App **满足至少一个特定条件** 时才会返回信息（例如：App 有访问 Wi-Fi 信息的能力，且**请求了精确位置权限**；或 App 是使用 `NEHotspotConfiguration` 配置过当前连接；或设备上有活动的 VPN / NEDNSSettingsManager 等）。也就是说：**需要权限/条件**才能拿到 SSID/BSSID 等敏感 Wi-Fi 信息。
+
+<br/>
+
+**常见满足条件的几项（概括）：**
+
+* App 已在 Xcode 中启用 **Access Wi-Fi Information** entitlement（`com.apple.developer.networking.wifi-info`）。
+* App 已取得位置权限（iOS 要求，精确位置通常需要）。
+* 或该网络是 App 通过 `NEHotspotConfiguration` 配置过的（或满足其它少数系统条件如活动 VPN）。([Apple Developer][10], [seacode.uk][9])
+
+<br/>
+
+**示例（闭包与 async 包装）**
+
+```swift
+NEHotspotNetwork.fetchCurrent { network in
+    if let network = network {
+        print("SSID:", network.ssid)
+        print("BSSID:", network.bssid ?? "nil")
+        print("signal:", network.signalStrength) // 0.0..1.0
+    } else {
+        print("无法获取当前网络信息（可能缺权限或条件不满足）")
+    }
+}
+```
+
+<br/>
+
+用 Swift 的 async/await 包装（方便在 async 环境里用）：
+
+```swift
+func fetchCurrentNetwork() async -> NEHotspotNetwork? {
+    await withCheckedContinuation { cont in
+        NEHotspotNetwork.fetchCurrent { net in
+            cont.resume(returning: net)
+        }
+    }
+}
+```
+
+**注意**：`signalStrength` 的值是 `0.0..1.0` 的范围（不是 dBm），且很多人报告在某些情形下会得到 0（Apple 的论坛回复也给出类似说明）。
+
+
+<br/>
+
+**3) `CNCopySupportedInterfaces()` / `CNCopyCurrentNetworkInfo(...)`（CaptiveNetwork）**
+
+* 这是较早的 SystemConfiguration CaptiveNetwork API，用于获取当前连接 Wi-Fi 的 SSID/BSSID（`CNCopySupportedInterfaces()` 列出接口，`CNCopyCurrentNetworkInfo` 获取具体 info）。在 iOS 的早期常用。
+
+<br/>
+
+**现在的状态 & 隐私限制**
+
+* `CNCopyCurrentNetworkInfo` 在 iOS 13 之后对访问做了严格限制（因为 Wi-Fi 信息能泄露位置信息）：要使用它你必须满足某些条件（如：启用了 Access Wi-Fi Information entitlement 并获得位置许可，或满足其它条件），并且从 iOS 14 开始 Apple 推动用 `NEHotspotNetwork.fetchCurrent` 作为替代，`CNCopyCurrentNetworkInfo` 标注为 Deprecated（在文档里可见）。因此**不推荐在新代码里继续依赖该接口**。([Apple Developer][14], [Stack Overflow][15])
+
+<br/>
+
+**示例（仅作历史参考 — 新项目请用 NEHotspotNetwork）**
+
+```swift
+import SystemConfiguration.CaptiveNetwork
+
+func currentSSID() -> String? {
+    guard let interfaces = CNCopySupportedInterfaces() as? [String] else { return nil }
+    for iface in interfaces {
+        if let dict = CNCopyCurrentNetworkInfo(iface as CFString) as? [String:AnyObject],
+           let ssid = dict[kCNNetworkInfoKeySSID as String] as? String {
+            return ssid
+        }
+    }
+    return nil
+}
+```
+
+**注意**：在 iOS 13+ 这段代码经常返回 nil 来反映系统权限/隐私变化。([Stack Overflow][15])
+
+<br/>
+
+**4) NEHotspotHelper（顺便说明）**
+
+* `NEHotspotHelper` 是另一个更强大的 Wi-Fi 热点辅助 API（能拦截/评估热点列表、在后台处理登录认证等），但**需要向 Apple 申请特殊的 Network Extension Entitlement（`com.apple.developer.networking.HotspotHelper`）并且审批严格**。普通 App 通常拿不到（Apple 会审核使用理由）。如果你只是想连接 Wi-Fi，优先用 `NEHotspotConfiguration`（更简单、无需额外审批）。([Apple Developer][16], [Medium][17])
+
+<br/>
+
+**权限 & Capabilities 一览（实践要点）**
+
+1. **Access Wi-Fi Information**（`com.apple.developer.networking.wifi-info`）
+
+   * 在 Xcode Target → Signing & Capabilities 加 “Access Wi-Fi Information”，或在 entitlements 添加 `com.apple.developer.networking.wifi-info = YES`。没有这个 entitlement，读取 SSID/BSSID 很可能失败。([Apple Developer][10], [Better Programming][18])
+
+2. **Location Permission**
+
+   * 从 iOS 13/14 后访问 Wi-Fi 信息可能要求 App 请求并获得位置授权（通常是当你使用 `CNCopyCurrentNetworkInfo` / `NEHotspotNetwork.fetchCurrent` 时）。请在 Info.plist 提供合适的说明键（如 `NSLocationWhenInUseUsageDescription`、`NSLocationAlwaysAndWhenInUseUsageDescription`），并在运行时请求权限。([seacode.uk][9])
+
+3. **Network Extensions / Hotspot entitlements**
+
+   * `NEHotspotHelper` 需要特殊审批；`NEHotspotConfiguration` 通常只要在 Capabilities 打开 “Hotspot Configuration” 就能工作（但偶有系统/设备 bug 情形）。([Medium][17], [Stack Overflow][6])
+
+4. **真机测试**：上述 Wi-Fi APIs 大多数都 **在模拟器不可用**，必须用真机测试。
+
+<br/>
+
+**推荐实战流程（配置 + 验证）**
+
+1. 在 Xcode 打开 `Signing & Capabilities`：添加 **Hotspot Configuration**（用于 apply）和 **Access Wi-Fi Information**（用于读取 SSID/BSSID）。
+2. 请求并确认用户的位置权限（若你需要读取 SSID）。
+3. 使用 `NEHotspotConfigurationManager.shared.apply(config)` 发起连接请求，处理 `error`（判断 `NEHotspotConfigurationError`）。
+4. `apply` 后不要完全依赖 `error == nil` 为“已连通”，用 `NEHotspotNetwork.fetchCurrent` 或 `NWPathMonitor` / 实际网络请求去确认真实连通性。([Marko Engelman][3], [Apple Developer][8])
+
+
+<br/><br/>
+
+**`NEHotspotConfiguration`、`NEHotspotConfigurationManager`、`NEHotspotNetwork.fetchCurrent`、`CNCopySupportedInterfaces`** 这些 API 有沙箱限制，部分需要特殊的 **Entitlement（网络扩展权限）**，不是所有 App 都能上架使用。
+
+
+<br/>
+
+**1.`NEHotspotConfiguration` & `NEHotspotConfigurationManager`**
+
+👉 用来连接指定的 Wi-Fi。
+
+```swift
+import NetworkExtension
+
+func connectToWiFi(ssid: String, password: String) {
+    let config = NEHotspotConfiguration(ssid: ssid, passphrase: password, isWEP: false)
+    config.joinOnce = false  // 设置为 true 表示仅本次加入，false 表示记住 Wi-Fi
+
+    NEHotspotConfigurationManager.shared.apply(config) { error in
+        if let error = error {
+            if (error as? NEHotspotConfigurationError)?.code == .alreadyAssociated {
+                print("已连接到该 Wi-Fi")
+            } else {
+                print("连接失败：\(error.localizedDescription)")
+            }
+        } else {
+            print("Wi-Fi 连接成功！")
+        }
+    }
+}
+```
+
+使用时调用：
+
+```swift
+connectToWiFi(ssid: "MyWiFi", password: "12345678")
+```
+
+<br/>
+
+**2.`NEHotspotNetwork.fetchCurrent`**
+
+👉 获取当前连接的 Wi-Fi 信息。
+
+```swift
+import NetworkExtension
+
+func getCurrentWiFi() {
+    NEHotspotNetwork.fetchCurrent { network in
+        if let network = network {
+            print("当前 Wi-Fi SSID: \(network.ssid)")
+            print("信号强度 RSSI: \(network.signalStrength)") // 0.0 ~ 1.0
+            print("BSSID: \(network.bssid)")
+        } else {
+            print("未连接到 Wi-Fi 或无权限获取")
+        }
+    }
+}
+```
+
+<br/>
+
+**3.`CNCopySupportedInterfaces`（SystemConfiguration 框架）**
+
+👉 获取设备支持的 Wi-Fi 接口，并查看当前 Wi-Fi 信息。
+这个方法比较旧，很多时候只能获取 **SSID 和 BSSID**。
+
+```swift
+import SystemConfiguration.CaptiveNetwork
+
+func getWiFiInfo() {
+    if let interfaces = CNCopySupportedInterfaces() as? [String] {
+        for interface in interfaces {
+            if let dict = CNCopyCurrentNetworkInfo(interface as CFString) as? [String: AnyObject] {
+                print("接口: \(interface)")
+                print("SSID: \(dict[kCNNetworkInfoKeySSID as String] ?? "" as AnyObject)")
+                print("BSSID: \(dict[kCNNetworkInfoKeyBSSID as String] ?? "" as AnyObject)")
+            }
+        }
+    } else {
+        print("无法获取 Wi-Fi 接口信息")
+    }
+}
+```
+
+<br/>
+
+**总结**
+
+* **`NEHotspotConfiguration`** → 连接 Wi-Fi
+* **`NEHotspotConfigurationManager`** → 管理 Wi-Fi 配置（添加/移除）
+* **`NEHotspotNetwork.fetchCurrent`** → 获取当前 Wi-Fi 详细信息（信号强度、SSID、BSSID）
+* **`CNCopySupportedInterfaces`** → 获取 Wi-Fi SSID/BSSID（老 API，功能有限）
 
 
 

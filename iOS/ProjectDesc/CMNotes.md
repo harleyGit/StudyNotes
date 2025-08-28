@@ -27,6 +27,8 @@
 - [**系统蓝牙库CoreBluetooth**](#系统蓝牙库CoreBluetooth)
 	- [精确获取当前蓝牙开启状态](#精确获取当前蓝牙开启状态)
 	- [轮询连接蓝牙设备](#轮询连接蓝牙设备)
+- [Wi-Fi连接](#Wi-Fi连接)
+	- [App内添加Wi-Fi配置](#App内添加Wi-Fi配置)
 - [**依赖注入库Swinject**](#依赖注入库Swinject)
 - [**实时音视频通信WebRTC**](#实时音视频通信WebRTC)
 - [**日志库SwiftyBeaver**](#日志库SwiftyBeaver)
@@ -1425,6 +1427,36 @@ PopupViewUntil.showOpenBlePopupView { [weak self] isAuth in
 }
 
 ```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Wi-Fi连接">Wi-Fi连接</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="App内添加Wi-Fi配置">App内添加Wi-Fi配置</h2>
+
+```swift
+NEHotspotConfiguration 
+
+NEHotspotConfigurationManager.shared.apply(config) { error in}
+
+NEHotspotNetwork.fetchCurrent { network in}
+
+CNCopySupportedInterfaces()
+```
+
+[详情请看这里](./蓝牙库CoreBluetooth.md#App加入设备Wi-Fi网络)
+
+
+
+
+
+
 
 
 <br/><br/><br/>
