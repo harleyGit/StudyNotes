@@ -1,8 +1,14 @@
 > <h1 id=""></h1>
 - [**import和require**](#import和require)
+- [可选取值](#可选取值)
+	- [数组为null，安全取元素](#数组为null，安全取元素)
 - [**数组**](#数组)
 	- [对象数组](#对象数组)
 	- [对象数组转换、过滤](#对象数组转换、过滤)
+	- [数组对象转换成map类型](#数组对象转换成map类型)
+	- [数组元素转换](#数组元素转换)
+- [Map](#Map)
+	- [获取map的所有keys](#获取map的所有keys)
 - [undefined vs null哪个好](#undefinedvsnull哪个好)
 - [**函数**](#函数)
 	- [Function()构造函数](#Function()构造函数)
@@ -17,6 +23,7 @@
 		- [语法简写特性-返回值参数和行参相同](#语法简写特性-返回值参数和行参相同)
 	- [函数结构参数 method（value,({ typeSpecDic }) => {}）](#函数结构参数)
 	- [回调函数](#回调函数)
+	- [函数设置默认值](#函数设置默认值)
 - [**对象高级使用**](#对象高级使用)
 	- [创建 JavaScript 对象](#创建JavaScript对象)
 	- 	[使用Object生成对象](#使用Object生成对象)
@@ -72,13 +79,8 @@
 |:--|:--|
 | 2 | math.add(2,3); // 5 |
 
-　
-　
-
-
 
 <br/><br/>
-
 
 **import 和 require 是JS模块化编程使用的.**
 
@@ -90,16 +92,11 @@
 
 <br/>
 
-
 - **本质**
 	- require 是赋值过程，其实require的结果就是对象、数字、字符串、函数等，再把结果赋值给某个变量。它是普通的值拷贝传递。
 	- import 是解构过程。使用import导入模块的属性或者方法是引用传递。且import是read-only的，值是单向传递的。default是ES6 模块化所独有的关键字，export default {} 输出默认的接口对象，如果没有命名，则在import时可以自定义一个名称用来关联这个对象
 
-
-
-<br/>
-<br/>
-
+<br/><br/>
 
 - **语法用法展示**
 
@@ -173,11 +170,7 @@ import _, { test, name } from './a.js'
 test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 ```
 
-
-
-
-<br/>
-<br/>
+<br/><br/>
 
 - **写法形式**
 	- require/exports 方式的写法比较统一
@@ -191,7 +184,7 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 	```
 
 
-	- import/export 方式的写法就相对丰富些
+- import/export 方式的写法就相对丰富些
 
 	```
 	// import
@@ -211,9 +204,7 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 	```
 
 
-<br/>
-<br/>
-
+<br/><br/>
 
 - **要点总结**
 	- 通过require引入基础数据类型时,属于复制该变量
@@ -222,6 +213,52 @@ test(`my name is ${name}`)  // 模板字符串中使用${}加入变量
 	- CommonJS规范默认export的是一个对象,即使导出的是基础数据类型
 
 
+
+***
+<br/><br/><br/>
+> <h1 id="可选取值">可选取值</h1>
+
+
+<br/><br/>
+> <h2 id="数组为null，安全取元素">数组为null，安全取元素</h2>
+
+若是`timeFilter`为一个数组，其初始值是 `null`。若是直接写 `timeFilter[0]` 会报错：
+
+```
+TypeError: Cannot read properties of null (reading '0')
+```
+
+解决办法就是在访问前加 **可选链运算符 `?.`** 或者 **逻辑判断**。
+
+<br/>
+
+**方式 1：可选链**
+
+```jsx
+const startTime = state.timeFilter?.[0];
+```
+
+如果 `timeFilter` 是 `null` 或 `undefined`，那么结果就是 `undefined`，不会报错。
+
+<br/>
+
+**方式 2：逻辑判断**
+
+```jsx
+const startTime = state.timeFilter && state.timeFilter[0];
+```
+
+这时如果 `timeFilter` 为 `null`，就会直接返回 `null`，而不是尝试取索引。
+
+<br/>
+
+**方式 3：默认值**
+
+```jsx
+const startTime = state.timeFilter?.[0] ?? null;
+```
+
+这样可以明确当没有值时设为 `null`（或者你想要的默认值）。
 
 
 
@@ -481,6 +518,234 @@ console.log(arr);
 | `Object.keys(obj)`                 | 得到对象键数组                |
 | `.reduce((acc, key) => {...}, {})` | 累加构造新对象，初始值是空对象        |
 | 用途                                 | 用于“对象 -> 新对象”类型转换或过滤操作 |
+
+
+***
+<br/><br/><br/>
+> <h2 id="数组对象转换成map类型">数组对象转换成map类型</h2>
+
+想把数组 `data` 转换成一个对象（类似 Map 结构）：
+
+```js
+const data = [
+  {
+    operateModule: "生产管理",
+    operateDescList: ["分配设备", "XXXX"]
+  }
+];
+```
+
+<br/>
+
+👉 输出：
+
+```js
+{
+  "生产管理": ["分配设备", "XXXX"]
+}
+```
+
+<br/>
+
+**方法 1：`reduce`**
+
+```js
+const map = data.reduce((acc, item) => {
+  acc[item.operateModule] = item.operateDescList;
+  return acc;
+}, {});
+
+console.log(map);
+```
+
+<br/>
+
+**方法 2：`Object.fromEntries`**
+
+```js
+const map = Object.fromEntries(
+  data.map(item => [item.operateModule, item.operateDescList])
+);
+
+console.log(map);
+```
+
+<br/>
+
+**⚡推荐**
+
+* 如果只需要普通对象，用 **`Object.fromEntries`** 简洁明了。
+* 如果你确实要 `Map` 实例，可以这样：
+
+```js
+const map = new Map(data.map(item => [item.operateModule, item.operateDescList]));
+console.log(map.get("生产管理")); // ["分配设备", "XXXX"]
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="数组元素转换">数组元素转换</h2>
+
+我的数据结构大概是这样的：
+
+```js
+const data = [
+  {
+    operateModule: "生产管理",
+    operateDescList: ["分配设备", "XXXX"]
+  },
+  {
+    operateModule: "设备维护",
+    operateDescList: ["检查设备", "维修设备"]
+  }
+];
+```
+
+<br/>
+
+我想把 **每个 `operateDescList` 里的元素** 转换成这种格式：
+
+```js
+[
+  { value: '分配设备', label: '分配设备' },
+  { value: 'XXXX', label: 'XXXX' },
+  { value: '检查设备', label: '检查设备' },
+  { value: '维修设备', label: '维修设备' }
+]
+```
+
+---
+<br/>
+
+**方法 1：用 `flatMap`（推荐）**
+
+```js
+const result = data.flatMap(item =>
+  item.operateDescList.map(desc => ({
+    value: desc,
+    label: desc
+  }))
+);
+
+console.log(result);
+```
+
+<br/>
+
+**方法 2：`reduce`**
+
+```js
+const result = data.reduce((acc, item) => {
+  const converted = item.operateDescList.map(desc => ({
+    value: desc,
+    label: desc
+  }));
+  return acc.concat(converted);
+}, []);
+
+console.log(result);
+```
+
+<br/>
+
+**方法 3：保留分组（如果你要区分不同 `operateModule`）**
+
+```js
+const grouped = data.map(item => ({
+  module: item.operateModule,
+  options: item.operateDescList.map(desc => ({
+    value: desc,
+    label: desc
+  }))
+}));
+
+console.log(grouped);
+```
+
+<br/>
+
+输出示例：
+
+```js
+[
+  {
+    module: "生产管理",
+    options: [
+      { value: "分配设备", label: "分配设备" },
+      { value: "XXXX", label: "XXXX" }
+    ]
+  },
+  {
+    module: "设备维护",
+    options: [
+      { value: "检查设备", label: "检查设备" },
+      { value: "维修设备", label: "维修设备" }
+    ]
+  }
+]
+```
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Map">Map</h1>
+
+***
+<br/>
+> <h2 id="获取map的所有keys">获取map的所有keys</h2>
+
+你前面用的是
+
+```js
+const data = [
+  {
+    operateModule: "生产管理",
+    operateDescList: ["分配设备", "XXXX"]
+  }
+];
+
+
+const map = Object.fromEntries(
+  data.map(item => [item.operateModule, item.operateDescList])
+);
+```
+
+这里的 `map` 是一个普通对象。
+
+<br/>
+
+**获取所有 key（对象版）**
+
+```js
+const keys = Object.keys(map);
+console.log(keys); // ["生产管理"]
+```
+
+<br/>
+
+**如果你用的是 `Map` 实例**
+
+```js
+const map = new Map(data.map(item => [item.operateModule, item.operateDescList]));
+
+const keys = [...map.keys()];
+console.log(keys); // ["生产管理"]
+```
+
+<br/>
+
+**✅ 总结**
+
+* `Object.keys(obj)` → 获取普通对象的所有 key。
+* `map.keys()`（配合 `[...]` 展开）→ 获取 ES6 `Map` 的所有 key。
+
 
 
 
@@ -1203,6 +1468,74 @@ render() {
 ```
 
 > 用箭头函数 `() => this.handleClick(...)` 是为了控制参数传递，否则会立即执行。
+
+
+***
+<br/><br/><br/>
+> <h2 id="函数设置默认值">函数设置默认值</h2>
+
+**把 `handleFilter` 封装成一个更通用的函数，支持：**
+
+* 必选参数：`filterKey`、`value`
+* 可选参数：`isTime` 以及未来可能扩展的其他参数
+* 调用时不传也不会报错
+
+<br/>
+
+**改造后的写法**
+
+```js
+handleFilter = (filterKey, value, options = {}) => {
+  const {
+    isTime = false,   // 是否时间过滤
+    caseInsensitive = false, // 示例：是否忽略大小写
+    extra = null      // 示例：额外参数
+  } = options;
+
+  console.log("filterKey:", filterKey);
+  console.log("value:", value);
+  console.log("isTime:", isTime);
+  console.log("caseInsensitive:", caseInsensitive);
+  console.log("extra:", extra);
+
+  // ✅ 这里写具体的处理逻辑
+};
+```
+
+<br/>
+
+调用示例
+
+**1.只传必选参数**
+
+```js
+this.handleFilter('actionTypeFilter', e);
+// isTime=false, caseInsensitive=false, extra=null
+```
+
+<br/>
+
+**2.传一个可选参数**
+
+```js
+this.handleFilter('timeFilter', e, { isTime: true });
+// isTime=true
+```
+
+<br/>
+
+**3.传多个可选参数**
+
+```js
+this.handleFilter('nameFilter', 'Jack', { caseInsensitive: true, extra: { id: 123 } });
+// caseInsensitive=true, extra={id:123}
+```
+
+<br/>
+---
+
+这样以后你想加更多可选参数，直接在 `options` 里扩展就行，不会破坏现有调用方式。
+
 
 
 

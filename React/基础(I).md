@@ -355,11 +355,7 @@ MyTitle.propTypes = {
 
 
 
-
-<br/>
-<br/>
-<br/>
-
+<br/><br/><br/>
 > <h2 id="ReactDOM">React DOM</h2>
 
 - react.js是React的核心文件，如组件、Hooks、虚拟DOM等，都在这个文件中。
@@ -371,9 +367,7 @@ MyTitle.propTypes = {
 **介绍：**ReactDOM对象是react-dom.js提供的一个用于进行DOM操作的对象，在该对象下有一系列API用于操作DOM。在React中需要和真实的DOM打交道时都需要通过ReactDOM的API进行。当然也可以使用一些原生DOM的API，但并不推荐这么做。
 
 
-
 <br/>
-
 > <h3 id='ReactDom.render'>ReactDom.render</h3>
 
 ```

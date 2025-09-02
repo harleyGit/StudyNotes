@@ -733,17 +733,19 @@ CGFloat leftInset = buttonWidth - imageWidth - spacing;
 button.imageEdgeInsets = UIEdgeInsetsMake(0, leftInset, 0, -leftInset);
 ```
 
----
 
-⚠️ **推荐写法**：
-如果只是要「右边留 9pt」，直接用 **方法一** 就够了。
-如果按钮里同时有文字，建议用 **方法二**。
+<br/>
 
----
+**布局：左边图片右边文字**
 
-要不要我给你整理一个 **UIButton 分类**（比如 `setImageRight(padding:)`），以后你只要写一句就能把图片放右边并控制间距？
+```swift
+let _deviceAddButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 226, 40)];
 
-
+// 设置图片在右边
+_deviceAddButton.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
+// 设置文字和图片间距
+_deviceAddButton.imageEdgeInsets = UIEdgeInsetsMake(0, 6, 0, -6);
+```
 
 
 

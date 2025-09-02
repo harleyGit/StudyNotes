@@ -1,13 +1,6 @@
-<!--
- * @Author: huanggang huanggang@icloud.com
- * @Date: 2025-05-07 14:01:57
- * @LastEditors: huanggang huanggang@icloud.com.com
- * @LastEditTime: 2025-05-07 14:05:47
- * @FilePath: /undefined/Users/huanggang/HGFiles/Code/MLC/Readme.md
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
+	- [类中的访问权限](#类中的访问权限)
 	- [异步任务Task](#异步任务Task)
 		- [异步网络请求+UI更新小Demo](#异步网络请求+UI更新小Demo)
 		- [Task的6种任务场景Demo](#Task的6种任务场景Demo)
@@ -20,6 +13,7 @@
 	- [拼接公共域名+接口路径](#拼接公共域名+接口路径)
 	- [自定义简易观察者](#自定义简易观察者)
 	- [字符串转枚举](#字符串转枚举)
+	- [oc对象转换成结构体的工厂方法](#oc对象转换成结构体的工厂方法)
 - [**UI组件**](#UI组件)
 	- [label宽度自适应](#label宽度自适应)
 	- [弹窗播放视频](#弹窗播放视频)
@@ -38,6 +32,7 @@
 	- [json数据本地库解析](#json数据本地库解析) 
 - [**本地数据库RealmSwift**](#本地数据库RealmSwift)
 	- [RealmSwift简单实用Demo](#RealmSwift简单实用Demo)
+- [GCDAsyncSocket及时通讯](#GCDAsyncSocket及时通讯)
 - [**Git操作**](#Git操作)
 	- [添加忽略文件](#添加忽略文件)
 - [**CocoaPod安装配置**](#CocoaPod安装配置)
@@ -51,6 +46,67 @@
 <br/>
 
 > <h1 id= "Swift高级用法">Swift高级用法</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="类中的访问权限">类中的访问权限</h2>
+
+若有`BleKit`库中**AClass**属性 ： 
+
+```swift
+public struct AClass {
+    private(set) var isRegistered: Bool = false
+}
+```
+
+* 在本模块外，**完全看不到** `isRegistered`（因为属性本身默认是 `internal`）
+* 在本模块内，可以读，但不能写
+
+
+**想让外部模块可以读取，但是不可以修改，如何做？**
+
+<br/>
+
+`private(set)` 的意思是：
+
+* **getter**（读）权限跟属性修饰符一致
+* **setter**（写）权限限制在 `private`
+
+
+---
+<br/>
+
+**想让外部模块能读但不能写**
+
+就要加上 **访问级别**：
+
+```swift
+public struct AClass {
+    public private(set) var isRegistered: Bool = false
+    
+    public init(isRegistered: Bool = false) {
+        self.isRegistered = isRegistered
+    }
+}
+```
+
+这样效果就是：
+
+* 在模块外可以 `device.isRegistered` ✅
+* 在模块外不能改 `device.isRegistered = true` ❌
+* 只有在 `AKThingBleDeviceModel` 的内部方法里能修改 ✅
+
+<br/>
+
+```swift
+let device = AKThingBleDeviceModel()
+print(device.isRegistered)  // ✅ 可以读
+
+device.isRegistered = true  // ❌ 报错：'isRegistered' setter is inaccessible
+```
+
+
+[**还有其他用法，请看这里**](./../Swift/关键字.md#模块访问权限举例)
 
 
 ***
@@ -994,6 +1050,12 @@ URL(string: "abc", relativeTo: base)!.absoluteString
 ***
 <br/><br/><br/>
 ># <h2 id="字符串转枚举">[字符串转枚举](./../Swift/swift基础.md##字符串转枚举)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="oc对象转换成结构体的工厂方法">[oc对象转换成结构体的工厂方法](./../Swift/swift基础.md#OC对象转换成结构体)</h2>
+
 
 
 <br/><br/><br/>
@@ -2652,6 +2714,18 @@ if let user = realm.objects(User.self).first {
 ---
 
 需要我帮你写一个完整的“Realm + MVVM”架构的样例项目结构吗？例如：保存登录用户、查询用户列表、响应 UI 更新。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="GCDAsyncSocket及时通讯">[GCDAsyncSocket及时通讯](./../Swift/GCDAsyncSocket.md)</h1>
+
+这个及时通讯用在ap连接的时候，获取设备发来的信息的。
+
+
 
 
 <br/><br/><br/>

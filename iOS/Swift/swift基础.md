@@ -3,6 +3,8 @@
 - [**属性**](#属性)
 	- [属性包装器](#属性包装器)
 	- [属性包装器中的 `projectedValue`（呈现值）](#属性包装器中的projectedValue呈现值)
+	- [BleDeviceModel数据模型的属性包装器](#BleDeviceModel数据模型的属性包装器)
+	- [@UserDefault属性包装器](#@UserDefault属性包装器)
 - [**数组**](#数组)
 	- [一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性](#一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性)
 - [**类**](#类)
@@ -28,6 +30,7 @@
 	- [主枚举包含多个子枚举](#主枚举包含多个子枚举)
 	- [字符串转枚举](#字符串转枚举)
 - [**结构体**](#结构体)
+	- [OC对象转换成结构体](#OC对象转换成结构体)
 - [**集合**](#集合)
 	- [Set集合与NSArray、Dictionary区别](#Set集合与NSArray、Dictionary区别)
 	- [enumerated（）集合(如数组、字典、集合等)遍历](#enumerated（）集合(如数组、字典、集合等)遍历)
@@ -284,6 +287,252 @@ if let person = Person(name: "John", age: 30) {
 通过不同的构造方法，你可以根据需求选择最合适的初始化方式来确保对象创建的安全性和灵活性。
 
 
+***
+<br/><br/><br/>
+> <h2 id="BleDeviceModel数据模型的属性包装器">BleDeviceModel数据模型的属性包装器</h2>
+
+Swift 的 **属性包装器（Property Wrapper）** 适合这种场景，比如：
+
+* 给属性一个默认值
+* 自动进行合法化（比如 RSSI 范围限定）
+* 自动持久化（比如存到 `UserDefaults`）
+* 控制只读属性
+
+---
+
+**1.定义几个常用包装器**
+
+```swift
+import Foundation
+
+/// 提供默认值
+@propertyWrapper
+struct Default<Value> {
+    private var value: Value
+    private let defaultValue: Value
+    
+    init(wrappedValue: Value) {
+        self.value = wrappedValue
+        self.defaultValue = wrappedValue
+    }
+    
+    var wrappedValue: Value {
+        get { value }
+        set { value = newValue }
+    }
+}
+
+/// RSSI 包装器（限制范围）
+@propertyWrapper
+struct RSSIValue {
+    private var value: Int?
+    
+    var wrappedValue: Int? {
+        get { value }
+        set {
+            if let rssi = newValue, (-100...0).contains(rssi) {
+                value = rssi
+            } else {
+                value = nil // 超出范围则置空
+            }
+        }
+    }
+    
+    init(wrappedValue: Int?) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+/// 只读包装器
+@propertyWrapper
+struct Readonly<Value> {
+    private var value: Value
+    
+    init(wrappedValue: Value) {
+        self.value = wrappedValue
+    }
+    
+    var wrappedValue: Value {
+        get { value }
+    }
+}
+```
+
+<br/>
+
+**2.应用到 `BleDeviceModel`**
+
+```swift
+import CoreBluetooth
+
+struct BleDeviceModel: Codable {
+    /// 蓝牙外设对象（不编码）
+    var peripheral: CBPeripheral? = nil
+    
+    /// 蓝牙名称
+    @Default("") var name: String
+    
+    /// 信号强度（自动校验范围）
+    @RSSIValue var rssi: Int?
+    
+    /// UUID
+    @Default("") var uuid: String
+    
+    /// 唯一标识符
+    @Default("") var uid: String
+    
+    /// 是否已注册绑定（只读）
+    @Readonly(false) var isRegistered: Bool
+    
+    /// 是否操作（Solicited，只读）
+    @Readonly(false) var isSolicited: Bool
+    
+    /// 是否可绑定（只读）
+    @Readonly(false) var isEnableBind: Bool
+    
+    /// mac 地址
+    @Default("") var macAddr: String
+    
+    /// 是否连接
+    @Default(false) var isConnect: Bool
+    
+    /// 流程状态（只读）
+    @Readonly(0) var processStatus: UInt8
+    
+    /// 产品 ID（只读）
+    @Readonly(0) var productId: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case name, rssi, uuid, uid, isRegistered, isSolicited,
+             isEnableBind, macAddr, isConnect, processStatus, productId
+    }
+}
+```
+
+<br/>
+
+**3.使用示例**
+
+```swift
+var device = BleDeviceModel()
+device.name = "MyDevice"
+device.rssi = -60   // ✅ 合法
+device.rssi = -120  // ❌ 超出范围 -> 自动变成 nil
+
+print(device.name)       // "MyDevice"
+print(device.rssi)       // Optional(-60)
+print(device.isRegistered) // false（只读）
+```
+
+<br/>
+
+这样，你就能通过属性包装器：
+
+* `@Default` → 给属性提供默认值，避免 nil
+* `@RSSIValue` → 自动校验数值范围
+* `@Readonly` → 在模型外部不可修改
+
+
+***
+<br/><br/><br/>
+> <h2 id="@UserDefault属性包装器">@UserDefault属性包装器</h2>
+
+写一个通用的 `@UserDefault` 属性包装器，让属性和 **`UserDefaults`** 自动绑定，读写属性就等于读写持久化存储。
+
+---
+<br/>
+
+**通用实现**
+
+```swift
+import Foundation
+
+@propertyWrapper
+public struct UserDefault<Value> {
+    private let key: String
+    private let defaultValue: Value
+    private let container: UserDefaults
+    
+    public init(_ key: String, defaultValue: Value, container: UserDefaults = .standard) {
+        self.key = key
+        self.defaultValue = defaultValue
+        self.container = container
+    }
+    
+    public var wrappedValue: Value {
+        get {
+            return container.object(forKey: key) as? Value ?? defaultValue
+        }
+        set {
+            container.set(newValue, forKey: key)
+        }
+    }
+}
+```
+
+<br/>
+
+**使用示例**
+
+比如在 `BleDeviceModel` 里希望 **`macAddr`** 永久保存：
+
+```swift
+public struct BleDeviceModel {
+    public var name: String?
+    public var rssi: Int?
+    
+    @UserDefault("macAddr", defaultValue: "")
+    public var macAddr: String
+}
+```
+
+<br/>
+
+这样使用：
+
+```swift
+var device = BleDeviceModel()
+device.macAddr = "11:22:33:44:55:66"   // ✅ 自动写入 UserDefaults
+
+print(device.macAddr)  // ✅ 下次重启 App 还能拿到
+```
+
+---
+<br/>
+
+**🚀 进阶（支持 `Codable` 对象）**
+
+若想保存的不是 `String/Int/Bool`，而是自定义模型，可以扩展为 **支持 `Codable`**：
+
+```swift
+@propertyWrapper
+public struct CodableUserDefault<Value: Codable> {
+    private let key: String
+    private let defaultValue: Value
+    private let container: UserDefaults
+    
+    public init(_ key: String, defaultValue: Value, container: UserDefaults = .standard) {
+        self.key = key
+        self.defaultValue = defaultValue
+        self.container = container
+    }
+    
+    public var wrappedValue: Value {
+        get {
+            guard let data = container.data(forKey: key) else { return defaultValue }
+            return (try? JSONDecoder().decode(Value.self, from: data)) ?? defaultValue
+        }
+        set {
+            let data = try? JSONEncoder().encode(newValue)
+            container.set(data, forKey: key)
+        }
+    }
+}
+```
+
+这样就可以持久化整个 `BleDeviceModel` 或者别的 `Codable` 模型。
+
+
 
 <br/><br/><br/>
 
@@ -294,7 +543,7 @@ if let person = Person(name: "John", age: 30) {
 
 
 ***
-<br/><br/><br/>
+<br/>
 > <h2 id="一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性">一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性</h2>
 
 **数据结构对象：**
@@ -2161,6 +2410,78 @@ let student7 = Student(chinese: 90, math: 80, english: 70)
 //自定义初始化方法
 let student8 = Student(stringScore: "70,80,90")
 ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="OC对象转换成结构体">OC对象转换成结构体</h2>
+
+写一个 **转换方法**，把 Objective-C 的 `BleModel` 转换成 Swift 的 `BleDeviceModel`。
+
+<br/> 
+
+**`BleDeviceModel` 结构体是这样的：**
+
+```swift
+import CoreBluetooth
+
+struct BleDeviceModel: Codable {
+    var peripheral: CBPeripheral? = nil
+    var name: String?
+    var rssi: Int?
+    private(set) var isRegistered: Bool = false
+
+
+    enum CodingKeys: String, CodingKey {
+        case name, rssi, isRegistered,
+    }
+}
+```
+
+<br/>
+
+在 Swift 中扩展 `BleDeviceModel`，写一个静态工厂方法：
+
+```swift
+extension BleDeviceModel {
+    static func from(_ model: BleModel) -> BleDeviceModel {
+        return BleDeviceModel(
+            peripheral: model.cbPeripheral,
+            name: model.name,
+            rssi: model.RSSI?.intValue,
+            isRegistered: model.isRegistered,
+        )
+    }
+
+    // 为了支持上面的工厂方法，补一个带参数 init
+    init(
+        name: String?,
+        rssi: Int?,
+        isRegistered: Bool,
+    ) {
+        self.peripheral = peripheral
+        self.name = name
+        self.rssi = rssi
+        self.isRegistered = isRegistered
+    }
+}
+```
+
+<br/>
+
+**使用示例**
+
+```swift
+let objcModel = BleModel()
+// objcModel 已经被 CoreBluetooth 扫描赋值过
+
+let swiftModel = BleDeviceModel.from(objcModel)
+
+print(swiftModel.name ?? "No Name")
+print(swiftModel.rssi ?? 0)
+print(swiftModel.isRegistered)
+```
+
 
 
 <br/>
