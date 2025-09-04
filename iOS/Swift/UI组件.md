@@ -26,6 +26,8 @@
 		- [直接设置右边距](#直接设置右边距) 
 		- [同时有文字+图片](#同时有文字+图片) 
 		- [通用公式（动态计算）](#通用公式（动态计算）)
+- [导航栏](#导航栏)
+	- [系统导航栏和自定义导航栏](#系统导航栏和自定义导航栏)
 
 
 
@@ -748,7 +750,259 @@ _deviceAddButton.imageEdgeInsets = UIEdgeInsetsMake(0, 6, 0, -6);
 ```
 
 
+<br/><br/><br/>
 
+***
+<br/>
+
+> <h1 id="导航栏">导航栏</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="系统导航栏和自定义导航栏"> 系统导航栏和自定义导航栏 </h2>
+
+**系统导航栏显示返回按钮的标题：**
+
+系统导航栏默认会有返回按钮，但是你的代码里
+
+```swift
+navigationController?.setNavigationBarHidden(false, animated: false)
+```
+
+- 虽然显示了系统导航栏，但如果你没有在 `viewDidLoad` 里设置 `title`，系统不会自动给你显示返回按钮。
+- 所以要保证有返回按钮，只需要确保 不是根控制器，并且设置一个 title 或 navigationItem.title 即可
+
+
+<br/><br/>
+
+**自定义导航栏模式下**
+
+当完全隐藏了系统导航栏，必须自己在 **CustomNavigationBar** 上加一个返回按钮，并手动调用 **popViewController**。
+
+```swift
+class CustomNavigationBar: UIView {
+    private let backButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("〈返回", for: .normal)
+        button.setTitleColor(.systemBlue, for: .normal)
+        return button
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .white
+        addSubview(backButton)
+        backButton.frame = CGRect(x: 10, y: 44, width: 60, height: 40)
+        backButton.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc private func backTapped() {
+        // 通过 responder 找到当前控制器
+        if let vc = self.next as? UIViewController ?? self.findViewController() {
+            vc.navigationController?.popViewController(animated: true)
+        }
+    }
+
+    private func findViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while let r = responder {
+            if let vc = r as? UIViewController {
+                return vc
+            }
+            responder = r.next
+        }
+        return nil
+    }
+}
+```
+
+<br/><br/>
+
+**手势左滑返回**
+
+系统的 interactivePopGestureRecognizer 默认依赖系统导航栏返回按钮。
+
+如果使用了 **自定义导航栏**，需要在 `viewDidLoad` 中手动开启：
+
+```swift
+class HGBaseViewController: UIViewController {
+    enum NavBarStyle {
+        case system
+        case custom
+    }
+
+    var navBarStyle: NavBarStyle = .system
+    private var customNavBar: CustomNavigationBar?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+
+        if navBarStyle == .custom {
+            navigationController?.setNavigationBarHidden(true, animated: false)
+            setupCustomNavBar()
+        } else {
+            navigationController?.setNavigationBarHidden(false, animated: false)
+            navigationItem.title = "系统导航栏"
+        }
+
+        setupCollectionView()
+
+        // 确保左滑返回手势可用
+        navigationController?.interactivePopGestureRecognizer?.delegate = nil
+    }
+
+    /// 创建并添加自定义导航栏
+    private func setupCustomNavBar() {
+        let navBarHeight: CGFloat = 88 // iPhone X 及以上状态栏 + 导航栏高度
+        let navBarFrame = CGRect(x: 0, y: 0, width: view.bounds.width, height: navBarHeight)
+        let navBar = CustomNavigationBar(frame: navBarFrame)
+        view.addSubview(navBar)
+        self.customNavBar = navBar
+    }
+
+    private func setupCollectionView() {
+        // 这里写你的 UICollectionView 初始化逻辑
+    }
+}
+```
+
+***
+<br/><br/>
+
+**问题：自定义导航栏和系统导航栏重叠，并且希望返回按钮只有图标不带文字**
+
+- **1.从自定义导航界面 → push 系统导航界面 → pop 回来自定义界面时**，顶部出现了 **两个导航栏重叠**。
+	
+	* 这是因为系统导航栏在 push 的时候又显示了，回到上一个自定义的界面时，系统的导航栏没有被隐藏。
+	* 解决办法：在 `HGBaseViewController` 的 `viewWillAppear` 里，根据 `navBarStyle` 再次设置导航栏的显示/隐藏。
+
+<br/>
+
+- **2.系统导航栏的返回按钮带文字**，比如「返回 上一页」，你希望只要箭头，不要文字。
+	* 解决办法：统一设置 `UIBarButtonItem.appearance().backButtonTitlePositionAdjustment` 或者在 push 之前修改返回按钮样式。
+
+下面代码可以保证两种情况都能正确：
+
+```swift
+class HGBaseViewController: UIViewController {
+    enum NavBarStyle {
+        case system
+        case custom
+    }
+
+    var navBarStyle: NavBarStyle = .system
+    private var customNavBar: CustomNavigationBar?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+
+        if navBarStyle == .custom {
+            setupCustomNavBar()
+        } else {
+            navigationItem.title = "系统导航栏"
+        }
+
+        setupCollectionView()
+
+        // 解决左滑返回手势失效的问题
+        navigationController?.interactivePopGestureRecognizer?.delegate = nil
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // 每次界面显示时，控制导航栏的隐藏/显示
+        if navBarStyle == .custom {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+        } else {
+            navigationController?.setNavigationBarHidden(false, animated: animated)
+        }
+    }
+
+    /// 创建并添加自定义导航栏
+    private func setupCustomNavBar() {
+        let navBarHeight: CGFloat = 88 // iPhone X 及以上状态栏+导航栏高度
+        let navBarFrame = CGRect(x: 0, y: 0, width: view.bounds.width, height: navBarHeight)
+        let navBar = CustomNavigationBar(frame: navBarFrame)
+        view.addSubview(navBar)
+        self.customNavBar = navBar
+    }
+
+    private func setupCollectionView() {
+        // UICollectionView 初始化逻辑
+    }
+}
+```
+
+<br/>
+
+**系统导航栏返回按钮只保留箭头**
+
+**方法一：** 如果只想在单个界面生效，可以在 push 之前写：
+
+```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    navigationItem.backButtonTitle = "" // iOS 14+ 推荐写法，导航按钮只保留箭头没有返回文本
+}
+```
+
+<br/>
+
+**方法二：** 让系统返回按钮只显示箭头，不显示文字。使用`UIBarButtonItem.appearance()` 是全局生效的。
+
+**但是需要注意：** 在基类控制器里统一设置（推荐在 AppDelegate 或 SceneDelegate 初始化时写一次）：
+
+```swift
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    
+    var window: UIWindow?
+    
+    
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        let window = UIWindow(windowScene: windowScene)
+        
+     
+        self.hideNaviBackTxtBtn() //需要注意只有在其根试图控制器初始化之前使用才可以，否则还是无效的。
+        //或者 self.hideNaviBackTxtBtnV00()
+        
+        // 设置根视图控制器
+        let rootVC = HGBaseListViewController(navBarStyle: .system) // 或.custom .system
+        let navController = UINavigationController(rootViewController: rootVC)
+        
+        window.rootViewController = navController
+        self.window = window
+        window.makeKeyAndVisible()
+        
+        self.hideNaviBackTxtBtnV00()
+    }
+    
+    internal func hideNaviBackTxtBtn() {
+        let backButtonAppearance = UIBarButtonItem.appearance()
+        backButtonAppearance.setTitleTextAttributes([.foregroundColor: UIColor.clear], for: .normal)
+        backButtonAppearance.setTitleTextAttributes([.foregroundColor: UIColor.clear], for: .highlighted)
+
+    }
+
+    /// 隐藏导航返回按钮文本（但是只是系统的并不奏效，只有先push系统 -》 自定义 -〉 系统，这样才没有，不知道咋回事）
+    internal func hideNaviBackTxtBtnV00() {
+        // 全局修改返回按钮文字隐藏
+        let appearance = UIBarButtonItem.appearance()
+        // 系统导航栏的返回按钮带文字，比如「返回 上一页」，你希望只要箭头，不要文字。(这个是全局生效的)
+        appearance.setBackButtonTitlePositionAdjustment(UIOffset(horizontal: -1000, vertical: 0), for: .default)
+    }
+    
+}
+```
 
 
 
