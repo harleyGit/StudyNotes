@@ -25,6 +25,8 @@
 	- [waitGroup等待所有goroutine全部退出/完成后再继续执行](#waitGroup等待所有goroutine全部退出/完成后再继续执行)
 - [安全](#安全)
 	- [签名证书](#签名证书)
+- [**路由库**](#路由库)
+	- [高性能路由库-httprouter.Router](#高性能路由库-httprouter.Router)
 
 
 
@@ -1270,10 +1272,44 @@ tlsConfig.ClientCAs = tlsCertPool
 	* 如果 `ClientAuth` 要求验证（例如 `VerifyClientCertIfGiven` / `RequireAndVerifyClientCert`），`ClientCAs` 需要包含可信的 CA，否则验证会失败。
 * 注意：`RootCAs` 是客户端用来验证**服务器证书**的池；`ClientCAs` 是服务端用来验证**客户端证书**的池。
 
-
-
 <br/>
 
 [**详细请看这里**](./网络.md证书签名常用概念)
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="路由库">路由库</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="高性能路由库-httprouter.Router">高性能路由库-httprouter.Router</h2>
+
+```go
+router := httprouter.New()
+router.HandleMethodNotAllowed = true
+router.PanicHandler = http_api.LogPanicHandler(nsqd.logf)
+router.NotFound = http_api.LogNotFoundHandler(nsqd.logf)
+router.MethodNotAllowed = http_api.LogMethodNotAllowedHandler(nsqd.logf)
+s := &httpServer{
+	nsqd:        nsqd,
+	tlsEnabled:  tlsEnabled,
+	tlsRequired: tlsRequired,
+	router:      router,
+}
+
+router.Handle("GET", "/ping", http_api.Decorate(s.pingHandler, log, http_api.PlainText))
+router.Handle("GET", "/info", http_api.Decorate(s.doInfo, log, http_api.V1))
+```
+
+[有这样一段代码，涉及到接口的路由，详细看这里](./路由httprouter.md#‌Router结构体)
+
+
+
+
 
 
