@@ -19,6 +19,7 @@
 	- [TCP地址判断](#TCP地址判断)
 	- [普通和安全监听区别](#普通和安全监听区别)
 	- [网络地址类型判断](#网络地址类型判断)
+	- [路由未找到(404)-装饰器](#路由未找到(404)-装饰器)
 - [并发编程](#并发编程)
 	- [并发安全容器-原子操作](#并发安全容器-原子操作)
 	- [waitGroup等待所有goroutine全部退出/完成后再继续执行](#waitGroup等待所有goroutine全部退出/完成后再继续执行)
@@ -923,6 +924,179 @@ if tcpAddr, ok := n.RealTCPAddr().(*net.TCPAddr); ok {
 ```
 
 这样就可以根据不同场景，获取 HTTP 服务监听端口，或者 TCP 直连端口。
+
+
+***
+<br/><br/><br/>
+> <h2 id="路由未找到(404)-装饰器">路由未找到(404)-装饰器</h2>
+
+看见了如下一段代码：
+
+```go
+func LogNotFoundHandler(logf lg.AppLogFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		Decorate(func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+			return nil, Err{404, "NOT_FOUND"}
+		}, Log(logf), V1)(w, req, nil)
+	})
+}
+```
+
+---
+<br/> 
+
+**1.函数签名**
+
+```go
+func LogNotFoundHandler(logf lg.AppLogFunc) http.Handler
+```
+
+* 返回值是 `http.Handler`，也就是一个能处理 HTTP 请求的对象。
+* 参数 `logf lg.AppLogFunc`：日志函数，用于记录请求和错误。
+
+所以，这个函数的作用就是 **返回一个“找不到路由”的 handler，并且带有日志功能**。
+
+<br/> 
+
+**2.http.HandlerFunc 封装**
+
+```go
+return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	...
+})
+```
+
+* `http.HandlerFunc` 是 Go 的一个适配器，可以把普通函数 `(w, req)` 包装成实现了 `http.Handler` 的对象。
+* 换句话说，它在这里定义了 **当请求未匹配任何路由时要执行的逻辑**。
+
+<br/> 
+
+**3.内部 Decorate 调用**
+
+```go
+Decorate(
+	func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+		return nil, Err{404, "NOT_FOUND"}
+	}, 
+	Log(logf), 
+	V1,
+)(w, req, nil)
+```
+
+这里是关键：
+
+* `Decorate(...)` 返回的还是一个函数类型：
+
+  ```go
+  func(w http.ResponseWriter, req *http.Request, ps httprouter.Params)
+  ```
+
+  然后立刻用 `(w, req, nil)` 调用。
+
+<br/>
+
+**4.第一个参数：业务处理函数**
+
+```go
+func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+	return nil, Err{404, "NOT_FOUND"}
+}
+```
+
+* 当路由找不到时，返回 `Err{404, "NOT_FOUND"}`。
+* `Err` 是一个自定义错误类型，包含 HTTP 状态码和错误信息。
+
+<br/>
+
+ **5.其余参数：装饰器**
+
+```go
+Log(logf), V1
+```
+
+这些是装饰器 (middleware)，作用大概是：
+
+* `Log(logf)`：负责记录请求日志（调用传入的日志函数）。
+* `V1`：大概率是 API 版本相关的装饰器，比如对返回数据做统一的 V1 格式封装。
+
+<br/>
+
+ **6.整体流程**
+
+所以这段代码的执行顺序大概是：
+
+1. 请求进来 → 被这个 handler 捕获（因为是 NotFoundHandler）。
+2. `Decorate` 把业务函数 + 一堆装饰器（Log、V1）组合起来。
+3. 最终调用组合后的函数 → 得到一个 `404 NOT_FOUND` 错误。
+4. 装饰器会负责：
+
+   * 记录日志。
+   * 统一格式化响应（比如 JSON `{ "status": 404, "message": "NOT_FOUND" }`）。
+   * 写回 HTTP Response。
+
+---
+<br/>
+
+**总结**
+
+这段代码的作用是：
+**返回一个带日志和统一 API 格式化的“路由未找到 (404)”处理器。**
+
+
+***
+<br/>
+
+**流程图：**
+
+```text
+请求进入 (未匹配到路由)
+          │
+          ▼
+ ┌────────────────────┐
+ │ LogNotFoundHandler │
+ └────────────────────┘
+          │
+          ▼
+ ┌───────────────────────┐
+ │ http.HandlerFunc(...) │
+ └───────────────────────┘
+          │
+          ▼
+ ┌─────────────────────────────────────────────┐
+ │ Decorate( handler, Log(logf), V1 )          │
+ │                                             │
+ │ - handler = 返回 404 NOT_FOUND 的函数        │
+ │ - Log(logf) = 装饰器，记录请求日志           │
+ │ - V1       = 装饰器，统一 API V1 格式化响应  │
+ └─────────────────────────────────────────────┘
+          │
+          ▼
+ ┌──────────────────────────────┐
+ │ 组合后的最终函数 (decorated) │
+ └──────────────────────────────┘
+          │
+          ▼
+ ┌───────────────────────────────────────────┐
+ │ 执行顺序：                                │
+ │   1. Log 装饰器 → 记录请求                 │
+ │   2. V1 装饰器  → 格式化输出               │
+ │   3. handler   → 返回 Err{404,"NOT_FOUND"} │
+ └───────────────────────────────────────────┘
+          │
+          ▼
+ ┌──────────────────────────────┐
+ │ HTTP Response 写回客户端     │
+ │  {"status":404,"message":"NOT_FOUND"} │
+ └──────────────────────────────┘
+```
+
+<br/>
+
+`LogNotFoundHandler` = **一个专门处理 404 的路由，返回 JSON 错误格式，并且带日志记录功能**。
+
+
+若是还是不太明白，[可以看这里举的一个Demo](./go实战进阶.md#装饰器)
+
 
 
 

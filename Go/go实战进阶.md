@@ -1,4 +1,6 @@
 > <h2 id=''></h2>
+- [**高级语法**](#高级语法)
+	- [装饰器](#装饰器)
 - [**调试**](#调试)
 	- [单元测试](#单元测试)
 	- [压力测试（性能测试）](#压力测试)
@@ -67,6 +69,182 @@
 		- [Golang Web开发：实现注册、登录与密码验证—bcrypt加密与存储详解](https://blog.axiaoxin.com/post/golang-web-dev-pwd-bcrypt/)
 	- [golang实战-（一系列教程-源码）丶吃鱼的猫（博客园）](https://www.cnblogs.com/eatfishcat/p/15953162.html)
 	- [客户端制作教程（github-其他博客含有爬虫demo可以学习下）](https://github.com/GopherCoder/gitcli/tree/master)
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="高级语法">高级语法</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="装饰器">装饰器</h2>
+
+**1.首先定义一个业务处理函数**
+
+比如我们要返回 **404 NOT\_FOUND**：
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+// 简单的错误类型
+type Err struct {
+	Code int
+	Msg  string
+}
+
+func (e Err) Error() string {
+	return fmt.Sprintf("%d %s", e.Code, e.Msg)
+}
+```
+
+<br/>
+
+**2.定义 Handler 类型**
+
+在 NSQ 里是 `(w, req, ps) (interface{}, error)`，我们简化一下：
+
+```go
+// 统一的 handler 类型
+type HandlerFunc func(http.ResponseWriter, *http.Request) (interface{}, error)
+```
+
+
+<br/>
+ 
+**3.定义装饰器 Decorator**
+
+```go
+// 装饰器定义：输入一个 HandlerFunc，返回一个新的 HandlerFunc
+type Decorator func(HandlerFunc) HandlerFunc
+```
+
+<br/>
+
+**4.写两个装饰器：Log 和 V1**
+
+```go
+// 日志装饰器
+func Log(logf func(string)) Decorator {
+	return func(next HandlerFunc) HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+			logf(fmt.Sprintf("Request: %s %s", r.Method, r.URL.Path))
+			return next(w, r)
+		}
+	}
+}
+
+// V1 装饰器：统一响应格式
+func V1(next HandlerFunc) HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+		data, err := next(w, r)
+		if err != nil {
+			if e, ok := err.(Err); ok {
+				http.Error(w, fmt.Sprintf(`{"status":%d,"message":"%s"}`, e.Code, e.Msg), e.Code)
+				return nil, err
+			}
+			http.Error(w, `{"status":500,"message":"internal error"}`, 500)
+			return nil, err
+		}
+		fmt.Fprintf(w, `{"status":200,"data":"%v"}`, data)
+		return data, nil
+	}
+}
+```
+
+<br/> 
+
+**5.写一个 Decorate 组合器**
+
+```go
+// 装饰器组合器
+func Decorate(h HandlerFunc, decs ...Decorator) HandlerFunc {
+	for i := len(decs) - 1; i >= 0; i-- {
+		h = decs[i](h)
+	}
+	return h
+}
+```
+
+<br/>
+
+**6.写一个 LogNotFoundHandler**
+
+```go
+// NotFound handler
+func LogNotFoundHandler(logf func(string)) http.Handler {
+	// 定义业务逻辑：直接返回 404 错误
+	h := func(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+		return nil, Err{404, "NOT_FOUND"}
+	}
+
+	// 装饰：先 Log，再 V1
+	decorated := Decorate(h, Log(logf), V1)
+
+	// 转为 http.Handler
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		decorated(w, r)
+	})
+}
+```
+
+<br/> 
+
+**7.main 函数测试**
+
+```go
+func main() {
+	logf := func(msg string) { fmt.Println("[LOG]", msg) }
+
+	http.Handle("/", LogNotFoundHandler(logf))
+	fmt.Println("Server running on :8080")
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+<br/> 
+
+**8.运行结果**
+
+启动服务后访问 `http://localhost:8080/xxx`：
+
+日志输出：
+
+```
+[LOG] Request: GET /xxx
+```
+
+客户端收到：
+
+```json
+{"status":404,"message":"NOT_FOUND"}
+```
+
+<br/>
+
+✅ 这样你就能看出：
+
+* `Decorate` 是把多个 **Decorator** 组合起来。
+* `Log` 先执行 → 打印请求。
+* `V1` 再执行 → 统一格式化响应。
+* 最终业务逻辑返回 404。
+
+
+
+
+
+
+
 
 
 
