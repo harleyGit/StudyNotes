@@ -27,6 +27,7 @@
 	- [签名证书](#签名证书)
 - [**路由库**](#路由库)
 	- [高性能路由库-httprouter.Router](#高性能路由库-httprouter.Router)
+		- [进阶-路由库中的装饰器](#进阶-路由库中的装饰器)
 - [**优化**](#优化)
 	- [高性能反射读取数据](#高性能反射读取数据)
 
@@ -1309,6 +1310,49 @@ router.Handle("GET", "/info", http_api.Decorate(s.doInfo, log, http_api.V1))
 ```
 
 [有这样一段代码，涉及到接口的路由，详细看这里](./路由httprouter.md#‌Router结构体)
+
+
+<br/><br/>
+> <h3 id="进阶-路由库中的装饰器">[进阶-路由库中的装饰器](./路由httprouter.md#‌高阶语法-装饰器)</h3>
+
+**看到如下一段代码：**
+
+```go
+package http_api
+
+type APIHandler func(http.ResponseWriter, *http.Request, httprouter.Params) (interface{}, error)
+
+func PlainText(f APIHandler) APIHandler {
+	return func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) (interface{}, error) {
+		code := 200
+		data, err := f(w, req, ps)
+		if err != nil {
+			code = err.(Err).Code
+			data = err.Error()
+		}
+		switch d := data.(type) {
+		case string:
+			w.WriteHeader(code)
+			io.WriteString(w, d)
+		case []byte:
+			w.WriteHeader(code)
+			w.Write(d)
+		default:
+			panic(fmt.Sprintf("unknown response type %T", data))
+		}
+		return nil, nil
+	}
+}
+```
+
+**调用：**
+
+```go
+router := httprouter.New()
+router.Handle("GET", "/ping", http_api.Decorate(s.pingHandler, log, http_api.PlainText))
+```
+
+[**疑问：** 没有看到PlainText中传入参数啊，它是怎么传递参数和结果的？怎么返回数据的](./路由httprouter.md#‌高阶语法-装饰器)
 
 
 
