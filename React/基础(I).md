@@ -1,6 +1,10 @@
 > <h2 id=""></h2>
 - [**基本用法**](#基本用法)
 	- [**React环境搭建**](#React环境搭建)
+		- [Vite和CRA脚手架区别](#Vite和CRA脚手架区别)
+		- [构建一个Vite全新项目](#构建一个Vite全新项目)
+		- [配置多环境](#配置多环境)
+		- [本地CSOR跨域反向代理](#本地CSOR跨域反向代理)
 	- [**JSX简介**](#JSX简介)
 		- [原理](#原理)
 	- [**CSS高级使用**](#CSS高级使用)
@@ -38,6 +42,7 @@
 		- [订阅模型](#订阅模型)
 - [**ES6基础**](#ES6基础)
 	- [异步编程](#异步编程)
+	- [async/await和Promise.then()使用](#async/await和Promise.then()使用)
 - [**顶层API**](#顶层API)
 	- [createElement](#createElement)
 	- [cloneElement](#cloneElement)
@@ -46,6 +51,7 @@
 - [**JavaScript语法**](#JavaScript语法)
 	- [数组splice()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
 - [**创建到打包**](#创建到打包)
+	- [Vite是什么](#Vite是什么)
 - **参考资料：**
 	- [**JavaScript(阮一峰)**](https://www.ruanyifeng.com/blog/javascript/)
 	- [**JavaScript优秀教程**](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript)
@@ -166,14 +172,413 @@
 使用这个比较简单,傻瓜式操作,不懂的自行网上搜索.
 
 
+***
+<br/><br/><br/>
+> <h2 id="Vite和CRA脚手架区别">Vite和CRA脚手架区别</h2>
 
+**`Vite和CRA【Create React App】`**定位都是“前端开发脚手架”，但理念和实现方式差别很大，所以用起来的感觉也差不少。可以从几个维度对比一下 👇
 
+---
+<br/> 
+
+**1️⃣ 架构 & 打包方式**
+
+| 对比项      | CRA（Create React App）  | Vite                                             |
+| -------- | ---------------------- | ------------------------------------------------ |
+| 架构       | 基于 **webpack**         | 开发时用 **esbuild** 作为 dev server，生产用 **Rollup** 打包 |
+| 启动速度     | 先打包再启动 → **慢**（尤其是大项目） | 不打包，按需编译 → **秒开**                                |
+| HMR（热更新） | 修改后重新打包整个依赖树           | 只编译变动的模块，HMR 超快                                  |
+| 配置       | 封装较深，想自定义要 `eject`     | 配置文件简单直观（`vite.config.js`）                       |
+
+<br/> 
+
+**2️⃣ 环境变量**
+
+| CRA                              | Vite                            |
+| -------------------------------- | ------------------------------- |
+| 用 `process.env.REACT_APP_XXX` 读取 | 用 `import.meta.env.VITE_XXX` 读取 |
+| 变量必须以 `REACT_APP_` 开头            | 变量必须以 `VITE_` 开头                |
+
+👉 这是很多人迁移时踩的第一个坑。
 
 <br/>
+
+ **3️⃣ 代理 & 开发服务器**
+
+| CRA                                                 | Vite                                    |
+| --------------------------------------------------- | --------------------------------------- |
+| 通过 `src/setupProxy.js` + `http-proxy-middleware` 配置 | 在 `vite.config.js` 里的 `server.proxy` 配置 |
+| 需要重启服务器才能生效                                         | 保存配置即可热生效                               |
+
+<br/> 
+
+**4️⃣ 插件生态**
+
+| CRA            | Vite                         |
+| -------------- | ---------------------------- |
+| 基本靠 webpack 插件 | Vite 自己的插件体系，同时也支持 Rollup 插件 |
+| 配置复杂度高         | 配置较简单，插件写法也轻量                |
+
 <br/>
 
+ **5️⃣ 生产构建**
+
+* CRA：webpack 完整打包，tree-shaking、代码分割等都要自己优化。
+* Vite：底层是 Rollup，默认输出就比较干净，支持更细粒度的代码分割。
+
+<br/> 
+
+**6️⃣ TypeScript / JSX 支持**
+
+* CRA：内置支持 TS，但编译速度受 webpack 影响。
+* Vite：用 esbuild 处理 TS/JSX，速度非常快。
+
+<br/> 
+
+**7️⃣ 社区 & 生命周期**
+
+* CRA：由 Facebook 出品，但近年来维护频率明显降低，生态有点停滞。
+* Vite：由 Evan You（Vue 作者）发起，现在已经是主流前端构建工具之一，React、Vue、Svelte 都有人用它。
+
+<br/>
+
+ **8️⃣ 适用场景**
+
+| CRA                  | Vite          |
+| -------------------- | ------------- |
+| 老项目或需要 webpack 生态的项目 | 新项目、追求开发体验和速度 |
+| 对复杂 webpack 配置有依赖    | 对“开箱即用”要求更高   |
+
+<br/>
+
+ **📌 总结**
+
+* **CRA** = “React 官方出厂配置 + webpack”
+  → 稳定，但笨重，适合入门或遗留项目。
+
+* **Vite** = “下一代前端构建工具”
+  → 开发体验好，热更新快，配置灵活，越来越多新项目选它。
+
+> 如果是新建 React 项目，99% 情况推荐直接用 **Vite**，除非有必须依赖 webpack 的老插件或工具链。
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="构建一个Vite全新项目">构建一个Vite全新项目</h2>
+
+**1.若是没有安装`Node`，先需要用homebrew进行安装**
+
+```bash
+ brew install node
+```
+
+然后就可以用：
+
+```sh
+npm -v 
+
+11.5.1
+```
+
+<br/>
+
+**2.使用 Vite创建一个新的项目**
+
+Vite 是目前最主流的前端开发工具，速度快、配置简单。
+
+```sh
+npm create vite@latest MLC_React
+
+reate-vite@7.1.1
+Ok to proceed? (y) y
+
+
+> npx
+> "create-vite" MLC_React
+
+│
+◇  Package name:
+│  mlc_react
+│
+◇  Select a framework:
+│  React
+│
+◇  Select a variant:
+│  JavaScript + SWC
+│
+◇  Scaffolding project in /Users/ganghuang/HGFiles/GitHub/MLC_React/MLC_React...
+│
+└  Done. Now run:
+
+  cd MLC_React
+  npm install
+  npm run dev
+```
+
+<br/>
+
+**3.进入目录并安装依赖：**
+
+```sh
+cd MLC_React
+
+npm install
+```
+
+<br/>
+
+**4.启动开发环境：**
+
+```sh
+npm run dev
+```
+
+浏览器访问 http://localhost:5173 就能看到 React 页面。
+
+***
+<br/><br/><br/>
+> <h2 id="配置多环境">配置多环境</h2>
+
+在项目根目录下新建 3 个环境配置文件：
+
+```sh
+.env.debug
+.env.pre
+.env.release
+```
+
+<br/>
+
+**内容示例：**
+
+**📄 `.env.debug`**
+
+```env
+VITE_APP_ENV=debug
+VITE_API_URL=http://localhost:3000/api
+```
+
+<br/>
+
+**📄 `.env.pre`**
+
+```env
+VITE_APP_ENV=pre
+VITE_API_URL=https://pre.example.com/api
+```
+
+<br/>
+
+**📄 `.env.release`**
+
+```env
+VITE_APP_ENV=release
+VITE_API_URL=https://api.example.com
+```
+
+⚠️ 注意：Vite 要求自定义变量必须以 `VITE_` 开头。
+
+<br/>
+
+**步骤 3：修改 `package.json` 脚本**
+
+在 `package.json` 里添加运行脚本：
+
+```json
+{
+  "scripts": {
+    "dev": "vite --mode debug",
+    "build:pre": "vite build --mode pre",
+    "build:release": "vite build --mode release",
+    "preview": "vite preview"
+  }
+}
+```
+
+这样就可以：
+
+* `npm run dev` → 使用 `.env.debug`
+* `npm run build:pre` → 使用 `.env.pre`
+* `npm run build:release` → 使用 `.env.release`
+
+<br/>
+
+**步骤 4：在代码里使用环境变量**
+
+在 `src/App.jsx` 里测试：
+
+```jsx
+function App() {
+  return (
+    <div>
+      <h1>Hello React</h1>
+      <p>当前环境: {import.meta.env.VITE_APP_ENV}</p>
+      <p>API 地址: {import.meta.env.VITE_API_URL}</p>
+    </div>
+  );
+}
+
+export default App;
+```
+
+启动后会自动显示不同环境的变量值。
+
+<br/>
+
+**步骤 5：目录结构建议**
+
+```
+MLC_React/
+├── public/             # 静态资源
+├── src/
+│   ├── api/            # 接口封装
+│   ├── components/     # 公共组件
+│   ├── pages/          # 页面
+│   ├── App.jsx         # 入口组件
+│   ├── App.css
+│   ├── assets
+│   ├── index.css
+│   └── main.jsx        # 入口文件
+├── package-lock.json
+├── package.json
+├── public
+│   └── vite.svg
+└── vite.config.js
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="本地CSOR跨域反向代理">本地CSOR跨域反向代理</h2>
+
+若在 Vite 里却用了 CRA 的 `setupProxy.js`
+
+`http-proxy-middleware` + `setupProxy.js` 这种写法是 **Create React App** 专用的，
+
+**Vite 并不会去加载 `src/setupProxy.js`，所以你的代理根本没生效。**
+
+<br/> 
+
+**Vite 中配置代理的正确方式**
+
+在 Vite 里要在 `vite.config.js` 里加 `server.proxy`：
+
+```js
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/dns.alidns': {
+        target: 'https://dns.alidns.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/dns\.alidns/, ''),
+      },
+    },
+  },
+});
+```
+
+解释：
+
+* `'/dns.alidns'`：拦截以这个开头的请求。
+* `target`：要代理到的真实服务。
+* `rewrite`：把前缀 `/dns.alidns` 去掉，剩下 `/resolve?name=...`。
+
+<br/>
+
+**调用接口的方式**
+
+前端代码要写成：
+
+```js
+axios.get('/dns.alidns/resolve', {
+  params: { name: 'fusion-gateway-cn.imilab.com', type: 'A' }
+});
+```
+
+<br/>
+
+启动 Vite (`npm run dev`) 后，
+
+浏览器请求 `http://localhost:5173/dns.alidns/resolve?...`
+
+Vite 开发服务器会把它代理到：
+
+```
+https://dns.alidns.com/resolve?name=fusion-gateway-cn.imilab.com&type=A
+```
+
+<br/> 
+
+**其他注意事项**
+
+* `vite.config.js`这个文件要放在根目录下，否则不起作用；
+* 代理只在开发模式 (`vite dev`) 下生效，**生产环境需要 Nginx 或后端做转发【这个针对于本地可以，生产环境放到服务端无法使用】**。
+* 如果你之前写了 `setupProxy.js`，可以删掉，它对 Vite 没作用。
+* 确保浏览器不要直接请求 `http://localhost:5173/https://dns.alidns.com/...` 这种路径。
+
+<br/><br/>
+
+
+**vite.config.js 必须放在项目根目录**（和 `package.json` 平级），Vite 才会自动加载它。
+这是 Vite 的约定，不能像 CRA 的 `setupProxy.js` 那样随便丢在 `src/` 里。
+
+如果你想把配置文件放在别的目录，有两种办法：
+
+<br/>
+
+**✅ 方案 1：直接放回根目录（推荐）**
+
+结构示例：
+
+```
+my-app/
+├─ package.json
+├─ vite.config.js   ← 这里
+├─ index.html
+└─ src/
+```
+
+这样运行 `npm run dev` 就能自动识别到 `vite.config.js`。
+
+<br/>
+
+**✅ 方案 2：保持在自定义目录，但启动时手动指定路径**
+
+假如你想放到 `config/vite.config.js`：
+
+```
+my-app/
+├─ package.json
+├─ config/
+│  └─ vite.config.js
+└─ src/
+```
+
+<br/>
+
+需要修改 `package.json` 的启动脚本：
+
+```json
+{
+  "scripts": {
+    "dev": "vite --config config/vite.config.js",
+    "build": "vite build --config config/vite.config.js",
+    "preview": "vite preview --config config/vite.config.js"
+  }
+}
+```
+
+> 这样 Vite 就会去读取 `config/vite.config.js`。
+
+
+<br/><br/>
 > <h2 id="JSX简介">JSX简介</h2>
-
 
 - **定义组件时，最外层的标签只能有一个。**
 
@@ -2349,19 +2754,146 @@ node_modules/vconsole/dist/vconsole.min.js:10
 
 
 
-<br/>
+<br/><br/><br/>
+> <h2 id='async/await和Promise.then()使用'>async/await和Promise.then()使用</h2>
 
-> 
-
-
-
-
-
+在 \*\*React（或任意 JS/TS 项目）\*\*里，`async/await` 和 `Promise.then()` 本质上是一回事，只是写法不同。
 
 <br/>
+
+ **1.`Promise` → `async/await`**
+
+如果拿到的是一个返回 Promise 的函数，可以直接用 `await` 来写：
+
+```js
+// 原始 Promise 写法
+fetch("/api/data")
+  .then(res => res.json())
+  .then(data => {
+    console.log("数据：", data);
+  })
+  .catch(err => {
+    console.error("出错了", err);
+  });
+
+// 转换成 async/await 写法
+async function loadData() {
+  try {
+    const res = await fetch("/api/data");
+    const data = await res.json();
+    console.log("数据：", data);
+  } catch (err) {
+    console.error("出错了", err);
+  }
+}
+```
+
+
+<br/> 
+
+**2.`async/await` → `Promise`**
+
+如果有一个 `async` 函数，它自动返回 Promise，所以可以直接用 `.then()`：
+
+```js
+// async 函数
+async function getNumber() {
+  return 42; // 等价于 Promise.resolve(42)
+}
+
+// 用 Promise 写法
+getNumber().then(num => {
+  console.log("数字：", num);
+});
+```
+
+<br/> 
+
+**3.React 场景下的常见用法**
+
+**(1) 在 `useEffect` 里**
+
+React 的 `useEffect` 回调不能直接用 `async`，但你可以在里面定义并调用异步函数：
+
+```jsx
+import { useEffect, useState } from "react";
+
+function App() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/data");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("加载失败", err);
+      }
+    }
+    fetchData();
+  }, []);
+
+  return <div>{data ? JSON.stringify(data) : "加载中..."}</div>;
+}
+```
+
 <br/>
 
-> <h2 id=''></h2>
+如果不用 `async`，同样可以写成 Promise 风格：
+
+```jsx
+useEffect(() => {
+  fetch("/api/data")
+    .then(res => res.json())
+    .then(setData)
+    .catch(err => console.error("加载失败", err));
+}, []);
+```
+
+<br/>
+
+**(2)在事件回调里**
+
+React 的事件函数可以直接用 `async`：
+
+```jsx
+function App() {
+  const handleClick = async () => {
+    const res = await fetch("/api/data");
+    const data = await res.json();
+    console.log("点击后获取的数据", data);
+  };
+
+  return <button onClick={handleClick}>获取数据</button>;
+}
+```
+
+<br/>
+
+等价的 Promise 写法：
+
+```jsx
+function App() {
+  const handleClick = () => {
+    fetch("/api/data")
+      .then(res => res.json())
+      .then(data => console.log("点击后获取的数据", data))
+      .catch(err => console.error(err));
+  };
+
+  return <button onClick={handleClick}>获取数据</button>;
+}
+```
+
+<br/>
+
+✅ 总结：
+
+* **async 函数**其实就是返回 `Promise` 的函数 → 可以 `.then()`。
+* **Promise** 可以用 `await` 来展开 → 更像同步代码。
+* 在 React 中，常见场景是 `useEffect`、事件回调，两种写法都行，主要看团队风格。
+
 
 
 
@@ -2934,13 +3466,71 @@ build文件就是打包项目打包的一系列配置.
 
 
 
-<br/>
+<br/><br/>
+> <h2 id="Vite是什么">Vite是什么</h2>
 
-***
-<br/>
+好问题 👌，我来给你详细解释一下 **Vite**。
 
-> <h1 id=""></h1>
+---
 
+## 🔹 Vite 是什么？
+
+Vite（读作 *vit*，法语里就是“快”🚀）是一个 **前端构建工具**，用来开发和打包 Vue、React、Svelte 等项目。它是由 Vue 作者 **尤雨溪（Evan You）** 开发的，后来逐渐成为 **主流的前端工具**，现在很多新项目都会用它替代传统的 **Webpack** 或 **Create React App (CRA)**。
+
+---
+
+## 🔹 为什么要用 Vite？
+
+传统的 Webpack 项目有几个痛点：
+
+* **启动慢**：Webpack 在启动时会把整个项目打包好，项目越大越卡。
+* **热更新（HMR）慢**：改一个小文件，也得重新构建一大堆代码。
+* **配置复杂**：要搞很多 loader、plugin，容易踩坑。
+
+Vite 的优势：
+
+1. **启动极快**
+
+   * 使用 **原生 ES Module** (`import/export`)，开发时无需整体打包，只启动你正在用的部分。
+   * 启动项目只需几百毫秒，而 Webpack 可能要几十秒。
+
+2. **热更新快（HMR）**
+
+   * 修改一个文件，Vite 只更新这个模块，而不是整个项目。
+
+3. **内置多框架支持**
+
+   * 支持 React、Vue、Svelte、Preact、Solid 等。
+
+4. **生产环境仍然走打包**
+
+   * 开发环境快 → 使用 ESBuild
+   * 打包时 → 使用 Rollup，产物稳定可用。
+
+5. **配置简单**
+
+   * 默认配置够用，不像 Webpack 那么繁琐。
+
+---
+
+## 🔹 对比一下
+
+| 工具                         | 启动速度 | 热更新速度 | 配置复杂度          | 适用场景       |
+| -------------------------- | ---- | ----- | -------------- | ---------- |
+| **Webpack**                | 慢    | 慢     | 高              | 老项目，大型企业项目 |
+| **CRA (Create React App)** | 中等   | 中等    | 低（封装了 webpack） | React 新手入门 |
+| **Vite**                   | ⚡ 极快 | ⚡ 极快  | 低              | 现代前端项目（推荐） |
+
+---
+
+## 🔹 一句话总结
+
+👉 **Vite 就是一个更快、更轻、更现代的前端开发工具**，用来创建和构建 React、Vue 等项目。
+现在新项目基本上都推荐用 Vite，而不是 CRA。
+
+---
+
+要不要我帮你画一个 **“Vite vs CRA 的工作流程对比图”**，让你直观理解为什么 Vite 更快？
 
 
 <br/>
