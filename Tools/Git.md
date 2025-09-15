@@ -647,10 +647,7 @@ $ git pull origin feature-D
 ```
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 
 ```
 // 为了在开发中保持分支的整洁度，建议从远程拉代码时使用变基
@@ -676,7 +673,7 @@ $ git pull --rebase
 
 [Swift忽略文件配置](https://github.com/github/gitignore/blob/main/Swift.gitignore)
 
-```
+```sh
 # .ignore不起作用解决方案
 # git rm -r --cached .
 # git add .
@@ -790,33 +787,131 @@ yarn.lock
 /Lobby/index.html
 
 
-
 jsconfig.json
 
 
 
 
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+#Go项目忽略
+# 忽略编译生成的可执行文件
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# 忽略输出目录
+/bin/
+
+# 忽略 Go 模块的依赖缓存
+/go.sum
+
+# 忽略 IDE 配置文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 忽略 macOS 特有的文件
+.DS_Store
+._*
+
+# 忽略日志文件
+*.log
+
+# 忽略环境变量文件
+.env
+.env.local
+
+# 忽略用户特定的文件
+*.user
+*.suo
+
+# 忽略临时文件
+*.tmp
+*.temp
+
+
+# 忽略构建缓存
+/.cache/
+/.build/
+
+# 忽略测试二进制文件
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# 忽略覆盖率文件
 *.out
+#delve生成的文件
+__debug_bin[0-9]*
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# 忽略依赖目录
+/vendor/
 
-# Go workspace file
+# 忽略 Go 工作区文件
 go.work
+go.work.sum
+
+ 
+.idea
+*.xml
+ 
+
+
+#React+Vite工程文件忽略配置
+# ========== Node 依赖 ==========
+node_modules/
+package-lock.json
+
+# ========== 构建输出 ==========
+dist/
+build/
+out/
+
+# ========== Vite / 打包缓存 ==========
+.vite/
+vite.config.ts.timestamp-*
+
+# ========== 环境变量文件 ==========
+.env
+.env.*
+!.env.example
+
+# ========== 日志文件 ==========
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# ========== 覆盖率 / 测试产物 ==========
+coverage/
+*.lcov
+
+# ========== 编辑器 & IDE 配置 ==========
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ========== 系统文件 ==========
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========== 杂项缓存 ==========
+*.tmp
+*.temp
+.tmp/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# ========== Storybook / 其它工具 ==========
+storybook-static/
+
+ 
+
+
 
 
 
@@ -924,7 +1019,6 @@ lint/tmp/
 
 # Android Profiling
 *.hprof
-
 ```
 
 

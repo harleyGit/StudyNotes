@@ -503,9 +503,9 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 
 ```json
 {
-  "editor.fontSize": 14,              // 代码编辑器字体大小
+  "editor.fontSize": 14, // 代码编辑器字体大小
   "terminal.integrated.fontSize": 12, // 终端字体大小
-  "window.zoomLevel": 2,               // 界面整体缩放，0是默认，正数放大，负数缩小
+  "window.zoomLevel": 1, // 界面整体缩放，0是默认，正数放大，负数缩小
   "update.mode": "none", //禁止更新
   "dart.openDevTools": "flutter",
   "git.autofetch": true,
@@ -557,7 +557,7 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   "go.toolsEnvVars": {
     "GO111MODULE": "on",
     "GOPROXY": "https://goproxy.cn,direct",
-    "GOTOOLCHAIN": "local"//很重要，使其工具链版本和本地go sdk保持一致，不会和go.mod保持一致，避免工具链和sdk不统一导致无法使用vscode的debugprint调试
+    "GOTOOLCHAIN": "local" //很重要，使其工具链版本和本地go sdk保持一致，不会和go.mod保持一致，避免工具链和sdk不统一导致无法使用vscode的debugprint调试
   },
   // 调试配置
   "go.delveConfig": {
@@ -576,6 +576,7 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   },
   // 代码格式化
   "go.formatTool": "gofmt",
+  // 保存时自动格式化
   "editor.formatOnSave": true,
   // 代码分析
   "go.lintFlags": ["--fast"],
@@ -588,7 +589,13 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   // 构建标签
   "go.buildTags": "",
   "editor.tabCompletion": "on",
+  // 设置 Prettier 为默认格式化工具
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // 如果是 JS/React 项目，可以指定格式化的文件类型
   "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[css]": {
@@ -609,7 +616,8 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "editor.defaultFormatter": "vscode.html-language-features"
   },
   "docker.extension.enableComposeLanguageServer": false,
-  "makefile.configureOnOpen": true
+  "makefile.configureOnOpen": true,
+  "editor.accessibilitySupport": "on"
 }
 ```
 
