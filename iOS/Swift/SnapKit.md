@@ -1,4 +1,5 @@
 > <h1 id=""></h1>
+- [自由伸缩宽度](#自由伸缩宽度)
 - [为什么用320和375作为屏幕适配的分界线](#为什么用320和375作为屏幕适配的分界线)
 - [left、right和leading、trailing区别](#left、right和leading、trailing区别) 
 - [makeConstraints和remakeConstraints区别](#makeConstraints和remakeConstraints区别)
@@ -19,7 +20,81 @@
 ***
 <br/><br/><br/>
 
-> <h1 id=""></h1>
+> <h1 id="自由伸缩宽度">自由伸缩宽度</h1>
+
+> **目标：**
+>
+> * LabelA 最小宽 70，靠左；
+> * LabelB 最小宽 40，靠右；
+> * 空间不足时，**先压缩 LabelA**，LabelB 尽量完整显示。
+
+
+```swift
+private func setupUI() {
+    let labelA = UILabel()
+    let labelB = UILabel()
+	contentView.addSubview(labelA)
+	contentView.addSubview(labelB)
+
+	// 样式
+	labelA.textColor = .black
+	labelB.textColor = .darkGray
+	labelA.lineBreakMode = .byTruncatingTail
+	labelB.lineBreakMode = .byTruncatingTail
+
+	// ------- SnapKit 约束 -------
+	labelA.snp.makeConstraints { make in
+		make.left.equalToSuperview().offset(16)
+		make.top.bottom.equalToSuperview().inset(8)
+		make.width.greaterThanOrEqualTo(70)                // 👈 LabelA 最小宽度
+		make.right.lessThanOrEqualTo(labelB.snp.left).offset(-8)
+	}
+
+	labelB.snp.makeConstraints { make in
+		make.top.bottom.equalTo(labelA)
+		make.right.equalToSuperview().inset(16)
+		make.width.greaterThanOrEqualTo(40)                // 👈 LabelB 最小宽度
+	}
+
+	// ------- 压缩优先级 -------
+	// B 的压缩阻力高（不容易被压缩）
+	labelB.setContentCompressionResistancePriority(.required, for: .horizontal)
+	// A 的压缩阻力低（先被压缩/截断）
+	labelA.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+}
+```
+
+---
+<br/>
+
+
+| 设置                                        | 作用                |
+| ----------------------------------------- | ----------------- |
+| `width.greaterThanOrEqualTo(…)`           | 限定最小宽度            |
+| `setContentCompressionResistancePriority` | 控制谁更容易被压缩         |
+| `.required`                               | 1000 优先级，几乎不会被压缩  |
+| `.defaultLow`                             | 250 优先级，空间不足时先被压缩 |
+
+<br/>
+
+**布局效果**
+
+* **空间充足**：A、B 都按内容宽度显示（不小于最小宽度）。
+* **空间不足**：
+
+  1. 先保证 B 尽量完整（> 40）。
+  2. 压缩 A（最小 70）。
+  3. 如果再不足，A 被截断，尾部显示 `…`。
+
+<br/>
+
+**实现：**
+
+> A、B 都有最小宽度，
+> B 始终优先完整，A 优先被压缩且在尾部显示省略号。
+
+
+
 
 
 ***
