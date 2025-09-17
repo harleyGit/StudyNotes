@@ -1,5 +1,6 @@
 > <h1 id=""></h1>
 - [**工厂模式**](#工厂模式)
+- [依赖注入+组合接口模式](#依赖注入+组合接口模式)
 
 
 
@@ -70,6 +71,107 @@ func main() {
 	fmt.Println("name=", stu.Name, "score=", &stu.getScore() cxxdcxZ)
 }
 ```
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="依赖注入+组合接口模式">依赖注入+组合接口模式</h1>
+
+这段 Go 代码：
+
+```go
+type Channel struct {
+    backend BackendQueue // 这是一个接口
+}
+```
+
+***
+<br/>
+
+- **1️⃣ `type Channel struct { ... }`**
+	* 定义了一个 **结构体类型**，名字叫 `Channel`。
+	* 结构体是 Go 中用来组合一组字段的类型。
+
+<br/>
+
+**2️⃣ `backend BackendQueue`**
+
+* `backend` 是 `Channel` 结构体里的一个字段。
+* 字段的类型是 `BackendQueue`，而 `BackendQueue` 是一个 **接口类型**（interface）。
+
+接口在 Go 中是“一组方法签名”的集合，任何实现了接口中所有方法的类型都可以赋值给这个接口变量。
+
+<br/>
+
+**3️⃣ 作用**
+
+把接口作为字段放进结构体的主要目的，是为了 **解耦** 和 **可扩展**：
+
+* `Channel` 只依赖 `BackendQueue` 接口，而不依赖它的具体实现。
+* 这样 `Channel` 可以在不同场景下组合不同的 `BackendQueue` 实现（比如：内存队列、Redis 队列、Kafka 队列……）。
+
+<br/>
+
+**4️⃣ 举例**
+
+假设接口 `BackendQueue` 是这样定义的：
+
+```go
+type BackendQueue interface {
+    Push(item any) error
+    Pop() (any, error)
+}
+```
+
+<br/>
+
+然后可以写多个实现：
+
+```go
+type MemoryQueue struct {
+    data []any
+}
+
+func (m *MemoryQueue) Push(item any) error {
+    m.data = append(m.data, item)
+    return nil
+}
+func (m *MemoryQueue) Pop() (any, error) {
+    if len(m.data) == 0 {
+        return nil, errors.New("empty")
+    }
+    item := m.data[0]
+    m.data = m.data[1:]
+    return item, nil
+}
+```
+
+<br/>
+
+再把它注入到 `Channel`：
+
+```go
+q := &MemoryQueue{}
+ch := Channel{backend: q}
+
+ch.backend.Push("hello")
+val, _ := ch.backend.Pop()
+fmt.Println(val) // 输出 hello
+```
+
+<br/>
+
+**5️⃣ 总结**
+
+> `Channel` 里的 `backend BackendQueue`
+> 👉 是用来把一个“队列功能”的接口嵌进结构体中，使 `Channel` 能通过接口来访问不同的队列实现，而不用关心细节。
+
+这就是 Go 常用的 **依赖注入 / 组合接口** 模式。
+
+
+
 
 
 

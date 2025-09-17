@@ -1,6 +1,7 @@
 - [**基础**](基础)
 	- [安全拼接字符串](#安全拼接字符串)
 	- [正则表达式匹配判断](#正则表达式匹配判断)
+	- [新类型和别名的区别](#新类型和别名的区别)
 - [**‌启动配置文件options.go**](#‌启动配置文件options.go)
 	- [标识不同的nsqd实例](#标识不同的nsqd实例)
 	- [nsqdFlagSet()解析命令行参数](#nsqdFlagSet()解析命令行参数)
@@ -30,6 +31,9 @@
 		- [进阶-路由库中的装饰器](#进阶-路由库中的装饰器)
 - [**优化**](#优化)
 	- [高性能反射读取数据](#高性能反射读取数据)
+	- [复用缓存](复用缓存)
+- [**设计模式**](#设计模式)
+	- [依赖注入+组合接口模式](#依赖注入+组合接口模式)
 
 
 
@@ -174,6 +178,85 @@ valid := validTopicChannelNameRegex.MatchString(name)
 * **topic 名字** 或 **channel 名字** 只能由特定字符组成，不能乱写。
 * 支持临时频道 `xxx#ephemeral`（客户端断开后就销毁）。
 * 通过这种正则统一限制命名规则，避免非法输入。
+
+
+***
+<br/><br/><br/>
+> <h2 id="新类型和别名的区别">新类型和别名的区别</h2>
+
+看到这段代码，那么这个`type`是定义别名吗？
+
+一开始看到这个我也以为是的，后来随着深入，发现不是的，它是[**别名**](./go语法(II).md#新类型和别名)
+
+```go
+type Experiment string
+
+const (
+	TopologyAwareConsumption Experiment = "topology-aware-consumption"
+)
+
+var AllExperiments = []Experiment{
+	TopologyAwareConsumption,
+}
+```
+
+
+这两句其实就是 **常量和类型的组合**，常见于「特性开关 / 实验开关」的实现里。
+
+<br/>
+
+ `type Experiment string`
+
+```go
+type Experiment string
+```
+
+* 这是 **给内建类型 `string` 定义了一个新名字**，叫 `Experiment`。
+* 底层仍然是 `string`，但有了一个单独的类型标识：
+	* 代码里可以区分普通字符串和「实验名」。
+	* 这样编译器能帮你避免把任意 `string` 误传到需要 `Experiment` 的地方。
+
+> Go 里这种写法叫 **定义新类型**，不是单纯的别名。
+>
+> ✅ 新类型：`type MyString string`
+> ❌ 别名写法：`type MyString = string`
+
+<br/>
+
+**`var AllExperiments = []Experiment{ ... }`**
+
+```go
+var AllExperiments = []Experiment{
+    TopologyAwareConsumption,
+}
+```
+
+* 声明了一个变量 `AllExperiments`，类型是 `[]Experiment`（`Experiment` 的切片）。
+* 里面放了一组当前支持的实验项，这里只有一个 `TopologyAwareConsumption`。
+* 这样做的好处：
+	* 方便枚举所有实验。
+	* 配置校验时，可以检查传入的实验名是否在 `AllExperiments` 里。
+
+完整用法通常是这样的：
+
+```go
+const (
+    TopologyAwareConsumption Experiment = "topology-aware-consumption"
+    AnotherExperiment       Experiment = "another-feature"
+)
+
+var AllExperiments = []Experiment{
+    TopologyAwareConsumption,
+    AnotherExperiment,
+}
+```
+
+
+- **这样设计可以：**
+
+* 给实验名一个强类型（避免滥用普通 `string`）。
+* 集中管理所有实验开关。
+
 
 
 
@@ -1477,6 +1560,58 @@ vlp.data = data
 
 [**官方`atomic.Value`的实现**](./源码.md#atomic.Value的实现)
 
+
+
+***
+<br/><br/><br/>
+> <h2 id="复用缓存">复用缓存</h2>
+
+
+```go
+var bp sync.Pool
+
+func init() {
+	bp.New = func() interface{} {
+		return &bytes.Buffer{}
+	}
+}
+
+func bufferPoolGet() *bytes.Buffer {
+	return bp.Get().(*bytes.Buffer)
+}
+
+func bufferPoolPut(b *bytes.Buffer) {
+	b.Reset()
+	bp.Put(b)
+}
+```
+
+[请看这里： 减少频繁分配内存](./go优化.md#减少频繁分配内存)
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="设计模式">设计模式</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="依赖注入+组合接口模式">依赖注入+组合接口模式</h2>
+
+```go
+type Channel struct {
+    backend BackendQueue // 这是一个接口
+}
+```
+
+- 把接口作为字段放进结构体的主要目的，是为了 **解耦** 和 **可扩展**：
+	- Channel 只依赖 BackendQueue 接口，而不依赖它的具体实现。
+	- 这样 Channel 可以在不同场景下组合不同的 BackendQueue 实现（比如：内存队列、Redis 队列、Kafka 队列……）。
+
+[具体解读和案例，请点击这里](./go设计模式.md#依赖注入+组合接口模式)
 
 
 
