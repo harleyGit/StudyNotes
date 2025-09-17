@@ -1,4 +1,5 @@
 > <h1 id=""></h1>
+- [**判断当前线程在哪条队列执行**](#判断当前线程在哪条队列执行)
 - [**await和async**](#await和async)
 	- [初步使用async和await](#初步使用async和await)
 	- [async和await中使用演员进入主队列](#async和await中使用演员进入主队列)
@@ -15,6 +16,157 @@
 - [**全局隔离机制@globalActor**](#全局隔离机制@globalActor)
 - [**‌ 核心安全协议Sendable**](#核心安全协议Sendable)
 	- [@unchecked作用和意义](#@unchecked作用和意义)
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="判断当前线程在哪条队列执行">判断当前线程在哪条队列执行</h1>
+
+```swift
+private let workQueueKey = DispatchSpecificKey<Void>()
+```
+
+`DispatchSpecificKey` 是 **Grand Central Dispatch (GCD)** 提供的一个工具，用来给某个 **DispatchQueue** 绑定“特定值（specific value）”，从而在运行时判断当前代码是不是在那条队列上执行，或者从队列里取出你自己挂上去的数据。
+
+<br/>
+
+**绑定 key 到队列**
+
+```swift
+let queue = DispatchQueue(label: "com.example.work")
+private let workQueueKey = DispatchSpecificKey<Void>()
+
+queue.setSpecific(key: workQueueKey, value: ())
+```
+
+这里把 `workQueueKey` 和 `()`（Void 的实例）绑定到 `queue`。
+
+<br/>
+
+**检查当前代码是否运行在指定队列**
+
+```swift
+func doSomething() {
+    if DispatchQueue.getSpecific(key: workQueueKey) != nil {
+        // 当前就在 workQueue 上
+        print("Already on workQueue")
+    } else {
+        // 不在 workQueue 上，切换过去
+        queue.async {
+            doSomething()
+        }
+    }
+}
+```
+
+这是 iOS 中避免 **死锁** 或 **多余派发** 的常见技巧。
+
+<br/>
+
+**也可以绑定任意类型的值**
+
+```swift
+let key = DispatchSpecificKey<String>()
+queue.setSpecific(key: key, value: "worker-queue")
+
+DispatchQueue.global().async {
+    if let name = DispatchQueue.getSpecific(key: key) {
+        print("Running on: \(name)")
+    } else {
+        print("Not on worker queue")
+    }
+}
+```
+
+<br/>
+
+**总结**
+
+* `DispatchSpecificKey` 是一个“标记”，让你把值与队列关联。
+* 常用于：
+	* 判断当前代码是否在某个队列上运行。
+	* 在队列中存储与上下文相关的小数据（类似 thread-local storage）。
+* 你定义 `private let workQueueKey = DispatchSpecificKey<Void>()`，是为了给自己的 `DispatchQueue` 做标识，后面再通过 `setSpecific` / `getSpecific` 来用。
+
+<br/>
+
+💡 **Tip**
+很多 Apple 框架（例如 `URLSession`、`NSManagedObjectContext`）内部也用这个机制，来确定回调是不是在它们要求的队列上执行。
+
+***
+<br/><br/>
+
+下面是演示如何用 `DispatchSpecificKey` 给队列“打标签”，然后在函数里检测自己当前是不是在那条队列上。
+
+<br/>
+
+```swift
+import Foundation
+
+// 1️⃣ 创建一个专用的工作队列
+let workQueue = DispatchQueue(label: "com.example.work")
+
+// 2️⃣ 创建一个 key，用来和队列绑定
+private let workQueueKey = DispatchSpecificKey<Void>()
+
+// 3️⃣ 绑定 key 到队列
+workQueue.setSpecific(key: workQueueKey, value: ())
+
+// 4️⃣ 定义一个函数，判断当前是否在 workQueue 上
+func performTask() {
+    if DispatchQueue.getSpecific(key: workQueueKey) != nil {
+        // ✅ 已经在 workQueue 上，直接执行
+        print("Already on workQueue, doing work immediately")
+        doSomeWork()
+    } else {
+        // ❌ 不在 workQueue，上去再执行，避免死锁
+        workQueue.async {
+            performTask()
+        }
+    }
+}
+
+func doSomeWork() {
+    print("doSomeWork running on thread: \(Thread.current)")
+}
+
+// 调用
+performTask()
+
+// 再次调用，但强制在 workQueue 上执行
+workQueue.async {
+    performTask()
+}
+```
+
+<br/>
+
+**运行结果**
+
+```
+Already on workQueue, doing work immediately
+doSomeWork running on thread: <NSThread: 0x60000085c1c0>{number = 4, name = (null)}
+Already on workQueue, doing work immediately
+doSomeWork running on thread: <NSThread: 0x60000085c1c0>{number = 4, name = (null)}
+```
+
+> 当 `performTask()` 被直接调用时，如果已经在 `workQueue` 上，就直接执行；
+> 如果不是，就 `async` 到 `workQueue`，保证线程安全，避免死锁。
+
+<br/>
+
+**关键点回顾**
+
+1. **`DispatchSpecificKey`** 只是“钥匙”，需要用 `setSpecific` 绑定到队列。
+2. 用 **`DispatchQueue.getSpecific`** 获取当前队列绑定的值，如果能取到，说明正在那个队列上。
+3. 这种模式在写同步工具、数据库封装、线程安全对象时非常有用。
+
 
 
 

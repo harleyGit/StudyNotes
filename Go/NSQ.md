@@ -24,6 +24,7 @@
 - [并发编程](#并发编程)
 	- [并发安全容器-原子操作](#并发安全容器-原子操作)
 	- [waitGroup等待所有goroutine全部退出/完成后再继续执行](#waitGroup等待所有goroutine全部退出/完成后再继续执行)
+		- [高级语法-包装计数](#高级语法-包装计数)
 	- [原子取出一个整型状态位](#原子取出一个整型状态位)
 - [安全](#安全)
 	- [签名证书](#签名证书)
@@ -1253,6 +1254,180 @@ t.waitGroup.Wait()
 * `sync.WaitGroup` 是 Go 标准库里的 goroutine 同步工具。
 * `util.WaitGroupWrapper` 是项目里封装的版本，简化 goroutine 启动和管理。
 * `t.waitGroup.Wait()` 就是：**等待所有 goroutine 全部退出/完成后再继续执行**。
+
+
+***
+<br/><br/><br/>
+> <h2 id="高级语法-包装计数">高级语法-包装计数</h2>
+
+```go
+n.waitGroup.Wrap(func() {
+		// by selecting on exitChan we guarantee that
+		// we do not block exit, see issue #123
+		select {
+		case <-n.exitChan:
+		case n.notifyChan <- v:
+			if loading || !persist {
+				return
+			}
+			n.Lock()
+			err := n.PersistMetadata()
+			if err != nil {
+				n.logf(LOG_ERROR, "failed to persist metadata - %s", err)
+			}
+			n.Unlock()
+		}
+	})
+```
+
+这个 Wrap(func() {}) 干嘛的？ 还有`select`使用有点不懂。
+
+<br/>
+
+**1️⃣ `n.waitGroup.Wrap(func() { … })`**
+
+* 这里的 `Wrap` 不是 Go 关键字，而是某个库或你们项目里对 `sync.WaitGroup` 的一层封装。
+* 作用通常是：
+	1. 自动 `Add(1)` 把 goroutine 计入 WaitGroup；
+	2. 启动一个 goroutine 执行传入的函数；
+	3. 函数退出时自动 `Done()`。
+
+<br/>
+
+大致实现可能是这样：
+
+```go
+type WaitGroupWrapper struct {
+    sync.WaitGroup
+}
+
+func (w *WaitGroupWrapper) Wrap(fn func()) {
+    w.Add(1)
+    go func() {
+        defer w.Done()
+        fn()
+    }()
+}
+```
+
+👉 好处：写 goroutine 时不用每次都手动 `Add`/`Done`，避免忘记释放。
+
+<br/>
+
+2️⃣ `select { ... }` 在 goroutine 里的作用
+
+`select` 是 Go 的**多路复用语句**，专门用来同时监听多个 channel 的状态。
+只要有一个 case 满足，就会执行那个分支。
+
+```go
+select {
+case <-n.exitChan:
+    // 收到退出信号，直接返回
+case n.notifyChan <- v:
+    // 把 v 发送到 notifyChan 成功，就做一些后续逻辑
+}
+```
+
+上面这段意思是：
+
+* 如果 `exitChan` 先有值（或被关闭），马上执行第一个 `case`，goroutine 退出；
+* 否则尝试把 `v` 写入 `notifyChan`，如果写成功就继续做 `PersistMetadata()`。
+
+<br/>
+
+**为什么要用 select：**
+
+* goroutine 同时等待“退出信号”和“正常处理逻辑”；
+* 避免因为 `notifyChan` 阻塞，而无法及时响应退出。
+
+<br/>
+
+**3️⃣ 结合起来理解整体流程**
+
+1. `Wrap` 启动一个 goroutine，并让 WaitGroup 跟踪它。
+2. goroutine 里：
+	
+	* 用 `select` 同时等 **退出信号** (`<-exitChan`) 和 **发送通知** (`notifyChan <- v`)。
+	* 如果收到退出信号，直接返回，不会阻塞退出流程（注释里写的 “do not block exit”）。
+	* 如果发送成功，并且 `loading` / `persist` 条件满足，就锁定 `n`，调用 `PersistMetadata()`，再解锁。
+
+<br/>
+
+ **4️⃣ 一个最小例子演示 `Wrap + select`**
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+type WaitGroupWrapper struct{ sync.WaitGroup }
+
+func (w *WaitGroupWrapper) Wrap(fn func()) {
+    w.Add(1)
+    go func() {
+        defer w.Done()
+        fn()
+    }()
+}
+
+func main() {
+    var wg WaitGroupWrapper
+    exitChan := make(chan struct{})
+    dataChan := make(chan int, 1)
+
+    wg.Wrap(func() {
+        for {
+            select {
+            case <-exitChan:
+                fmt.Println("goroutine exit")
+                return
+            case dataChan <- 42:
+                fmt.Println("sent 42")
+                time.Sleep(300 * time.Millisecond)
+            }
+        }
+    })
+
+    time.Sleep(time.Second)
+    close(exitChan) // 通知退出
+    wg.Wait()
+    fmt.Println("all done")
+}
+```
+
+运行输出：
+
+```
+sent 42
+sent 42
+sent 42
+goroutine exit
+all done
+```
+
+* goroutine 一直往 `dataChan` 发数据；
+* 当 `exitChan` 被关闭，`select` 立即走 `<-exitChan`，优雅退出。
+
+<br/>
+
+**✅ 总结**
+
+* `Wrap(func(){})`：只是 `WaitGroup` 的语法糖，用来**简化 goroutine 的启动和回收**。
+* `select`：Go 语言里监听 **多个 channel** 的关键语句，常用于：
+
+	* 同时处理数据和退出信号；
+	* 等待多个 channel 里“谁先就绪”；
+	* 实现超时 (`select` + `time.After`)。
+
+> 掌握 `select` 是写好并发程序的核心，几乎所有“优雅退出”“同时等待多个事件”都要用它。
+
+
+
+
 
 
 ***
