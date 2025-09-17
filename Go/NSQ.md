@@ -24,11 +24,14 @@
 - [并发编程](#并发编程)
 	- [并发安全容器-原子操作](#并发安全容器-原子操作)
 	- [waitGroup等待所有goroutine全部退出/完成后再继续执行](#waitGroup等待所有goroutine全部退出/完成后再继续执行)
+	- [原子取出一个整型状态位](#原子取出一个整型状态位)
 - [安全](#安全)
 	- [签名证书](#签名证书)
-- [**路由库**](#路由库)
-	- [高性能路由库-httprouter.Router](#高性能路由库-httprouter.Router)
-		- [进阶-路由库中的装饰器](#进阶-路由库中的装饰器)
+- [**库**](#库)
+	- [磁盘消息队列库go-diskqueue](#磁盘消息队列库go-diskqueue)
+	- [**路由库**](#路由库)
+		- [高性能路由库-httprouter.Router](#高性能路由库-httprouter.Router)
+			- [进阶-路由库中的装饰器](#进阶-路由库中的装饰器)
 - [**优化**](#优化)
 	- [高性能反射读取数据](#高性能反射读取数据)
 	- [复用缓存](复用缓存)
@@ -1252,8 +1255,82 @@ t.waitGroup.Wait()
 * `t.waitGroup.Wait()` 就是：**等待所有 goroutine 全部退出/完成后再继续执行**。
 
 
+***
+<br/><br/><br/>
+> <h2 id="原子取出一个整型状态位">原子取出一个整型状态位</h2>
+
+```go
+func (c *Channel) Exiting() bool {
+	return atomic.LoadInt32(&c.exitFlag) == 1
+}
+```
+
+其实跟「**原子退出**」没什么神秘的特殊机制 😊
+这是 Go 里**原子读取一个标志位**的常见写法，用来安全地判断 `Channel` 是否正在退出。
+
+<br/>
+
+**解释**
+
+1. `c.exitFlag`
+
+   * 是 `Channel` 结构里的一个字段，类型通常是 `int32`。
+   * 约定：`0` 表示**正常运行**，`1` 表示**正在退出 / 已退出**。
+
+2. `atomic.LoadInt32(&c.exitFlag)`
+
+   * 来自标准库 `sync/atomic`。
+   * 作用是**原子地读取一个 int32 值**，避免在多 goroutine 下出现“读到一半”的情况。
+
+3. `== 1`
+
+   * 如果值是 1，就说明这个 `Channel` 已经在退出状态。
+
+<br/>
+
+**为什么要用 `atomic`？**
+
+因为 `exitFlag` 可能在很多 goroutine 里被读取 / 修改：
+
+```go
+func (c *Channel) Exit() {
+    atomic.StoreInt32(&c.exitFlag, 1)  // 原子地写 1
+}
+```
+
+* 如果不用 `atomic`，直接 `c.exitFlag = 1`、`if c.exitFlag == 1`，在 32 位平台或高并发下可能会产生 **竞态条件**。
+* `atomic.LoadInt32` + `atomic.StoreInt32` 保证：
+	* 读写是一个完整操作，不会被中断；
+	* 读一定能看到最新写入的值。
 
 
+**用法Demo**
+
+常见于长生命周期的组件：
+
+```go
+type Channel struct {
+    exitFlag int32
+    // …其他字段…
+}
+
+func (c *Channel) Start() {
+    for {
+        if c.Exiting() {
+            fmt.Println("channel exiting")
+            return
+        }
+        // do work …
+    }
+}
+
+func (c *Channel) Exit() {
+    atomic.StoreInt32(&c.exitFlag, 1)
+}
+```
+
+* 业务逻辑里循环检查 `Exiting()`，一旦返回 `true`，就停止工作并清理资源。
+* `Exit()` 方法会把 `exitFlag` 原子写为 1，通知其他 goroutine「我要关了」。
 
 
 
@@ -1361,6 +1438,33 @@ tlsConfig.ClientCAs = tlsCertPool
 <br/>
 
 [**详细请看这里**](./网络.md证书签名常用概念)
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="库">库</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="磁盘消息队列库go-diskqueue">磁盘消息队列库go-diskqueue</h2>
+
+```go
+c.backend = diskqueue.New(
+		backendName,
+		nsqd.getOpts().DataPath,
+		nsqd.getOpts().MaxBytesPerFile,
+		int32(minValidMsgLength),
+		int32(nsqd.getOpts().MaxMsgSize)+minValidMsgLength,
+		nsqd.getOpts().SyncEvery,
+		nsqd.getOpts().SyncTimeout,
+		dqLogf,
+	)
+```
+
+这个是在`channel.go`文件中的一段代码，[简单实用看这里](./go-diskueue.md#介绍)
+
 
 
 <br/><br/><br/>

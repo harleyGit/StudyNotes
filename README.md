@@ -168,6 +168,7 @@
 	- [Go标准库](./Go/Go标准库.md)
 	- [go-svc](./Go/go-svc.md)
 	- [路由httprouter](./Go/路由httprouter.md)
+	- [磁盘队列库go-diskueue](./Go/go-diskueue.md)
 
 
 
