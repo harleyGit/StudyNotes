@@ -38,6 +38,8 @@
 	- [复用缓存](复用缓存)
 - [**设计模式**](#设计模式)
 	- [依赖注入+组合接口模式](#依赖注入+组合接口模式)
+- [**文件读写**](#文件读写)
+	- [强制写入磁盘](#强制写入磁盘)
 
 
 
@@ -1893,6 +1895,34 @@ type Channel struct {
 [具体解读和案例，请点击这里](./go设计模式.md#依赖注入+组合接口模式)
 
 
+<br/><br/><br/>
 
+***
+<br/>
 
+> <h1 id="文件读写">文件读写</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="强制写入磁盘">强制写入磁盘</h2>
+
+```
+func writeSyncFile(fn string, data []byte) error {
+	f, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(data)
+	if err == nil {
+		err = f.Sync()
+	}
+	f.Close()
+	return err
+}
+```
+
+这个 `err = f.Sync()` 什么意思？ 是同步什么吗？ 文件使用完一定要关闭吗
+
+并不是，这个`f.Sync()`是将**内核中的内存**落盘进入磁盘中，防止断电导致数据的丢失。[具体解释，请看这里](./go语法.md#时时写入数据到磁盘)
 
