@@ -750,6 +750,44 @@ case m1, ok := <-ch1:
 > `ok` 是每次 `<-` 操作都会返回的“状态标志”。
 > 只有 **通道关闭 + 没有数据** 时，它才为 `false`，其它情况下都为 `true`。
 
+
+
+<br/><br/>
+
+**提问：** `time.After(700 * time.Millisecond)` 是一个通道吗？没有看到创建通道？
+
+ **`time.After(700 * time.Millisecond)`** 其实**不是你手动写的某个通道**，而是 Go 标准库 `time` 包里提供的一个**函数**：
+
+```go
+func After(d Duration) <-chan Time
+```
+
+**它会：**
+
+- 1.创建一个 **只读通道**（`<-chan time.Time`）
+- 2.启动一个定时器，等 `d` 时间（这里是 700 ms）后，把**当前时间** `time.Time` 发送到这个通道里
+- 3.发送一次后，这个通道就“完成”了（不再发新值，但不会显式 close）
+
+所以这句：
+
+```go
+case <-time.After(700 * time.Millisecond):
+    fmt.Println("timeout waiting")
+```
+
+意思是：
+
+> “如果在 700ms 内没从 `ch1` / `ch2` 读到数据，就从 `time.After` 返回的那个通道里接收一个值，触发超时逻辑。”
+
+<br/>
+
+**补充几点：**
+
+* `time.After` 每次调用都会新建一个定时器和一个独立通道，所以要在 `select` 里每次都写一遍。
+* 如果你要**重复触发**，最好用 `time.NewTicker` 或 `time.Tick`，它们会定期发送值，而 `After` 只会发送一次。
+* `time.After` 返回的通道并不会显式 `close`，所以没有 `ok` 之类的检查，直接 `<-` 就行（定时到达后只会发一次）。
+
+
 ***
 <br/><br/>
 
