@@ -8,6 +8,11 @@
 	- [采集和协商约束](#采集和协商约束)
 - [本地视频预览](#本地视频预览)
 - [信令建立](#信令建立)
+- [**数据通道**](#数据通道)
+	- [WebRTC整体连接流程图](#WebRTC整体连接流程图)
+	- [WebRTC建连时序图](#WebRTC建连时序图)
+- [启用或者禁用远端音频播放](#启用或者禁用远端音频播放)
+
 
 
 <br/><br/><br/>
@@ -909,4 +914,273 @@ class SignalingClient {
 * **安全**：信令通道用 TLS/WSS 并加鉴权，避免中间人注入。
 * **兼容**：不同 WebRTC 版本 API 有差异（例如 unified plan vs plan-b），若遇到 SDP 问题，可参考官方 demo（AppRTCMobile）。 ([Chromium Git Repositories][4])
 * **DtlsSrtpKeyAgreement**：历史上某些平台上需要显式打开该约束以保证 DTLS-SRTP 正常协商（不同版本行为会变）。 ([Google Groups][6])
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="数据通道">数据通道</h1>
+
+**`数据通道（Data Channel）`**
+
+除了音视频，WebRTC 还有一个很重要的能力就是 **Data Channel**，它走的也是点对点（P2P）通道。
+
+<br/>
+
+**作用：**
+
+* 在已经建立的 WebRTC 连接上，传输任意数据（文本、二进制都行）。
+* 延迟低，可靠性可选（类似 UDP / TCP 混合），适合实时应用。
+
+<br/>
+
+**常见应用场景：**
+
+- 1.**IM 消息**：在音视频通话里加聊天功能。
+- 2.**实时同步**：比如白板协作，鼠标轨迹同步。
+- 3.**游戏联机**：小数据包状态同步。
+- 4.**信令优化**：有时可以用来传递控制信息，而不必走外部服务器。
+
+<br/>
+
+**简单示例（Swift）**
+
+```swift
+// 创建 DataChannel
+let config = RTCDataChannelConfiguration()
+config.isReliable = true
+let dataChannel = peerConnection.dataChannel(forLabel: "chat", configuration: config)
+
+// 接收消息
+dataChannel?.delegate = self
+
+// 发送消息
+let message = "Hello WebRTC!"
+let buffer = RTCDataBuffer(data: message.data(using: .utf8)!, isBinary: false)
+dataChannel?.sendData(buffer)
+```
+
+接收回调：
+
+```swift
+extension YourClass: RTCDataChannelDelegate {
+    
+    func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
+        if let text = String(data: buffer.data, encoding: .utf8) {
+            print("收到消息: \(text)")
+        }
+    }
+}
+```
+
+* `DataChannel` → **在 PeerConnection 里传任意数据（非音视频）**。
+
+***
+<br/><br/><br/>
+> <h2 id="WebRTC整体连接流程图">WebRTC整体连接流程图</h2>
+
+**下面是WebRTC整体连接流程图，** 帮你理清音频轨道、视频轨道和数据通道的关系
+
+**🌐 WebRTC PeerConnection 结构图**
+
+```sh
+   ┌──────────────────────────┐
+   │        Peer A (本地)      │
+   │                          │
+   │  ┌───────────┐           │
+   │  │ 麦克风     │───┐       │
+   │  └───────────┘   │       │
+   │                   ▼       │
+   │               [AudioTrack]│
+   │                   │       │
+   │  ┌───────────┐   │       │
+   │  │ 摄像头     │───┘       │
+   │  └───────────┘           │
+   │                   ▼       │
+   │               [VideoTrack]│
+   │                           │
+   │     ┌──────────────────┐ │
+   │     │   DataChannel    │ │
+   │     └──────────────────┘ │
+   │                           │
+   │       PeerConnection      │
+   └─────────────┬─────────────┘
+                 │ (ICE + DTLS/SRTP)
+                 ▼
+   ┌─────────────┴─────────────┐
+   │        Peer B (远端)        │
+   │                            │
+   │            [AudioTrack] ◀──┘ 麦克风
+   │            [VideoTrack] ◀──┘ 摄像头
+   │         [DataChannel] ◀───► 聊天/白板/状态同步
+   │                            │
+   │  (可用 enableRemoteAudioTracks 控制是否播放远端音频)
+   └────────────────────────────┘
+```
+
+---
+<br/>
+
+**🔑 说明**
+
+- 1.**音频轨道 (AudioTrack)**
+	* 从麦克风采集 → 通过 `PeerConnection` 传给对方。
+	* 对方可以用 `enableRemoteAudioTracks(false)` 一键静音所有远端音频。
+
+- 2.**视频轨道 (VideoTrack)**
+	* 从摄像头采集 → 传给对方 → 在 `<RTCVideoView>` 中渲染。
+
+- 3.**数据通道 (DataChannel)**
+	* 建立在同一个 P2P 通道上，可以发文字、文件、二进制数据。
+	* 适合聊天消息、白板协作、实时状态同步等。
+
+***
+<br/><br/><br/>
+> <h2 id="WebRTC建连时序图">WebRTC建连时序图</h2>
+
+**WebRTC建连时序图，涉及把音频、视频、数据通道建立过程都串起来**，展示从创建 PeerConnection → 建立连接 → 双方轨道和数据通道建立的全过程。
+
+<br/>
+
+**WebRTC 建立连接时序图**
+
+```
+Peer A (Caller)                          Peer B (Callee)
+────────────────────────────────────────────────────────────
+ |                                          |
+ | 1. getUserMedia(音频/视频)                |
+ | ───────────────────────────────────────> |
+ |   (采集麦克风/摄像头，生成本地轨道)        |
+ |                                          |
+ | 2. 创建 PeerConnection                   |
+ |                                          |
+ | 3. pc.addTrack(AudioTrack/VideoTrack)    |
+ |                                          |
+ | 4. 可选：pc.createDataChannel("chat")     |
+ |                                          |
+ | 5. createOffer()                         |
+ | ───────────────────────────────────────> |
+ |                                          |
+ | 6. setLocalDescription(Offer)            |
+ |                                          |
+ | 7. 发送 Offer SDP 给 Peer B (信令)        |
+ | ───────────────────────────────────────> |
+ |                                          |
+ |                                          | 8. setRemoteDescription(Offer)
+ |                                          |
+ |                                          | 9. getUserMedia(音频/视频)
+ |                                          |    (可选：也可以只收不发)
+ |                                          |
+ |                                          | 10. pc.addTrack(...)
+ |                                          |
+ |                                          | 11. createAnswer()
+ |                                          | ────────────────────────────────>
+ |                                          |
+ |                                          | 12. setLocalDescription(Answer)
+ |                                          |
+ | 13. setRemoteDescription(Answer)         |
+ |                                          |
+ | 14. ICE Candidate 交换 (双向)             |
+ | <──────────────────────────────────────> |
+ |                                          |
+ | === 建立 P2P 通道成功 ===                 |
+ |                                          |
+ | 15. 音频轨道播放 (可通过                  |
+ |     enableRemoteAudioTracks 控制全局开关) |
+ |                                          |
+ | 16. 视频轨道渲染到 UI                     |
+ |                                          |
+ | 17. DataChannel 打开 (onopen)            |
+ | <──────────────────────────────────────> |
+ |                                          |
+ | 18. 双方可以发文字/二进制消息             |
+ |                                          |
+```
+
+---
+
+### 🔑 关键点说明
+
+* **音视频轨道**：通过 `addTrack` 添加到 `PeerConnection`，远端会在 `ontrack` 回调中收到。
+* **数据通道**：一方用 `createDataChannel` 创建，另一方会在 `ondatachannel` 回调中收到。
+* **信令**：Offer/Answer + ICE Candidate 的交换，通常要通过服务器（WebSocket/HTTP）转发。
+* **控制远端音频**：
+
+  * 全局开关：`pc.enableRemoteAudioTracks(false)`。
+  * 单个轨道：`remoteAudioTrack.isEnabled = false`。
+
+---
+
+要不要我再帮你用 **Swift (iOS WebRTC)** 写一份代码骨架，把 **音频轨道、视频轨道、数据通道** 三者结合在一个 `PeerConnection` 中？这样就能和上面的时序图对应起来。
+
+
+
+
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="启用或者禁用远端音频播放">启用或者禁用远端音频播放</h1>
+
+
+**`① enableRemoteAudioTracks`**
+
+在 `WebRTC iOS/Android 原生 SDK（C++ 层 PeerConnectionInterface）`里，
+`enableRemoteAudioTracks(bool enable) `是 全局开关：
+
+- **`true`** → 开启所有远端音频轨道的播放。
+
+- **`false`** → 关闭所有远端音频轨道的播放（相当于一键全体静音）。
+
+如果你只想控制某个特定的远端音频轨道，就用 `RTCAudioTrack.isEnabled = false（iOS Swift）`或者 **`remoteAudioTrack->set_enabled(false)（C++）`**。
+
+****
+<br/>
+
+`PeerConnection` 里的 **`enableRemoteAudioTracks`** 主要作用是：
+控制是否让 **所有远端音频轨道**（remote audio tracks）进入播放（渲染）状态。
+
+换句话说，它是一个开关，用来**批量启用或禁用远端的音频播放**，而不是逐条轨道去 mute/unmute。
+
+<br/>
+
+**具体作用**
+
+* **true（默认）**：
+  所有远端音频轨道都会被解码并播放出来（如果已添加到 PeerConnection 并附加到音频输出设备）。
+* **false**：
+  即使远端有音频流传过来，本地也不会解码播放，等于把所有远端音频“静音”。
+
+---
+<br/>
+
+**应用场景**
+
+- 1.**会议应用的全局静音**
+   比如主持人点一个“静音所有人”的按钮，可以直接调用 `pc.enableRemoteAudioTracks(false)`，而不用逐个对 track 调整。
+
+- 2.**性能优化**
+   某些场景暂时不需要音频时，可以关闭远端音频的解码和播放，节省 CPU/电池。
+
+- 3.**用户隐私控制**
+   如果用户想临时屏蔽所有远端声音，可以用这个接口，而不是依赖 UI 音量控制。
+
+<br/>
+
+**⚠️ 注意：**
+
+* 这是 **批量控制**，不是单个轨道。
+* 如果需要对某一个远端 `AudioTrack` 控制，通常用 `remoteAudioTrack.setEnabled(false)`。
+
+
+
 
