@@ -42,6 +42,8 @@
 - [**CocoaPod安装配置**](#CocoaPod安装配置)
 - [**概念**](#概念)
 	- [p2p连接](#p2p连接)
+- [**工程Bug**](#工程Bug)
+	- [析构调用闭包导致crash](#析构调用闭包导致crash)
 
 
 
@@ -3153,6 +3155,140 @@ Client A             Rendezvous Server           Client B
 * **拓扑示意图（NAT 映射关系）**
 
 来完整理解 UDP 打洞的流程了。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="工程Bug">工程Bug</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="析构调用闭包导致crash">析构调用闭包导致crash</h2>
+
+在iOS中的**BleUtil.m**中有：
+
+```oc
+- (void)dealloc {
+    
+    [self invalidateAndClear];
+}
+- (void) invalidateAndClear { [self stopScanPeripherals];
+    
+}
+
+- (void)stopScanPeripherals {
+    
+    AKLogV(TAG, @"stopScanPeripherals");
+    
+    if (self.scanTimer) {
+        dispatch_source_cancel(self.scanTimer);
+        self.scanTimer = nil;
+    }
+    [self.centralManager stopScan];
+    [self clearDiscoverPeripherals];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.scanBleCallBackBlock) {
+            AKBleInfoModel *model = [[AKBleInfoModel alloc] initWithHandStopScan:YES];
+            self.scanBleCallBackBlock(model);// ❌ dealloc 时调用，block 内可能访问了 self
+        }
+    });
+    
+}
+```
+
+
+执行析构方法`dealloc`后，到了`if (self.scanBleCallBackBlock) {}`直接崩溃报错：**`Thread 1: EXC_BAD_ACCESS (code=1, address=0x731ac6290)`**
+
+<br/>
+
+- **经分析，崩溃的原因是：**
+	- `dealloc` 调用时，`self` 已经在释放。
+	- 在 `dealloc` 里调了 `invalidateAndClear → stopScanPeripherals`。
+	- `stopScanPeripherals` 里用了 异步回调：`dispatch_async(dispatch_get_main_queue(), ^{ ... });`
+
+这会延迟执行 block。
+
+等到 block 真正执行时，self 已经销毁了，
+**→ 访问 self.scanBleCallBackBlock 时内存已被回收，导致 EXC_BAD_ACCESS 崩溃。**
+
+<br/>
+
+一开始想通过 **`弱引用weak`【弱引用 self，避免野指针】** 进行解决的，如下：
+
+```oc
+__weak typeof(self) weakSelf = self;
+dispatch_async(dispatch_get_main_queue(), ^{
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (!strongSelf) return; // self 已释放，直接退出
+    if (strongSelf.scanBleCallBackBlock) {
+        AKBleInfoModel *model = [[AKBleInfoModel alloc] initWithHandStopScan:YES];
+        strongSelf.scanBleCallBackBlock(model);
+    }
+});
+```
+
+- 崩溃原因：dealloc 后异步 block 仍在访问已释放的 self。
+- 最推荐的做法：不要在 dealloc 中再做业务回调，只清理资源即可。
+- 如果必须回调，用 weakSelf + nil block 防止野指针。
+
+<br/>
+
+我像上面那样做后，在`__weak typeof(self) weakSelf = self;`报了一个`‌Thread 13: abort with payload or reason `直接就crash了。
+
+这很可能不是 `__weak` 本身的问题，而是**`清理顺序 / 竞态 / 其它对象（比如 CBCentralManager / CBPeripheral / block 内部捕获的外部对象）`**在 `self` 被释放后仍在异步回调里被访问，或者 GCD timer 的取消方式不安全。
+
+<br/>
+
+
+**拓展：常见原因（为什么 weakSelf 却还崩溃）**
+
+- CBCentralManager / CBPeripheral 仍会异步回调 delegate：如果 centralManager.delegate = self，在你释放 self 之后，系统仍可能异步调用 delegate，导致访问野指针。
+
+- scanBleCallBackBlock 本身捕获了 VC 或其它已释放对象，调用它会触发崩溃（即使你用 weakSelf 检查了 self）。
+
+- dispatch_source_t（timer） 的取消/挂起状态处理不当：若 timer 曾被 dispatch_suspend 而没被 resume，再 dispatch_source_cancel / release 可能出错。
+
+- 异步 block 内部抛异常（未捕获）会导致 abort；日志里能看到异常原因。
+
+- 竞态：你在某线程把 block 置 nil，同时另一个线程又在读取/执行，导致不安全访问。
+
+<br/><br/>
+***
+
+解决方案是对闭包回调这块做一些处理：
+
+```oc
+// 4) 安全地拷贝并置空回调属性，然后在主线程调用拷贝（避免 race）
+void (^callback)(AKBleInfoModel *) = nil;
+@synchronized (self) {
+    if (self.scanBleCallBackBlock) {
+        callback = [self.scanBleCallBackBlock copy];
+        self.scanBleCallBackBlock = nil; // 立即置空，防止别处再调用
+    }
+}
+
+if (callback) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        @try {
+            AKBleInfoModel *model = [[AKBleInfoModel alloc] initWithHandStopScan:YES];
+            callback(model);
+        } @catch (NSException *ex) {
+            NSLog(@"Exception when calling scan callback in stopScanPeripherals: %@", ex);
+        }
+    });
+}
+```
+
+- **需要注意的是：**
+	- 先把 `scanBleCallBackBlock` 拷贝到局部变量并立刻把属性置 nil，能防止别处并发访问到已经释放的 `block` 指针。
+	- 在主线程上执行回调并用 `@try/@catch` 捕获异常（用于调试和避免直接 abort），但这不是最终解决方案——真正要找出回调里是否访问了已释放对象。
+	- 处理 `dispatch_source_t` 要小心 `suspended/resume` 状态，避免在 `suspended 状态下直接 cancel。`
+
 
 
 
