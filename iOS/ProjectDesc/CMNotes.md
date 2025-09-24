@@ -43,6 +43,7 @@
 - [**概念**](#概念)
 	- [p2p连接](#p2p连接)
 - [**工程Bug**](#工程Bug)
+	- [SYM软件针对于.ips文件进行符号话.DSYM](https://github.com/zqqf16/SYM)
 	- [析构调用闭包导致crash](#析构调用闭包导致crash)
 
 
@@ -3288,6 +3289,10 @@ if (callback) {
 	- 先把 `scanBleCallBackBlock` 拷贝到局部变量并立刻把属性置 nil，能防止别处并发访问到已经释放的 `block` 指针。
 	- 在主线程上执行回调并用 `@try/@catch` 捕获异常（用于调试和避免直接 abort），但这不是最终解决方案——真正要找出回调里是否访问了已释放对象。
 	- 处理 `dispatch_source_t` 要小心 `suspended/resume` 状态，避免在 `suspended 状态下直接 cancel。`
+
+<br/>
+
+**‼️：上面的代码最好不要放在析构方法dealloc中，容易引起crash问题。最好不要做这种在block回调或者线程操作。**
 
 
 
