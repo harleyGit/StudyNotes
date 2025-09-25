@@ -45,6 +45,7 @@
 - [**工程Bug**](#工程Bug)
 	- [SYM软件针对于.ips文件进行符号话.DSYM](https://github.com/zqqf16/SYM)
 	- [析构调用闭包导致crash](#析构调用闭包导致crash)
+	- [线程堆栈分析报告如何查看？](#线程堆栈分析报告如何查看？)
 
 
 
@@ -3295,6 +3296,177 @@ if (callback) {
 **‼️：上面的代码最好不要放在析构方法dealloc中，容易引起crash问题。最好不要做这种在block回调或者线程操作。**
 
 
+***
+<br/><br/><br/>
+> <h2 id="线程堆栈分析报告如何查看？">线程堆栈分析报告如何查看？</h2>
+
+**比如这段Swift线程崩溃报告，如何解读？**
+
+```shException Type:  EXC_BAD_ACCESS (SIGBUS)
+Exception Codes: 0x0000000000000002, 0x0000000ff6bb5d18
+Termination Reason: SIGNAL 10
+
+Triggered by Thread:  15
+```
+
+
+上述崩溃信息是 `iOS` 里比较常见的一类底层异常，内容解析如下：
+
+<br/> 
+
+**1️⃣ `Exception Type:  EXC_BAD_ACCESS (SIGBUS)`**
+
+* **EXC\_BAD\_ACCESS**
+  表示你的程序访问了不该访问的内存地址（访问“坏地址”）。
+* 括号里的 **SIGBUS**
+  指触发异常的具体信号：**Bus Error**。
+  这通常意味着：
+  
+	* 访问了一块已经释放/无效的内存；
+	* 或者访问地址未对齐（对齐错误），例如用 `UnsafePointer` 读写未按类型对齐的内存；
+	* 或者读写的物理页当前不可用（极少见）。
+
+> 简单说：**程序在尝试读取/写入一段无效或未对齐的内存时被系统杀掉**。
+
+<br/>
+
+**2️⃣ `Exception Codes: 0x0000000000000002, 0x0000000ff6bb5d18`**
+
+* 第一个 `0x2` 通常是异常的子类型。
+* 第二个是触发问题的内存地址：`0x0000000ff6bb5d18`
+  你可以在调试器里看这个地址是否落在某个对象区域里，帮助确认是哪块内存。
+
+<br/>
+
+**3️⃣ `Termination Reason: SIGNAL 10`**
+
+* **SIGNAL 10** 就是 POSIX 信号 `SIGBUS`，和上面的括号一致。
+
+<br/>
+
+**4️⃣ `Triggered by Thread: 15`**
+
+* 表示在 **线程 15** 上触发的崩溃，不一定是主线程。
+  说明有并发或后台任务在操作内存。
+* 然后你可以在堆栈报告下找到线程是**15**编号的，然后查看是执行到哪行代码造成的crash
+
+<br/>
+
+**常见成因**
+
+| 场景                | 说明                                            |
+| ----------------- | --------------------------------------------- |
+| 访问已释放对象           | 比如 `weak` 引用没判空，或 `unowned` 被释放后再访问           |
+| 原生指针错误            | `UnsafePointer` / `UnsafeMutablePointer` 使用不当 |
+| 对齐错误              | 用 `UnsafeRawPointer` 转换结构体时地址没对齐              |
+| 多线程写内存            | 两个线程同时修改对象，没做同步                               |
+| CoreData / SQLite | 数据页损坏，或被错误地并发访问                               |
+| C/ObjC 库          | 用 C API 写错缓冲区长度，或传了无效地址                       |
+
+
+<br/><br/>
+
+比如通过查看**`线程编号15`**这段日志，如下：
+
+```sh
+Thread 15 name:   Dispatch queue: com.cm.bleQueue
+Thread 15 Crashed:
+0   libobjc.A.dylib                        0x1883f3b98 objc_retain + 16
+1   argus-app-ios-overseas                 0x104f1eb8c -[AKBleUtil stopTimeoutTimer] + 1584012 (AKBleUtil.m:191)
+2   argus-app-ios-overseas                 0x104f1ee84 -[AKBleUtil stopScanPeripherals] + 1584772 (AKBleUtil.m:224)
+3   argus-app-ios-overseas                 0x104f1c620 -[AKBleManager finishWithSuccess:peripheralMac:error:] + 1574432 (AKBleManager.m:320)
+4   argus-app-ios-overseas                 0x104f1c550 -[AKBleManager stopPollConnectBle:] + 1574224 (AKBleManager.m:305)
+5   argus-app-ios-overseas                 0x104f1d010 -[AKBleManager connectBluetoothDeviceWithUUID:] + 1576976 (AKBleManager.m:444)
+6   argus-app-ios-overseas                 0x104f20864 -[AKBleUtil centralManager:didConnectPeripheral:] + 1591396 (AKBleUtil.m:467)
+7   CoreBluetooth                          0x1b472bc60 -[CBCentralManager handlePeripheralConnectionCompleted:] + 456
+8   CoreBluetooth                          0x1b470aa88 -[CBCentralManager handleMsg:args:] + 224
+9   CoreBluetooth                          0x1b470822c -[CBManager xpcConnectionDidReceiveMsg:args:] + 212
+10  CoreBluetooth                          0x1b4708114 __30-[CBXpcConnection _handleMsg:]_block_invoke + 48
+11  libdispatch.dylib                      0x192df4aac _dispatch_call_block_and_release + 32
+12  libdispatch.dylib                      0x192e0e584 _dispatch_client_callout + 16
+13  libdispatch.dylib                      0x192dfd2d0 _dispatch_lane_serial_drain + 740
+14  libdispatch.dylib                      0x192dfdde0 _dispatch_lane_invoke + 440
+15  libdispatch.dylib                      0x192dfd138 _dispatch_lane_serial_drain + 332
+16  libdispatch.dylib                      0x192dfddac _dispatch_lane_invoke + 388
+17  libdispatch.dylib                      0x192e081dc _dispatch_root_queue_drain_deferred_wlh + 292
+18  libdispatch.dylib                      0x192e07a60 _dispatch_workloop_worker_thread + 540
+19  libsystem_pthread.dylib                0x215588a0c _pthread_wqthread + 292
+20  libsystem_pthread.dylib                0x215588aac start_wqthread + 8
+```
+
+<br/>
+
+**1️⃣ 关键崩溃位置**
+
+```
+Thread 15 Crashed:
+0   libobjc.A.dylib   objc_retain
+1   argus-app-ios-overseas  -[AKBleUtil stopTimeoutTimer]  (AKBleUtil.m:191)
+```
+
+* `objc_retain` → Objective-C 在给对象做 `retain`（增加引用计数）的时候访问到了一块无效的内存。
+* 出错点在 `AKBleUtil.m` 第 191 行，也就是 `stopTimeoutTimer` 里。
+
+👉 **说明**：`stopTimeoutTimer` 里有一个对象被 `retain` 时，底层地址已经无效（通常是被释放掉了）。
+
+<br/>
+
+**2️⃣ 堆栈上下文**
+
+```
+AKBleUtil stopTimeoutTimer
+ └─ stopScanPeripherals
+     └─ AKBleManager finishWithSuccess:peripheralMac:error:
+         └─ stopPollConnectBle:
+             └─ connectBluetoothDeviceWithUUID:
+                 └─ centralManager:didConnectPeripheral:
+```
+
+* 从调用顺序看，这是在 **蓝牙连接成功回调**（`didConnectPeripheral:`）里，调用了 `connectBluetoothDeviceWithUUID:` → `stopPollConnectBle:` → `finishWithSuccess:` → `stopScanPeripherals` → `stopTimeoutTimer`。
+* 所以这是 CoreBluetooth 回调线程（你这里是 `com.cm.bleQueue`），在回调里调用了 `stopTimeoutTimer`。
+
+<br/>
+
+**3️⃣ 崩溃成因推测**
+
+根据 `objc_retain` + `EXC_BAD_ACCESS (SIGBUS)` 的组合，常见原因是：
+
+- 1.**对象已经被释放**
+   `stopTimeoutTimer` 里可能访问了一个 `NSTimer`、`dispatch_source_t` 或 `self` 的某个属性，但那个对象已提前释放。
+- 2.**多线程竞争**
+   可能另一个线程把定时器或 `AKBleUtil` 自己释放了，而蓝牙回调线程同时在调用 `stopTimeoutTimer`。
+- 3.**Block 循环引用/悬挂指针**
+   如果定时器用 block 方式持有 `self`，处理不当也可能在释放时出现野指针。
+
+<br/>
+
+**4️⃣ 建议的排查方法**
+
+| 步骤                     | 说明                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| ① 检查 `AKBleUtil.m:191` | 找到 `stopTimeoutTimer` 的实现，看这一行访问了什么对象（`self.timer`？`dispatch_source`？）。                                                              |
+| ② 确认对象生命周期             | 谁创建 / 谁释放 `timer` 或 `AKBleUtil`，是否在 `dealloc`/`invalidate` 中释放太早。                                                                    |
+| ③ Zombie Objects       | Xcode → Edit Scheme → Diagnostics → **Enable Zombie Objects**，运行后如果再次崩溃，会显示 “message sent to deallocated instance xxx”，可以直接看到是哪一个对象。 |
+| ④ Thread Sanitizer     | Scheme 里开启 Thread Sanitizer，看是否是数据竞争导致。                                                                                              |
+| ⑤ 定时器弱引用               | 如果是 `NSTimer scheduledTimer...`，记得在 `invalidate` 之前保持强引用，否则 Timer 会释放掉 target，再回调时出错。                                                |
+
+<br/>
+
+**5️⃣ 结论**
+
+> 崩溃点：
+> `AKBleUtil - stopTimeoutTimer` 第 191 行
+> 问题类型：访问已释放对象 / 悬挂指针
+> 环境：CoreBluetooth 回调线程（`com.cm.bleQueue`）
+
+下一步最重要的是：
+
+* 打开 `AKBleUtil.m`，定位第 191 行，看是哪个对象被访问。
+* 打开 “Enable Zombie Objects” 再复现崩溃，系统会告诉你确切的对象类型。
+
+<br/>
+
+后面的解决方法是将之前因为使用NSRunTimer作为定时器因为与其他多线程多次切换造成与其他线程的数据造成**竞态**导致一些对象过早示范。现在换成了使用**GCD**作为定时器，然后统一在**异步串行**统一处理，这样就解决了。
 
 
 
