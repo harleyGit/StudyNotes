@@ -1,5 +1,6 @@
 > <h1 id=""></h1>
 - [**判断当前线程在哪条队列执行**](#判断当前线程在哪条队列执行)
+- [barrier实现线程安全](#barrier实现线程安全)
 - [**await和async**](#await和async)
 	- [初步使用async和await](#初步使用async和await)
 	- [async和await中使用演员进入主队列](#async和await中使用演员进入主队列)
@@ -166,6 +167,149 @@ doSomeWork running on thread: <NSThread: 0x60000085c1c0>{number = 4, name = (nul
 1. **`DispatchSpecificKey`** 只是“钥匙”，需要用 `setSpecific` 绑定到队列。
 2. 用 **`DispatchQueue.getSpecific`** 获取当前队列绑定的值，如果能取到，说明正在那个队列上。
 3. 这种模式在写同步工具、数据库封装、线程安全对象时非常有用。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="barrier实现线程安全">barrier实现线程安全</h1>
+
+通用的 **线程安全泛型容器**`ThreadSafe<T>`
+
+```swift
+import Foundation
+
+/// 一个线程安全的泛型容器
+public final class ThreadSafe<T> {
+    
+    private var value: T
+    private let queue = DispatchQueue(
+        label: "com.argus.threadSafeQueue",
+        attributes: .concurrent
+    )
+    
+    public init(_ value: T) {
+        self.value = value
+    }
+    
+    /// 线程安全读
+    public func read() -> T {
+        return queue.sync {
+            return value
+        }
+    }
+    
+    /// 线程安全写
+    public func write(_ newValue: T) {
+        queue.sync(flags: .barrier) {
+            self.value = newValue
+        }
+    }
+    
+    /// 支持闭包形式的修改（比单纯的 write 更灵活）
+    public func mutate(_ transform: (inout T) -> Void) {
+        queue.sync(flags: .barrier) {
+            transform(&value)
+        }
+    }
+}
+```
+
+<br/>
+
+**使用示例**
+
+```swift
+let safeInt = ThreadSafe(0)
+
+// 多线程并发写入
+DispatchQueue.concurrentPerform(iterations: 1000) { i in
+    safeInt.mutate { $0 += 1 }
+}
+
+// 最后读取
+print("最终结果:", safeInt.read())  // 1000
+```
+
+<br/>
+
+**特点**
+
+* `read()`：多个线程可以并发读取，不阻塞。
+* `write()`：写操作是独占的，保证安全。
+* `mutate {}`：可以在闭包里对值做复杂修改，比如数组 `append`、字典更新等。
+
+
+***
+<br/>
+
+**核心代码阅读：**
+
+```swift
+private let queue = DispatchQueue(
+    label: "com.argus.threadSafeQueue", 
+    attributes: .concurrent
+)
+```
+
+* 定义了一个 **并发队列 (concurrent queue)**，名字是 `"com.argus.threadSafeQueue"`。
+* 并发队列的特点是：可以同时并发执行多个任务。
+* 但是，我们可以通过 **barrier** 让某些任务（写操作）变成“独占任务”。
+
+<br/>
+
+```swift
+public func read() -> T {
+    return queue.sync {
+        return value
+    }
+}
+```
+
+* `read()` 方法通过 `queue.sync {}` 在并发队列里同步执行读操作。
+* 因为是 **并发队列**，多个 `read()` 可以同时执行，不会互相阻塞。
+* 读操作不会修改数据，因此允许并发执行是安全的。
+
+<br/>
+
+```swift
+public func write(_ newValue: T) {
+    queue.sync(flags: .barrier) {
+        self.value = newValue
+    }
+}
+```
+
+* `write()` 使用了 `queue.sync(flags: .barrier)`。
+
+* **barrier** 的作用：
+	* 保证当前这个写任务 **等到之前所有任务（包括读）都完成后才执行**；
+	* 在它执行时，会阻塞队列，不允许其他读/写并发；
+	* 写任务执行完之后，新的读操作才会继续并发执行。
+
+* 换句话说：
+	* 多个 `read()` 可以并行
+	* `write()` 是串行的，且写的时候会阻塞其他读写，避免数据竞争
+
+<br/>
+
+**总结：这段代码的作用**
+
+它实现了一个 **线程安全的读写封装**（常见叫 `ThreadSafe<T>` 或 `Atomic<T>`）：
+
+* **读**：多个线程可以同时读，性能好。
+* **写**：写的时候加独占锁，确保数据一致性。
+* **实现原理**：利用 GCD 并发队列 + barrier 替代传统的互斥锁（`NSLock`）。
+
+<br/>
+
+👉 对比一下：
+
+* `NSLock`：读写都会加锁 → 并发读也会被阻塞 → 性能一般。
+* `DispatchQueue + barrier`：读可以并发，写独占 → 性能更优，常用于缓存、配置、共享数据结构。
+
 
 
 
