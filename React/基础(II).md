@@ -2,6 +2,7 @@
 - [**‌项目文件结构**](#项目文件结构)
 	- [node_modules文件夹](#node_modules文件夹)
 	- [普通包和作用域包](#普通包和作用域包)
+- [**手机本地调试**](#手机本地调试)
 - [**React基础**](#React基础)
 	- [**props**](#props)
 	- [生命周期](#生命周期)
@@ -138,6 +139,93 @@ node_modules/
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="手机本地调试">手机本地调试</h1>
+
+- **1.手机和电脑要同处一个局域网【也就是同一个Wi-Fi】**
+
+- **2.用 局域网 IP 代替 localhost**
+
+在你的电脑上查一下 IP 地址，例如：
+
+```sh
+ipconfig getifaddr en0   # macOS 有线/WiFi IP
+
+// 或者在工程中运行
+npm run start
+
+You can now view my in the browser.
+
+  Local:            http://localhost:3000/imi-diagnosis/build
+  On Your Network:  http://172.16.149.76:3000/imi-diagnosis/build
+// 使用 http://172.16.149.76:3000/imi-diagnosis/build 也行；
+```
+
+<br/>
+
+- **3.在react工程中进行如下路由配置**
+
+**App.js中有：**
+
+```js
+function App() {
+  return (
+    <Routes>
+	    <Route path="/home" element={<HomePage />} />
+	
+	    <Route
+	        path="/app/guide_video/GuideVideoListView"
+	        element={<GuideVideoListView />}
+	      />
+		</Routes>
+  );
+}
+```
+
+<br/>
+
+**HomePage.js中有：**
+
+```
+class HomePage extends Component {
+  constructor(props) {
+    super(props);
+  }
+freshManGuideVideoListClick = () => {
+    this.props.navigate("/app/guide_video/GuideVideoListView");
+  };
+
+render() {
+    return (
+      <div style={{ padding: 20 }}>
+        <h1>首页</h1>
+      
+        <button onClick={this.freshManGuideVideoListClick}>
+          新手引导视频列表
+        </button>
+      </div>
+    );
+  }
+}
+
+export default WithRouter(HomePage);
+```
+
+<br/>
+
+```swift
+let vc = BaseWKWebViewController()
+        vc.urlStr = "http://172.16.149.76:3000/imi-diagnosis/build#/app/guide_video/GuideVideoListView"
+
+self.navigationController?.pushViewController(vc, animated: true)
+```
+
+这样就可以在本地进行调试了。
+
 
 
 <br/><br/><br/>
@@ -165,11 +253,7 @@ static propTypes = {
 
 
 
-<br/>
-<br/>
-
-
-
+<br/><br/>
 > <h2 id='生命周期'>生命周期</h2>
 
 生命周期可以分为挂载、渲染、卸载,分成两类:
@@ -2131,3 +2215,8 @@ serve -s ./build
 
 > **注意：** 如果打开后页面是空白，可能需要在`package.json`里加上一行：  
 > `"homepage": "."`，保存后重新打包[7]。
+
+---
+注释: 0,37313 SHA-256 849398b4fd106efc4fd18a0b3103789c  
+@HuangGang <harley.smessage@icloud.com>: 108,21 2790,101 2912,2 2937,6 2986,29 3179,7 3231,46 3286,9 3337 3388 3390 3402 3454 3496 3506,2 3525,11 3537,2 3553,2 3556,4 3997,20 4157 4223,22  
+...
