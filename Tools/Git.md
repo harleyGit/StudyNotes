@@ -19,6 +19,7 @@
 		- [git fetch](#gitfetch)
 		- [拉取代码](#拉取代码)
 	- [忽略文件配置](#忽略文件配置)
+		- [全局级配置影响仓库级配置](#全局级配置影响仓库级配置)
 - [**工作流指令**](#工作流指令)
 	- [新功能分支](#新功能分支)
 	- [修复紧急bug](#修复紧急bug)
@@ -911,11 +912,6 @@ storybook-static/
 
  
 
-
-
-
-
-
 #Android项目忽略：https://blog.csdn.net/EthanCo/article/details/127285825
 .gradle
 /local.properties
@@ -1056,7 +1052,7 @@ lint/tmp/
 
 &emsp; 清理该文件夹有个小缺点：清理之后构建首次构建项目的时候可能会增加构建时间。但是这不影响正常使用。而且还可以回收更多自由的空间内存。
 
-<br/><br/><br/>
+<br/><br/>
 
 问题: UserInterfaceState.xcuserstate 文件添加进忽略文件,还是无法消除.
 
@@ -1085,6 +1081,292 @@ git commit -m '忽略UserInterface.xcuserstate文件类型提交'
 git pull 
 git push
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="全局级配置影响仓库级配置">全局级配置影响仓库级配置</h2>
+
+**为什么全局级 `.gitignore_global` 的忽略配置 `/build` 会影响到项目中的 `/build`？**
+
+ **原因：**
+
+Git 的全局忽略文件（即 `~/.gitignore_global`）是对你所有仓库 **都生效** 的。
+它并不会去判断“当前项目有没有 build 目录”，而是：
+
+> 一旦匹配上模式 `/build`，**任何仓库中路径为 `build` 的文件夹都会被忽略。**
+
+即使当前仓库的 `build` 是新生成的、本地构建目录，只要路径匹配 `/build`，Git 都会认为它是“应忽略的”。
+
+***
+<br/>
+
+**举个例子：**
+
+全局忽略文件：
+
+```
+/build
+```
+
+你的项目结构：
+
+```
+imi-diagnosis/
+ ├── src/
+ ├── build/
+ └── package.json
+```
+
+那么：
+
+```
+git status
+```
+
+时，`build/` 永远不会出现。
+
+🧠 原因是：
+
+* `.gitignore_global` 规则是“相对于仓库根目录”来匹配的；
+* `/build` 正好匹配仓库根目录下的 `build/` 文件夹；
+* 即使这个规则写在全局文件中，它仍然会应用到每一个仓库的根目录。
+
+---
+<br/>
+
+`~/.gitignore_global` 属于哪一级？
+
+| 层级名    | 配置方式                                                        | 文件位置                  | 作用范围     |
+| ------ | ----------------------------------------------------------- | --------------------- | -------- |
+| 🥇 仓库级 | `.gitignore`                                                | 项目根目录                 | 当前仓库     |
+| 🥈 全局级 | `git config --global core.excludesfile ~/.gitignore_global` | `~/.gitignore_global` | 当前用户所有仓库 |
+| 🥉 系统级 | `/etc/gitconfig`                                            | 系统 Git 安装配置           | 系统所有用户   |
+
+所以：
+
+> ✅ `/Users/huanggang/.gitignore_global` 属于 **全局级** 忽略文件。
+> 它由你当前 macOS 用户（huanggang）的 Git 全局配置管理。
+> 不属于系统级，也不属于仓库级。
+
+可以通过命令验证：
+
+```bash
+git config --get core.excludesfile
+```
+
+你应该会看到输出：
+
+```
+/Users/huanggang/.gitignore_global
+```
+
+<br/>
+
+**如何让当前仓库不受全局 `/build` 影响**
+
+你有三种解决办法：
+
+**🧩 方法 1：在仓库 `.gitignore` 中“反忽略”**
+
+在项目根目录的 `.gitignore` 里加入：
+
+```bash
+!/build
+```
+
+代表“即使被全局忽略了，也要包含这个文件夹”。
+
+⚠️ 注意：
+若 `/build` 文件夹已被 Git 忽略，需要先强制加入：
+
+```bash
+git add -f build/
+```
+
+<br/>
+
+**🧩 方法 2：禁用全局忽略（仅当前项目）**
+
+执行：
+
+```bash
+git config core.excludesfile ""
+```
+
+这样，这个仓库就不会再读取 `~/.gitignore_global`。
+不会影响其他仓库。
+
+<br/> 
+
+🧩 方法 3：修改全局忽略文件的规则
+
+把 `/build` 改为更安全的规则：
+
+```bash
+# 忽略 node 构建目录
+**/dist
+# 忽略 webpack build 输出（只限特定项目）
+# /build  ← 删除或注释掉这一行
+```
+
+<br/> 
+
+✅ 四、快速定位谁在忽略文件
+
+命令：
+
+```bash
+git check-ignore -v build/
+```
+
+可以告诉你：
+
+```
+/Users/huanggang/.gitignore_global:1: /build
+```
+
+表示忽略规则来自哪个文件、哪一行，非常实用。
+
+
+***
+<br/><br/><br/>
+> <h2 id="当前仓库没有`/build`的忽略，而全局配置了，那为什么又以全局为主">当前仓库没有`/build`的忽略，而全局配置了，那为什么又以全局为主</h2>
+
+**✅ 一、Git 忽略规则的“优先级”并不是“谁覆盖谁”，而是“谁命中谁生效”**
+
+这是最容易混淆的点。
+我们先看这条规则的本质：
+
+> **Git 并不会合并忽略规则或决定“哪个文件优先”，
+> 它只会从所有 ignore 文件中汇总所有规则，然后去逐条匹配。**
+
+也就是说：
+
+* 如果一个文件在任何一个 `.gitignore`（全局 / 仓库 / 子目录）中**被匹配忽略**，那它就会被忽略；
+* 除非 **在更靠后的规则**（或同级文件里）用 `!` 显式“反忽略”，Git 才会把它重新包括回来。
+
+---
+<br/>
+
+**📘 举个例子**
+
+假设你的全局忽略文件（`~/.gitignore_global`）有：
+
+```
+/build
+```
+
+而你的项目 `.gitignore` **没有提到 build**（即没有 `!build` 这种反忽略规则）。
+
+那么当 Git 处理 `build/` 时，它会发现：
+
+> 啊，这个路径匹配到了全局规则 `/build`，OK，忽略掉。
+
+因为 `.gitignore` 没有说“不忽略”，所以全局规则就生效了。
+
+🧩 所以：
+
+> “仓库级优先级最高”指的是：
+> 如果仓库级文件**显式地反忽略（!）**某个全局被忽略的文件，
+> 那么仓库的规则会覆盖掉全局规则。
+> 但如果仓库里根本没提到这个文件，全局规则仍然生效。
+
+<br/>
+
+**✅ 二、Git 忽略匹配机制简化版**
+
+Git 实际上按以下顺序应用所有规则（从上到下）：
+
+1. 系统级忽略（最低）
+2. 全局忽略
+3. 仓库 `.gitignore`
+4. 子目录 `.gitignore`（最近的优先）
+5. “反忽略”规则（!xxx）
+
+> 注意：这不是“优先级比较”，而是“顺序叠加 + 最后生效”。
+
+<br/>
+
+**📘 举例 2：反忽略才能覆盖**
+
+全局：
+
+```bash
+/build
+```
+
+项目 `.gitignore`：
+
+```bash
+!/build
+```
+
+👉 此时 `/build` 会重新被包含，Git 会跟踪。
+
+因为 Git 先匹配了“忽略 /build”，再遇到仓库级的“反忽略”，就取消了前者的效果。
+
+<br/>
+
+**✅ 三、验证你现在的状态**
+
+在你的项目里执行：
+
+```bash
+git check-ignore -v build/
+```
+
+你会看到类似输出：
+
+```
+/Users/huanggang/.gitignore_global:1:/build
+build/
+```
+
+说明该规则来自全局忽略文件的第 1 行。
+而因为项目 `.gitignore` 没有反忽略它，所以全局规则生效。
+
+<br/>
+
+**✅ 四、如何修正**
+
+在项目根目录新建或编辑 `.gitignore`，添加：
+
+```bash
+!/build
+```
+
+然后重新让 Git 追踪：
+
+```bash
+git add -f build/
+```
+
+此时再执行：
+
+```bash
+git check-ignore -v build/
+```
+
+应该不会再输出任何结果了（说明不再被忽略）。
+
+<br/>
+
+**✅ 五、总结对照表**
+
+| 情况       | 全局 `.gitignore_global` | 项目 `.gitignore` | 结果          |
+| -------- | ---------------------- | --------------- | ----------- |
+| `/build` | (无此规则)                 | 忽略              | ✅ 被忽略       |
+| `/build` | 忽略                     | (无规则)           | ✅ 被忽略       |
+| `/build` | 忽略                     | `!/build`       | ❌ 不忽略（项目优先） |
+| `/build` | 忽略                     | 再次 `/build`     | ✅ 仍忽略（叠加）   |
+
+---
+
+🔍 **所以你遇到的现象不是“全局优先”，而是“全局规则命中后项目没反驳它”。**
+只要项目层明确“反忽略”，就能覆盖全局规则。
+
+
+
 
 
 <br/><br/><br/>
@@ -1300,14 +1582,8 @@ git push
 ![合并Huang 分支到 develop 分支](https://upload-images.jianshu.io/upload_images/2959789-cb50d674849ed6dc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='代码回滚'>代码回滚</h2>
-
-
 
 **适用于的场景：**
 - 提交错代码，想放弃刚刚提交的部分；
@@ -1332,12 +1608,8 @@ git push
 
 ![本地回滚完成](https://upload-images.jianshu.io/upload_images/2959789-035fac02454342ca.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-
 <br/>
-
 > <h2 id='远程回滚'>**`远程回滚`**</h2>
-
-
 
 &emsp;  `SourceTree`默认是不提供这种操作的，因为存在风险。所以，回滚远程代码，一定要注意：
 ①. 想要放弃的代码，是所有开发成员都一致同意的；
@@ -1361,10 +1633,7 @@ git push
 ![回到了第一次提交位置](https://upload-images.jianshu.io/upload_images/2959789-be1df4b96dae57d7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='变基'>变基</h2>
 
 ![变基与合并的区别](https://upload-images.jianshu.io/upload_images/2959789-b9b68a2db95509cc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -1387,12 +1656,8 @@ git push
 
 
 
-<br/>
-<br/>
-
-
+<br/><br/>
 > <h2 id='打Tag'>打Tag</h2>
-
 
 **功能:**
 -  轻量级的：它其实是一个独立的分支,或者说是一个不可变的分支.指向特定提交对象的引用;
