@@ -48,6 +48,7 @@
 	- [SYM软件针对于.ips文件进行符号话.DSYM](https://github.com/zqqf16/SYM)
 	- [析构调用闭包导致crash](#析构调用闭包导致crash)
 	- [线程堆栈分析报告如何查看？](#线程堆栈分析报告如何查看？)
+	- [网址缓存导致无法加载](#网址缓存导致无法加载)
 
 
 
@@ -3490,8 +3491,106 @@ AKBleUtil stopTimeoutTimer
 
 
 
+***
+<br/><br/><br/>
+> <h2 id="网址缓存导致无法加载">网址缓存导致无法加载</h2>
+
+**出现的场合：** 最开始加载是好的，后面因为域名换了，导致无法加载网页。在手机的**Safari**是可以加载的，电脑的**Safari、Chrome**都是可以的。
+
+网页「在浏览器可以打开，但在默认 WKWebView 不行」，大概率就是**缓存 / Cookie / 登录态冲突**导致的。
+
+这个现象在 iOS 开发中其实很常见，跟 WKWebView 的「缓存 / Cookie / 本地存储机制」有关。
+
+后来发现将`WKWebView`的缓存清理了就可以了。如下：
 
 
+**修改前的代码（默认）**
+
+```swift
+let configuration = WKWebViewConfiguration()
+// 默认使用 persistent（持久化）DataStore
+let webView = WKWebView(frame: .zero, configuration: configuration)
+```
+
+**默认情况下：**
+
+* `WKWebsiteDataStore.default()`（持久化）
+* WebView 会自动保存 Cookie、LocalStorage、IndexedDB、Service Worker 缓存等
+* 这些缓存会在 App 多次启动后持续存在
+
+<br/>
+
+**👉 这意味着：**
+
+* 如果目标网页对 Cookie 或本地状态有依赖（比如登录态或特定的 session 校验），
+* 旧的缓存 / Cookie 如果与服务器当前状态不匹配，就可能导致加载失败、跳转错误、白屏或被重定向循环卡住。
+
+<br/>
+
+**修改后的代码**
+
+```swift
+let configuration = WKWebViewConfiguration()
+configuration.websiteDataStore = WKWebsiteDataStore.nonPersistent()
+
+let webView = WKWebView(frame: .zero, configuration: configuration)
+```
+
+- **改成 `nonPersistent` 后的效果：**
+
+	* 不使用任何持久化缓存
+	* 每次打开页面，都是“全新的浏览器环境”
+	* 不携带旧 Cookie / Session / 缓存
+	* 与在浏览器中「无痕模式（隐私模式）」加载网页的效果一致
+
+上述代码虽然可以解决问题，但是**一棒子打死了**。对于性能和优化不是太好了。比如：打开速度、资源等。
+
+<br/>
+
+**👉 所以网页能正常加载了，因为：**
+
+* 清除了之前可能「污染」或「冲突」的 Cookie/Session
+* 服务器重新下发新的 Token / Cookie
+* 页面逻辑不再被旧状态卡住
+
+<br/>
+
+**可能的根本原因**
+
+1. **旧 Cookie / Session 过期或无效**，服务器拒绝请求。
+2. **缓存的 Service Worker / 本地存储异常**，导致页面无法正常更新。
+3. **重定向循环或鉴权逻辑异常**，只有干净环境才能进入。
+4. Web 页面对 Safari 与 WKWebView 的缓存行为处理不一致（这也是常见坑）。
+
+
+***
+<br/>
+
+个人感觉最好的办法是，当**加载失败的时候然后清理，然后再次加载，如下：**
+
+👉 可以在代理回调 `webView(_:didFailProvisionalNavigation:withError:)` 里调用：
+
+```swift
+func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    print("加载失败：\(error.localizedDescription)")
+    clearWebViewCache { [weak self] in
+        self?.webView.reload()
+    }
+}
+
+private func clearWebViewCache(completion: @escaping () -> Void) {
+    let dataStore = WKWebsiteDataStore.default()
+    let types = WKWebsiteDataStore.allWebsiteDataTypes()
+    dataStore.fetchDataRecords(ofTypes: types) { records in
+        dataStore.removeData(ofTypes: types, for: records) {
+            print("✅ WKWebView 缓存已清除")
+            completion()
+        }
+    }
+}
+```
+
+这样只有在加载失败时才清理缓存，避免每次启动都清空。
 
 
 
