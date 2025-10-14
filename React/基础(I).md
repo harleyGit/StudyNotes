@@ -43,6 +43,7 @@
 - [**ES6基础**](#ES6基础)
 	- [异步编程](#异步编程)
 	- [async/await和Promise.then()使用](#async/await和Promise.then()使用)
+	- [Promise的then、catch、finally如何选择使用](#Promise的then、catch、finally如何选择使用)
 - [**顶层API**](#顶层API)
 	- [createElement](#createElement)
 	- [cloneElement](#cloneElement)
@@ -2897,17 +2898,165 @@ function App() {
 
 
 
-<br/>
-<br/>
-
-> <h2 id=''></h2>
-
-
-
-
-
+<br/><br/>
+> <h2 id='Promise的then、catch、finally如何选择使用'>Promise的then、catch、finally如何选择使用</h2>
+Promise 最容易混淆的部分之一：`then`、`catch`、`finally` 看似相似，但职责完全不同。
 
 <br/>
+
+**✅ 一句话总结**
+
+| 方法          | 作用              | 是否接收结果    | 典型使用场景      |
+| ----------- | --------------- | --------- | ----------- |
+| `then()`    | 当 Promise 成功时执行 | ✅ 是       | 请求成功后处理数据   |
+| `catch()`   | 当 Promise 失败时执行 | ✅ 是（接收错误） | 处理异常或网络错误   |
+| `finally()` | 无论成功或失败都执行      | ❌ 否       | 清理资源、关闭加载动画 |
+
+<br/>
+
+**🧩 1️⃣ `then()` —— 成功时执行**
+
+```js
+fetch('/api/data')
+  .then((res) => {
+    console.log('✅ 请求成功:', res);
+  });
+```
+
+* **执行时机**：Promise 状态变为 `fulfilled`
+* **参数**：接收 `resolve()` 传出的结果
+* **可链式调用**：返回新的 Promise
+
+<br/>
+
+**🧩 2️⃣ `catch()` —— 失败时执行**
+
+```js
+fetch('/api/data')
+  .then((res) => {
+    throw new Error('解析错误');
+  })
+  .catch((err) => {
+    console.error('❌ 捕获错误:', err);
+  });
+```
+
+* **执行时机**：Promise 状态变为 `rejected`
+* **参数**：接收 `reject()` 或代码抛出的错误
+* **类似 try...catch**
+
+> 👉 注意：`catch` 还能捕获上面链条中任何地方的异常。
+
+<br/>
+
+**🧩 3️⃣ `finally()` —— 无论成功或失败都执行**
+
+```js
+fetch('/api/data')
+  .then((res) => console.log('✅ 成功'))
+  .catch((err) => console.log('❌ 失败'))
+  .finally(() => {
+    console.log('🔚 请求结束，关闭 loading');
+  });
+```
+
+* **执行时机**：Promise 结束时（无论成功或失败）
+* **不接收参数**
+* **返回一个新的 Promise**，继续链式调用
+
+---
+<br/>
+
+**完整例子**
+
+比如一个请求数据并在加载时显示转圈动画：
+
+```js
+setLoading(true);
+
+fetch('/api/user')
+  .then((res) => res.json())
+  .then((data) => {
+    console.log('✅ 数据:', data);
+  })
+  .catch((err) => {
+    console.error('❌ 出错了:', err);
+  })
+  .finally(() => {
+    setLoading(false); // 🔚 无论成败，都关闭 loading
+  });
+```
+
+<br/>
+
+**💬 说明：**
+
+* ✅ 成功：执行 then → finally
+* ❌ 失败：跳过 then，执行 catch → finally
+* 🎯 无论如何：finally 一定执行
+
+---
+<br/>
+
+**⚖️ 对比总结**
+
+| 方法        | 是否捕获异常 | 是否能修改结果 | 是否总会执行 | 常见用途                    |
+| --------- | ------ | ------- | ------ | ----------------------- |
+| `then`    | 否      | 是       | 否      | 成功后逻辑                   |
+| `catch`   | 是      | 是       | 否      | 错误处理                    |
+| `finally` | 否      | 否       | ✅ 是    | 清理收尾操作（关闭 loading、释放资源） |
+
+
+<br/>
+---
+
+**模拟实战项目中使用：**
+
+**`VM.jsx`中有如下Code**
+
+```jsx
+static requestBusinessUserInfoData = ({ userId }) => {
+    {
+      return new Promise((resolve, reject) => {
+        const data = {
+		  benefitTotal: 0,
+          address: '萨达',
+          gmtCreate: 1760338679795,
+        };
+        // 模拟异步（例如从接口获取数据）
+        setTimeout(() => {
+          resolve(data);
+        }, 500);
+      });
+    }
+};
+```
+
+<br/>
+
+在页面`Page.jsx`中使用上述模拟的请求数据：
+
+```js
+getData = () => {
+    // 获取商户详情
+    this.setState({ loading: true });
+
+   DetailVM.requestBusinessUserInfoData({ userId: 'this.props.location.query.id' })
+      .then((resp) => {
+        this.setState({
+          businessUserInfo: resp,
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+  };
+```
+
+
+
+
+<br/><br/><br/>
 
 ***
 <br/>
@@ -2916,14 +3065,12 @@ function App() {
 
 
 <br/>
-
-> <h2 id="createElement">[createElement](https://juejin.cn/post/6844903970876440583)</h2>
+># <h2 id="createElement">[createElement](https://juejin.cn/post/6844903970876440583)</h2>
 
 
 
 
 <br/>
-
 > <h2 id="cloneElement">cloneElement</h2>
 
 ```
