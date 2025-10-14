@@ -3007,8 +3007,8 @@ fetch('/api/user')
 | `finally` | 否      | 否       | ✅ 是    | 清理收尾操作（关闭 loading、释放资源） |
 
 
-<br/>
 ---
+<br/>
 
 **模拟实战项目中使用：**
 
@@ -3065,15 +3065,14 @@ getData = () => {
 
 
 <br/>
+
 ># <h2 id="createElement">[createElement](https://juejin.cn/post/6844903970876440583)</h2>
 
-
-
-
 <br/>
+
 > <h2 id="cloneElement">cloneElement</h2>
 
-```
+```js
 React.cloneElement(
  element,
  [props],
@@ -3099,7 +3098,7 @@ key 和 ref 会被保留，因为它们本身也是 props ，所以也可以修�
 
 CloneElementTest.js文件
 
-```
+```js
 export function CloneDemo(props) {
     console.dir(props)
     console.table({ 'text: %s': props.children.props.children, 'keyValue': props.keyValue})
@@ -3116,11 +3115,8 @@ export function ContainerBox() {
 
 Index.js文件
 
-```
+```js
 import { ContainerBox } from './Test/CloneElementTest';
-
-
-
 
 ReactDOM.render(
   <React.StrictMode>
@@ -3132,9 +3128,6 @@ ReactDOM.render(
 
 
 reportWebVitals();
-
-
-
 ```
 
 效果图：
@@ -3149,7 +3142,7 @@ reportWebVitals();
 
 CloneElementTest.js
 
-```
+```js
 
 export function CloneDemo1({ dom = <div />, ...props }) {
     console.dir(props)
