@@ -32,6 +32,7 @@
 		- [useMemo](#useMemo)
 			- [useMemo的依赖数组](#useMemo的依赖数组)
 			- [长轮询案例](#长轮询案例)
+		- [useEffect、useCallback、useMemo的三者区别](#useEffect、useCallback、useMemo的三者区别)
 	- [React Router](#ReactRouter)
 		- [路由Demo](#路由Demo)
 	- [参数传递](#参数传递)
@@ -1933,7 +1934,7 @@ export default TestApp1
 
 &emsp; useMemo、useCallback用法都差不多，都会在第一次渲染的时候执行，之后会在其依赖的变量发生改变时再次执行，并且这两个hooks都返回缓存的值，useMemo返回缓存的变量，useCallback返回缓存的函数。
 
-```
+```js
 import React, { useEffect, useState, useCallback, memo, useMemo } from 'react';
 
 const Child = ({ name, onClick }) => {
@@ -1978,7 +1979,7 @@ export default TestApp1
 
 使用:
 
-```
+```js
   render() {
 	  return (
             <TestApp1/>
@@ -2015,7 +2016,7 @@ export default TestApp1
 <br/><br/>
 > <h3 id='长轮询案例'>[长轮询案例](https://codeantenna.com/a/veVh4iDVA7)</h3>
 
-```
+```js
 const TestApp1 = () => {
 
     // 轮询管理器
@@ -2110,7 +2111,7 @@ export default TestApp1
 
 **函数地址请求**
 
-```
+```js
 const TestApp = () => {
     const [origin, setOrigin] = useState('');
     const updateState = useCallback(async () => {
@@ -2127,18 +2128,225 @@ const TestApp = () => {
 ```
 
 
+***
+<br/><br/><br/>
+> <h2 id="useEffect、useCallback、useMemo的三者区别">useEffect、useCallback、useMemo的三者区别</h2>
+
+它们是 React Hooks 里最容易“混淆”但又最核心的三个概念。
+确实它们**都依赖第二个参数（依赖数组）**来控制触发逻辑，但它们的**目的、执行时机和返回结果完全不同**。
+下面我用一个「精炼 + 实战」的方式帮你彻底理清。
+
+---
+<br/>
+
+**🧩 一图总结差异**
+
+| Hook          | 作用                        | 何时执行                     | 返回值          | 常见用途                   |
+| ------------- | ------------------------- | ------------------------ | ------------ | ---------------------- |
+| `useEffect`   | 处理**副作用（异步、DOM、订阅、数据请求）** | 在 **渲染完成后**（commit 阶段）执行 | 无返回（可返回清理函数） | 网络请求、事件监听、DOM 操作、日志输出等 |
+| `useCallback` | 缓存一个**函数引用**              | 依赖项变时才**重新创建函数**         | 返回一个**函数**   | 避免子组件重复渲染（props 传函数时）  |
+| `useMemo`     | 缓存一个**计算结果（值）**           | 依赖项变时才**重新计算结果**         | 返回**值**      | 性能优化（计算量大）、派生状态缓存      |
+
+---
+<br/>
+
+**举例理解：同一个依赖，不同用途**
+
+假设你有个组件要根据 `count` 计算一个耗时结果：
+
+```jsx
+function Demo({ count }) {
+  // 1️⃣ useEffect —— 做副作用
+  useEffect(() => {
+    console.log("count 改变了，触发副作用");
+  }, [count]);
+
+  // 2️⃣ useCallback —— 缓存函数
+  const handleClick = useCallback(() => {
+    console.log("点击时 count =", count);
+  }, [count]);
+
+  // 3️⃣ useMemo —— 缓存计算值
+  const result = useMemo(() => {
+    console.log("重新计算 result");
+    return count * 2;
+  }, [count]);
+
+  return (
+    <div>
+      <p>结果：{result}</p>
+      <button onClick={handleClick}>点击</button>
+    </div>
+  );
+}
+```
+
+✅ **三者的区别在于：**
+
+| Hook          | 触发时机               | 执行内容               |
+| ------------- | ------------------ | ------------------ |
+| `useEffect`   | 组件渲染 **完成后**（异步阶段） | 处理副作用，比如网络请求、DOM操作 |
+| `useCallback` | **渲染期间** 判断依赖是否变化  | 返回函数引用是否需要更新       |
+| `useMemo`     | **渲染期间** 判断依赖是否变化  | 返回值是否需要重新计算        |
+
+---
+<br/>
+
+ **对比核心差异：执行时机与意图**
+
+| 对比项        | useEffect   | useCallback   | useMemo |
+| ---------- | ----------- | ------------- | ------- |
+| **执行时机**   | 渲染之后（异步）    | 渲染中（同步）       | 渲染中（同步） |
+| **目标**     | 执行副作用逻辑     | 稳定函数引用        | 稳定计算结果  |
+| **性能优化意义** | 减少重复副作用     | 避免函数变导致子组件重渲染 | 避免重复计算  |
+| **返回类型**   | void / 清理函数 | 函数            | 任意值     |
+
+---
+<br/> 
+
+**💡 一句话记忆法**
+
+> * `useEffect`：**做事**（执行副作用）
+> * `useCallback`：**保人**（保住函数引用）
+> * `useMemo`：**存值**（缓存计算结果）
+
+<br/> 
+
+**🧪 补充实战：为什么看起来都依赖第二个参数？**
+
+它们确实都依赖第二个参数，但“触发逻辑”不同：
+
+| Hook          | 依赖变化时发生什么                           |
+| ------------- | ----------------------------------- |
+| `useEffect`   | 上次 effect 会清理（如果有），然后执行新的 effect 函数 |
+| `useCallback` | 返回一个**新的函数引用**                      |
+| `useMemo`     | 返回一个**新的计算值**                       |
 
 <br/>
+
+**🚫 常见误区**
+
+| 误区                                    | 实际情况                          |
+| ------------------------------------- | ----------------------------- |
+| “`useCallback` 和 `useMemo` 一样，只是形式不同” | ❌ 错，前者缓存**函数引用**，后者缓存**值**    |
+| “`useEffect` 用来缓存数据”                  | ❌ 它不能缓存，只能做副作用操作              |
+| “没必要加依赖数组，反正会自动判断”                    | ❌ React 不会帮你自动判断，会导致无限循环或错过更新 |
+
+***
+<br/><br/>
+
+看一个直观的例子 **`useEffect`**、**`useCallback`** 和 **`useMemo`** 的区别。
+
+
+```jsx
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
+export default function DemoHooks() {
+  const [count, setCount] = useState(0);
+  const [text, setText] = useState('Hello');
+
+  // useEffect —— 每次渲染后执行（依赖变更时）
+  useEffect(() => {
+    console.log('🟢 useEffect: count 或 text 改变后触发');
+    return () => {
+      console.log('🔴 useEffect cleanup: 卸载或下次触发前清理');
+    };
+  }, [count, text]);
+
+  // useCallback —— 返回一个记忆化的函数引用
+  const handleClick = useCallback(() => {
+    console.log('🟡 handleClick 被调用：当前 count =', count);
+  }, [count]);
+
+  // useMemo —— 返回一个记忆化的值（只在依赖变化时重新计算）
+  const computedValue = useMemo(() => {
+    console.log('🔵 useMemo: 计算值');
+    return count * 2;
+  }, [count]);
+
+  console.log('⚪ 组件渲染中...');
+
+  return (
+    <div style={{ fontFamily: 'monospace' }}>
+      <h3>React Hooks 对比演示</h3>
+      <p>count: {count}</p>
+      <p>text: {text}</p>
+      <p>computedValue (useMemo): {computedValue}</p>
+      <button onClick={() => setCount(count + 1)}>增加 count</button>
+      <button onClick={() => setText(text === 'Hello' ? 'World' : 'Hello')}>
+        切换 text
+      </button>
+      <button onClick={handleClick}>调用 useCallback 函数</button>
+    </div>
+  );
+}
+```
+
+<br/> 
+
+**执行过程输出（控制台打印顺序）**
+
+假设你操作如下：
+
+1️⃣ **页面初次加载**
+
+```
+⚪ 组件渲染中...
+🔵 useMemo: 计算值
+🟢 useEffect: count 或 text 改变后触发
+```
+
 <br/>
 
-> <h3 id=''></h3>
+2️⃣ **点击“增加 count”**
 
-
+```
+⚪ 组件渲染中...
+🔵 useMemo: 计算值        ← 因为 count 改变，重新计算
+🟢 useEffect: count 或 text 改变后触发
+🔴 useEffect cleanup: 卸载或下次触发前清理
+```
 
 <br/>
-<br/>
+
+3️⃣ **点击“切换 text”**
+
+```
+⚪ 组件渲染中...
+🟢 useEffect: count 或 text 改变后触发
+🔴 useEffect cleanup: 卸载或下次触发前清理
+```
+
+> 注意：`useMemo` 没打印，因为 `count` 没变；
+> 而 `useEffect` 仍然执行，因为 `text` 是它的依赖。
+
 <br/>
 
+4️⃣ **点击“调用 useCallback 函数”**
+
+```
+🟡 handleClick 被调用：当前 count = X
+```
+
+> 这里只执行了函数体，不会触发组件重新渲染。
+
+---
+<br/>
+
+
+**✅ 总结区别**
+
+| Hook          | 用途                   | 依赖变化时行为        | 返回类型 | 常见用途       |
+| ------------- | -------------------- | -------------- | ---- | ---------- |
+| `useEffect`   | 副作用（网络请求、DOM 操作、订阅等） | 执行副作用函数（并清理旧的） | 无返回值 | 生命周期逻辑     |
+| `useCallback` | 缓存函数引用               | 重新创建函数         | 函数   | 避免子组件重复渲染  |
+| `useMemo`     | 缓存计算结果               | 重新计算值          | 任意值  | 避免昂贵计算重复执行 |
+
+
+
+
+
+<br/><br/><br/>
 > <h2 id='ReactRouter'>React Router</h2>
 
 &emsp; SPA（Single Page Application，单页面应用），整个应用只加载一个页面（入口页面），后续在与用户的交互过程中，通过DOM操作在这个单页上动态生成结构和内容。使用SPA可以使项目有更好的用户体验，减少请求、渲染和页面跳转产生的等待与空白，另外前端在项目中更具重要性，数据和页面内容都由异步请求（AJAX）+DOM操作来完成，前端则更多地去处理业务逻辑。
@@ -2163,7 +2371,7 @@ WEB端的Router中提供了两种不同的模式**＜HashRouter/＞**和**＜Bro
 
 **index.js**
 
-```
+```js
 import { BrowserRouter as Router, HashRouter } from 'react-router-dom';
 
 ReactDOM.render(
@@ -2181,7 +2389,7 @@ ReactDOM.render(
 
 **App.js**
 
-```
+```js
 render() {
     return <TestHOC4 />
 }
@@ -2192,7 +2400,7 @@ render() {
 
 **HOC.js**
 
-```
+```js
 export function TestHOC4() {
 
     return <div style={{ width: '100%', height: '100%' }}>
@@ -2238,7 +2446,7 @@ export default function RouterAboutView() {
 
 **RouterIndexView.js**
 
-```
+```js
 export default function RouterIndexView() {
     return <div>
         <h1>首页视图</h1>
@@ -2252,7 +2460,7 @@ export default function RouterIndexView() {
 
 **RouterListView.js**
 
-```
+```js
 export default function RouterListView() {
     const pageLength = Math.ceil(Data.length / 3)
 
@@ -2295,7 +2503,7 @@ export function List(props) {
 
 **RouterRouter.js**
 
-```
+```js
 let Routers = [
     {
         path: '/',
@@ -2529,32 +2737,7 @@ export default function RouterUndefinedView() {
 ![39](./../Pictures/react39.png)
 
 
-<br/>
-<br/>
-
-> <h3 id=''></h3>
-
-
-
-<br/>
-<br/>
-
-> <h3 id=''></h3>
-
-
-
-<br/>
-<br/>
-
-> <h3 id=''></h3>
-
-
-
-
-<br/>
-<br/>
-<br/>
-
+<br/><br/><br/>
 > <h2 id="参数传递">参数传递</h2>
 
 <br>
@@ -2574,8 +2757,7 @@ export default function RouterUndefinedView() {
 
 
 
-<br>
-<br>
+<br><br>
 
 > <h3 id="子父组件的通信">子->父组件的通信</h3>
 
@@ -3054,8 +3236,6 @@ getData = () => {
 ```
 
 
-
-
 <br/><br/><br/>
 
 ***
@@ -3178,21 +3358,12 @@ reportWebVitals();
 ```
 
 ![标签元素排列](./../Pictures/react17.png)
-
-
-
 ![props打印](./../Pictures/react18.png)
-
-
-
 
 
 <br/>
 
 > **验证2:传参数**
-
-
-
 
 <br/>
 
@@ -3241,8 +3412,6 @@ reportWebVitals();
 ![控制台打印](./../Pictures/react19.png)
 
 ![标签显示](./../Pictures/react20.png)
-
-
 
 
 <br/>
@@ -3305,8 +3474,6 @@ reportWebVitals();
 
 
 ![属性打印](./../Pictures/react22.png)
-
-
 
 
 <br/>
@@ -3377,30 +3544,7 @@ reportWebVitals();
 
 
 
-
-
-<br/>
-
-> <h2 id=""></h2>
-
-
-
-
-<br/>
-
-> <h2 id=""></h2>
-
-
-
-<br/>
-
-> <h2 id=""></h2>
-
-
-
-
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -3490,8 +3634,6 @@ typeError: undefined is not an object(evaluating 'a2.length')
 ```
 
 
-
-
 <br/>
 
 &emsp; 确定数据类型后，然后根据不同的数据类型使用不同的方法来判断，例
@@ -3544,7 +3686,7 @@ isEmpty(undefined)     //true
 
 
 
-<br/>
+<br/><br/> <br/>
 
 ***
 <br/>
@@ -3552,8 +3694,7 @@ isEmpty(undefined)     //true
 > <h1 id="JavaScript语法">JavaScript语法</h1>
 
 
-
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
@@ -3603,23 +3744,16 @@ build文件就是打包项目打包的一系列配置.
 
 
 
-
-
-
 <br/><br/>
 > <h2 id="Vite是什么">Vite是什么</h2>
 
-好问题 👌，我来给你详细解释一下 **Vite**。
-
----
-
-## 🔹 Vite 是什么？
+**🔹 Vite 是什么？**
 
 Vite（读作 *vit*，法语里就是“快”🚀）是一个 **前端构建工具**，用来开发和打包 Vue、React、Svelte 等项目。它是由 Vue 作者 **尤雨溪（Evan You）** 开发的，后来逐渐成为 **主流的前端工具**，现在很多新项目都会用它替代传统的 **Webpack** 或 **Create React App (CRA)**。
 
----
+<br/> 
 
-## 🔹 为什么要用 Vite？
+**🔹 为什么要用 Vite？**
 
 传统的 Webpack 项目有几个痛点：
 
@@ -3629,31 +3763,33 @@ Vite（读作 *vit*，法语里就是“快”🚀）是一个 **前端构建工
 
 Vite 的优势：
 
-1. **启动极快**
+- **1.启动极快**
+	
+	* 使用 **原生 ES Module** (`import/export`)，开发时无需整体打包，只启动你正在用的部分。
+	* 启动项目只需几百毫秒，而 Webpack 可能要几十秒。
 
-   * 使用 **原生 ES Module** (`import/export`)，开发时无需整体打包，只启动你正在用的部分。
-   * 启动项目只需几百毫秒，而 Webpack 可能要几十秒。
 
-2. **热更新快（HMR）**
+- **2.热更新快（HMR）**
 
-   * 修改一个文件，Vite 只更新这个模块，而不是整个项目。
+	* 修改一个文件，Vite 只更新这个模块，而不是整个项目。
 
-3. **内置多框架支持**
+- **3.内置多框架支持**
 
-   * 支持 React、Vue、Svelte、Preact、Solid 等。
+	* 支持 React、Vue、Svelte、Preact、Solid 等。
 
-4. **生产环境仍然走打包**
+- **4.生产环境仍然走打包**
 
-   * 开发环境快 → 使用 ESBuild
-   * 打包时 → 使用 Rollup，产物稳定可用。
+	* 开发环境快 → 使用 ESBuild
+	* 打包时 → 使用 Rollup，产物稳定可用。
 
-5. **配置简单**
+- **5.配置简单**
 
-   * 默认配置够用，不像 Webpack 那么繁琐。
+	* 默认配置够用，不像 Webpack 那么繁琐。
 
 ---
+<br/> 
 
-## 🔹 对比一下
+**🔹 对比一下**
 
 | 工具                         | 启动速度 | 热更新速度 | 配置复杂度          | 适用场景       |
 | -------------------------- | ---- | ----- | -------------- | ---------- |
@@ -3661,16 +3797,14 @@ Vite 的优势：
 | **CRA (Create React App)** | 中等   | 中等    | 低（封装了 webpack） | React 新手入门 |
 | **Vite**                   | ⚡ 极快 | ⚡ 极快  | 低              | 现代前端项目（推荐） |
 
----
+<br/> 
 
-## 🔹 一句话总结
+**🔹 一句话总结**
 
 👉 **Vite 就是一个更快、更轻、更现代的前端开发工具**，用来创建和构建 React、Vue 等项目。
 现在新项目基本上都推荐用 Vite，而不是 CRA。
 
----
 
-要不要我帮你画一个 **“Vite vs CRA 的工作流程对比图”**，让你直观理解为什么 Vite 更快？
 
 
 <br/>
