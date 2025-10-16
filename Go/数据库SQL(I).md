@@ -125,6 +125,129 @@ CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name
 ON table_name(col_name[length],...) [ASC | DESC]
 ```
 
+***
+<br/>
+
+**`ALTER TABLE` 方式添加索引**
+
+语法：
+
+```sql
+ALTER TABLE table_name 
+ADD [UNIQUE | FULLTEXT | SPATIAL] [INDEX | KEY]
+[index_name](col_name[length],...) [ASC | DESC];
+```
+
+这意思是：
+
+> 在已有的表上 **修改表结构**，给一个或多个字段添加索引。
+
+<br/>
+
+**✅ 示例 1：普通索引（INDEX）**
+
+```sql
+ALTER TABLE users
+ADD INDEX idx_name (name);
+```
+
+* 表名：`users`
+* 索引名：`idx_name`
+* 索引字段：`name`
+* 效果：在 `name` 字段上建立一个普通索引，加快 `WHERE name = 'Tom'` 的查询速度。
+
+<br/>
+
+**✅ 示例 2：唯一索引（UNIQUE INDEX）**
+
+```sql
+ALTER TABLE users
+ADD UNIQUE INDEX idx_email (email);
+```
+
+* 作用：保证 `email` 字段的值不能重复（唯一性约束）。
+
+<br/>
+
+**✅ 示例 3：多列联合索引（复合索引）**
+
+```sql
+ALTER TABLE users
+ADD INDEX idx_name_age (name, age);
+```
+
+* 联合索引会在 `(name, age)` 组合上建立索引。
+* 优化查询如：
+
+  ```sql
+  SELECT * FROM users WHERE name='Tom' AND age=20;
+  ```
+
+  或者只按 `name` 查也能利用部分索引。
+
+<br/>
+
+** 二、`CREATE INDEX` 方式添加索引**
+
+语法：
+
+```sql
+CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name 
+ON table_name (col_name[length],...) [ASC | DESC];
+```
+这其实与 `ALTER TABLE` 效果一样，只是写法不同。
+
+<br/>
+
+**✅ 示例 4：普通索引**
+
+```sql
+CREATE INDEX idx_name ON users(name);
+```
+
+与上面 `ALTER TABLE ... ADD INDEX` 的作用相同。
+
+<br/>
+
+**✅ 示例 5：唯一索引**
+
+```sql
+CREATE UNIQUE INDEX idx_email ON users(email);
+```
+
+功能同上：防止 email 重复。
+
+<br/>
+
+**✅ 示例 6：全文索引（FULLTEXT）**
+
+```sql
+CREATE FULLTEXT INDEX idx_bio ON users(bio);
+```
+
+* 用于全文搜索（仅限 `CHAR`, `VARCHAR`, `TEXT` 类型字段）。
+* 查询时可用：
+
+  ```sql
+  SELECT * FROM users WHERE MATCH(bio) AGAINST('developer');
+  ```
+
+---
+<br/>
+
+**小总结**
+
+| 方式             | 用法        | 典型语句                                          | 用途       |
+| -------------- | --------- | --------------------------------------------- | -------- |
+| `ALTER TABLE`  | 在修改表时添加索引 | `ALTER TABLE users ADD INDEX idx_name(name);` | 修改表结构时使用 |
+| `CREATE INDEX` | 独立添加索引    | `CREATE INDEX idx_name ON users(name);`       | 单独创建索引   |
+
+> ⚙️ 两者效果完全等价，只是写法不同。
+> 一般习惯：
+>
+> * 建表后添加索引 → 用 `ALTER TABLE`
+> * 单独维护索引 → 用 `CREATE INDEX`
+
 
 <br/><br/>
 > <h3 id="删除索引">删除索引</h3>
@@ -139,7 +262,6 @@ DROP INDEX index_name ON table_name;
 
 
 <br/><br/>
-
 > <h3 id="查看索引">查看索引</h3>
 
 ```sql
@@ -166,8 +288,6 @@ CREATE TABLE practiceIndex_student_info(
 	PRIMARY KEY (id)
 )ENGINE=INNODB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 ```
-
-
 
 
 
