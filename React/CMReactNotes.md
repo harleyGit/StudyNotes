@@ -2,6 +2,7 @@
 - [**手机本地调试**](#手机本地调试)
 - [**函数**](#函数)
 	- [函数参数设置默认值](#函数参数设置默认值)
+	- [useCallBack无法根据依赖变量改变而调用内部函数](#useCallBack无法根据依赖变量改变而调用内部函数)
 - [**管理Node版本的NVM**](#管理Node版本的NVM)
 - [**新建一个React项目**](#新建一个React项目)
 - [**JavaScript陌生语法**](#JavaScript陌生语法)
@@ -13,6 +14,7 @@
 	- [数组为null,可选操作](#数组为null,可选操作)
 	- [数组对象元素转换成map](#数组对象元素转换成map)
 	- [解构赋值](#解构赋值)
+	- [展开运算符，保留部分值](#展开运算符，保留部分值)
 - [Flex布局](#Flex布局)
 - [清理缓存导致的错误](#清理缓存导致的错误)
 - [跨域造成无法请求解决](#跨域造成无法请求解决)
@@ -73,6 +75,39 @@ handleFilter = (filterKey, value, { isTime = false }) => {}
 this.handleFilter('actionTypeFilter', e) 这样调用，为什么会报错
 ```
 
+
+***
+<br/><br/><br/>
+> <h2 id="useCallBack无法根据依赖变量改变而调用内部函数">useCallBack无法根据依赖变量改变而调用内部函数</h2>
+
+```
+[cloudProfitTime, setCloudProfitTime] = useState(90)
+
+const handleSubmit = useCallback(
+    (params = {}) => {
+	 
+	 const submitData = {
+				spuFreezeDays: cloudProfitTime,
+      };
+      
+  },[
+  cloudProfitTime,
+  saveData,
+],)
+
+// 按钮点击事件
+const editClick = ({ isStartEdit, action = SubmitAction.CANCEL }) => {
+		
+	setCloudProfitTime(9)
+	setIsEdit(isStartEdit);
+	if (action == SubmitAction.SAVE) {
+	  setSaveData(SubmitAction.SAVE);
+	}
+};
+```
+点击一个按钮执行`editClick`方法后，但是handleSubmit 并没有执行，怎么回事？
+
+这是一个典型的 **React 状态更新异步 + useCallback 依赖关系误区**，[解决方案请看这里](./基础(I).md根据依赖参数useCallBack无法调用内部函数)
 
 
 
@@ -496,6 +531,87 @@ function Demo() {
 }
 ```
 
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="展开运算符，保留部分值">展开运算符，保留部分值</h1>
+
+```js
+ const [cloudProfitTime, setCloudProfitTime] = useState({ old: 90, new: 90 });
+```
+
+为什么
+
+```js
+setCloudProfitTime(...cloudProfitTime, { new: value });
+```
+
+会报错，咋回事？
+
+<br/>
+
+**我写的是：**
+
+```js
+setCloudProfitTime(...cloudProfitTime, { new: value });
+```
+
+这其实是语法错误的写法，因为：
+
+1. **`setCloudProfitTime` 只接收一个参数（新的 state 值）**；
+2. 你却在这里使用了「展开运算符」`...cloudProfitTime`，但它本身是一个对象，不是数组；
+3. 你还传了两个参数（展开的 + 新对象），所以 React 报错。
+
+<br/>
+
+**正确写法：你想“保留旧值，更新部分字段”**
+
+在 React 中，更新对象状态时要**创建一个新的对象副本**：
+
+```js
+setCloudProfitTime({
+  ...cloudProfitTime,  // 保留原来的所有属性
+  new: value,          // 覆盖 new 字段
+});
+```
+
+✅ 这样才是合法写法。
+
+<br/>
+
+**完整例子：**
+
+```jsx
+const [cloudProfitTime, setCloudProfitTime] = useState({ old: 90, new: 90 });
+
+const onChangeValue = (value) => {
+  setCloudProfitTime({
+    ...cloudProfitTime,
+    new: value,
+  });
+};
+```
+
+<br/>
+
+**推荐写法（防止闭包旧值）**
+
+在 React 的 state 更新中，最好用函数式更新：
+
+```js
+setCloudProfitTime(prev => ({
+  ...prev,
+  new: value,
+}));
+```
+
+✅ 优点：
+
+* 不依赖外层的闭包；
+* 在异步或频繁更新时保证拿到最新的状态。
 
 
 
@@ -2528,6 +2644,6 @@ import styles from './index.less';
 
 
 ---
-注释: 0,44934 SHA-256 33700154bc2256403fdfa13b5f28726f  
-@HuangGang <harley.smessage@icloud.com>: 1,67 353,83 1150,37 1285,91 1378,58 1445,147 1599,15 1727,8 6411,66 6484,9 6529,6 6537 6548,7 6556 6570 6575,15 6602,14 6640,81 6860,6 6867,2 6872 6877,3 6888 6892 6894 6898 6907 6921 6929 6945 6951,22 6983,65 7055,11 7102,6 7122,7 7147,7 7705 41006,96 41116,2 41119,7 41145,4 41150,7 41158,2 41177,2 41180,7 41314,47 41491,15 41517,9 41566,2 41634,2 41699,2 41749,14 41775,9 41943,4 41948 42844,126 43923,36 43964 43974 43979,58 44038,4 44053 44058,2 44351,5 44358,2 44386,2 44795,22 44822,3 44831,74 44910,22  
+注释: 0,46777 SHA-256 c14856f59fa393d3f5c18248b768cc49  
+@HuangGang <harley.smessage@icloud.com>: 1,132 418,114 1246,37 1381,91 1474,58 1541,147 1695,15 1823,107 1946,5 1965,18 2040 2042,3 2065,5 2110,10 2123,3 2159,10 2240,9 2263,3 2267 2292 2328 2363 2369,4 2381 2391 2422,3 2432,2 2467,16 2491,29 7196,66 7269,9 7314,6 7322 7333,7 7341 7355 7360,15 7387,14 7425,81 7645,6 7652,2 7657 7662,3 7673 7677 7679 7683 7692 7706 7714 7730 7736,22 7768,65 7840,11 7887,6 7907,7 7932,7 8490,77 8645,4 8655,7 8717,4 8731,12 8747,2 8976,5 8983,2 9005,2 9165,5 9172,2 9179,2 9381,5 9388,2 9402,2 42849,96 42959,2 42962,7 42988,4 42993,7 43001,2 43020,2 43023,7 43157,47 43334,15 43360,9 43409,2 43477,2 43542,2 43592,14 43618,9 43786,4 43791 44687,126 45766,36 45807 45817 45822,58 45881,4 45896 45901,2 46194,5 46201,2 46229,2 46638,22 46665,3 46674,74 46753,22  
 ...

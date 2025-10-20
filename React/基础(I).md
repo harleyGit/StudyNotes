@@ -33,6 +33,9 @@
 			- [useMemo的依赖数组](#useMemo的依赖数组)
 			- [长轮询案例](#长轮询案例)
 		- [useEffect、useCallback、useMemo的三者区别](#useEffect、useCallback、useMemo的三者区别)
+		- [根据依赖参数useCallBack无法调用内部函数](#根据依赖参数useCallBack无法调用内部函数)
+			- [自动调用](#自动调用)
+			- [手动调用](#手动调用) 
 	- [React Router](#ReactRouter)
 		- [路由Demo](#路由Demo)
 	- [参数传递](#参数传递)
@@ -2344,6 +2347,433 @@ export default function DemoHooks() {
 
 
 
+***
+<br/><br/><br/>
+> <h2 id="根据依赖参数useCallBack无法调用内部函数">根据依赖参数useCallBack无法调用内部函数</h2>
+
+```js
+[cloudProfitTime, setCloudProfitTime] = useState(90)
+
+const handleSubmit = useCallback(
+    (params = {}) => {
+	 
+	 const submitData = {
+				spuFreezeDays: cloudProfitTime,
+      };
+      
+  },[
+  cloudProfitTime,
+  saveData,
+],)
+
+// 按钮点击事件
+const editClick = ({ isStartEdit, action = SubmitAction.CANCEL }) => {
+		
+	setCloudProfitTime(9)
+	setIsEdit(isStartEdit);
+	if (action == SubmitAction.SAVE) {
+	  setSaveData(SubmitAction.SAVE);
+	}
+};
+```
+
+点击按钮触发`‌editClick`事件，无法执行，具体原因请看**下面：**
+
+***
+<br/>
+
+**当前定义了两个函数：**
+
+```js
+const handleSubmit = useCallback(
+  (params = {}) => {
+    const submitData = {
+      spuFreezeDays: cloudProfitTime,
+    };
+  },
+  [cloudProfitTime, saveData],
+);
+
+const editClick = ({ isStartEdit, action = SubmitAction.CANCEL }) => {
+  setIsEdit(isStartEdit);
+  if (action == SubmitAction.SAVE) {
+    setSaveData(SubmitAction.SAVE);
+  }
+};
+```
+
+<br/>
+
+你点击按钮时只执行了：
+
+```js
+editClick({ isStartEdit: false, action: SubmitAction.SAVE });
+```
+
+但发现 `handleSubmit` **没被调用** ❌
+
+<br/>
+
+**原因：你并没有调用 `handleSubmit`！**
+
+`useCallback` 只是“定义”了一个函数，
+它不会因为依赖项变化而**自动执行**。
+
+> ✅ React 不会自动运行 useCallback 内部代码，
+> 它只是更新这个函数的引用。
+
+<br/><br/>
+> <h3 id="自动调用">自动调用</h3>
+
+
+**✅ 正确做法1：在依赖更新时手动触发执行**
+
+如果你希望当 `saveData` 改变时自动执行 `handleSubmit`，
+你需要在一个 `useEffect` 中监听它：
+
+```js
+useEffect(() => {
+  if (saveData === SubmitAction.SAVE) {
+    handleSubmit();
+  }
+}, [saveData, handleSubmit]);
+```
+
+这样逻辑变成：
+
+1. 点击按钮 → `editClick()`
+2. `setSaveData(SubmitAction.SAVE)` → 改变状态
+3. `useEffect` 监听到 `saveData` 变成 `"save"` → 调用 `handleSubmit()`
+
+<br/>
+
+**✅ 整理成完整可工作的示例：**
+
+```jsx
+import React, { useState, useCallback, useEffect } from "react";
+import { Input, Button } from "antd";
+
+// js中定义一个常量枚举
+const SubmitAction = Object.freeze({
+  SAVE: "save",
+  CANCEL: "cancel",
+});
+
+export default function CloudProfitForm() {
+  const [isEdit, setIsEdit] = useState(false); // 是否编辑中
+  const [cloudProfitTime, setCloudProfitTime] = useState(""); // 输入内容
+  const [saveAction, setSaveAction] = useState(""); // 保存触发标志
+
+  // 提交函数
+  const handleSubmit = useCallback(() => {
+    const submitData = {
+      spuFreezeDays: cloudProfitTime,
+    };
+
+    console.log("✅ handleSubmit 执行，提交数据：", submitData);
+
+    // 模拟提交结束后关闭编辑
+    setIsEdit(false);
+    setSaveAction(""); // 清空状态防止重复触发
+  }, [cloudProfitTime]);
+
+  // 点击编辑或保存
+  const editClick = useCallback(
+    ({ isStartEdit, action = SubmitAction.CANCEL }) => {
+      setIsEdit(isStartEdit);
+
+      if (action === SubmitAction.SAVE) {
+        setSaveAction(SubmitAction.SAVE);
+      }
+    },
+    []
+  );
+
+  // 🔥 当保存动作触发时，执行 handleSubmit
+  useEffect(() => {
+    if (saveAction === SubmitAction.SAVE) {
+      handleSubmit();
+    }
+  }, [saveAction, handleSubmit]);
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h3>云利润时间设置</h3>
+
+      <Input
+        placeholder="请输入冻结天数"
+        value={cloudProfitTime}
+        onChange={(e) => setCloudProfitTime(e.target.value)}
+        disabled={!isEdit}
+        style={{ width: 200, marginRight: 10 }}
+      />
+
+      {!isEdit ? (
+        <Button type="primary" onClick={() => editClick({ isStartEdit: true })}>
+          编辑
+        </Button>
+      ) : (
+        <>
+          <Button
+            type="primary"
+            onClick={() => editClick({ isStartEdit: false, action: SubmitAction.SAVE })}
+            style={{ marginRight: 8 }}
+          >
+            保存
+          </Button>
+          <Button onClick={() => editClick({ isStartEdit: false, action: SubmitAction.CANCEL })}>
+            取消
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+<br/>
+
+> 点击 “保存” → 自动调用 `handleSubmit` → 打印提交结果 → 恢复成非编辑状态
+
+输出示例：
+
+```
+✅ handleSubmit 执行，提交数据： { spuFreezeDays: "6" }
+```
+
+<br/>
+
+**🧩 行为说明**
+
+| 动作                            | 状态变化                    | 说明           |
+| ----------------------------- | ----------------------- | ------------ |
+| 点击“编辑”                        | `isEdit = true`         | 输入框变可编辑      |
+| 修改输入内容                        | 更新 `cloudProfitTime`    | 可正常输入        |
+| 点击“保存”                        | `setSaveAction("save")` | 触发 useEffect |
+| useEffect 监听到 saveAction=save | 调用 `handleSubmit()`     | 打印提交结果       |
+| 提交完                           | 自动 `setIsEdit(false)`   | 返回非编辑状态      |
+| 点击“取消”                        | 直接退出编辑模式     
+
+<br/> 
+
+**✅ 可选优化（避免重复触发）**
+
+如果你希望 `handleSubmit` 执行完后清除 `saveData`，可以加一行：
+
+```js
+useEffect(() => {
+  if (saveData === SubmitAction.SAVE) {
+    handleSubmit();
+    setSaveData(""); // 清空状态，避免二次触发
+  }
+}, [saveData, handleSubmit]);
+```
+
+
+***
+<br/><br/>
+> <h3 id="手动调用">手动调用</h3>
+
+根据上面的自动调用，下面给出使用 **React 函数组件示例**（使用 Hooks）实现手动调用：
+
+* **编辑 / 非编辑** 状态切换
+* **保存时提交并退出编辑状态**
+* **使用 `useCallback` 和状态依赖**
+
+---
+<br/>
+
+
+```jsx
+import React, { useState, useCallback } from "react";
+import { Input, Button } from "antd";
+
+const SubmitAction = {
+  SAVE: "save",
+  CANCEL: "cancel",
+};
+
+export default function EditDemo() {
+  const [isEdit, setIsEdit] = useState(false); // 是否编辑状态
+  const [cloudProfitTime, setCloudProfitTime] = useState("");
+  const [saveData, setSaveData] = useState(null);
+
+  // 提交函数
+  const handleSubmit = useCallback(
+    (params = {}) => {
+      const { action = SubmitAction.CANCEL } = params;
+
+      const submitData = {
+        spuFreezeDays: cloudProfitTime,
+        action,
+      };
+
+      console.log("提交的数据：", submitData);
+
+      if (action === SubmitAction.SAVE) {
+        // 模拟异步保存
+        setTimeout(() => {
+          console.log("✅ 保存成功");
+          // 保存成功后退出编辑状态
+          setIsEdit(false);
+          setSaveAction("")// 清空防止重复触发
+        }, 500);
+      }
+    },
+    [cloudProfitTime]
+  );
+
+  // 点击编辑或保存
+  const editClick = ({ isStartEdit, action = SubmitAction.CANCEL }) => {
+    setIsEdit(isStartEdit);
+
+    if (action === SubmitAction.SAVE) {
+      setSaveData(SubmitAction.SAVE);
+      handleSubmit({ action: SubmitAction.SAVE });
+    }
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <div style={{ marginBottom: 12 }}>
+        <Input
+          value={cloudProfitTime}
+          disabled={!isEdit}
+          placeholder="请输入云利润时间"
+          onChange={(e) => setCloudProfitTime(e.target.value)}
+          style={{ width: 200 }}
+        />
+      </div>
+
+      {isEdit ? (
+        <>
+          <Button
+            type="primary"
+            onClick={() =>
+              editClick({ isStartEdit: false, action: SubmitAction.SAVE })
+            }
+          >
+            保存
+          </Button>
+          <Button
+            style={{ marginLeft: 8 }}
+            onClick={() => editClick({ isStartEdit: false })}
+          >
+            取消
+          </Button>
+        </>
+      ) : (
+        <Button onClick={() => editClick({ isStartEdit: true })}>编辑</Button>
+      )}
+    </div>
+  );
+}
+```
+
+<br/>
+
+**逻辑说明**
+
+- 1.**初始状态：** 非编辑（`isEdit=false`）；
+- 2.**点击“编辑”：** `isEdit=true` → 输入框可编辑；
+- 3.**点击“保存”：**
+
+	* 调用 `handleSubmit({ action: 'save' })`
+	* 模拟提交保存
+	* 保存完成后自动恢复到非编辑状态；
+- 4.**点击“取消”：** 直接退出编辑状态，不提交。
+
+<br/>
+***
+
+
+**❓疑问：**
+
+根据上述代码**`handleSubmit`方法**中的 `cloudProfitTime` 是最新的改变的输入框输入的**值嘛？有点担心是之前旧的值**
+
+
+<br/>
+
+方法 **`handleSubmit`** 使用了 `useCallback` 并依赖于 `[cloudProfitTime]`，拿到**是最新的 cloudProfitTime值** 分两种情况来看👇：
+
+<br/> 
+
+**情况 1：当前写法（✅ 能拿到最新值）**
+
+你的这段：
+
+```js
+const handleSubmit = useCallback(
+  (params = {}) => {
+    const submitData = {
+      spuFreezeDays: cloudProfitTime,
+    };
+    ...
+  },
+  [cloudProfitTime]
+);
+```
+
+👉 因为 `cloudProfitTime` 被放在了依赖数组中，
+每次它更新时，`handleSubmit` 会重新创建一个闭包版本，内部拿到的就是**最新的值**。
+
+<br/>
+
+✅ 所以，当你点击“保存”按钮时：
+
+```js
+handleSubmit({ action: SubmitAction.SAVE });
+```
+
+它拿到的就是当下输入框的最新内容。
+→ **这个写法是安全的、正确的。**
+
+<br/>
+
+**情况 2：如果你把依赖写成 `[]`**
+
+```js
+const handleSubmit = useCallback(
+  (params = {}) => {
+    console.log(cloudProfitTime);
+  },
+  [] // ❌ 没有依赖
+);
+```
+
+那么它会捕获第一次渲染时的 `cloudProfitTime`，之后再怎么输入都不会更新。
+👉 这时候 `handleSubmit` 就会拿到**旧值（过期闭包）**。
+
+<br/>
+
+ **✅ 结论**
+
+你的当前写法：
+
+```js
+const handleSubmit = useCallback(..., [cloudProfitTime])
+```
+
+✅ **能保证拿到最新的 cloudProfitTime**，不用担心闭包过期问题。
+
+---
+
+如果你还想要更保险（比如 handleSubmit 可能被其他异步操作调用），可以使用 `useRef` 保留实时值👇：
+
+```js
+const cloudProfitTimeRef = useRef(cloudProfitTime);
+useEffect(() => {
+  cloudProfitTimeRef.current = cloudProfitTime;
+}, [cloudProfitTime]);
+
+const handleSubmit = useCallback((params = {}) => {
+  console.log("最新值：", cloudProfitTimeRef.current);
+}, []);
+```
+
+这样无论何时调用，都一定是最新值。
+
+
 
 
 <br/><br/><br/>
@@ -3822,3 +4252,8 @@ Vite 的优势：
 <br/>
 
 > <h1 id=""></h1>
+
+---
+注释: 0,79436 SHA-256 d1bd79db4f242cec598d89a479691f21  
+@HuangGang <harley.smessage@icloud.com>: 1152,25 1179,26 1206,39 45579,100 45695,5 45714,18 45789 45791,3 45814,5 45859,10 45872,3 45908,10 45989,9 46012,3 46016 46041 46077 46112 46118,5 46125,5 46139,39 46186,2 46542,7 46667,5 46674,2 46701,2 46806,38 46845,2 46853 46867,2 47203,9 47226,2 47344,7 49192 49196,9 49319,11 49336,2 49914,5 49920,4 49938,2 50148,59 50236,4 50316,6 51126,39 52335,9 52348,2 52352,2 52387,2 52427,2 52444 52485 52495 52515,2 52545,32 52589,9 52613,47 52674,2 52724 52744 52759,5 52765,4 52788,2 53056,7 53178,5 53185,2 53205,2 53418,7 53426,2 53432,2 53906,2  
+...
