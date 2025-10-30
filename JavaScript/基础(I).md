@@ -5,6 +5,7 @@
 - [**数组**](#数组)
 	- [对象数组](#对象数组)
 	- [对象数组转换、过滤](#对象数组转换、过滤)
+		- [reduce的扁平化](#reduce的扁平化)
 	- [数组对象转换成map类型](#数组对象转换成map类型)
 	- [数组元素转换](#数组元素转换)
 - [Map](#Map)
@@ -518,6 +519,150 @@ console.log(arr);
 | `Object.keys(obj)`                 | 得到对象键数组                |
 | `.reduce((acc, key) => {...}, {})` | 累加构造新对象，初始值是空对象        |
 | 用途                                 | 用于“对象 -> 新对象”类型转换或过滤操作 |
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="reduce的扁平化">reduce的扁平化</h2>
+
+`reduce()` 是 JavaScript 数组中非常强大的一个方法，用来**把一个数组“归约”成一个值**（这个值可以是数字、对象、数组、字符串都可以）。
+
+<br/>
+
+**基本语法**
+
+```js
+array.reduce((累积值, 当前项) => {
+  // 返回新的累积值
+}, 初始值);
+```
+
+其中：
+
+* `累积值 (acc)`：上一次返回的结果；
+* `当前项 (cur)`：本次迭代的数组元素；
+* `初始值`：第一次迭代时 `acc` 的初始值。
+
+---
+<br/>
+
+**1.数组求和**
+
+```js
+const numbers = [1, 2, 3, 4];
+
+const sum = numbers.reduce((acc, cur) => {
+  return acc + cur;
+}, 0);
+
+console.log(sum); // 10
+```
+
+👉 运行过程（每一步的 acc 和 cur）：
+
+| 步骤 | acc | cur | 返回值 |
+| -- | --- | --- | --- |
+| 1  | 0   | 1   | 1   |
+| 2  | 1   | 2   | 3   |
+| 3  | 3   | 3   | 6   |
+| 4  | 6   | 4   | 10  |
+
+最后返回 10。
+
+<br/>
+
+**2：把数组变成对象（类似你现在的用法）**
+
+假设我们有一个数组：
+
+```js
+const users = [
+  { id: 1, name: 'Harley' },
+  { id: 2, name: 'Alice' },
+  { id: 3, name: 'Bob' }
+];
+```
+
+<br/>
+
+我们希望变成：
+
+```js
+{
+  1: { id: 1, name: 'Harley' },
+  2: { id: 2, name: 'Alice' },
+  3: { id: 3, name: 'Bob' }
+}
+```
+
+👉 用 `reduce()` 可以这样写：
+
+```js
+const result = users.reduce((acc, user) => {
+  acc[user.id] = user; // 给对象加上新属性
+  return acc;           // 返回累积值（下次循环继续用）
+}, {}); // 初始值是空对象 {}
+
+console.log(result);
+```
+
+<br/>
+
+输出：
+
+```js
+{
+  1: { id: 1, name: 'Harley' },
+  2: { id: 2, name: 'Alice' },
+  3: { id: 3, name: 'Bob' }
+}
+```
+
+---
+<br/>
+
+**3：嵌套数组扁平化**
+
+```js
+const arr = [[1, 2], [3, 4], [5]];
+
+const flat = arr.reduce((acc, cur) => acc.concat(cur), []);
+
+console.log(flat); // [1, 2, 3, 4, 5]
+```
+
+---
+
+<br/>
+
+**回到提到的那段代码**
+
+```js
+const result = data.reduce((acc, category) => {
+  category.items.forEach(item => {
+    const key = item.code;
+    acc[key] = item; // 给对象新增一个属性
+  });
+  return acc; // 返回给下一轮
+}, {});
+```
+
+用 `reduce()` 的目的是：
+
+> 把原始的嵌套数组（外层3个对象 + 每个对象里多个 items）“归约”成一个扁平对象结构。
+
+相当于在循环的同时构造一个新对象。
+
+---
+<br/> 
+
+✅ **总结一句话：**
+
+> `reduce()` = “在遍历数组的同时，不断累计结果（数字、对象、数组都行）”
+
+
+
 
 
 ***

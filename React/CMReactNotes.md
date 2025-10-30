@@ -15,6 +15,7 @@
 	- [数组对象元素转换成map](#数组对象元素转换成map)
 	- [解构赋值](#解构赋值)
 	- [展开运算符，保留部分值](#展开运算符，保留部分值)
+	- [数组reduce处理复合json数据](#数组reduce处理复合json数据)
 - [Flex布局](#Flex布局)
 - [清理缓存导致的错误](#清理缓存导致的错误)
 - [跨域造成无法请求解决](#跨域造成无法请求解决)
@@ -612,6 +613,422 @@ setCloudProfitTime(prev => ({
 
 * 不依赖外层的闭包；
 * 在异步或频繁更新时保证拿到最新的状态。
+
+
+***
+<br/><br/><br/>
+> <h2 id="数组reduce处理复合json数据">数组reduce处理复合json数据</h2>
+
+有一段这样的JSON数据如下：
+
+```json
+[
+  {
+    "categoryCode": "led",
+    "categoryTitle": "LED灯",
+    "items": [
+      {
+        "categoryCode": "led",
+        "description": "白光灯，1:低电平有效 0:高电平有效",
+        "code": "white_light_active_low",
+        "enabled": true,
+        "valueType": "enum",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 0,
+        "values": [
+          {
+            "name": "高电平有效",
+            "value": 0
+          },
+          {
+            "name": "低电平有效",
+            "value": 1
+          }
+        ],
+        "sort": 10
+      },
+      {
+        "categoryCode": "led",
+        "description": "红外灯，1:低电平有效 0:高电平有效",
+        "code": "infrared_light_active_low",
+        "enabled": true,
+        "valueType": "enum",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 0,
+        "values": [
+          {
+            "name": "高电平有效",
+            "value": 0
+          },
+          {
+            "name": "低电平有效",
+            "value": 1
+          }
+        ],
+        "sort": 20
+      }
+    ]
+  },
+  {
+    "categoryCode": "motor",
+    "categoryTitle": "电机配置",
+    "items": [
+      {
+        "categoryCode": "motor",
+        "description": "云台水平可转到步数",
+        "code": "h_ptz_max_step",
+        "enabled": true,
+        "valueType": "int",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 0,
+        "values": [],
+        "sort": 110
+      },
+      {
+        "categoryCode": "motor",
+        "description": "云台垂直可转到步数",
+        "code": "v_ptz_max_step",
+        "enabled": true,
+        "valueType": "int",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 0,
+        "values": [],
+        "sort": 120
+      }
+    ]
+  },
+  {
+    "categoryCode": "other",
+    "categoryTitle": "其他",
+    "items": [
+      {
+        "categoryCode": "other",
+        "description": "摄像头个数(0~10)",
+        "code": "sensor_num",
+        "enabled": true,
+        "valueType": "int",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 10,
+        "values": [],
+        "sort": 510
+      }
+    ]
+  }
+]
+```
+
+<br/>
+
+转化成如下结构：
+
+```json
+TF卡JSON数据：
+
+[
+  {
+    "categoryCode": "led",
+    "categoryTitle": "LED灯",
+    "items": [
+      {
+        "categoryCode": "led",
+        "description": "白光灯，1:低电平有效 0:高电平有效",
+        "code": "white_light_active_low",
+        "enabled": true,
+        "valueType": "enum",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 0,
+        "values": [
+          {
+            "name": "高电平有效",
+            "value": 0
+          },
+          {
+            "name": "低电平有效",
+            "value": 1
+          }
+        ],
+        "sort": 10
+      },
+      {
+        "categoryCode": "led",
+        "description": "红外灯，1:低电平有效 0:高电平有效",
+        "code": "infrared_light_active_low",
+        "enabled": true,
+        "valueType": "enum",
+        "defaultValue": null,
+        "minValue": 0,
+        "maxValue": 0,
+        "values": [
+          {
+            "name": "高电平有效",
+            "value": 0
+          },
+          {
+            "name": "低电平有效",
+            "value": 1
+          }
+        ],
+        "sort": 20
+      }
+    ]
+  },
+  
+  ˙˙˙˙˙˙˙
+  ˙˙˙˙˙
+  .
+]
+```
+
+***
+<br/>
+
+这是一个典型的「嵌套数组扁平化 + 自定义键名映射」需求。
+
+**我的结构是：**
+
+```js
+[
+  {
+    categoryCode,
+    categoryTitle,
+    items: [ {...}, {...}, ... ]
+  },
+  ...
+]
+```
+
+<br/>
+
+想得到一个对象结构：
+
+```js
+{
+  whiteLight: {...},
+  redLight: {...},
+  ...
+}
+```
+
+---
+<br/>
+
+ **完整可运行的 JS 实现示例:**
+
+```js
+const data = [ /* 你提供的 JSON 数组 */ ];
+
+// 1️⃣ 定义一个映射表，把 code 对应成想要的 key
+const codeMap = {
+  white_light_active_low: 'whiteLight',
+  infrared_light_active_low: 'redLight',
+  v_ptz_max_step: 'ptz_v_stepNum',
+  sensor_num: 'cameraNum',
+};
+
+// 2️⃣ 遍历数据结构，把所有 items 扁平化并映射到新对象
+const result = data.reduce((acc, category) => {
+  category.items.forEach(item => {
+    const key = codeMap[item.code] || item.code; // 若无映射则使用原 code
+    // 深拷贝后把 values 的 name 改成 label（如果存在）
+    const newItem = {
+      ...item,
+      values: item.values.map(v => ({
+        label: v.name || v.label,
+        value: v.value
+      }))
+    };
+    acc[key] = newItem;
+  });
+  return acc;
+}, {});
+
+console.log(result);
+```
+
+<br/>
+
+ **输出结果示例（部分）**
+
+```js
+{
+  whiteLight: {
+    categoryCode: 'led',
+    description: '白光灯，1:低电平有效 0:高电平有效',
+    code: 'white_light_active_low',
+    enabled: true,
+    valueType: 'enum',
+    defaultValue: null,
+    minValue: 0,
+    maxValue: 0,
+    values: [
+      { label: '高电平有效', value: 0 },
+      { label: '低电平有效', value: 1 }
+    ],
+    sort: 10
+  },
+  redLight: {
+    categoryCode: 'led',
+    description: '红外灯，1:低电平有效 0:高电平有效',
+    code: 'infrared_light_active_low',
+    ...
+  },
+  ...
+}
+```
+
+<br/>
+
+**✅ 如果你不需要手动写 `codeMap`**
+
+可以让键名自动来自 `code` 本身（但这会比较长）：
+
+```js
+const result = Object.fromEntries(
+  data.flatMap(category =>
+    category.items.map(item => [
+      item.code,
+      {
+        ...item,
+        values: item.values.map(v => ({ label: v.name || v.label, value: v.value }))
+      }
+    ])
+  )
+);
+```
+
+输出键名会是：
+
+```js
+{
+  white_light_active_low: {...},
+  infrared_light_active_low: {...},
+  ...
+}
+```
+
+
+上述中的[**`reduce`**](./../JavaScript/基础(I).md#reduce的扁平化)方法如何使用呢？
+
+***
+<br/>
+
+**参数回填组合：**
+
+```json
+{
+    "whiteLight": 1,
+    "redLight": 1,
+    "ptz_v_stepNum": "3",
+    "cameraNum": "7"
+}
+```
+
+<br/>
+
+组合成这样：
+
+```json
+
+[
+  {
+    "code": "white_light_active_low",
+    "value": 1
+  },
+  {
+      "code": "infrared_light_active_low",
+      "value": 1
+  },
+  {
+    "code": "v_ptz_max_step",
+    "value": "3"
+  },
+  {
+    "code": "sensor_num",
+    "value": "7"
+  }
+]
+```
+
+
+<br/>
+
+这里可以用一行 `Object.entries()` + `find()` 或 `reduce()` 轻松完成。
+下面是完整、准确、推荐的写法 👇
+
+---
+
+### ✅ 完整可运行代码
+
+```js
+const codeMap = {
+    "whiteLight": "white_light_active_low",
+    "redLight": "infrared_light_active_low",
+    "ptz_v_stepNum": "v_ptz_max_step",
+    "cameraNum": "sensor_num"
+}
+const source = {
+    "whiteLight": 1,
+    "redLight": 1,
+    "ptz_v_stepNum": "3",
+    "cameraNum": "7"
+};
+
+// 反转映射，方便从 value 找 key
+const reverseMap = Object.entries(codeMap).reduce((acc, [k, v]) => {
+  acc[v] = k;
+  return acc;
+}, {});
+
+// 生成 items 数组
+const items = Object.entries(source).map(([key, value]) => ({
+  code: reverseMap[key] || key, // 没在映射表中的保持原样
+  value,
+}));
+
+console.log(items);
+```
+
+<br/>
+
+**输出**：
+
+```js
+[
+  {
+    "code": "white_light_active_low",
+    "value": 1
+  },
+  {
+      "code": "infrared_light_active_low",
+      "value": 1
+  },
+  {
+    "code": "v_ptz_max_step",
+    "value": "3"
+  },
+  {
+    "code": "sensor_num",
+    "value": "7"
+  }
+]
+```
+
+---
+<br/>
+
+**✅ 说明**
+
+* `Object.entries()` 将对象转成 `[key, value]` 数组，方便遍历；
+* `reduce()` 用于生成反向映射表；
+* 最后通过 `map()` 把原始对象转为你想要的 `{ code, value }` 数组；
+* 若某个字段不在 `codeMap` 里，则保持原键。
+
 
 
 
@@ -2644,6 +3061,6 @@ import styles from './index.less';
 
 
 ---
-注释: 0,46777 SHA-256 c14856f59fa393d3f5c18248b768cc49  
-@HuangGang <harley.smessage@icloud.com>: 1,132 418,114 1246,37 1381,91 1474,58 1541,147 1695,15 1823,107 1946,5 1965,18 2040 2042,3 2065,5 2110,10 2123,3 2159,10 2240,9 2263,3 2267 2292 2328 2363 2369,4 2381 2391 2422,3 2432,2 2467,16 2491,29 7196,66 7269,9 7314,6 7322 7333,7 7341 7355 7360,15 7387,14 7425,81 7645,6 7652,2 7657 7662,3 7673 7677 7679 7683 7692 7706 7714 7730 7736,22 7768,65 7840,11 7887,6 7907,7 7932,7 8490,77 8645,4 8655,7 8717,4 8731,12 8747,2 8976,5 8983,2 9005,2 9165,5 9172,2 9179,2 9381,5 9388,2 9402,2 42849,96 42959,2 42962,7 42988,4 42993,7 43001,2 43020,2 43023,7 43157,47 43334,15 43360,9 43409,2 43477,2 43542,2 43592,14 43618,9 43786,4 43791 44687,126 45766,36 45807 45817 45822,58 45881,4 45896 45901,2 46194,5 46201,2 46229,2 46638,22 46665,3 46674,74 46753,22  
+注释: 0,53577 SHA-256 f6921d503d971713ee029a71f19897a8  
+@HuangGang <harley.smessage@icloud.com>: 1,132 418,159 1291,37 1426,91 1519,58 1586,147 1740,15 1868,107 1991,5 2010,18 2085 2087,3 2110,5 2155,10 2168,3 2204,10 2285,9 2308,3 2312 2337 2373 2408 2414,4 2426 2436 2467,3 2477,2 2512,16 2536,29 7241,66 7314,9 7359,6 7367 7378,7 7386 7400 7405,15 7432,14 7470,81 7690,6 7697,2 7702 7707,3 7718 7722 7724 7728 7737 7751 7759 7775 7781,22 7813,65 7885,11 7932,6 7952,7 7977,7 8535,77 8690,4 8700,7 8762,4 8776,12 8792,2 9021,5 9028,2 9050,2 9210,5 9217,2 9224,2 9426,5 9433,2 9447,2 9593,103 11768,31 12841,22 12865,17 12908,3 12912,4 12921,2 13024,7 13109,7 13117,2 13133,3 13830,7 13838,2 13850,2 14333,9 14363,2 14751,36 14795 14806,43 14939,30 15210,16 15905,9 15916,2 16178,9 16191,2 16349 49649,96 49759,2 49762,7 49788,4 49793,7 49801,2 49820,2 49823,7 49957,47 50134,15 50160,9 50209,2 50277,2 50342,2 50392,14 50418,9 50586,4 50591 51487,126 52566,36 52607 52617 52622,58 52681,4 52696 52701,2 52994,5 53001,2 53029,2 53438,22 53465,3 53474,74 53553,22  
 ...
