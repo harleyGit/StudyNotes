@@ -13,7 +13,8 @@
 	- [拼接公共域名+接口路径](#拼接公共域名+接口路径)
 	- [自定义简易观察者](#自定义简易观察者)
 	- [字符串转枚举](#字符串转枚举)
-	- [oc对象转换成结构体的工厂方法](#oc对象转换成结构体的工厂方法)
+	- [oc对象转换成结构体的工厂方法](#oc对象转换成结构体的工厂方法) 
+	- [可用配网过滤](#可用配网过滤)
 - [**线程安全**](#线程安全)
 	- [barrier实现线程安全](#barrier实现线程安全)
 - [**UI组件**](#UI组件)
@@ -1068,6 +1069,143 @@ URL(string: "abc", relativeTo: base)!.absoluteString
 ***
 <br/><br/><br/>
 ># <h2 id="oc对象转换成结构体的工厂方法">[oc对象转换成结构体的工厂方法](./../Swift/swift基础.md#OC对象转换成结构体)</h2>
+
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="可用配网过滤">[可用配网过滤](./../Swift/swift基础.md#数组的compactMap和filter使用)</h2>
+
+**需求包含：**
+
+- ✅ `ProvisioningMethod` 枚举（原 LinkWayType）
+- ✅ 返回字符串数组
+- ✅ `compactMap` 使用你指定的完整写法
+- ✅ 是否展示选择页逻辑
+- ✅ App版本支持校验
+- ✅ 回调结构清晰可直接接入 UI
+
+<br/>
+
+**ProvisioningManager.swift**
+
+```swift
+import Foundation
+
+/// ✅ 配网方式（Provisioning Method）
+public enum ProvisioningMethod: String {
+    case none = "None"
+    case ap = "AP"             // AP模式
+    case wired = "WN"          // 有线
+    case ble = "BLUETOOTH"     // 蓝牙
+    case wifi = "WIFI"         // WiFi
+    case sn = "SN"             // SN码
+
+    /// ✅ 当前 App 支持的配网方式类型
+    static var supportedMethods: [ProvisioningMethod] {
+        return [.ap, .wired, .ble]
+    }
+
+    /// ✅ 根据 ways 字符串数组过滤出设备支持 & App支持的方式 → 字符串数组返回
+    static func filterSupportedMethods(from ways: [String]) -> [String] {
+        let methods = ways.compactMap { way -> ProvisioningMethod? in
+            return ProvisioningMethod(rawValue: way)
+        }
+        .filter { supportedMethods.contains($0) }
+
+        return methods.map { $0.rawValue }
+    }
+}
+
+
+/// ✅ 配网方式管理器
+class ProvisioningManager {
+
+    /// ✅ 示例：App 是否支持某一种配网方式
+    private static func isAppSupported(_ method: ProvisioningMethod) -> Bool {
+        // 示例：低版本App暂不支持 Wired (可根据业务逻辑改成版本比较)
+        if method == .wired {
+            return false
+        }
+        return true
+    }
+
+    /// ✅ 传入设备 ways 字符串数组，自动处理配网逻辑
+    /// - Parameters:
+    ///   - ways: 设备支持的方式（字符串数组）
+    ///   - onSingle: 只支持一种方式 —> 直接进入该方式
+    ///   - onShowSelection: 多种方式 —> 展示配网方式选择页
+    ///   - onShowUpgradeAlert: App不支持设备方式 —> 提示升级
+    static func handleProvisioning(
+        ways: [String],
+        onSingle: @escaping (String) -> Void,
+        onShowSelection: @escaping ([String]) -> Void,
+        onShowUpgradeAlert: @escaping () -> Void
+    ) {
+
+        // ✅ 过滤 App 支持的方式
+        let filteredMethods = ProvisioningMethod.filterSupportedMethods(from: ways)
+
+        // ✅ 若过滤后空 → 都不支持 → 弹窗提示
+        guard !filteredMethods.isEmpty else {
+            onShowUpgradeAlert()
+            return
+        }
+
+        // ✅ App是否支持方式进一步判断（转换回枚举操作）
+        let validMethods = filteredMethods.compactMap { way -> ProvisioningMethod? in
+            return ProvisioningMethod(rawValue: way)
+        }
+        .filter { isAppSupported($0) }
+        .map { $0.rawValue }
+
+        if validMethods.isEmpty {
+            onShowUpgradeAlert()
+            return
+        }
+
+        switch validMethods.count {
+        case 1:
+            // ✅ 一种方式 → 直接进入配网流程
+            onSingle(validMethods.first!)
+
+        default:
+            // ✅ 多种方式 → 展示选择页
+            onShowSelection(validMethods)
+        }
+    }
+}
+```
+
+<br/>
+
+**使用：**
+
+```swift
+let deviceSupport = ["BLUETOOTH", "WN"]
+
+ProvisioningManager.handleProvisioning(
+    ways: deviceSupport
+) { way in
+    print("✅ 直接进入：\(way)")
+} onShowSelection: { methods in
+    print("✅ 展示选择页：\(methods)")
+} onShowUpgradeAlert: {
+    print("⚠️ 暂不支持，请升级App")
+}
+```
+
+输出示例：
+
+```
+✅ 展示选择页：["BLUETOOTH"]
+```
+
+（因为 Wired 当前设定为不支持 → 过滤掉）
+
+
+这个知识需要看：[数组的compactMap和filter使用](./../Swift/swift基础.md#数组的compactMap和filter使用)
 
 
 <br/><br/><br/>

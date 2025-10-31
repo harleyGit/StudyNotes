@@ -7,6 +7,7 @@
 	- [@UserDefault属性包装器](#@UserDefault属性包装器)
 - [**数组**](#数组)
 	- [一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性](#一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性)
+	- [数组的compactMap和filter使用](#数组的compactMap和filter使用)
 - [**类**](#类)
 	- [流式API](#流式API)
 - [**值引用类型**](#值引用类型)
@@ -774,6 +775,183 @@ let productMap = dataModels
 
 print(productMap)
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="数组的compactMap和filter使用">数组的compactMap和filter使用</h2>
+
+ **1) 概念速览**
+
+* `compactMap`：对序列中的每个元素执行闭包，闭包返回可选（`T?`）。`compactMap` 会把非 `nil` 的结果收集成新的数组，自动去掉 `nil` —— 常用来把 `String` 转为 `Enum?` 并移除无法转换的项。
+* `filter`：对序列中的每个元素执行布尔闭包，返回 `true` 的元素保留，`false` 的元素丢弃。
+
+<br/>
+
+**2)示例**
+
+```swift
+let arr = ["1", "2", "three", "4"]
+
+// compactMap：把字符串转成 Int，转换失败的会变成 nil，compactMap 会丢弃 nil
+let ints = arr.compactMap { Int($0) }
+print(ints) // [1, 2, 4]
+
+// filter：只保留偶数
+let evens = ints.filter { $0 % 2 == 0 }
+print(evens) // [2, 4]
+```
+
+<br/>
+
+**3) 组合使用**
+
+情形：外部传来 `ways: [String]`，想把能转成 `ProvisioningMethod` 的项保留下来，并且只保留 App 支持的那些枚举。
+
+先定义枚举（你之前的）：
+
+```swift
+enum ProvisioningMethod: String {
+    case ap = "AP"
+    case wired = "WN"
+    case ble = "BLUETOOTH"
+
+    static var supportedMethods: [ProvisioningMethod] {
+        return [.ap, .wired, .ble]
+    }
+}
+```
+
+<br/>
+
+**方法 A：先 `compactMap` 再 `filter`（常见）**
+
+```swift
+let ways = ["BLUETOOTH", "WN", "SN"]
+
+let methods = ways
+    .compactMap { str -> ProvisioningMethod? in
+        return ProvisioningMethod(rawValue: str)
+    }
+    .filter { ProvisioningMethod.supportedMethods.contains($0) }
+
+print(methods) // [.ble, .wired]
+```
+
+解释：
+
+* `compactMap` 把 `"SN"` 无法转成枚举，会返回 `nil`，被丢弃。
+* `filter` 再确保这些枚举在 `supportedMethods` 中（此例都在，所以都保留）。
+
+<br/>
+
+**方法 B：先 `filter`（字符串上过滤）再 `compactMap`（减少枚举创建）**
+
+```swift
+let supportedRawValues = Set(ProvisioningMethod.supportedMethods.map { $0.rawValue }) // {"AP","WN","BLUETOOTH"}
+
+let methods2 = ways
+    .filter { supportedRawValues.contains($0) }         // 先把不在 supportedRawValues 的字符串去掉（减少后续工作）
+    .compactMap { ProvisioningMethod(rawValue: $0) }    // 然后再转成枚举
+
+print(methods2) // [.ble, .wired]
+```
+
+优点：如果 `ways` 很大、并且大多数字符串是不支持的，用 `filter` 先淘汰不必要的字符串可以避免大量失败的枚举构造，提高性能。
+
+<br/>
+
+ **4) 顺序重要吗？什么时候先 `filter` 更好？**
+
+* **正确性**：在大多数场景，`compactMap` → `filter` 与 `filter` → `compactMap` 得到的最终结果一致（如果 `filter` 的判断只基于已转换后的枚举或基于原始字符串的支持集合）。
+* **性能**：如果 `ways` 很大，且 `ProvisioningMethod(rawValue:)` 的开销不算极小，或 `supported` 集合可以用字符串比较快速筛掉大量不相关项时，先对字符串做 `filter`（使用 `Set`）通常更快。
+* **可读性**：`compactMap` → `filter` 更直观（先把不可转换的去掉，再做业务过滤）；`filter` → `compactMap` 更高效但需要先准备 `supportedRawValues`。
+
+<br/>
+
+**5) 给出的那行代码的正确写法（完整闭包样式）**
+
+```swift
+return ways.compactMap { LinkWayType(rawValue: $0) in
+            
+}
+```
+
+这是不正确的写法（`compactMap` 的闭包要返回一个可选值）。正确的完整闭包写法如下：
+
+```swift
+return ways.compactMap { str -> LinkWayType? in
+    // 这里可以写复杂逻辑，然后 return 枚举或 nil
+    return LinkWayType(rawValue: str)
+}
+.filter { LinkWayType.supportWays.contains($0) }
+```
+
+<br/>
+
+如果你想用更紧凑的一行写法：
+
+```swift
+return ways.compactMap { LinkWayType(rawValue: $0) }
+            .filter { LinkWayType.supportWays.contains($0) }
+```
+
+<br/>
+
+或按性能优化（先字符串过滤再映射）：
+
+```swift
+let supportedValues = Set(LinkWayType.supportWays.map { $0.rawValue })
+return ways.filter { supportedValues.contains($0) }
+           .compactMap { LinkWayType(rawValue: $0) }
+```
+
+<br/>
+
+**6) 与 `isAppSupported` 结合的完整示例（实用版）**
+
+```swift
+enum LinkWayType: String {
+    case none = "None"
+    case ap = "AP"
+    case wired = "WN"
+    case ble = "BLUETOOTH"
+    case wifi = "WIFI"
+    case sn = "SN"
+
+    static var supportWays: [LinkWayType] { [.ap, .wired, .ble] }
+}
+
+func isAppSupported(_ way: LinkWayType) -> Bool {
+    // 假设低版本不支持 wired
+    if way == .wired { return false }
+    return true
+}
+
+func supportedWaysFromDevice(ways: [String]) -> [LinkWayType] {
+    // 推荐：字符串先过滤（快速）→ 再转换成枚举 → 再用 isAppSupported 过滤
+    let supportedRaw = Set(LinkWayType.supportWays.map { $0.rawValue })
+
+    return ways
+        .filter { supportedRaw.contains($0) }              // 先把不在 app 支持 raw 值的字符串去掉
+        .compactMap { LinkWayType(rawValue: $0) }         // 再转换成枚举（不会 nil）
+        .filter { isAppSupported($0) }                    // 最终排除 app 版本不支持的枚举
+}
+
+// 使用
+let device = ["BLUETOOTH", "WN", "SN"]
+let final = supportedWaysFromDevice(ways: device)
+print(final) // 结果可能只是 [.ble]，因为 .wired 被 isAppSupported 拒绝
+```
+
+<br/>
+
+**总结（实用建议）**
+
+- 1.当你需要把字符串转换为枚举并去掉无法转换的项，使用 `compactMap`。
+- 2.当你需要基于某个条件筛选元素，使用 `filter`。
+- 3.若关心性能：若能在字符串层面用 `Set` 快速剔除大量不可能的项，先 `filter`（字符串）再 `compactMap`（枚举）通常更快。
+- 4.可读性：先 `compactMap` 再 `filter` 写法更直观，适合数据量小或清晰展示逻辑。
+- 5.你给的那行代码应改成 `compactMap { str -> LinkWayType? in return LinkWayType(rawValue: str) }` 或直接 `compactMap { LinkWayType(rawValue: $0) }`，然后链 `filter`。
 
 
 
