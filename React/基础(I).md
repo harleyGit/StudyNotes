@@ -67,6 +67,106 @@
 	- [异步和轮询](https://juejin.cn/post/6844904170865033223)
 
 
+```
+ useEffect(() => {
+    if (!visible || !merchantId || loadingSpuDetail) return;
+
+    setLoadingSpuDetail(true);
+    spuStrategyDetail({ merchantId })
+      .then((res) => {})}, [visible, merchantId]);  
+
+const initTableData = useCallback(() =>{}, [visible, spuDetailData, initialData, merchantLevel, skuList, strategy]);
+```
+我想将fetchSpuStrategyDetail函数拿出来从useEffect中，然后我可以在另一个方法initTableData 中直接调用 fetchSpuStrategyDetail 函数吗？
+
+
+非常好的问题 👏
+你想把 `fetchSpuStrategyDetail` 从 `useEffect` 中提取出来，然后在另一个方法 `initTableData` 中也能直接调用 ——
+✅ **完全可以做到**，但要注意依赖管理和闭包问题。下面我帮你一步步写出最稳妥、可复用的写法 👇
+
+---
+
+## ✅ 推荐写法
+
+```jsx
+// 1️⃣ 定义 fetchSpuStrategyDetail
+const fetchSpuStrategyDetail = useCallback(async () => {
+  if (!merchantId) return;
+  setLoadingSpuDetail(true);
+  try {
+    const res = await spuStrategyDetail({ merchantId });
+    // 🚀 这里处理返回数据逻辑
+    // setSpuDetailData(res.data);
+  } catch (error) {
+    console.error('fetchSpuStrategyDetail failed:', error);
+  } finally {
+    setLoadingSpuDetail(false);
+  }
+}, [merchantId]); // ✅ 只依赖 merchantId 即可
+
+
+// 2️⃣ useEffect 中使用它
+useEffect(() => {
+  if (!visible || !merchantId || loadingSpuDetail) return;
+  fetchSpuStrategyDetail();
+}, [visible, merchantId, fetchSpuStrategyDetail, loadingSpuDetail]);
+
+
+// 3️⃣ 在 initTableData 中也可以直接调用
+const initTableData = useCallback(() => {
+  console.log('🚀 初始化表格逻辑...');
+  fetchSpuStrategyDetail(); // ✅ 可以直接调用
+}, [fetchSpuStrategyDetail]);
+```
+
+---
+
+## 💡 为什么这样写可行？
+
+1. **`fetchSpuStrategyDetail` 是稳定函数**
+   因为它是用 `useCallback` 定义的，React 会保证它在依赖（`merchantId`）不变时引用也不变。
+   所以 `useEffect`、`initTableData` 都可以安全复用。
+
+2. **不会重复创建闭包或引发无限循环**
+
+   * `useEffect` 的依赖中包括 `fetchSpuStrategyDetail`，但只在 `merchantId` 变时才变化；
+   * 不会导致死循环。
+
+3. **可在任何地方调用**
+   比如：
+
+   ```js
+   const handleRefreshClick = () => {
+     fetchSpuStrategyDetail();
+   };
+   ```
+
+   ✅ 直接复用，逻辑清晰。
+
+---
+
+## ⚠️ 注意点
+
+* `fetchSpuStrategyDetail` 内部如果使用了更多 state 或 props（例如 `setSpuDetailData`, `merchantLevel` 等），也要记得放进依赖数组；
+* 如果 `spuStrategyDetail` 是一个来自外部模块的稳定函数（比如 API 调用），不用加进依赖；
+* `setLoadingSpuDetail` 是 React 自带的 setter，不需要放依赖。
+
+---
+
+## 🧠 简单总结
+
+| 目标                                | 实现方式                   |
+| --------------------------------- | ---------------------- |
+| 想在多个地方使用 `fetchSpuStrategyDetail` | ✅ 用 `useCallback` 定义函数 |
+| 想在 `useEffect` 和其他函数里共用           | ✅ 直接调用同一个回调            |
+| 避免闭包/依赖混乱                         | ✅ 在依赖数组中准确声明使用到的变量     |
+
+---
+
+如果你把完整代码段（含 state 定义、spuStrategyDetail 实现）贴上来，我可以帮你重构成最优结构，确保不会出现 stale closure 或重复加载。是否要我帮你直接改成完整版本？
+
+
+
 
 <br/>
 
@@ -78,14 +178,10 @@
 
 
 
-
-
-
-
 <br/>
 
 ***
-<br/>
+<br/><br/><br/>
 
 
 ># <h1 id="基本用法">基本用法</h1>
