@@ -29,7 +29,10 @@
 			- [useEffect中执行多个网络请求](#useEffect中执行多个网络请求)
 			- [副作用钩子useEffect末尾3种参数使用方法](#副作用钩子useEffect末尾3种参数使用方法)
 		    - [useEffect参数加函数和中扩号的区别](#useEffect参数加函数和中扩号的区别)
+		    - [副作用钩子useEffect末尾3种参数使用方法](#副作用钩子useEffect末尾3种参数使用方法)
+		    - [useEffect第2个参数为函数](#useEffect第2个参数为函数)
 		- [useCallback](#useCallback)
+			- [useCallback的依赖为函数如何理解](#useCallback的依赖为函数如何理解)
 		- [useMemo](#useMemo)
 			- [useMemo的依赖数组](#useMemo的依赖数组)
 			- [长轮询案例](#长轮询案例)
@@ -1863,6 +1866,187 @@ useEffect(() => {
 ># <h3 id="副作用钩子useEffect末尾3种参数使用方法">[副作用钩子useEffect末尾3种参数使用方法](./架构模式.md#副作用钩子useEffect末尾3种参数使用方法)</h3>
 
 <br/><br/>
+> <h3 id='useEffect第2个参数为函数'>useEffect第2个参数为函数</h3>
+
+非常好的问题！👏
+你这段代码：
+
+```js
+useEffect(() => {
+  handleTypeUpdate('', true);
+}, [merchantData, form, localMerchantType, handleTypeUpdate]);
+
+const handleTypeUpdate = useCallback( (strValue, isInit = false) => {
+	// 有异步网络请求
+}
+```
+
+提问： **useEffect末尾不是依赖变量吗？怎么还可以是一个函数？有啥用**
+
+确实写得很典型，也非常容易让人误解。
+下面我来帮你**彻底弄清楚为什么依赖数组里能放函数**、**它的用途是什么**，以及**useCallback 的作用**。
+
+---
+<br/>
+
+**useEffect 的本质**
+
+React 的 `useEffect` 是一个**副作用钩子**：
+
+```js
+useEffect(() => {
+  // 副作用代码
+}, [依赖变量]);
+```
+
+它的运行规则是：
+
+> 每当依赖数组 `[x, y, z]` 中的任意一个值发生变化时，
+> 就会重新执行这个 effect。
+
+---
+<br/>
+
+依赖数组里为什么可以放函数？
+
+因为在 React 中，**函数也是一种值（引用类型）**。
+`useEffect` 并不关心你放的是变量、对象还是函数，只要引用变了，就会重新触发。
+
+所以这一行：
+
+```js
+[merchantData, form, localMerchantType, handleTypeUpdate]
+```
+
+其实意思是：
+
+> 当 merchantData、form、localMerchantType、或 handleTypeUpdate 的引用发生变化时，
+> 重新执行 handleTypeUpdate('', true)。
+
+---
+<br/>
+
+为什么要把函数加到依赖数组里？
+
+因为 React 要求：
+
+> 所有在 useEffect 中**用到的外部变量或函数**，
+> 都应该出现在依赖数组中。
+
+否则，它会在严格模式下报出 warning（比如 ESLint 提示：`React Hook useEffect has missing dependencies`）。
+
+---
+<br/>
+
+**问题来了：函数 `handleTypeUpdate` 不是每次 render 都会变吗？**
+
+是的，如果你这样写：
+
+```js
+const handleTypeUpdate = (strValue, isInit = false) => {
+  ...
+};
+```
+
+这个函数在每次组件重新渲染时都会被重新创建一个新的引用，
+于是 `useEffect` 每次都会认为依赖变了，从而重复执行。
+
+这就可能引起**无限循环调用**⚠️
+
+---
+<br/>
+
+**💡 解决办法：使用 `useCallback`**
+
+```js
+const handleTypeUpdate = useCallback((strValue, isInit = false) => {
+  // 有异步网络请求
+}, []);
+```
+
+`useCallback` 的作用是：
+
+> 记住这个函数的引用，只有依赖项变化时才重新创建。
+
+于是 `useEffect` 就能安全地依赖它而不会死循环。
+
+---
+<br/>
+
+**完整逻辑分析**
+
+你当前代码：
+
+```js
+const handleTypeUpdate = useCallback(
+  (strValue, isInit = false) => {
+    // 有异步网络请求
+  },
+  [] // ❗️依赖为空 -> 永远保持同一个引用
+);
+
+useEffect(() => {
+  handleTypeUpdate('', true);
+}, [merchantData, form, localMerchantType, handleTypeUpdate]);
+```
+
+执行流程：
+
+- 1. 首次渲染 → `useEffect` 触发 → 调用 `handleTypeUpdate('', true)`。
+- 2. 当 `merchantData`、`form` 或 `localMerchantType` 发生变化时 → 再次调用。
+
+React 会再次执行 useEffect 里的代码，也就是：
+
+```js
+handleTypeUpdate('', true);
+```
+
+4. 因为 `handleTypeUpdate` 是被 `useCallback` 固定引用的 → 不会触发额外执行。
+
+---
+<br/>
+
+**总结对比**
+
+| 场景                     | 是否应加到依赖里    | 原因 |
+| ---------------------- | ----------- | -- |
+| 函数是普通声明（每次 render 都新建） | ❌ 否则死循环     |    |
+| 函数用 useCallback 包装     | ✅ 应该加上      |    |
+| 外部变量（state / props）    | ✅ 一定要加上     |    |
+| 不希望触发（明确知道只运行一次）       | ✅ 依赖为空 `[]` |    |
+
+---
+<br/>
+
+**简单比喻**
+
+可以把依赖数组看成是 “触发条件”：
+
+* 放变量 → 当变量变化时执行；
+* 放函数 → 当函数定义变化时执行；
+* 放空数组 `[]` → 只执行一次；
+* 不写依赖 → 每次 render 都执行（几乎没人这么用）。
+
+<br/>
+
+
+```js
+useEffect(() => {
+  console.log('依赖变了');
+}, [someValue, someCallback]);
+```
+
+| 场景                   | 触发时机   |
+| -------------------- | ------ |
+| `someValue` 改变       | 重新执行   |
+| `someCallback` 的引用改变 | 重新执行   |
+| `useCallback` 固定引用   | 不会重复触发 |
+
+
+
+
+
+<br/><br/>
 > <h3 id='useCallback'>useCallback</h3>
 
 **useCallback(fn,deps):**
@@ -2081,6 +2265,12 @@ useEffect(() => {
 | `[]`              | 仅初次执行       | 页面初次加载    |
 | `[initTableData]` | 当函数或其依赖变时执行 | 数据联动刷新    |
 | `[filter]`        | 当特定依赖变化时执行  | 筛选 / 搜索更新 |
+
+
+<br/><br/>
+> <h3 id='useCallback的依赖为函数如何理解'>useCallback的依赖为函数如何理解</h3>
+
+
 
 
 
