@@ -3,6 +3,7 @@
 - [**函数**](#函数)
 	- [函数参数设置默认值](#函数参数设置默认值)
 	- [useCallBack无法根据依赖变量改变而调用内部函数](#useCallBack无法根据依赖变量改变而调用内部函数)
+	- [useEffect间接调用函数](#useEffect间接调用函数)
 - [**管理Node版本的NVM**](#管理Node版本的NVM)
 - [**新建一个React项目**](#新建一个React项目)
 - [**JavaScript陌生语法**](#JavaScript陌生语法)
@@ -113,7 +114,101 @@ const editClick = ({ isStartEdit, action = SubmitAction.CANCEL }) => {
 
 这是一个典型的 **React 状态更新异步 + useCallback 依赖关系误区**，[解决方案请看这里](./基础(I).md#根据依赖参数useCallBack无法调用内部函数)
 
+***
+<br/><br/><br/>
+> <h2 id="useEffect间接调用函数">useEffect间接调用函数</h2>
 
+```
+ useEffect(() => {
+    if (!visible || !merchantId || loadingSpuDetail) return;
+
+		setLoadingSpuDetail(true);
+		spuStrategyDetail({ merchantId }).then((res) => {
+  
+})}, [visible, merchantId]);  
+
+const initTableData = useCallback(() =>{}, [visible, spuDetailData, initialData, merchantLevel, skuList, strategy]);
+```
+我想将**`fetchSpuStrategyDetail`**函数拿出来从**`useEffect`**中，然后我可以在另一个方法**`initTableData`** 中直接调用 **`fetchSpuStrategyDetail`** 函数吗？
+
+
+<br/> 
+
+**✅ 推荐写法**
+
+```jsx
+// 1️⃣ 定义 fetchSpuStrategyDetail
+const fetchSpuStrategyDetail = useCallback(async () => {
+  if (!merchantId) return;
+  setLoadingSpuDetail(true);
+  try {
+    const res = await spuStrategyDetail({ merchantId });
+    // 🚀 这里处理返回数据逻辑
+    // setSpuDetailData(res.data);
+  } catch (error) {
+    console.error('fetchSpuStrategyDetail failed:', error);
+  } finally {
+    setLoadingSpuDetail(false);
+  }
+}, [merchantId]); // ✅ 只依赖 merchantId 即可
+
+
+// 2️⃣ useEffect 中使用它
+useEffect(() => {
+  if (!visible || !merchantId || loadingSpuDetail) return;
+  fetchSpuStrategyDetail();
+}, [visible, merchantId, fetchSpuStrategyDetail, loadingSpuDetail]);
+
+
+// 3️⃣ 在 initTableData 中也可以直接调用
+const initTableData = useCallback(() => {
+  console.log('🚀 初始化表格逻辑...');
+  fetchSpuStrategyDetail(); // ✅ 可以直接调用
+}, [fetchSpuStrategyDetail]);
+```
+
+---
+<br/>
+
+**💡 为什么这样写可行？**
+
+- 1.**`fetchSpuStrategyDetail` 是稳定函数**
+   因为它是用 `useCallback` 定义的，React 会保证它在依赖（`merchantId`）不变时引用也不变。
+   所以 `useEffect`、`initTableData` 都可以安全复用。
+
+- 2.**不会重复创建闭包或引发无限循环**
+	* `useEffect` 的依赖中包括 `fetchSpuStrategyDetail`，但只在 `merchantId` 变时才变化；
+	* 不会导致死循环。
+
+3.**可在任何地方调用**
+   比如：
+
+```js
+const handleRefreshClick = () => {
+fetchSpuStrategyDetail();
+};
+```
+
+✅ 直接复用，逻辑清晰。
+
+<br/>
+
+
+**⚠️ 注意点**
+
+* `fetchSpuStrategyDetail` 内部如果使用了更多 state 或 props（例如 `setSpuDetailData`, `merchantLevel` 等），也要记得放进依赖数组；
+* 如果 `spuStrategyDetail` 是一个来自外部模块的稳定函数（比如 API 调用），不用加进依赖；
+* `setLoadingSpuDetail` 是 React 自带的 setter，不需要放依赖。
+
+<br/>
+
+**🧠 简单总结**
+
+| 目标                                | 实现方式                   |
+| --------------------------------- | ---------------------- |
+| 想在多个地方使用 `fetchSpuStrategyDetail` | ✅ 用 `useCallback` 定义函数 |
+| 想在 `useEffect` 和其他函数里共用           | ✅ 直接调用同一个回调            |
+| 避免闭包/依赖混乱                         | ✅ 在依赖数组中准确声明使用到的变量     |
 
 
 
@@ -3065,6 +3160,6 @@ import styles from './index.less';
 
 
 ---
-注释: 0,53577 SHA-256 f6921d503d971713ee029a71f19897a8  
-@HuangGang <harley.smessage@icloud.com>: 1,132 418,159 1291,37 1426,91 1519,58 1586,147 1740,15 1868,107 1991,5 2010,18 2085 2087,3 2110,5 2155,10 2168,3 2204,10 2285,9 2308,3 2312 2337 2373 2408 2414,4 2426 2436 2467,3 2477,2 2512,16 2536,29 7241,66 7314,9 7359,6 7367 7378,7 7386 7400 7405,15 7432,14 7470,81 7690,6 7697,2 7702 7707,3 7718 7722 7724 7728 7737 7751 7759 7775 7781,22 7813,65 7885,11 7932,6 7952,7 7977,7 8535,77 8690,4 8700,7 8762,4 8776,12 8792,2 9021,5 9028,2 9050,2 9210,5 9217,2 9224,2 9426,5 9433,2 9447,2 9593,103 11768,31 12841,22 12865,17 12908,3 12912,4 12921,2 13024,7 13109,7 13117,2 13133,3 13830,7 13838,2 13850,2 14333,9 14363,2 14751,36 14795 14806,43 14939,30 15210,16 15905,9 15916,2 16178,9 16191,2 16349 49649,96 49759,2 49762,7 49788,4 49793,7 49801,2 49820,2 49823,7 49957,47 50134,15 50160,9 50209,2 50277,2 50342,2 50392,14 50418,9 50586,4 50591 51487,126 52566,36 52607 52617 52622,58 52681,4 52696 52701,2 52994,5 53001,2 53029,2 53438,22 53465,3 53474,74 53553,22  
+注释: 0,55945 SHA-256 d87dd981cb9c3508d7ed26be27d29a62  
+@HuangGang <harley.smessage@icloud.com>: 132,5 146,9 164,7 2611,30 2650,8 2667,12 2765,2 2794,2 2845,4 3005,3 3030,3 3039,3 3051,3 3067,3 3083,3 3093,3 3118,3 3128,6 3135,4 3145,2 3971,9 3991,2 3995,2 4142,2 4166 4237 4362,6 4370,2 4377,2 4597,5 4604,2 4612,2  
 ...
