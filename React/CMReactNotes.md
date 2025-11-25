@@ -17,6 +17,7 @@
 	- [解构赋值](#解构赋值)
 	- [展开运算符，保留部分值](#展开运算符，保留部分值)
 	- [数组reduce处理复合json数据](#数组reduce处理复合json数据)
+ 	- [复杂数据更新](#复杂数据更新) 
 - [Flex布局](#Flex布局)
 - [清理缓存导致的错误](#清理缓存导致的错误)
 - [跨域造成无法请求解决](#跨域造成无法请求解决)
@@ -1128,6 +1129,288 @@ console.log(items);
 * 若某个字段不在 `codeMap` 里，则保持原键。
 
 
+<br/><br/><br/>
+># <h2 id="复杂数据更新">复杂数据更新</h2>
+
+若这个pcbaList是这种数据类型的一个如下：
+```js
+{
+  activityName: { value: activityModel?.activityName ?? '-', isLegal: true },
+  activityTime: { value: activityModel?.activityTime ?? '-', isLegal: true },
+  publishStatus: { value: activityModel?.publishStatus ?? false, isLegal: true },
+  pcbaList: activityModel?.pcbaList ?? [],
+  chooseMerchant: { value: {}, isLegal: true },
+  pcbaList: { value: activityModel.pcbaList, isLegal: true },
+  // totalSubsidyQuantity: activityModel?.totalSubsidyQuantity ?? 0,
+}
+```
+**上述修改其实是  pcbaList: { value: activityModel.pcbaList, isLegal: true },中的value，那我如何做?**
+
+<br/><br/>
+
+**数据结构是：**
+
+```js
+pcbaList: { 
+  value: activityModel.pcbaList, 
+  isLegal: true 
+}
+```
+
+要更新的其实是 **pcbaList.value 里面的数组中的某个对象**。
+
+---
+
+<br/>
+**假设你要修改 `productIdentifier: 'imilab.ipc.11309.pmc1'` 的 `activeSubsidy`**
+
+```js
+updatePcbaActiveSubsidy = (targetId, newSubsidy) => {
+  this.setState(prevState => {
+    const { pcbaList } = prevState.activityDatas;
+
+    const newPcbaValue = pcbaList.value.map(item => {
+      if (item.productIdentifier === targetId) {
+        return {
+          ...item,
+          activeSubsidy: newSubsidy
+        };
+      }
+      return item;
+    });
+
+    return {
+      activityDatas: {
+        ...prevState.activityDatas,
+        pcbaList: {
+          ...pcbaList,
+          value: newPcbaValue
+        }
+      }
+    };
+  });
+};
+```
+<br/>
+
+```js
+this.updatePcbaActiveSubsidy('imilab.ipc.11309.pmc1', 888);
+```
+
+<br/>
+
+**state 大概像这样：**
+
+```js
+activityDatas: {
+  activityName: { value: 'xxx', isLegal: true },
+  activityTime: { value: 'xxx', isLegal: true },
+  pcbaList: { 
+    value: [ {…}, {…}, {…} ], 
+    isLegal: true 
+  },
+  ...
+}
+```
+
+要更新：
+
+* 最外层的 activityDatas
+* 其中的 pcbaList
+* 其中的 value（数组）
+* 数组中某一个对象
+
+所以结构是：
+
+```sh
+activityDatas
+  └── pcbaList
+        └── value（数组）
+              └── item (你的 PCBA 数据对象)
+```
+
+
+<br/><br/>
+
+```js
+updatePcbaItem = (productIdentifier, patchObj) => {
+  this.setState(prevState => {
+    const pcbaList = prevState.activityDatas.pcbaList;
+
+    const newValue = pcbaList.value.map(item =>
+      item.productIdentifier === productIdentifier
+        ? { ...item, ...patchObj }
+        : item
+    );
+
+    return {
+      activityDatas: {
+        ...prevState.activityDatas,
+        pcbaList: { ...pcbaList, value: newValue }
+      }
+    };
+  }, () => {
+    // ★★★ 这里就是最新的 state ★★★
+    console.log('最新的 pcbaList:', this.state.activityDatas.pcbaList.value);
+  });
+};
+
+```
+
+<br/><br/><br/>
+
+># <h2 id="复杂数据合并">复杂数据合并</h2>
+
+若是对于res中的数据在如下数据：
+
+```js
+
+
+
+const oldValue = [
+    {
+        "pcbaName": "AA40",
+        "productIdentifier": "imilab.ipc.116.pmc1",
+        "productType": "智能摄像机",
+        "materialNumber": "10.19.33.6.1",
+        "costPrice": "100.0",
+        "currentPrice": "50.0",
+        "activeSubsidy": 1
+    },
+    {
+        "pcbaName": "AA30",
+        "productIdentifier": "imilab.ipc.113.pmc1",
+        "productType": "智能摄像机",
+        "materialNumber": "10.99.33.6.1",
+        "costPrice": "100.0",
+        "currentPrice": "50.0"
+    }
+]
+```
+**需求：按 productIdentifier 进行合并**：
+
+* 如果 `oldValue` 中存在同样的 `productIdentifier` → **使用 oldValue 的整个对象（包括 activeSubsidy 等字段）**
+* 如果不存在 → **使用 res 的原对象**
+* 最终得到一个新的数组。
+
+---
+<br/>
+
+**✅ 最终合并代码**
+
+```js
+const oldMap = Object.fromEntries(
+  oldValue.map(item => [item.productIdentifier, item])
+);
+
+const finalList = res.map(item =>
+  oldMap[item.productIdentifier] || item
+);
+```
+
+<br/>
+
+**🔍 输出解释**
+
+`finalList` 会是：
+
+* 如果某个 productIdentifier 在 oldValue 中出现 → oldValue 的数据覆盖 res
+* 否则保留 res 中原始的数据
+
+---
+<br/>
+
+**步骤 1：把 oldValue 转成 Map，提高查找性能（O(1)）**
+
+```js
+const oldMap = Object.fromEntries(
+  oldValue.map(item => [item.productIdentifier, item])
+);
+```
+<br/>
+
+得到：
+
+```js
+{
+  "imilab.ipc.116.pmc1": { ... oldValue 对象 },
+  "imilab.ipc.113.pmc1": { ... oldValue 对象 }
+}
+```
+
+<br/>
+
+**步骤 2：遍历 res 并决定用哪个对象**
+
+```js
+const finalList = res.map(item =>
+  oldMap[item.productIdentifier] || item
+);
+```
+
+* 如果 `oldMap[productIdentifier]` 存在 → 用 oldValue 的对象
+* 不存在 → 用 res 的对象
+
+<br/>
+
+**完整示例（可直接运行）**
+
+```js
+const res = [
+  {
+    pcbaName: 'AA30',
+    productIdentifier: 'imilab.ipc.113.pmc1',
+    productType: '智能摄像机',
+    materialNumber: '10.99.33.6.1',
+    costPrice: '100.0',
+    currentPrice: '50.0'
+  },
+  {
+    pcbaName: 'AA40',
+    productIdentifier: 'imilab.ipc.116.pmc1',
+    productType: '智能摄像机',
+    materialNumber: '10.19.33.6.1',
+    costPrice: '100.0',
+    currentPrice: '50.0'
+  }
+];
+
+const oldValue = [
+  {
+    pcbaName: 'AA40',
+    productIdentifier: 'imilab.ipc.116.pmc1',
+    productType: '智能摄像机',
+    materialNumber: '10.19.33.6.1',
+    costPrice: '100.0',
+    currentPrice: '50.0',
+    activeSubsidy: 1
+  },
+  {
+    pcbaName: 'AA30',
+    productIdentifier: 'imilab.ipc.113.pmc1',
+    productType: '智能摄像机',
+    materialNumber: '10.99.33.6.1',
+    costPrice: '100.0',
+    currentPrice: '50.0'
+  }
+];
+
+const oldMap = Object.fromEntries(
+  oldValue.map(item => [item.productIdentifier, item])
+);
+
+const finalList = res.map(item =>
+  oldMap[item.productIdentifier] || item
+);
+
+console.log(finalList);
+```
+
+<br/>
+
+**最终结果（示例）**
+
+因为 oldValue 中两个 productIdentifier 都存在，最终结果使用了 oldValue 的两个对象，包括 activeSubsidy。
 
 
 <br/><br/><br/>
