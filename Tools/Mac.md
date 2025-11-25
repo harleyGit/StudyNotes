@@ -6,6 +6,7 @@
 - [**终端**](#终端)
 	- [HTTPie-Web服务友好交互工具](#HTTPie-Web服务友好交互工具)
 	- [Mac全局优化设置DNS解析](#Mac全局优化设置DNS解析)
+	- [一键或命令卸载Mac应用程序](#一键或命令卸载Mac应用程序)
 - [**脚本构建**](#脚本构建)
 	- [AQG脚本构建](#AQG脚本构建)
 - [**💻终端命令**](#💻终端命令)
@@ -334,8 +335,27 @@ networksetup -getdnsservers Wi-Fi
 sudo killall -HUP mDNSResponder
 ```
 
+<br/><br/><br/>
 
+> <h2 id="一键或命令卸载Mac应用程序">一键或命令卸载Mac应用程序</h2>
 
+✅ 想要真正“一条命令卸载任何软件”？（最方便的做法）
+
+安装 AppCleaner 的 CLI（命令行版本）
+它会搜索所有关联文件，非常干净。
+
+```sh
+brew install appcleaner
+```
+<br/>
+
+**卸载应用：**
+
+```sh
+appcleaner /Applications/<App>.app --force
+```
+ 
+或者你也可以将【Finder】中的程序拖入到**AppCleaner**进行删除，也很方便。
 
 <br/>
 
