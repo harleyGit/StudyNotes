@@ -1,3 +1,5 @@
+
+- [视图位置和尺寸](#视图位置和尺寸)
 - [**更新页面方法简介**](#更新页面方法简介)
 	- [setNeedsLayout](#setNeedsLayout)
 	- [layoutIfNeeded](#layoutIfNeeded)
@@ -15,6 +17,91 @@
 - [setNeedsLayout和setNeedsDisplayInRect区别](#setNeedsLayout和setNeedsDisplayInRect区别)
 - [**视图绘制循环**](#视图绘制循环)
 
+
+
+
+
+
+
+
+<br/>
+
+***
+
+<br/><br/><br/>
+
+> <h1 id="视图位置和尺寸">视图位置和尺寸</h1>
+
+**📌 CGRect / UIView.frame 常用几何属性对照表**
+
+| 属性       | 含义       | 等价表达式                   |
+| -------- | -------- | ----------------------- |
+| `minX`   | 最小 X（左侧） | `origin.x`              |
+| `midX`   | X 方向中心点  | `origin.x + width / 2`  |
+| `maxX`   | 最大 X（右侧） | `origin.x + width`      |
+| `minY`   | 最小 Y（顶部） | `origin.y`              |
+| `midY`   | Y 方向中心点  | `origin.y + height / 2` |
+| `maxY`   | 最大 Y（底部） | `origin.y + height`     |
+| `width`  | 宽度       | `size.width`            |
+| `height` | 高度       | `size.height`           |
+| `origin` | 起点坐标     | `CGPoint(x, y)`         |
+| `size`   | 尺寸       | `CGSize(width, height)` |
+
+---
+<br/> 
+
+**📌 UIView 额外的位置 & 尺寸属性**
+
+| 属性               | 说明                        |
+| ---------------- | ------------------------- |
+| `bounds`         | 自身坐标系中的 frame（常用于内部子视图布局） |
+| `center`         | 视图中心点坐标                   |
+| `safeAreaInsets` | 顶部/底部安全区域                 |
+| `layoutMargins`  | iOS 自动布局边距                |
+
+<br/>
+
+```swift
+let frame = someView.frame
+
+print(frame.minX) // 左边位置
+print(frame.maxY) // 底部位置
+print(frame.midY) // 中心Y
+print(frame.width) // 宽度
+```
+
+<br/>
+
+**推荐：直接对 UIView 扩展计算属性（常见写法）**
+
+开发中经常定义扩展提升可读性：
+
+```swift
+extension UIView {
+    var x: CGFloat {
+        get { frame.origin.x }
+        set { frame.origin.x = newValue }
+    }
+
+    var y: CGFloat {
+        get { frame.origin.y }
+        set { frame.origin.y = newValue }
+    }
+
+    var right: CGFloat { x + width }
+    var bottom: CGFloat { y + height }
+
+    var width: CGFloat {
+        get { frame.size.width }
+        set { frame.size.width = newValue }
+    }
+
+    var height: CGFloat {
+        get { frame.size.height }
+        set { frame.size.height = newValue }
+    }
+}
+```
 
 
 
