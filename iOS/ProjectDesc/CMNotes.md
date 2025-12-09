@@ -15,6 +15,7 @@
 	- [字符串转枚举](#字符串转枚举)
 	- [oc对象转换成结构体的工厂方法](#oc对象转换成结构体的工厂方法) 
 	- [可用配网过滤](#可用配网过滤)
+	- [更新/替换list中相同设备的数据-map、first方法](#更新/替换list中相同设备的数据-map、first方法)
 - [**线程安全**](#线程安全)
 	- [barrier实现线程安全](#barrier实现线程安全)
 - [**UI组件**](#UI组件)
@@ -1206,6 +1207,71 @@ ProvisioningManager.handleProvisioning(
 
 
 这个知识需要看：[数组的compactMap和filter使用](./../Swift/swift基础.md#数组的compactMap和filter使用)
+
+***
+<br/><br/><br/>
+> <h2 id="更新/替换list中相同设备的数据-map、first方法">更新/替换list中相同设备的数据-map、first方法</h2>
+
+```swift
+return list.map { element in
+    if let match = data.first(where: { $0.iotId == element.iotId }) {
+        return match
+    }
+    return element
+}
+```
+<br/>
+
+**这段代码做的事情是：**
+
+> 遍历 `list` 中的每一个元素
+> 对每个元素，到 `data` 里找有没有 **同样 iotId** 的对象
+> 找到 ➜ 用 `data` 的对象替换
+> 找不到 ➜ 用原来的对象
+
+
+> **用 data 里面的一部分数据，更新/替换 list 中相同设备的数据**
+
+<br/>
+
+**举个具体例子**
+
+现有 A 表（设备列表 — list）
+
+| iotId | 名字    |
+| ----- | ----- |
+| 1     | 老数据_A |
+| 2     | 老数据_B |
+| 3     | 老数据_C |
+
+<br/>
+
+另有 B 表（扫描回来最新设备信息 — data）
+
+| iotId | 名字    |
+| ----- | ----- |
+| 2     | 新数据_B |
+| 3     | 新数据_C |
+
+<br/>
+
+执行后结果👇
+
+| iotId | 名字    | 来源      |
+| ----- | ----- | ------- |
+| 1     | 老数据_A | list 保留 |
+| 2     | 新数据_B | data 替换 |
+| 3     | 新数据_C | data 替换 |
+
+也就是：
+
+* 发现相同编号，就用 **最新的数据覆盖旧数据**
+* 没找到，就保持不变
+
+[数组map、first详细用法请看这里](./../Swift/swift基础.md#数组map、first方法详解)
+
+
+
 
 
 <br/><br/><br/>
