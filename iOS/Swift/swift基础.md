@@ -9,6 +9,8 @@
 	- [一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性](#一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性)
 	- [数组的compactMap和filter使用](#数组的compactMap和filter使用)
 	- [数组map、first方法详解](#数组map、first方法详解)
+- [Dictionary](#Dictionary)
+	- [按指定字段分组](#按指定字段分组)
 - [**类**](#类)
 	- [流式API](#流式API)
 - [**值引用类型**](#值引用类型)
@@ -1055,6 +1057,128 @@ return list.map { element in
 | --------------- | ---------- | -- | ------- | ------------------ |
 | `map`           | 批量加工数据     | 数组 | 新数组     | UI Model 转换、更新整个列表 |
 | `first(where:)` | 查找符合条件的第一个 | 数组 | 元素或 nil | 根据 id 查找、去重、匹配蓝牙设备 |
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Dictionary">Dictionary</h1>
+
+<br/>
+
+> <h2 id="按指定字段分组">按指定字段分组</h2>
+
+```json
+result = (
+	{
+		errorMesg = "";
+		channel = 0;
+		currentVersionName = "0.1";
+		status = 0;
+		upgradeType = 0;
+		iotId = "fe11111";
+		versionName = "0.03";
+		copywriting = "版本0.1";
+		percentage = 0;
+		
+	},
+	{
+		errorMesg = "";
+		channel = 9;
+		currentVersionName = "3.0.0_0002";
+		status = 0;
+		upgradeType = 0;
+		iotId = "ab22222";
+		versionName = "3.0.0_0012";
+		copywriting =  "版本0.2";
+		percentage = 1;
+	}
+
+);
+```
+<br/>
+
+```swift
+let grouped = Dictionary(grouping: list, by: { $0.iotId })
+```
+<br/>
+
+它会把原来的数组 **按指定字段分组**。
+
+> 就是“把相同 iotId 的固件全部放一起”。
+
+比如你的 `result` 数组是：
+
+| iotId | channel | versionName |
+| ----- | ------- | ----------- |
+| A     | 0       | v001        |
+| A     | 9       | v002        |
+| B     | 1       | v005        |
+
+执行后：
+
+```swift
+grouped == [
+    "A": [第一个固件, 第二个固件],
+    "B": [第三个固件]
+]
+```
+
+变成了 **字典**：
+
+* key = iotId（相同的放一个 key 下）
+* value = 对应的固件数组
+
+<br/>
+
+## 📌 有啥用？
+
+因为你需要 ——
+
+> 将 result 中 **iotId 相同的数据合并处理**
+> （版本号拼接/文案合并/进度合并）
+
+如果不分组的话，你就没办法知道哪些固件属于同一个 **设备**。
+
+<br/>
+
+你有 10 个学生成绩数据：
+
+| 姓名 | 科目 | 成绩 |
+| -- | -- | -- |
+| 张三 | 数学 | 90 |
+| 张三 | 英语 | 88 |
+| 李四 | 语文 | 80 |
+
+你想把同一个学生的数据放一起：
+
+```swift
+let grouped = Dictionary(grouping: students, by: { $0.name })
+```
+
+结果就是👇
+
+```
+"张三": [数学90, 英语88]
+"李四": [语文80]
+```
+
+之后你就能算平均分、总分等 ——
+**这个分组就是为了后面好处理。**
+
+<br/>
+
+| 功能                       | 描述                          |
+| ------------------------ | --------------------------- |
+| Dictionary(grouping:by:) | 让数组按指定属性分类成字典               |
+| 解决问题                     | 把属于同一台设备（相同 iotId）的多个固件汇总处理 |
+
+> 没有它，你就不知道哪些数据是同一设备来的
+> 就不能做你的合并逻辑和进度计算
+
+
+
 
 
 
