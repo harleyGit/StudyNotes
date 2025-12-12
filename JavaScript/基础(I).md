@@ -3,11 +3,14 @@
 - [可选取值](#可选取值)
 	- [数组为null，安全取元素](#数组为null，安全取元素)
 - [**数组**](#数组)
+	- [数组判空](#数组判空)
 	- [对象数组](#对象数组)
 	- [对象数组转换、过滤](#对象数组转换、过滤)
 		- [reduce的扁平化](#reduce的扁平化)
 	- [数组对象转换成map类型](#数组对象转换成map类型)
 	- [数组元素转换](#数组元素转换)
+- [字符串](#字符串)
+	- [字符串判空](#字符串判空)
 - [Map](#Map)
 	- [获取map的所有keys](#获取map的所有keys)
 - [undefined vs null哪个好](#undefinedvsnull哪个好)
@@ -282,7 +285,15 @@ item1, ..., itemX	可选。向数组添加的新项目。
 
 ```
 
+***
+<br/><br/><br/>
+> <h2 id="数组判空">数组判空</h2>
 
+```js
+function isEmptyArray(arr) {
+  return !Array.isArray(arr) || arr.length === 0;
+}
+```
 
 
 ***
@@ -832,7 +843,23 @@ console.log(grouped);
 ```
 
 
+<br/><br/><br/>
 
+***
+<br/>
+
+> <h1 id="字符串">字符串</h1>
+
+***
+<br/>
+> <h2 id="字符串判空">字符串判空</h2>
+
+```js
+export function isEmptyStr(str) {
+  let newStr = str.toString().trim();
+  return !newStr || newStr.trim() === '';
+}
+```
 
 
 <br/><br/><br/>
