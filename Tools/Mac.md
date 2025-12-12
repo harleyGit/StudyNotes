@@ -59,6 +59,7 @@
 		- [重置 root 密码](#重置root密码)
 		- [Charles使用](#Charles使用)
 		- [Mock本地json数据](#Mock本地json数据)
+	- [iOS中SYM通过符号表查看堆栈错误信息](#iOS中SYM通过符号表查看堆栈错误信息)
 	- [目录结构树tree](#目录结构树tree)
 	- [在线流程图和符号时序图](#在线流程图和符号时序图)
 	- [Wireshark🦈SIP](#Wireshark🦈SIP)
@@ -2678,6 +2679,10 @@ EXIT;
 ![](./../Pictures/tool.0.0.7.png)
 
 ![](./../Pictures/tool.0.0.8.png)
+
+
+<br/><br/><br/>
+># <h2 id="iOS中SYM通过符号表查看堆栈错误信息">[iOS中SYM通过符号表查看堆栈错误信息](#https://github.com/zqqf16/SYM)</h2>
 
 
 <br/><br/><br/>
