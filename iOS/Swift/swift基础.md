@@ -10,6 +10,7 @@
 	- [数组的compactMap和filter使用](#数组的compactMap和filter使用)
 	- [数组map、first方法详解](#数组map、first方法详解)
 	- [`contains(where:)`使用](#contains_where使用)
+	- [`first(where:)`使用 ](#first_where使用)
 - [Dictionary](#Dictionary)
 	- [按指定字段分组](#按指定字段分组)
 - [**类**](#类)
@@ -1061,7 +1062,7 @@ return list.map { element in
 
 
 <br/><br/><br/>
-> <h2 id="contains(where:)使用">contains(where:)使用</h2>
+> <h2 id="contains_where使用">contains(where:)使用</h2>
 
 **“最原始的 for 循环”理解逻辑**
 
@@ -1097,7 +1098,6 @@ let data = [
 
 <br/>
 
-
 **用 for 循环“手写**
 
 ```swift
@@ -1118,7 +1118,11 @@ for element in list {
         print("没找到")
     }
 }
-``` 二**`contains(where:)` 是上面代码的“函数式`**# 写法
+```
+
+<br/>
+
+**`contains(where:)` 是上面代码的“函数式`**
 
 ```swift
 let exists = data.contains { item in
@@ -1127,7 +1131,9 @@ let exists = data.contains { item in
 }
 ```
 
-### 它等价于什么？
+<br/>
+
+**它等价于什么？**
 
 等价于：
 
@@ -1136,8 +1142,9 @@ let exists = data.contains { item in
 一旦返回 `true`，`contains` **立刻停止遍历**。
 
 ---
+<br/>
 
-## 三、一个最小可运行 demo（重点）
+**一个最小可运行 demo（重点）**
 
 ```swift
 let devices = [
@@ -1155,23 +1162,18 @@ let result = devices.contains { device in
 print(result) // true
 ```
 
-### 逐步理解
+**理解**
 
-1. `contains` 开始遍历 `devices`
-2. 第一个元素：
+- 1.`contains` 开始遍历 `devices`
+- 2.第一个元素：
+	* `"A" == "A"` ✅
+	* `1 == 1` ✅
+	* 闭包返回 `true`
+- 3.`contains` 立刻返回 `true`
 
-   * `"A" == "A"` ✅
-   * `1 == 1` ✅
-   * 闭包返回 `true`
-3. `contains` 立刻返回 `true`
+<br/>
 
----
-
-## 四、`first(where:)` 和 `contains(where:)` 的区别（一看就懂）
-
-### `contains(where:)`
-
-> **只关心“有没有”**
+`contains(where:)` **只关心“有没有”**
 
 ```swift
 let exists = data.contains {
@@ -1182,25 +1184,47 @@ let exists = data.contains {
 
 返回值：`Bool`
 
----
+***
+<br/><br/><br/>
+> <h2 id="first_where使用">`first(where:)`使用</h2>
 
-### `first(where:)`
-
-> **我要“那个对象本身”**
+**`first(where:)`是要“那个对象本身”****
 
 ```swift
+class UpgradeDeviceInfo {
+    var iotId: String?
+    var channel: Int?
+
+    init(iotId: String?, channel: Int?) {
+        self.iotId = iotId
+        self.channel = channel
+    }
+}
+
+let list = [
+    UpgradeDeviceInfo(iotId: "A", channel: 1),
+    UpgradeDeviceInfo(iotId: "B", channel: 1)
+]
+
+let data = [
+    UpgradeDeviceInfo(iotId: "A", channel: 1), // 匹配
+    UpgradeDeviceInfo(iotId: "B", channel: 2)  // channel 不同
+]
+
+
 let match = data.first {
     $0.iotId == element.iotId &&
     $0.channel == element.channel
 }
+
 ```
 
 返回值：
 `UpgradeDeviceInfo?`
 
----
+<br/>
 
-## 五、回到你最初的函数（完整 demo）
+**最初的函数（完整 demo）**
 
 ```swift
 func updateListWithData(
@@ -1217,31 +1241,21 @@ func updateListWithData(
 }
 ```
 
-### 调用方式
+<br/>
+
+**调用方式**
 
 ```swift
 let result = updateListWithData(list: list, data: data)
 ```
 
-### 结果是什么？
+**结果是:**
 
 * `("A", 1)` → 被 `data` 中的新对象替换
 * `("B", 1)` → 因为没匹配上，保留原对象
 
----
 
-## 六、一句话记住它们
-
-* `contains(where:)`
-  👉 **“有没有满足条件的元素？”**
-* `first(where:)`
-  👉 **“给我第一个满足条件的元素”**
-* 闭包里的代码
-  👉 **就是你以前写在 if 里的判断条件**
-
----
-
-## 七、你可以这样练习（非常推荐）
+<br/>
 
 ```swift
 let numbers = [1, 3, 5, 7]
@@ -1252,9 +1266,6 @@ print(hasEven) // false
 let firstGreaterThan4 = numbers.first { $0 > 4 }
 print(firstGreaterThan4) // Optional(5)
 ```
-
-如果你愿意，我可以把 **`map / filter / contains / first`** 用一张“对照 for 循环表”帮你彻底吃透，之后你看 Swift 代码会非常轻松。
-
 
 
 
