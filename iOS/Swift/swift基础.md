@@ -9,7 +9,7 @@
 	- [一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性](#一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性)
 	- [数组的compactMap和filter使用](#数组的compactMap和filter使用)
 	- [数组map、first方法详解](#数组map、first方法详解)
-	- [`contains(where:)`使用)(#`contains(where:)`使用)
+	- [contains(where:)使用](#contains(where:)使用)
 - [Dictionary](#Dictionary)
 	- [按指定字段分组](#按指定字段分组)
 - [**类**](#类)
