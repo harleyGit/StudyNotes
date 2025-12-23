@@ -9,6 +9,7 @@
 	- [一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性](#一个数组对象元素id和另一个数组对象中的ProductNo相等后，将其对象属性赋值给另一个对象属性)
 	- [数组的compactMap和filter使用](#数组的compactMap和filter使用)
 	- [数组map、first方法详解](#数组map、first方法详解)
+	- [contains(where:)使用)(#contains(where:)使用)
 - [Dictionary](#Dictionary)
 	- [按指定字段分组](#按指定字段分组)
 - [**类**](#类)
@@ -1057,6 +1058,206 @@ return list.map { element in
 | --------------- | ---------- | -- | ------- | ------------------ |
 | `map`           | 批量加工数据     | 数组 | 新数组     | UI Model 转换、更新整个列表 |
 | `first(where:)` | 查找符合条件的第一个 | 数组 | 元素或 nil | 根据 id 查找、去重、匹配蓝牙设备 |
+
+
+<br/><br/><br/>
+> <h2 id="contains(where:)使用">contains(where:)使用</h2>
+
+**“最原始的 for 循环”理解逻辑**
+
+假设模型：
+
+```swift
+class UpgradeDeviceInfo {
+    var iotId: String?
+    var channel: Int?
+
+    init(iotId: String?, channel: Int?) {
+        self.iotId = iotId
+        self.channel = channel
+    }
+}
+```
+
+<br/>
+
+数据：
+
+```swift
+let list = [
+    UpgradeDeviceInfo(iotId: "A", channel: 1),
+    UpgradeDeviceInfo(iotId: "B", channel: 1)
+]
+
+let data = [
+    UpgradeDeviceInfo(iotId: "A", channel: 1), // 匹配
+    UpgradeDeviceInfo(iotId: "B", channel: 2)  // channel 不同
+]
+```
+
+<br/>
+
+
+**用 for 循环“手写**
+
+```swift
+for element in list {
+    var found = false
+
+    for item in data {
+        if item.iotId == element.iotId &&
+           item.channel == element.channel {
+            found = true
+            break
+        }
+    }
+
+    if found {
+        print("找到匹配的")
+    } else {
+        print("没找到")
+    }
+}
+``` 二**`contains(where:)` 是上面代码的“函数式`**# 写法
+
+```swift
+let exists = data.contains { item in
+    item.iotId == element.iotId &&
+    item.channel == element.channel
+}
+```
+
+### 它等价于什么？
+
+等价于：
+
+> **data 里“是否存在”至少一个元素，使得闭包返回 true**
+
+一旦返回 `true`，`contains` **立刻停止遍历**。
+
+---
+
+## 三、一个最小可运行 demo（重点）
+
+```swift
+let devices = [
+    UpgradeDeviceInfo(iotId: "A", channel: 1),
+    UpgradeDeviceInfo(iotId: "B", channel: 2)
+]
+
+let target = UpgradeDeviceInfo(iotId: "A", channel: 1)
+
+let result = devices.contains { device in
+    device.iotId == target.iotId &&
+    device.channel == target.channel
+}
+
+print(result) // true
+```
+
+### 逐步理解
+
+1. `contains` 开始遍历 `devices`
+2. 第一个元素：
+
+   * `"A" == "A"` ✅
+   * `1 == 1` ✅
+   * 闭包返回 `true`
+3. `contains` 立刻返回 `true`
+
+---
+
+## 四、`first(where:)` 和 `contains(where:)` 的区别（一看就懂）
+
+### `contains(where:)`
+
+> **只关心“有没有”**
+
+```swift
+let exists = data.contains {
+    $0.iotId == element.iotId &&
+    $0.channel == element.channel
+}
+```
+
+返回值：`Bool`
+
+---
+
+### `first(where:)`
+
+> **我要“那个对象本身”**
+
+```swift
+let match = data.first {
+    $0.iotId == element.iotId &&
+    $0.channel == element.channel
+}
+```
+
+返回值：
+`UpgradeDeviceInfo?`
+
+---
+
+## 五、回到你最初的函数（完整 demo）
+
+```swift
+func updateListWithData(
+    list: [UpgradeDeviceInfo],
+    data: [UpgradeDeviceInfo]
+) -> [UpgradeDeviceInfo] {
+
+    return list.map { element in
+        data.first {
+            $0.iotId == element.iotId &&
+            $0.channel == element.channel
+        } ?? element
+    }
+}
+```
+
+### 调用方式
+
+```swift
+let result = updateListWithData(list: list, data: data)
+```
+
+### 结果是什么？
+
+* `("A", 1)` → 被 `data` 中的新对象替换
+* `("B", 1)` → 因为没匹配上，保留原对象
+
+---
+
+## 六、一句话记住它们
+
+* `contains(where:)`
+  👉 **“有没有满足条件的元素？”**
+* `first(where:)`
+  👉 **“给我第一个满足条件的元素”**
+* 闭包里的代码
+  👉 **就是你以前写在 if 里的判断条件**
+
+---
+
+## 七、你可以这样练习（非常推荐）
+
+```swift
+let numbers = [1, 3, 5, 7]
+
+let hasEven = numbers.contains { $0 % 2 == 0 }
+print(hasEven) // false
+
+let firstGreaterThan4 = numbers.first { $0 > 4 }
+print(firstGreaterThan4) // Optional(5)
+```
+
+如果你愿意，我可以把 **`map / filter / contains / first`** 用一张“对照 for 循环表”帮你彻底吃透，之后你看 Swift 代码会非常轻松。
+
+
+
+
 
 <br/><br/><br/>
 
