@@ -47,7 +47,8 @@
 	- [依赖注入+组合接口模式](#依赖注入+组合接口模式)
 - [**文件读写**](#文件读写)
 	- [强制写入磁盘](#强制写入磁盘)
-
+- **资料**
+	- [NSQ-geekymv博客阅读](https://github.com/geekymv/nsq/blob/nsq-annotated/article/nsq01-introduce.md)  
 
 
 
