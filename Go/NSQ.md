@@ -1,4 +1,18 @@
+- [消息队列应用场景](#消息队列应用场景)
+	- [程序解耦](#程序解耦)
+	- [异步处理](#异步处理)
+	- [日志处理](#日志处理)
+	- [流量削峰](#流量削峰)
+	- [消息通信](#消息通信)
 - [介绍](#介绍)
+	- [NSQ组件](#NSQ组件)
+	- [NSQ工具](#NSQ工具)
+	- [NSQ架构](#NSQ架构)
+	- [NSQ数据流](#NSQ数据流)
+	- [NSQ数据流](#NSQ数据流)
+	- [部署方式](#部署方式)
+	- [开发流程](#开发流程)
+	- [TLS认证](#认证)
 - [**Channel背景**](#Channel背景)
 	- [Channel.go包解读](#Channel.go包解读)
 	- [拓扑感知消费和普通消费的对比](#拓扑感知消费和普通消费的对比) 
@@ -53,6 +67,59 @@
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="消息队列应用场景">消息队列应用场景</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="程序解耦">程序解耦</h2>
+
+- 用户注册成功会为发送注册成功的短信通知
+
+- 传统模式下需要将用户信息持久化到数据库后，再调用发送短信口。当短信平台暂时出现连通性问题，则会导致用户注册失败，说明注册模块与短信功能高耦合。违反程序设计原则高内聚低耦仁再引用消息队列后，用户注册成功后则将数据持久化到数据库）。
+
+- 将消息写入消息队列后返回用户注册成功。短信平台通过从消！：
+
+- 列中获取消息为用户发送通知，此时短信平台并不影响用户注册；
+
+
+***
+<br/><br/><br/>
+> <h2 id="异步处理">异步处理</h2>
+
+- **阻塞&非阻塞？同步&异步？**
+	- 被调用者维度（内核）：同步和异步
+		- 同步：在调用者A发起对被调用者B的调用后，B在未生成结之前不会向B返回结果
+		- 异步：在调用者A发起对被调用者B的调用后，B直接返回，待生成结果后通过状态、通知或回调调用者A告知结果
+
+- 调用者维度（用户）：阻塞和非阻塞
+	- 阻塞：在调用者A发起对调用者B的调用后，A在未得到B告的结果之前一直处于；
+	- 非阻塞：在调用者A发起对调用者B得调用后，A可以进行其他的操作。
+
+***
+<br/><br/><br/>
+> <h2 id="日志处理">日志处理</h2>
+- 日志采集客户端：负责日志数据采集和解析，并将日志数据实时/定时写入到消息队列
+
+- 消息队列：负责日志数据的接收，存储和转发日志处理应用：订阅消息队列，并消费日志数据
+	- 常见应用：ELK
+
+***
+<br/><br/><br/>
+> <h2 id="流量削峰">流量削峰</h2>
+常见于商城秒杀活动，为解决访问量过大，导致流量暴增，应用挂掉。常在服务器接收后用户数据后，写入消息队列。后台业务根#消息队列中的请求信息继续后续逻辑处理
+
+***
+<br/><br/><br/>
+> <h2 id="消息通信">消息通信</h2>
+消息队列一般都内置了高效的通信机制，可用于在消息通讯。比实现点对点、广播消息队列，或者聊天室等场景
+
+
+
 
 <br/><br/><br/>
 
@@ -61,6 +128,294 @@
 
 > <h1 id="介绍">介绍</h1>
 NSQ是一种消息队列,类似一种kafka的消息队列，类似一种工具。在选择时，根据情况进行选择。
+
+<br/>
+
+&emsp; **NSQ是使用GO语言开发的实时分布式消息传递平台。**
+- **主要特点：**
+	- 支持分布式部署，解决单点故障问题
+	- 水平可扩展（没有代理，可以无缝的将更多节点添加到集群中）
+	- 基于低延迟推送的消息传递（性能）
+	- 支持负载均衡和广播消息路由
+	- 在高吞吐量的工作负载下表现出色
+	- 消息主要存储与内存（超过内存配置后保存在磁盘上）
+	- 消费者可通过nsqlookupd服务查找生产者
+	- 传输层安全性（TLS）
+	- 任意的数据格式
+
+<br/>
+
+- **部署简便**
+	- 基于TCP协议，支持任何语言开发客户端库
+	- 提供HTTP接口，用于统计信息，管理操作功能提供管理功能nsqadmin
+	- 与statsd集成以进行实时检测
+
+
+***
+<br/><br/><br/>
+> <h2 id="NSQ组件">NSQ组件</h2>
+- **nsqd**
+	- 用于接收、分发、传递消息到客户端的守护程序
+	- 常侦听两个TCP端口，4150用于TCP客户端连接，4151用于提供理
+HTTP API，也可启用HTTPS API
+
+<br/>
+
+- **nsqlookupd**
+	- 用于管理nsqd拓扑信息的守护程序.（消费者）客户端查询
+nsqlookupd以发现 nsqd特定topic的生产者
+	- 常侦听两个TCP端口，4160用于nsqd的通信，4161用于提供
+НТТР API
+
+<br/>
+- **nsqadmin**
+	- 提供一个WebUI，用于实时查看群集信息并进行各种任务管理
+
+***
+<br/><br/><br/>
+> <h2 id="NSQ工具">NSQ工具</h2>
+- **NSQ工具**
+	- 用于获取指定`topic,channel`下统计信息
+	- **`nsq_tail`**
+		- 用于将指定topic, channel中的消息打印到控制台
+		- 用于将指定topic,channel中的消息导出到文件
+		- 用于将指定topic, channel中的消息转发到http服务器
+
+- **`nsq_to_nsq`**
+	- 用于将指定topic, channel中的消息转发到其他nsqd那
+	- 用于将控制台消息发送到指定topic
+
+***
+<br/><br/><br/>
+> <h2 id="NSQ架构">NSQ架构</h2>
+
+![go.0.0.183.png](./../Pictures/go.0.0.183.png)
+
+
+***
+<br/><br/><br/>
+> <h2 id="NSQ数据流">NSQ数据流</h2>
+- 生产者客户端连接到nsqd，并将数据消息发送到指定topic中
+- nsqd将topic中数据分发到所有关联的channel中
+- nsqd将channel中消息推送到订阅channel的某个客户中进行处理
+
+![go.0.0.184.png](./../Pictures/go.0.0.184.png)
+
+***
+<br/><br/><br/>
+> <h2 id="部署方式">部署方式</h2>
+
+- **单机**
+	- nsqd
+
+<br/>
+
+- **nsqd**
+
+```sh
+nsqd.exe --data-path=./datas
+```
+
+<br/>
+
+- **nsqadmin**
+
+```sh
+nsqadmin.exe --nsqd-http-address="localhost:4151"
+```
+
+![go.0.0.185.png](./../Pictures/go.0.0.185.png)
+
+<br/>
+
+**测试：**
+- 启动nsq_tail订阅test主题channel管道并将消息打印到控制台
+- 启动to_nsq从控制台将消息发送到test主题
+- curl调用web api产生消
+
+![go.0.0.186.png](./../Pictures/go.0.0.186.png)
+
+
+<br/><br/>
+
+- **集群**
+	- nsqlookupd
+	- nsqd
+
+![go.0.0.187.png](./../Pictures/go.0.0.187.png)
+
+**生产者测试：**
+- 启动nsq_tail订阅test主题channel管道并将消息打印到控制台
+- 启动to_nsq从控制台将消息发送到test主题
+- curl调用web api产生消息
+
+![go.0.0.188.png](./../Pictures/go.0.0.188.png)
+
+<br/>
+
+**消费者测试：**
+- 启动nsq_tail订阅test主题channel管道并将消息打印到控制台
+- 启动to_nsq从控制台将消息发送到test主题
+- curl调用web api产生消息
+
+![go.0.0.189.png](./../Pictures/go.0.0.189.png)
+
+
+<br/>
+
+- **管理平台**
+	- nsqadmin
+
+
+***
+<br/><br/><br/>
+> <h2 id="开发流程">开发流程</h2>
+
+[NSQ的库URL： https://github.com/nsqio/go-nsq](https://github.com/nsqio/go-nsq)
+
+- **生产者**
+	- 定义连接配置
+	- 定义生产者
+	- 发布消息
+	- 关闭连接
+
+```go
+package main
+import (
+	"fmt"
+	"10g"
+	"github. com/nsgio/go-nsq*
+)
+
+func main1() {
+ 	topic := "test"
+	addr := "localhost:4150"
+	config := nsg.NewConfig()
+	//定义nsq生产者配置
+	productor,err：= nsq.NewProducer（addr, config） // 创建生产者
+	if err != nil {
+		log. Fatal(err)
+	｝
+	for i：= 0; i< 10; i++｛
+		productor.Publish（topic， ［Jbyte（fmt. Sprintf（"message %d"，i）））//发布消息
+	｝
+	productor.Stop（）// 停止连接
+}
+
+```
+
+<br/>
+
+- **消费者**
+	- 定义连接配置
+	- 定义消费者
+	- 定乂消息処理器
+	- 连接nsq或nsqlookupd
+	- 停止连接
+
+
+```go
+package main
+import (
+	"fmt"
+	"10g
+	"os
+	"ost signal"
+	"syscall"
+	"github.com/nsqio/go-nsq"
+）
+
+
+func main() {
+
+	topic :="test"
+	channel := "testgo"
+	lookupAddr := "localhost: 4161"
+	// addr := "localhost: 4150"
+	config := nsq.NewConfig()
+	// 定义nsq消费者配置
+	consumer, err ：= nsq.NewConsumer （topic, channe1,config）//創建消費者
+	if err 1= nil (
+		log. Fatal(err)
+	｝
+	// 定义nsq处理器
+	consumer.AddHandler（nsq.HandlerFunc（func（m *nsq.Message） error｛
+	fmt. Println(string(m.Body))
+		return nil
+	｝））
+	err = consumer.ConnectToNSOLookupd （1ookupAddr）// 连接nsg 1ookupd
+	// err = consumer.ConnectToNSQD (addr) // te nsq
+	if err != nil {
+		log. Fatal(err)
+	}
+	// 等待系统信号
+	interrupt ：= make（chan os.signal）
+	signal. Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+	＜-interrupt
+	consumer.stop（）// 停止连接
+｝
+```
+
+<br/>
+
+**测试：启动消费者和生产者：**
+
+![go.0.0.190.png](./../Pictures/go.0.0.190.png)
+
+
+***
+<br/><br/><br/>
+> <h2 id="认证">认证</h2>
+
+- **TLS**
+	- nsqd通过命令行参数`--tls-cert，--tls-key，--tls-client-auth-policy`，
+	- `tls-required，-tls-root-ca-file`等参数配置协商客户使用ts以增加安全性
+
+- **通过webhook提供第三方认证和访问控制**
+	- nsqd通过--auth-http-address可配置第三方认证，只对TCP连接有效
+- Til: `https://github.com/imsilence/nsqdauth`或者使用这个工具：`‌github.com/imsilence/tlscert`
+
+<br/>
+
+**TLS认证测试**
+
+- **部署**
+	- nsalookupd
+	- nsqd
+
+**![go.0.0.191](./../Pictures/go.0.0.191.png)**
+![go.0.0.192.png](./../Pictures/go.0.0.192.png)
+
+<br/>
+
+**客户端配置：**
+
+```go
+caFile := "./cert/ca.pem"
+certFile, certkey := "./cert/client-pem", "./cert/client-key.pem" 
+
+pool := x509. NewCertPool()
+caPem, _ := ioutil.ReadFile(caFile)
+pool.AppendCertsFromPEM(caPem)
+
+cert, _:= tls.Load509KeyPair(certFile, certkey)
+
+config : = nsq.NewConfig
+config. Set ("tls_v1", true) config. Set ("tls_config", &tls.Configt
+RootCAs:
+pool,
+Certificates:
+[]tls.Certificate{cert),
+InsecureSkipVerify: false,
+})
+
+productor, err := nsq. NewProducer(addr, config) //
+创建生产者
+if err != nil {
+	log.Fatal(err)
+}
+```
+
 
 
 
