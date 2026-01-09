@@ -2708,6 +2708,15 @@ go version
 <br/><br/><br/>
 > <h2 id="go.mod中可以设置工具链版本吗">go.mod中可以设置工具链版本吗</h2>
 
+**基本介绍：**
+
+![go.0.0.194.png](./../Pictures/go.0.0.194.png)
+![go.0.0.195.png](./../Pictures/go.0.0.195.png)
+
+
+***
+<br/>
+
 **go.mod 文件中**有：
 
 ```sh
