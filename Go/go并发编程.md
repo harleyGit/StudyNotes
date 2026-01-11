@@ -1,5 +1,9 @@
 
 > <h4/>
+- [Go的协程逻辑态和C、Java的线程内核态区别](#Go的协程逻辑态和C、Java的线程内核态区别)
+	- [GMP调度全过程](#GMP调度全过程) 
+	- [安全点时序图&C为啥不是安全的](#安全点时序图&C为啥不是安全的) 
+		- [goroutine的抢占是安全的？](#goroutine的抢占是安全的？)
 - [**‌并发编程**](#并发编程)
 	- [进程、线程与协程进程](#进程、线程与协程进程)
 	- [goroutine](#goroutine)
@@ -8,13 +12,18 @@
 		- [类似栅栏的线程隔离](类似栅栏的线程隔离)
 	- [channel（通道）](#channel（通道）)
 		- [通道的声明和创建](#通道的声明和创建)
+			- [引入：阶乘计算](#引入：阶乘计算)
 		- [通道发送数据](#通道发送数据) 
 		- [通道接收数据](#通道接收数据)
+			- [管道初始化、写入、读取](#管道初始化、写入、读取)
+			- [channe的遍历和关闭](#channe的遍历和关闭)
+			- [统计1-200000数字中哪些是素数](#统计1-200000数字中哪些是素数)
 		- [单向通道](#单向通道) 
 		- [带缓冲的通道](#带缓冲的通道)
 		- [指针类型通道](#指针类型通道)
 		- [select防止通道阻塞](#select防止通道阻塞)
 		- [select使用场景](#select使用场景)
+		- [recovery使用](#recovery使用)
 	- [轻量级线程](#轻量级线程)
 	- [线程锁](#线程锁)
 		- [互斥锁](#互斥锁)
@@ -25,6 +34,818 @@
 	- [sync包学习](#sync包学习)
 		- [Once 执行一次](#Once执行一次)
 	
+	
+	
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="Go的协程逻辑态和C、Java的线程内核态区别">Go的协程逻辑态和C、Java的线程内核态区别</h1>
+
+它们是一个**并发模型与操作系统实现层面**问题。可以从**“谁来调度、成本有多高、阻塞会发生什么”**这三条主线来理解 Go 协程（goroutine，逻辑态）与 C / Java 线程（内核态）的本质区别。
+
+---
+<br/>
+
+**结论**
+
+> **Go 的 goroutine 是用户态（逻辑态）并发单位，由 Go 运行时调度；
+> C / Java 的线程是内核态并发单位，由操作系统内核调度。**
+
+这意味着它们在**调度者、创建/切换成本、阻塞模型、可扩展性**上存在根本差异。
+
+<br/>
+
+**核心概念对比**
+
+| 维度     | Go goroutine（逻辑态） | C / Java 线程（内核态） |
+| ------ | ----------------- | ---------------- |
+| 调度者    | Go runtime（用户态）   | OS 内核            |
+| 并发单位   | G（goroutine）      | Thread           |
+| 是否内核可见 | 否                 | 是                |
+| 创建成本   | 极低（KB 级栈）         | 很高（MB 级栈）        |
+| 切换成本   | 用户态切换             | 内核态上下文切换         |
+| 阻塞影响   | 仅阻塞当前 G           | 阻塞整个线程           |
+| 数量级    | 十万 / 百万级          | 几百～几千            |
+| 并发模型   | M:N               | 1:1              |
+
+---
+<br/>
+
+**逻辑态（用户态）并发模型**
+
+**Go 的 G–M–P 模型**
+
+Go 并不是“goroutine 直接跑在 CPU 上”，而是三层结构：
+
+```
+G (goroutine)  →  P (processor)  →  M (OS thread)
+```
+
+* **G**：用户写的 `go func()`
+* **M**：真正的 OS 线程（内核态）
+* **P**：调度上下文（逻辑处理器）
+
+> Go runtime 在用户态**把大量 G 复用到少量 M 上执行**
+
+---
+<br/>
+
+ **为什么说 goroutine 是“逻辑态”**
+
+* goroutine **不被 OS 感知**
+* OS 只看到 Go 进程中的若干个线程（M）
+* goroutine 的：
+	* 创建
+	* 调度
+	* 切换
+	* 挂起/恢复
+    都由 **Go runtime 在用户态完成**
+
+因此：
+
+* **切换不需要陷入内核**
+* 成本极低（纳秒级）
+
+<br/>
+
+**阻塞时发生了什么（关键差异）**
+
+```go
+go func() {
+    time.Sleep(time.Second)
+}()
+```
+
+* goroutine 被标记为阻塞
+* runtime 把该 G 挂起
+* **M 不会被阻塞**
+* M 继续执行其他 G
+
+**逻辑阻塞 ≠ 线程阻塞**
+
+---
+<br/> 
+
+**C / Java：内核态线程模型**
+
+**1:1 模型（线程即内核线程）**
+
+在现代系统中：
+
+* `pthread`（C）
+* `java.lang.Thread`
+
+本质都是：
+
+> **一个语言线程 = 一个 OS 内核线程**
+
+特点：
+
+* 创建线程 → `clone / CreateThread`
+* 调度线程 → OS scheduler
+* 上下文切换 → **内核态切换**
+
+<br/>
+
+**为什么内核线程昂贵**
+
+- **1）创建成本高**
+	* 分配内核结构
+	* 分配独立栈（通常 1–8MB）
+	* 注册调度实体
+
+- **2）切换成本高**
+	* 保存/恢复寄存器
+	* 切换页表
+	* CPU cache / TLB 失效
+
+<br/>
+
+**阻塞是“硬阻塞”**
+
+```java
+Thread.sleep(1000);
+```
+
+* 当前线程陷入阻塞
+* **OS 线程不可执行**
+* CPU 只能调度其他线程
+
+如果线程数不够：
+
+> **整个系统并发能力直接下降**
+
+---
+<br/>
+
+
+**直观类比（非常重要）**
+
+**`Go（goroutine）`**
+
+> 像**协程池 + 用户态调度器**
+
+* goroutine：任务
+* runtime：调度器
+* OS 线程：工人
+
+<br/>
+
+**`C / Java（线程）`**
+
+> 像**直接把任务交给政府调度**
+
+* 每个任务都要登记
+* 调度、切换都走“官方流程”
+* 稳定但昂贵
+
+---
+<br/>
+
+
+**为什么 Go 能开 10 万个协程？**
+
+关键原因：
+
+1. **用户态调度（无 syscall）**
+2. **可增长栈（2KB 起）**
+3. **M:N 复用模型**
+4. **非阻塞 I/O + 网络轮询器（netpoller）**
+
+而 Java / C：
+
+* 10 万线程 ≈ OOM + 系统雪崩
+
+---
+<br/>
+
+**注意的一个误区**
+
+**❌ 误区**
+
+> “goroutine 不用内核线程”
+
+ **✅ 正解**
+
+> **goroutine 最终还是运行在内核线程上，但它们不是一一对应**
+
+---
+<br/>
+
+**内核线程选择比较？**
+
+并不是 goroutine 全面优于线程：
+
+| 场景         | 更合适的模型       |
+| ---------- | ------------ |
+| 超高并发 I/O   | Go goroutine |
+| 少量重 CPU 计算 | Java / C 线程  |
+| 需要精确线程控制   | 内核线程         |
+| 与 C 库深度交互  | 内核线程         |
+
+---
+<br/>
+
+**结论**
+
+> **Go 的并发优势来自“把并发调度从内核态上移到用户态”，
+> 用 M:N 模型显著降低调度与阻塞成本；
+> 而 C / Java 线程依赖内核调度，稳定但昂贵。**
+
+
+***
+<br/><br/><br/>
+> <h2 id="GMP调度全过程">GMP 调度全过程</h2>
+
+**讲解三部分：**
+
+1. **GMP 调度全过程（带伪代码 + 流程图思路）**
+2. **Go goroutine vs Java 虚拟线程（Loom）对比**
+3. **一句“工程级理解总结”**
+
+---
+<br/>
+
+**Go 的 G-M-P 调度全过程（重点）**
+
+1️⃣ 三个核心角色（再精确一点）
+
+```text
+G (goroutine)
+- 逻辑执行单元
+- 保存函数栈、PC、状态
+
+M (machine)
+- OS 内核线程
+- 真正跑在 CPU 上
+
+P (processor)
+- 调度上下文
+- 持有 runqueue（G 队列）
+```
+
+关键限制：
+
+> **必须是：M 绑定 P，才能执行 G**
+
+<br/>
+
+**2️⃣ 调度整体结构（脑中结构图）**
+
+```
+            ┌──────────┐
+            │ Global Q │
+            └────┬─────┘
+                 │
+     ┌───────────┴───────────┐
+     │                       │
+┌────▼────┐             ┌────▼────┐
+│   P0    │             │   P1    │
+│ runQ[] │             │ runQ[] │
+└────┬────┘             └────┬────┘
+     │                       │
+┌────▼────┐             ┌────▼────┐
+│   M0    │             │   M1    │
+│ OS线程 │             │ OS线程 │
+└─────────┘             └─────────┘
+```
+
+<br/>
+
+ **3️⃣ goroutine 创建时发生了什么**
+
+```go
+go foo()
+```
+
+**逻辑步骤：**
+
+```text
+1. 创建 G（分配初始栈，~2KB）
+2. 将 G 放入：
+   - 当前 P 的本地 runqueue
+   - 若满了，放入全局队列
+3. 返回，不阻塞当前 goroutine
+```
+
+**没有：**
+
+* 没有 syscall
+* 没有线程创建
+* 没有内核介入
+
+<br/>
+
+**4️⃣ M 执行 G 的核心伪代码（重点）**
+
+```go
+for {
+    g := P.runqueue.pop()
+    if g == nil {
+        g = globalRunqueue.pop()
+    }
+    if g == nil {
+        g = stealFromOtherP()
+    }
+    if g == nil {
+        parkCurrentM()
+    }
+
+    execute(g)
+}
+```
+
+这就是 **Go 用户态调度器的核心循环**。
+
+<br/> 
+
+**5️⃣ G 阻塞时（最关键差异）**
+
+**场景 1：`Sleep / Channel / Mutex`**
+
+```go
+time.Sleep(1 * time.Second)
+```
+
+```text
+1. G 状态 -> waiting
+2. G 从 runqueue 移除
+3. M 继续找下一个 G
+4. P 不变
+```
+
+**结果：**
+
+* M 不阻塞
+* CPU 不浪费
+* 并发能力不下降
+
+<br/>
+
+**场景 2：系统调用（syscall）**
+
+```go
+syscall.Read(fd)
+```
+
+```text
+1. M 即将进入内核阻塞
+2. runtime 解绑 P
+3. P 交给新的 M
+4. 原 M 阻塞在内核
+```
+
+**这一步是 Go 的“精华设计”**：
+
+> **阻塞的是 M，不是 P，不影响整体调度**
+
+---
+<br/> 
+
+**Go goroutine vs Java 虚拟线程（Loom）**
+
+这是一个你很可能在面试或架构讨论中会遇到的点。
+
+---
+<br/> 
+
+**1️⃣ 模型对比（本质）**
+
+| 维度     | Go goroutine | Java 虚拟线程    |
+| ------ | ------------ | ------------ |
+| 调度位置   | Go runtime   | JVM          |
+| 底层线程   | OS thread    | OS thread    |
+| 模型     | M:N          | M:N          |
+| 阻塞感知   | runtime 感知   | JVM 感知       |
+| I/O 模型 | netpoller    | continuation |
+| 成熟度    | 非常成熟         | 较新（JDK 21+）  |
+
+<br/> 
+
+**2️⃣ 虚拟线程的工作方式（简化）**
+
+```java
+Thread.startVirtualThread(() -> {
+    blockingCall();
+});
+```
+
+内部逻辑：
+
+```text
+1. 虚拟线程绑定载体线程
+2. 遇到阻塞点（已知）
+3. 保存 continuation
+4. 解绑载体线程
+5. 恢复时重新调度
+```
+
+👉 **这在思想上已经非常接近 goroutine**
+
+<br/>
+
+**3️⃣ 核心差异（工程角度）**
+
+| 点     | Go         | Java Loom   |
+| ----- | ---------- | ----------- |
+| 设计起点  | 为并发而生      | 兼容历史        |
+| 栈模型   | 连续栈，可增长    | 分段栈         |
+| 生态一致性 | 全生态统一      | 仍有库不友好      |
+| 调度可控性 | runtime 强控 | JVM + OS 混合 |
+
+<br/>
+
+ **4️⃣ 一句评价（很重要）**
+
+> **Loom 让 Java“终于追上了 Go 的并发模型”，
+> 但 Go 是“为并发而设计”，Java 是“为并发而改造”。**
+
+---
+<br/>
+
+**总结（可直接背）**
+
+> * **goroutine 是用户态并发单位，由 Go runtime 调度**
+> * **线程是内核态调度单位，由 OS 调度**
+> * Go 通过 **M:N + 用户态调度**，将并发成本从“内核级”降到“函数级”
+> * Java Loom 在思想上已接近 Go，但历史包袱和生态一致性仍是差异点
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="goroutine的抢占是安全的？">goroutine的抢占是安全的？</h2>
+
+
+为什么 **goroutine 的抢占（preemption）是安全的**？
+
+结论先行：
+
+> **因为 Go 只在“可证明安全的点”进行抢占，并且抢占的是“执行权”，不是“执行状态”。**
+
+这与 OS 线程的“硬中断式抢占”在设计哲学上完全不同。
+
+---
+<br/>
+
+**先明确：什么叫“不安全的抢占”**
+
+在并发系统中，**不安全抢占**通常指：
+
+* 在任意指令中断执行
+* 被中断时：
+
+  * 栈未一致
+  * 寄存器状态不完整
+  * 写了一半的内存
+* 运行时无法恢复一致语义
+
+这是 **内核线程级抢占**需要极端谨慎的原因。
+
+---
+<br/> 
+
+Go 的抢占不是“随时打断”
+
+**核心原则（非常重要）**
+
+> **Go 不在任意 CPU 指令处抢占 goroutine**
+
+而是：
+
+> **只在 runtime 认可的“安全点（Safe Point）”抢占**
+
+---
+<br/>
+
+**什么是 Safe Point（安全点）**
+
+**1️⃣ Go 中的安全点定义**
+
+安全点满足以下条件：
+
+* 当前 goroutine 的：
+
+  * 栈是完整的
+  * 寄存器状态可保存
+  * 没有处于 runtime 的临界区
+* GC / 调度器可以安全介入
+
+<br/> 
+
+**2️⃣ 安全点出现的位置（记住这几个）**
+
+| 类型             | 示例          |
+| -------------- | ----------- |
+| 函数调用前后         | `foo()`     |
+| 栈增长检查点         | 函数序言        |
+| channel 操作     | `<-ch`      |
+| mutex / select | `select {}` |
+| 循环回边（Go 1.14+） | `for {}`    |
+
+---
+<br/> 
+
+**Go 抢占机制的演进（关键背景）**
+
+**1️⃣ Go 1.14 之前：协作式抢占**
+
+```text
+goroutine 主动让出 CPU
+```
+
+问题：
+
+* 死循环不让
+* GC 等不到世界停止（STW）
+
+<br/> 
+
+**2️⃣ Go 1.14 之后：异步抢占（但仍然安全）**
+
+> **这是很多人误解的地方**
+
+“异步” ≠ “任意时刻”
+
+<br/> 
+
+**3️⃣ Go 的异步抢占是如何做到“安全”的？**
+
+**机制分三步：**
+
+**Step 1：发送抢占请求**
+
+* runtime 标记某个 G 为 `preempt`
+* 不立即打断执行
+
+<br/>
+
+**Step 2：信号触发（如 SIGURG）**
+
+* OS 给 M 发信号
+* M 进入 signal handler
+
+<br/> 
+
+**Step 3：检查是否在安全点**
+
+```text
+如果在安全点：
+    保存 G 上下文
+    切换 goroutine
+否则：
+    标记，继续执行
+    等下一个安全点
+```
+
+> **永远不会在 unsafe point 强行切换**
+
+---
+<br/>
+
+**为什么“逻辑抢占”是安全的（本质原因）**
+
+**1️⃣ 抢占的是 goroutine，不是 OS 线程**
+
+* OS 线程（M）仍然活着
+* 只是换了一个 G 执行
+
+<br/>
+
+ **2️⃣ Go 不允许“中断半条 Go 语义”**
+
+* Go 指令是编译器可感知的
+* runtime 知道：
+
+  * 栈布局
+  * 指针位置
+  * 活跃对象
+
+这是 C/C++ 永远做不到的事。
+
+---
+<br/> 
+
+**3️⃣ 与 GC 深度协同**
+
+GC 需要：
+
+* 知道所有指针位置
+* 知道哪些栈可扫描
+
+安全点 = **GC 可扫描点**
+
+所以：
+
+> **“能抢占” ⇔ “能 GC” ⇔ “状态一致”**
+
+---
+<br/>
+
+**和 OS 线程抢占的根本差异**
+
+| 对比项   | goroutine 抢占 | OS 线程抢占 |
+| ----- | ------------ | ------- |
+| 抢占时机  | 安全点          | 任意指令    |
+| 抢占粒度  | 函数级          | 指令级     |
+| 状态一致性 | 编译器保证        | 内核强行保存  |
+| 恢复成本  | 极低           | 极高      |
+| GC 友好 | 天然           | 需要额外协议  |
+
+---
+<br/>
+
+**面试的标准回答**
+
+> **Go 的 goroutine 抢占是安全的，因为它不是在任意指令处打断执行，而只在编译器和 runtime 明确标注的安全点进行抢占。这些安全点保证了栈和寄存器状态一致，并且与 GC 扫描点完全对齐，因此抢占不会破坏程序语义。这种“用户态、语义级”的抢占与操作系统的指令级抢占在本质上不同。**
+
+<br/><br/>
+> <h3 id="安全点时序图&C为啥不是安全的安全点时序图&C为啥不是安全的">安全点时序图&C为啥不是安全的</h3>
+
+<br/> 
+
+**Safe Point 抢占「时序图」（文字版，可直接脑补）**
+
+这是 **Go 1.14+ 异步抢占** 的真实逻辑流程，用一条时间线说明。
+
+<br/>
+
+ **1️⃣ 时序图（从左到右是时间）**
+
+```
+G 正在执行 Go 代码
+│
+│   （runtime 需要抢占：GC / 调度）
+│
+├── runtime 标记 G.preempt = true
+│
+├── OS 向 M 发送信号（SIGURG）
+│
+├── M 进入 signal handler
+│
+├── 检查当前执行点
+│     │
+│     ├── ❌ 非 Safe Point
+│     │       │
+│     │       ├── 记录“待抢占”
+│     │       └── 返回，继续执行 G
+│     │
+│     └── ✅ Safe Point
+│             │
+│             ├── 保存 G 的寄存器 / PC
+│             ├── 标记 G 状态 = runnable
+│             ├── G 放回 runqueue
+│             └── M 切换执行下一个 G
+│
+└── 抢占完成
+```
+
+<br/>
+
+ **2️⃣ Safe Point 本身是什么？**
+
+**Safe Point ≠ 随机位置**
+
+它满足三个条件：
+
+1. **栈是完整、可扫描的**
+2. **runtime 知道所有活跃指针的位置**
+3. **不在 runtime 的临界区**
+
+<br/> 
+
+**3️⃣ 常见 Safe Point（你可以直接背）**
+
+* 函数调用边界
+* 函数序言（栈增长检查）
+* channel / mutex / select
+* `for` 循环回边（Go 1.14+）
+* 显式的调度点（`runtime.Gosched`）
+<br/>
+
+ **4️⃣ 一句话总结 Safe Point 抢占**
+
+> **Go 的“异步抢占”并不是随时中断，而是“异步地请求，在同步的安全点执行”。**
+
+---
+<br/>
+
+为什么 **C / C++ 永远做不了 goroutine 这种抢占**
+
+这是一个**语言设计层面的硬限制**，不是“没实现好”。
+
+<br/>
+
+**结论（先给）**
+
+> **因为 C / C++ 的编译器和运行时无法证明“当前执行状态是安全的”，也无法可靠枚举栈上的指针。**
+
+<br/>
+
+ **1️⃣ Go 能做到的，C/C++ 根本不知道**
+
+**Go 编译器知道什么？**
+
+* 每个函数的栈布局
+* 每个栈槽是不是指针
+* 哪些寄存器里可能存指针
+* 哪些位置是 GC / 抢占安全点
+
+<br/>
+
+
+
+**C/C++ 完全不知道什么？**
+
+```c
+void foo() {
+    int x = 10;
+    void* p = get_ptr();
+}
+```
+
+* `x` 是值还是伪装成指针？
+* `p` 指向堆？栈？野指针？
+* 寄存器里有没有隐藏指针？
+
+**答案：编译器和 runtime 都不知道**
+
+<br/> 
+
+**2️⃣ C/C++ 的“抢占”只能交给 OS**
+
+OS 的线程抢占特点：
+
+* 任意指令处中断
+* 强行保存寄存器
+* 不理解语言语义
+* 不关心栈是否“语义一致”
+
+所以：
+
+> **OS 抢占的是“CPU”，不是“程序语义”**
+
+<br/> 
+
+**3️⃣ 为什么这对“用户态抢占”是致命的**
+
+如果你试图在 C/C++ 中实现 goroutine 式抢占：
+
+**问题 1：你不知道哪里能停**
+
+* 任意指令都可能：
+	* 写一半内存
+  * 修改一半结构
+* 没有 Safe Point 概念
+
+<br/>
+
+**问题 2：你不知道怎么 GC**
+
+* 栈上哪些是指针？
+* 哪些是整数？
+* 哪些是临时变量？
+
+这就是为什么 C/C++ 只能用：
+
+* 手动内存管理
+* 或 **保守 GC（conservative GC）**
+
+<br/>
+
+**问题 3：你不知道怎么恢复执行**
+
+* 编译器可能重排指令
+* inline / 寄存器分配不可控
+* 没有“可恢复的语义边界”
+
+<br/> 
+
+**4️⃣ 为什么“协程库”≠ goroutine**
+
+C/C++ 的协程库（如 `ucontext`、boost coroutine）：
+
+| 点     | 现实       |
+| ----- | -------- |
+| 切换方式  | 显式 yield |
+| 抢占    | ❌ 不支持    |
+| GC 协同 | ❌        |
+| 安全点   | ❌        |
+| 调度    | 协作式      |
+
+👉 **它们不是抢占式协程，只是“保存/恢复栈”**
+
+<br/>
+
+**5️⃣ 对比一句“本质差异”**
+
+> **Go 是“语言 + 编译器 + runtime + GC”整体设计；
+> C/C++ 是“只提供语法，把一切交给 OS”。**
+
+
+
 
 <br/><br/><br/>
 
@@ -130,6 +951,48 @@ func BaseConcurrentProgram_v1 () {
 	}
 }
 ```
+
+
+<br/>
+
+- **一个Demo，实现功能：**
+	- 1）在主线程（可以理解成进程）中，开启一个 goroutine，该协程每隔1秒输出 "hello,World"
+	- 2） 在主线程中也每隔一秒输出"hello,golang”，输出10次后，退出程序
+	- 3） 要求主线程和 goroutine 同时执行.
+
+```go
+//编写一个函数，每隔1秒输出 “he1lo,world"
+func test) {
+	for 1 := 1; i <= 10; i++｛
+		fmt. Println("tesst () hello,world " + strconv. Itoa(i))
+		time. Sleep (time.Second)
+	｝
+｝
+func main() {
+
+	go test() //开启了一个协程
+
+	for i := 1; i <= 10; i++ {
+		fmt Println(" main() hello,golang" + strconv. Itoa (1))
+		time. Sleep(time.Second)
+	｝
+｝
+```
+
+**打印：**
+
+```sh
+main(› hello-golangi tesst () hello,world 1 main(› hello-golang2 tesst () hello,world 2
+main(› hello-golang3 tesst () hello,world 3 tesst () hello,world 4
+main(› hello,golang4 tesst () hello,world 5
+main() hello,golang5
+tesst () hello,world 6
+main(› hello-golang6 tesst () hello,world ? main(› hello,golang? tesst () hello,world 8
+main hello-golang8
+```
+
+![go.0.0.195.png](./../Pictures/go.0.0.195.png)
+
 
 
 <br/><br/>
@@ -249,6 +1112,15 @@ fmt.Println("全部完成")
 
 ```go
 var name chan type
+
+// 举例：
+var intChan chan int （intChan 用于存放 int 数据）
+
+var mapChan chan maplint］string （mapChan 用于存放 maplint］string 类型）
+
+var perChan chan Person
+
+var perChan2 chan *Person
 ```
 
 - **参数说明如下。**
@@ -256,6 +1128,12 @@ var name chan type
 	- name：通道的名称。
 	- chan: Go语言关键字，通道类型。
 	- type：在通道内部传输的数据的类型。为了创建通道，需要使用make()函数。创建通道的语法格式如下。
+
+<br/>
+
+**channel 是引用类型**
+
+&emsp; channel必须初始化才能写入数据，即 make 后才能使用管道是有类型的，intChan 只能写入 整数 int
 
 <br/>
 
@@ -286,6 +1164,55 @@ chel = make(chan string)
  type Equip struct{ /＊ 一些字段 ＊/ }
  ch2 := make(chan ＊Equip)         // 创建Equip指针类型的通道，可以存放＊Equip
 ```
+
+<br/>
+
+<br/><br/>
+> <h3 id="引入：阶乘计算">引入：阶乘计算</h3>
+**需求：** `要计算 1-200 的各个数的阶乘，并且把各个数的阶乘放入到 map 中。最后显示出来，使用 goroutine 完成。`
+
+
+```go
+package main import (
+	"fmt"
+	"time"
+）
+// 思路
+// 1. 编写一个函数，来计算各个数的阶乘，并放入到 map 
+// 2. 我们启动的协程多个，统计的将结果放入到 map 中
+// 3. map 应该做出一个全局的.
+
+var (
+	myMap = make(map[int]int, 10)
+）
+
+// test 函数就是计算 n！，让将这个结果放入到 myMap
+func test(n int) {
+	res := 1
+	for i := 1; i<=n; it+ {
+		res *= i
+	｝
+	// 这里我们将 res 放入到 myMap
+	myMap[n] = res //concurrent map writes?
+}
+
+func main {
+	//  我们这里开启多个协程完成这个任务［200个］
+	for i：= 1;i<= 200;i++｛
+		go test(i)
+	}
+	// 休眠10秒钟【第二个问题】
+	time.Sleep (time.Second * 10)
+	//这里我们输出结果，变量这个结果
+	for i, v := range myMap {
+		fimt.Printf("map[%d]=%d\n", i, v)
+	}
+}
+```
+
+![go.0.0.197.png](./../Pictures/go.0.0.197.png)
+
+
 
 <br/><br/><br/>
 > <h2 id="通道发送数据">通道发送数据</h2>
@@ -384,10 +1311,284 @@ for data := range ch {
 
 通道ch是可以进行遍历的，遍历的结果就是接收到的数据。数据类型就是通道的数据类型。通过for遍历获得的变量只有一个，即上面例子中的data。
 
+
+***
+<br/><br/><br/>
+> <h2 id="管道初始化、写入、读取">管道初始化、写入、读取</h2>
+
+
+```go
+package main import (
+	"fmt"
+）
+func main {
+	//演示一下管道的使用
+	//1. 创建一个可以存放3个 int 类型的管道
+	var intChan chan int
+	intChan = make(chan int, 3)
+	
+	//2.看看
+	intChan 是什么
+	fmnt.Printf（"intChan 的值=%v intChan 本身的地址=%plin"， intChan， &intChan）
+	
+	//3.向管道写入数据
+	intChan<- 10
+	num := 211
+	intChan<- num
+	intChan<- 50
+	//intChan<-98//注意点，当我们给管写入数据时，不能超过其容量
+	//4.看看管道的长度和 cap（容量）
+	fmt. Printf("channel len= %v cap=%v \n", len(intChan), cap(intChan)) // 3, 3
+	
+	//5. 从管道中读取数据
+	var num2 int
+	num2 = <-intChan
+	fmt.Println（"num2="，num2）
+	fint.Printf"channel len= %v cap=%v In", len(intChan), cap(intChan)) // 2, 3
+	
+	//6. 在没有使用协程的情况下，如果我们的管道数据已经全部取出，再取就会报告deadlock
+	num3 := <-intChan num4 := <-intChan num5 := <-intChan
+	fit.Printin("num3=", num3, "num4=", num4, "num5=", num5)
+}
+```
+
+
+<br/><br/>
+> <h3 id="channe的遍历和关闭">channe的遍历和关闭</h3>
+
+- **channel 的关闭**
+	- 使用内置函数 close 可以关闭channel，当 channel 关闭后，就不能再向 channel 写数据了，但是仍然可以从该 channel 读取数据
+
+```go
+package main 
+import (
+	"fmt"
+)
+
+func main {
+
+	intchan := make(chan int, 3)
+	intchan<- 100
+	intchan<- 200
+	
+	close (intchan) // close
+	//这是不能够再写入数到channel
+	//intchan<- 300
+	ft. Println("okook~")
+	//当管道关闭后，读取数据是可以的
+	n1 := ‹-intchan fmt. Println"n1=*, n1)
+｝
+```
+
+<br/>
+
+- **channel 的遍历**
+channel 支持 for-range 的方式进行遍历，请注意两个细节
+
+	- 1）在遍历时，如果 channel 没有关闭，则回出现 deadlock 的错误
+	- 2） 在遍历时，如果 channel 已经关闭，则会正常遍历数据，遍历完后，就会退出遍历。
+
+```go
+//遍历管道
+intChan2 ：= make（chan int,100）
+for i := 0; i ‹ 100; i++ {
+	intchan2<-i*2 1/放入100个数据到管道
+｝
+
+//遍历管道不能使用普通的 for 循环
+// for i：= es 1x len（intchan2）：i++｛
+
+// }
+//在遍历时，如果channel没有关闭，则会出现deadlock的错误
+//在遍历时，如果channe1已经关闭，则会正常遍历效据，遍历完后，就会退出遍历
+close(intchan2)
+for v ：= range intchanz｛
+	fmt.Println("v=", v)
+}
+```
+
+<br/><br/>
+
+- **Demo要求：**
+	- 1） 开启一个writeData协程，向管道intChan中写入50个整数.
+	- 2） 开启一个readData协程，从管道intChan中读取writeData写入的数据。
+	- 3）
+	- 注意：writeData和readDate操作的是同一个管道
+	- 4）主线程需要等待writeData和readDate协程都完成工作才能退出【管道】
+
+![go.0.0.198.png](./../Pictures/go.0.0.198.png)
+
+```sh
+package main import (
+	"time"
+	"fmt"
+）
+
+// write Data
+func writeData(intChan chan int){
+	for i := 1; i <= 50; it+ {
+		//放入数据
+		intChan<- i
+		fmt. Printin("writeData", i)
+		//time.Sleep(time.Second)
+	}
+	close(intChan) //关闭
+}
+
+
+//read data
+func readData(intChan chan int, exitChan chan bool) {
+	for {
+		v, ok := <-intChan
+		if!ok {
+			break
+		}
+		//time.Sleep(time.Second)
+		fmt.Printf（"'readData 读到数据=%vn"，v）
+	}
+	//readData 读取完数据后，即任务完成
+	exitChan<- true
+	close(exitChan)
+}
+
+func main {
+	//创建两个管道
+	intChan：= make（chan int, 50）
+	exitChan := make(chan bool, 1)
+	
+	go writeData(intChan)
+	go readData(intChan, exitChan)
+	//time. Sleep(time.Second * 10)
+	
+	for {
+		_ ok:= <-exitChan 
+		if !ok {
+			break
+		}
+	}
+}
+```
+
+**问题：** 如果注销掉 `go readData（intChan, exitChan）`，程序会怎么样？
+
+- **答：** 如果只是向管道写入数据，而没有读取，就会出现阻塞而**dead lock**，原因是:
+	- intChan容量是10，而代码writeData会写入 50个数据，因此会阻塞在 writeData的 `‌intChan<- i`
+	- 阻塞原因是：如果编译器（运行），发现一个管道只有写，而没有读，则改管道就会阻塞。
+		- 写管道和读管道的频率不一致，无所谓；
+
+<br/><br/>
+> <h3 id="统计1-200000数字中哪些是素数">统计1-200000数字中哪些是素数</h3>
+
+**需求：** 要求统计`1-8000`的数字中，哪些是素数？ 现在我们有goroutine和channel的知识后，就可以完成了［测试数据8000］
+
+<br/>
+
+- **分析思路：**
+	- 传统的方法，就是使用一个循环，循环的判断各个数是不是素数【ok】。
+	- 使用并发/并行的方式，将统计素数的任务分配给多个（4个）goroutine 去完成，完成任务时间短。
+
+```go
+package main import (
+	"fit"
+	"time"
+）
+
+//向 intChan 放入1-8000个数
+func putNum(intChan chan int) {
+	
+	for i := 1; i<= 8000; it+ {
+		intChan<- i
+	}
+	
+	//关闭 intChan
+	close(intChan)
+}
+	
+// 从 intChan 取出数据，并判断是否为素数，如果是，就
+// 放入到primeChan
+func primeNum（intChan chan int, primeChan chan int, exitChan chan bool） ｛
+
+	// 使用 for 循环
+	// var num int
+	var flag bool
+	for {
+		time.Sleep(time.Millisecond * 10)
+		num, ok := <-intChan
+		
+		if !ok {//intChan EXTE
+			break
+		}
+		
+		flag=true//假设是素数
+		// 判断 num 是不是素数
+		for i：=2;i<num; i++ ｛
+			if num % i= 0｛//说明该 num 不是素数
+				flag = false
+				break
+			}
+		}
+		if flag {
+			// 将这个数就放入到 primeChan
+			primeChan<- num
+		}
+	｝
+	
+	fmt.Println（"有一个 primeNum协程因为取不到数据，退出"）
+	// 这里我们还不能关闭 primeChan
+	// 向 exitChan 写入 true
+	exitChan<- true
+}
+
+
+func main {
+	
+	intChan := make(chan int, 1000)
+	primeChan：= make（chan int, 2000）//放入结果
+	
+	// 标识退出的管道
+	exitChan：= make（chan bool, 4）//4个
+	
+	// 开启一个协程，向 intChan 放入1-8000个数
+	go putNum(intChan)
+	// 开启4个协程，从 intChan 取出数据，并判断是否为素数，如果是，就
+	// 放入到primeChan
+	for i:= 0; i < 4; it+ {
+		go primeNum(intChan, primeChan, exitChan)
+	}
+	
+	// 这这里我们主线程，进行处理
+	// 直接
+	go func() {
+	
+		for i := 0; i < 4; i++ {	
+			<- exitChan
+		}
+		// 当我们从 exitChan取出了4个结果，就可以放心的关闭 prprimeChan
+		close(primeChan)
+	}()
+	
+	// 遍历我们的primeChan，把结果取出
+	for {
+		res, ok := <-primeChan 
+		if !oks {
+			break
+		}
+	｝
+ 
+ //将结果输出
+	fmt.Printf（"素数=%dn"， res）
+	fmt.Printin（"main 线程退出"）
+｝
+```
+
+**结论：** 使用go协程后，执行的速度，比普通方法提高至少4倍。
+
+
+
 <br/><br/><br/>
 > <h2 id="单向通道">单向通道</h2>
 
-声明格式:
+**声明格式:**
 
 只能发送的通道类型为chan<-，只能接收的通道类型为<-chan: 
 
@@ -563,6 +1764,58 @@ recv: 3 msg-3
 
 > **作用：**
 >`select` 在 Go 里就是 **“通道的多路复用器”** —— 它的出现，主要是为了解决 **当有多个 channel（或 `default` 分支）需要同时监听时，怎么优雅地等待并处理就绪的那个**。
+
+***
+<br/>
+
+**使用 select 可以解决从管道取数据的阻塞问题**
+
+```go
+package main import (
+	"fmt"
+	"time"
+）
+
+
+func main {
+	// 使用 select 可以解决从管道取数据的阻塞问题
+	
+	// 1.定义一个管道 10个数据 int
+	intChan := make(chan int, 10)
+	for i:= 0; i < 10; i++ {
+		intChan <- i
+	｝
+	// 2.定义一个管道5个数据string
+	stringChan := make(chan string, 5)
+	for i：= 0; i<5; it+｛
+		stringChan <- "hello" + fimt.Sprintf("%d"， i）
+	｝
+	
+	//传统的方法在遍历管道时，如果不关闭会阻塞而导致deadlock
+	
+	//问题，在实际开发中，可能我们不好确定什么关闭该管道，
+	//可以使用 select 方式可以解决
+	// label:
+	for {
+		select {
+			/注意：这里，如果 intChan 一直没有关闭，不会一直阻塞而 deadlock
+			// ，会自动到下一个 case 匹配
+			case v:= <-intChan :
+				fmt.Printf（"从 intChan 读取的数据%du”，v）
+				time. Sleep(time.Second)
+			case v := <-stringChan :
+				fmt.Printf（"从 stringChan 读取的数据%sin"，v）
+				time.Sleep(time.Second)
+			default :
+				fmt.Printf（"都取不到了，不玩了，程序员可以加入逻辑In"）
+				time.Sleep(time.Second)
+				return
+				//break label
+			｝
+	}
+}
+
+```
 
 ***
 <br/>
@@ -1006,6 +2259,51 @@ func main() {
 | `<-jobChan`          | 任务监听通道，处理具体任务       |
 
 
+***
+<br/><br/><br/>
+> <h2 id="recovery使用">recovery使用</h2>
+
+**`goroutine`** 中使用 recover，解决协程中出现 panic，导致程序崩溃问题
+
+**说明：** 如果我们起了一个协程，但是这个协程出现了panic，如果我们没有捕获这个panic，就会造成整个程序崩溃，这时我们可以在goroutine中使用**`recover`**来捕获panic，进行处理，这样即使这个协程发生的问题，但是主线程仍然不受影响，可以继续执行。
+
+```go
+package main import (
+	"fmt"
+	"time"
+}
+
+//函数
+func sayHello {
+	for i:= 0; i < 10; i++ {
+	time.Sleep(time.Second)
+	fmt. PrintIn("hello, world")
+}
+
+//函数
+func test() {
+	//这里我们可以使用 defer+recover
+	defer func() {
+		//捕获 test 拋出的panic
+		if err := recover; err != nil {
+			fnt.Println（"test（ 发生错误"，err）
+		}()
+		//定义了一个map
+		var myMap map[int]string
+		myMap[0] = "golang" //error
+}
+	
+	
+func main() {
+	go sayHello() 
+	go test()
+	
+	for i := 0; i < 10; it+ {
+		fmt. Println("main ok=", i)
+		time. Sleep(time.Second)
+	}
+}
+```
 
 
 
