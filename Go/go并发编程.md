@@ -998,18 +998,23 @@ func main() {
 **打印：**
 
 ```sh
-main(› hello-golangi tesst () hello,world 1 main(› hello-golang2 tesst () hello,world 2
-main(› hello-golang3 tesst () hello,world 3 tesst () hello,world 4
-main(› hello,golang4 tesst () hello,world 5
+main() hello-golang 1
+tesst () hello,world 1
+main() hello-golang2
+tesst () hello,world 2
+main() hello-golang3
+tesst () hello,world 3
+tesst () hello,world 4
+main() hello,golang4
+tesst () hello,world 5
 main() hello,golang5
 tesst () hello,world 6
-main(› hello-golang6 tesst () hello,world ? main(› hello,golang? tesst () hello,world 8
+main() hello-golang6
+tesst () hello,world 7
+main() hello,golang7
+tesst () hello,world 8
 main hello-golang8
 ```
-
-![go.0.0.195.png](./../Pictures/go.0.0.195.png)
-
-
 
 <br/><br/>
 > <h3 id="匿名函数创建goroutine">匿名函数创建goroutine</h3>
@@ -1109,7 +1114,7 @@ fmt.Println("全部完成")
 <br/><br/><br/>
 > <h2 id="channel（通道）">channel（通道）</h2>
 
-**直白点：** `通道（channnel）`就是为了解决在携程中数据的安全性，之前使用锁是可以解决的，但是不够优雅不够好，使用起来比较麻烦。
+**直白点：** `通道（channnel）`就是为了解决在协程中数据的安全性，之前使用锁是可以解决的，但是不够优雅不够好，使用起来比较麻烦。
 
 <br/>
 
@@ -1132,7 +1137,7 @@ var name chan type
 // 举例：
 var intChan chan int （intChan 用于存放 int 数据）
 
-var mapChan chan maplint］string （mapChan 用于存放 maplint］string 类型）
+var mapChan chan map[int］string （mapChan 用于存放 map[int］string 类型）
 
 var perChan chan Person
 
@@ -1830,8 +1835,212 @@ func main {
 			｝
 	}
 }
+```
+
+
+- **在 select 中：**
+	- 多个 case 同时可读时：随机选择一个
+	- 若所有 case 都阻塞，且有 default：执行 default
+ 	- 从 缓冲 channel 中读取：
+  		- 只要缓冲区还有数据 → 可读
+    	- 缓冲区空 + 未关闭 → 阻塞（在 select 中表现为“不可选”）
+ 
+<br/>
+
+**Log:**
+
+```sh
+从 intChan 读取的数据 0
+从 stringChan 读取的数据 hello0
+从 intChan 读取的数据 1
+从 stringChan 读取的数据 hello1
+从 intChan 读取的数据 2
+从 stringChan 读取的数据 hello2
+从 intChan 读取的数据 3
+从 stringChan 读取的数据 hello3
+从 intChan 读取的数据 4
+从 stringChan 读取的数据 hello4
+从 intChan 读取的数据 5
+从 intChan 读取的数据 6
+从 intChan 读取的数据 7
+从 intChan 读取的数据 8
+从 intChan 读取的数据 9
+都取不到了，不玩了，程序员可以加入逻辑
+```
+
+- **说明：**
+	- 前 10 次中，intChan 和 stringChan 交替或随机被 select 选中
+ 	- 当 stringChan 的 5 个元素读完后：
+  		- 只剩 intChan 可选
+	- 当 intChan 也读完后：
+		- 两个 case 都阻塞
+  		- default 执行
+    	- return，程序结束
+
+ <br/>
+
+ **为什么 default 一定会被执行？**
+
+- **因为：**
+	- 你 没有关闭任何 channel
+	- 当两个 channel 都被读空后：
+		- <-intChan 阻塞
+ 		 - <-stringChan 阻塞
+    - select 发现 所有 case 都不可用
+    	- → 执行 default
+
+***
+<br/>
+
+**疑问：** `它会自动关闭吗？若是不关闭，后面在对channel进行写入数据会怎样?`
+
+<br/>
+
+**channel 会“自动关闭”吗？**
+
+**不会。**
+
+在 Go 中：
+
+> **channel 永远不会被自动关闭。**
+
+无论是：
+
+* 缓冲 channel
+* 非缓冲 channel
+* 被读空
+* 没有引用
+* 退出 `select`
+* 函数返回
+
+**都不会触发 channel 的自动关闭。**
+
+唯一合法的关闭方式只有一条：
+
+```go
+close(ch)
+```
+
+并且只能由**发送方**关闭。
+
+<br/>
+
+**不关闭 channel，后续再向该 channel 写入数据会怎样？**
+
+- **情况 1：channel 仍然存活（未 close）**
+
+这是**完全正常、且允许的**。
+
+```go
+ch := make(chan int, 10)
+
+// 先写
+for i := 0; i < 10; i++ {
+    ch <- i
+}
+
+// 被读空，但未关闭
+
+// 再写
+ch <- 100
+fmt.Println(<-ch) // 输出 100
+```
+
+结论：
+
+> **channel 被读空 ≠ channel 关闭**
+
+只要：
+
+* channel 没有被 `close`
+* 仍有 goroutine 持有它
+
+👉 **可以无限次继续写入和读取**
+
+<br/>
+
+- **情况 2：向已 close 的 channel 写入**
+
+这是**严重运行时错误**。
+
+```go
+close(ch)
+ch <- 1
+```
+
+运行结果：
 
 ```
+panic: send on closed channel
+```
+
+这是 Go 运行时直接抛出的 **panic**，无法忽略。
+
+<br/>
+
+**为什么你的 select 示例中“看起来像关闭了”？**
+
+你看到的是这个行为：
+
+```go
+select {
+case v := <-intChan:
+case v := <-stringChan:
+default:
+    return
+}
+```
+<br/>
+
+当两个 channel 都：
+
+* 已读空
+* 但未关闭
+
+<br/>
+
+此时：
+
+* `<-intChan` → 阻塞
+* `<-stringChan` → 阻塞
+* `select` 发现 **所有 case 阻塞**
+* → 执行 `default`
+
+这只是 **select 的调度行为**，**不是 channel 被关闭**
+<br/>
+
+**从“已关闭”的 channel 读取会发生什么？（对比）**
+
+```go
+close(ch)
+v := <-ch
+fmt.Println(v)
+```
+
+结果：
+
+* 立即返回
+* `v` 为该类型的 **零值**
+
+推荐写法：
+
+```go
+v, ok := <-ch
+if !ok {
+    // channel 已关闭
+}
+```
+
+
+<br/><br/>
+
+**什么时候可以不 close？**
+
+以下情况可以不 close：
+
+* channel 只用于 goroutine 生命周期内通信
+* 通过 `context / done channel` 控制退出
+* 使用 `select + default` 主动结束
 
 ***
 <br/>
