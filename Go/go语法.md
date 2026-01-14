@@ -6783,7 +6783,48 @@ CREATE TABLE user(id INT NOT NULL, name VARCHAR(20), PRIMARY KEY(ID));
 
 <br/>
 
+`sql.Open(driverName, dataSourceName string)` 中的数据源dataSourceName范例解析：
+
+```sh
+root:password@tcp(127.0.0.1:3306)/hg_mlc_db?charset=utf8mb4&parseTime=True&&loc=UTC
+│     │        │        │            │              │             │           └─ 时区设为本地（如 Asia/Shanghai）
+│     │        │        │            │              │             └─ 自动将 TIME/DATE 转为 Go 的 time.Time
+│     │        │        │            │              └─ 指定连接字符集为 utf8mb4（支持 emoji 等）
+│     │        │        │            └─ 要连接的数据库名（必须已存在！）
+│     │        │        └─ MySQL 服务器地址和端口
+│     │        └─ 使用 TCP 协议连接（也可用 unix socket）
+│     └─ 密码（明文，生产环境建议用配置或环境变量）
+└─ 用户名
 ```
+
+- **❌ 问题：loc=Local 使用服务器本地时区，在面向国际化的时候会有问题：**
+
+```sh
+loc=Local
+```
+这是最值得调整的部分。
+
+- `loc=Local` 表示 Go 程序使用 运行该程序的机器的本地时区（比如你服务器在上海，就是 Asia/Shanghai）。
+- 当你把时间存入数据库（尤其是 DATETIME 类型），MySQL 不会存储时区信息。
+- 如果你的用户来自不同时区（如纽约、伦敦、东京），而你又用 loc=Local 去解析或写入时间，会导致：
+- 同一个 UTC 时间，在不同部署环境下显示不同；
+- 数据混乱，难以做跨时区业务逻辑（如“用户看到的是自己当地时间”）。
+
+<br/>
+
+**DSN 中指定 loc=UTC**
+
+```go
+dsn := "...&loc=UTC"
+```
+- 所有时间在 Go 中以 time.Time（UTC）处理；
+- 存入数据库的是 UTC 时间；
+- 前端或业务层根据用户时区转换显示（如 t.In(time.FixedZone("Tokyo", 9*3600))）
+
+
+<br/>
+
+```go
 //  新建数据表user
 func TestMySQLV2_createTable() {
 	// 创建数据对象
