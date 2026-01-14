@@ -4,6 +4,7 @@
 	- [‌基本命令](#基本命令)
 		- [服务端启动](#服务端启动) 
 		- [启动redis客户端](#启动redis客户端)
+		- [启动redis服务后一定启动它的客户端吗](#启动redis服务后一定启动它的客户端吗)
 - [**协议**](#协议)
 - [**操作Redis**](#操作Redis)
 - [**十大数据类型**](#十大数据类型)
@@ -256,6 +257,168 @@ flushall // 删除所有
 
 set [key] [value] // 设置一条
 ```
+***
+<br/><br/><br/>
+> <h2 id="启动redis服务后一定启动它的客户端吗">启动redis服务后一定启动它的客户端吗</h2>
+**回答：不需要。**
+在你已经启动 **`redis-server`** 的前提下，**程序中使用 `GET` / `SET` 完全不需要再启动 `redis-cli` 客户端**。
+
+下面把**服务端 / 客户端 / 程序访问**三者的关系讲清楚，避免概念混淆。
+
+---
+<br/>
+
+**1️⃣ `redis-server` —— **真正的服务端（必须启动）**
+
+这是 Redis 的核心进程：
+
+* 负责：
+  * 内存数据存储
+  * Key 管理
+  * 网络监听（默认 6379）
+* **你的 Go 程序是直接连它的**
+
+<br/>
+
+启动示例：
+
+```bash
+redis-server
+# 或
+redis-server /usr/local/etc/redis.conf
+```
+
+只要它在跑，你的 Go 程序就能 `Get / Set`。
+
+<br/>
+
+**2️⃣ `redis-cli` —— **命令行调试工具（可选）**
+
+`redis-cli` 只是一个 **人用的客户端工具**：
+
+* 用途：
+  * 手动查看数据
+  * 调试 key 是否存在
+  * 测试 Redis 是否正常
+* **和你的 Go 程序没有任何依赖关系**
+
+<br/>
+
+示例：
+
+```bash
+redis-cli
+> GET user:code:xxx
+```
+
+👉 不启动 `redis-cli`，**Go 程序照样正常访问 Redis**。
+
+<br/>
+
+**3️⃣ 你的 Go 程序 —— **业务客户端**
+
+```text
+Go 程序
+   |
+   | TCP 6379
+   v
+redis-server
+```
+
+* Go 程序内部通过：
+
+  * `go-redis`
+  * 连接池
+* 直接和 `redis-server` 通信
+* 不需要 `redis-cli` 参与
+
+---
+<br/>
+
+**为什么很多人会误以为“要启动 redis-cli”？**
+
+**❌ 误解 1：redis-cli 像 MySQL client 一样“必须存在”**
+
+实际上：
+
+* MySQL CLI：也是调试工具
+* Redis CLI：也是调试工具
+
+**它们都不是服务的一部分**
+
+<br/>
+
+**❌ 误解 2：看到 redis-server 启动在前台**
+
+```bash
+redis-server
+```
+
+此时终端被占用，另一个终端里用：
+
+```bash
+redis-cli
+```
+
+让人误以为「cli 是必须配套的」
+
+实际上：
+
+* redis-server：必须
+* redis-cli：只是你开的一个“观察窗口”
+
+<br/>
+
+**❌ 误解 3：程序 Get 失败，于是去启动 redis-cli**
+
+如果你遇到：
+
+```text
+redis: connection pool: failed to dial
+```
+
+**根因一定不是没启动 redis-cli**，而是：
+
+* redis-server 没启动
+* 地址/端口错误
+* client 初始化错误
+
+---
+<br/>
+
+**什么时候“需要”用 redis-cli？**
+
+仅在以下场景（开发 / 运维）：
+
+**1️⃣ 验证 Redis 是否启动成功**
+
+```bash
+redis-cli ping
+# PONG
+```
+
+<br/>
+
+**2️⃣ 手动查看 / 清理数据**
+
+```bash
+redis-cli
+> KEYS *
+> GET xxx
+> DEL xxx
+```
+
+<br/>
+
+**3️⃣ 排查程序问题**
+
+对比：
+
+* 程序写入成功了吗？
+* TTL 是否正确？
+
+
+
 
 
 <br/><br/><br/>
