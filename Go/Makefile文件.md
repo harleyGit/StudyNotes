@@ -84,6 +84,31 @@ help:
 	@echo "make test: run go tests"
 ```
 
+<br/>
+
+**如下使用案例：**
+
+- **初始化**
+
+```sh
+make db-init
+```
+
+<br/>
+
+**执行任意 SQL**
+```sh
+make db-run SQL=migrations/add_index.sql
+```
+
+<br/>
+
+**进入 MySQL**
+
+```sh
+make db-shell
+```
+
 ***
 <br/> 
 

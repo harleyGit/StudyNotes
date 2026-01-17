@@ -1,5 +1,6 @@
 > <h1 ></h3>
 - [**Docker介绍**](#Docker介绍)
+- [Dockerfile文件语法介绍](#Dockerfile文件语法介绍)
 - [docker大致命令介绍](#docker大致命令介绍)
 - [Docker使用](#Docker使用)
 - [加快镜像下载,配置国内镜像](#加快镜像下载,配置国内镜像)
@@ -140,9 +141,159 @@ CMD [ "bash", "-c", "/go/GopherBook/chapter11/votes;" ]
 
 &emsp; 对于个人开发者，如果有自己私有的服务器，那么可以配合DaoCloud(https://www.daocloud.io/)搭建流水线，自动同步远端代码进行测试、构建等环节，自动构建镜像、部署容器。
 
-***
+
 <br/><br/><br/>
-> <h2 id="docker大致命令介绍">docker大致命令介绍</h2>
+
+***
+<br/>
+
+> <h1 id="Dockerfile文件语法介绍">Dockerfile文件语法介绍</h1>
+
+
+```dockerfile
+FROM golang:1.23-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/main .
+# 不复制 .env！
+CMD ["./main"]
+```
+
+&emsp; 这段 Dockerfile 是用来构建一个 Go（Golang）语言编写的程序，并将其打包成一个轻量级的 Docker 镜像。
+
+&emsp; 使用了 **多阶段构建（multi-stage build）** 技术。意思是：  
+- 第一阶段（叫 `builder`）专门用来**编译代码**（需要 Go 编译器等工具）。  
+- 第二阶段只包含**运行程序所需的最小环境**（不需要编译器，更小、更安全）。
+
+这样做的好处是：最终镜像非常小，没有多余的开发工具或源代码。
+
+***
+<br/>
+
+**第一阶段：构建阶段（Builder Stage）**
+
+```dockerfile
+FROM golang:1.23-alpine AS builder
+```
+- 从官方的 `golang:1.23-alpine` 镜像开始构建。
+  - `golang:1.23-alpine`：这是一个预装了 Go 1.23 版本的 Alpine Linux 系统镜像（Alpine 是一个超轻量的 Linux 发行版）。
+  - `AS builder`：给这个阶段起个名字叫 `builder`，后面可以用这个名字引用它。
+
+<br/>
+
+```dockerfile
+WORKDIR /app
+```
+- 设置工作目录为容器内的 `/app` 文件夹。
+- 后续所有命令（如 COPY、RUN）都会在这个目录下执行。
+
+<br/>
+
+```dockerfile
+COPY go.mod go.sum ./
+```
+
+- 把你本地项目根目录下的 `go.mod` 和 `go.sum` 文件复制到容器的 `/app/` 目录中。
+  - 这两个文件定义了项目的依赖（类似 Python 的 requirements.txt）。
+  - 先只复制这两个文件，是为了利用 Docker 的**缓存机制**：如果依赖没变，下次构建时可以跳过下载依赖这一步，加快速度。
+
+<br/>
+
+```dockerfile
+RUN go mod download
+```
+- 在容器里运行命令：下载项目所需的所有 Go 模块（依赖包）。
+- 这些依赖会被缓存在容器中，供下一步编译使用。
+
+<br/>
+
+```dockerfile
+COPY . .
+```
+- 把你本地项目**所有文件**（包括源代码 `.go` 文件等）复制到容器的 `/app/` 目录。
+- 注意：此时 `.env` 文件也会被复制进来（但后面不会带到最终镜像中，见下文）。
+
+<br/>
+
+```dockerfile
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+```
+- 执行 Go 编译命令：
+  - `CGO_ENABLED=0`：禁用 CGO（这样编译出的是纯静态二进制文件，不依赖系统 C 库，更适合在 Alpine 等精简系统中运行）。
+  - `GOOS=linux`：明确指定目标操作系统是 Linux（虽然默认就是，但显式写出更保险）。
+  - `go build -o main .`：把当前目录（`.`）的 Go 代码编译成一个名为 `main` 的可执行文件。
+- 编译完成后，`/app/main` 就是你的程序二进制文件。
+
+✅ 到此为止，第一阶段结束。我们得到了一个可执行文件 `main`。
+
+---
+<br/>
+
+- **🚀 第二阶段：运行阶段（Runtime Stage）**
+
+```dockerfile
+FROM alpine:latest
+```
+- 开始一个**全新的镜像构建阶段**，这次只用最基础的 `alpine:latest`（一个只有几 MB 的极简 Linux 系统）。
+- **注意：这个阶段和上面的 builder 完全隔离**，没有 Go、没有源代码、没有依赖，非常干净。
+
+```dockerfile
+RUN apk --no-cache add ca-certificates
+```
+- 在 Alpine 中运行命令：安装 `ca-certificates` 包。
+  - 这个包包含 HTTPS 通信所需的根证书（比如你的程序要调用外部 API，就需要它来验证 SSL 证书）。
+  - `--no-cache` 表示不保留 apk 的缓存，让镜像更小。
+
+<br/>
+
+```dockerfile
+WORKDIR /root/
+```
+- 设置工作目录为 `/root/`（也可以设为 `/app` 或其他，这里作者选了 `/root/`）。
+
+```dockerfile
+COPY --from=builder /app/main .
+```
+- 从第一阶段（`builder`）中，把编译好的 `/app/main` 可执行文件复制到当前阶段的 `/root/` 目录下。
+- **关键点**：只复制可执行文件，**不复制源代码、.env、go.mod 等任何其他文件**！
+  - 所以你注释说“不复制 .env！”是对的——`.env` 虽然在 builder 阶段被 COPY 进去了，但**不会进入最终镜像**。
+
+```dockerfile
+CMD ["./main"]
+```
+- 设置容器启动时默认运行的命令：执行 `./main`。
+- 当你运行 `docker run your-image` 时，就会自动启动这个 Go 程序。
+
+<br/>
+---
+
+- **✅ 总结整个流程：**
+
+- 1.**第一阶段**（builder）：
+	- 用带 Go 编译器的镜像；
+	- 下载依赖、编译代码，生成 `main` 可执行文件。
+
+- 2.**第二阶段**（最终镜像）：
+	- 用超小的 Alpine 镜像；
+	- 只复制编译好的 `main` 文件；
+	- 安装必要的证书；
+	- 启动程序。
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="docker大致命令介绍">docker大致命令介绍</h1>介绍</h2>
 
 ![go.0.0.75.png](./../Pictures/go.0.0.75.png)
 

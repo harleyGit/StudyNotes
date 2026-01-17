@@ -164,8 +164,10 @@
 - [go性能分析](./Go/go性能分析.md)
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
 - [**‌分布式协调服务ZooKeeper**](./Go/分布式协调服务ZooKeeper.md)
+- [Go工程文件配置](./Go/Go工程文件配置.md)
 - [**‌发版**](./Go/发版.md)
 - [Makefile文件](./Go/Makefile文件.md)
+- [K8s部署](/Go/K8s部署.md)
 - **库**
 	- [源码00](./Go/源码.md)
 	- [Go标准库](./Go/Go标准库.md)
