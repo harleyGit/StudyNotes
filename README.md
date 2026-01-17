@@ -165,6 +165,7 @@
 - [**go_swagger(API文档编写)**](./Go/go_swagger.md)
 - [**‌分布式协调服务ZooKeeper**](./Go/分布式协调服务ZooKeeper.md)
 - [**‌发版**](./Go/发版.md)
+- [Makefile文件](./Go/Makefile文件.md)
 - **库**
 	- [源码00](./Go/源码.md)
 	- [Go标准库](./Go/Go标准库.md)
