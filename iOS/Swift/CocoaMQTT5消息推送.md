@@ -1,5 +1,6 @@
 - [**‌CocoaMQTT5**](#CocoaMQTT5介绍)
 - [MQTT核心概念](#MQTT核心概念)
+- [CocoaMQTT5Delegate代理方法](#CocoaMQTT5Delegate代理方法)
 - GPT资料：https://chatgpt.com/c/6965ee06-3a08-8323-9f66-246d7a755526
 
 
@@ -225,5 +226,332 @@ mqtt.disconnect()
 
 如果你只需要 MQTT 3.1.1 的功能，可以用 `CocoaMQTT`；
 如果要支持 **MQTT v5** 的属性/增强功能，就选 `CocoaMQTT5`。
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="CocoaMQTT5Delegate代理方法">CocoaMQTT5Delegate代理方法</h1>
+
+
+```swift
+extension MQTTManager: CocoaMQTTDelegate {
+
+    func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
+        print("MQTT connected: \(ack)")
+        
+        // 示例：订阅设备状态
+        subscribe(topic: "device/+/status")
+    }
+
+    func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
+        let topic = message.topic
+        let payload = message.string ?? ""
+
+        print("📩 [\(topic)] \(payload)")
+
+        // 在这里分发给 ViewModel / Combine / Notification
+    }
+
+    func mqtt(_ mqtt: CocoaMQTT, didDisconnect reason: CocoaMQTTDisconnectReason, error: Error?) {
+        print("MQTT disconnected")
+    }
+
+    func mqtt(_ mqtt: CocoaMQTT, didPublishMessage message: CocoaMQTTMessage, id: UInt16) {}
+    func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopics success: NSDictionary, failed: [String]) {}
+    func mqtt(_ mqtt: CocoaMQTT, didUnsubscribeTopics topics: [String]) {}
+    func mqttDidPing(_ mqtt: CocoaMQTT) {}
+    func mqttDidReceivePong(_ mqtt: CocoaMQTT) {}
+}
+```
+
+
+<br/>
+
+- **1. didConnectAck`**
+
+```swift
+func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck)
+```
+
+- 触发时机
+	* **客户端与 MQTT Broker 建立 TCP + MQTT 协议连接完成后**
+	* 收到 **CONNACK** 报文时触发
+	* 表示“连接结果确认”，不是开始 connect 的回调
+
+- **关键参数**
+	* `ack`: `CocoaMQTTConnAck`
+	  * `.accept`：连接成功
+	  * `.badUsernameOrPassword`
+	  * `.notAuthorized`
+	  * `.serverUnavailable`
+	  * 等
+
+- **典型用途**
+	* 判断是否真正连上 Broker
+	* **在此之后才能：**
+	  * `subscribe`
+	  * `publish`
+	* 初始化会话状态
+
+<br/>
+
+**生产级实践**
+
+```swift
+if ack == .accept {
+    subscribe(topic: "device/+/status")
+    subscribe(topic: "user/\(userId)/notify")
+} else {
+    // 登录失败、鉴权失败、账号异常
+}
+```
+
+> ⚠️ 不要在 `connect()` 之后立刻订阅，必须等到 `didConnectAck(.accept)`
+
+<br/>
+
+- **2.`didReceiveMessage`**
+
+```swift
+func mqtt(_ mqtt: CocoaMQTT,
+          didReceiveMessage message: CocoaMQTTMessage,
+          id: UInt16)
+```
+- **触发时机**
+	* 客户端 **收到 Broker 推送的 PUBLISH 消息**
+	* 来自你订阅过的 Topic
+
+- **关键参数**
+	* `message.topic`：消息主题
+	* `message.payload` / `message.string`
+	* `message.qos`
+	* `message.retained`
+
+- **典型用途**
+	* 处理设备上报
+	* 处理状态变化
+	* 处理告警 / 控制回执
+
+- **生产级实践**
+	- **只做分发，不直接写业务逻辑**
+
+```swift
+mqttEventSubject.send(
+    MQTTEvent(topic: message.topic, payload: payload)
+)
+```
+
+然后：
+
+* ViewModel（Combine）
+* 或 NotificationCenter
+* 或 Redux / Store
+
+> ⚠️ 不要在这里做 JSON 大解析或耗时操作
+
+<br/>
+
+- **3. `didDisconnect`**
+
+```swift
+func mqtt(_ mqtt: CocoaMQTT,
+          didDisconnect reason: CocoaMQTTDisconnectReason,
+          error: Error?)
+```
+
+- **触发时机**
+* MQTT 连接断开
+	* 网络断开
+	* Broker 主动断开
+	* 心跳超时
+	* 调用 `disconnect()`
+
+- **关键参数**
+	* `reason`：
+		* `.normal`
+		* `.error`
+		* `.timeout`
+		* `.keepAliveTimeout`
+		* `error`：底层 Socket 错误
+
+- **典型用途**
+	* 重连策略
+	* 更新 UI 状态
+	* 设备离线处理
+
+- **生产级实践**
+
+```swift
+scheduleReconnectWithBackoff()
+```
+
+常见策略：
+
+* 指数退避（1s / 2s / 4s / 8s）
+* 前后台切换暂停重连
+* 网络可达性恢复后再重连
+
+<br/>
+
+- **4. `didPublishMessage`**
+
+```swift
+func mqtt(_ mqtt: CocoaMQTT,
+          didPublishMessage message: CocoaMQTTMessage,
+          id: UInt16)
+```
+
+- **触发时机**
+	* **客户端成功将消息发送给 Broker**
+	* 仅表示“已发出”，不是对端已处理
+
+- **典型用途**
+	* 调试日志
+	* QoS1 / QoS2 状态追踪
+	* 消息发送统计
+
+- **生产级实践**
+	* 很多项目 **可以留空**
+	* 对 IPC 控制类消息有用
+
+<br/>
+
+- **5. `didSubscribeTopics`**
+
+```swift
+func mqtt(_ mqtt: CocoaMQTT,
+          didSubscribeTopics success: NSDictionary,
+          failed: [String])
+```
+
+- **触发时机**
+	* Broker 对 SUBSCRIBE 请求返回 SUBACK
+
+- **关键参数**
+	* `success`：订阅成功的 topic → qos
+	* `failed`：订阅失败的 topic
+
+- **典型用途**
+	* 确认关键 topic 是否成功订阅
+	* 容错处理
+
+- **生产级实践**
+
+```swift
+if failed.contains("device/+/status") {
+    // 记录错误，可能权限不足
+}
+```
+
+<br/>
+
+- **`didUnsubscribeTopics`**
+
+```swift
+func mqtt(_ mqtt: CocoaMQTT,
+          didUnsubscribeTopics topics: [String])
+```
+
+- **触发时机**
+	* UNSUBSCRIBE 成功后
+
+- **典型用途**
+	* 页面销毁时取消订阅
+	* 切换设备 / 用户
+
+- **生产级实践**
+	* 多设备切换时清理旧订阅
+
+<br/> 
+
+- **`mqttDidPing`**
+
+```swift
+func mqttDidPing(_ mqtt: CocoaMQTT)
+```
+
+- **触发时机**
+	* 客户端发送 **PINGREQ**（心跳）
+
+- **典型用途**
+	* 调试
+	* 连接存活监控
+
+- **生产级建议**
+	* 一般不需要处理
+	* 不要写业务逻辑
+
+<br/>
+
+- **`mqttDidReceivePong`**
+
+```swift
+func mqttDidReceivePong(_ mqtt: CocoaMQTT)
+```
+
+- **触发时机**
+	* Broker 回复 **PINGRESP**
+
+- **典型用途**
+	* 判断连接是否健康
+
+- **生产级实践**
+	* 可作为“活跃连接”标记
+	* 心跳异常 → 触发重连
+
+<br/>
+
+- **企业级 IPC / IoT 项目中的推荐分层**
+
+```text
+CocoaMQTTDelegate
+        ↓
+MQTTManager（只做连接 & 分发）
+        ↓
+Combine / Notification
+        ↓
+ViewModel / DeviceManager
+        ↓
+UI / 设备状态机
+```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id=""></h1>
 
 
