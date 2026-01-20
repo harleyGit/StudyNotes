@@ -27,6 +27,7 @@
 			- [放大招，容器删除重新来	](#放大招，容器删除重新来	)
 	- [4.CI中数据库变更流程](#4.CI中数据库变更流程)
 	- [GO工程的实践使用](#GO工程的实践使用)
+    - [CI和PR概念理解](#CI和PR概念理解) 
 
 
 <br/><br/><br/>
@@ -2229,6 +2230,224 @@ on: [pull_request]  # 只要有人提 PR（合并请求），就自动运行这�
 
 <br/>
 
+```yaml
+jobs:
+  migrate-check:
+```
+
+意思是：
+
+* 这是一个 Job（任务）
+* 名字叫 `migrate-check`
+* 专门用来做 **数据库迁移检查**
+
+<br/>
+
+**运行环境是什么？**
+
+```yaml
+runs-on: ubuntu-latest
+```
+
+含义：
+
+> GitHub 给你开一台 **全新的 Ubuntu Linux 虚拟机**
+
+⚠️ 注意：
+
+* 不是你的 Mac
+* 不是服务器
+* 每次都是 **干净的系统**
+
+<br/>
+
+<br/>
+
+**MySQL 是怎么来的？（重点）**
+
+- 1️⃣ services 是什么？
+
+```yaml
+services:
+  mysql:
+```
+
+这是 GitHub Actions 的 **容器服务** 功能：
+
+> 在这台 Ubuntu 虚拟机旁边，再起一个 **MySQL Docker 容器**
+
+<br/>
+
+- **2️⃣ MySQL 配置逐行解释**
+
+```yaml
+image: mysql:8.0
+```
+
+* 使用官方 MySQL 8.0 镜像
+* 相当于：`docker run mysql:8.0`
+
+<br/>
+
+```yaml
+env:
+  MYSQL_ROOT_PASSWORD: root
+  MYSQL_DATABASE: app_db
+```
+
+等价于：
+
+```bash
+root 密码 = root
+启动时自动创建数据库 app_db
+```
+
+<br/>
+
+```yaml
+ports:
+  - 3306:3306
+```
+
+含义：
+
+> MySQL 容器的 3306 端口
+> 映射到虚拟机的 3306 端口
+
+所以后面你才能用：
+
+```text
+tcp(localhost:3306)
+```
+
+<br/>
+
+- **3️⃣ health-check 是干嘛的？**
+
+```yaml
+options: >-
+  --health-cmd="mysqladmin ping -proot"
+  --health-interval=5s
+  --health-retries=5
+```
+
+意思是：
+
+* 每 5 秒执行一次 `mysqladmin ping`
+* 用 root/root 连接
+* 最多重试 5 次
+* **只有 MySQL 真正启动成功后，后续步骤才会执行**
+
+否则 CI 会直接失败。
+
+<br/>
+---
+<br/>
+
+**steps：真正执行的步骤**
+
+- **Step 1️⃣ 拉取你的代码**
+
+```yaml
+- uses: actions/checkout@v4
+```
+
+意思：
+
+> 把你的 Go 项目代码 clone 到这台虚拟机
+
+否则后面找不到：
+
+```text
+migrations/
+```
+
+<br/>
+
+-  **2️⃣ 安装 migrate 工具**
+
+```yaml
+- name: Install migrate
+  run: |
+    curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz \
+    | tar xvz
+    sudo mv migrate /usr/local/bin/
+```
+
+你在本地可能是：
+
+```bash
+brew install golang-migrate
+```
+
+但在 CI：
+
+* 没有 brew
+* 所以 **直接下载二进制文件**
+
+最终效果：
+
+```bash
+migrate -version
+```
+
+可以直接用。
+
+<br/>
+
+**3️⃣ 执行 migrate up（核心）**
+
+```yaml
+- name: Run migrate up
+  run: |
+    migrate -path migrations \
+    -database "mysql://root:root@tcp(localhost:3306)/app_db" \
+    up
+```
+
+翻译成人话：
+
+> 用 `migrations/` 目录里的 SQL
+> 连上 MySQL
+> **按顺序执行所有 `.up.sql` 文件**
+
+如果有任何问题：
+
+* SQL 语法错
+* 表已存在
+* 外键错误
+
+➡️ **CI 直接失败，PR 不能合并**
+
+<br/>
+
+- **4️⃣ 执行 migrate down 1**
+
+```yaml
+- name: Run migrate down
+  run: |
+    migrate -path migrations \
+    -database "mysql://root:root@tcp(localhost:3306)/app_db" \
+    down 1
+```
+
+含义：
+
+> **回滚最近一次迁移**
+
+验证的是：
+
+* 你的 `.down.sql` 是否真的可用
+* 不会破坏数据库结构
+
+⚠️ 非常重要
+很多人只写 `.up.sql`，`.down.sql` 是坏的
+这个步骤专门抓这种问题
+
+
+
+<br/>
+
 - **启动一个临时 MySQL 数据库（干净、隔离）**
 
 ```yaml
@@ -2356,6 +2575,101 @@ migrate -path migrations -database "mysql://root:root@tcp(localhost:3306)/app_db
 ```
 
 ✅ 如果这两个命令都成功，说明你的 SQL 是合格的！
+
+---
+<br/>
+
+**这套流程整体在干嘛？（一句话总结）**
+
+```text
+PR 提交
+ ↓
+启动 Ubuntu
+ ↓
+启动 MySQL 8.0
+ ↓
+安装 migrate
+ ↓
+执行所有 up.sql
+ ↓
+回滚一次 down.sql
+ ↓
+全部成功 → PR 通过
+任何一步失败 → PR 红灯
+```
+
+---
+<br/>
+
+**你作为 Go 工程该如何“使用”它？**
+
+- **1️⃣ 你需要具备的目录结构**
+
+```text
+project-root/
+├── migrations/
+│   ├── 0001_xxx.up.sql
+│   ├── 0001_xxx.down.sql
+│   ├── 0002_xxx.up.sql
+│   └── 0002_xxx.down.sql
+├── go.mod
+└── .github/
+    └── workflows/
+        └── db.yml
+```
+
+<br/> 
+
+**2️⃣ 本地先跑通（非常重要）**
+
+在你 Mac 上先确认：
+
+```bash
+migrate \
+  -path migrations \
+  -database "mysql://root:root@tcp(127.0.0.1:3306)/app_db" \
+  up
+```
+
+否则 CI 一定会失败。
+
+<br/>
+
+- **3️⃣ PR 才会触发（不是 push 就跑）**
+
+这个配置 **不会**在：
+
+* 本地
+* 直接 push 到 main
+
+运行，**只在 PR 阶段跑**。
+
+---
+<br/>
+
+- **Q1：它会影响线上数据库吗？**
+
+❌ 不会
+这是一个 **临时 MySQL 容器**，跑完即销毁。
+
+<br/>
+
+- **Q2：能不能改成 dev / test / prod？**
+
+可以，后续通常会做：
+
+* 只在 PR 检查 migration
+* prod 用人工审批 + release pipeline
+
+<br/> 
+
+**Q3：这是不是“自动建表”？**
+
+不是自动建表，而是：
+
+> **自动验证你的建表 SQL 是否正确**
+
+
 
 ---
 <br/>
@@ -2607,6 +2921,204 @@ A：**绝对不能改！** 一旦合并到主干，migration 文件就是“历�
 
 **Q：如果 down 无法实现怎么办？**  
 A：比如删除了字段，数据丢了就不能回滚。这时 `.down.sql` 可以写注释说明不可逆，但需要团队评审通过，并在 CI 中特殊处理（比如跳过 down 测试——不推荐）。
+
+
+> <h3 id= "CI和PR概念理解">CI和PR概念理解</h3>
+
+## 一、CI 是什么？（非常关键）
+
+### 1️⃣ CI 的全称
+
+**CI = Continuous Integration（持续集成）**
+
+直译很抽象，工程里一句话解释：
+
+> **每次代码“准备合并”时，自动帮你做一轮检查，防止把坏代码合进去**
+
+---
+
+### 2️⃣ CI 在实际工程中干什么？
+
+在 Go 项目中，CI 通常会自动执行：
+
+* `go test ./...`
+* `go vet`
+* `go fmt` / `goimports`
+* **数据库 migrate 检查（你现在这个）**
+* 构建二进制文件
+* Docker build
+
+这些操作**不是你手动跑**，而是：
+
+> **GitHub 在服务器上，替你跑**
+
+---
+
+### 3️⃣ 你现在这个 `db.yml` 属于哪类 CI？
+
+它属于：
+
+> **CI 中的数据库迁移校验任务**
+
+也就是：
+
+* 不跑你的 Go 服务
+* 只验证数据库脚本是否可靠
+
+---
+
+## 二、PR 是什么？是不是“每次提交代码”？
+
+### 1️⃣ PR 的全称
+
+**PR = Pull Request（拉取请求）**
+
+意思不是“提交代码”，而是：
+
+> **请求把你的代码，从一个分支，合并到另一个分支**
+
+---
+
+### 2️⃣ 提交（commit） vs PR（非常容易混）
+
+| 行为           | 含义             | 会不会触发 CI |
+| ------------ | -------------- | -------- |
+| `git commit` | 本地保存一次修改       | ❌        |
+| `git push`   | 推到远端分支         | ❌（取决于配置） |
+| **创建 PR**    | 请求合并代码         | ✅        |
+| 更新 PR        | 往 PR 分支继续 push | ✅        |
+
+👉 **CI 通常绑定的是 PR，而不是 commit**
+
+---
+
+### 3️⃣ 一个完整流程（真实开发）
+
+假设你在做一个 Go 项目：
+
+```text
+main       ← 稳定分支
+feature/db-migrate  ← 你正在开发
+```
+
+#### 步骤：
+
+```bash
+# 1. 创建功能分支
+git checkout -b feature/db-migrate
+
+# 2. 写 Go 代码 / SQL
+git commit -m "add user table"
+
+# 3. 推到远端
+git push origin feature/db-migrate
+```
+
+此时：
+
+❌ **还没有 CI**
+
+---
+
+#### 4️⃣ 在 GitHub 页面点 “Create Pull Request”
+
+这一步才是 **PR**
+
+```text
+feature/db-migrate  →  main
+```
+
+此时：
+
+✅ **CI 自动开始跑**
+
+* db.yml
+* test.yml
+* build.yml
+
+---
+
+## 三、所以回答你的问题（直接结论）
+
+### ❓「PR 指的是我每次 Go 工程项目中提交的代码吗？」
+
+**不是。**
+
+更准确说法是：
+
+> **PR 是“一组提交”的集合，用来申请合并到主分支**
+
+---
+
+### ❓「CI 是不是每次我写代码就跑？」
+
+不是。
+
+> **CI 通常只在 PR / merge / release 这些“关键节点”运行**
+
+这样做的目的：
+
+* 节省资源
+* 防止你每次保存文件都跑一堆检查
+
+---
+
+## 四、结合你现在的 db.yml 再看一遍
+
+```yaml
+on: [pull_request]
+```
+
+精确含义是：
+
+> **只有当你创建或更新 PR 时**
+>
+> **才执行数据库迁移检查**
+
+而不是：
+
+* 本地
+* 每次 commit
+* 每次 push
+
+---
+
+## 五、用一句“工程黑话”总结
+
+> **CI 是自动质检**
+>
+> **PR 是送检入口**
+
+你这个 `db.yml` 就是：
+
+> **“数据库迁移的自动质检工位”**
+
+---
+
+## 六、你现在已经进入“正规工程阶段”
+
+从你问的内容来看，你已经在接触：
+
+* Go 后端工程化
+* 数据库迁移规范
+* CI/CD 基础设施
+
+这是从「写代码」走向「写系统」的关键一步。
+
+---
+
+## 七、下一步我建议你继续学的顺序（非常实用）
+
+1️⃣ **PR + CI 状态为什么能阻止合并**
+2️⃣ 在 CI 中跑 `go test`
+3️⃣ 本地如何模拟 CI（Docker Compose）
+4️⃣ CI 失败时如何快速定位问题
+5️⃣ CD（自动部署）和 CI 的区别
+
+你只要告诉我：
+👉 **“下一步我想学第 X 个”**
+我就按你现在的水平继续往下讲。
+
 
 
 
