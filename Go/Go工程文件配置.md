@@ -19,6 +19,12 @@
 	- [Go中自动检测migrate状态-只读，绝不改表](#Go中自动检测migrate状态-只读，绝不改表)	
 	- [2.多环境配置拆分【dev/test/prod】](#2.多环境配置拆分【dev/test/prod】)
 	- [3.Docker+MySQL+migrate一体化](#3.Docker+MySQL+migrate一体化)
+	- [问题：踩坑记录](#问题：踩坑记录)
+	- [文件路径不正确](#文件路径不正确)
+	- [拉取镜像失败](#拉取镜像失败)
+	- [问题模块：数据库迁移文件](#问题模块：数据库迁移文件)
+	- [xx.sql文件内容为空](#xx.sql文件内容为空) 
+		- [放大招，容器删除重新来	](#放大招，容器删除重新来	)
 
 
 <br/><br/><br/>
@@ -1207,6 +1213,18 @@ CMD ["./app"]
 **3️⃣ 启动一切**
 
 ```bash
+pwd                                                                 
+/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO
+
+cd /Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO #工程根目录
+
+# 清理构建缓存
+docker builder prune -a
+
+# 或强制不使用缓存重建
+docker-compose -f config/docker/hg_docker_compose.dev.yml up --build --no-cache
+
+
 docker-compose -f config/docker/hg_docker_compose.dev.yml up --build
 ```
 
@@ -1217,6 +1235,863 @@ MySQL → migrate → Go
 ```
 
 上述[`hg_docker_compose.dev.yml 和·Dockerfile详解请看这里`](./Docker.md#案例：本地用Docker一次性启动)
+
+
+***
+<br/><br/><br/>
+> <h2 id="问题：踩坑记录"> 问题：踩坑记录 </h2>
+
+在执行上述的`docker-compose -f config/docker/hg_docker_compose.dev.yml up --build‌`时候遇到很多问题，花了2天的时间来处理，现在记录下，避免后面踩坑。
+
+
+<br/><br/>
+> <h3 id="文件路径不正确">文件路径不正确</h3>
+
+一开始在工程根目录 `./src/MLC_GO` 执行的指令是：
+
+```sh
+docker-compose up --build
+```
+
+提示：
+
+```sh
+no configuration file provided: not found
+```
+
+<br/>
+
+原因是：我的`‌hg_docker_compose.dev.yml`文件在
+
+```sh
+ ./src/MLC_GO/config/docker/
+```
+
+所以会提示报错。
+
+后面显示指定配置文件，命令改为：
+
+```sh
+docker-compose -f config/docker/hg_docker_compose.dev.yml up --build
+```
+
+<br/><br/>
+
+**问题：工程中Dockerfile文件路径配置**
+
+在 `hg_docker-compose.dev.yml ` 中明确指定 上下文（context） 和 Dockerfile 路径：
+```
+yaml
+services:
+  app:
+    build:
+      context: ../../          # 从 compose 文件位置回退到 myProject/
+      dockerfile: Dockerfile   # Dockerfile 在 myProject/ 下
+    # ... 其他配置
+```
+- `../../` 是因为：
+- 当前 compose 文件路径：`myProject/config/docker/hg_docker-compose.dev.yml`
+- 所以 ../../ = myProject/
+
+
+<br/><br/>
+
+**问题：env 文件找不到**
+
+```text
+env file .../hg_debug.env not found: stat ... no such file or directory
+```
+✅ 原因：
+
+`hg_docker-compose.dev.yml` 中写了类似这样的配置：
+```yaml
+services:
+  app:
+    env_file:
+      - ./../env_configs/hg_debug.env
+```
+**但注意⁉️：** `Docker Compose` 在解析 env_file 路径时，是以 compose 文件所在目录为基准的相对路径！
+
+<br/>
+
+**工程目录：**
+
+```sh
+MLC_GO/
+├── config/
+│   ├── env_configs/
+│   │   └── hg_debug.env     ← 真实位置
+│   └── docker/
+│       └── hg_docker-compose.dev.yml  ← compose 文件在这里
+├── cmd/
+├── go.mod
+└── Dockerfile
+```
+
+<br/><br/>
+> <h3 id="拉取镜像失败">拉取镜像失败</h3>
+
+```sh
+执行后出现如下错误：
+[+] Building 32.5s (2/2) FINISHED                                                                        docker:desktop-linux 
+ => [app internal] load build definition from Dockerfile                                                                 0.0s
+ => => transferring dockerfile: 249B                                                                                     0.0s
+ => ERROR [app internal] load metadata for docker.io/library/golang:latest                                              32.5s 
+------
+[+] Running 0/1l] load metadata for docker.io/library/golang:latest:
+ ⠦ Service app  Building                                                                                                32.6s 
+failed to solve: golang:latest: failed to resolve source metadata for docker.io/library/golang:latest: failed to do request: Head "https://hub-mirror.c.163.com/v2/library/golang/manifests/latest?ns=docker.io": EOF
+```
+
+因为一开始用的是阿里的，网上看了发现 **阿里的公共的还是私人的拉取镜像**都不能用了。
+
+**还有科大的，网易云的也不行。**
+
+后面就在网上找了一个，如下配置：
+
+```json
+{
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "experimental": false,
+  "features": {
+    "buildkit": true
+  },
+  "registry-mirrors": [
+    "https://docker.xuanyuan.me",
+    "https://dockerproxy.com",
+    "https://mirror.ccs.tencentyun.com",
+    "https://mirror.baidubce.com"
+  ]
+}
+```
+
+![go.0.1.0.png](./../Pictures/go.0.1.0.png)
+
+但是还有问题，因为当初使用了**`VPN`**，所以猜想是不是需要终端挂代理，然后在执行呢？就试了下：
+
+```sh
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7890
+
+docker-compose -f config/docker/hg_docker_compose.dev.yml up --build
+```
+
+然后这个问题解决了，最好是将`‌ "registry-mirrors": []`，这个就是表示用国外的，很慢的，若是有代理就很快啦。 接着有出现其他问题。继续解决！！
+
+<br/>
+
+**Dockerfile文件中的Go版本：**
+
+```Dockerfile
+# 构建阶段
+FROM golang:1.23 AS builder
+
+ENV GOPROXY=https://goproxy.cn,direct
+WORKDIR /app
+……
+…
+```
+
+**验证是否修复**
+
+运行：
+
+```bash
+
+# 手动测试拉取镜像
+docker pull golang:1.22
+docker pull alpine:3.20
+```
+
+
+<br/><br/>
+> <h3 id="问题模块：数据库迁移文件">问题模块：数据库迁移文件</h3>
+
+**错误提示：**
+
+```
+mysql-1    | 2026-01-18T09:36:19.563530Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.44'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+migrate-1  | error: first .: file does not exist
+migrate-1 exited with code 1
+Gracefully stopping... (press Ctrl+C again to force)
+service "migrate" didn't complete successfully: exit 1tch
+```
+
+**遇到的错误是：**
+```text
+migrate-1  | error: first .: file does not exist
+migrate-1 exited with code 1
+```
+这是 golang-migrate/migrate 工具 报的错，意思是：它找不到你的数据库迁移文件（SQL 脚本）！
+
+**🔍 根本原因**
+
+你的 docker-compose.yml 中配置了：
+
+```yaml
+volumes:
+      - ../../migrations:/migrations
+```
+但 在你当前的项目结构中，./migrations 目录不存在，或者路径不对。
+
+`‌../../migrations`是你工程中相当于当前文件`‌hg_docker_compose.dev.yml`的位置，`‌/migrations`是映射到**镜像的服务卷文件**。
+
+<br/>
+
+- **migrations文件夹内的文件需要注意几点，若是不符合就会出现笼统的错误：file not exist：**
+	- 里面不能包含空的文件夹【当时包含了，结果一直报错：文件不存在】；
+	- 文件命名为：**`数字_描述.up.sql 和 数字_描述.down.sql`**的规范，比如：`000001_xxx.up.sql格式`， **up**和**down**分表表示**最新和回滚**；
+	- 💡 命名规则：**`{6位数字}_{描述}.up.sql 和 .down.sql`**;
+		- `000001_init.up.sql` 和`000001_init.down.sql`文件`down`和`up`要一对；
+		- 所有迁移文件必须以 严格递增的数字前缀 开头（如 000001_, 000002_）
+		- 不能重复，且必须是 纯数字（通常 6 位）
+	- ❌ 问题 ：缺少对应的 .down.sql 文件
+		- 虽然不是强制要求，但 golang-migrate 在某些模式下会检查配对文件。更重要的是：
+		- 如果你只提供 .up.sql，而工具配置要求完整迁移集，也可能报错。
+
+
+**比如：**
+
+```sh
+myProject/
+├── migrations/
+│   ├── 000001_init.up.sql
+│   ├── 000001_init.down.sql
+│   ├── 000002_create_users.up.sql
+│   ├── 000002_create_users.down.sql
+│   ├── 000003_create_posts.up.sql
+│   └── 000003_create_posts.down.sql
+└── config/
+    └── docker/
+        └── hg_docker_compose.dev.yml
+```
+
+<br/><br/>
+> <h4 id="xx.sql文件内容为空">xx.sql文件内容为空</h4>
+
+**migrations文件如下：**
+
+```sh
+000001_init.down.sql            000003_create_posts.down.sql
+000001_init.up.sql              000003_create_posts.up.sql
+000002_crate_user.down.sql      v000_sql
+000002_crate_user.up.sql
+
+
+mysql-1    | 2026-01-19T10:02:29.301859Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.44'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+migrate-1  | 1/u init (4.387084ms)
+migrate-1  | 2/u crate_user (17.556625ms)
+migrate-1  | error: migration failed in line 0:  (details: Error 1065: Query was empty)
+migrate-1 exited with code 1
+Gracefully stopping... (press Ctrl+C again to force)
+service "migrate" didn't complete successfully: exit 1tch
+
+```
+
+<br/>
+
+**你现在的错误是：**
+
+```
+migrate-1  | error: migration failed in line 0:  (details: Error 1065: Query was empty)
+```
+
+这说明：**你的某个 `.up.sql` 迁移文件内容为空，或者只包含注释/无效 SQL！**
+
+MySQL 报错 `Error 1065: Query was empty` 的意思是：**执行了一个空的 SQL 查询**。
+
+---
+<br/> 
+
+**🔍 根本原因分析**
+
+从你的文件列表看：
+
+```
+000001_init.up.sql
+000002_crate_user.up.sql
+000003_create_posts.up.sql
+v000_sql          ← 这个很可疑！
+```
+
+问题很可能出在以下任一文件中：
+
+- **❌ 可能原因 1：`v000_sql` 是非法文件**
+	- 它没有 `.sql` 后缀（虽然有，但命名不规范）
+	- 它可能是一个空文件、目录，或内容无效
+	- **`golang-migrate` 会尝试读取所有 `.sql` 文件**，即使名字不符合规范！
+
+> ⚠️ 即使你没在命令行指定它，只要它在 `/migrations` 目录下，就会被加载！
+
+<br/>
+
+- **❌ 可能原因 2：某个 `.up.sql` 文件内容为空**
+例如：
+
+```sql
+-- init database
+```
+→ 这是**纯注释**，MySQL 执行时视为“空查询”，报错 1065。
+
+或者文件真的就是空的。
+
+<br/>
+
+- **✅ 解决方案**
+
+- **✅ 第一步：立即删除 `v000_sql` 文件！**
+
+这个文件：
+- 命名不规范（不是 `数字_描述.sql`）
+- 很可能是临时文件、备份文件或空文件
+- **必须删除**，否则 migrate 会尝试解析它！
+
+```bash
+# 在项目根目录执行
+rm migrations/v000_sql
+```
+
+> 💡 `golang-migrate` 要求：**目录下只能有符合 `{数字}_{name}.up.sql` 和 `.down.sql` 的文件！**
+
+<br/>
+
+- **✅ 第二步：检查每个 `.up.sql` 文件内容是否有效**
+
+逐个查看：
+
+```bash
+cat migrations/000001_init.up.sql
+cat migrations/000002_crate_user.up.sql
+cat migrations/000003_create_posts.up.sql
+```
+
+<br/>
+
+✅ 每个文件**至少要有一条有效的 SQL 语句**，例如：
+
+```sql
+-- 000001_init.up.sql
+CREATE DATABASE IF NOT EXISTS app_db;
+USE app_db;
+```
+
+<br/>
+
+
+```sql
+-- 000002_crate_user.up.sql （注意：crate → create?）
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+```
+
+- **❌ 如果看到：**
+	- 空文件
+	- 只有 `-- comments`
+	- 只有 `SELECT 1;`（无意义，但不会报错）
+	- 语法错误
+
+→ 都可能导致问题。
+
+> 🔸 特别注意：`000002_crate_user.up.sql` 中的 `crate` 应该是拼写错误，应为 `create`，但这不会导致 1065 错误，只是逻辑问题。
+
+<br/>
+
+- **✅ 第三步：确保没有隐藏的空文件**
+
+有时候编辑器会生成临时文件（如 `.DS_Store`, `~$xxx.sql`），也需清理：
+
+```bash
+# 清理非标准文件
+ls -la migrations/
+# 删除任何非 000001_xxx.up.sql / .down.sql 的文件
+```
+
+只保留：
+
+```sh
+000001_init.up.sql
+000001_init.down.sql
+000002_create_user.up.sql     # 建议改名修正拼写
+000002_create_user.down.sql
+000003_create_posts.up.sql
+000003_create_posts.down.sql
+```
+
+---
+<br/>
+
+- **✅ 第四步：测试单个迁移（可选调试）**
+
+你可以先只保留 `000001_init.up.sql`，看是否成功。如果成功，再逐个加回其他文件，定位具体是哪个文件出错。
+
+<br/>
+
+- **🛠 示例：正确的 `.up.sql` 内容**
+
+```sql
+-- 000001_init.up.sql
+CREATE DATABASE IF NOT EXISTS app_db;
+USE app_db;
+```
+
+<br/>
+
+```sql
+-- 000002_create_users.up.sql
+USE app_db;
+
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+> ✅ 每个文件都要有实际的 DDL/DML 语句！
+
+---
+<br/>
+
+
+> **✅ 最终操作清单**
+1. **删除 `migrations/v000_sql`**
+2. **检查所有 `.up.sql` 文件内容非空且含有效 SQL**
+3. **修正拼写：`crate_user` → `create_user`（建议）**
+4. **确保目录下只有规范命名的 `.up.sql` 和 `.down.sql`**
+5. **重新运行：**
+
+   ```bash
+   docker-compose -f config/docker/hg_docker_compose.dev.yml up --build
+   ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="dirty:地迁移文件与数据库状态不一致">dirty:地迁移文件与数据库状态不一致</h2>
+
+```sh
+mysql-1    | 2026-01-19T10:07:35.604922Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.44'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+migrate-1  | error: Dirty database version 3. Fix and force version.
+migrate-1 exited with code 1
+Gracefully stopping... (press Ctrl+C again to force)
+service "migrate" didn't complete successfully: exit 1tch
+```
+
+<br/>
+
+**什么是 “Dirty” 状态？**
+
+- `golang-migrate` 在执行迁移前，会先在 `schema_migrations` 表中插入一条记录：`version=3, dirty=1`
+- 如果迁移成功，会更新为：`dirty=0`
+- 如果迁移失败（如 SQL 语法错误、连接中断），`dirty` 仍为 `1`，表示“这个版本没跑完”
+- 下次再运行 migrate，它会拒绝继续，提示你手动修复
+
+
+<br/>
+
+**有这么一段：**
+
+```
+migrate-1  | error: Dirty database version 3. Fix and force version.
+```
+
+是 **`golang-migrate` 的经典状态错误**，说明你的数据库迁移记录处于 **“脏（dirty）”状态** —— 即上次迁移执行到一半失败了，系统标记为“未完成”。
+
+<br/>
+
+- **📌 原因：**
+	- 你的数据库（MySQL）中 `schema_migrations` 表记录的版本是 **3**。
+	- 但 `golang-migrate` 检测到 **本地迁移文件与数据库状态不一致**（例如：你删除/修改了已应用的迁移文件）。
+	- 这种状态称为 **“dirty”** —— 表示迁移过程被中断或手动干预过。
+
+<br/>
+
+- **✅ 方法A：强制重置迁移状态**
+
+- 方法 A：【推荐】使用 `migrate force` 命令
+在项目根目录运行：
+
+```bash
+# 先确保 MySQL 容器在运行
+docker-compose -f config/docker/hg_docker_compose.dev.yml up -d mysql
+
+#获取 Docker Compose 网络名,找到类似 `mlc_go_default` 的网络（通常是 `{项目目录名}_default`）
+docker network ls
+
+# 强制将数据库标记为版本 3（干净状态）
+docker run --rm \
+  -v $(pwd)/migrations:/migrations \
+  --network=mlc_go_default \  # 替换为你的 compose 项目网络名
+  migrate/migrate \
+  -path /migrations \
+  -database "mysql://root:root@tcp(mysql:3306)/app_db" \
+  force 3
+```
+
+> 💡 如何知道网络名？运行 `docker network ls`，找类似 `mlc_go_default` 的网络。
+
+**✅ 输出应为：**
+
+```
+Forcing version 3...
+```
+
+> 💡 这会把 `schema_migrations` 表中的 `dirty` 字段设为 `0`，表示“版本 3 已干净完成”
+
+<br/>
+
+- **方法 B：手动清理（适用于开发环境）**
+
+```sql
+-- 连接到 MySQL
+docker exec -it mlc_go-mysql-1 mysql -uroot -proot
+
+-- 清空迁移记录表
+USE app_db;
+DELETE FROM schema_migrations;
+```
+然后重新运行 migrate。
+
+***
+<br/>
+
+**方法二：手动修复（适用于开发环境）**
+
+如果你只是本地开发，也可以直接进数据库改数据。
+
+<br/>
+
+**`Docker Compose`** 启动的容器名称 不是固定叫 **`mlc_go-mysql-1`**，而是由以下规则生成：
+
+```sh
+<项目目录名>_<服务名>_1
+```
+
+你的项目目录是：
+
+```sh
+/Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO → 目录名是 MLC_GO
+```
+
+而你的 `docker-compose.yml` 中 `MySQL` 服务名可能是 `mysql（根据日志 mysql-1 推断）`。
+
+先要确认**mysql容器**时候存在，查看下：
+
+```sh
+docker ps -a | grep -i mysql
+```
+
+如：
+
+```
+docker ps -a | grep -i mysql
+6683df2b589d   mysql:8.0         "docker-entrypoint.s…"   17 hours ago   Exited (0) 4 hours ago             docker-mysql-1
+```
+
+<br/>
+
+- **步骤：**
+
+- 1.**进入 MySQL 容器**
+  
+```bash
+docker exec -it docker-mysql-1 mysql -uroot -phh109
+```
+
+<br/>
+
+- 2.**查看当前迁移状态**
+   
+```sql
+# 查看数据库
+SHOW DATABASES;
+
+# 使用你的数据库
+USE hg_mlc_db;
+
+# 查看迁移表
+SELECT * FROM schema_migrations;
+```
+ 
+你应该看到：
+
+```
++---------+-------+
+| version | dirty |
++---------+-------+
+|       3 |     1 |
++---------+-------+
+```
+
+<br/> 
+
+- 3.**清理 dirty 标记**
+
+```sql
+UPDATE schema_migrations SET dirty = 0 WHERE version = 3;
+```
+
+或者，如果你想**从头开始**（丢弃所有迁移）：
+
+```sql
+DELETE FROM schema_migrations;
+DROP TABLE users;  -- 手动删除已创建的表（按需）
+```
+
+<br/>
+
+- **🛠 后续操作**
+
+完成上述任一方法后，重新运行你的服务：
+
+```bash
+docker-compose -f config/docker/hg_docker_compose.dev.yml up --build
+```
+
+✅ 现在 `migrate` 应该能正常检测到“版本 3 已完成”，并尝试应用更高版本的迁移（如 4、5...），或者直接退出（如果没有新迁移）。
+
+---
+<br/>
+
+- **🔒 预防措施（避免再次出现）**
+	- 1.**确保每个 `.up.sql` 文件内容有效**（不能空、不能只有注释）
+	- 2.**不要手动中断 migrate 过程**
+	- 3.**开发时可加 `--verbose` 查看详细日志**：
+
+```yaml
+command: ["-verbose", "-path", "/migrations", "-database", "...", "up"]
+```
+
+---
+<br/>
+
+- **❓ 如果我想回滚到版本 2？**
+
+可以使用：
+
+```bash
+docker run ... migrate ... down 1
+```
+这会回滚 **1 个版本**（从 3 → 2），但前提是你的 `.down.sql` 文件能正确执行。
+
+
+***
+<br/>
+
+**✅ 快速修复 dirty 状态**
+
+假设你查到容器名是 `docker-mysql-1`，数据库是 `hg_mlc_db`，密码 `hh109`：
+
+```bash
+# 1. 启动服务（确保 mysql 运行）
+docker-compose -f config/docker/hg_docker_compose.dev.yml up -d mysql
+
+# 2. 查看容器名
+docker ps --format "table {{.Names}}\t{{.Image}}" | grep mysql
+
+# 3. 登录 MySQL（验证连接）
+docker exec -it mlc_go-mysql-1 mysql -uroot -phh109 -e "SELECT * FROM hg_mlc_db.schema_migrations;"
+
+# 4. 如果表存在且 dirty=1，手动清理
+docker exec -it mlc_go-mysql-1 mysql -uroot -phh109 -e "
+USE hg_mlc_db;
+UPDATE schema_migrations SET dirty = 0 WHERE version = 3;
+"
+```
+
+<br/>
+
+**小技巧：一键查看所有容器名**
+
+```bash
+docker-compose -f config/docker/hg_docker_compose.dev.yml ps
+```
+
+输出示例：
+
+```sh
+NAME                IMAGE          COMMAND                  SERVICE
+mlc_go-mysql-1      mysql:8.0      "docker-entrypoint.s…"   mysql
+mlc_go-migrate-1    migrate/...    "/migrate -path ..."     migrate
+```
+
+<br/>
+
+第四步：清理旧容器并重启
+
+```sh 
+# 停止并删除旧容器
+docker rm -f docker-mysql-1
+
+# 启动整个服务栈（包括 mysql + migrate + app）
+docker-compose -f config/docker/hg_docker_compose.dev.yml up -d mysql
+
+# 查看日志
+docker logs -f docker-mysql-1
+```
+
+你应该看到：
+
+```sh
+... [System] [MY-010931] ... ready for connections ...
+```
+
+<br/>
+
+- **验证连接**
+	- **进入容器（现在应该能连上）**
+
+```sh
+docker exec -it docker-mysql-1 mysql -uroot -phh109
+
+# 在 MySQL 中执行
+USE hg_mlc_db;
+SELECT * FROM schema_migrations;
+```
+
+<br/><br/>
+> <h3 id="放大招，容器删除重新来">放大招，容器删除重新来</h3>
+**试了很多次，还是不行，遇到很多问题‼️**
+
+**最后不得已，想着反正是测试，就想既然是容器的问题，干脆把容器文件删除掉，重新来！！**
+
+***
+<br/>
+
+
+要**彻底清空容器里的数据并重新开始**（特别是 MySQL 容器），你需要删除：
+
+1. **容器本身**
+2. **关联的 volume（数据卷）** —— 这是关键！因为数据库数据默认存在 volume 里，即使删容器也不会丢
+
+---
+<br/>
+
+- **✅ 操作步骤（以你的项目为例）**
+
+- **🔥 第一步：停止并删除所有相关容器**
+
+```bash
+# 停止并删除 compose 启动的服务
+docker-compose -f config/docker/hg_docker_compose.dev.yml down
+```
+
+> 这会删除 `docker-mysql-1`、`docker-migrate-1` 等容器。
+
+<br/>
+
+- **🧹 第二步：删除关联的 Docker Volume（关键！）**
+
+MySQL 的数据默认存在一个 **named volume**（比如 `docker_mysql_data` 或类似名字）。
+
+- **查看所有 volume：**
+
+```bash
+docker volume ls
+```
+
+你会看到类似：
+
+```sh
+DRIVER    VOLUME NAME
+local     docker_mysql_data
+local     other_volume
+```
+
+<br/>
+
+- **删除 MySQL 相关的 volume：**
+
+```bash
+# 方法 1：根据 compose 项目名自动清理（推荐）
+docker volume prune -f
+
+# 方法 2：手动删除（更精准）
+docker volume rm docker_mysql_data
+```
+
+> 💡 **`docker volume prune` 会删除所有未被容器使用的 volume**，安全且彻底。
+
+<br/>
+
+**🗑 第三步（可选）：清理 dangling 镜像和缓存**
+
+```bash
+# 清理无用镜像、构建缓存等
+docker system prune -af
+```
+
+<br/>
+
+**🔄 第四步：重新启动服务**
+
+```bash
+# 重新构建并启动
+docker-compose -f config/docker/hg_docker_compose.dev.yml up --build
+```
+
+✅ 此时：
+- MySQL 容器是全新的
+- 数据库 `hg_mlc_db` 会被重新创建（如果你在 compose 中设置了 `MYSQL_DATABASE`）
+- `schema_migrations` 表从零开始
+- 所有迁移文件重新执行
+
+<br/>
+
+**🔍 如何确认 volume 已清理？**
+
+在 `docker-compose.yml` 中，MySQL 服务通常这样定义 volume：
+
+```yaml
+services:
+  mysql:
+    volumes:
+      - mysql_data:/var/lib/mysql   # ← 这个 mysql_data 是 volume 名
+
+volumes:
+  mysql_data:                       # ← 定义 named volume
+```
+
+对应的 volume 名是：**`<项目目录名>_mysql_data`**
+
+你的项目目录是 `MLC_GO` → volume 名很可能是 **`mlc_go_mysql_data`**
+
+所以也可以精确删除：
+
+```bash
+docker volume rm mlc_go_mysql_data
+```
+
+> 如果不确定名字，就用 `docker volume ls` 查看。
+
+<br/>
+
+**✅ 最终验证**
+
+启动后检查：
+
+```bash
+# 1. 确认容器运行
+docker ps
+
+# 2. 进入 MySQL
+docker exec -it docker-mysql-1 mysql -uroot -phh109
+
+# 3. 查看数据库
+SHOW DATABASES;
+-- 应该看到 hg_mlc_db（如果 compose 中配置了 MYSQL_DATABASE）
+
+USE hg_mlc_db;
+SHOW TABLES;
+-- 初始应只有 schema_migrations
+```
+
 
 ---
 
