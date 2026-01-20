@@ -27,7 +27,8 @@
 			- [放大招，容器删除重新来	](#放大招，容器删除重新来	)
 	- [4.CI中数据库变更流程](#4.CI中数据库变更流程)
 	- [GO工程的实践使用](#GO工程的实践使用)
-    - [CI和PR概念理解](#CI和PR概念理解) 
+    - [CI和PR概念理解](#CI和PR概念理解)
+- [GO工程企业级标准](#GO工程企业级标准)
 
 
 <br/><br/><br/>
@@ -3118,6 +3119,790 @@ on: [pull_request]
 你只要告诉我：
 👉 **“下一步我想学第 X 个”**
 我就按你现在的水平继续往下讲。
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/><br/>
+> <h1 id="GO工程企业级标准">GO工程企业级标准</h1>
+
+大厂分水岭:
+- 如果你愿意，下一步我可以继续带你做：
+- 数据库变更评审规范（SQL Review Checklist）
+- 线上数据迁移（不停服）
+- 读写分离 / 主从延迟处理  
+- Go + MySQL 事务与并发一致性
+
+**实施大致如下：**
+
+**方案二：实施二**
+下面我**严格按企业级 / 中大型公司真实流程**，并且**完全站在“小白第一次做”的视角**，一步一步把你提到的 **1 / 2 / 3 / 4 全部做完整**。
+你可以把这份回答当作 **Go 项目数据库工程化的“标准模板”** 来用。
+
+---
+
+# 一、你现在要解决的核心问题（先统一认知）
+
+在**正规 Go 后端项目**中，数据库相关事情分为 **4 个层级**：
+
+| 层级      | 做什么               | 谁负责               |
+| ------- | ----------------- | ----------------- |
+| DB 服务   | MySQL 是否启动        | 运维 / Docker       |
+| 库 & 表结构 | schema、表、索引       | **迁移系统（migrate）** |
+| 业务数据    | insert / update   | Go 代码             |
+| 环境差异    | dev / test / prod | 配置系统              |
+
+**结论先给你：**
+
+> ❌ **绝对不会**在 Go 业务代码里判断
+> “表存不存在、字段存不存在，再创建”
+
+> ✅ **全部通过数据库迁移系统（migrate）一次性解决**
+
+---
+
+# 二、整体目标（你最终会得到什么）
+
+完成后你将拥有：
+
+```
+your_project/
+├── cmd/
+│   └── api/
+│       └── main.go
+├── config/
+│   ├── dev.yaml
+│   ├── test.yaml
+│   └── prod.yaml
+├── internal/
+│   └── db/
+│       └── migrate_check.go
+├── migrations/
+│   ├── 000001_init.up.sql
+│   ├── 000001_init.down.sql
+│   ├── 000002_add_user.up.sql
+│   └── 000002_add_user.down.sql
+├── docker/
+│   └── docker-compose.yml
+├── scripts/
+│   └── db_init.sh
+├── Makefile
+└── go.mod
+```
+
+---
+
+# 三、Step 1：Go 中**只读检测 migrate 状态**（不改数据库）
+
+> **目的**：
+> 服务启动时，**只检查数据库是不是已经 migrate 完成**
+> ❌ 不执行 migrate
+> ❌ 不创建表
+
+---
+
+## 1️⃣ migrate 的核心原理（你必须懂）
+
+migrate 工具会自动创建一张表：
+
+```sql
+schema_migrations
+```
+
+结构类似：
+
+```sql
+version | dirty
+```
+
+* version：当前迁移版本
+* dirty：是否迁移中断
+
+---
+
+## 2️⃣ Go 中检测 migrate 状态（只读）
+
+`internal/db/migrate_check.go`
+
+```go
+package db
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+)
+
+func CheckMigrateStatus(db *sql.DB) error {
+	var version sql.NullInt64
+	var dirty bool
+
+	err := db.QueryRow(`
+		SELECT version, dirty
+		FROM schema_migrations
+		LIMIT 1
+	`).Scan(&version, &dirty)
+
+	if err != nil {
+		return errors.New("database not migrated: schema_migrations table not found")
+	}
+
+	if dirty {
+		return fmt.Errorf("database migration dirty at version %d", version.Int64)
+	}
+
+	return nil
+}
+```
+
+---
+
+## 3️⃣ 在 main.go 中使用
+
+```go
+err = db.CheckMigrateStatus(mysqlDB)
+if err != nil {
+	log.Fatalf("DB migrate check failed: %v", err)
+}
+```
+
+### 企业级规则
+
+> 🚨 **migrate 不通过 → 服务直接拒绝启动**
+
+---
+
+# 四、Step 2：多环境（dev / test / prod）配置拆分
+
+---
+
+## 1️⃣ 为什么必须拆环境？
+
+| 环境   | 用途      |
+| ---- | ------- |
+| dev  | 本地开发    |
+| test | CI / 测试 |
+| prod | 线上      |
+
+> ❌ 禁止：
+> dev 代码直连 prod 数据库
+
+---
+
+## 2️⃣ 配置文件示例
+
+### `config/dev.yaml`
+
+```yaml
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: root
+  database: go_demo_dev
+```
+
+### `config/prod.yaml`
+
+```yaml
+mysql:
+  host: mysql-prod
+  port: 3306
+  user: go_app
+  password: ${MYSQL_PASSWORD}
+  database: go_demo
+```
+
+---
+
+## 3️⃣ Go 加载配置（最简版）
+
+```go
+type Config struct {
+	MySQL struct {
+		Host     string
+		Port     int
+		User     string
+		Password string
+		Database string
+	}
+}
+```
+
+通过环境变量控制：
+
+```bash
+export APP_ENV=dev
+```
+
+```go
+env := os.Getenv("APP_ENV")
+cfgFile := fmt.Sprintf("config/%s.yaml", env)
+```
+
+---
+
+# 五、Step 3：Docker + MySQL + migrate 一体化（重点）
+
+---
+
+## 1️⃣ docker-compose.yml
+
+`docker/docker-compose.yml`
+
+```yaml
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: go_demo_dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+```
+
+---
+
+## 2️⃣ 安装 migrate 工具（本地）
+
+```bash
+brew install golang-migrate
+```
+
+---
+
+## 3️⃣ migrations 目录规范（企业级）
+
+```
+migrations/
+├── 000001_init.up.sql
+├── 000001_init.down.sql
+```
+
+### `000001_init.up.sql`
+
+```sql
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE,
+    phone VARCHAR(20) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### `000001_init.down.sql`
+
+```sql
+DROP TABLE users;
+```
+
+---
+
+## 4️⃣ 执行 migrate
+
+```bash
+migrate \
+  -database "mysql://root:root@tcp(127.0.0.1:3306)/go_demo_dev" \
+  -path migrations \
+  up
+```
+
+---
+
+# 六、Step 4：CI 中数据库变更流程（真实企业流程）
+
+---
+
+## 1️⃣ 提交数据库变更的**唯一方式**
+
+> ❌ 禁止手写 SQL 到线上
+> ❌ 禁止改表后不留记录
+
+> ✅ **只能提交 migration 文件**
+
+---
+
+## 2️⃣ CI 执行流程（伪代码）
+
+```yaml
+steps:
+  - docker-compose up -d mysql
+  - migrate up
+  - go test ./...
+```
+
+---
+
+## 3️⃣ CI 失败场景
+
+| 情况           | 结果      |
+| ------------ | ------- |
+| migrate 失败   | ❌ CI 阻断 |
+| dirty = true | ❌ 禁止合并  |
+| Go 测试失败      | ❌ 禁止发布  |
+
+---
+
+# 七、你现在“绝对不应该做”的事情
+
+❌ Go 代码中判断表是否存在
+❌ Go 中 `CREATE TABLE IF NOT EXISTS`
+❌ 线上直接 `ALTER TABLE`
+❌ 手工改库不提交 migration
+
+---
+
+# 八、你下一步应该做什么（学习路线）
+
+### ✅ 第一步（你现在）
+
+* 理解 migrate + 环境隔离
+
+### ✅ 第二步
+
+* 为 **每一个表结构变更** 写 migration
+
+### ✅ 第三步
+
+* 在 CI 中强制 migrate 校验
+
+---
+
+## 如果你愿意，下一步我可以直接帮你：
+
+1️⃣ 给你 **一个完整可运行的 Go + Docker + migrate 示例仓库结构**
+2️⃣ 给你 **Makefile 一键启动 / migrate / rollback**
+3️⃣ 给你 **真实公司级 DB 变更 SOP 文档**
+
+你只需要告诉我：
+👉 **你现在是本地开发优先，还是准备直接做上线项目？**
+
+
+***
+<br/><br/><br/>
+
+# 方案一：
+
+很好，这一步开始你已经进入**真正的“企业级后端数据库工程”阶段**了。
+下面我**不假设你有任何经验**，会用**“为什么 → 怎么做 → 示例 → 企业规范”**的方式，把你点名的 **1 / 2 / 3 / 4** 全部完整讲清楚。
+
+> 你可以把这份内容当作
+> **中大型互联网公司新人入职后 1～2 个月必须掌握的数据库基础内训文档**
+
+---
+
+# 总览：这 4 件事在企业里分别解决什么问题？
+
+| 编号 | 主题                | 解决的核心问题          |
+| -- | ----------------- | ---------------- |
+| 1  | 数据库变更评审规范         | 防止「一个 SQL 把线上干崩」 |
+| 2  | 线上数据迁移（不停服）       | 表结构升级时不影响用户      |
+| 3  | 读写分离 / 主从延迟       | 扛高并发、避免读脏数据      |
+| 4  | Go + MySQL 事务与一致性 | 并发下数据不乱、不丢       |
+
+---
+
+# 一、数据库变更评审规范（SQL Review Checklist）
+
+## 1️⃣ 为什么需要 SQL Review？
+
+真实事故（非常常见）：
+
+* `ALTER TABLE users ADD COLUMN ...`
+  → **锁表 30 分钟**
+* `DELETE FROM orders;`
+  → **误删全表**
+* 少了 `WHERE`
+  → **线上数据全毁**
+
+> 所以在企业里：
+> **任何 SQL 变更 ≈ 代码上线级别的严肃程度**
+
+---
+
+## 2️⃣ 企业标准流程（你以后一定会遇到）
+
+```
+开发提出需求
+   ↓
+写 migration SQL
+   ↓
+SQL Review（至少 1 人）
+   ↓
+测试环境执行
+   ↓
+预发 / 灰度
+   ↓
+生产执行
+```
+
+---
+
+## 3️⃣ SQL Review Checklist（逐条给你）
+
+### ✅ 1. 是否走 migration（而不是手工 SQL）
+
+✔️ 正确：
+
+```text
+migrations/000003_add_user_status.up.sql
+```
+
+❌ 错误：
+
+```sql
+直接在生产库执行 ALTER TABLE
+```
+
+---
+
+### ✅ 2. 是否有 down.sql（回滚方案）
+
+**企业强制要求：**
+
+```sql
+-- up
+ALTER TABLE users ADD COLUMN status TINYINT NOT NULL DEFAULT 1;
+
+-- down
+ALTER TABLE users DROP COLUMN status;
+```
+
+> 没有 down.sql = 不允许合并代码
+
+---
+
+### ✅ 3. 是否会锁表（重点）
+
+**高风险 SQL：**
+
+```sql
+ALTER TABLE users MODIFY email VARCHAR(512);
+```
+
+* 行数大？
+* 是否 InnoDB？
+* 是否支持 online DDL？
+
+👉 需要 DBA / 资深工程师确认
+
+---
+
+### ✅ 4. 是否全表扫描
+
+```sql
+UPDATE users SET status = 0;
+```
+
+❌ 直接禁止
+
+必须：
+
+```sql
+UPDATE users SET status = 0 WHERE last_login < '2024-01-01';
+```
+
+---
+
+## 4️⃣ 企业里 SQL Review 的“潜规则”
+
+* **宁可慢，也不能炸**
+* 改表 ≠ 普通功能上线
+* 新人改表，必须有人兜底
+
+---
+
+# 二、线上数据迁移（不停服）
+
+> 这是 **90% 小白第一次听就会懵的地方**
+
+---
+
+## 1️⃣ 什么叫“停服迁移”？
+
+```text
+停服务
+改表
+启动服务
+```
+
+❌ **中大型公司基本不允许**
+
+---
+
+## 2️⃣ 不停服迁移的核心思想（记住这 8 个字）
+
+> **“向前兼容，分阶段上线”**
+
+---
+
+## 3️⃣ 最经典场景：给 users 表加字段
+
+### 目标
+
+新增字段：
+
+```sql
+user_level INT
+```
+
+---
+
+### 阶段 1：只加字段（不使用）
+
+```sql
+ALTER TABLE users ADD COLUMN user_level INT DEFAULT 0;
+```
+
+Go 代码：
+
+* ❌ 不读
+* ❌ 不写
+
+---
+
+### 阶段 2：代码开始写新字段（兼容旧数据）
+
+```go
+INSERT INTO users (...) VALUES (..., userLevel)
+```
+
+读取时：
+
+```go
+if userLevel == 0 {
+    // 当作普通用户
+}
+```
+
+---
+
+### 阶段 3：数据回填（后台慢慢跑）
+
+```sql
+UPDATE users SET user_level = 1 WHERE created_at < '2024-01-01' LIMIT 1000;
+```
+
+> 分批跑，避免锁表
+
+---
+
+### 阶段 4：强制约束（可选）
+
+```sql
+ALTER TABLE users MODIFY user_level INT NOT NULL;
+```
+
+---
+
+## 4️⃣ 企业总结口诀
+
+> **加字段先不读 → 再写 → 再补数据 → 最后加约束**
+
+---
+
+# 三、读写分离 / 主从延迟处理（入门版）
+
+---
+
+## 1️⃣ 为什么需要读写分离？
+
+```
+写请求 → 主库
+读请求 → 从库
+```
+
+好处：
+
+* 主库压力小
+* 从库可水平扩展
+
+---
+
+## 2️⃣ 主从延迟是怎么来的？
+
+```text
+主库写入 → binlog → 从库同步（有延迟）
+```
+
+延迟可能：
+
+* 10ms
+* 100ms
+* 1s+
+
+---
+
+## 3️⃣ 最经典的坑（新手 100% 会踩）
+
+```text
+注册成功
+↓
+立刻查询用户信息
+↓
+从库查
+↓
+查不到
+```
+
+---
+
+## 4️⃣ 企业级解决方案（你先掌握前 2 个）
+
+### ✅ 方案 1：关键读走主库（最常用）
+
+```go
+// 注册后，强制主库读取
+user, _ := repo.GetUserByID(ctx, id, UseMaster())
+```
+
+---
+
+### ✅ 方案 2：延迟读
+
+```go
+time.Sleep(100 * time.Millisecond)
+```
+
+（简单粗暴，但常见）
+
+---
+
+## 5️⃣ 架构层设计（给你概念）
+
+```text
+DBRouter
+ ├── Master
+ └── Slave
+```
+
+---
+
+# 四、Go + MySQL 事务与并发一致性（非常重要）
+
+---
+
+## 1️⃣ 为什么要事务？
+
+没有事务：
+
+```text
+扣钱成功
+订单创建失败
+```
+
+→ 数据错乱
+
+---
+
+## 2️⃣ Go 中正确使用事务（标准模板）
+
+```go
+tx, err := db.BeginTx(ctx, nil)
+if err != nil {
+    return err
+}
+
+defer tx.Rollback()
+
+_, err = tx.Exec(`UPDATE accounts SET balance = balance - ? WHERE id = ?`, amount, uid)
+if err != nil {
+    return err
+}
+
+_, err = tx.Exec(`INSERT INTO orders (...) VALUES (...)`)
+if err != nil {
+    return err
+}
+
+return tx.Commit()
+```
+
+---
+
+## 3️⃣ 并发一致性的根本原因
+
+```text
+多个 goroutine 同时改同一行
+```
+
+---
+
+## 4️⃣ 必须掌握的 2 个锁（入门）
+
+### ✅ 行锁（最重要）
+
+```sql
+SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;
+```
+
+作用：
+
+* 锁住这一行
+* 其他事务必须等
+
+---
+
+### ✅ 乐观锁（进阶）
+
+```sql
+UPDATE products
+SET stock = stock - 1, version = version + 1
+WHERE id = 1 AND version = 3;
+```
+
+---
+
+## 5️⃣ 企业选型原则（记住）
+
+| 场景 | 用什么  |
+| -- | ---- |
+| 金额 | 行锁   |
+| 库存 | 乐观锁  |
+| 配置 | 最终一致 |
+
+---
+
+# 五、你现在的学习路线（非常重要）
+
+### 第 1 周
+
+* 理解 migration + SQL review
+
+### 第 2 周
+
+* 会设计不停服迁移
+
+### 第 3 周
+
+* 理解主从延迟
+
+### 第 4 周
+
+* 事务 + 锁
+
+---
+
+## 下一步我可以继续带你做（直接实战）：
+
+* ✅ 一个 **并发扣库存的 Go 示例（含事务 + 锁）**
+* ✅ 一个 **不停服迁移完整演示（从 0 到上线）**
+* ✅ 一个 **主从读写分离的代码结构示例**
+
+你只要告诉我下一步选哪个，我就直接写代码给你。
+
 
 
 
