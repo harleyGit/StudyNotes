@@ -25,6 +25,7 @@
 - [**工作目录的相对路径**](#工作目录的相对路径)
 	- [go相对路径](#go相对路径)
 - [**‌基本语法与使用**](#基本语法与使用)
+	- [package中的init方法调用顺序](#package中的init方法调用顺序)
 	- [**变量**](#变量)
 		- [多个变量的声明和推导](#多个变量的声明和推导)
 		- [bool值字段有无判断](#bool值字段有无判断)
@@ -1277,6 +1278,132 @@ ganghuang@GangHuangs-MacBook-Pro PracticeGRPCExample % go run main.go server
 > <h1 id='基本语法与使用'>基本语法与使用</h1>
 
 ![go.0.0.11.png](./../Pictures/go.0.0.11.png)
+
+***
+<br/><br/><br/>
+> <h2 id="package中的init方法调用顺序"> package中的init方法调用顺序 </h2>
+
+`init()` 函数在 Go 中是一个特殊的存在，它有一些独特的特性和调用时机。
+
+- **`init()` 函数的调用时机**
+
+- `init()` 函数在以下时机**自动调用**：
+
+	- 1.**包初始化时**：每个包的 `init()` 函数会在包的所有全局变量初始化后，且在包被导入时自动执行。
+
+	- 2.**执行顺序**：
+		- 从 `main` 包开始，递归地导入依赖包
+		- 对于每个包，先初始化包级变量（按声明顺序）
+		- 然后执行该包的 `init()` 函数（按声明顺序）
+		- 最后，如果包被多次导入，`init()` 只执行一次
+
+	- 3.**具体时机**：
+		- 程序启动时
+		- 包被导入时（无论是直接还是间接导入）
+		- 在 `main()` 函数执行之前
+
+**Code示例：**
+
+**`pkg1.go`文件**
+
+```go
+package pkg1
+
+import "fmt"
+
+var globalVar = func() int {
+    fmt.Println("pkg1: 全局变量初始化")
+    return 1
+}()
+
+func init() {
+    fmt.Println("pkg1: init 函数 1")
+}
+
+func init() {
+    fmt.Println("pkg1: init 函数 2")
+}
+```
+
+<br/>
+
+**`pkg2.go`文件** 
+
+```go
+package pkg2
+
+import "fmt"
+
+func init() {
+    fmt.Println("pkg2: init 函数")
+}
+```
+
+<br/>
+
+**`main.go`文件**
+
+```go
+package main
+
+import (
+    "fmt"
+    _ "pkg1"
+    _ "pkg2"
+)
+
+func init() {
+    fmt.Println("main: init 函数")
+}
+
+func main() {
+    fmt.Println("main: main 函数")
+}
+```
+
+输出顺序：
+
+```sh
+pkg1: 全局变量初始化
+pkg1: init 函数 1
+pkg1: init 函数 2
+pkg2: init 函数
+main: init 函数
+main: main 函数
+```
+
+<br/>
+- **注意事项**
+	- 1.**多个 `init()`**：一个包可以有多个 `init()` 函数，它们按声明顺序执行。
+	- 2.**不可调用**：`init()` 函数不能被其他函数调用。
+	- 3.**导入副作用**：使用 `import _ "package"` 语法可以只执行包的 `init()` 而不使用包的其他功能。
+	- 4.**同步保证**：`init()` 函数的执行是同步的，确保在 `main()` 开始前完成所有初始化。
+
+<br/>
+
+**替代方案**
+
+虽然 Go 没有其他类似的特殊函数，但可以通过以下方式实现类似功能：
+
+```go
+// 使用包级变量初始化
+var initializer = func() bool {
+    // 初始化逻辑
+    return true
+}()
+
+// 使用 sync.Once 确保只执行一次
+var once sync.Once
+
+func Initialize() {
+    once.Do(func() {
+        // 初始化逻辑
+    })
+}
+```
+
+`init()` 函数主要用于包的初始化工作，如注册驱动、初始化全局变量、验证环境等。
+
 
 > <h1 id="变量">变量</h1>
 
