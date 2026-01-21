@@ -2,12 +2,15 @@
 - [mysql使用前命令和配置](#mysql使用前命令和配置)
 - [下载go-mysql驱动程序](#下载go-mysql驱动程序) 
 - [操作mysql数据库](#操作mysql数据库)  	
-	- [查询mysql版本](#查询mysql版本) 
-	- [新建数据表user](#新建数据表user)
-	- [增加一条数据](#增加一条数据)
-	- [修改数据](#修改数据)
-	- [删除数据](#删除数据)
-	- [结构体中sql.NullString使用](#结构体中sql.NullString使用)
+	- [查询mysql版本](#查询mysql版本)
+- [新建数据表user](#新建数据表user)
+- [插入数据](#插入数据)
+- [查询数据](#查询数据)
+	- [查寻一条数据](#查寻一条数据)
+- [增加一条数据](#增加一条数据)
+- [修改数据](#修改数据)
+- [删除数据](#删除数据)
+- [结构体中sql.NullString使用](#结构体中sql.NullString使用)
 - [数据库&表执行方式](#数据库&表执行方式)
 	- [终端手动执行](#终端手动执行)
 	- [脚本执行](#脚本执行) 
@@ -158,9 +161,6 @@ import (
 ```
 db, err := sql.Open("mysql", "<user>:<password>@tcp(127.0.0.1:3306)/<database-name>")
 ```
-
-
-
 - **参数说明如下。**
 	- user: MySQL数据库的用户名。
 	- password: MySQL数据库的密码。
@@ -199,8 +199,6 @@ sudo /usr/local/mysql/support-files/mysql.server start
 ```
 sudo mysql -u root -p
 ```
-
-
 <br/><br/>
 
 **显示数据库版本Demo**
@@ -253,7 +251,10 @@ ganghuang@GangHuangs-MacBook-Pro TestMySQLV1 % go run test_mysql_v1.go
 
 <br/><br/><br/>
 
-> <h2 id="新建数据表user">新建数据表user</h2>
+***
+<br/><br/>
+
+> <h1 id="新建数据表user">新建数据表user</h1>
 
 在数据库db_test中新建数据表user。在数据表user中，包含主键id和用户的名字name。为了实现上述操作，可以使用如下的SQL语句。
 
@@ -513,10 +514,173 @@ id: 2, name: 司马懿🍎
 ```
 
 <br/><br/><br/>
+> <h2 id="查寻一条数据">查寻一条数据</h2>
+
+```go
+err := r.db.QueryRowContext(
+    ctx,
+    `SELECT id, email, phone, password_hash, salt
+     FROM users WHERE id = ?`,
+    id,
+).Scan(
+    &u.ID,
+    &u.Email,
+    &u.Phone,
+    &u.PasswordHash,
+    &u.Salt,
+)
+```
+
+这是 Go 中使用标准库 `database/sql` **查询单行数据** 的经典写法。下面我们详细拆解 `QueryRowContext` 和 `.Scan()` 是如何工作的，以及它们背后的机制。
+
+---
+<br/>
+
+**整体流程概览**
+
+1. **`r.db.QueryRowContext(...)`**  
+   → 向数据库发送一条 **只期望返回一行** 的 SQL 查询。
+2. **返回一个 `*sql.Row` 对象**（代表“可能有一行结果”）。
+3. **调用 `.Scan(...)`**  
+   → 将这一行的各列值 **按顺序读取并赋值给传入的变量指针**。
+4. 如果查询出错（如连接失败、SQL 语法错误）或查不到数据（`id` 不存在），`.Scan()` 会返回对应错误。
+
+---
+<br/>
+
+
+```go
+func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+```
+
+- **🔹 作用**
+	- 执行一条 **最多返回一行** 的 SQL 查询（通常是带主键或唯一条件的 `SELECT`）。
+	- **不会立即执行查询**，而是返回一个 `*sql.Row` 对象，真正的数据库交互发生在 `.Scan()` 调用时。
+	- 支持 `context.Context`：可用于超时控制、请求取消等。
+
+<br/>
+
+- **🔹 为什么叫 “Row”？**
+	- 它假设你只关心 **一行结果**。即使 SQL 返回多行，它也**只取第一行**，其余忽略（但不报错）。
+	- 如果你确实需要多行，请用 `QueryContext` + 循环 `rows.Next()`。
+
+<br/>
+
+- **🔹 特殊行为：查不到数据怎么办？**
+	- 如果 SQL 返回 **0 行**，`QueryRowContext` **不会报错**！
+	- 错误会在后续调用 `.Scan()` 时返回：`sql.ErrNoRows`
+
+> ✅ 这是 Go 的惯用设计：把“无结果”当作一种可预期的状态，而非异常。
+
+---
+<br/>
+
+```go
+func (r *Row) Scan(dest ...interface{}) error
+```
+
+- **🔹 作用**
+	- 将当前行的 **每一列的值**，按顺序 **赋值给 `dest` 中对应的变量指针**。
+	- 自动进行 **类型转换**（如数据库 `INT` → Go `int64`，`VARCHAR` → `string` 等）。
+	- 如果列数 ≠ `dest` 参数个数，会报错：`sql: expected X destination arguments, got Y`
+
+<br/>
+
+- **🔹 关键点：必须传指针！**
+
+```go
+// ❌ 错误：传的是值，Scan 无法修改原变量
+Scan(u.ID, u.Email)
+
+// ✅ 正确：传地址，Scan 才能写入
+Scan(&u.ID, &u.Email)
+```
+
+<br/>
+
+- **🔹 类型匹配规则（简化版）**
+
+| 数据库类型（如 MySQL） | Go 目标类型（推荐） |
+|------------------|------------------|
+| `INT`, `BIGINT`     | `int64` / `*int64` |
+| `VARCHAR`, `TEXT`   | `string`          |
+| `BOOLEAN`           | `bool`            |
+| `DATETIME`          | `time.Time`       |
+| `NULL`              | 使用指针类型（如 `*string`）或 `sql.NullString` |
+
+> 💡 如果字段可能为 `NULL`，建议用 `sql.NullXXX` 类型或指针，否则 `.Scan()` 会报错。
+
+---
+<br/>
+
+**完整执行流程**
+
+1. 调用 `QueryRowContext(ctx, sql, args...)`
+   - 构造带参数的 SQL（防注入）
+   - 返回一个 `*sql.Row` 对象（此时还没连数据库）
+
+2. 调用 `.Scan(&a, &b, ...)`
+   - 触发实际数据库查询
+   - 驱动（如 `go-sql-driver/mysql`）执行 SQL
+   - 获取结果集的第一行（如果有）
+   - 按列顺序，将每列的值转换为目标 Go 类型
+   - 写入到你传入的指针变量中
+   - 如果出错（连接失败、类型不匹配、无结果等），返回 `error`
+
+---
+<br/>
+
+**错误处理示例**
+
+```go
+var u model.User
+err := r.db.QueryRowContext(ctx, "SELECT ...", id).Scan(&u.ID, &u.Email, ...)
+
+if err != nil {
+    if errors.Is(err, sql.ErrNoRows) {
+        // 用户不存在
+        return nil, ErrUserNotFound
+    }
+    // 其他数据库错误
+    return nil, fmt.Errorf("failed to query user: %w", err)
+}
+// 成功，u 已被填充
+return &u, nil
+```
+
+> ✅ **务必检查 `sql.ErrNoRows`**！这是“查不到”的标准错误。
+
+---
+<br/>
+
+**对比其他方法**
+
+| 方法 | 用途 | 返回 |
+|------|------|------|
+| `ExecContext` | 执行 `INSERT/UPDATE/DELETE` | `sql.Result`, `error` |
+| `QueryContext` | 查询多行 | `*sql.Rows`, `error` |
+| `QueryRowContext` | 查询单行 | `*sql.Row`（延迟执行）|
+
+---
+<br/>
+
+**总结**
+
+| 组件 | 作用 |
+|------|------|
+| **`QueryRowContext`** | 发起一个“最多返回一行”的查询，返回 `*sql.Row`（惰性执行） |
+| **`.Scan(...)`** | 触发实际查询，并将结果列按顺序写入传入的指针变量 |
+| **关键要求** | 列数 = 参数数；必须传指针；处理 `sql.ErrNoRows` |
+| **适用场景** | 通过主键/唯一索引查单条记录（如用户登录、详情页） |
+
+这种模式是 Go 操作数据库的 **标准且高效** 的方式，既安全（防注入），又简洁（一行搞定查询+赋值）。
+
+
+<br/><br/><br/>
 
 ***
 <br/><br/>
-> <h2 id="增加一条数据">增加一条数据</h2>
+> <h1 id="增加一条数据">增加一条数据</h1>
 
 ```go
 func (r *UserRepo) Insert(ctx context.Context, u *model.User) error {
