@@ -483,13 +483,13 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 
 - **VSCode配置有这几种**
 	* **Open User Settings (JSON)**
-	 * → 这是全局用户配置文件，修改它会影响你用这台机器上的所有 VS Code 项目（全局生效）
+		* → 这是全局用户配置文件，修改它会影响你用这台机器上的所有 VS Code 项目（全局生效）
 	
 	* **Open Workspace Settings (JSON)**
-	 * → 这是当前打开项目的工作区配置，修改它只影响当前这个项目（针对项目的局部配置）
+		* → 这是当前打开项目的工作区配置，修改它只影响当前这个项目（针对项目的局部配置）
 	
 	* **Open Default Settings (JSON)**
-	 * → 这是 VS Code 默认配置，通常不修改，用来参考默认值
+	   * → 这是 VS Code 默认配置，通常不修改，用来参考默认值
 
 <br/>
 
@@ -498,7 +498,6 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 **`Comand+shift+P,`（或者‌`Cmd+,`，然后选择扩展下的某个功能）** 然后选择打开 **Open User Settings(json)**
 
 ```json
-
 {
   "editor.accessibilitySupport": "off", // on Accessibility 强制打开声音错误、警告、终端
   "audioCues.enabled": "off", // 关闭 比比声
@@ -647,7 +646,6 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 ```
 
 <br/>
-
 比如: Deepseek给的建议:
 
 ```json
