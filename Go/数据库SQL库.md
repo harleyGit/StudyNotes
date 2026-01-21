@@ -1,19 +1,20 @@
 - [**MySQL数据库编程**](#MySQL数据库编程)
-	- [mysql使用前命令和配置](#mysql使用前命令和配置)
-	- [下载go-mysql驱动程序](#下载go-mysql驱动程序) 
-	- [操作mysql数据库](#操作mysql数据库)  	
-		- [查询mysql版本](#查询mysql版本) 
-		- [新建数据表user](#新建数据表user)
-		- [增加一条数据](#增加一条数据)
-		- [修改数据](#修改数据)
-		- [删除数据](#删除数据)
-		- [结构体中sql.NullString使用](#结构体中sql.NullString使用)
+- [mysql使用前命令和配置](#mysql使用前命令和配置)
+- [下载go-mysql驱动程序](#下载go-mysql驱动程序) 
+- [操作mysql数据库](#操作mysql数据库)  	
+	- [查询mysql版本](#查询mysql版本) 
+	- [新建数据表user](#新建数据表user)
+	- [增加一条数据](#增加一条数据)
+	- [修改数据](#修改数据)
+	- [删除数据](#删除数据)
+	- [结构体中sql.NullString使用](#结构体中sql.NullString使用)
 - [数据库&表执行方式](#数据库&表执行方式)
 	- [终端手动执行](#终端手动执行)
 	- [脚本执行](#脚本执行) 
 	- [数据库迁移工具](#数据库迁移工具) 
 	- [Go内执行sql文件](#Go内执行sql文件)
 - [mysql指令](#mysql指令)
+- [xxx.sql文件加注释方式](#xxx.sql文件加注释方式)
 
 
 
@@ -1339,5 +1340,97 @@ mysql> show databases;
 create database db_test;
 
 Query OK, 1 row affected (0.00 sec)
+```
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/><br/>
+<h1 id='xxx.sql文件加注释方式'>xxx.sql文件加注释方式</h1>
+**✅ SQL 中两种标准注释方式**
+
+**1. **单行注释**：使用 `--`（注意后面要跟一个空格）**
+
+```sql
+-- 这是一个单行注释
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+```
+
+> ⚠️ 注意：`--` 后**必须有一个空格**（或换行），否则某些数据库（如 MySQL）可能不识别。
+
+<br/>
+
+- **2. **多行注释**：使用 `/* ... */`**
+
+```sql
+/*
+这是多行注释
+可以写很多行
+用于说明复杂逻辑
+*/
+INSERT INTO users (name) VALUES ('Alice');
+```
+
+也可以用于**行内注释**：
+```sql
+SELECT id, name /* 用户基本信息 */, created_at FROM users;
+```
+
+---
+<br/>
+
+
+**⚠️ 注意事项**
+
+| 数据库 | 是否支持 | 特别说明 |
+|--------|--------|--------|
+| **MySQL** | ✅ | 支持 `-- ` 和 `/* */`；注意 `--` 后必须有空格 |
+| **PostgreSQL** | ✅ | 完全支持 |
+| **SQLite** | ✅ | 完全支持 |
+| **SQL Server** | ✅ | 支持 `--`（不要求空格）和 `/* */` |
+| **Oracle** | ✅ | 支持 |
+
+> 💡 几乎所有主流数据库都遵循 SQL 标准的注释语法，所以你的 `.sql` 文件在不同数据库间迁移时，注释通常不会出问题。
+
+---
+<br/>
+
+**完整的 `init_db.sql` 文件**
+
+```sql
+-- =============================================
+-- 数据库初始化脚本
+-- 作用：创建用户表和订单表
+-- 作者：dev@example.com
+-- 时间：2026-01-21
+-- =============================================
+
+/* 
+ * 用户表：存储系统用户基本信息
+ * 注意：email 必须唯一
+ */
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20),
+    password_hash CHAR(64) NOT NULL,
+    salt CHAR(32) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 订单表（后续再加外键约束）
+CREATE TABLE orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status TINYINT DEFAULT 0,  -- 0:待支付, 1:已支付, 2:已取消
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
