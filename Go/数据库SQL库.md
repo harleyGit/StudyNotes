@@ -3,7 +3,8 @@
 	- [下载go-mysql驱动程序](#下载go-mysql驱动程序) 
 	- [操作mysql数据库](#操作mysql数据库)  	
 		- [查询mysql版本](#查询mysql版本) 
-		- [新建数据表user](#新建数据表user) 
+		- [新建数据表user](#新建数据表user)
+		- [增加一条数据](#增加一条数据)
 		- [修改数据](#修改数据)
 		- [删除数据](#删除数据)
 		- [结构体中sql.NullString使用](#结构体中sql.NullString使用)
@@ -509,6 +510,176 @@ func testMySQLV2_query() {
 id: 1, name: David
 id: 2, name: 司马懿🍎
 ```
+
+<br/><br/><br/>
+
+***
+<br/><br/>
+> <h2 id="增加一条数据">增加一条数据</h2>
+
+```go
+func (r *UserRepo) Insert(ctx context.Context, u *model.User) error {
+    res, err := r.db.ExecContext(
+        ctx,
+        `INSERT INTO users (email, phone, password_hash, salt)
+         VALUES (?, ?, ?, ?)`,
+        u.Email,
+        u.Phone,
+        u.PasswordHash,
+        u.Salt,
+    )
+    if err != nil {
+        return err
+    }
+    u.ID, _ = res.LastInsertId()
+    return nil
+}
+```
+`ExecContext`方法干嘛的？`LastInsertId()`有啥用？
+
+***
+<br/>
+
+**SQL 插入语句**
+
+```sql
+INSERT INTO users (email, phone, password_hash, salt)
+VALUES (?, ?, ?, ?)
+```
+
+- 向 `users` 表插入一条新记录。
+- 使用了 **参数化查询（? 占位符）**，防止 SQL 注入。
+- 插入字段不包括 `id`，说明 `id` 很可能是数据库自增主键（如 MySQL 的 `AUTO_INCREMENT`）。
+
+<br/>
+
+**🆔 `.LastInsertId()` 是什么？**
+
+```go
+u.ID, _ = res.LastInsertId()
+```
+
+- `res` 是 `sql.Result` 类型，由 `ExecContext` 返回。
+- `.LastInsertId()` 是 Go 标准库 `database/sql` 提供的方法，用于**获取刚刚插入行的自增主键 ID**。
+- 它只在**支持自增主键的数据库**（如 MySQL、SQLite）中有意义；在 PostgreSQL 中通常用 `RETURNING id` 配合 `QueryRowContext` 来实现类似功能。
+
+> ⚠️ 注意：这里忽略了第二个返回值（错误），实际生产中建议检查：
+```go
+id, err := res.LastInsertId()
+if err != nil {
+     return fmt.Errorf("failed to get last insert id: %w", err)
+ }
+ u.ID = id
+```
+
+<br/>
+
+**💡 为什么要把 ID 回填到 `u`？**
+
+- 调用方可能需要知道新创建用户的 ID（比如后续关联其他表、返回 API 响应等）。
+- 通过修改传入的指针 `u`，调用方可以直接使用 `u.ID`，无需额外查询。
+
+例如：
+
+```go
+user := &model.User{
+    Email: "alice@example.com",
+    Phone: "13800138000",
+    PasswordHash: "...",
+    Salt: "...",
+}
+err := repo.Insert(ctx, user)
+if err != nil { /* handle */ }
+
+// 此时 user.ID 已被填充为数据库分配的 ID
+fmt.Println("New user ID:", user.ID)
+```
+
+***
+<br/>
+
+```go
+func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+```
+&emsp; 这个方法是 Go 语言标准库 `database/sql` 中的一个方法，**用于执行不返回行数据的 SQL 语句（比如 `INSERT`、`UPDATE`、`DELETE`）**，并支持上下文（`context.Context`）控制。
+
+- **作用**：执行一条“写操作”SQL（不会返回结果集，只返回影响行数或自增 ID）。
+- **典型用途**：
+  - 插入新记录（`INSERT`）
+  - 更新已有数据（`UPDATE`）
+  - 删除数据（`DELETE`）
+
+> ✅ 和它对应的“读操作”方法是 `QueryContext`（用于 `SELECT`，会返回多行数据）和 `QueryRowContext`（用于单行查询）。
+
+<br/>
+
+**参数说明**
+
+| 参数 | 说明 |
+|------|------|
+| `ctx context.Context` | 上下文，用于控制超时、取消等。比如 HTTP 请求取消时，数据库操作也能及时停止。 |
+| `query string` | 要执行的 SQL 语句，通常用 `?` 作为占位符（如 `"INSERT INTO users (name) VALUES (?)"`）。 |
+| `args ...interface{}` | 替换 `?` 的实际参数值，自动防 SQL 注入。 |
+
+<br/>
+
+**返回值**
+
+```go
+res, err := db.ExecContext(ctx, "INSERT ...", ...)
+```
+
+- **`err`**：如果 SQL 执行出错（如连接失败、语法错误、唯一键冲突等），这里会返回错误。
+- **`res sql.Result`**：包含执行结果的元信息，主要有两个方法：
+  - `res.RowsAffected()` → 返回受影响的行数（比如更新了 3 行）。
+  - `res.LastInsertId()` → 返回刚插入行的自增主键 ID（仅在 MySQL、SQLite 等支持的数据库中有效）。
+
+---
+<br/>
+
+**为什么用 `ExecContext` 而不是 `Exec`？**
+
+- `Exec` 是旧版方法，**不支持 `context.Context`**。
+- `ExecContext` 允许你：
+  - 设置超时（防止数据库慢查询拖垮服务）：
+    ```go
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    db.ExecContext(ctx, "INSERT ...")
+    ```
+  - 在 HTTP 请求取消时自动中断数据库操作（提升系统健壮性）。
+
+> ✅ **最佳实践：始终使用 `*Context` 版本的方法（如 `ExecContext`, `QueryContext`）**。
+
+---
+<br/>
+
+**举个完整例子**
+
+```go
+_, err := db.ExecContext(ctx,
+    "UPDATE users SET last_login = ? WHERE id = ?",
+    time.Now(),
+    userID,
+)
+if err != nil {
+    return fmt.Errorf("failed to update last login: %w", err)
+}
+```
+
+或者你的原始代码：
+
+```go
+res, err := r.db.ExecContext(ctx,
+    "INSERT INTO users (email, phone, password_hash, salt) VALUES (?, ?, ?, ?)",
+    u.Email, u.Phone, u.PasswordHash, u.Salt,
+)
+if err != nil {
+    return err // 比如邮箱已存在（违反唯一索引）
+}
+u.ID, _ = res.LastInsertId() // 获取新用户的 ID
+```
+
 
 
 <br/><br/><br/>
