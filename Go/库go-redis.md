@@ -847,25 +847,13 @@ func (c *RedisCache) DeletePattern(ctx context.Context, pattern string) error {
 }
 ```
 
-## 四、go.mod 完整示例
+<br/><br/><br/>
 
-```go
-// go.mod 文件示例
-module github.com/yourusername/my-redis-project
+***
+<br/>
 
-go 1.19
+> <h1 id="性能优化建议">性能优化建议</h1>
 
-require (
-    github.com/redis/go-redis/v9 v9.0.5
-)
-
-require (
-    github.com/cespare/xxhash/v2 v2.2.0 // indirect
-    github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-)
-```
-
-## 五、性能优化建议
 
 1. **连接池配置**：根据并发量调整 PoolSize
 2. **使用 Pipeline**：批量操作减少网络往返
@@ -873,11 +861,14 @@ require (
 4. **监控慢查询**：定期检查慢查询日志
 5. **数据分片**：大数据量时考虑分片
 
-## 六、常见问题解决
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="常见问题解决">常见问题解决</h1>
 
 1. **连接超时**：检查网络和防火墙设置
 2. **内存不足**：合理设置 maxmemory 策略
 3. **键冲突**：使用命名空间前缀
 4. **序列化问题**：使用 JSON 或 Protobuf
-
-这个完整的指南应该能帮助你在 Mac 上顺利使用 go-redis 进行开发。

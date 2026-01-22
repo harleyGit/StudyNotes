@@ -170,7 +170,8 @@
 - [K8s部署](/Go/K8s部署.md)
 - **库**
 	- [源码00](./Go/源码.md)
-	- [库go-redis](/Go/库go-redis.md)
+	- [库go-redis](./Go/库go-redis.md)
+	- [库golang-jwt](./Go/库golang-jwt.md)
 	- [Go标准库](./Go/Go标准库.md)
 	- [go-svc](./Go/go-svc.md)
 	- [路由httprouter](./Go/路由httprouter.md)
