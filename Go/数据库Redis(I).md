@@ -38,12 +38,24 @@ Redis 的客户端和服务端是通过 TCP 连接来进行数据交互， 服�
 **安装:**
 
 ```sh
+# 1. 安装 Go (1.13+ 版本)
+brew install go
+
+# 2. 验证安装
+go version
+
+# 3. 安装 Redis（用于本地测试）
 brew install redis
+
+# 4. 启动 Redis
+brew services start redis
+# 或手动启动
+redis-server /usr/local/etc/redis.conf
 ```
 
 <br/>
 
-**验证是否安装成功:**
+**客户端验证是否安装成功:**
 
 ```sh
 % redis-cli -v
