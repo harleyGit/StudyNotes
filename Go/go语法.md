@@ -26,6 +26,7 @@
 	- [go相对路径](#go相对路径)
 - [**‌基本语法与使用**](#基本语法与使用)
 	- [package中的init方法调用顺序](#package中的init方法调用顺序)
+	- [字符串拼接](#字符串拼接)
 	- [**变量**](#变量)
 		- [多个变量的声明和推导](#多个变量的声明和推导)
 		- [bool值字段有无判断](#bool值字段有无判断)
@@ -1404,6 +1405,135 @@ func Initialize() {
 
 `init()` 函数主要用于包的初始化工作，如注册驱动、初始化全局变量、验证环境等。
 
+<br/><br/><br/>
+
+***
+<br/><br/>
+
+> <h1 id="字符串拼接">字符串拼接</h1>
+
+**1. 使用 `+` 操作符（适合少量、简单的拼接）**
+
+```go
+s := "Hello" + " " + "World"
+fmt.Println(s) // Hello World
+```
+✅ **优点**：简单直观  
+❌ **缺点**：每次拼接都会创建新字符串（因为 Go 字符串是不可变的），**大量拼接时性能差、内存开销大**
+
+> 📌 适用于 **2~3 个字符串** 的简单拼接。
+
+<br/>
+
+**2. 使用 `fmt.Sprintf`（适合带格式的拼接）**
+
+```go
+name := "Alice"
+age := 30
+s := fmt.Sprintf("Name: %s, Age: %d", name, age)
+fmt.Println(s) // Name: Alice, Age: 30
+```
+✅ **优点**：可读性强，支持格式化  
+❌ **缺点**：性能一般，内部会使用 buffer，但比 `+` 好一点
+
+> 📌 适用于需要**插入变量并控制格式**的场景。
+
+<br/>
+
+**3. 使用 `strings.Join`（适合拼接字符串切片）**
+
+```go
+parts := []string{"apple", "banana", "cherry"}
+s := strings.Join(parts, ", ")
+fmt.Println(s) // apple, banana, cherry
+```
+✅ **优点**：高效拼接多个已知字符串  
+❌ **缺点**：必须先把内容组织成 `[]string`
+
+> 📌 适用于**已有字符串数组/切片**的情况。
+
+<br/>
+
+**4. 使用 `strings.Builder`（推荐！大量拼接时首选）**
+
+```go
+var builder strings.Builder
+
+builder.WriteString("Hello")
+builder.WriteString(" ")
+builder.WriteString("World!")
+builder.WriteString("\n")
+builder.WriteString("Go is great!")
+
+s := builder.String()
+fmt.Println(s)
+```
+✅ **优点**：
+- 内部使用可增长的字节缓冲区（类似 `bytes.Buffer`，但更高效且只读安全）
+- **零内存拷贝优化**（Go 1.10+）
+- 性能最好，尤其适合**循环中多次拼接**
+
+❌ **缺点**：代码稍长
+
+> 📌 **强烈推荐用于循环或大量字符串拼接的场景！**
+
+---
+<br/>
+
+**⚠️ 不推荐：`bytes.Buffer`（虽然能用，但 `strings.Builder` 更优）**
+
+```go
+var buf bytes.Buffer
+buf.WriteString("hello")
+s := buf.String()
+```
+> `strings.Builder` 是专门为字符串拼接设计的，比 `bytes.Buffer` 更安全（防止误读写）、性能略优。
+
+---
+<br/>
+
+**性能对比（大致排序，从快到慢）：**
+1. `strings.Builder`（大量拼接）
+2. `strings.Join`（已知切片）
+3. `fmt.Sprintf`（带格式）
+4. `+`（仅限少量）
+
+---
+<br/>
+
+**最佳实践建议：**
+| 场景 | 推荐方式 |
+|------|--------|
+| 拼接 2~3 个常量字符串 | `+` |
+| 插入变量并格式化 | `fmt.Sprintf` |
+| 拼接 `[]string` | `strings.Join` |
+| 循环中拼接（如日志、JSON 手动构建等） | `strings.Builder` |
+
+---
+<br/>
+
+**示例：循环拼接（错误 vs 正确）**
+
+```go
+// ❌ 错误：性能差（O(n²)）
+var s string
+for i := 0; i < 1000; i++ {
+    s += strconv.Itoa(i) // 每次都新建字符串！
+}
+
+// ✅ 正确：高效（O(n)）
+var builder strings.Builder
+for i := 0; i < 1000; i++ {
+    builder.WriteString(strconv.Itoa(i))
+}
+s := builder.String()
+```
+
+
+<br/><br/><br/>
+
+***
+<br/><br/>
 
 > <h1 id="变量">变量</h1>
 
