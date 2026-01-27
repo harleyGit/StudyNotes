@@ -1,6 +1,7 @@
 ><h1 id='目录'>目录</h1>
 - [**Git提交规范**](#git提交规范)
 	- [模块图片相对路径](#模块图片相对路径)
+- [**注释标签**](#注释标签)
 - [**C语言**](#c-language)
 - [**Go**](#go)
 - [**iOS开发**](#ios开发)
@@ -92,6 +93,41 @@
 - [**超过1000本的计算机经典书籍分享**](https://github.com/forthespada/CS-Books)
 - [**LearnGolang(Github学习资料**)](https://github.com/LearnGolang/LearnGolang/tree/master)
 - [**Go编程基础**](https://github.com/Unknwon/go-fundamental-programming)
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="注释标签">注释标签</h1>
+
+- **标准任务标签**
+	- **`// TODO:`** - 需要后续完成的功能
+	- **`// FIXME:`** - 需要修复的问题/已知bug
+	- **`// OPTIMIZE:`** - 需要优化的代码
+	- **`// HACK:`** - 临时解决方案/需要重构
+	- **`// NOTE:`** - 重要说明
+	- **`// XXX:`** - 警告/需要注意的地方
+
+<br/>
+
+- **Go特定标签**
+	- **`// BUG(rsc):`** - Go源码中使用的bug标记（会被godoc识别）
+	- **`// DEPRECATED:`** - 已弃用的代码
+	- **`// UNIMPLEMENTED:`** - 未实现的功能
+<br/>
+
+- **工具支持的标签，很多IDE和工具会自动高亮这些标签：**
+
+```go
+// REVIEW: 需要代码审查
+// BUG: 已知bug
+// WARNING: 警告信息
+// PERF: 性能相关
+// SECURITY: 安全相关
+```
+
+
 
 
 <br/><br/><br/>
