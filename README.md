@@ -203,7 +203,8 @@
 - [Go工程文件配置](./Go/Go工程文件配置.md)
 - [**‌发版**](./Go/发版.md)
 - [Makefile文件](./Go/Makefile文件.md)
-- [K8s部署](/Go/K8s部署.md)
+- [K8s部署](./Go/K8s部署.md)
+- [**日志**](./Go/日志.md)
 - **库**
 	- [源码00](./Go/源码.md)
 	- [库go-redis](./Go/库go-redis.md)
