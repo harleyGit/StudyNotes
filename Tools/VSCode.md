@@ -499,154 +499,165 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 
 ```json
 {
-  "editor.accessibilitySupport": "off", // on Accessibility 强制打开声音错误、警告、终端
-  "audioCues.enabled": "off", // 关闭 比比声
-  "editor.fontSize": 14, // 代码编辑器字体大小
-  "terminal.integrated.fontSize": 12,
-  "window.zoomLevel": 1,
-  "update.mode": "none", //禁止更新
-  "dart.openDevTools": "flutter",
-  "git.autofetch": true,
-  "files.autoSave": "afterDelay",
-  "workbench.colorTheme": "Default Light+",
-  "dart.debugExternalLibraries": false,
-  "dart.debugSdkLibraries": false,
-  "terminal.integrated.scrollback": 50000, // 占用大量内存
-  "debug.inlineValues": true,
-  "editor.suggestSelection": "first",
-  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-  "java.semanticHighlighting.enabled": true,
-  // 保存时自动格式化
-  "editor.formatOnSave": true,
-  "files.exclude": {
-    "**/.classpath": true,
-    "**/.project": true,
-    "**/.settings": true,
-    "**/.factorypath": true
-  },
-  "[dart]": {
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "editor.rulers": [80],
-    "editor.selectionHighlight": false,
-    "editor.suggest.snippetsPreventQuickSuggestions": false,
-    "editor.suggestSelection": "first",
-    "editor.tabCompletion": "onlySnippets",
-    "editor.wordBasedSuggestions": "off"
-  },
-  "java.project.importOnFirstTimeStartup": "automatic",
-  "explorer.confirmDelete": false,
-  "C_Cpp.updateChannel": "Insiders",
-  "diffEditor.ignoreTrimWhitespace": true,
-  "files.autoGuessEncoding": true,
-  "dart.showInspectorNotificationsForWidgetErrors": false,
-  "settingsSync.ignoredSettings": [],
-  // 全局：所有语言，不影响其他语言类似配置
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
-  },
-  "redhat.telemetry.enabled": true,
-  "security.workspace.trust.untrustedFiles": "open",
-  "editor.unicodeHighlight.nonBasicASCII": false,
-  "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
-  "go.toolsManagement.checkForUpdates": "local",
-  // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
-  "go.alternateTools": {
-    "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
-  },
-  "go.toolsEnvVars": {
-    "GO111MODULE": "on",
-    "GOPROXY": "https://goproxy.cn,direct",
-    "GOTOOLCHAIN": "local" //很重要，使其工具链版本和本地go sdk保持一致，不会和go.mod保持一致，避免工具链和sdk不统一导致无法使用vscode的debugprint调试
-  },
-  // 调试配置
-  "go.delveConfig": {
-    "showRegisters": false,
-    "debugAdapter": "dlv-dap",
-    "apiVersion": 2,
-    "showGlobalVariables": true
-  },
-  "gopls": {
-    "staticcheck": true // 可选：启用静态分析
-  },
-  "editor.quickSuggestions": {
-    "other": true,
-    "comments": false,
-    "strings": true
-  },
-  // ===== Go 编辑行为（只作用于 .go 文件）=====
-  "[go]": {
-    "editor.defaultFormatter": "golang.go",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
-    },
-    "editor.quickSuggestions": {
-      "other": true,
-      "comments": false,
-      "strings": true
-    }
-  },
-  // start ===== Go 工具链 / LSP（全局）=====>
-  // 配置 key 以 editor. 开头 → 可以写进 [go]
-  // 配置 key 以 go. / gopls. 开头 → 只能写全局
-  "go.goroot": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go",
-  "go.gopath": "/Users/ganghuang/HGFiles/GitHub/GoProject",
-  "go.useLanguageServer": true,
-  // 代码格式化
-  "go.formatTool": "goimports", //会自动整理并移除未使用的import
-  // 代码分析
-  "go.lintTool": "golangci-lint",
-  // 自动补全
-  "go.autocompleteUnimportedPackages": true,
-  // 代码导航
-  "go.inferGopath": true,
-  "go.docsTool": "gogetdoc",
-  // end <===== Go 工具链 / LSP（全局）=====
-  // 构建标签
-  "go.buildTags": "",
-  "editor.tabCompletion": "on",
-  // 设置 Prettier 为默认格式化工具,Go 不会用 Prettier, Go 只认：go.formatTool、gopls
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  // 如果是 JS/React 项目，可以指定格式化的文件类型
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-
-  // 启用 CSS 和 SCSS 支持
-  "css.validate": true,
-  "scss.validate": true,
-  "less.validate": true,
-  // 启用 JavaScript 和 CSS 文件跳转
-  "javascript.implicitProjectConfig.checkJs": true,
-  "css.lint.validProperties": "all",
-  "[html]": {
-    "editor.defaultFormatter": "vscode.html-language-features"
-  },
-  "docker.extension.enableComposeLanguageServer": false,
-  "makefile.configureOnOpen": true,
-  "editor.minimap.enabled": false,
-  "accessibility.signals.lineHasError": {
-    "sound": "off"
-  },
-  "accessibility.signals.terminalBell": {
-    "sound": "off"
-  },
-  "terminal.integrated.enableVisualBell": false
+  // <===== 基础体验开始 =========
+  "editor.accessibilitySupport": "off", // on Accessibility 强制打开声音错误、警告、终端
+  "audioCues.enabled": "off", // 关闭 比比声
+  "editor.fontSize": 16, // 代码编辑器字体大小
+  "terminal.integrated.fontSize": 12,
+  "update.mode": "none", //禁止更新
+  "workbench.colorTheme": "Default Light+",
+  "editor.minimap.enabled": false,
+"terminal.integrated.enableVisualBell": false,
+  "terminal.integrated.scrollback": 50000, // 占用大量内存
+  // ===== 基础体验结束 =========>
+  // <===== 编辑器通用行为开始 =====
+  "editor.inlineSuggest.enabled": true,
+  "editor.tabCompletion": "on",
+  "debug.inlineValues": true,
+  "editor.suggestSelection": "first",
+  "editor.formatOnSave": true, // 保存时自动格式化
+  "editor.unicodeHighlight.nonBasicASCII": false,
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "true",
+    "source.fixAll": "true",
+    "source.fixAll.eslint": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode", // 设置 Prettier 为默认格式化工具,Go 不会用 Prettier, Go 只认：go.formatTool、gopls
+  "editor.formatOnType": false, // required
+  "editor.formatOnPaste": true, // optional
+  // ===== 编辑器通用行为结束 =====>
+  // <===== 文件 & Git =====
+  "files.autoSave": "afterDelay",
+  "files.autoGuessEncoding": true,
+  "explorer.confirmDelete": false,
+  "files.exclude": {
+    "**/.classpath": true,
+    "**/.project": true,
+    "**/.settings": true,
+    "**/.factorypath": true
+  },
+  "github.copilot.enable": {
+    //文档关
+    "*": true,
+    "markdown": false,
+    "plaintext": false
+  },
+  "git.autofetch": true,
+  "github.copilot.inlineSuggest.enable": true,
+  "github.copilot.editor.enableAutoCompletions": true,
+  // ===== 文件 & Git =====>
+  // ===== Dart / Flutter开始 =====>
+  "dart.openDevTools": "flutter",
+  "dart.debugExternalLibraries": false,
+  "dart.debugSdkLibraries": false,
+  "dart.showInspectorNotificationsForWidgetErrors": false,
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [80],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  // <===== Dart / Flutter🔚 =====
+  // <===== Java开始 =====
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "java.semanticHighlighting.enabled": true,
+  // ===== Java🔚  =====>
+  // <===== Web / React 开始=====
+  // 启用 CSS 和 SCSS 支持
+  "css.validate": true,
+  "scss.validate": true,
+  "less.validate": true,
+  // 启用 JavaScript 和 CSS 文件跳转
+  "javascript.implicitProjectConfig.checkJs": true,
+  "css.lint.validProperties": "all",
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  // 如果是 JS/React 项目，可以指定格式化的文件类型
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // ===== Web / React🔚 =====>
+  // ===== Go 环境开始 =====>
+  "go.useLanguageServer": true,
+  "go.toolsManagement.checkForUpdates": "local",
+  // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
+  "go.alternateTools": {
+    "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
+  },
+  "go.toolsEnvVars": {
+    "GO111MODULE": "on",
+    "GOPROXY": "https://goproxy.cn,direct",
+    "GOTOOLCHAIN": "local" //很重要，使其工具链版本和本地go sdk保持一致，不会和go.mod保持一致，避免工具链和sdk不统一导致无法使用vscode的debugprint调试
+  },
+  // 调试配置
+  "go.delveConfig": {
+    "showRegisters": false,
+    "debugAdapter": "dlv-dap",
+    "apiVersion": 2,
+    "showGlobalVariables": true
+  },
+  "gopls": {
+    "staticcheck": true // 可选：启用静态分析
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+},
+  // 代码格式化
+  "go.formatTool": "goimports", //会自动整理并移除未使用的import
+  // 代码分析
+  "go.lintTool": "golangci-lint",
+  // 自动补全
+  "go.autocompleteUnimportedPackages": true,
+  // 代码导航
+  "go.inferGopath": true,
+  "go.docsTool": "gogetdoc",
+  // 构建标签
+  "go.buildTags": "",
+  // ===== Go 环境结束🔚 =====>
+  // ===== 其他 =====>
+  "docker.extension.enableComposeLanguageServer": false,
+  "makefile.configureOnOpen": true,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "diffEditor.ignoreTrimWhitespace": true,
+  "accessibility.signals.lineHasError": {
+    "sound": "off"
+  },
+  "accessibility.signals.terminalBell": {
+    "sound": "off"
+  },
+  "settingsSync.ignoredSettings": [],
+  "redhat.telemetry.enabled": true,
+  "security.workspace.trust.untrustedFiles": "open",
+  "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma"
 }
 ```
 
 <br/>
-比如: Deepseek给的建议:
+
+**比如: Deepseek给的建议:**
 
 ```json
 {
