@@ -501,15 +501,16 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 {
   // <===== 基础体验开始 =========
   "editor.accessibilitySupport": "off", // on Accessibility 强制打开声音错误、警告、终端
-  "audioCues.enabled": "off", // 关闭 比比声
+  "audioCues.enabled": "off", // 关闭比比声
   "editor.fontSize": 16, // 代码编辑器字体大小
   "terminal.integrated.fontSize": 12,
+  "window.zoomLevel": 0.4, //全局 UI 缩放
   "update.mode": "none", //禁止更新
   "workbench.colorTheme": "Default Light+",
   "editor.minimap.enabled": false,
-"terminal.integrated.enableVisualBell": false,
-  "terminal.integrated.scrollback": 50000, // 占用大量内存
-  // ===== 基础体验结束 =========>
+  "terminal.integrated.enableVisualBell": false,
+  "terminal.integrated.scrollback": 50000, // 占用大量内存 
+  // ===== 基础体验结束 =========> 
   // <===== 编辑器通用行为开始 =====
   "editor.inlineSuggest.enabled": true,
   "editor.tabCompletion": "on",
@@ -523,14 +524,20 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "strings": true
   },
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "true",
-    "source.fixAll": "true",
-    "source.fixAll.eslint": true
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
   },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.run": "onSave",
   "editor.defaultFormatter": "esbenp.prettier-vscode", // 设置 Prettier 为默认格式化工具,Go 不会用 Prettier, Go 只认：go.formatTool、gopls
   "editor.formatOnType": false, // required
-  "editor.formatOnPaste": true, // optional
-  // ===== 编辑器通用行为结束 =====>
+  "editor.formatOnPaste": true, // optional 
+  // ===== 编辑器通用行为结束 =====> 
   // <===== 文件 & Git =====
   "files.autoSave": "afterDelay",
   "files.autoGuessEncoding": true,
@@ -549,8 +556,8 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   },
   "git.autofetch": true,
   "github.copilot.inlineSuggest.enable": true,
-  "github.copilot.editor.enableAutoCompletions": true,
-  // ===== 文件 & Git =====>
+  "github.copilot.editor.enableAutoCompletions": true, 
+  // ===== 文件 & Git =====> 
   // ===== Dart / Flutter开始 =====>
   "dart.openDevTools": "flutter",
   "dart.debugExternalLibraries": false,
@@ -565,24 +572,21 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "editor.suggestSelection": "first",
     "editor.tabCompletion": "onlySnippets",
     "editor.wordBasedSuggestions": "off"
-  },
-  // <===== Dart / Flutter🔚 =====
+  }, 
+  // <===== Dart / Flutter🔚 ===== 
   // <===== Java开始 =====
   "java.project.importOnFirstTimeStartup": "automatic",
-  "java.semanticHighlighting.enabled": true,
-  // ===== Java🔚  =====>
-  // <===== Web / React 开始=====
-  // 启用 CSS 和 SCSS 支持
+  "java.semanticHighlighting.enabled": true, 
+  // ===== Java🔚  =====> 
+  // <===== Web / React 开始===== // 启用 CSS 和 SCSS 支持
   "css.validate": true,
   "scss.validate": true,
-  "less.validate": true,
-  // 启用 JavaScript 和 CSS 文件跳转
+  "less.validate": true, // 启用 JavaScript 和 CSS 文件跳转
   "javascript.implicitProjectConfig.checkJs": true,
   "css.lint.validProperties": "all",
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
-  },
-  // 如果是 JS/React 项目，可以指定格式化的文件类型
+  }, // 如果是 JS/React 项目，可以指定格式化的文件类型
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -591,12 +595,11 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   },
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  // ===== Web / React🔚 =====>
+  }, 
+  // ===== Web / React🔚 =====> 
   // ===== Go 环境开始 =====>
   "go.useLanguageServer": true,
-  "go.toolsManagement.checkForUpdates": "local",
-  // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
+  "go.toolsManagement.checkForUpdates": "local", // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
   "go.alternateTools": {
     "go": "/opt/homebrew/Cellar/go/1.23.5/libexec/bin/go"
   },
@@ -604,8 +607,7 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "GO111MODULE": "on",
     "GOPROXY": "https://goproxy.cn,direct",
     "GOTOOLCHAIN": "local" //很重要，使其工具链版本和本地go sdk保持一致，不会和go.mod保持一致，避免工具链和sdk不统一导致无法使用vscode的debugprint调试
-  },
-  // 调试配置
+  }, // 调试配置
   "go.delveConfig": {
     "showRegisters": false,
     "debugAdapter": "dlv-dap",
@@ -621,19 +623,14 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
     }
-},
-  // 代码格式化
-  "go.formatTool": "goimports", //会自动整理并移除未使用的import
-  // 代码分析
-  "go.lintTool": "golangci-lint",
-  // 自动补全
-  "go.autocompleteUnimportedPackages": true,
-  // 代码导航
+  }, // 代码格式化
+  "go.formatTool": "goimports", //会自动整理并移除未使用的import // 代码分析
+  "go.lintTool": "golangci-lint", // 自动补全
+  "go.autocompleteUnimportedPackages": true, // 代码导航
   "go.inferGopath": true,
-  "go.docsTool": "gogetdoc",
-  // 构建标签
-  "go.buildTags": "",
-  // ===== Go 环境结束🔚 =====>
+  "go.docsTool": "gogetdoc", // 构建标签
+  "go.buildTags": "", 
+  // ===== Go 环境结束🔚 =====> 
   // ===== 其他 =====>
   "docker.extension.enableComposeLanguageServer": false,
   "makefile.configureOnOpen": true,
