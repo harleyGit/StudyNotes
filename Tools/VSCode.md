@@ -555,7 +555,6 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "plaintext": false
   },
   "git.autofetch": true,
-  "github.copilot.inlineSuggest.enable": true,
   "github.copilot.editor.enableAutoCompletions": true, 
   // ===== 文件 & Git =====> 
   // ===== Dart / Flutter开始 =====>
