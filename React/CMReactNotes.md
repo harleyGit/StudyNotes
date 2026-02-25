@@ -55,6 +55,7 @@
 	- [基于主键skuId的数组对齐+数据源替换](#基于主键skuId的数组对齐+数据源替换)
 	- [并发请求处理](#并发请求处理)
     - [Promise.all批处理网络请求](#Promise.all批处理网络请求)
+    - [数组遍历元素某个字段是否为nil](#数组遍历元素某个字段是否为nil)
 
 
 
@@ -4136,6 +4137,78 @@ const [appOptions, countryOptions] =
 
 但本质依然靠顺序。
 
+***
+<br/><br/><br/>
+> <h2 id="数组遍历元素某个字段是否为nil">数组遍历元素某个字段是否为nil</h2>
+
+**需求是：**
+> 遍历 `chooseMerchantArr`，
+> 只要 **存在任意一个元素的 `freeInfo` 为空或不存在 → 返回 false**
+
+这在逻辑上属于：**全量校验（all 校验）**。
+
+---
+<br/>
+
+使用 `Array.prototype.every()`：
+
+```js
+const isValid = chooseMerchantArr.every(item => {
+  return item.freeInfo != null && item.freeInfo !== '';
+});
+```
+
+<br/>
+
+**逻辑说明**
+
+| 判断                      | 说明                      |
+| ----------------------- | ----------------------- |
+| `item.freeInfo != null` | 过滤 `undefined` 和 `null` |
+| `item.freeInfo !== ''`  | 过滤空字符串                  |
+
+
+* `true` → 所有元素都有合法的 freeInfo
+* `false` → 至少有一个为空或不存在
+
+
+---
+
+## ✅ 更严谨写法（推荐用于生产环境）
+
+如果你希望：
+
+* 不允许 undefined
+* 不允许 null
+* 不允许 ''
+* 不允许纯空格
+
+```js
+const isValid = chooseMerchantArr.every(item => {
+  return typeof item.freeInfo === 'string' && item.freeInfo.trim() !== '';
+});
+```
+
+---
+<br/>
+
+**🔎 如果你想要反向判断（是否存在非法）**
+
+```js
+const hasInvalid = chooseMerchantArr.some(item => {
+  return item.freeInfo == null || item.freeInfo === '';
+});
+```
+
+<br/>
+
+**总结**
+
+| 需求      | 方法         |
+| ------- | ---------- |
+| 所有元素合法  | `every()`  |
+| 只要有一个非法 | `some()`   |
+| 传统循环    | `for...of` |
 
 
 
