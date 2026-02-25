@@ -52,6 +52,9 @@
 	- [overflow与阴影搭配](#overflow与阴影搭配)
 - [案例](#案例)
 	- [保留旧对象引用+合并新选择结果](#保留旧对象引用+合并新选择结果)
+	- [基于主键skuId的数组对齐+数据源替换](#基于主键skuId的数组对齐+数据源替换)
+	- [并发请求处理](#并发请求处理)
+    - [Promise.all批处理网络请求](#Promise.all批处理网络请求)
 
 
 
@@ -3625,8 +3628,9 @@ finalList = [
 ```
 
 ---
+<br/>
 
-# 七、为什么要这样做？
+**提问：为什么要这样做？**
 
 假设用户在 UI 里：
 
@@ -3649,8 +3653,7 @@ finalList = value;
 ✅ 只新增真正新增的项
 
 ---
-
-# 八、最后这句
+<br/>
 
 ```js
 isLegal: finalList?.length != 0
@@ -3666,8 +3669,472 @@ isLegal = finalList.length > 0
 
 > 只要选中不为空 → 合法
 
+***
+<br/><br/><br/>
+> <h2 id="基于主键skuId的数组对齐+数据源替换">基于主键skuId的数组对齐+数据源替换</h2>
+**方法实现遵守以下规则：**
+- 如果`chooseMerchant.value` 里的元素在 `valueXX` 中存在相同` skuId → `保留
+- 如果`不存在 → 删除`
+- 同时保证最终数据以 `valueXX` 为主（不能保留旧脏数据）
+
+***
+<br/>
+
+```js
+function mergeChooseMerchant(valueXX = [], chooseMerchant = {}) {
+  const oldList = chooseMerchant?.value || [];
+
+  // 1️⃣ 把旧数据做成 Map
+  const oldMap = new Map(
+    oldList.map(item => [item.skuId, item])
+  );
+
+  // 2️⃣ 以 valueXX 为基准构造最终数组
+  const finalList = valueXX.map(item => {
+    return oldMap.get(item.skuId) || item;
+  });
+
+  return {
+    value: finalList,
+    isLegal: finalList.length > 0,
+  };
+}
+```
+
+---
+<br/>
+
+**1️⃣ 最新数据源（valueXX）**
+
+```js
+const valueXX = [
+  { skuId: '1001', name: 'Camera A', price: 199 },
+  { skuId: '1002', name: 'Camera B', price: 299 },
+];
+```
+
+表示：当前系统中合法的 SKU 只有 1001 和 1002。
+
+---
+<br/>
+
+**2️⃣ 旧已选数据（chooseMerchant）**
+
+```js
+const chooseMerchant = {
+  value: [
+    {
+      skuId: '1001',
+      name: 'Camera A',
+      price: 199,
+      discount: 20,   // 用户额外编辑字段
+    },
+    {
+      skuId: '1003',
+      name: 'Camera C',
+      price: 399,
+    }
+  ]
+};
+```
+
+注意：
+
+* 1001 是合法的
+* 1003 已经不在 valueXX 里了（应该被删除）
+
+---
+<br/>
+
+**执行过程拆解**
+
+<br/>
+
+**第一步：构造 oldMap**
+
+```js
+oldMap = {
+  '1001' => { skuId:'1001', name:'Camera A', price:199, discount:20 }
+  '1003' => { skuId:'1003', name:'Camera C', price:399 }
+}
+```
+
+<br/>
+
+**第二步：遍历 valueXX**
+
+**遍历到 1001**
+
+```js
+oldMap.get('1001') 存在
+```
+
+→ 使用旧对象（保留 discount）
+
+结果：
+
+```js
+{
+  skuId: '1001',
+  name: 'Camera A',
+  price: 199,
+  discount: 20
+}
+```
+
+<br/>
+
+**遍历到 1002**
+
+```js
+oldMap.get('1002') 不存在
+```
+
+→ 使用 valueXX 的对象
+
+结果：
+
+```js
+{
+  skuId: '1002',
+  name: 'Camera B',
+  price: 299
+}
+```
+
+<br/>
+
+**✅ 最终返回结果**
+
+```js
+{
+  value: [
+    {
+      skuId: '1001',
+      name: 'Camera A',
+      price: 199,
+      discount: 20   // 保留
+    },
+    {
+      skuId: '1002',
+      name: 'Camera B',
+      price: 299
+    }
+  ],
+  isLegal: true
+}
+```
+
+---
+<br/>
+
+**可以看到规则全部满足**
+
+| skuId | 结果    | 原因           |
+| ----- | ----- | ------------ |
+| 1001  | 保留旧对象 | 存在于 valueXX  |
+| 1003  | 删除    | 不存在于 valueXX |
+| 1002  | 自动加入  | 在 valueXX 中  |
 
 
+***
+<br/><br/><br/>
+> <h2 id="并发请求处理">并发请求处理</h2>
+
+- **需求拆成三步：**
+	- 从数组中提取 skuId → 组成新数组
+	- 遍历 skuId 数组 → `逐个调用 requestSkuDays`
+	- 将返回结果组装成对象 → `存入 state`
+	- 使用 `Promise.all` 并发处理
+
+```js
+class DemoPage extends React.Component {
+
+  state = {
+    days: {}
+  };
+
+  // 主逻辑方法
+  handleRequestSkuDays = (list = []) => {
+
+    // 1️⃣ 提取 skuId 数组
+    const skuIdList = list.map(item => item.skuId).filter(Boolean);
+
+    if (skuIdList.length === 0) {
+      this.setState({ days: {} });
+      return;
+    }
+
+    // 2️⃣ 并发调用接口
+    const requestList = skuIdList.map(skuId =>
+      FreeiCloudStoragePolicyEditVM.requestSkuDays({ mainSkuId: skuId })
+        .then(res => ({
+          mainSkuId: skuId,
+          data: res
+        }))
+    );
+
+    // 3️⃣ 汇总结果
+    Promise.all(requestList)
+      .then(results => {
+        const aa = {};
+
+        results.forEach(item => {
+          aa[item.mainSkuId] = item.data;
+        });
+
+        this.setState({ days: aa });
+      })
+      .catch(err => {
+        console.error('requestSkuDays error:', err);
+      });
+  };
+
+}
+```
+
+<br/>
+
+**最终得到的 state 结构**
+
+```js
+days = {
+  "279308005005066240": res1,
+  "xxxx": res2,
+  "yyyy": res3
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="Promise.all批处理网络请求">Promise.all批处理网络请求</h2>
+
+```js
+static transformSubsidyActivityData = async ({ activityModel, intl }) => {
+  const { pcbaSubsidyItems, ...merchantData } = activityModel;
+
+  // 1️⃣ 并发执行所有异步任务
+  const [
+    appOptions,
+    countryOptions
+  ] = await Promise.all([
+    this.getSelectedAppOptions(activityModel?.belongAppId ?? ''),
+    this.getSelectedCountryOptions(activityModel?.effectiveCountry ?? '', intl),
+  ]);
+
+  // 2️⃣ 整理最终数据
+  const dataItems = {
+    app: { value: appOptions, isLegal: true },
+    country: { value: countryOptions, isLegal: true },
+    product: { value: activityModel?.product ?? [], isLegal: true },
+  };
+
+  return dataItems;
+};
+```
+***
+<br/>
+
+
+**🙋提问：** 为什么必须 Promise.all？
+
+如果你写：
+
+```js
+const app = await this.getSelectedAppOptions(...)
+const country = await this.getSelectedCountryOptions(...)
+```
+是串行执行。
+
+<br/>
+
+但使用：
+
+```js
+await Promise.all([...])
+```
+是并发执行，性能更好。
+
+<br/>
+
+**🎯 调用方式（React 类组件）**
+
+```js
+componentDidMount() {
+  this.loadData();
+}
+
+loadData = async () => {
+  const dataItems =
+    await FreeiCloudStoragePolicyEditVM.transformSubsidyActivityData({
+      activityModel: this.props.activityModel,
+      intl: this.props.intl,
+    });
+
+  this.setState(dataItems);
+};
+```
+
+
+***
+<br/>
+
+```js
+const [appOptions, countryOptions] = await Promise.all([
+  this.getSelectedAppOptions(activityModel?.belongAppId ?? ''),
+  this.getSelectedCountryOptions(activityModel?.effectiveCountry ?? '', intl),
+]);
+```
+
+是**严格一一对应**，顺序完全由 `Promise.all([...])` 里数组的顺序决定。
+
+**等价于：**
+
+```js
+const results = await Promise.all([
+  PromiseA,
+  PromiseB
+]);
+
+// results[0] 对应 PromiseA
+// results[1] 对应 PromiseB
+
+const appOptions = results[0];
+const countryOptions = results[1];
+```
+
+---
+<br/>
+
+** 1️⃣ Promise.all 的返回顺序**
+
+**返回值顺序永远等于传入数组顺序**
+
+即便：
+
+* 第二个 Promise 先返回
+* 第一个 Promise 后返回
+
+最终数组顺序依然保持：
+
+```
+[第一个Promise结果, 第二个Promise结果]
+```
+
+---
+<br/>
+
+```js
+const p1 = new Promise(resolve =>
+  setTimeout(() => resolve('A'), 2000)
+);
+
+const p2 = new Promise(resolve =>
+  setTimeout(() => resolve('B'), 500)
+);
+
+const result = await Promise.all([p1, p2]);
+
+console.log(result);
+```
+
+输出永远是：
+
+```
+['A', 'B']
+```
+
+即使 B 先完成。
+
+---
+<br/>
+
+**回到代码中**
+
+```js
+[
+  this.getSelectedAppOptions(...),      // index 0
+  this.getSelectedCountryOptions(...),  // index 1
+]
+```
+
+所以：
+
+| Promise index | 变量             |
+| ------------- | -------------- |
+| 0             | appOptions     |
+| 1             | countryOptions |
+
+严格对应。
+
+---
+<br/>
+
+**常见错误**
+
+很多人误以为是“谁先返回谁排前面”，这是错误的。
+
+Promise.all 是：
+
+> 等全部完成 → 按传入顺序组装结果
+
+不是按完成时间排序。
+
+---
+<br/>
+
+**如果以后参数很多怎么办？**
+
+比如 5 个：
+
+```js
+const [
+  appOptions,
+  countryOptions,
+  productOptions,
+  skuOptions,
+  userOptions
+] = await Promise.all([
+  fn1(),
+  fn2(),
+  fn3(),
+  fn4(),
+  fn5()
+]);
+```
+
+顺序必须严格一致。
+
+---
+<br/>
+
+**更安全写法（对象解构方案，避免顺序问题）**
+
+如果你担心顺序错乱，可以写成：
+
+```js
+const results = await Promise.all([
+  this.getSelectedAppOptions(...),
+  this.getSelectedCountryOptions(...),
+]);
+
+const appOptions = results[0];
+const countryOptions = results[1];
+```
+
+或者封装成：
+
+```js
+const promises = {
+  app: this.getSelectedAppOptions(...),
+  country: this.getSelectedCountryOptions(...),
+};
+
+const [appOptions, countryOptions] =
+  await Promise.all(Object.values(promises));
+```
+
+但本质依然靠顺序。
 
 
 
