@@ -1,5 +1,7 @@
 - [新类型和别名](#新类型和别名)
 	- [新类型不可以使用原类型的方法](#新类型不可以使用原类型的方法)
+- [范型](#范型)
+	- [范型推断](#范型推断)
 - [**日志**](#日志)
 	- [日志格式](#日志格式)
 - [文件](#文件)
@@ -181,6 +183,138 @@ func main() {
 不过这会把 `MyString` 变成结构体，不再是单纯的“新字符串类型”。
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "范型">范型</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="范型推断">范型推断</h2>
+
+```go
+func SuccessResult[T any](w http.ResponseWriter, r *http.Request, data T) {
+
+	result := HGResultModel[T]{
+		Code:      OKCode,
+		Message:   "success💯",
+		Result:    data,
+		TID:       UtilsPackage.GetTID(r.Context()),
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	writeResult(result, w)
+}
+```
+
+**提问：** 那为什么在下面的函数中不需要在调用的时候指明范型的类型：
+
+```go
+// 调用
+HGResponsePakcage.SuccessResult(w, r, resp)
+```
+***
+<br/>
+
+
+这个涉及 **Go 泛型的类型推导（type inference）机制**。
+
+不需要写成：
+
+```go
+HGResponsePakcage.SuccessResult[HGPageResultModel[*UserDtoPackage.HGCreateUserDTO]](w, r, resp)
+```
+
+就能正常工作。
+
+---
+<br/>
+
+因为**Go 编译器能从实参 `resp` 的类型自动推导出泛型参数 `T`，所以无需显式指定。**
+
+<br/>
+
+**函数定义是：**
+
+```go
+func SuccessResult[T any](w http.ResponseWriter, r *http.Request, data T)
+```
+<br/>
+
+**调用：**
+
+```go
+SuccessResult(w, r, resp)
+```
+
+其中 `resp` 的类型是：
+
+```go
+HGResponsePakcage.HGPageResultModel[*UserDtoPackage.HGCreateUserDTO]
+```
+
+Go 编译器会做以下事情：
+
+1. 看到第三个参数 `data T` 被传入了 `resp`；
+2. 推断出：为了让 `data T` 能接收 `resp`，**`T` 必须等于 `resp` 的类型**；
+3. 因此自动将 `T` 推导为 `HGPageResultModel[*UserDtoPackage.HGCreateUserDTO]`；
+4. 整个函数实例化为：
+   ```go
+   func SuccessResult[HGPageResultModel[*UserDtoPackage.HGCreateUserDTO]](...)
+   ```
+
+这个过程叫做 **类型推导（Type Inference）**，是 Go 泛型的核心便利特性之一。
+
+---
+<br/>
+
+**🆚 对比：什么时候必须显式指定泛型参数？**
+
+只有当 **编译器无法从参数中推断出 `T`** 时，才需要手动指定。
+
+**❌ 例子：无参数或参数不包含 `T`**
+
+```go
+func NewList[T any]() []T {
+    return make([]T, 0)
+}
+
+// 错误：无法推断 T 是什么
+list := NewList() // ❌ 编译错误！
+
+// 正确：必须显式指定
+list := NewList[string]() // ✅
+```
+<br/>
+
+**✅ 你的场景：参数包含 `T`**
+
+```go
+func SuccessResult[T any](..., data T)
+//                    ↗
+//             data 的类型 = T
+```
+→ 所以 **有足够信息推导 `T`**，无需手动写。
+
+<br/>
+
+**🧪 验证：尝试传不同类型的 `resp`**
+
+如果你传一个完全无关的类型，比如 `int`：
+
+```go
+HGResponsePakcage.SuccessResult(w, r, 42)
+```
+
+它依然能编译！因为 `T` 被推导为 `int`，生成的是：
+
+```go
+HGResultModel[int]{ Result: 42, ... }
+```
+
+这也说明了：**只要参数能匹配，Go 就能推导泛型类型**。
 
 
 <br/><br/><br/>
