@@ -1,6 +1,7 @@
 
 - [AI集合模型ollama](#AI集合模型ollama)
 - [OpenAI的CodeX](#OpenAI的CodeX)
+- [OpenCode](#OpenCode)
 
 
 <br/><br/><br/>
@@ -47,4 +48,15 @@
   - 使用计划模式： 对大多数用户来说，这是最简单且最有效的选择。计划模式允许 Codex 收集背景信息，提出澄清问题，并在实施前制定更强有力的计划。用 `/plan`或 `Shift + Tab` 键切换。
   - 请 Codex 采访你： 如果你对自己想要什么有个大致想法，但不确定如何好好描述，先让 Codex 问你问题。告诉它挑战你的假设，把模糊的想法变成具体的东西，然后再写代码。
   - 使用 PLANS.md 模板： 对于更高级的工作流程，你可以配置 `Codex 遵循 PLANS.md` 或执行计划模板，用于较长时间或多步骤的工作。更多细节请参见执行 [计划指南](https://developers.openai.com/cookbook/articles/codex_exec_plans)。 
-		
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "OpenCode">OpenCode</h1>
+[下载和配置：](https://opencode.ai/zh/download)
+
+
+
