@@ -37,6 +37,7 @@
 	- [minicom终端串口工具](#minicom终端串口工具)
 - [硬件自带Wi-Fi](#硬件自带Wi-Fi)
 	- [App加入设备Wi-Fi网络](#App加入设备Wi-Fi网络)
+- [iot配网简单架构](#iot简单配网架构)
 - **借鉴资料**
 	- [iOS 蓝牙（中心模式连接外设）](https://juejin.cn/post/7129891777783267342)
 
@@ -3653,6 +3654,256 @@ func getWiFiInfo() {
 * **`NEHotspotConfigurationManager`** → 管理 Wi-Fi 配置（添加/移除）
 * **`NEHotspotNetwork.fetchCurrent`** → 获取当前 Wi-Fi 详细信息（信号强度、SSID、BSSID）
 * **`CNCopySupportedInterfaces`** → 获取 Wi-Fi SSID/BSSID（老 API，功能有限）
+
+
+```swift
+// MARK: - 定义配网方式
+enum DeviceConfigMethod {
+    case bluetooth
+    case lan
+    case softAP
+    case ethernet
+}
+
+// MARK: - 定义设备基础模型
+class Device {
+    let id: String
+    let productId: String
+    var name: String?
+    
+    init(id: String, productId: String, name: String? = nil) {
+        self.id = id
+        self.productId = productId
+        self.name = name
+    }
+}
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "iot简单配网架构">iot简单配网架构</h1>
+
+
+// MARK: - 把不同配网方式需要的参数拆开
+protocol DeviceConfigRequest {}
+
+struct BluetoothConfigRequest: DeviceConfigRequest {
+    let peripheralID: String
+}
+
+struct LANConfigRequest: DeviceConfigRequest {
+    let ip: String
+    let port: UInt16
+}
+
+struct SoftAPConfigRequest: DeviceConfigRequest {
+    let ssid: String
+    let password: String
+    let targetWiFiSSID: String
+    let targetWiFiPassword: String
+}
+
+struct EthernetConfigRequest: DeviceConfigRequest {
+    let host: String
+    let port: UInt16
+}
+
+
+protocol DeviceConfigStrategy {
+    associatedtype Request: DeviceConfigRequest
+    
+    var method: DeviceConfigMethod { get }
+    
+    func startConfig(
+        for device: Device,
+        request: Request
+    ) async throws -> DeviceConfigResult
+}
+
+struct DeviceConfigResult {
+    let deviceID: String
+    let success: Bool
+    let message: String
+}
+
+
+
+// MARK: -- 各种方式分别实现
+// MARK: -- 蓝牙
+final class BluetoothConfigStrategy: DeviceConfigStrategy {
+    let method: DeviceConfigMethod = .bluetooth
+    
+    func startConfig(
+        for device: Device,
+        request: BluetoothConfigRequest
+    ) async throws -> DeviceConfigResult {
+        print("开始蓝牙配网: \(device.id), peripheralID: \(request.peripheralID)")
+        return DeviceConfigResult(
+            deviceID: device.id,
+            success: true,
+            message: "Bluetooth config success"
+        )
+    }
+}
+
+
+// MARK: -- LAN
+final class LANConfigStrategy: DeviceConfigStrategy {
+    let method: DeviceConfigMethod = .lan
+    
+    func startConfig(
+        for device: Device,
+        request: LANConfigRequest
+    ) async throws -> DeviceConfigResult {
+        print("开始局域网配网: \(device.id), ip: \(request.ip)")
+        return DeviceConfigResult(
+            deviceID: device.id,
+            success: true,
+            message: "LAN config success"
+        )
+    }
+}
+
+
+
+// MAKR： - AP
+final class SoftAPConfigStrategy: DeviceConfigStrategy {
+    let method: DeviceConfigMethod = .softAP
+    
+    func startConfig(
+        for device: Device,
+        request: SoftAPConfigRequest
+    ) async throws -> DeviceConfigResult {
+        print("开始 SoftAP 配网: \(device.id), AP: \(request.ssid)")
+        return DeviceConfigResult(
+            deviceID: device.id,
+            success: true,
+            message: "SoftAP config success"
+        )
+    }
+}
+
+// - 网线
+final class EthernetConfigStrategy: DeviceConfigStrategy {
+    let method: DeviceConfigMethod = .ethernet
+    
+    func startConfig(
+        for device: Device,
+        request: EthernetConfigRequest
+    ) async throws -> DeviceConfigResult {
+        print("开始网线配网: \(device.id), host: \(request.host)")
+        return DeviceConfigResult(
+            deviceID: device.id,
+            success: true,
+            message: "Ethernet config success"
+        )
+    }
+}
+
+
+// MARK： - 工厂模式：统一创建策略
+enum DeviceConfigFactory {
+    static func makeBluetoothStrategy() -> BluetoothConfigStrategy {
+        BluetoothConfigStrategy()
+    }
+
+    static func makeLANStrategy() -> LANConfigStrategy {
+        LANConfigStrategy()
+    }
+
+    static func makeSoftAPStrategy() -> SoftAPConfigStrategy {
+        SoftAPConfigStrategy()
+    }
+
+    static func makeEthernetStrategy() -> EthernetConfigStrategy {
+        EthernetConfigStrategy()
+    }
+}
+
+
+//final class BluetoothConfigStrategy {
+//    private let bleManager: BLEManager
+//    private let logger: Logger
+//
+//    init(bleManager: BLEManager, logger: Logger) {
+//        self.bleManager = bleManager
+//        self.logger = logger
+//    }
+//}
+
+// 再往上包一层 Facade，给业务侧更好用的入口
+final class DeviceConfigurator {
+
+    func configBluetooth(
+        device: Device,
+        request: BluetoothConfigRequest
+    ) async throws -> DeviceConfigResult {
+        let strategy = DeviceConfigFactory.makeBluetoothStrategy()
+        return try await strategy.startConfig(for: device, request: request)
+    }
+
+    func configLAN(
+        device: Device,
+        request: LANConfigRequest
+    ) async throws -> DeviceConfigResult {
+        let strategy = DeviceConfigFactory.makeLANStrategy()
+        return try await strategy.startConfig(for: device, request: request)
+    }
+
+    func configSoftAP(
+        device: Device,
+        request: SoftAPConfigRequest
+    ) async throws -> DeviceConfigResult {
+        let strategy = DeviceConfigFactory.makeSoftAPStrategy()
+        return try await strategy.startConfig(for: device, request: request)
+    }
+
+    func configEthernet(
+        device: Device,
+        request: EthernetConfigRequest
+    ) async throws -> DeviceConfigResult {
+        let strategy = DeviceConfigFactory.makeEthernetStrategy()
+        return try await strategy.startConfig(for: device, request: request)
+    }
+}
+
+// 调用Demo
+class TestClass {
+    func testaa() async {
+        let device = Device(id: "123", productId: "ABC")
+        let request = SoftAPConfigRequest(
+            ssid: "Device_AP",
+            password: "12345678",
+            targetWiFiSSID: "HomeWiFi",
+            targetWiFiPassword: "home_password"
+        )
+
+        let configurator = DeviceConfigurator()
+        let result = try? await configurator.configSoftAP(device: device, request: request)
+        print(result?.message)
+    }
+    
+    func testSoftAPConfigSuccess() async throws {
+        let strategy = SoftAPConfigStrategy()
+        let device = Device(id: "123", productId: "ABC")
+        let request = SoftAPConfigRequest(
+            ssid: "Device_AP",
+            password: "12345678",
+            targetWiFiSSID: "HomeWiFi",
+            targetWiFiPassword: "11111111"
+        )
+
+        let result = try await strategy.startConfig(for: device, request: request)
+
+//        XCTAssertTrue(result.success)
+    }
+}
+
+```
 
 
 
