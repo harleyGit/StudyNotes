@@ -2,6 +2,7 @@
 - [AI集合模型ollama](#AI集合模型ollama)
 - [OpenAI的CodeX](#OpenAI的CodeX)
 - [OpenCode](#OpenCode)
+- [快马-inscode](https://inscode.net)
 
 
 <br/><br/><br/>
