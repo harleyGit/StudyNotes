@@ -3,12 +3,19 @@
 - [OpenAI的CodeX](#OpenAI的CodeX)
 - [CodeX-CLI使用](#CodeX-CLI使用)
 	- [安装Cli](#安装Cli)
-	- [了解工程当前状态](#工程当前状态)
+	- [CLI组合快捷键](#CLI组合快捷键)
+	- [常用命令](#常用命令)
+	- [提示词实例](#提示词实例) 	
+	- [工程当前状态](#工程当前状态)
 	- [进入工程目录并启动](#进入工程目录并启动)
 	- [打开某个类文件修改某个工功能](#打开某个类文件修改某个工功能)
 	- [终止当前提问](#终止当前提问)
-		- [Ctrl+C停止交互，重启会话](#Ctrl+C停止交互，重启会话) 
+		- [Ctrl+C停止交互，重启会话](#Ctrl+C停止交互，重启会话)
+  			- [恢复会话](#恢复会话) 
 		- [停止当前会话，继续重新提问](#停止当前会话，继续重新提问)
+  	- [AGENTS.md记忆](#AGENTS.md记忆)
+  	- [快捷命令](#快捷命令)
+	- [网络搜索](#网络搜索)
 - [OpenCode](#OpenCode)
 - [快马-inscode](https://inscode.net)
 
@@ -81,6 +88,66 @@ npm i -g @openai/codex
 ```sh
 brew install --cask codex
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="CLI组合快捷键">CLI组合快捷键</h2>
+
+| 组合快捷键      | 中文说明                       |
+|------------|-------------------------------|
+| Ctrl + J     | 在大多数终端里插入新行            |
+
+
+
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="常用命令">常用命令</h2>
+
+```sh
+# 非交互TUI模式，进入聊天模式
+codex
+
+# 带初始提示启动
+codex "fix lint errors"
+
+
+# 非交互式自动化模式, 直接通过 exec直接执行命令，当命令启动
+codex exec "帮我写一个坦克大战的游戏开发需 求文档，要求500"
+
+# 沙盒自动模式,不会对你本地的操作系统产生影响，使用单独的环境，比如跑到一个虚拟机或者容器中运行
+codex --full-auto "crate the faaciest todo-list app"
+
+
+# 非沙盒自动模式
+codex --dangerously-bypass-approvals-and-sanbox "crate the faaciest todo-list app"
+
+
+# 引用图片，codex -i [文件路径或者拷贝的图片] ["提问的内容用引号引起来，否则会cli认为是多个参数"]
+codex -i /Users/harleyhuang/Desktop/CodeX_Test/2.png "分析这张图片"
+
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="提示词实例">提示词实例</h2>
+
+| ✨ 提示词 | 功能 |
+|-----------|------|
+| codex "Refactor the Dashboard component to React Hooks" | Codex 重写了类组件，运行了 npm test，并显示了差异 |
+| codex "Generate SQL migrations for adding a users table" | 推断你的 ORM，创建迁移文件，并在沙盒数据库中运行它们 |
+| codex "Write unit tests for utils/date.ts" | 生成测试，执行测试，并反复迭代直到通过 |
+| `codex "Bulk-rename *.jpeg -> *.jpg with git mv"` | 安全地重命名文件并更新导入 / 使用 |
+| codex "Explain what this regex does: ^(?=.*[A-Z]).{8,}$" | 输入一步步的解释 |
+| codex "Carefully review this repo, and propose 3 high impact well-scoped PRs" | 建议在当前代码库中提出有影响力的 PR |
+| **备注** | 测试完之后做一个部署啊 |
+
+当然后面的英文可以换成中文进行说明，其实就是交互式聊天
+
+
 
 
 ***
@@ -214,6 +281,32 @@ To continue this session, run codex resume 019d65d5-027b-7f61-b7e5-9b6010f37bbb
 019d65d5-027b-7f61-b7e5-9b6010f37bbb
 ```
 
+
+***
+<br/><br/>
+> <h3 id="恢复会话">恢复会话</h3>
+
+恢复历史会话
+
+* `codex resume`
+  主控的人 `codex resume`，会弹出会话选择器，允许你选择要恢复的历史会话[1]。
+
+* `codex resume --last`
+  恢复最近的一次会话[1]。
+
+* `codex resume <ID>`
+  通过会话 ID 恢复某个特定会话。会话 ID 可以通过 `/status` 命令或在 `~/.codex/sessions/` 目录下查找[1]。
+
+示例命令：
+
+```sh
+codex resume
+codex resume --last
+codex resume 719xxxxxx
+```
+
+你直接可以使用这个 Codex resume
+
 ---
 <br/>
 
@@ -319,8 +412,172 @@ codex new
 
 
 
+***
+<br/><br/><br/>
+> <h2 id="AGENTS.md记忆">AGENTS.md记忆</h2>
+
+你问的 **AGENTS** 可能有几个语境，我给你详细梳理下，并结合现代 AI / 软件开发环境来讲它的作用和用途。
+
+---
+
+## 1️⃣ 在 AI / ChatGPT 语境下的 Agents
+
+在 OpenAI 或类似 AI 平台里，**Agent**（智能代理）指的是一种“可以自主执行任务的程序”，通常具备以下特点：
+
+* **能自主决策**：根据输入和目标自己选择下一步操作，而不是单纯回答用户问题。
+* **能执行多步骤任务**：不仅生成文本，还能调用 API、查找信息、处理文件等。
+* **可集成工具**：Agent 可以使用浏览器、数据库、计算器、云存储等外部工具。
+
+**用途示例**：
+
+* 预定航班：用户输入“帮我订下周从上海到北京的机票”，Agent 会自己查航班、对比价格、填写信息。
+* 数据分析：上传 CSV 文件，Agent 自动读取、分析、生成图表报告。
+* 自动化办公：Agent 可以帮你整理邮件、生成周报、自动回复客户。
+
+🔹 总结：在 AI 语境里，**Agents 是会“动手”的 AI，能完成连续任务，不只是单条问答**。
+
+---
+
+## 2️⃣ 在编程 / 系统设计中的 Agents
+
+在软件工程中，Agent 常指“软件代理”或“后台服务”，特点是：
+
+* **独立运行**：通常在后台运行，不依赖用户直接交互。
+* **执行特定任务**：比如监控系统状态、同步数据、接收指令并处理。
+* **可被调度或调用**：比如操作系统中的守护进程（daemon）、IoT 设备中的智能控制模块。
+
+**用途示例**：
+
+* **网络爬虫 Agent**：定时抓取网页数据。
+* **IoT Agent**：监控传感器数据并触发动作。
+* **自动化运维 Agent**：检查服务器健康状态、自动修复问题。
+
+🔹 总结：在软件环境里，**Agent 是自动化执行任务的“智能后台程序”**。
 
 
+***
+<br/>
+
+**AGENTS.md 记忆**
+
+AGENTS.md 记忆功能类似 Claude Code 的 CLAUDE.md，让 AI 记住项目特定的指导：
+
+```text
+# 全局配置
+~/.codex/AGENTS.md
+
+# 项目配置
+./AGENTS.md
+
+# 子目录配置
+./components/AGENTS.md
+```
+
+你可以在 codex 中输入 `/init` 提示，让 codex 帮你生成初始的 AGENTS.md 文件。
+
+CodeX 中的 `AGENTS.md` 是一个简单又开放的格式，专门用来指导 CodeX 更好的干活。
+
+可以把 `AGENTS.md` 想象成是给 Agents 准备的 README，它提供了一个专门的、可预测的地方，用来提供上下文和指令，帮助 AI 编码 Agents 更好地完成你的项目。
+
+详细介绍: [https://agents.md/](https://agents.md/)
+好然后是 agents.md 啊
+
+
+***
+<br/><br/><br/>
+> <h2 id="快捷命令">快捷命令</h2>
+
+**基础命令**
+
+| 命令       | 中文说明                       | 备注/用法示例 |
+|------------|-------------------------------|----------------|
+| /model     | 切换模型和推理等级             | `/model gpt-5-mini` |
+| /approvals | 设置授权模式【编辑的时候授权，读是不想要的】                   | `/approvals enable` |
+| /new 或者 /clear      | new是开启新的会话， clear是清除并开启新的对话                   | `/new` |
+| /init      | 初始化 AGENTS.md 指导文件       | `/init` |
+| /compact   | 上下文压缩，避免触发上下文限制 | `/compact` |
+| /diff      | 显示 git 差异                  | `/diff LocalPods/ArgusAppHome` |
+| /mention   | 引用某个文件                   | `/mention BluetoothDetectUtil.swift` |
+| /status    | 显示当前会话配置和 Token 用量  | `/status` |
+
+---
+<br/>
+
+**高级命令示例**
+
+- **初始化 AGENTS.md 并生成 Swift 模块模板**：
+```bash
+/init
+````
+
+<br/>
+
+* **查看当前会话状态和 Token 使用量**：
+
+```bash
+/status
+```
+
+<br/>
+
+* **对比代码与 Git 差异**：
+
+```bash
+/diff LocalPods/ArgusAppHome/Classes/Utils/BluetoothDetectUtil.swift
+```
+
+<br/>
+
+* **引用特定文件内容辅助 Codex 生成代码**：
+
+```bash
+/mention BluetoothDetectUtil.swift
+```
+
+<br/>
+
+* **压缩上下文以节约 Token 或避免上下文溢出**：
+
+```bash
+/compact
+```
+
+* **开启新会话，清空上下文**：
+
+```bash
+/new
+```
+
+---
+<br/>
+
+**使用建议**
+
+1. 每次修改或新增 Agent 模块后，可以先执行 `/init` 或 `/mention` 来同步文档和代码。
+2. 使用 `/status` 定期监控 Token 用量，避免消耗过快。
+3. 在大型工程中，使用 `/diff` 辅助 Codex 查看变动与 Git 差异，保证安全提交。
+4. `/compact` 用于复杂会话或大文件处理，避免超出上下文限制。
+
+
+***
+<br/><br/>
+> <h3 id="网络搜索">网络搜索</h3>
+
+有了 Web search 网络搜索，模型就能访问互联网的最新信息，让模型在生成回复之前，先上网搜搜最新的信息，并提供带有出处的答案。
+
+想启用这个功能，传递 `--search` 参数即可：
+
+```
+codex --search
+
+可以，这条命令会启动带联网搜索能力的 Codex 交互会话。
+  进入后直接输入你的问题即可，不用再写 codex --search。
+
+
+› 今天上海宝山天气，会不会下雨？哪些地方下雨了
+```
+
+这样可以仅使用网络搜索，而避免给 agent 完全不受限制的网络访问权限。
 
 
 
