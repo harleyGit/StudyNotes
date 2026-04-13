@@ -16,6 +16,7 @@
   	- [AGENTS.md记忆](#AGENTS.md记忆)
   	- [快捷命令](#快捷命令)
 	- [网络搜索](#网络搜索)
+ 	- [配置MCP](#配置MCP) 
 - [OpenCode](#OpenCode)
 - [快马-inscode](https://inscode.net)
 
@@ -579,7 +580,286 @@ codex --search
 
 这样可以仅使用网络搜索，而避免给 agent 完全不受限制的网络访问权限。
 
+***
+<br/><br/><br/>
+> <h2 id="配置MCP">配置MCP</h2>
 
+**什么是 “Codex 的 MCP”？**
+
+**MCP = Model Context Protocol（模型上下文协议）**
+它是一种开放的协议标准，用来让智能助理（像 Codex、Claude、Cursor 等 AI agent）**真正“操作外部工具和数据”**，而不仅仅是在内部回答文字问题。([FastAccess AI][1])
+
+可以把它想象成：
+
+📌 **AI 的 USB 接口**
+就像电脑可以通过 USB 接鼠标、键盘、打印机一样，**MCP 是 AI 与外部系统/服务连接的标准桥梁**。通过 MCP，AI 能够：
+
+* 自动操作浏览器、抓取网页
+* 读取/写入数据库
+* 调用第三方 API
+* 操作 Git 仓库、执行代码、部署
+* 访问文件系统或日志
+
+而不是仅靠内置的“知识和推理”。([FastAccess AI][1])
+
+> **核心总结：MCP 不是 Codex “内部功能”，而是扩展它能力的一个协议标准。**
+
+---
+
+## 🧠 二、MCP 对 Codex 的意义是什么？
+
+### 🟩 没有 MCP 的时候
+
+Codex 只能：
+
+✔ 根据你的 prompt 生成代码
+✔ 阅读静态文件/上下文
+✔ 给出建议
+
+但 **无法自动执行真实操作**（例如真正去调用 API、自动提交 Git PR、打开浏览器）。它只能告诉你要怎么做，但不能去做。([Vibe Sparking AI][2])
+
+---
+
+### 🟦 有了 MCP 之后
+
+就像给 Codex 装上了“手”和“脚”，它可以：
+
+✅ 自动执行现实操作（调用工具、API、数据库）
+✅ 更智能地集成 CI/CD、代码仓库、日志、搜索工具
+✅ 完成真实工作流，而不是只“讲出来”
+
+这对于工程自动化、编排任务、甚至企业级自动化流程非常关键。([FastAccess AI][3])
+
+---
+
+## 📦 三、如何理解 Codex + MCP 的作用域？
+
+| 场景                  | 有无 MCP | 能否完成 |
+| ------------------- | ------ | ---- |
+| 生成函数代码              | ❌      | ✔    |
+| 访问数据库查询数据           | ❌      | ❌    |
+| 调用第三方 API 并处理结果     | ❌      | ❌    |
+| 自动提交 PR 到 GitHub    | ❌      | ❌    |
+| 自动运行 UI 自动化测试       | ❌      | ❌    |
+| 自动执行 PS 操作（浏览器/命令行） | ❌      | ❌    |
+| 通过标准化协议调用外部工具       | ✔      | ✔    |
+
+这就是说：**MCP 是为了让 AI “动起来” 而不是只会写代码。**
+
+---
+
+## 🧪 四、对于不同工程怎么写/配置 MCP
+
+> **注意**：具体代码不是每个平台强制要求，但大体思路是一样的：
+>
+> 1. 添加 MCP 服务器配置
+> 2. 在项目里启动 MCP 服务器
+> 3. 让 Codex 通过协议去调用（类似 API 调用）
+
+下面按常见工程类型来分步骤说明：
+
+---
+
+### 📱 1) iOS Swift 工程
+
+Swift 工程本身不能直接处理 MCP 协议，但一般做法是：
+
+#### ✅ 方法 1 — 使用 **Codex CLI + MCP Server**
+
+**步骤概览（能让 AI 自动帮你执行任务）**：
+
+1. 安装 Codex CLI：
+
+```bash
+npm install -g @openai/codex
+```
+
+2. 编辑 `~/.codex/config.toml`
+   添加 MCP Server 配置。例如：
+
+```toml
+[mcp_servers.my_ios_tools]
+command = "swift"
+args = ["run", "MySwiftMCPServer"]
+startup_timeout_ms = 20000
+```
+
+这里 `MySwiftMCPServer` 是一个你自己写的 Swift 服务器，它实现了 MCP 协议，可以处理来自 AI 的请求。([Vibe Sparking AI][2])
+
+3. 启动服务器：
+
+```bash
+swift run MySwiftMCPServer
+```
+
+4. Codex 运行就能调用你的 Swift 服务了。
+
+---
+
+#### ✅ 方法 2 — 把 MCP Server 做成 REST API
+
+如果你不想写协议服务，你可以：
+
+1. 写一个 **Swift 后端 Web 服务（Vapor 等）**
+2. 实现一些 API（比如生成代码、保存文件、运行测试）
+3. 使用现成的 MCP 转接器（让 REST API 变成 MCP）
+
+形式上类似：
+
+```
+AI(client)  ⇄  MCP Server  ⇄  REST Swift API ⇄  iOS 项目后端逻辑
+```
+
+---
+
+### 💻 2) React (JavaScript / TypeScript) 工程
+
+React 本身是前端，因此常见用法是：
+
+#### 🟢 内部自动化（如自动测试、浏览器操作）
+
+你可以写一个 Node.js MCP Server：
+
+```js
+const { startMCPServer } = require("@modelcontextprotocol/sdk");
+
+startMCPServer({
+  tools: {
+    // AI 可以调用的动作
+    openBrowser: async ({ url }) => { /* 用 Puppeteer 打开 */ },
+    runTest: async () => { /* 用 Jest/Playwright 运行测试 */ },
+  }
+});
+```
+
+然后在 `~/.codex/config.toml`：
+
+```toml
+[mcp_servers.react_dev]
+command = "node"
+args = ["./mcp-server.js"]
+```
+
+这样 Codex 能自动：
+
+✔ 运行测试
+✔ 操作界面
+✔ 修改画面结构
+✔ 自动创建 issue/PR
+
+---
+
+### 🐹 3) Go 工程
+
+Go 工程非常适合写自己的 MCP Server，因为 Go 天然有 HTTP 和并发支持。
+
+#### 🟡 典型流程：
+
+1. 写一个 Go MCP Server（使用 JSON-RPC / stdio / socket）
+
+示例（伪代码）：
+
+```go
+server := mcp.NewServer()
+
+server.Handle("runGoTest", func(params map[string]interface{}) {
+    // 调用 go test 或者 build
+})
+
+server.ListenAndServe()
+```
+
+2. 配置 Codex：
+
+```toml
+[mcp_servers.go_tools]
+command = "/path/to/your/gotool"
+args = []
+```
+
+3. 启动后，Codex 能调用 Go 工具链，例如：
+
+🔹 `runGoTest` → 执行 `go test ./...`
+🔹 `grepCode` → 在工程里搜索
+
+---
+
+## 🧩 五、最基础的 MCP 配置模板
+
+这个是你可以复制到 `~/.codex/config.toml` 的例子（适用于各种语言工程）：
+
+```toml
+[mcp_servers.serverA]
+command = "node"
+args = ["./server-a-mcp.js"]
+startup_timeout_ms = 15000
+
+[mcp_servers.serverB]
+command = "go"
+args = ["run", "./mcpserver.go"]
+```
+
+当你启动这些 server 并写好逻辑之后，**Codex 在生成代码时就能自动调用这些工具完成一系列操作**。([Vibe Sparking AI][2])
+
+---
+
+## 🧠 六、简要总结（尽量理解）
+
+📍 **MCP 不是代码，而是一种协议**
+📍 它让 AI 不只是“会说出一段代码”，而是真正能去调工具、对工程执行真实操作
+📍 对于不同项目（Swift / React / Go）来说：
+✔ Swift 更多会结合服务器或后端服务接 MCP
+✔ React 常用 Node.js MCP Server + 浏览器自动化
+✔ Go 最容易写自定义 MCP 服务并且性能高
+
+---
+
+## 🧠 进一步理解的小白比喻
+
+想象：
+
+* **AI Codex = 一个大脑**
+* **MCP = 大脑与身体部位之间的标准化神经线**
+* **MCP Server = 不同身体器官（浏览器、测试框架、CI/CD、数据库）**
+
+没有 MCP 大脑只能想象、说话
+有 MCP 大脑可以自己做事情了 🎯
+
+---
+
+如你要，我也可以给你：
+
+📌 一个 **从零到一的 Swift MCP Server 教程**
+📌 一个 **React 具体 MCP Server 代码模板**
+📌 一个 **Go MCP Server REST + JSON-RPC 示例**
+
+随时继续问我！👍
+
+[1]: https://fastgptplus.com/zh/posts/codex-cli-mcp-guide?utm_source=chatgpt.com "Codex CLI MCP配置教程 2025完整指南：快速上手与10+服务器示例 | FastGPTPlus"
+[2]: https://www.vibesparking.com/zh-cn/blog/ai/openai/codex/mcp/2025-09-10-codex-mcp-setup-10-servers/?utm_source=chatgpt.com "Codex 接入推荐的 10 个 MCP | Vibe Sparking AI"
+[3]: https://fastgptplus.com/zh/posts/codex-cli-mcp-integration?utm_source=chatgpt.com "Codex CLI MCP集成完全指南：从配置到实战的深度教程 | FastGPTPlus"
+
+<br/><br/>
+
+Codex CLI 可以通过在 `~/.codex/config.toml` 中定义一个 mcp_servers 部分来配置 MCP，和 Claude 和 Cursor 在各自的 JSON 配置文件中定义 mcpServers 一样，但是 Codex 的格式略有不同，它使用 TOML，而不是 JSON。
+
+比如我添加了以下几个 MCP：
+
+```json
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+env = { "test" = "123456" }
+
+[mcp_servers.puppeteer]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-puppeteer"]
+env = { "test" = "123456" }
+```
+
+你可以手动的在这个 configure
+
+验证 MCP
 
 <br/><br/><br/>
 
