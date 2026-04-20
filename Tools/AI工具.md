@@ -19,15 +19,17 @@
     - [MCP](#MCP)
 		- [MCP基础使用](#MCP基础使用)
 		- [配置MCP](#配置MCP)
-		- [iOS-Swift工程使用SKil](#iOS-Swift工程使用SKil)
-		- [React工程使用Skil](#React工程使用Skil)
-		- [Go工程使用skil](#Go工程使用skil)
+	    - [查看mcp](#查看mcp)
+		- [iOS-Swift工程使用MCP](#iOS-Swift工程使用MCP)
+		- [React工程使用MCP](#React工程使用MCP)
+		- [Go工程使用MCP](#Go工程使用MCP)
 		- [最基础的 MCP 配置模板](#最基础的MCP配置模板)
+	    - [调用MCP](#调用MCP)
 		- [Codex的CLI配置MCPServer](#Codex的CLI配置MCPServer)
-		- [SKil使用](#SKil使用)
-			- [SKil文件放置](#SKil文件放置)
-			- [如何使用Skills](#如何使用Skills)
-		- [项目实战](#项目实战)
+	- [SKil使用](#SKil使用)
+		- [SKil文件放置](#SKil文件放置)
+		- [如何使用Skills](#如何使用Skills)
+	- [项目实战](#项目实战)
 - [OpenCode](#OpenCode)
 - [快马-inscode](https://inscode.net)
 
@@ -610,8 +612,7 @@ codex --search
 	- ✔ Go 最容易写自定义 MCP 服务并且性能高
 
 ***
-<br/><br/><br/>
-> <h2 id="配置MCP">配置MCP</h2>
+<br/>
 
 **什么是 “Codex 的 MCP”？**
 
@@ -680,10 +681,11 @@ Codex 只能：
 
 这就是说：**MCP 是为了让 AI “动起来” 而不是只会写代码。**
 
----
-<br/> 
+***
+<br/><br/><br/>
+> <h2 id="配置MCP">配置MCP</h2>
 
-**🧪 四、对于不同工程怎么写/配置 MCP**
+**🧪 对于不同工程怎么写/配置 MCP**
 
 > **注意**：具体代码不是每个平台强制要求，但大体思路是一样的：
 >
@@ -691,12 +693,48 @@ Codex 只能：
 > 2. 在项目里启动 MCP 服务器
 > 3. 让 Codex 通过协议去调用（类似 API 调用）
 
-下面按常见工程类型来分步骤说明：
+---
+<br/> 
+
+**`~/.codex/config.toml`** 是 Codex 核心配置文件，我调试了半天找到几个关键配置。
+
+首先是全局配置，这些选项需要放在配置文件开头部分：
+
+```toml
+# 模型选择（GPT-5 + High推理）
+model = "gpt-5"	# 指定Codex调用的底层大模型
+model_reasoning_effort = "high"	# `high` | 模型推理强度，可选`low`/`medium`/`high`，越高逻辑推理、长任务拆解能力越强 
+
+# 默认模型提供商
+model_provider = "openai"	#  `openai` | 模型服务商，默认OpenAI，也可切换第三方兼容源
+
+# 沙盒策略（支持 read-only、workspace-write、danger-full-access、elevated）
+sandbox_mode = "workspace-write"	# `workspace-write` | AI文件操作权限沙盒：<br>`read-only`只读、`workspace-write`工作区读写、`danger-full-access`全量危险权限、`elevated`高阶系统权限 
+
+# 审批策略（支持 on-failure、on-request、untrusted以及never）
+approval_policy = "on-failure"	# `on-failure` | AI操作人工审批触发规则：<br>`on-failure`失败时请求审批、`on-request`每次操作都审批、`untrusted`非安全操作审批、`never`全程免审批
+```
+
+***
+<br/><br/><br/>
+> <h2 id="查看mcp">查看mcp</h2>
+
+```sh
+/mcp
+```
+
+| MCP服务名称 | 认证状态 | 启用状态 |
+| ---- | ---- | ---- |
+| `codex_apps` | 已通过身份验证（API 密钥） | 已启用 |
+| `xcode` | Auth unsupported（不支持身份认证） | 已启用 |
+| `xcodebuildmcp` | Auth unsupported（不支持身份认证） | 已启用 |
+
+-   `codex_apps`：Codex 官方自带核心应用服务，已完成 **API Key 密钥身份校验**，权限链路完整，处于启用状态。
+-   `xcode` / `xcodebuildmcp`：Mac/iOS 开发相关 MCP 工具，标注 `Auth unsupported` 代表**无需额外账号授权、无身份校验流程**，本地直连可用，均已开启。
 
 ***
 <br/><br/>
-> <h3 id="iOS-Swift工程使用SKil"> iOS-Swift工程使用SKil</h3>
-
+> <h3 id="iOS-Swift工程使用MCP"> iOS-Swift工程使用MCP</h3>
 
 Swift 工程本身不能直接处理 MCP 协议，但一般做法是：
 
@@ -751,12 +789,13 @@ swift run MySwiftMCPServer
 
 ```
 AI(client)  ⇄  MCP Server  ⇄  REST Swift API ⇄  iOS 项目后端逻辑
+
 ```
 
 
 ***
 <br/><br/>
-> <h3 id="React工程使用Skil">React工程使用Skil</h3>
+> <h3 id="React工程使用MCP">React工程使用MCP</h3>
 
 React 本身是前端，因此常见用法是：
 
@@ -795,7 +834,7 @@ args = ["./mcp-server.js"]
 
 ***
 <br/><br/>
-> <h3 id="Go工程使用skil">Go工程使用skil</h3>
+> <h3 id="Go工程使用MCP">Go工程使用MCP</h3>
  
  Go 工程非常适合写自己的 MCP Server，因为 Go 天然有 HTTP 和并发支持。
 
@@ -835,7 +874,6 @@ args = []
 ***
 <br/><br/><br/>
 > <h2 id="最基础的MCP配置模板">最基础的 MCP 配置模板</h2>
-
 
 这个是你可以复制到 `~/.codex/config.toml` 的例子（适用于各种语言工程）：
 
@@ -880,6 +918,33 @@ env = { "test" = "123456" }
 验证 MCP
 
 
+***
+<br/><br/><br/>
+> <h2 id="调用MCP">调用MCP</h2>
+
+创建了一个名字叫做**content-truncate-mcp**的MCP服务。
+
+
+***
+<br/>
+
+**使用：**
+
+```sh
+content-truncate-mcp，处理：**今天天气很好，我们去爬山吧**，保留前6个字
+```
+
+我会调用 `content-truncate-mcp`，将这句话截取前 6 个字符并返回结果。
+
+```sh
+Called content-truncate-mcp.truncate_content(
+{"max_length":6,"text":"今天天气很好，我们去爬山吧"}
+  {"truncated_text": "今天天气很好", "original_length": 13, "truncated_length": 6, true}
+)
+```
+处理结果：**今天天气很好**
+
+
 
 <br/><br/><br/>
 
@@ -888,6 +953,13 @@ env = { "test" = "123456" }
 
 > <h1 id="SKil使用">SKil使用</h1>
 
+```sh
+# 描述你的skill功能
+skil -creator 
+
+# 列举出现在有的skil列表
+/skils
+```
 
 ***
 <br/><br/><br/>
