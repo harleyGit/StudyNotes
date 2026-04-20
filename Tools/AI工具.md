@@ -16,7 +16,18 @@
   	- [AGENTS.md记忆](#AGENTS.md记忆)
   	- [快捷命令](#快捷命令)
 	- [网络搜索](#网络搜索)
- 	- [配置MCP](#配置MCP) 
+    - [MCP](#MCP)
+		- [MCP基础使用](#MCP基础使用)
+		- [配置MCP](#配置MCP)
+		- [iOS-Swift工程使用SKil](#iOS-Swift工程使用SKil)
+		- [React工程使用Skil](#React工程使用Skil)
+		- [Go工程使用skil](#Go工程使用skil)
+		- [最基础的 MCP 配置模板](#最基础的MCP配置模板)
+		- [Codex的CLI配置MCPServer](#Codex的CLI配置MCPServer)
+		- [SKil使用](#SKil使用)
+			- [SKil文件放置](#SKil文件放置)
+			- [如何使用Skills](#如何使用Skills)
+		- [项目实战](#项目实战)
 - [OpenCode](#OpenCode)
 - [快马-inscode](https://inscode.net)
 
@@ -580,6 +591,24 @@ codex --search
 
 这样可以仅使用网络搜索，而避免给 agent 完全不受限制的网络访问权限。
 
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="MCP">MCP</h1>
+
+- **理解MCP**
+	- 📍 **MCP 不是代码，而是一种协议**
+	- 📍 它让 AI 不只是“会说出一段代码”，而是真正能去调工具、对工程执行真实操作
+	- 📍 对于不同项目（Swift / React / Go）来说：
+	- ✔ Swift 更多会结合服务器或后端服务接 MCP
+	- ✔ React 常用 Node.js MCP Server + 浏览器自动化
+	- ✔ Go 最容易写自定义 MCP 服务并且性能高
+
 ***
 <br/><br/><br/>
 > <h2 id="配置MCP">配置MCP</h2>
@@ -588,6 +617,8 @@ codex --search
 
 **MCP = Model Context Protocol（模型上下文协议）**
 它是一种开放的协议标准，用来让智能助理（像 Codex、Claude、Cursor 等 AI agent）**真正“操作外部工具和数据”**，而不仅仅是在内部回答文字问题。([FastAccess AI][1])
+
+<br/>
 
 可以把它想象成：
 
@@ -604,11 +635,12 @@ codex --search
 
 > **核心总结：MCP 不是 Codex “内部功能”，而是扩展它能力的一个协议标准。**
 
----
+***
+<br/> 
 
-## 🧠 二、MCP 对 Codex 的意义是什么？
+**MCP 对 Codex 的意义是什么？**
 
-### 🟩 没有 MCP 的时候
+- **🟩 没有 MCP 的时候**
 
 Codex 只能：
 
@@ -619,8 +651,9 @@ Codex 只能：
 但 **无法自动执行真实操作**（例如真正去调用 API、自动提交 Git PR、打开浏览器）。它只能告诉你要怎么做，但不能去做。([Vibe Sparking AI][2])
 
 ---
+<br/>
 
-### 🟦 有了 MCP 之后
+- **🟦 有了 MCP 之后**
 
 就像给 Codex 装上了“手”和“脚”，它可以：
 
@@ -631,8 +664,9 @@ Codex 只能：
 这对于工程自动化、编排任务、甚至企业级自动化流程非常关键。([FastAccess AI][3])
 
 ---
+<br/>
 
-## 📦 三、如何理解 Codex + MCP 的作用域？
+- **如何理解 Codex + MCP 的作用域？**
 
 | 场景                  | 有无 MCP | 能否完成 |
 | ------------------- | ------ | ---- |
@@ -647,8 +681,9 @@ Codex 只能：
 这就是说：**MCP 是为了让 AI “动起来” 而不是只会写代码。**
 
 ---
+<br/> 
 
-## 🧪 四、对于不同工程怎么写/配置 MCP
+**🧪 四、对于不同工程怎么写/配置 MCP**
 
 > **注意**：具体代码不是每个平台强制要求，但大体思路是一样的：
 >
@@ -658,23 +693,26 @@ Codex 只能：
 
 下面按常见工程类型来分步骤说明：
 
----
+***
+<br/><br/>
+> <h3 id="iOS-Swift工程使用SKil"> iOS-Swift工程使用SKil</h3>
 
-### 📱 1) iOS Swift 工程
 
 Swift 工程本身不能直接处理 MCP 协议，但一般做法是：
 
-#### ✅ 方法 1 — 使用 **Codex CLI + MCP Server**
+-  **✅ 方法 1 — 使用 Codex CLI + MCP Server**
 
 **步骤概览（能让 AI 自动帮你执行任务）**：
 
-1. 安装 Codex CLI：
+- **1.安装 Codex CLI：**
 
 ```bash
 npm install -g @openai/codex
 ```
 
-2. 编辑 `~/.codex/config.toml`
+<br/>
+
+- **2.编辑 `~/.codex/config.toml`**
    添加 MCP Server 配置。例如：
 
 ```toml
@@ -686,17 +724,22 @@ startup_timeout_ms = 20000
 
 这里 `MySwiftMCPServer` 是一个你自己写的 Swift 服务器，它实现了 MCP 协议，可以处理来自 AI 的请求。([Vibe Sparking AI][2])
 
-3. 启动服务器：
+<br/>
+
+- **3.启动服务器：**
 
 ```bash
 swift run MySwiftMCPServer
 ```
 
-4. Codex 运行就能调用你的 Swift 服务了。
+<br/>
+
+- **4.Codex 运行就能调用你的 Swift 服务了。**
 
 ---
+<br/>
 
-#### ✅ 方法 2 — 把 MCP Server 做成 REST API
+- **✅方法 2 — 把 MCP Server 做成 REST API**
 
 如果你不想写协议服务，你可以：
 
@@ -710,13 +753,14 @@ swift run MySwiftMCPServer
 AI(client)  ⇄  MCP Server  ⇄  REST Swift API ⇄  iOS 项目后端逻辑
 ```
 
----
 
-### 💻 2) React (JavaScript / TypeScript) 工程
+***
+<br/><br/>
+> <h3 id="React工程使用Skil">React工程使用Skil</h3>
 
 React 本身是前端，因此常见用法是：
 
-#### 🟢 内部自动化（如自动测试、浏览器操作）
+- **🟢 内部自动化（如自动测试、浏览器操作）**
 
 你可以写一个 Node.js MCP Server：
 
@@ -731,6 +775,8 @@ startMCPServer({
   }
 });
 ```
+
+<br/>
 
 然后在 `~/.codex/config.toml`：
 
@@ -747,15 +793,15 @@ args = ["./mcp-server.js"]
 ✔ 修改画面结构
 ✔ 自动创建 issue/PR
 
----
+***
+<br/><br/>
+> <h3 id="Go工程使用skil">Go工程使用skil</h3>
+ 
+ Go 工程非常适合写自己的 MCP Server，因为 Go 天然有 HTTP 和并发支持。
 
-### 🐹 3) Go 工程
+- **🟡 典型流程：**
 
-Go 工程非常适合写自己的 MCP Server，因为 Go 天然有 HTTP 和并发支持。
-
-#### 🟡 典型流程：
-
-1. 写一个 Go MCP Server（使用 JSON-RPC / stdio / socket）
+- **1.写一个 Go MCP Server（使用 JSON-RPC / stdio / socket）**
 
 示例（伪代码）：
 
@@ -768,8 +814,9 @@ server.Handle("runGoTest", func(params map[string]interface{}) {
 
 server.ListenAndServe()
 ```
+<br/>
 
-2. 配置 Codex：
+- **2.配置 Codex：**
 
 ```toml
 [mcp_servers.go_tools]
@@ -777,14 +824,18 @@ command = "/path/to/your/gotool"
 args = []
 ```
 
-3. 启动后，Codex 能调用 Go 工具链，例如：
+<br/>
+
+**3.启动后，Codex 能调用 Go 工具链，例如：**
 
 🔹 `runGoTest` → 执行 `go test ./...`
 🔹 `grepCode` → 在工程里搜索
 
----
 
-## 🧩 五、最基础的 MCP 配置模板
+***
+<br/><br/><br/>
+> <h2 id="最基础的MCP配置模板">最基础的 MCP 配置模板</h2>
+
 
 这个是你可以复制到 `~/.codex/config.toml` 的例子（适用于各种语言工程）：
 
@@ -801,45 +852,12 @@ args = ["run", "./mcpserver.go"]
 
 当你启动这些 server 并写好逻辑之后，**Codex 在生成代码时就能自动调用这些工具完成一系列操作**。([Vibe Sparking AI][2])
 
----
 
-## 🧠 六、简要总结（尽量理解）
 
-📍 **MCP 不是代码，而是一种协议**
-📍 它让 AI 不只是“会说出一段代码”，而是真正能去调工具、对工程执行真实操作
-📍 对于不同项目（Swift / React / Go）来说：
-✔ Swift 更多会结合服务器或后端服务接 MCP
-✔ React 常用 Node.js MCP Server + 浏览器自动化
-✔ Go 最容易写自定义 MCP 服务并且性能高
+***
+<br/><br/><br/>
+> <h2 id="Codex的CLI配置MCPServer">Codex的CLI配置MCPServer</h2>
 
----
-
-## 🧠 进一步理解的小白比喻
-
-想象：
-
-* **AI Codex = 一个大脑**
-* **MCP = 大脑与身体部位之间的标准化神经线**
-* **MCP Server = 不同身体器官（浏览器、测试框架、CI/CD、数据库）**
-
-没有 MCP 大脑只能想象、说话
-有 MCP 大脑可以自己做事情了 🎯
-
----
-
-如你要，我也可以给你：
-
-📌 一个 **从零到一的 Swift MCP Server 教程**
-📌 一个 **React 具体 MCP Server 代码模板**
-📌 一个 **Go MCP Server REST + JSON-RPC 示例**
-
-随时继续问我！👍
-
-[1]: https://fastgptplus.com/zh/posts/codex-cli-mcp-guide?utm_source=chatgpt.com "Codex CLI MCP配置教程 2025完整指南：快速上手与10+服务器示例 | FastGPTPlus"
-[2]: https://www.vibesparking.com/zh-cn/blog/ai/openai/codex/mcp/2025-09-10-codex-mcp-setup-10-servers/?utm_source=chatgpt.com "Codex 接入推荐的 10 个 MCP | Vibe Sparking AI"
-[3]: https://fastgptplus.com/zh/posts/codex-cli-mcp-integration?utm_source=chatgpt.com "Codex CLI MCP集成完全指南：从配置到实战的深度教程 | FastGPTPlus"
-
-<br/><br/>
 
 Codex CLI 可以通过在 `~/.codex/config.toml` 中定义一个 mcp_servers 部分来配置 MCP，和 Claude 和 Cursor 在各自的 JSON 配置文件中定义 mcpServers 一样，但是 Codex 的格式略有不同，它使用 TOML，而不是 JSON。
 
@@ -860,6 +878,175 @@ env = { "test" = "123456" }
 你可以手动的在这个 configure
 
 验证 MCP
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="SKil使用">SKil使用</h1>
+
+
+***
+<br/><br/><br/>
+> <h2 id="SKil文件放置">SKil文件放置</h2>
+
+- **可选添加子文件夹:**
+	- scripts/: 存放可执行脚本。
+	- references/: 参考文档。
+	- assets/: 模板或其他资源。
+
+<br/>
+
+- **Skill 存放位置（优先级从高到低）:**
+	- 项目当前目录: .codex/skills/（适合当前 repo 专用）。
+	- 项目根目录: repo_root/.codex/skills/（团队共享）。
+	- 个人全局: ~/.codex/skills/（默认位置）。
+	- 系统内置: Codex 自带，无法覆盖。
+
+更高优先级的 Skill 会覆盖同名低优先级 Skill，便于自定义覆盖。
+
+
+***
+<br/><br/><br/>
+> <h2 id="如何使用Skills">如何使用Skills</h2>
+
+**使用 Skills 有两种方式：**
+1.  **显式调用（推荐精确控制）**：
+    - 在提示中直接写 `$.skill-name`（例如 `$.linear`）。
+    - 或在 CLI/IDE 中使用 `/skills` 命令选择。
+
+2.  **自动选择（更自然，也就是对话中含有触发技能的特征）**：
+    - Codex 会根据你的任务描述，智能判断并加载匹配的 Skill（依赖 `description` 字段写得准确）。
+
+输入 `codex` 启动，然后打一个斜杠，就可以看到 Skills 了。
+
+输入 `/skills` 进入技能菜单，然后输入 `skill-creator`。也可以直接通过 `$` 触发功能菜单。
+
+输入命令：
+
+<br/>
+
+- 可以使用Skil触发xxx-skil.md中的的reference引用，也就是文件中引用其他xxx.md文件的规则；
+- 文件中含有其调用脚本或者调用其他skil的提示
+
+<br/>
+ 
+创建Skil
+- $skil-creator cal-skil 用于计算加减乘除 
+
+
+<br/><br/>
+
+
+已按 `skill-creator` 建好 `makefolder` 技能骨架与脚本，保持精简可用。
+
+<br/>
+
+**变更说明**
+
+- 新增 `skills/makefolder/SKILL.md`，包含触发描述与使用规则
+- 新增 `skills/makefolder/scripts/make_folder.ps1`，用于在当前项目创建单一文件夹
+
+<br/>
+
+- **文件位置**
+	- `skills/makefolder/SKILL.md`
+	- `skills/makefolder/scripts/make_folder.ps1`
+
+<br/>
+
+- **下一步建议**
+	- **1.试用脚本：`./skills/makefolder/scripts/make_folder.ps1 test`**
+	- **2.如果你想改成中文说明或加入更多校验规则，告诉我偏好。**
+
+---
+底部补充文本：
+然后项目目录下，就会有一个 Skills 了。
+
+---
+<br/>
+
+然后项目目录下，就会有一个 Skills 了。
+
+Skills 下面有一个子文件夹叫 makefolder。
+
+具体目录结构如下：
+
+```sh
+skills/
+  └─ makefolder/
+     ├─ SKILL.md
+     └─ scripts/
+        └─ make_folder.ps1
+```
+
+然后可以测试技能了。
+
+直接告诉他：
+
+```sh
+创建一个名为jarvis的文件
+```
+
+或者使用
+
+```sh
+$makefolder jarvis
+```
+这样它就会自动调用技能创建文件夹了。
+
+调用过程中会显示可用的技能，并获取你的授权。
+
+然后你也可以把这个技能拷贝到用户目录下。
+
+```sh
+~\.codex\skills\makefolder
+```
+这样就成为一个**全局技能**了，在其他项目中也可以使用。
+拷贝这个动作也可以交给 Codex 来完成！
+
+最后，也可以通过 `$skill-installer` 来安装 OpenAI 的官方技能！
+
+
+***
+<br/><br/><br/>
+> <h2 id="项目实战">项目实战</h2>
+
+**环境准备**
+
+- **先安装Github客户端**
+
+Codex知道如何使用 `gh` CLI与GitHub交互，用于创建问题、打开Pull Request、读取评论等。
+
+没有安装 `gh` 时，Claude仍然可以使用GitHub API或MCP服务器（如果您已安装）。
+
+**Codex提示词**：
+帮我安装gh CLI，之后重启Codex终端，然后执行`gh --version`
+
+**一键安装命令**：
+
+```powershell
+winget install --id GitHub.cli
+```
+
+**gh登录授权**：
+
+```bash
+gh auth login
+```
+用于获取github token完成账号授权。
+
+<br/>
+---
+
+## 开发旅行攻略网站
+### 项目提示词
+1. 创建Github项目：使用gh命令创建一个`trip`项目，里面就包含一个README.md，然后将这个项目推送到github
+2. 需求提示词：我需要开发旅行攻略网站，包含完整页面展示，请帮我细化下需求实现，输出到trip项目下`旅行攻略网站需求.md`文件中
+   
 
 <br/><br/><br/>
 
