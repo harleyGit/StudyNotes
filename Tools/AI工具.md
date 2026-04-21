@@ -430,6 +430,14 @@ codex new
 <br/><br/><br/>
 > <h2 id="AGENTS.md记忆">AGENTS.md记忆</h2>
 
+**Codex 官方文档明确说了：**
+- Codex 在开始工作前会读取 `AGENTS.md`
+- 可以有全局的 `~/.codex/AGENTS.md`
+- 也可以有项目内的 `AGENTS.md`
+- 越靠近当前目录的说明，优先级越高
+
+<br/>
+
 你问的 **AGENTS** 可能有几个语境，我给你详细梳理下，并结合现代 AI / 软件开发环境来讲它的作用和用途。
 
 ---
@@ -952,6 +960,19 @@ Called content-truncate-mcp.truncate_content(
 <br/>
 
 > <h1 id="SKil使用">SKil使用</h1>
+
+- **skill 是一种“可复用工作流包”，可以把：**
+  - 指令
+  - 参考资料
+  - 脚本
+
+打包成一个目录，里面最核心的是 `SKILL.md`。Codex 会先读取 skill 的元信息，只有在匹配到任务时，才进一步加载完整内容。Codex 官方也说明了 `skills` 可以在 **Codex CLI、IDE extension、Codex app** 中使用。
+
+官方还说明，Codex 使用 skill 有两种方式：
+- 显式调用：你主动提到某个 skill
+- 隐式调用：任务描述与 skill 的 description 匹配时，Codex 自己选择使用
+
+<br/>
 
 ```sh
 # 描述你的skill功能
