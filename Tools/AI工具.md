@@ -963,9 +963,9 @@ Called content-truncate-mcp.truncate_content(
 > <h1 id="SKil使用">SKil使用</h1>
 
 - **skill 是一种“可复用工作流包”，可以把：**
-  - 指令
-  - 参考资料
-  - 脚本
+	- 指令
+	- 参考资料
+	- 脚本
 
 打包成一个目录，里面最核心的是 `SKILL.md`。Codex 会先读取 skill 的元信息，只有在匹配到任务时，才进一步加载完整内容。Codex 官方也说明了 `skills` 可以在 **Codex CLI、IDE extension、Codex app** 中使用。
 
@@ -1007,19 +1007,81 @@ skil -creator
 <br/><br/><br/>
 > <h2 id="如何使用Skills">如何使用Skills</h2>
 
-**使用 Skills 有两种方式：**
-1.  **显式调用（推荐精确控制）**：
-    - 在提示中直接写 `$.skill-name`（例如 `$.linear`）。
-    - 或在 CLI/IDE 中使用 `/skills` 命令选择。
+***
+<br/><br/>
+> <h3 id="安装github现成skill">安装github现成skill</h3>
+**github上的ppt的skil：** 
 
-2.  **自动选择（更自然，也就是对话中含有触发技能的特征）**：
-    - Codex 会根据你的任务描述，智能判断并加载匹配的 Skill（依赖 `description` 字段写得准确）。
+```sh
+https://github.com/anthropics/skills/tree/main/skills/pptx
+```
+
+<br/>
+
+**在codex的GUI输入：**
+
+```sh
+$Skil Installer https://github.com/anthropics/skills/tree/main/skills/pptx
+```
+
+回车就可以安装了
+
+<br/>
+
+安装成功后，查看：
+
+```sh
+/skills
+```
+选择 List skills
+
+<br/>
+
+查看pptx文件结构
+
+```sh
+
+pptx/
+├─ editing.md
+├─ LICENSE.txt
+├─ pptxgenjs.md
+├─ scripts/
+ │  ├─ office/
+ │   ├─ __init__.py
+ │   ├─ add_slide.py
+ │  ├─  clean.py
+ │  └─ thumbnail.py
+├─ SKILL.md
+└─ clean.py
+```
+
+<br/>
+
+**触发skill的几种方式, 比如使用 xxx-skill，通常有 4 种方式：**
+- **1.直接点名触发（最稳）**
+	- 在输入里写：`$xxx-skill`，比如 `$.skill-name`（例如 `$.linear`）
+		- 例：$xxx-skill 帮我把 input/*.jpg 拼成一张图
+	- 或在 CLI/IDE 中使用 `/skills` 命令选择
+
+- **2.文本里明确指定**
+	- 不写 $ 也行，只要清楚提到技能名
+	- 例：请使用 xxx-skill 完成这个任务
+
+- **3.语义自动触发（更自然，也就是对话中含有触发技能的特征）**
+	- Codex 会根据你的任务描述，智能判断并加载匹配的 Skill（依赖 `description` 字段写得准确）。
+	- 不提名字，直接描述任务；如果和 xxx-skill/SKILL.md 的触发条件匹配，会自动用
+		- 例：把多张图片拼成一张输出
+- **4.多 skill 组合触发**
+	- 同一条里同时指定多个
+	- 例：$skill-a $skill-b 先生成素材再拼图
+
+<br/>
+
+前提是 `xxx-skill 已安装在 ~/.codex/skills/xxx-skill`，并且安装后重启 Codex。
 
 输入 `codex` 启动，然后打一个斜杠，就可以看到 Skills 了。
 
 输入 `/skills` 进入技能菜单，然后输入 `skill-creator`。也可以直接通过 `$` 触发功能菜单。
-
-输入命令：
 
 <br/>
 
