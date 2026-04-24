@@ -1147,7 +1147,37 @@ gh auth login
 <br/>
 
 > <h1 id= "OpenCode">OpenCode</h1>
+
 [下载和配置：](https://opencode.ai/zh/download)
 
+**Mac的安装和启动：**
 
+```sg
+brew install anomalyco/tap/opencode
+brew uninstall anomalyco/tap/opencode     卸载
+brew untapped anomalyco/opencode          卸载
+rm -rf ~/.opencode                        清理
+
+opencode --version	：版本
+opencode	： 启动
+```
+
+<br/>
+
+**常用命令：**
+
+```sh
+/connect        提供商的名字，链接我们想使用的提供商
+/models         我们想使用的模型
+/compact        压缩当前会话(打包，强迫AI注意力集中，避免分散。)，快捷键是：ctrl+x 之后再按c
+/editor         打开配置的编辑器
+/exit           退出opencode指令或者/q、/quit
+/export         导出会话记录
+/new            开启一个新的会话
+/sessions       一个会话列表
+/theme          主题，选择我们喜欢的样式
+/share          可以分享你在opencode中的内容
+
+control+P       设置某些东西；比如： show side bar在侧边栏可以看我们token消耗多少了
+```
 
