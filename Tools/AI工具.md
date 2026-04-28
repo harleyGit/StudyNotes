@@ -31,6 +31,7 @@
 		- [如何使用Skills](#如何使用Skills)
 	- [项目实战](#项目实战)
 - [OpenCode](#OpenCode)
+	- [文件配置](#文件配置) 
 - [快马-inscode](https://inscode.net)
 
 
@@ -1179,5 +1180,302 @@ opencode	： 启动
 /share          可以分享你在opencode中的内容
 
 control+P       设置某些东西；比如： show side bar在侧边栏可以看我们token消耗多少了
+```
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="文件配置">文件配置</h2>
+在mac中配置供应商提供不同的模型，步骤如下：
+
+- **1.在opencode中新建opencode.json**
+
+  ```sh
+  /Users/huanggang/.config/opencode
+  ```
+  在 **opencode中**新建一个**opencode.json**文件。
+
+  | 文件名           | 是否被 OpenCode 识别 | 含义        |
+| ------------- | --------------- | --------- |
+| opencode.json | ✅ 是             | 主配置文件（必须） |
+| config.json   | ❌ 否             | 不会被读取     |
+
+
+<br/>
+
+- **2.配置**
+
+  ```json
+  {
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": true,
+
+  "defaultProvider": "CM_AI",
+  "defaultModel": "qwen3.6-plus",
+
+  "provider": {
+    "CM_AI": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+        "apiKey": "sk-sp-djI.gKxxxxx....xxxiyvI1"
+      },
+      "models": {
+        "qwen3.6-plus": { "name": "qwen3.6-plus" },
+        "qwen-image-2.0": { "name": "qwen-image-2.0" },
+        "qwen-image-2.0-pro": { "name": "qwen-image-2.0-pro" },
+        "wan2.7-image": { "name": "wan2.7-image" },
+        "wan2.7-image-pro": { "name": "wan2.7-image-pro" },
+        "glm-5": { "name": "glm-5" }
+      }
+    },
+
+    "deepseek": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://api.deepseek.com/v1",
+        "apiKey": "sk-xxx"
+      },
+      "models": {
+        "deepseek-v3.2": { "name": "deepseek-v3.2" }
+      }
+    },
+
+    "minimax": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://api.minimax.chat/v1",
+        "apiKey": "sk-xxx"
+      },
+      "models": {
+        "MiniMax-M2.5": { "name": "MiniMax-M2.5" }
+      }
+    }
+  }
+}
+```
+
+
+| JSON 字段 | 解释说明 | 你的配置值/情况 |
+| :--- | :--- | :--- |
+| `$schema` | **JSON模式校验**：一个特殊的URL，不是让电脑去访问的。它的作用是让你**在支持JSON Schema的编辑器（如VS Code）中获得智能提示和语法校验**，帮你更准确地填写配置项，属于最佳实践的一部分。 | `"https://opencode.ai/config.json"` |
+| `autoupdate` | **自动更新开关**：一个布尔值（`true`或`false`）。设置为`true`表示你希望OpenCode客户端在有新版本时自动下载更新；设为`false`则会禁用此功能。 | `true` |
+| `provider` | **AI服务商配置块**：这个对象用来定义你要连接哪个AI服务商（比如OpenAI、Anthropic，或任何兼容其接口协议的第三方服务商）。 | (对象) |
+| `argus` | **服务商ID（Provider ID）**：这是你自己起的名字，像`"argus"`或用 `"my-custom-provider"`都行。作用是**唯一标识这个服务商**，供OpenCode内部使用。 | `"argus"` |
+| `npm` | **AI-SDK适配器包名**：固定为`"@ai-sdk/openai-compatible"`。你提供的URL是 **OpenAI兼容接口**，所以必须指向这个包，OpenCode才能理解该如何连接你的服务商。 | `"@ai-sdk/openai-compatible"` |
+| `name` | **UI显示名称**：这只是为了让OpenCode的用户界面（TUI）显示更方便你识别的名称，不影响任何功能。 | `"argus"` |
+| `options.baseURL` | **API接口地址**：**最重要的一行**。写在这里的地址是OpenCode发送AI请求的目标。你给的链接 `https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` 是阿里云百炼平台的**OpenAI兼容模式**调用地址，可能无需特殊处理，但建议你使用带 `/v1` 后缀的地址。 | `https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` |
+| `options.apiKey` | **API密钥**：你的服务商凭证（`sk-...`）。**明文写在配置文件里存在安全风险**，尤其当项目要分享给他人或提交到Git时。 | `sk-sp-djI.gKcPLQOeamfWv=2&p=imilab.ipc.113omc1&m` |
+| `models` | **可用模型列表**：告诉OpenCode你的服务商具体支持哪些模型。`"glm-5"`是**模型ID**，`"name"`是**UI显示名称**。你可以把 `glm-5` 换成 `deepseek-v3.2` 等他模型，作为这个服务商的可用模型。 | `"glm-5": {"name": "glm-5"}, "MiniMax-M2.5": {...}` |
+
+<br/>
+
+- **模型提供商（provider）= 提供大模型 API 的服务方**
+
+| Provider    | 实际公司      | 说明           |
+| ----------- | --------- | ------------ |
+| openai      | OpenAI    | GPT 系列       |
+| anthropic   | Anthropic | Claude       |
+| argus（你自定义） | 阿里云 MaaS  | 你现在用的        |
+| azure       | Microsoft | Azure OpenAI |
+| deepseek    | 深度求索      | DeepSeek     |
+
+- **核心原因:**
+	- 👉 不同厂商 API 不一样，但 CLI 想统一调用方式
+
+### 调用链路如下：
+
+```sh
+你输入：
+opencode chat "你好"
+
+↓
+
+CLI 读取配置：
+defaultProvider = argus
+defaultModel = glm-5
+
+↓
+
+找到 provider.argus
+
+↓
+
+用 @ai-sdk/openai-compatible
+
+↓
+
+请求：
+https://.../v1/chat/completions
+
+↓
+
+返回结果
+```
+
+<br/><br/>
+
+```
+"npm": "@ai-sdk/openai-compatible",
+```
+- **1.做什么的？**
+
+ - 这个是整个 provider 能不能工作的核心，不是装饰项。
+ - 它指定了：OpenCode 用哪个 SDK 去调用你的模型接口
+
+<br/>
+
+- **2.底层发生了什么（工程视角）**
+
+当你执行：
+
+```sh
+opencode chat "你好"
+```
+
+内部流程：
+
+```sh
+1. 读取 provider.argus
+
+2. 发现：
+   npm = @ai-sdk/openai-compatible
+
+3. 加载这个 SDK
+
+4. 构造请求：
+   POST /chat/completions
+
+5. 发给：
+   https://.../v1
+
+6. 返回结果 → CLI 输出
+```
+
+<br/>
+
+```json
+"baseURL": ".../v1",
+"apiKey": "sk-..."
+```
+**这2个字段干嘛的？有啥用？！可以理解为：**
+
+> 👉 一个决定“请求发到哪里”
+> 👉 一个决定“你有没有权限用”
+
+<br/>
+
+可以把 `baseURL` 想象成一个**电话号码**。它的作用就是告诉 OpenCode 这类 AI 客户端：“嘿，你要找的服务在‘这里’，把请求发到这个地址就行了”。
+
+在技术世界里，`baseURL` 就是 API 的服务端地址。OpenCode 通过这些基础的、统一的地址，才能找到阿里云百炼平台，调用你需要的各种模型。
+
+### 🗣️ 两个“号码” (`baseURL`)，两种对话“方言”
+
+阿里云百炼平台提供了两个不同的“电话号码”：
+
+*   **`https://.../compatible-mode/v1` (兼容 OpenAI 协议)**
+    *   这个地址“说”的是 OpenAI 的“方言”。OpenCode 等使用 OpenAI 接口的工具通过这个地址接入。
+    *   **你的选择**：因为你主要在配置 OpenCode，所以这个就是你应该使用的 `baseURL`。
+
+*   **`https://.../apps/anthropic` (兼容 Anthropic 协议)**
+    *   这个地址“说”的是 Anthropic（Claude 模型的开发者）的“方言”。它主要是为了让 **Claude Code** 这类原生支持 Anthropic 协议的工具，也能调用阿里云上那些并非 Claude 系列的模型（比如你列出的 `glm-5` 等）。
+ 
+<br/>
+
+比如具体的如上面提到的：
+
+```json
+"baseURL": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+```
+**它指定模型 API 的服务器地址， 通俗理解为：**
+
+```text
+baseURL = 服务器地址（API 网关入口）
+```
+
+<br/>
+
+**📌 实际请求是这样拼的**
+
+```bash
+opencode chat "你好"
+```
+
+内部会变成：
+
+```text
+POST https://token-plan.../v1/chat/completions
+```
+
+👉 也就是说：
+
+```text
+baseURL + /chat/completions
+```
+
+
+<br/>
+
+**`apiKey` 是干嘛的？**
+
+```json
+"apiKey": "sk-xxxx"
+```
+**👉 作用:身份认证（鉴权）**
+
+<br/>
+
+**📌 实际作用**
+
+请求时会自动带上：
+
+```http
+Authorization: Bearer sk-xxxx
+```
+<br/>
+
+**📌 通俗理解**
+
+```text
+apiKey = 你的“付费凭证 / 访问令牌”
+```
+
+没有它：
+
+👉 服务端直接拒绝（401）
+
+<br/>
+
+**把这两个合起来理解（最重要）**
+
+你可以把一次请求理解成：
+
+```text
+你（CLI）
+   ↓
+拿着 apiKey（身份证）
+   ↓
+去 baseURL（服务器地址）
+   ↓
+请求模型服务
+```
+
+<br/>
+
+**对应到你这个配置**
+
+```json
+"options": {
+  "baseURL": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+  "apiKey": "sk-xxx"
+}
+```
+
+👉 实际含义就是：
+
+```text
+去阿里云 MaaS 这个服务器
+用你的 key 调用模型
 ```
 
