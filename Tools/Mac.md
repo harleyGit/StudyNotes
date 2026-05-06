@@ -62,6 +62,7 @@
 	- [iOS中SYM通过符号表查看堆栈错误信息](#iOS中SYM通过符号表查看堆栈错误信息)
 	- [目录结构树tree](#目录结构树tree)
 	- [在线流程图和符号时序图](#在线流程图和符号时序图)
+	- [ASCII流程图工具](#ASCII流程图工具) 
 	- [Wireshark🦈SIP](#Wireshark🦈SIP)
 	- [MacVim](#MacVim)
 	- [微信小助手扩展](#微信小助手扩展)
@@ -2722,6 +2723,125 @@ tree -L 2  # 只显示两层目录
 
 [在线代码时序图](https://sequencediagram.org/)
 [在线代码流程图](https://mermaid.live/edit#pako:eNpVkbFugzAQhl_FuqmVSEQcQ4KHSg1ps6Rqh0yFDFY4MGqwkTFKU-Dda4iqtp58-r_vv-E6OOkMgUN-1peTFMaSwzZVxL3HJJambGwlmiOZzR76HVpSaYXXnmzudpo0Utd1qYr7G78ZIRJ3-xFDYmWpPoZbFE_-q8KebJO9qK2uj3-Tw0X35Ckp36Sr_59Ig856TnLBczE7CUNiYY7gQWHKDLg1LXpQoanEOEI3yilYiRWmwN03w1y0Z5tCqgan1UK9a139mEa3hQRXfW7c1NaZsLgtRWHEL4IqQxPrVlngC3-qAN7BJ3DK1nPKgiXz2YoFbLX04OoYSufLaLGKFtE6XEcsCAYPvqal_jyglPkhDcIwpBGjzsCstNq83M4wXWP4BvSmfHA)
+
+
+<br/><br/><br/>
+
+***
+<br/>
+ 
+  > <h1 id= "ASCII流程图工具"> ASCII流程图工具</h1>
+
+## AccessToken / RefreshToken 生命周期（全流程）
+
+```sh
++---------------------+                          +----------------------+
+|       Client        |                          |        Server        |
+|  (Web / App / API)  |                          |   Auth + Resource    |
++----------+----------+                          +----------+-----------+
+           |                                                |
+           | 1. 登录 (username/password / OAuth / SSO)      |
+           |----------------------------------------------->|
+           |                                                |
+           |                           2. 校验用户凭证       |
+           |                           3. 生成 Token 对：    |
+           |                              - accessToken     |
+           |                              - refreshToken    |
+           |<-----------------------------------------------|
+           | 4. 存储 Token（内存 / Cookie / Secure Store）   |
+           |                                                |
+           |================ 正常访问阶段 ===================|
+           |                                                |
+           | 5. 请求 API (带 accessToken)                   |
+           |----------------------------------------------->|
+           |                                                |
+           |                         6. 校验 accessToken     |
+           |                         (签名 / 过期时间 exp)   |
+           |<-----------------------------------------------|
+           |         7. 返回业务数据 (200 OK)               |
+           |                                                |
+           |================ accessToken 过期 ==============|
+           |                                                |
+           | 8. 请求 API (旧 accessToken)                   |
+           |----------------------------------------------->|
+           |                                                |
+           |                         9. Token 已过期         |
+           |<-----------------------------------------------|
+           |               返回 401 Unauthorized             |
+           |                                                |
+           | 10. 使用 refreshToken 请求刷新                 |
+           |----------------------------------------------->|
+           |                                                |
+           |                   11. 校验 refreshToken：       |
+           |                       - 是否有效                |
+           |                       - 是否过期                |
+           |                       - 是否被吊销              |
+           |                                                |
+           |        (✔ 有效)                                 |
+           |<-----------------------------------------------|
+           |     12. 返回新的 accessToken (可选新 refresh)   |
+           |                                                |
+           | 13. 更新本地 Token                             |
+           |                                                |
+           | 14. 重试原请求 (带新 accessToken)              |
+           |----------------------------------------------->|
+           |                                                |
+           |<-----------------------------------------------|
+           |          15. 返回业务数据 (成功)               |
+           |                                                |
+           |================ refreshToken 失效 =============|
+           |                                                |
+           | 16. refreshToken 无效/过期/被吊销              |
+           |<-----------------------------------------------|
+           |            返回 401 / 403                      |
+           |                                                |
+           | 17. 强制重新登录                              |
+           |                                                |
++----------+----------+                          +----------+-----------+
+```
+
+ ## 在 Mac 上可以用以下工具生成 ASCII 艺术图表,推荐工具：  
+ ### - 1.Monodraw（最推荐）                                                                       
+		- 专门的 Mac ASCII 艺术编辑器                                                               
+		- 支持绘制框图、流程图、表格                                                                
+		- App Store 可下载                                                                          
+		- 界面直观，类似绘图软件                                                                    
+                                                                                                 
+### - 2.ASCII Flow（在线工具）                                                                   
+	 	- 网站：https://asciiflow.com                                                               
+	 	- 免费，无需安装                                                                            
+	 	- 支持框图、箭头、文本                                                                      
+		- 可导出为文本                                                                              
+                                                                                                 
+### - 3.Carbon（代码美化）                                                                       
+		- 网站：https://carbon.now.sh                                                               
+		- 主要用于代码截图美化                                                                      
+		- 可配合 ASCII 艺术使用                                                                     
+                                                                                                 
+### - 4.命令行工具                                                                               
+																							 
+ #### 	- 安装：                                                                                      
+																							 
+ #### 安装 asciio（Perl 工具）                                                                  
+
+```sh
+brew install asciio                                                                         
+```
+																							 
+ #### 或使用 ditaa（将 ASCII 转 PNG）                                                           
+```sh
+brew install ditaa
+```
+
+### - 5.快速方法                                                                                    
+																							 
+ 手动绘制（推荐用于简单图表）：                                                              
+ - 使用文本编辑器（如 VS Code、Sublime）                                                     
+ - 使用特殊字符：┌ ─ ┐ │ └ ┘ ├ ┤ ┬ ┴ ┼ ▼ ◀ ▶ ● ○                                             
+																							 
+### - 6.VS Code 插件：                                                                              
+ 	- 安装 "Draw.io Integration" 插件                                                           
+ 	- 绘制后导出为 SVG/PNG 
 
 
 <br/><br/><br/>
