@@ -16,6 +16,7 @@
 	- [oc对象转换成结构体的工厂方法](#oc对象转换成结构体的工厂方法) 
 	- [可用配网过滤](#可用配网过滤)
 	- [更新/替换list中相同设备的数据-map、first方法](#更新/替换list中相同设备的数据-map、first方法)
+	- [数组集合使用协议hash比较](#数组集合使用协议hash比较)
 - [**线程安全**](#线程安全)
 	- [barrier实现线程安全](#barrier实现线程安全)
 - [**UI组件**](#UI组件)
@@ -1272,7 +1273,159 @@ return list.map { element in
 [数组map、first详细用法请看这里](./../Swift/swift基础.md#数组map、first方法详解)
 
 
+***
+<br/><br/><br/>
+> <h2 id="数组集合使用协议hash比较">数组集合使用协议hash比较</h2>
+# `contains(where:)` 与 `==` 的调用逻辑说明
 
+## 你的核心疑问
+
+在 `AKThingLANScanner.swift` 中用了：
+
+```swift
+guard scannedDevices.contains(where: { $0.dedupIdentity == device.dedupIdentity }) == false else {
+    return
+}
+```
+
+你想知道：它是否会调用 `AKThingLANScannedDeviceModel` 里的：
+
+```swift
+public static func == (
+    lhs: AKThingLANScannedDeviceModel,
+    rhs: AKThingLANScannedDeviceModel
+) -> Bool
+```
+
+## 结论先说
+
+- **不会**调用你贴的 `AKThingLANScannedDeviceModel.==`。
+- 这行代码比较的是 **`String`**（`dedupIdentity`）而不是模型对象本身。
+- 实际调用的是 **`String` 的 `==`**。
+
+## 为什么不会调用模型的 `==`
+
+### 1) `contains(where:)` 的语义
+
+`contains(where:)` 接收一个闭包：
+
+```swift
+(Element) -> Bool
+```
+
+数组里每个元素都会传入这个闭包，闭包返回 `true` 就停止并返回 `true`。
+
+### 2) 你当前闭包比较的是 `dedupIdentity`
+
+闭包内容是：
+
+```swift
+$0.dedupIdentity == device.dedupIdentity
+```
+
+`dedupIdentity` 类型是 `String`，因此这里是：
+
+```swift
+String == String
+```
+
+不是：
+
+```swift
+AKThingLANScannedDeviceModel == AKThingLANScannedDeviceModel
+```
+
+所以不会走模型里自定义的 `static func ==`。
+
+## 什么时候才会调用模型的 `==`
+
+只有直接比较模型对象时才会触发，比如：
+
+```swift
+lhs == rhs
+```
+
+或者：
+
+```swift
+scannedDevices.contains(device)
+```
+
+这一种 `contains(_:)` 需要 `Element: Equatable`，它内部会用元素的 `==`，所以会调用模型的 `==`。
+
+---
+
+## 对比示例（最直观）
+
+### 示例 A：会调用模型 `==`
+
+```swift
+let a = AKThingLANScannedDeviceModel(productId: "p1", mac: "", ip: "192.168.1.10")
+let b = AKThingLANScannedDeviceModel(productId: "p2", mac: "", ip: "192.168.1.10")
+
+// 调用 AKThingLANScannedDeviceModel.static func ==
+let same = (a == b)
+```
+
+### 示例 B：不会调用模型 `==`
+
+```swift
+let hasSame = scannedDevices.contains { item in
+    // 这里只比较 String，调用 String.==
+    item.dedupIdentity == device.dedupIdentity
+}
+```
+
+---
+
+## 你这段 guard 的执行过程（逐步）
+
+```swift
+guard scannedDevices.contains(where: { $0.dedupIdentity == device.dedupIdentity }) == false else {
+    return
+}
+```
+
+按步骤是：
+
+1. 遍历 `scannedDevices`。
+2. 对每个元素计算 `$0.dedupIdentity`（String）。
+3. 用 `String == String` 与 `device.dedupIdentity` 比较。
+4. 只要某次为 `true`，`contains(where:)` 立即返回 `true`。
+5. `guard true == false` 不成立，进入 `else { return }`，当前设备不再追加。
+6. 如果全都不相等，`contains(where:)` 返回 `false`，`guard` 通过，继续 append。
+
+---
+
+## 举一个完整去重例子
+
+假设已有数组里有：
+
+```text
+productId = "p1", mac = "AA-BB-CC-DD-EE-FF", ip = "192.168.1.10"
+```
+
+它的 `dedupIdentity` 会是：
+
+```text
+mac:aabbccddeeff
+```
+
+新扫到设备：
+
+```text
+productId = "p2", mac = "aa:bb:cc:dd:ee:ff", ip = "192.168.1.99"
+```
+
+其 `dedupIdentity` 也是：
+
+```text
+mac:aabbccddeeff
+```
+
+因此闭包比较结果为 `true`，`contains(where:)` 返回 `true`，`guard` 触发 `return`，新设备被判定为重复。
+
+这就是“**用 dedupIdentity 字符串做去重**”的完整调用链。
 
 
 <br/><br/><br/>
