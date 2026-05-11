@@ -1,7 +1,8 @@
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
 	- [多代理+弱引用管理](#多代理+弱引用管理)
-     - [compactMap等价方法和解读、举例](#compactMap等价方法和解读、举例)	
+		- [compactMap等价方法和解读、举例](#compactMap等价方法和解读、举例)
+  		- [数组contains解读](#数组contains解读)
 	- [类中的访问权限](#类中的访问权限)
 	- [异步任务Task](#异步任务Task)
 		- [异步网络请求+UI更新小Demo](#异步网络请求+UI更新小Demo)
@@ -190,8 +191,6 @@ delegate 又强引用 manager
 所以：`weak var value`
 
 意味着：**delegate释放后，这里自动变成 nil**
-
-
 
 ***
 <br/>
@@ -408,8 +407,8 @@ self.delegates.removeAll { $0.value == nil }
 ## 取出有效 delegate
 
 - **`compactMap`：**
- - 自动过滤 nil,并解包
- - 映射（map）
+	- 自动过滤 nil,并解包
+ 	- 映射（map）
 
 
 ```swift id="0isjlwm"
@@ -536,9 +535,9 @@ HGManager
 ### 事件发生：
 - **蓝牙连接成功**,
 - **Manager：**
-  - 遍历所有 `delegate`
-  - 逐个通知
-  - 调用：`delegate.didConnectDevice()`
+	- 遍历所有 `delegate`
+  	- 逐个通知
+  	- 调用：`delegate.didConnectDevice()`
 
 
 
