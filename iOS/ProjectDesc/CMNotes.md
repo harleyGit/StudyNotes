@@ -1,5 +1,7 @@
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
+	- [多代理+弱引用管理](#多代理+弱引用管理)
+     - [compactMap等价方法和解读、举例](#compactMap等价方法和解读、举例)	
 	- [类中的访问权限](#类中的访问权限)
 	- [异步任务Task](#异步任务Task)
 		- [异步网络请求+UI更新小Demo](#异步网络请求+UI更新小Demo)
@@ -63,6 +65,482 @@
 <br/>
 
 > <h1 id= "Swift高级用法">Swift高级用法</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="多代理+弱引用管理">多代理+弱引用管理</h2>
+
+# HGWeakStruct文件
+
+```swift
+/// 结构体,内部保存的AnyObject为弱引用
+public struct HGWeakStruct<T: AnyObject> {
+    public weak var value: T?
+    
+    public init(value: T? = nil) {
+        self.value = value
+    }
+}
+```
+
+# HGManager文件
+
+```swift
+
+public protocol HGManagerDelegate: NSObjectProtocol {
+	@objc optional func didConnectDevice(identifier: String?)
+}
+
+public class HGManager: NSObject, NSCopying, NSMutableCopying, NSSecureCoding {
+
+private var delegates: [HGWeakStruct<HGManagerDelegate>] = []
+
+
+private func notifyDelegates(_ handler: (HGManagerDelegate) -> Void) {
+
+	let currentDelegates = self.delegateQueue.sync {
+		self.delegates.removeAll { $0.value == nil }
+		return self.delegates.compactMap { $0.value }
+	}
+	currentDelegates.forEach(handler)
+}
+```
+
+# 调用
+
+## 下面的代码啥意思？
+
+```swift
+
+self.delegates.removeAll { $0.value == nil || $0.value === delegate }
+elf.delegates.contains(where: { $0.value === delegate })
+self.notifyDelegates { $0. didConnectDevice(identifier: identifier) }
+```
+
+***
+<br/><br/>
+
+上面的代码片段是一个非常典型的：
+
+```text
+Swift 多代理（multicast delegate） + 弱引用管理
+```
+
+- 这个在：
+	* BLE SDK
+	* 网络 SDK
+	* 事件总线
+	* Notification 分发
+
+里非常常见。
+
+***
+<br/>
+
+上述代码片段核心目的是：
+
+```text
+一个 manager 可以同时通知多个 delegate，
+并且不会造成循环引用。
+```
+
+我按底层逻辑给你完整拆解。
+
+---
+<br/>
+
+# HGWeakStruct 是干嘛的
+
+```swift 
+public struct HGWeakStruct<T: AnyObject> {
+    
+    public weak var value: T?
+    
+    public init(value: T? = nil) {
+        self.value = value
+    }
+}
+```
+
+## 作用：把对象弱引用包装起来
+
+## 因为：Array 不能直接存 weak,比如：
+
+```swift id="u1ph4l"
+weak var delegates: [HGManagerDelegate]
+```
+Swift 不允许，所以必须包一层：`AKWeakStruct`
+
+
+***
+<br/>
+
+# 为什么要 weak?
+# 避免循环引用。
+
+```text
+Manager 强引用 delegates
+delegate 又强引用 manager
+```
+
+就：**永远无法释放**
+
+## BLE SDK 特别容易出现这种问题。
+
+所以：`weak var value`
+
+意味着：**delegate释放后，这里自动变成 nil**
+
+
+
+***
+<br/>
+
+# delegates 数组结构
+
+```swift id="9d4mz7"
+private var delegates: [HGWeakStruct<HGManagerDelegate>] = []
+```
+
+实际内存大概：
+
+```sh
+delegates
+ ├── weak delegateA
+ ├── weak delegateB
+ └── weak delegateC
+```
+
+不是强持有。
+
+
+***
+<br/>
+
+## === 是啥意思
+
+这是：**引用类型对象地址比较**，不是值比较。
+
+**比如：**
+
+```swift id="dx2qz6"
+obj1 === obj2
+```
+表示：**是不是同一个对象实例**
+
+<br/>
+
+```swift id="mjlwmv"
+let a = NSObject()
+let b = a
+let c = NSObject()
+```
+
+结果：
+
+```swift id="87p1jf"
+a === b // true
+a === c // false
+```
+
+---
+<br/>
+
+# removeAll 那段啥意思
+
+```swift id="ohgsy7"
+self.delegates.removeAll {
+    $0.value == nil || $0.value === delegate
+}
+```
+
+**解读：**
+- 删除：
+  - 1. 已经释放的 delegate
+  - 2. 当前指定 delegate
+
+## 等价：
+
+```swift id="0pb26t"
+self.delegates.removeAll { item in
+    
+    if item.value == nil {
+        return true
+    }
+    
+    if item.value === delegate {
+        return true
+    }
+    
+    return false
+}
+```
+
+<br/>
+
+### 举例
+
+```sh
+# 假设
+delegates:
+[A, B, nil, C]
+
+# 现在
+remove(delegate: B)
+
+# 执行
+removeAll {
+    $0.value == nil || $0.value === B
+}
+
+# 结果
+[A, C]
+```
+因为：
+* nil 被清掉
+* B 被移除
+
+
+<br/><br/>
+> <h3 id="数组contains解读">数组contains解读</h3>
+- 遍历数组，
+- 只要有一个满足条件就返回 true
+
+# contains(where:) 啥意思
+
+```swift id="qbjg7k"
+// 这种写法是 尾随闭包 + $0 简写
+// 检查数组里是否已经存在该 delegate
+self.delegates.contains(where: {
+	// 是否是同一个对象实例， 比较内存地址
+	$0.value === delegate
+})
+
+// 完整写法：
+self.delegates.contains(where: { item in
+    item.value === delegate
+})
+
+// 更完整写法
+self.delegates.contains(where: { (item: HGWeakStruct<HGManagerDelegate>) -> Bool in
+    
+    return item.value === delegate
+})
+```
+**等价：**
+
+```swift id="n2m0lg"
+for item in delegates {
+
+    if item.value === delegate {
+        return true
+    }
+}
+
+return false
+
+
+// 或者如下：
+var isExist = false
+
+for item in self.delegates {
+
+    if item.value === delegate {
+
+        isExist = true
+        break
+    }
+}
+```
+
+---
+<br/>
+
+# notifyDelegates 核心机制
+
+
+```swift id="c2u84h"
+private func notifyDelegates(
+    _ handler: (HGManagerDelegate) -> Void
+) {
+
+    let currentDelegates = self.delegateQueue.sync {
+
+        self.delegates.removeAll { $0.value == nil }
+
+        return self.delegates.compactMap { $0.value }
+    }
+
+    currentDelegates.forEach(handler)
+}
+```
+## 线程安全
+
+```swift id="svjlwm"
+self.delegateQueue.sync
+```
+
+说明：**delegates 访问是串行队列保护的**
+**避免：**
+* 多线程同时增删
+* 崩溃
+* 数组越界
+
+<br/>
+
+## 清理已释放对象
+
+```swift id="j8cepo"
+self.delegates.removeAll { $0.value == nil }
+
+// 最开始
+[A, nil, C]
+
+// 删除空值后
+[A, C]
+```
+**因为 weak 已自动 nil。**
+
+<br/><br/>
+> <h3 id="compactMap等价方法和解读、举例">compactMap等价方法和解读、举例</h3>
+
+
+## 取出有效 delegate
+
+- **`compactMap`：**
+ - 自动过滤 nil,并解包
+ - 映射（map）
+
+
+```swift id="0isjlwm"
+self.delegates.compactMap { $0.value }
+
+// 完整写法
+self.delegates.compactMap { item in
+    return item.value
+}
+
+// 更完整写法
+self.delegates.compactMap { (item: HGWeakStruct<HGManagerDelegate>) -> HGManagerDelegate? in
+    
+    return item.value
+}
+```
+
+**等价**
+
+```swift
+var result: [AKBleProcessManagerDelegate] = []
+
+for item in self.delegates {
+
+    if let delegate = item.value {
+        result.append(delegate)
+    }
+}
+```
+
+<br/>
+
+**举例**
+
+```sh
+// 取出之前
+[weak A, weak nil, weak C]
+
+// compactMap执行后
+[A, C]
+```
+<br/>
+
+## 为什么先复制 currentDelegates? 
+## 非常重要。这里：
+
+```swift id="zv1xk5"
+let currentDelegates = ...
+```
+是为了：
+
+```text
+避免遍历时数组被修改
+```
+否则：
+
+```text
+forEach 时 remove delegate
+可能崩溃
+```
+### 这是经典写法。
+
+---
+<br/>
+
+## forEach(handler)
+
+```swift id="4q3qdc"
+currentDelegates.forEach(handler)
+
+// 等价
+for delegate in currentDelegates {
+    handler(delegate)
+}
+```
+
+***
+<br/>
+
+## 最终调用
+- 通知所有 delegate：
+- 蓝牙连接成功了
+
+```swift id="mxw40f"
+self.notifyDelegates {
+    $0.didConnectBluetoothPeripheral?(
+        identifier: identifier
+    )
+}
+
+// 完整写法
+// 更完整写法：将 { delegate in 换成 {(delegate: AKBleProcessManagerDelegate) in
+self.notifyDelegates { delegate in
+    
+    delegate.didConnectBluetoothPeripheral?(
+        identifier: identifier
+    )
+}
+```
+**等价**
+
+```swift 
+for delegate in currentDelegates {
+
+    delegate.didConnectDevice?(
+        identifier: identifier
+    )
+}
+```
+
+---
+<br/>
+
+## 总结：整个架构图
+
+```text
+HGManager
+    │
+    ├── weak delegateA
+    ├── weak delegateB
+    └── weak delegateC
+```
+
+### 事件发生：
+- **蓝牙连接成功**,
+- **Manager：**
+  - 遍历所有 `delegate`
+  - 逐个通知
+  - 调用：`delegate.didConnectDevice()`
+
+
 
 ***
 <br/><br/><br/>
