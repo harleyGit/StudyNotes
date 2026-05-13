@@ -15,6 +15,11 @@
 - [**token解析**](#token解析)
 - [SQL](#SQL)
 	- [xx.sql问件加注释](#xx.sql问件加注释)
+ 	- [SQL排它锁-更新用户信息](#SQL排它锁-更新用户信息)
+    	- [FOR UPDATE行锁核心](#FOR_UPDATE行锁核心)
+		- [FORUPDATE的几个特点](#FOR_UPDATE的几个特点)
+		- [注意死锁问题](#注意死锁问题)
+    	- [SQL锁](../SQL锁.md)
 - [TCP通信自己实现](#TCP通信自己实现)
 - [功能模块](#功能模块)
 	- [登录注册](#登录注册) 
@@ -422,6 +427,312 @@ USE HG_MLC_DB;
   - 如果 HG_MLC_D 数据库不存在，这条语句会报错。
   - 很可能是打字错误，应为：
         USE HG_MLC_DB;
+
+***
+<br/><br/><br/>
+> <h2 id="SQL排它锁-更新用户信息">SQL排它锁-更新用户信息</h2>
+
+
+```sh
+SELECT user_id, email, phone, password_hash, salt FROM users WHERE user_id = ? FOR UPDATE 
+```
+
+这条sql语句什么意思？特别是 **`‌FOR UPDATE `**
+
+本质上是：**查询某个用户的数据，并且对这条记录加“排他锁（行锁）”。**
+
+通常用于：
+* 修改用户数据前
+* 校验余额/库存
+* 修改密码
+* 防止并发问题
+
+<br/>
+**Go 中通常：**
+
+```go
+db.QueryRowContext(ctx, sql, userID)
+```
+
+***
+<br/><br/><br/>
+> <h2 id="FOR_UPDATE行锁核心"> FOR UPDATE行锁核心</h2> 
+
+```sql
+FOR UPDATE
+```
+
+### 它会给查出来的行加锁（排他锁/X锁）
+
+意思：**当前事务没有提交之前，别人不能修改这条数据。**
+
+<br/>
+
+**典型执行流程, 假设：** 用户A 和 用户B 同时修改余额。
+
+---
+
+- **事务1**
+
+```sql
+BEGIN;
+
+SELECT * FROM users
+WHERE user_id = 1
+FOR UPDATE;
+```
+
+此时：
+
+* user_id=1 这一行被锁住
+* 事务1持有锁
+
+---
+
+- **事务2**
+
+同时执行：
+
+```sql
+BEGIN;
+
+SELECT * FROM users
+WHERE user_id = 1
+FOR UPDATE;
+```
+
+会发生：**阻塞等待**
+
+直到：
+
+* 事务1 COMMIT
+* 或 ROLLBACK
+
+事务2 才能继续。
+
+---
+<br/>
+
+### 为什么需要 FOR UPDATE?
+
+这是为了：**防止并发数据错误**
+
+例如：**不加锁的问题**
+
+余额：
+
+```text
+100
+```
+
+两个请求同时扣：
+* 请求A 扣 30
+* 请求B 扣 50
+
+---
+
+- **A读取**
+
+```text
+100
+```
+
+<br/>
+
+- **B读取**
+
+```text
+100
+```
+
+<br/>
+
+- **A更新**
+
+```text
+70
+```
+
+<br/>
+
+- **B更新**
+
+```text
+50
+```
+<br/>
+最终：
+
+```text
+50
+```
+<br/>
+实际上应该：
+
+```text
+20
+```
+
+这叫：**并发覆盖问题**
+
+（Lost Update）
+
+---
+<br/> 
+
+### FOR UPDATE 如何解决
+
+- **事务A：**
+
+```sql
+SELECT balance FROM users
+WHERE id = 1
+FOR UPDATE;
+```
+
+锁住行。
+<br/>
+
+- **事务B：**
+
+只能等待,于是：
+
+```text
+A执行完
+→ 提交
+→ B再读取最新值
+```
+
+数据就不会错。
+
+<br/>
+
+### **Go 项目中典型用法**
+
+比如：
+
+```go
+tx, _ := db.BeginTx(ctx, nil)
+
+row := tx.QueryRowContext(ctx, `
+    SELECT user_id, balance
+    FROM users
+    WHERE user_id = ?
+    FOR UPDATE
+`, userID)
+
+// 读取余额
+// 计算新余额
+// UPDATE users ...
+
+tx.Commit()
+```
+
+注意：**FOR UPDATE 必须在事务里才有效**
+
+必须：
+
+```sql
+BEGIN
+```
+
+- **否则：**
+	- 很多数据库会自动提交，
+	- 锁瞬间释放，
+	- 等于没锁。
+
+---
+<br/>
+
+### 锁的是啥？
+
+在 InnoDB(MySQL),通常锁的是：**`行锁（Row Lock）`**,不是整张表。
+
+所以：
+
+```sql
+WHERE user_id = 1
+```
+
+只锁这一行。
+<br/>
+其他用户：
+
+```sql
+WHERE user_id = 2
+```
+
+不受影响。
+
+---
+<br/>
+
+### 前提：必须走索引
+
+如果：
+
+```sql
+WHERE user_id = ?
+```
+
+没有索引,可能变成：**`表锁 / 大范围锁`**,性能会很差,所以通常：
+
+```sql
+PRIMARY KEY(user_id)
+```
+
+或者：
+
+```sql
+INDEX(user_id)
+```
+
+---
+
+<br/><br/>
+> <h3 id="FOR_UPDATE的几个特点">FOR UPDATE 的几个特点</h3>
+
+| 特性      | 说明          |
+| ------- | ----------- |
+| 必须事务内   | 否则无意义       |
+| 锁的是查询结果 | 查到哪些锁哪些     |
+| 排他锁     | 别人不能 UPDATE |
+| 会阻塞     | 其他事务等待      |
+| 防并发     | 核心用途        |
+
+***
+<br/>
+
+### 实际项目常见场景
+
+常用于：
+
+| 场景      | 是否常用 |
+| ------- | ---- |
+| 扣库存     | ✓    |
+| 扣余额     | ✓    |
+| 修改密码    | ✓    |
+| 用户状态变更  | ✓    |
+| 抢券      | ✓    |
+| 秒杀      | ✓    |
+| 分布式任务抢占 | ✓    |
+
+<br/><br/>
+> <h3 id="注意死锁问题">注意死锁问题</h3>
+
+如果多个事务：
+
+```text
+事务A锁 user1
+事务B锁 user2
+
+事务A再锁 user2
+事务B再锁 user1
+```
+
+就会：**死锁（Deadlock）**,数据库会回滚其中一个事务。
+
+所以：**加锁顺序必须一致**,非常重要。
 
 
 
