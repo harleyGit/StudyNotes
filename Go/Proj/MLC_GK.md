@@ -15,6 +15,8 @@
 - [**token解析**](#token解析)
 - [SQL](#SQL)
 	- [xx.sql问件加注释](#xx.sql问件加注释)
+	- [创建users表](#创建users表)
+	- [给users表增加字段](#给users表增加字段)
  	- [SQL排它锁-更新用户信息](#SQL排它锁-更新用户信息)
     	- [FOR UPDATE行锁核心](#FOR_UPDATE行锁核心)
 		- [FORUPDATE的几个特点](#FOR_UPDATE的几个特点)
@@ -401,8 +403,7 @@ pageResp := NewPageResponse(items)
 */
 ```
  
- <br/>     
-
+<br/>     
 
 ```sql
 CREATE DATABASE HG_MLC_DB DEFAULT CHARACTER SET utf8mb4;
@@ -428,6 +429,22 @@ USE HG_MLC_DB;
   - 如果 HG_MLC_D 数据库不存在，这条语句会报错。
   - 很可能是打字错误，应为：
         USE HG_MLC_DB;
+        
+***
+<br/><br/><br/>
+> <h2 id="SQL语句解读">SQL语句解读</h2>
+
+
+***
+<br/><br/>
+># <h3 id="创建users表">[创建users表](../数据库SQL(I).md#users表创建)</h3>
+
+
+***
+<br/><br/>
+># <h3 id="给users表增加字段">[给users表增加字段](../数据库SQL(I).md#users表新增一个字段)</h3>
+
+
 
 ***
 <br/><br/><br/>

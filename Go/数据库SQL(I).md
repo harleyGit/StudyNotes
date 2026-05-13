@@ -56,7 +56,8 @@
 - [创建表](#创建表)
 - [拷贝表](#拷贝表)
 - [修改表](#修改表)
-	- [追加一个列](#追加一个列) 
+	- [追加一个列](#追加一个列)
+	- [users表新增一个字段](#users表新增一个字段) 
 	- [修改一个列](#修改一个列) 
 	- [重命名一个列](#重命名一个列) 
 	- [删除一个列](#删除一个列)
@@ -420,6 +421,404 @@ INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, 
 (6, 'Nakagawa Nanami', '中川七海', 'nanami1@gmail.com', '212-749-3438', '2007-03-14', 'pCWr6ZCmBT', 327.37, 539.46, 12, 482);
 
 ```
+
+***
+<br/><br/><br/>
+> <h2 id="users表创建">users表创建</h2>
+
+```sql 
+CREATE TABLE IF NOT EXISTS `users`(
+    `id` BIGINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NULL COMMENT '邮箱',
+    `phone` VARCHAR(32) NULL COMMENT '手机号',
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    UNIQUE KEY `uk_email` (`email`),
+    UNIQUE KEY `uk_phone` (`phone`)
+
+)ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 
+COLLATE=utf8mb4_general_ci 
+COMMENT='用户表';
+```
+
+这是一个：**创建用户表（users）的 MySQL 建表语句。**
+
+下面详细拆解。
+
+---
+<br/>
+
+- **1.`CREATE TABLE IF NOT EXISTS`**
+
+```sql id="y4o5lt"
+CREATE TABLE IF NOT EXISTS `users`
+```
+
+意思：**创建一个名为 users 的表。**
+
+**IF NOT EXISTS**，含义：如果表不存在才创建。
+
+避免：
+
+```text id="2i6v27"
+Table 'users' already exists
+```
+
+报错。
+
+***
+<br/>
+
+- **2.`id`字段**
+
+```sql id="cxce8r"
+`id` BIGINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT
+```
+
+- **2.1.`id`**
+
+字段名：**`id`**,表示：**用户唯一 ID**,例如：
+
+| id |
+| -- |
+| 1  |
+| 2  |
+| 3  |
+
+<br/>
+
+- **2.2. `BIGINT`**
+
+表示：**64位整数**,范围很大为：
+
+**有符号：**
+
+```text id="6j6m7m"
+-9223372036854775808
+~
+9223372036854775807
+```
+
+---
+
+- **2.3.`UNSIGNED`**
+
+意思：**无符号**，即：不能是负数。
+
+范围变成：
+
+```text id="z8k2nh"
+0
+~
+18446744073709551615
+```
+
+---
+
+### 为什么主键常用 `UNSIGNED`
+
+因为：`ID` 不需要负数。
+
+这样：
+* 范围更大
+* 语义更合理
+
+Go 工程中很常见：`uint64` 对应 `BIGINT UNSIGNED`
+
+---
+
+- **2.4.`PRIMARY KEY`**
+
+```sql id="7eg6bh"
+PRIMARY KEY
+```
+
+表示：**主键**
+
+特点：
+* 唯一
+* 不可重复
+* 自动创建聚簇索引(InnoDB)
+
+例如：
+
+| id |
+| -- |
+| 1  |
+| 2  |
+
+不能：
+
+| id  |
+| --- |
+| 1   |
+| 1 ❌ |
+
+---
+
+### 主键作用:
+* 唯一标识一行数据
+* 查询优化
+* 外键关联
+* ORM 映射
+* 分页排序
+
+---
+
+- **2.5. `NOT NULL`**
+
+```sql id="3epnl8"
+NOT NULL
+```
+
+表示：不能为空,即下面不允许：
+
+```sql id="q5lx2j"
+INSERT INTO users(id) VALUES(NULL);
+```
+
+---
+
+- **2.6. `AUTO_INCREMENT`**
+
+```sql id="un98ha"
+AUTO_INCREMENT
+```
+
+表示：`自增`,`MySQL` 自动生成 ID。
+
+例如,第一次插入：
+
+```text id="0nzhll"
+1
+```
+
+第二次：
+
+```text id="yfw8ko"
+2
+```
+
+第三次：
+
+```text id="7kzt6u"
+3
+```
+
+---
+<br/>
+
+
+### `updated_at` 字段
+
+```sql id="g97rnn"
+`updated_at` TIMESTAMP NOT NULL 
+DEFAULT CURRENT_TIMESTAMP
+ON UPDATE CURRENT_TIMESTAMP
+COMMENT '更新时间'
+```
+<br/>
+
+- **`TIMESTAMP`**表示：**时间类型**,例如：`‌2026-05-13 12:30:00`
+
+```text id="v5zvr1"
+
+```
+<br/>
+
+- **`DEFAULT CURRENT_TIMESTAMP`**,意思：**默认当前时间**,插入数据时：**自动填入当前时间。**
+
+例如：
+
+```sql id="l4v8z0"
+INSERT INTO users ...
+```
+
+自动变：
+
+```text id="6zrm8z"
+2026-05-13 18:00:00
+```
+<br/>
+
+- **ON UPDATE CURRENT_TIMESTAMP**
+	- 表示：
+		- 当该行数据更新时，
+		- 自动更新当前时间。
+
+**原来：**
+
+```text id="hljlwm"
+2026-05-13 10:00:00
+```
+
+执行：
+
+```sql id="aeh4s4"
+UPDATE users SET xxx=xxx
+```
+
+自动变：
+
+```text id="1l58rj"
+2026-05-13 11:00:00
+```
+
+
+---
+<br/>
+
+## UNIQUE KEY
+
+### 邮箱唯一索引
+
+```sql id="9jqzsz"
+UNIQUE KEY `uk_email` (`email`)
+```
+
+表示：**email 字段唯一。**
+
+---
+<br/>
+
+- **UNIQUE KEY 含义**,不允许重复。例如：
+
+| email                           |
+| ------------------------------- |
+| [a@test.com](mailto:a@test.com) |
+| [b@test.com](mailto:b@test.com) |
+
+允许。
+
+但：
+
+| email                             |
+| --------------------------------- |
+| [a@test.com](mailto:a@test.com)   |
+| [a@test.com](mailto:a@test.com) ❌ |
+
+不允许。
+
+---
+
+### `uk_email`,这是索引名字：
+
+```sql id="r0vx8z"
+uk_email
+```
+
+通常：
+
+* uk = unique key
+* idx = index
+
+命名规范。
+
+---
+<br/>
+
+### ENGINE=InnoDB
+
+指定：**存储引擎。**
+<br/>
+
+#### 为什么用 InnoDB
+
+因为支持：
+* 事务
+* 行锁
+* 外键
+* MVCC
+* 崩溃恢复
+
+现代 MySQL 基本默认：
+
+```text id="3t7z7n"
+InnoDB
+```
+
+---
+<br/>
+
+### `DEFAULT CHARSET=utf8mb4`
+
+表示：**默认字符集。**
+
+支持：
+* 中文
+* Emoji 😀
+* 多语言
+
+推荐标准。
+
+---
+
+### `COLLATE=utf8mb4_general_ci`
+
+表示：**排序规则。**
+<br/>
+
+- **`ci`**
+
+```text id="w00qgw"
+case insensitive
+```
+
+忽略大小写。
+
+例如：
+
+```text id="g6k26w"
+Tom == tom
+```
+
+***
+<br/>
+
+
+```sql id="eu0j71"
+CREATE TABLE IF NOT EXISTS `users`(
+
+    `id` BIGINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+
+    `email` VARCHAR(128) NOT NULL COMMENT '邮箱',
+
+    `phone` VARCHAR(20) NOT NULL COMMENT '手机号',
+
+    `updated_at` TIMESTAMP NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+    COMMENT '更新时间',
+
+    UNIQUE KEY `uk_email` (`email`),
+
+    UNIQUE KEY `uk_phone` (`phone`)
+
+)ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci
+COMMENT='用户表';
+```
+
+**最终大概：**
+
+| 字段         | 类型              | 说明   |
+| ---------- | --------------- | ---- |
+| id         | BIGINT UNSIGNED | 主键ID |
+| email      | VARCHAR(128)    | 邮箱   |
+| phone      | VARCHAR(20)     | 手机号  |
+| updated_at | TIMESTAMP       | 更新时间 |
+
+索引：
+
+| 索引名      | 类型   |
+| -------- | ---- |
+| PRIMARY  | 主键   |
+| uk_email | 唯一索引 |
+| uk_phone | 唯一索引 |
+
+
 
 
 <br/><br/><br/>
@@ -2952,6 +3351,205 @@ ADD email VARCHAR(45) AFTER hire_date;
 | job_id      | varchar(15)   | YES  |     | NULL    |       |
 +-------------+---------------+------+-----+---------+-------+
 ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="users表新增一个字段">users表新增一个字段</h2>
+
+
+## 这条 SQL 是给 users 表新增一个字段（列）
+
+```sql
+ALTER TABLE `users`
+    ADD COLUMN `nickname` VARCHAR(64) NULL COMMENT '昵称' AFTER `user_name`
+```
+
+***
+<br/>
+
+- **1.ALTER TABLE**
+
+```sql
+ALTER TABLE `users`
+```
+
+**修改已有的数据表 `users`**,`ALTER TABLE` 是 MySQL 用来：
+* 增加字段
+* 删除字段
+* 修改字段
+* 修改索引
+* 修改约束
+
+等表结构操作的语句。
+
+<br/>
+
+- **2.ADD COLUMN**
+
+```sql
+ADD COLUMN `nickname`
+```
+
+意思：**新增一个字段（列）叫 `nickname`**,新增后**用户表**会多出一个字段：
+
+| user_id | user_name | nickname |
+| ------- | --------- | -------- |
+
+<br/>
+
+- **3. VARCHAR(64)**
+
+```sql
+VARCHAR(64)
+```
+
+意思：**字符串类型，最大长度 64 个字符**,这是 MySQL 中最常见的变长字符串类型。
+
+<br/>
+
+- **4.NULL**
+
+```sql
+NULL
+```
+
+意思：**允许为空**,即下面是合法的：
+
+```sql
+INSERT INTO users(nickname)
+VALUES(NULL);
+```
+
+或者：
+
+```sql
+nickname 不传
+```
+
+都可以。
+
+<br/>
+
+**若是 NOT NULL**,例如：
+
+```sql
+nickname VARCHAR(64) NOT NULL
+```
+
+则：**必须有值。** 否则插入报错。
+
+<br/>
+
+- **5. COMMENT '昵称'**
+
+```sql
+COMMENT '昵称'
+```
+
+意思：**给字段添加注释**,数据库里会记录：
+
+| 字段       | 注释 |
+| -------- | -- |
+| nickname | 昵称 |
+
+这个注释：
+
+* Navicat 可见
+* DataGrip 可见
+* 后台管理系统可读取
+* ORM 可读取
+* 自动生成 API 文档时可能会使用
+
+属于：**数据字典说明**,非常常用。
+
+<br/>
+
+- **6. AFTER `user_name`**
+
+```sql
+AFTER `user_name`
+```
+
+意思：**把 nickname 字段放在 user_name 字段后面**
+
+例如原表：
+
+| user_id | user_name | email |
+
+执行后：
+
+| user_id | user_name | nickname | email |
+
+<br/>
+
+**若不写 AFTER**,`MySQL` 默认：
+
+新增字段会放最后。
+
+例如：
+
+| user_id | user_name | email | nickname |
+
+<br/>
+- **这条 SQL 的完整意思：**
+	- 修改 users 表，
+	- 新增一个 nickname 字段，
+	- 类型是最大 64 字符的字符串，
+	- 允许为空，
+	- 字段注释为“昵称”，
+	- 并且把它放在 user_name 字段后面。
+
+<br/>
+
+- **执行后的效果**,假设原表：
+
+```sql
+CREATE TABLE users (
+    user_id BIGINT,
+    user_name VARCHAR(64),
+    email VARCHAR(128)
+);
+```
+
+执行后变成：
+
+```sql
+CREATE TABLE users (
+    user_id BIGINT,
+    user_name VARCHAR(64),
+
+    nickname VARCHAR(64) NULL COMMENT '昵称',
+
+    email VARCHAR(128)
+);
+```
+
+---
+
+### 补充：字段位置相关语法
+
+- **放第一列**
+
+```sql
+ADD COLUMN nickname VARCHAR(64) FIRST
+```
+<br/>
+
+- **放某列后面**
+
+```sql
+ADD COLUMN nickname VARCHAR(64) AFTER user_name
+```
+<br/>
+
+- **默认最后**
+
+```sql
+ADD COLUMN nickname VARCHAR(64)
+```
+
+
 
 <br/><br/>
 > <h3 id="修改一个列">修改一个列</h3>
