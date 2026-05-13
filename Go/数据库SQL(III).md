@@ -38,6 +38,14 @@
 			- [约束等级](#约束等级)
 			- [删除外键约束](#删除外键约束)
 			- [外键-开发场景](#外键-开发场景)
+   			- [安全表与用户表的外键约束](#安全表与用户表的外键约束)
+					- [最核心作用：保证数据一致性](#最核心作用：保证数据一致性)     
+					- [数据删除(ON DELETE)行为](#数据删除ON_DELETE行为)     
+					- [RESTRICT（默认）行为](#RESTRICT默认行为)      
+					- [SET NULL行为](#SET_NULL行为)     
+					- [NO ACTION行为](#NO_ACTION行为)    
+					- [数据库关系理解](#数据库关系理解)    
+					- [为什么很多互联网项目不用外键](#为什么很多互联网项目不用外键) 
 		- [检查约束check](#检查约束check) 
 		- [默认值约束](#默认值约束)
 		- [添加/删除约束](#添加/删除约束)
@@ -1888,6 +1896,422 @@ mysql>  show index from emp;
 
 说明：（概念解释）学生表中的 student_id 是主键，那么成绩表中的 student_id 则为外键。如果更新学生表中的 student_id，同时触发成绩表中的 student_id 更新，即为级联更新。外键与级联更新适用于`单机低并发`，不适合`分布式`、`高并发集群`；级联更新是强阻塞，存在数据库`更新风暴`的风险；外键影响数据库的`插入速度`。
 
+
+***
+<br/><br/><br/>
+> <h2 id="安全表与用户表的外键约束">安全表与用户表的外键约束</h2>
+
+```sql id="9al6mt"
+CONSTRAINT `fk_user_security_user_id`
+FOREIGN KEY (`user_id`)
+REFERENCES `users`(`user_id`)
+ON DELETE CASCADE
+```
+
+- 是：**外键约束（Foreign Key Constraint）**
+
+- 作用： **建立两张表之间的数据关联关系，并保证数据一致性。**
+- 整体意思，可以翻译成：
+	- 当前表中的 `user_id`
+	- 必须引用 `users` 表里的 `user_id`，
+	- 并且当 users 表中的用户被删除时，
+	- 当前表对应的数据也自动删除。
+
+---
+
+- **1.CONSTRAINT 名称**
+
+```sql id="c6g05e"
+CONSTRAINT `fk_user_security_user_id`
+```
+
+这是：外键约束名字
+
+相当于这个规则叫：**`fk_user_security_user_id`**，通常：`‌fk_表名_字段名`，用于：
+* 删除约束
+* 修改约束
+* 数据库报错定位
+
+---
+
+## 举例，以后可以：
+
+```sql id="jlwm3t"
+ALTER TABLE xxx
+DROP FOREIGN KEY fk_user_security_user_id;
+```
+
+删除这个外键。
+
+---
+
+- **2. FOREIGN KEY (`user_id`)**
+
+```sql id="k2gbf2"
+FOREIGN KEY (`user_id`)
+```
+
+意思：**当前表的 user_id 是外键**，比如当前表可能是：**`‌user_security`**
+
+---
+
+- **假设完整表**
+
+```sql id="c33mvt"
+CREATE TABLE user_security (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT,
+    password_hash VARCHAR(255),
+
+    CONSTRAINT fk_user_security_user_id
+    FOREIGN KEY (user_id)
+    REFERENCES users(user_id)
+);
+```
+<br/>
+这里：
+
+```text id="ej12rz"
+user_security.user_id
+```
+<br/>
+引用：
+
+```text id="qjlwmc"
+users.user_id
+```
+
+---
+<br/>
+
+- **3.REFERENCES `users`(`user_id`)**
+
+```sql id="q4g3v9"
+REFERENCES `users`(`user_id`)
+```
+
+意思：**外键引用 users 表的 user_id**,即：
+- 子表.user_id
+- 必须存在于
+- 父表.users.user_id
+
+```text id="c5ljh7"
+
+```
+
+<br/><br/>
+> <h3 id="最核心作用：保证数据一致性">最核心作用：保证数据一致性</h3>
+
+- **假设users 表：**
+
+| user_id | name |
+| ------- | ---- |
+| 1       | Tom  |
+| 2       | Jack |
+
+<br/>
+
+- **user_security 表：**
+
+| id | user_id | password |
+| -- | ------- | -------- |
+| 10 | 1       | xxx      |
+
+---
+<br/>
+
+- **合法**,因为：
+
+```text id="t7eyvk"
+1 存在于 users.user_id
+```
+
+---
+<br/>
+
+- **非法情况**,如果：
+
+```sql id="1rcth1"
+INSERT INTO user_security(user_id)
+VALUES(999);
+```
+<br/>
+而：
+
+```text id="txg8lj"
+users 表没有 999
+```
+<br/>
+会报错：
+
+```text id="pyukyv"
+Cannot add or update a child row:
+a foreign key constraint fails
+```
+
+<br/><br/>
+> <h3 id="数据删除ON_DELETE行为">数据删除ON DELETE行为</h3>
+
+**ON DELETE CASCADE 是重点**，这个非常重要。意思：
+
+```sql id="4gr7yf"
+ON DELETE CASCADE
+```
+
+表示：**父表删除**，**`子表自动删除`**
+
+---
+<br/>
+
+**举例**
+
+- **users**
+
+| user_id | name |
+| ------- | ---- |
+| 1       | Tom  |
+
+<br/>
+
+- **user_security**
+
+| id | user_id |
+| -- | ------- |
+| 10 | 1       |
+
+<br/>
+
+- **执行**
+
+```sql id="36o6gn"
+DELETE FROM users
+WHERE user_id = 1;
+```
+
+<br/>
+
+- **结果**
+	- 不仅：**`users.user_id=1`** 被删。
+	- 而且：**`user_security.user_id=1`**,也自动删。
+
+---
+<br/>
+
+### **为什么需要 CASCADE**
+
+避免：**脏数据（孤儿数据）**, 比如：
+
+**用户没了：**
+
+```text id="11i1bd"
+users.user_id=1 被删
+```
+
+但：
+
+```text id="g9zslw"
+user_security.user_id=1
+```
+
+还存在。
+
+这就是：**孤儿数据（Orphan Data）**,**CASCADE 会自动清理。**
+
+---
+***
+<br/><br/><br/>
+> <h3 id="RESTRICT默认行为">RESTRICT（默认）行为</h3>
+
+```sql id="m8pw7d"
+ON DELETE RESTRICT
+```
+
+意思：**不允许删除父表**，如果有子表引用。
+
+---
+
+- **举例：**
+	- 如果`‌user_security.user_id=1`存在。
+	- 执行**`‌DELETE FROM users WHERE user_id=1;`**，直接报错。
+
+<br/><br/>
+> <h3 id="SET_NULL行为">SET NULL行为</h3>
+ 
+```sql id="31qj0u"
+ON DELETE SET NULL
+```
+
+意思：删除父表后：
+
+```text id="xngpkr"
+子表 user_id = NULL
+```
+
+---
+
+- **举例**:
+
+**删除用户后：**
+
+```text id="hnzskn"
+user_security.user_id
+变 NULL
+```
+<br/>
+前提：
+
+```text id="ysqskm"
+字段允许 NULL
+```
+
+<br/><br/>
+> <h3 id="NO_ACTION行为"> NO ACTION行为</h3>
+
+
+**NO ACTION**和 **RESTRICT** 类似。
+
+<br/><br/>
+> <h3 id="数据库关系理解">数据库关系理解</h3>
+
+- **这是：一对一 / 一对多关系**
+	- **users:主表（父表）**
+	- **user_security: 从表（子表）**
+	- 关系：
+
+```text id="4n3x3u"
+users
+  ↓
+user_security
+```
+
+---
+<br/>
+
+### 真实项目中的用途
+
+- **1.用户体系**
+
+```text id="7m4m3t"
+users
+↓
+user_profile
+↓
+user_security
+↓
+user_login_log
+```
+
+---
+
+- **2.订单体系**
+
+```text id="e6s5h7"
+orders
+↓
+order_items
+```
+
+删除订单：自动删订单项。
+
+<br/><br/>
+> <h3 id="为什么很多互联网项目不用外键">为什么很多互联网项目不用外键</h3>
+
+
+这个是：**面试高频问题**
+
+**很多 Go / Java 大型项目：** 不使用数据库外键,原因：
+
+---
+<br/>
+
+- **1. 性能**
+
+- **外键会：**
+	* 增加锁
+	* 增加检查
+	* 降低写性能
+
+<br/>
+
+- **2.分库分表困难**
+
+外键无法跨库。
+
+<br/>
+
+- **3.微服务不适合**
+
+服务拆分后：
+
+```text id="jlwmn6"
+users库
+orders库
+```
+
+无法外键。
+
+<br/>
+
+- **4.级联删除危险**
+
+可能：
+
+```text id="s99u4e"
+误删大量数据
+```
+
+<br/><br/>
+> <h3 id="互联网项目常见做法">互联网项目常见做法</h3>
+
+
+通常：**不建外键,代码维护关系**
+
+例如：
+
+Go Service：
+
+```go id="4pbrcz"
+user, err := userRepo.FindByID(id)
+```
+
+代码保证逻辑。
+
+数据库只建：
+
+```sql id="q1k5cz"
+INDEX(user_id)
+```
+
+不建：
+
+```sql id="4mp70x"
+FOREIGN KEY
+```
+
+---
+<br/>
+
+### 什么时候适合外键
+
+适合：
+
+| 场景     | 是否推荐 |
+| ------ | ---- |
+| 小型系统   | ✓    |
+| 后台管理系统 | ✓    |
+| 单体应用   | ✓    |
+| 强一致性系统 | ✓    |
+
+---
+
+不适合：
+
+| 场景    | 原因  |
+| ----- | --- |
+| 高并发   | 性能  |
+| 分库分表  | 不支持 |
+| 微服务   | 跨库  |
+| 超大数据量 | 锁严重 |
 
 
 
