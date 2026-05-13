@@ -1,5 +1,6 @@
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
+	- [Swift关于OC方法名映射](#Swift关于OC方法名映射)
 	- [多代理+弱引用管理](#多代理+弱引用管理)
 		- [compactMap等价方法和解读、举例](#compactMap等价方法和解读、举例)
   		- [数组contains解读](#数组contains解读)
@@ -66,6 +67,10 @@
 <br/>
 
 > <h1 id= "Swift高级用法">Swift高级用法</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="Swift关于OC方法名映射">Swift关于OC方法名映射</h2>
 
 ***
 <br/><br/><br/>
