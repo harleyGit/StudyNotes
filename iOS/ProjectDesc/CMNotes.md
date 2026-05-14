@@ -1,6 +1,7 @@
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
 	- [Swift关于OC方法名映射](#Swift关于OC方法名映射)
+	- [枚举打印输出](#枚举打印输出)
 	- [多代理+弱引用管理](#多代理+弱引用管理)
 		- [compactMap等价方法和解读、举例](#compactMap等价方法和解读、举例)
   		- [数组contains解读](#数组contains解读)
@@ -71,6 +72,295 @@
 ***
 <br/><br/><br/>
 > <h2 id="Swift关于OC方法名映射">Swift关于OC方法名映射</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="枚举打印输出">枚举打印输出</h2>
+
+`CustomStringConvertible` 用于**控制对象被打印时显示的字符串**。在 SDK 中给 `enum`、`State`、`ErrorCode`、`DeviceType`、`Mode` 等类型实现它，可以让日志更稳定、更清晰。
+
+**工业级推荐写法：**
+
+```swift
+import Foundation
+
+// MARK: - OOB Mode
+
+@objc
+public enum Mode: Int, CustomStringConvertible {
+
+    /// 自动模式
+    case AUTO
+
+    /// 手动模式
+    case MANUAL
+
+    /// 默认模式
+    case DEFAULT
+
+    /// Swift print()
+    public var description: String {
+        return stringValue
+    }
+
+    /// Swift / OC 通用
+    @objc
+    public var stringValue: String {
+        switch self {
+        case .AUTO:
+            return "AUTO"
+
+        case .MANUAL:
+            return "MANUAL"
+
+        case .DEFAULT:
+            return "DEFAULT"
+        }
+    }
+}
+```
+
+这里同时保留 `description` 和 `stringValue`：
+
+| 属性 | 用途 |
+| ---- | ---- |
+| `description` | Swift `print()` / 字符串插值自动使用 |
+| `stringValue` | Swift / OC 都可以显式调用 |
+
+---
+<br/>
+
+## 为什么要实现 CustomStringConvertible？
+
+默认情况下打印枚举：
+
+```swift
+let mode = Mode.AUTO
+print(mode)
+```
+
+输出可能是：
+
+```text
+Mode(rawValue: 0)
+```
+
+也可能是：
+
+```text
+AUTO
+```
+
+具体输出取决于 Swift 版本和 enum 情况，不够稳定。
+
+实现 `CustomStringConvertible` 后：
+
+```swift
+print(mode)
+```
+
+输出稳定为：
+
+```text
+AUTO
+```
+
+在日志里：
+
+```swift
+AKLog("mode = \(mode)")
+```
+
+输出会从不友好的：
+
+```text
+mode = Mode(rawValue: 1)
+```
+
+变成：
+
+```text
+mode = MANUAL
+```
+
+<br/>
+
+## 会自动触发 description 的场景
+
+| 场景 | 示例 |
+| ---- | ---- |
+| `print()` | `print(mode)` |
+| 字符串插值 | `"\(mode)"` |
+| 日志系统 | `NSLog("%@", "\(mode)")` |
+| Debug 输出 | Xcode 控制台 |
+
+`CustomStringConvertible` 类似其他语言里的 `toString()`：
+
+| 语言 | 对应能力 |
+| ---- | ---- |
+| Swift | `CustomStringConvertible` |
+| Java | `toString()` |
+| Kotlin | `toString()` |
+| OC | `description` |
+
+---
+<br/>
+
+## SDK 中推荐实现的类型
+
+| 类型 | 推荐 |
+| ---- | ---- |
+| `enum` | 必须 |
+| `State` | 必须 |
+| `ErrorCode` | 必须 |
+| `DeviceType` | 必须 |
+| `Mode` | 必须 |
+
+例如：
+
+```swift
+AddDeviceType
+AddState
+ErrorCode
+BleConnectState
+```
+
+这些类型经常出现在 BLE、AP、LAN、OOB Mode、State、ErrorCode 等日志里，实现后日志会更舒服。
+
+---
+<br/>
+
+## 它和 @objc 没关系
+
+`CustomStringConvertible` 是纯 Swift 协议，OC 不认识它。OC 对应的是：
+
+```objc
+[obj description]
+```
+
+Swift 对应的是：
+
+```swift
+description
+```
+
+如果不声明协议，只写一个普通 `description` 属性：
+
+```swift
+@objc
+public enum Mode: Int {
+
+    case AUTO
+
+    public var description: String {
+        return "AUTO"
+    }
+}
+```
+
+那么：
+
+```swift
+mode.description
+```
+
+可以输出：
+
+```text
+AUTO
+```
+
+但：
+
+```swift
+print(mode)
+```
+
+不会自动调用你的 `description`。因为 Swift 不知道这个普通属性是用于文本描述的。
+
+---
+<br/>
+
+## description 来自协议要求
+
+如果你写：
+
+```swift
+public var description: String
+```
+
+并希望 `print(mode)` 自动使用它，就必须让枚举遵守：
+
+```swift
+CustomStringConvertible
+```
+
+也就是：
+
+```swift
+@objc
+public enum Mode: Int, CustomStringConvertible
+```
+
+否则 `description` 只是普通属性，不会参与 `print()` 的文本描述逻辑。
+
+---
+<br/>
+
+## 更高级的调试协议
+
+除了：
+
+```swift
+CustomStringConvertible
+```
+
+还有：
+
+```swift
+CustomDebugStringConvertible
+```
+
+区别：
+
+| 协议 | 用途 |
+| ---- | ---- |
+| `description` | 用户输出 |
+| `debugDescription` | 调试输出 |
+
+一般 SDK 只实现 `description` 就够了。
+
+---
+<br/>
+
+## 最终效果
+
+Swift：
+
+```swift
+print(mode)
+```
+
+输出：
+
+```text
+AUTO
+```
+
+OC：
+
+```objc
+mode.stringValue
+```
+
+输出：
+
+```text
+AUTO
+```
+
+这个方案最适合 SDK、跨平台、日志系统、Swift + OC 混编场景。
 
 ***
 <br/><br/><br/>
@@ -4603,9 +4893,6 @@ private func clearWebViewCache(completion: @escaping () -> Void) {
 ```
 
 这样只有在加载失败时才清理缓存，避免每次启动都清空。
-
-
-
 
 
 
