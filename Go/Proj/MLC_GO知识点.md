@@ -1,10 +1,25 @@
-# Go 知识点
+- [Go 知识点](#Go知识点)
+	- [中间件链式调用](#中间件链式调用)
+	- [完整请求流程](#完整请求流程)
+	- [ChainInterceptors 实现原理](#ChainInterceptors实现原理)
+	- [洋葱模型图解](#洋葱模型图解)
+	- [运行示例](#运行示例)
 
-## 中间件链式调用（ChainInterceptors）
 
-### 核心概念：洋葱模型
+***
+<br/><br/><br/>
+> <h2 id="Go知识点">Go 知识点</h2>
 
-```
+本文整理 Go HTTP 中间件链式调用 `ChainInterceptors`：**启动阶段从后往前包装 handler，请求阶段从外到内进入，响应阶段从内到外退出**。
+
+
+***
+<br/><br/><br/>
+> <h3 id="中间件链式调用">中间件链式调用</h3>
+
+## 核心概念：洋葱模型
+
+```text
 ChainInterceptors(guarded, A, B, C)
 
 请求流向（洋葱模型）：
@@ -15,9 +30,13 @@ ChainInterceptors(guarded, A, B, C)
 └─────────────────────────────────────────┘
 ```
 
-### 4层中间件洋葱模型详解
+`ChainInterceptors(guarded, A, B, C)` 最终表现为：**C 最先进入，A 最靠近业务，响应返回时反向退出**。
 
-```
+<br/>
+
+## 4 层中间件洋葱模型
+
+```text
 请求 ──→
         ┌────────────────────────────────────────┐
         │ 【1】JSONHeaderInterceptor 进入         │
@@ -43,28 +62,32 @@ ChainInterceptors(guarded, A, B, C)
                                      ←── 响应
 ```
 
-**执行顺序解读：**
+**执行顺序：**
 
 | 阶段 | 执行顺序 | 说明 |
 |------|---------|------|
 | 请求进入 | 1 → 2 → 3 → 4 → 业务 | 从外层到内层，层层深入 |
 | 响应返回 | 业务 → 4 → 3 → 2 → 1 | 从内层到外层，层层退出 |
 
-**每一层的职责：**
+**每一层职责：**
 
-- **第1层 JSONHeaderInterceptor**：设置响应头 `Content-Type: application/json`
-- **第2层 RecoverInterceptor**：捕获 panic，防止服务崩溃
-- **第3层 AccessLogInterceptor**：记录请求方法、路径、耗时
-- **第4层 RequestTIDInterceptor**：生成追踪ID，便于日志追踪
+| 层级 | 中间件 | 职责 |
+|------|--------|------|
+| 1 | `JSONHeaderInterceptor` | 设置响应头 `Content-Type: application/json` |
+| 2 | `RecoverInterceptor` | 捕获 `panic`，防止服务崩溃 |
+| 3 | `AccessLogInterceptor` | 记录请求方法、路径、耗时 |
+| 4 | `RequestTIDInterceptor` | 生成追踪 ID，便于日志追踪 |
 
-### 代码示例
+<br/>
+
+## 简化代码示例
 
 ```go
 // 假设 3 个简单拦截器
 func A(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         fmt.Println("A: 进入")
-        next.ServeHTTP(w, r)  // 调用下一层
+        next.ServeHTTP(w, r) // 调用下一层
         fmt.Println("A: 退出")
     })
 }
@@ -80,21 +103,21 @@ func B(next http.Handler) http.Handler {
 func C(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         fmt.Println("C: 进入")
-        next.ServeHTTP(w, r)
+        next.ServeHTTP(w, r) // 调用下一层
         fmt.Println("C: 退出")
     })
 }
 
 // 调用 ChainInterceptors
 handler := ChainInterceptors(
-    guarded,    // 业务处理
-    A, B, C,    // 中间件
+    guarded, // 业务处理
+    A, B, C, // 中间件
 )
 ```
 
-### 请求到达时输出顺序
+请求到达时输出：
 
-```
+```text
 C: 进入
 B: 进入
 A: 进入
@@ -104,32 +127,33 @@ B: 退出
 C: 退出
 ```
 
----
 
-## 完整请求流程示例
+***
+<br/><br/><br/>
+> <h3 id="完整请求流程">完整请求流程</h3>
 
-### 假设场景：用户调用登录接口
+假设用户调用登录接口：
 
-```
+```text
 POST /api/v1/auth/login
 Body: {"username": "test", "password": "123456"}
 ```
 
-### 代码结构
+代码结构：
 
 ```go
 return ChainInterceptors(
     guarded,                       // 内层：实际业务处理
     RequestTIDInterceptor,         // 4
-    AccessLogInterceptor,          // 3  
+    AccessLogInterceptor,          // 3
     RecoverInterceptor,            // 2
-    JSONHeaderInterceptor,          // 1
+    JSONHeaderInterceptor,         // 1
 )
 ```
 
-### 请求完整旅程（从客户端到服务器）
+请求完整旅程：
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │  客户端发起请求                                                       │
 │  POST /api/v1/auth/login                                            │
@@ -204,9 +228,11 @@ return ChainInterceptors(
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 形象比喻：快递包裹
+<br/>
 
-```
+## 快递包裹类比
+
+```text
 你寄快递（发送请求）：
 
 1. 📦 打包盒           → JSONHeaderInterceptor（标记内容类型）
@@ -218,11 +244,11 @@ return ChainInterceptors(
 签收后，快递员返回确认，一层层上报回来...
 ```
 
----
+<br/>
 
-## 如果中间发生 panic？
+## 如果中间发生 panic
 
-```
+```text
 假设 Login 内部 panic("数据库连接失败")
 
 第 5 层：guarded → panic
@@ -231,7 +257,7 @@ return ChainInterceptors(
          ↓
 第 3 层：AccessLogInterceptor → 正常返回
          ↓
-第 2 层：RecoverInterceptor 
+第 2 层：RecoverInterceptor
          · 捕获到 panic
          · 记录错误日志
          · 返回 500 错误响应
@@ -240,20 +266,17 @@ return ChainInterceptors(
 客户端收到：{"code":500,"message":"服务器内部错误"}
 ```
 
----
-
-## 总结
-
 **请求进入**：外层 → 内层（像剥洋葱皮）  
 **响应返回**：内层 → 外层（像穿洋葱皮）
 
-每一层都可以：
-- **请求前**：做预处理（设置头、记录日志、生成追踪ID）
-- **请求后**：做后处理（记录耗时、捕获异常、清理资源）
+每一层都可以在请求前做预处理，也可以在响应后做日志、异常、清理等后处理。
 
----
 
-## ChainInterceptors 实现原理
+***
+<br/><br/><br/>
+> <h3 id="ChainInterceptors实现原理">ChainInterceptors 实现原理</h3>
+
+**核心代码：**
 
 ```go
 // HGHTTPInterceptor 表示一个可组合的 HTTP 拦截器。
@@ -277,7 +300,7 @@ func ChainInterceptors(base http.Handler, interceptors ...HGHTTPInterceptor) htt
 }
 ```
 
-### 为什么从后往前包装？
+从后往前包装是为了先构建内层，再把内层作为 `next` 交给外层：
 
 ```go
 for i := len(interceptors) - 1; i >= 0; i-- {
@@ -285,19 +308,16 @@ for i := len(interceptors) - 1; i >= 0; i-- {
 }
 ```
 
-这样保证：
-- **第一个参数最先执行外层逻辑**
-- **最后一个参数最先进入内层**
+这样保证：**第一个外层参数最先执行进入逻辑，最后一个内层参数最靠近业务逻辑**。
 
-类比穿衣服：先穿内衣，再穿外衣，脱的时候先脱外衣。
 
----
+***
+<br/><br/><br/>
+> <h3 id="洋葱模型图解">洋葱模型图解</h3>
 
-## 为什么中间件是洋葱模型？
+## 函数嵌套调用
 
-### 核心原因：函数嵌套调用
-
-中间件的洋葱模型源于**函数嵌套调用**的自然特性：
+中间件的洋葱模型源于函数嵌套调用：外层在 `next.ServeHTTP` 前执行进入逻辑，在 `next.ServeHTTP` 返回后执行退出逻辑。
 
 ```go
 func MiddlewareA(next http.Handler) http.Handler {
@@ -317,9 +337,9 @@ func MiddlewareB(next http.Handler) http.Handler {
 }
 ```
 
-### 执行流程图解
+## 组装和执行流程
 
-```
+```text
 ChainInterceptors(business, A, B)
 
 组装过程（从后往前）：
@@ -356,11 +376,9 @@ ChainInterceptors(business, A, B)
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 简单类比
+## 洋葱比喻
 
-**1. 洋葱比喻**
-
-```
+```text
         请求 ──→
                     ┌──────────────┐
                     │   中间件 A   │
@@ -376,7 +394,7 @@ ChainInterceptors(business, A, B)
         ←── 响应
 ```
 
-**2. 递归调用比喻**
+## 递归调用比喻
 
 ```go
 func A() {
@@ -395,9 +413,9 @@ func B() {
 // 进入 A → 进入 B → 业务处理 → 退出 B → 退出 A
 ```
 
-**3. 现实生活比喻**
+## 电话流程比喻
 
-```
+```text
 打电话找人：
 
 你（客户端）
@@ -415,9 +433,9 @@ func B() {
 你（客户端）收到响应
 ```
 
-### 洋葱模型的好处
+## 洋葱模型的好处
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. 统一的请求/响应处理                                        │
 │    - 每个中间件都能在请求前后做处理                           │
@@ -439,9 +457,55 @@ func B() {
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 实际运行示例
 
-运行 `examples/middleware_onion_demo/main.go`，访问 `/hello`：
+***
+<br/><br/><br/>
+> <h3 id="运行示例">运行示例</h3>
+
+## 中间件组合
+
+```go
+handler := ChainInterceptors(
+    businessHandler,
+    RequestTIDInterceptor,   // 4 (最内层，最后进入，最先退出)
+    AccessLogInterceptor,    // 3
+    RecoverInterceptor,      // 2
+    JSONHeaderInterceptor,   // 1 (最外层，最先进入，最后退出)
+)
+```
+
+## 正常请求
+
+```bash
+curl http://localhost:8080/hello
+```
+
+服务器输出：
+
+```text
+========================================
+【1-进入】JSONHeaderInterceptor - 设置响应头
+【2-进入】RecoverInterceptor - 设置 panic 捕获
+【3-进入】AccessLogInterceptor - GET /hello
+【4-进入】RequestTIDInterceptor - TID: TID-20260430-ABC123
+>>> 【业务处理】开始执行 <<<
+>>> 【业务处理】执行完毕 <<<
+【4-退出】RequestTIDInterceptor - TID: TID-20260430-ABC123
+【3-退出】AccessLogInterceptor - 请求完成
+【2-退出】RecoverInterceptor - 正常完成
+【1-退出】JSONHeaderInterceptor - 响应已完成
+========================================
+```
+
+客户端收到：
+
+```json
+{"code":0,"message":"Hello, World!"}
+```
+
+<br/>
+
+**原始运行输出：**
 
 ```bash
 $ curl http://localhost:8080/hello
@@ -465,9 +529,38 @@ $ curl http://localhost:8080/hello
 {"code":0,"message":"Hello, World!"}
 ```
 
-### 发生 panic 时
+---
+<br/>
 
-访问 `/panic` 接口（模拟业务 panic）：
+## panic 捕获
+
+```bash
+curl http://localhost:8080/panic
+```
+
+服务器输出：
+
+```text
+========================================
+【1-进入】JSONHeaderInterceptor - 设置响应头
+【2-进入】RecoverInterceptor - 设置 panic 捕获
+【3-进入】AccessLogInterceptor - GET /panic
+【4-进入】RequestTIDInterceptor - TID: TID-20260430-ABC123
+>>> 【业务处理】即将 panic <<<
+【2-捕获】RecoverInterceptor - panic: 模拟数据库连接失败
+【1-退出】JSONHeaderInterceptor - 响应已完成
+========================================
+```
+
+客户端收到：
+
+```json
+{"code":500,"message":"服务器内部错误"}
+```
+
+<br/>
+
+**原始 panic 输出：**
 
 ```bash
 $ curl http://localhost:8080/panic
@@ -487,101 +580,29 @@ $ curl http://localhost:8080/panic
 {"code":500,"message":"服务器内部错误"}
 ```
 
-注意：panic 被 RecoverInterceptor 捕获后，内层的中间件退出日志不会打印，因为异常跳过了正常返回路径。
+关键点：`panic` 发生时，内层中间件的退出日志可能不会打印；`RecoverInterceptor` 捕获后返回外层继续执行，服务器不会崩溃。
 
 ---
+<br/>
 
-## 4个中间件完整运行示例
-
-### 中间件组合
-
-```go
-handler := ChainInterceptors(
-    businessHandler,
-    RequestTIDInterceptor,   // 4 (最内层，最后进入，最先退出)
-    AccessLogInterceptor,     // 3
-    RecoverInterceptor,       // 2
-    JSONHeaderInterceptor,    // 1 (最外层，最先进入，最后退出)
-)
-```
-
-### 示例1：正常请求（GET /hello）
-
-**客户端请求：**
-```bash
-curl http://localhost:8080/hello
-```
-
-**服务器输出（清晰展示洋葱进出）：**
-```
-========================================
-【1-进入】JSONHeaderInterceptor - 设置响应头
-【2-进入】RecoverInterceptor - 设置 panic 捕获
-【3-进入】AccessLogInterceptor - GET /hello
-【4-进入】RequestTIDInterceptor - TID: TID-20260430-ABC123
->>> 【业务处理】开始执行 <<<  
->>> 【业务处理】执行完毕 <<<  
-【4-退出】RequestTIDInterceptor - TID: TID-20260430-ABC123
-【3-退出】AccessLogInterceptor - 请求完成
-【2-退出】RecoverInterceptor - 正常完成
-【1-退出】JSONHeaderInterceptor - 响应已完成
-========================================
-```
-
-**客户端收到：**
-```
-{"code":0,"message":"Hello, World!"}
-```
-
-### 示例2：panic捕获（GET /panic）
-
-**客户端请求：**
-```bash
-curl http://localhost:8080/panic
-```
-
-**服务器输出（panic被捕获）：**
-```
-========================================
-【1-进入】JSONHeaderInterceptor - 设置响应头
-【2-进入】RecoverInterceptor - 设置 panic 捕获
-【3-进入】AccessLogInterceptor - GET /panic
-【4-进入】RequestTIDInterceptor - TID: TID-20260430-ABC123
->>> 【业务处理】即将 panic <<<  
-【2-捕获】RecoverInterceptor - panic: 模拟数据库连接失败
-【1-退出】JSONHeaderInterceptor - 响应已完成
-========================================
-```
-
-**客户端收到：**
-```
-{"code":500,"message":"服务器内部错误"}
-```
-
-**关键点：**
-- panic 发生时，内层中间件（3、4）的退出日志不会打印
-- RecoverInterceptor 捕获后，返回外层继续执行
-- 服务器不会崩溃，继续处理其他请求
-
-### 示例3：鉴权失败（提前终止）
-
-假设添加一个 AuthInterceptor：
+## 鉴权失败提前终止
 
 ```go
 func AuthInterceptor(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w, r) {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         if !isAuthenticated(r) {
             w.WriteHeader(401)
             w.Write([]byte(`{"code":401,"message":"未授权"}`))
-            return  // 不调用 next，直接返回
+            return // 不调用 next，直接返回
         }
         next.ServeHTTP(w, r)
     })
 }
 ```
 
-**请求流程：**
-```
+请求流程：
+
+```text
 【1-进入】JSONHeaderInterceptor
 【2-进入】RecoverInterceptor
 【3-进入】AuthInterceptor
@@ -590,12 +611,15 @@ func AuthInterceptor(next http.Handler) http.Handler {
 【1-退出】JSONHeaderInterceptor
 ```
 
-**客户端收到：**
-```
+客户端收到：
+
+```json
 {"code":401,"message":"未授权"}
 ```
 
-### 执行顺序总结表
+<br/>
+
+**执行顺序总结表：**
 
 | 场景 | 进入顺序 | 退出顺序 | 特点 |
 |------|---------|---------|------|
@@ -603,7 +627,9 @@ func AuthInterceptor(next http.Handler) http.Handler {
 | panic | 1→2→3→4→业务→panic | 2(捕获)→1 | 内层退出跳过 |
 | 鉴权失败 | 1→2→3 | 3→2→1 | 提前终止 |
 
-### 运行测试方法
+<br/>
+
+## 运行测试方法
 
 ```bash
 cd /Users/ganghuang/HGFiles/GitHub/GoProject/src/MLC_GO
@@ -614,8 +640,18 @@ go run main.go
 # 测试2: curl http://localhost:8080/panic
 ```
 
-### 代码位置
+代码位置：
 
-```
+```text
 TestNotes/ungrammar_pt/middleware_pt/middleware_demo.go
 ```
+
+<br/>
+
+## 总结
+
+- **链式装配：** `ChainInterceptors` 在启动阶段从后往前包装中间件。
+- **请求进入：** 外层 → 内层 → 业务。
+- **响应返回：** 业务 → 内层 → 外层。
+- **异常处理：** `RecoverInterceptor` 放在较外层，用于统一捕获内层 `panic`。
+- **提前终止：** 中间件不调用 `next.ServeHTTP` 时，请求不会继续进入内层或业务处理。
