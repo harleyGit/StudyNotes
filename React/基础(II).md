@@ -4,6 +4,11 @@
 	- [普通包和作用域包](#普通包和作用域包)
 	- [加载本地图片和图标](#加载本地图片和图标)
 		- [Assets工具类](#Assets工具类)
+	- [package.json文档](#package.json文档)
+		- [旧版本地运行](#旧版本地运行)
+		- [自动开启局域网访问](#自动开启局域网访问)
+		- [scripts 命令区别](#scripts命令区别)
+		- [mode 环境配置](#mode环境配置)
 - [**手机本地调试**](#手机本地调试)
 - [**React基础**](#React基础)
 	- [**props**](#props)
@@ -379,6 +384,408 @@ export default function App() {
 * **大文件、不需要打包处理的静态资源（例如背景图、视频、PDF 等）** → 放 `public/assets`，用路径引用。
 
 
+
+***
+<br/><br/><br/>
+> <h2 id="package.json文档">package.json文档</h2>
+
+---
+<br/>
+
+## 企业常见写法
+
+```json id="e4imlj"
+"scripts": {
+  "dev": "vite --mode local",
+
+  "dev:test": "vite --mode test",
+
+  "dev:pre": "vite --mode pre",
+
+  "build:test": "vite build --mode test",
+
+  "build:pre": "vite build --mode pre",
+
+  "build:prod": "vite build --mode prod"
+}
+```
+
+对应：
+
+```text id="dkxibg"
+.env.local
+.env.test
+.env.pre
+.env.prod
+```
+
+这是标准做法。
+
+---
+<br/>
+
+## 需要检查的 env 文件
+
+建议检查：
+
+```text id="y1e28y"
+.env.debug
+.env.pre
+.env.release
+```
+
+示例：
+
+```env id="gzpn7g"
+# .env.debug
+VITE_API_BASE=https://debug-api.xxx.com
+```
+
+```env id="b85hpb"
+# .env.pre
+VITE_API_BASE=https://pre-api.xxx.com
+```
+
+```env id="gq13z4"
+# .env.release
+VITE_API_BASE=https://api.xxx.com
+```
+
+代码里读取：
+
+```js id="4g00i3"
+const api = import.meta.env.VITE_API_BASE
+```
+
+即可根据 `mode` 自动切换环境。
+
+
+
+
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="旧版本地运行">旧版本地运行</h2>
+
+## package.json文件有一段如下：
+
+```json
+"scripts": { 
+	"dev": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite --mode debug", 
+	"build:pre": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite build --mode pre", 
+	"build:release": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite build --mode release", 
+	"lint": "eslint .", 
+	"preview": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite preview" 
+},
+```
+
+
+## dev环境运行
+
+```sh
+npm run dev 
+
+Local: http://localhost:5173/ 
+➜ Network: use --host to expose 
+➜ press h + enter to show help
+```
+
+<br/>
+
+**可以在浏览器打开：**
+
+```text
+http://localhost:5173/
+```
+
+查看你的 React 页面。
+
+<br/>
+
+```bash
+➜  Network: use --host to expose
+```
+
+### 意思是：当前只能本机访问,也就是：
+* 你的 Mac 自己可以访问 `localhost:5173`
+* 同局域网手机、其他电脑不能访问
+
+<br/>
+
+### 如果你想让：
+* 手机访问
+* 局域网设备调试
+* 远程访问
+
+需要这样启动：
+
+```bash
+npm run dev -- --host
+
+# 或者
+vite --host
+```
+
+**启动后会多一个类似：**
+
+```bash
+Network: http://192.168.1.10:5173/
+```
+
+手机和其他设备就能访问了。
+
+
+***
+<br/><br/><br/>
+> <h3 id="自动开启局域网访问">自动开启局域网访问</h3>
+
+如果不想每次输入：
+
+```bash
+npm run dev -- --host
+```
+
+而是希望直接：
+
+```bash
+npm run dev
+```
+
+就自动支持局域网访问，可以把 `--host` 写进 `scripts.dev`。
+
+```json
+"scripts": {
+  "dev": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite --mode debug --host",
+
+  "build:pre": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite build --mode pre",
+
+  "build:release": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite build --mode release",
+
+  "lint": "eslint .",
+
+  "preview": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite preview --host"
+}
+```
+
+以后直接执行：
+
+```bash
+npm run dev
+```
+
+即可启动 debug 环境并支持局域网访问。
+
+
+***
+<br/><br/><br/>
+> <h3 id="scripts命令区别">scripts 命令区别</h3>
+
+## dev：开发服务器
+
+```json
+"dev": "vite --mode debug"
+```
+
+作用：
+
+- 启动开发服务器
+- 支持热更新（HMR）
+- 实时编译
+- 不会真正打包
+
+运行：
+
+```bash
+npm run dev
+```
+
+会得到：
+
+```bash
+http://localhost:5173
+```
+
+适合本地开发、调试和接口联调。
+
+---
+<br/>
+
+## build:*：正式打包
+
+```json
+"build:pre": "vite build --mode pre"
+```
+
+```json
+"build:release": "vite build --mode release"
+```
+
+作用：
+
+- 真正生成生产文件
+- 输出 `dist/`
+- 压缩 JS/CSS
+- Tree Shaking
+- 资源 hash 化
+
+运行：
+
+```bash
+npm run build:pre
+```
+
+会生成：
+
+```text
+dist/
+```
+
+里面是：
+
+```text
+index.html
+assets/
+```
+
+这些静态资源才能部署到 nginx、阿里云、CDN、正式服务器。
+
+---
+<br/>
+
+## preview：本地预览打包结果
+
+```json
+"preview": "vite preview"
+```
+
+`preview` 不是开发服务器，而是**启动一个服务器查看 build 后的 `dist` 文件**。
+
+流程：
+
+```bash
+npm run build:release
+```
+
+再执行：
+
+```bash
+npm run preview
+```
+
+它会读取：
+
+```text
+dist/
+```
+
+然后启动一个静态服务器。
+
+用途：
+
+- 模拟线上环境
+- 检查打包后是否正常
+- 检查路由问题
+- 检查资源路径问题
+
+---
+<br/>
+
+## lint：代码检查
+
+```json
+"lint": "eslint ."
+```
+
+作用是检查代码规范，例如：未使用变量、React Hooks 错误、分号问题、import 顺序、部分 TS 类型问题。
+
+运行：
+
+```bash
+npm run lint
+```
+
+<br/>
+
+## vite 和 vite build 的核心区别
+
+```bash
+vite
+```
+
+是开发服务器，特点是热更新、不压缩、快速编译、内存运行，适合开发调试。
+
+```bash
+vite build
+```
+
+是生产构建，特点是输出 `dist`、压缩代码、生成 hash 文件、执行 tree shaking，适合上线部署。
+
+
+***
+<br/><br/><br/>
+> <h3 id="mode环境配置">mode 环境配置</h3>
+
+这些命令：
+
+```bash
+vite --mode debug
+vite build --mode pre
+vite build --mode release
+```
+
+表示使用不同环境配置。
+
+例如：
+
+```text
+.env.debug
+.env.pre
+.env.release
+```
+
+Vite 会自动加载对应环境变量。
+
+```env
+# .env.pre
+VITE_API=https://pre-api.xxx.com
+```
+
+```env
+# .env.release
+VITE_API=https://api.xxx.com
+```
+
+对应关系：
+
+| mode | 环境 |
+| ---- | ---- |
+| `debug` | 开发环境 |
+| `pre` | 预发环境 |
+| `release` | 正式环境 |
+
+接口地址会随着 `mode` 自动切换。
+
+---
+<br/>
+
+## build:pre / build:release 不是运行
+
+```json id="w4ndmb"
+"build:pre": "vite build --mode pre",
+"build:release": "vite build --mode release"
+```
+
+它们只是**用 pre/release 环境变量进行打包**，不是启动本地开发服务器。
+
+如果想像 `dev` 一样启动本地服务器，但加载 `.env.pre` 或 `.env.release`，应新增：
+
+```json id="zc5e5x"
+"dev:pre": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite --mode pre --host",
+
+"dev:release": "PATH=\"$HOME/.nvm/versions/node/v20.19.0/bin:$PATH\" vite --mode release --host"
+```
 
 
 
@@ -2540,6 +2947,6 @@ serve -s ./build
 > `"homepage": "."`，保存后重新打包[7]。
 
 ---
-注释: 0,42742 SHA-256 a83da691f60478f8216bb4b2b3d77dfb  
-@HuangGang <harley.smessage@icloud.com>: 105,5 119,3 131,7 147,3 159,2 163,21 250,23 2864,33 2906,2 2917,7 2972,5 2978,4 3001,2 3113,9 3125,2 3479,6 3487,2 3513,2 3614,7 3622,2 3629,2 3815,2 3820,3 3859,5 3866,2 3893,2 4275,5 4282,2 4301,2 4430,7 4438,2 4443,2 4512,10 4525,2 4851,5 4858,2 4865,2 5018,60 5164,5 5171,2 5181,2 5474,5 5481,2 5500,2 6165,5 6173,2 6179,2 6662,5 6669,2 6677,2 6816 6821,101 6943,2 6968,6 7017,29 7210,7 7262,46 7317,9 7368 7419 7421 7433 7485 7527 7537,2 7556,11 7568,2 7584,2 7587,4 8028,20 8188 8254,22 10203,61 10356,7 10502,5 10574,8 10590,2 10596,2 10815,7 10823,2 10829,2 10833,2 10853 10909 10974 11003,7 11011,2 11037 11089 11111 11178,7 11186,2 11209 11243,2 11272,2 11304,2 11336,2 11368,2 11385,2 11447,5 11454,2 11460,2 11515,5 11600,3  
+注释: 0,47537 SHA-256 f0f4321109f07e26255025c65ae818c7  
+@HuangGang <harley.smessage@icloud.com>: 105,5 119,3 131,7 147,3 159,43 220 248 281 307 310,21 397,23 3011,33 3053,2 3064,7 3119,5 3125,4 3148,2 3260,9 3272,2 3626,6 3634,2 3660,2 3761,7 3769,2 3776,2 3962,2 3967,3 4006,5 4013,2 4040,2 4422,5 4429,2 4448,2 4577,7 4585,2 4590,2 4659,10 4672,2 4998,5 5005,2 5012,2 5165,60 5311,5 5318,2 5328,2 5621,5 5628,2 5647,2 6312,5 6320,2 6326,2 6809,5 6816,2 6824,2 6963 6965,30 7009,2 7025,6 11616,101 11738,2 11763,6 11812,29 12005,7 12057,46 12112,9 12163 12214 12216 12228 12280 12322 12332,2 12351,11 12363,2 12379,2 12382,4 12823,20 12983 13049,22 14998,61 15151,7 15297,5 15369,8 15385,2 15391,2 15610,7 15618,2 15624,2 15628,2 15648 15704 15769 15798,7 15806,2 15832 15884 15906 15973,7 15981,2 16004 16038,2 16067,2 16099,2 16131,2 16163,2 16180,2 16242,5 16249,2 16255,2 16310,5 16395,3  
 ...

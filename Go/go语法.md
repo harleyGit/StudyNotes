@@ -41,6 +41,11 @@
 		- [切片](#切片)
 			- [切片内存底层原理](#切片内存底层原理)
 			- [切片改变数组元素解决](#切片改变数组元素解决)
+		- [Go 切片 append 展开语法](#Go切片append展开语法)
+			- [moduleRegistry 是什么](#moduleRegistry是什么)
+			- [append 追加另一个切片](#append追加另一个切片)
+			- [为什么必须使用 modules...](#为什么必须使用modules)
+			- [append 常见用法](#append常见用法)
 		- [Map(容器)](#Map(容器))
 			- [`map[string]interface{}`的意思](#`map[string]interface{}`的意思)
 		- [列表list](#列表list)
@@ -2538,6 +2543,190 @@ func main() {
 ```
 
 这些方法可以确保你在修改切片时不会影响原始的底层数组。选择哪种方法取决于你的需求，尤其是对性能的考虑。
+
+
+***
+<br/><br/><br/>
+> <h2 id="Go切片append展开语法">Go 切片 append 展开语法</h2>
+
+这段 Go 代码的核心是：`moduleRegistry` 是一个 `[]HGModule` 切片，`append(moduleRegistry, modules...)` 表示把另一个切片 `modules` 中的所有元素展开后追加进去。
+
+
+***
+<br/><br/><br/>
+> <h3 id="moduleRegistry是什么">moduleRegistry 是什么</h3>
+
+```go
+moduleRegistry []HGModule
+```
+
+通常出现在结构体字段或变量声明中，等价理解为：
+
+```go
+var moduleRegistry []HGModule
+```
+
+意思是：
+
+- `moduleRegistry` 是一个 Go 切片（slice）
+- 切片元素类型是 `HGModule`
+- 类似 Swift 的 `[HGModule]`、Java 的 `List<HGModule>`、OC 的 `NSArray<HGModule *> *`
+
+
+***
+<br/><br/><br/>
+> <h3 id="append追加另一个切片">append 追加另一个切片</h3>
+
+```go
+moduleRegistry = append(moduleRegistry, modules...)
+```
+
+意思是：**把 `modules` 里面的所有元素追加到 `moduleRegistry` 中**。
+
+等价于：
+
+```go
+for _, m := range modules {
+    moduleRegistry = append(moduleRegistry, m)
+}
+```
+
+举例：
+
+```go
+moduleRegistry := []HGModule{
+    A,
+    B,
+}
+
+modules := []HGModule{
+    C,
+    D,
+}
+
+moduleRegistry = append(moduleRegistry, modules...)
+```
+
+执行后：
+
+```go
+moduleRegistry == []HGModule{
+    A,
+    B,
+    C,
+    D,
+}
+```
+
+
+***
+<br/><br/><br/>
+> <h3 id="为什么必须使用modules">为什么必须使用 modules...</h3>
+
+`modules...` 是 Go 的**可变参数展开语法**。
+
+`append` 的函数签名可以理解为：
+
+```go
+func append(slice []T, elems ...T) []T
+```
+
+其中 `elems ...T` 表示接收多个 `T` 类型元素。
+
+所以：
+
+```go
+modules...
+```
+
+是在把：
+
+```go
+[]HGModule
+```
+
+展开成：
+
+```go
+HGModule, HGModule, HGModule
+```
+
+再传给 `append`。
+
+---
+<br/>
+
+## 错误写法
+
+如果写成：
+
+```go
+append(moduleRegistry, modules)
+```
+
+会报错。
+
+因为 `append` 需要的是：
+
+```go
+append([]HGModule, HGModule)
+```
+
+或者：
+
+```go
+append([]HGModule, HGModule, HGModule, HGModule...)
+```
+
+但 `modules` 本身是：
+
+```go
+[]HGModule
+```
+
+它不是单个 `HGModule`，所以必须用 `modules...` 把切片拆开。
+
+
+***
+<br/><br/><br/>
+> <h3 id="append常见用法">append 常见用法</h3>
+
+## 追加一个元素
+
+```go
+arr = append(arr, item)
+```
+
+---
+<br/>
+
+## 追加多个元素
+
+```go
+arr = append(arr, a, b, c)
+```
+
+---
+<br/>
+
+## 追加另一个切片
+
+```go
+arr = append(arr, otherArr...)
+```
+
+这就是 `moduleRegistry = append(moduleRegistry, modules...)` 的情况。
+
+<br/>
+
+## 总结
+
+- `moduleRegistry []HGModule` 表示 `HGModule` 类型切片。
+- `append(moduleRegistry, modules...)` 表示把 `modules` 中的元素逐个追加进去。
+- `...` 用于把切片展开成可变参数。
+- `append(moduleRegistry, modules)` 会报错，因为 `modules` 是 `[]HGModule`，不是单个 `HGModule`。
+
+
 
 <br/><br/>
 > <h2 id="Map(容器)">Map(容器)</h2>

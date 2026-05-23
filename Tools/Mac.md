@@ -84,6 +84,8 @@
 	- [**免费节点**](https://lncn.org)
 	- [iOS禁止更新描述文件](https://sysin.org/blog/disable-ios-update/)
 	- [**BetaProfiles(阻止苹果系统软件更新及证书)**](https://betaprofiles.com)
+	- [DNS配置文件阻止iOS更新](https://ios.cfw.guide/blocking-updates/)
+	- [Nugget阻止iOS17*系统更新](https://github.com/leminlimez/Nugget/releases?page=2&utm_source=chatgpt.com)
 	- [**AppleOpenSource(苹果系统资源下载)**](https://opensource.apple.com)
 	- [**反斗限免**](http://free.apprcn.com)
 	- [**邮箱账号获取(10分钟邮箱，免费邮箱账号注册获取验证码)**](https://10minutemail.net)

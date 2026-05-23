@@ -6,6 +6,7 @@
 		- [删除索引](#删除索引) 
 		- [查看索引](#查看索引) 
 		- [创建带有默认值、列别名表](#创建带有默认值、列别名表)
+		- [创建表的时候创建索引](#创建表的时候创建索引)
 - [**目录结构**](#目录结构)
 - [**特殊的NULL运算**](#特殊的NULL运算)
 - [**创建employees表**](#创建employees表)
@@ -289,6 +290,27 @@ CREATE TABLE practiceIndex_student_info(
 	PRIMARY KEY (id)
 )ENGINE=INNODB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="创建表的时候创建索引">创建表的时候创建索引</h2>
+
+```sql
+CREATE TABLE IF NOT EXISTS `video_submissions`(
+    `submission_id` VARCHAR(64) NOT NULL COMMENT '稿件唯一标识（业务ID）',
+    `status` VARCHAR(16) NOT NULL DEFAULT 'draft' COMMENT '稿件状态: draft草稿/reviewing审核中/published已发布/rejected已退回/archived已封存',
+    `category` VARCHAR(32) NOT NULL DEFAULT '' COMMENT '稿件分区',
+
+	 UNIQUE KEY `uk_submission_id` (`submission_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_category` (`category`),
+)engine=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='视频稿件主表';
+
+```
+
+## `KEY`：就是普通索引。
+## `UNIQUE KEY`：是唯一索引。
 
 
 
