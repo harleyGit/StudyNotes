@@ -1,5 +1,8 @@
 - [输入框字数限制](#输入框字数限制)
 - [**清空按钮**](#清空按钮)
+- **参考资料：**
+	- [UITextField的那点事](https://www.jianshu.com/p/4b9957f2afc2)
+
 
 
 
@@ -464,14 +467,3 @@ field.clearButtonMode=UITextFieldViewModeWhileEditing;
 效果图：
 
 ![起始输入和长度设置](https://upload-images.jianshu.io/upload_images/2959789-2130fef6c6675534.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-
-<br/>
-
-***
-<br/>
-
-参考资料：
-
-[UITextField的那点事](https://www.jianshu.com/p/4b9957f2afc2)
-
