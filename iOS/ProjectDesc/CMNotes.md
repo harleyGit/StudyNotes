@@ -2240,7 +2240,7 @@ mac:aabbccddeeff
 
 ***
 <br/><br/><br/>
-> <h2 id="输入框字数限制">[输入框字数限制](../Objective-C/UITextField.md#输入框字数限制)</h2>
+># <h2 id="输入框字数限制">[输入框字数限制](../Objective-C/UITextField.md#输入框字数限制)</h2>
 
 
 
@@ -2256,7 +2256,7 @@ mac:aabbccddeeff
 
 ***
 <br/><br/><br/>
-> <h2 id="自定义简易观察者">自定义简易观察者</h2>
+># <h2 id="自定义简易观察者">自定义简易观察者</h2>
 
 这是一个自定义的“观察者”模式类 `Observable<T>`，它的作用是：当内部的 `value` 发生变化时，通知外部观察者。这个模式在 MVVM 中非常常见，用于数据绑定，类似 SwiftUI 的 `@Published` 或 RxSwift 的 `Observable`。
 
