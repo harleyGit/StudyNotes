@@ -4,6 +4,9 @@
 	- [ChainInterceptors 实现原理](#ChainInterceptors实现原理)
 	- [洋葱模型图解](#洋葱模型图解)
 	- [运行示例](#运行示例)
+- [工程表](#工程表)
+- [后台管理接口设计](#后台管理接口设计)
+- [分布式限流-Lua脚本](#分布式限流-Lua脚本)
 
 
 ***
@@ -655,3 +658,574 @@ TestNotes/ungrammar_pt/middleware_pt/middleware_demo.go
 - **响应返回：** 业务 → 内层 → 外层。
 - **异常处理：** `RecoverInterceptor` 放在较外层，用于统一捕获内层 `panic`。
 - **提前终止：** 中间件不调用 `next.ServeHTTP` 时，请求不会继续进入内层或业务处理。
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="工程表">工程表</h1>
+
+## **‌菜单权限表**
+
+```sql
+CREATE TABLE `permission` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '权限编码',
+  `type` tinyint NOT NULL COMMENT '1:菜单  2:操作',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '权限名称',
+  `page_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '菜单路径',
+  `parent_id` bigint NOT NULL DEFAULT '-1' COMMENT '父级权限ID',
+  `status` tinyint NOT NULL COMMENT '1:正常 -1:禁用',
+  `sort` int NOT NULL DEFAULT '1',
+  `desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '权限描述',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_at` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `update_by` bigint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `idx_code` (`code`,`status`) USING BTREE,
+  KEY `idx_name` (`name`) USING BTREE,
+  KEY `idx_parent_id` (`parent_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+ROW_FORMAT=DYNAMIC COMMENT='权限清单表';
+```
+
+<br/>
+
+## 管理员表
+
+```sql
+CREATE TABLE `admin_user` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键-管理员ID表',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '名字',
+  `nick_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '',
+  `mobile` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '手机',
+  `lark_open_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '1:正常 -1:禁用',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_at` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint NOT NULL DEFAULT '0',
+  `update_by` bigint NOT NULL DEFAULT '1',
+  `sex` tinyint NOT NULL DEFAULT '3' COMMENT '3:其他 1: 男 2: 女',
+  `is_delete` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `idx_mobile` (`mobile`) USING BTREE,
+  KEY `idx_name` (`name`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+```
+
+---
+### 字段说明💡
+1. **核心身份字段**：`name`(姓名)、`nick_name`(昵称)、`mobile`(手机号，唯一索引)、`password`(密码)、`lark_open_id`(飞书OpenID，适配企业办公登录)
+2. **状态控制**：`status`(账号启用/禁用)、`is_delete`(逻辑删除，不做物理删除)
+3. **基础属性**：`sex`(性别)
+4. **审计字段**：`create_at`/`update_at`(自动维护创建/更新时间)、`create_by`/`update_by`(记录操作人ID)
+5. **索引设计**：手机号唯一索引防重复，姓名索引优化模糊查询
+
+
+<br/>
+
+## 角色权限表
+
+```sql
+CREATE TABLE `role_permission` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `role_id` bigint NOT NULL COMMENT '角色ID',
+  `permission_id` bigint NOT NULL COMMENT '权限ID',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by` bigint NOT NULL DEFAULT '0',
+  `update_by` bigint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_role_id` (`role_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+ROW_FORMAT=DYNAMIC COMMENT='角色权限表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：**多对多中间表**，用于绑定角色与权限的关联关系，实现一个角色分配多个权限、一个权限可被多个角色复用。
+2. **核心关联字段**
+   - `role_id`：关联角色表主键
+   - `permission_id`：关联菜单权限表主键
+3. **审计字段**：`create_at`/`update_at`/`create_by`/`update_by`，记录关联关系的创建、更新时间与操作人。
+4. **索引设计**：`idx_role_id` 索引，优化按角色批量查询权限的性能。
+5. **优化建议**：可增加**联合唯一索引** `UNIQUE KEY uk_role_permission(role_id,permission_id)`，防止同一角色重复绑定相同权限。
+
+<br/>
+
+
+## 管理员角色表
+
+```sql
+CREATE TABLE `admin_user_role` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `admin_user_id` bigint NOT NULL COMMENT '管理员ID',
+  `role_id` bigint NOT NULL COMMENT '角色ID',
+  `update_at` datetime NOT NULL,
+  `update_by` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uidx_aduid_role_id` (`admin_user_id`,`role_id`),
+  KEY `idx_role_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+---
+### 表结构说明💡
+1. **表用途**：RBAC权限体系中**管理员-角色**的多对多中间表，实现一个管理员可绑定多个角色、一个角色可分配给多个管理员。
+2. **核心约束**
+   - `uidx_aduid_role_id`：**联合唯一索引**，防止同一管理员重复绑定相同角色
+   - `idx_role_id`：角色ID普通索引，优化按角色批量查询管理员的性能
+3. **审计字段**：`update_at`记录绑定关系更新时间，`update_by`记录操作人ID
+4. **补充优化**：可补全`create_at`、`create_by`字段，完善全链路操作日志，与前面几张权限表设计保持统一
+
+
+<br/>
+
+## 用户主表
+
+```sql
+CREATE TABLE `user` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '全局user_id',
+  `nick_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `sex` tinyint NOT NULL COMMENT '默认0 其他，1: 男 2: 女',
+  `password` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '默认1: 正常  -1: 禁用',
+  `icon_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `create_at` datetime NOT NULL,
+  `last_login_at` datetime DEFAULT NULL,
+  `update_at` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_name` (`nick_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='用户主表';
+```
+
+---
+### 表结构说明💡
+1. **基础信息字段**
+   - `nick_name`：用户昵称，长度64，建立索引优化昵称检索
+   - `sex`：性别枚举，0-其他、1-男、2-女
+   - `icon_key`：头像资源标识，用于存储对象存储地址/键值
+2. **账号安全字段**
+   - `password`：用户密码，存储加密后密文
+   - `status`：账号状态，1正常、-1禁用
+3. **时间审计字段**
+   - `create_at`：账号创建时间
+   - `last_login_at`：最后登录时间，用于风控、活跃度统计
+   - `update_at`：信息更新时间，自动更新
+4. **设计特点**
+   - 使用 `bigint unsigned` 无符号主键，支持更大用户量级
+   - 字符集统一使用 `utf8mb4`，兼容emoji表情存储
+   - 索引精简，仅对高频查询的昵称建立普通索引
+
+<br/>
+
+## a. 微信用户表
+
+```sql
+CREATE TABLE `wechat_user` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID,自增(无实际用途)',
+  `user_id` bigint NOT NULL COMMENT '全局用户id,user表主键',
+  `union_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '微信union_id',
+  `nick_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '微信昵称',
+  `icon_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '微信头像地址',
+  `create_at` datetime NOT NULL,
+  `update_at` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uidx_user` (`user_id`) USING BTREE,
+  UNIQUE KEY `uidx_union` (`union_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='微信用户表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：第三方微信登录关联表，与**用户主表(user)** 一对一绑定，用于存储微信授权信息，实现微信快捷登录。
+2. **核心关联&唯一约束**
+   - `user_id`：关联用户主表主键，**唯一索引**保证一个用户仅绑定一个微信账号
+   - `union_id`：微信全局唯一标识，**唯一索引**防止重复授权注册
+3. **微信信息字段**：存储微信昵称、头像地址，同步用户微信端资料
+4. **时间字段**：`create_at`记录绑定时间，`update_at`自动维护信息更新时间
+5. **设计特点**：采用冗余自增主键`id`，业务实际以`user_id`、`union_id`做唯一校验，适配微信开放平台多端登录体系
+
+<br/>
+
+## c. 应用用户表
+
+```sql
+CREATE TABLE `app_user` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增(无实际用途)',
+  `user_id` bigint NOT NULL COMMENT '全局用户id,user表主键',
+  `app_code` int NOT NULL COMMENT '1000=公众号，1001=小程序，其他进行扩展，固定值不能变更',
+  `open_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '微信对应应用openid',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '默认1: 正常 -1: 禁用',
+  `create_at` datetime NOT NULL,
+  `update_at` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uidx_user_appcode` (`user_id`,`app_code`),
+  UNIQUE KEY `uidx_openId` (`open_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='应用用户表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：区分**公众号、小程序**等不同微信应用来源的用户绑定关系，实现**一个全局用户可绑定多个微信应用**，支持多端登录。
+2. **核心唯一约束**
+   - `uidx_user_appcode`：联合唯一索引，保证**同一个用户在同一个微信应用下只能绑定一次**
+   - `uidx_openId`：open_id全局唯一，避免重复注册
+3. **应用区分**：`app_code` 固定编码区分渠道（1000公众号、1001小程序），便于后续扩展其他第三方应用
+4. **状态与审计**：`status`控制应用渠道账号启用/禁用；`create_at`/`update_at`记录绑定与更新时间
+5. **与微信用户表区别**：`wechat_user`存**union_id（微信全局唯一）**，`app_user`存**open_id（单应用唯一）**，二者配合实现微信多端账号打通
+
+<br/>
+
+## 用户权益表（用户购买的课程商品权益）
+
+```sql
+CREATE TABLE `user_course_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `order_id` bigint NOT NULL COMMENT '订单ID',
+  `goods_id` bigint NOT NULL COMMENT '商品ID',
+  `goods_type` tinyint NOT NULL COMMENT '1.课程商品',
+  `buy_time` bigint NOT NULL COMMENT '购买时间',
+  `service_expire_time` bigint NOT NULL COMMENT '服务到期时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_uid` (`user_id`),
+  KEY `idx_cid` (`goods_id`),
+  KEY `idx_se_ex_t` (`service_expire_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户购买的课程列表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：记录用户购买课程后的**权益凭证**，用于校验用户是否拥有对应课程的观看、学习权限。
+2. **核心关联字段**
+   - `user_id`：关联全局用户ID
+   - `order_id`：关联订单ID，溯源购买来源
+   - `goods_id`：关联课程商品ID
+3. **时间字段**：使用**时间戳(bigint)** 存储购买时间、服务到期时间，便于跨时区处理与计算
+4. **索引设计**
+   - `idx_uid`：按用户快速查询已购课程
+   - `idx_cid`：按课程查询购买用户
+   - `idx_se_ex_t`：按到期时间索引，用于批量处理即将过期/已过期的权益
+5. **业务扩展**：`goods_type`预留类型字段，可后续拓展其他类型付费商品
+
+
+<br/>
+
+## 课程商品主表
+
+```sql
+CREATE TABLE `course_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `cover_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `intro_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '介绍图资源标识',
+  `desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `goods_price` bigint NOT NULL DEFAULT '0' COMMENT '商品价格',
+  `service_time` tinyint NOT NULL COMMENT '辅导服务时长\r\n1: 一个月 2: 三个月 3: 半年 4: 一年',
+  `sale_type` tinyint NOT NULL COMMENT '1: 免费 2: 收费',
+  `status` tinyint NOT NULL DEFAULT '-1' COMMENT '-1: 下架 1: 上架',
+  `create_at` datetime NOT NULL,
+  `create_by` bigint NOT NULL DEFAULT '0',
+  `update_at` datetime NOT NULL,
+  `update_by` bigint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uidx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='课程商品表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：存储课程商品基础信息，是**用户权益表**的主表，定义课程名称、价格、服务周期、上下架状态。
+2. **核心业务字段**
+   - `name`：课程名称，**唯一索引**防止重复创建同名课程
+   - `cover_key`/`intro_key`：封面图、介绍图的资源存储标识
+   - `goods_price`：商品价格，使用`bigint`存储**分**，避免浮点数精度问题
+   - `service_time`：服务周期枚举，定义辅导有效时长
+   - `sale_type`：售卖类型，区分免费/付费课程
+   - `status`：上架状态，控制前端是否展示
+3. **审计字段**：记录创建/更新时间与操作人ID，用于后台管理溯源
+4. **关联关系**：与`user_course_goods`一对多关联，一个课程可被多个用户购买
+
+
+<br/>
+
+##  课程目录表
+
+```sql
+CREATE TABLE `course_catalog` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `parent_id` bigint NOT NULL DEFAULT '-1',
+  `level` int NOT NULL DEFAULT '1',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `good_id` bigint NOT NULL,
+  `sort` bigint NOT NULL,
+  `update_at` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `update_by` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_course` (`course_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='课程目录表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：存储课程的**树形层级目录**，支持章节、小节多级结构，用于课程内容展示。
+2. **树形结构字段**
+   - `parent_id`：父级目录ID，`-1`代表一级根目录，实现无限级树形结构
+   - `level`：层级深度，1=一级目录、2=二级目录，用于区分章节/小节
+   - `sort`：排序字段，控制目录展示顺序
+3. **关联字段**
+   - `good_id`：关联课程商品主表ID，绑定归属课程
+   - `idx_course`：课程ID索引，快速查询某课程下所有目录
+4. **审计字段**：`update_at`自动更新、`update_by`记录操作人，适配后台编辑维护
+5. **小瑕疵**：索引字段为`course_id`，实际表中字段为`good_id`，建议修正索引为 `KEY idx_good_id (good_id)` 保证匹配
+
+<br/>
+
+## b. 课程课时表
+
+```sql
+CREATE TABLE `course_lessons` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `goods_id` bigint NOT NULL,
+  `catalog_id` bigint NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '课时名称',
+  `enable_trial` tinyint NOT NULL DEFAULT '0' COMMENT '1:试听 其他值表示非试听',
+  `status` tinyint NOT NULL COMMENT '1:启用 -1: 禁用',
+  `video_key` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件key',
+  `detail` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '课时详情',
+  `homework` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '课后练习',
+  `sort` tinyint NOT NULL DEFAULT '0',
+  `update_at` datetime NOT NULL,
+  `update_by` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_gid` (`goods_id`),
+  KEY `idx_ct_id` (`catalog_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='课程课时表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：存储课程**最小播放单元（课时）**，关联课程目录，承载视频、课时详情、课后作业等核心教学内容。
+2. **核心关联**
+   - `goods_id`：关联课程商品主表
+   - `catalog_id`：关联课程目录表，归属某一章节/小节
+3. **业务控制字段**
+   - `enable_trial`：试听开关，免费试看核心字段
+   - `status`：控制课时是否启用展示
+   - `video_key`：视频文件资源标识，对接对象存储
+   - `sort`：课时排序，控制同目录下课时播放顺序
+4. **富文本内容**：`detail`/`homework` 使用 `text` 类型，支持存储长文本、富文本格式的课时详情与作业
+5. **索引设计**：分别对课程ID、目录ID建立索引，快速查询对应目录下的所有课时
+
+<br/>
+
+##  订单主表（完整补全版SQL）
+
+```sql
+CREATE TABLE `orders` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `order_no` char(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单编号',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '-1:已取消, 1:待支付 2:已支付(待发货) 3:已完成',
+  `order_source` tinyint NOT NULL COMMENT '1: 用户下单 2: 管理后台 3: 系统赠送',
+  `order_amount` bigint NOT NULL COMMENT '订单金额=支付金额，单位分',
+  `order_origin_amount` bigint NOT NULL COMMENT '订单金额-商品原价，单位分',
+  `payment_amount` bigint NOT NULL COMMENT '支付金额-实际支付金额，单位分',
+  `trade_no` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '第三方支付单号',
+  `inner_trade_no` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '内部交易单号',
+  `order_desc` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单描述',
+  `payment_at` bigint NOT NULL DEFAULT '0' COMMENT '订单支付时间，毫秒时间戳',
+  `user_remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '用户备注',
+  `receiver_confirm_at` bigint DEFAULT NULL COMMENT '确认收货时间',
+  `receiver_confirm_type` tinyint DEFAULT NULL COMMENT '确认收货方式 1: 用户确认收货 99:发货自动确认',
+  `refund_amount` bigint NOT NULL DEFAULT '0' COMMENT '订单退款金额',
+  `refund_at` bigint DEFAULT NULL COMMENT '退款时间，毫秒时间戳',
+  `cancel_at` bigint DEFAULT NULL COMMENT '取消时间，毫秒时间戳',
+  `cancel_type` tinyint DEFAULT NULL COMMENT '1: 用户取消 2: 客服取消 3: 超时取消',
+  `cancel_by` bigint DEFAULT NULL COMMENT '取消人ID，根据取消类型判断是用户还是客服，-1为系统',
+  `cancel_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '取消原因',
+  `create_at` bigint NOT NULL COMMENT '订单创建时间，毫秒时间戳',
+  `create_by` bigint NOT NULL COMMENT '订单创建人ID，根据order_source判断是用户，还是客服ID，系统为0',
+  `transfer_at` bigint NOT NULL DEFAULT '0' COMMENT '转交时间',
+  `transfer_by` bigint NOT NULL DEFAULT '0' COMMENT '转交人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_odno` (`order_no`) USING BTREE,
+  KEY `idx_uid` (`user_id`) USING BTREE,
+  KEY `idx_create` (`create_at`) USING BTREE,
+  KEY `idx_trade_no` (`trade_no`) USING BTREE,
+  KEY `idx_pay_at` (`payment_at`) USING BTREE,
+  KEY `idx_osrc` (`order_source`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='订单主表';
+```
+
+---
+### 补充&修正说明💡
+1. **缺失字段补全**
+   - 补全`trade_no`、`inner_trade_no`、`order_desc`、`user_remark`、`cancel_reason`等字段的**默认值、注释、字段闭合**
+   - 完善枚举注释：订单状态、下单来源、取消类型、确认收货方式
+2. **索引格式统一**
+   原SQL索引格式错乱，统一规范为标准MySQL索引语法，去除重复冗余内容
+3. **时间类型规范**
+   全表使用**bigint毫秒时间戳**，和你之前用户表、权益表时间存储风格保持一致
+4. **业务逻辑完善**
+   补充创建人`create_by`注释，区分用户/客服/系统下单场景，适配后台订单管理
+
+
+<br/>
+
+## a. 订单对象表（完整补全版）
+
+```sql
+CREATE TABLE `order_items` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `order_id` bigint NOT NULL COMMENT '订单ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `goods_id` bigint NOT NULL COMMENT '商品ID',
+  `goods_type` tinyint NOT NULL DEFAULT '1' COMMENT '1:课程商品',
+  `quantity` int NOT NULL DEFAULT '1' COMMENT '商品数量',
+  `goods_snap` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品快照',
+  PRIMARY KEY (`id`),
+  KEY `idx_oid` (`order_id`),
+  KEY `idx_gid` (`goods_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='订单商品对象表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：订单主表的**子表（订单明细）**，存储一个订单内购买的课程商品明细，支持一订单多商品。
+2. **核心关联字段**
+   - `order_id`：关联订单主表ID，建立索引快速查询订单下所有商品
+   - `user_id`：冗余存储用户ID，方便直接查询用户订单商品
+   - `goods_id`：关联课程商品表ID
+3. **关键字段**
+   - `goods_snap`：**商品快照**，存储下单时商品信息（JSON格式），防止商品后续修改导致订单历史信息丢失
+   - `quantity`：购买数量，课程类商品一般默认为1
+4. **索引设计**：对订单ID、商品ID建立索引，适配订单明细查询、商品销量统计场景
+5. **设计规范**：和前面订单主表、课程商品表字段命名、字符集完全统一
+
+
+<br/>
+
+## 短信模板表（完整补全版SQL）
+
+```sql
+CREATE TABLE `sms_template` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `scene_code` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '场景编码，唯一标识业务场景',
+  `sign_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '短信签名',
+  `platform_tmpl_id` int NOT NULL COMMENT '第三方短信平台的模版ID',
+  `tmpl_str` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '短信模板内容',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '默认1: 正常 -1: 禁用',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `admin_user_id` bigint NOT NULL DEFAULT '0' COMMENT '管理后台admin_user_id',
+  `platform` char(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '短信平台，如tencent(腾讯云)',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uidx_scene` (`scene_code`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='短信模板表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：统一管理系统内各类业务短信模板（验证码、通知、营销短信），对接第三方短信平台，实现模板配置化。
+2. **核心业务字段**
+   - `scene_code`：**唯一场景编码**，用于代码中指定发送对应模板，全局唯一索引约束
+   - `sign_name`：短信签名，合规发送必备
+   - `platform_tmpl_id`：第三方平台（腾讯云/阿里云等）审核通过的模板ID
+   - `tmpl_str`：模板文本，支持变量占位符
+   - `platform`：区分短信服务商，便于多平台兼容切换
+3. **状态与审计**
+   - `status`：控制模板启用/禁用
+   - `create_at`/`update_at`：自动维护时间
+   - `admin_user_id`：记录后台配置人ID
+4. **设计规范**：字符集、存储格式与项目内其他表完全统一，适配后台配置管理
+
+<br/>
+
+## 云存储的资源文件表（完整补全版SQL）
+
+```sql
+CREATE TABLE `resource_upload_files` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `scene` char(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '业务场景编码',
+  `file_key` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件云存储唯一标识key',
+  `user_id` bigint NOT NULL COMMENT '用户id',
+  `user_type` bigint NOT NULL COMMENT '用户类型 1:普通用户 2:后台管理员',
+  `file_type` char(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件类型 如img、video、doc',
+  `file_size` bigint NOT NULL COMMENT '文件大小对应字节数',
+  `file_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件原始名称',
+  `upload_client_ip` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '上传客户端IP',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '文件创建时间=上传时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uidx_key` (`file_key`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='云存储资源文件表';
+```
+
+---
+### 表结构说明💡
+1. **表用途**：统一记录**所有上传至对象存储（OSS/COS）**的文件信息，实现文件溯源、权限管控、业务场景绑定。
+2. **核心字段**
+   - `file_key`：云存储文件唯一标识，**唯一索引**防止重复上传
+   - `scene`：业务场景编码，区分头像、课程封面、课时视频、作业文件等场景
+   - `user_id`+`user_type`：区分普通用户/管理员上传，用于权限校验
+   - `file_type`：区分图片、视频、文档，便于业务筛选
+   - `file_size`：字节存储，精准记录文件大小
+3. **审计字段**：记录上传IP、上传时间，用于风控与日志追溯
+4. **设计规范**：与项目其他表字符集、索引风格保持一致，可与课程、用户、订单表关联使用
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="后台管理接口设计">后台管理接口设计</h1>
+
+# 五、后台管理接口设计（Go课程商城）
+## 1. 菜单权限模块
+
+```sh
+1. 添加权限菜单
+POST /api/admin/v1/perm/create
+2. 更改权限菜单
+POST /api/admin/v1/perm/update
+3. 更新权限菜单状态
+POST /api/admin/v1/perm/update_status
+4. 获取权限菜单列表
+GET /api/admin/v1/perm/list
+5. 删除权限菜单
+POST /api/admin/v1/perm/delete
+```
+
+## 2. 管理员模块
+
+```sh
+1. 添加管理员(含角色)
+POST /api/admin/v1/user/create
+2. 更新管理员(含角色)
+POST /api/admin/v1/user/update
+3. 更新管理员状态
+POST /api/admin/v1/user/update_status
+4. 获取管理员列表
+GET /api/admin/v1/user/list
+5. 获取管理员信息(返回角色)
+GET /api/admin/v1/user/info
+6. 更换管理员手机号
+POST /api/admin/v1/user/change_mobile
+7. 管理员绑定飞书账号
+POST /api/admin/v1/user/lark/bind
+8. 管理员解绑飞书账号
+POST /api/admin/v1/user/lark/unbind
+```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="分布式限流-Lua脚本">[分布式限流-Lua脚本](../Proj/MLC_GO知识点.md#分布式限流-Lua脚本)</h1>

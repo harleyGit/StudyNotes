@@ -1,5 +1,6 @@
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
+	- [状态机枚举使用](#状态机枚举使用)
 	- [Swift关于OC方法名映射](#Swift关于OC方法名映射)
 	- [枚举打印输出](#枚举打印输出)
 	- [多代理+弱引用管理](#多代理+弱引用管理)
@@ -33,6 +34,10 @@
 - [**系统蓝牙库CoreBluetooth**](#系统蓝牙库CoreBluetooth)
 	- [精确获取当前蓝牙开启状态](#精确获取当前蓝牙开启状态)
 	- [轮询连接蓝牙设备](#轮询连接蓝牙设备)
+	- [BLE扫描SessionID](#BLE扫描SessionID)
+	- [一段代码检测蓝牙状态，优化内存泄露](#一段代码检测蓝牙状态，优化内存泄露)
+	- [蓝牙入口](#蓝牙入口)
+		- [蓝牙权限状态获取](#蓝牙权限状态获取)
 - [Wi-Fi连接](#Wi-Fi连接)
 	- [App内添加Wi-Fi配置](#App内添加Wi-Fi配置)
 - [**依赖注入库Swinject**](#依赖注入库Swinject)
@@ -68,6 +73,12 @@
 <br/>
 
 > <h1 id= "Swift高级用法">Swift高级用法</h1>
+
+
+***
+<br/><br/><br/>
+># <h2 id="状态机枚举使用">[状态机枚举使用](../Swift/swift基础.md#状态机枚举使用)</h2>
+
 
 ***
 <br/><br/><br/>
@@ -2579,7 +2590,13 @@ private let workQueueKey = DispatchSpecificKey<Void>()
 
 ***
 <br/><br/><br/>
-> <h2 id="">一段代码检测蓝牙状态，优化内存泄露</h2>
+># <h2 id="BLE扫描SessionID">[./../蓝牙库CoreBluetooth.md# BLE扫描SessionID](#BLE扫描SessionID)</h2>
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="一段代码检测蓝牙状态，优化内存泄露">一段代码检测蓝牙状态，优化内存泄露</h2>
 
 
 ```swift
@@ -2674,6 +2691,18 @@ PopupViewUntil.showOpenBlePopupView { [weak self] isAuth in
 }
 
 ```
+
+
+
+***
+<br/><br/><br/>
+># <h2 id="蓝牙入口">[蓝牙入口](../Swift/蓝牙库CoreBluetooth.md#蓝牙入口)</h2>
+
+
+<br/><br/>
+># <h3 id="蓝牙权限状态获取">[蓝牙权限状态获取](../Swift/蓝牙库CoreBluetooth.md#蓝牙权限状态获取)</h3>
+
+
 
 
 <br/><br/><br/>

@@ -38,8 +38,12 @@
 - [硬件自带Wi-Fi](#硬件自带Wi-Fi)
 	- [App加入设备Wi-Fi网络](#App加入设备Wi-Fi网络)
 - [iot配网简单架构](#iot简单配网架构)
+- [BLE 扫描为什么需要 scanSessionID](#BLE扫描SessionID)
 - **借鉴资料**
 	- [iOS 蓝牙（中心模式连接外设）](https://juejin.cn/post/7129891777783267342)
+
+
+
 
 <br/><br/><br/>
 
@@ -3688,6 +3692,7 @@ class Device {
 > <h1 id= "iot简单配网架构">iot简单配网架构</h1>
 
 
+```
 // MARK: - 把不同配网方式需要的参数拆开
 protocol DeviceConfigRequest {}
 
@@ -3905,6 +3910,682 @@ class TestClass {
 
 ```
 
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="BLE扫描SessionID">BLE 扫描为什么需要 scanSessionID</h1>
+
+在 `BLEScanManager` 中加入：
+
+```swift
+private var scanSessionID = UUID()
+```
+
+它的作用不是为了标识设备，也不是为了业务逻辑，而是为了标识“当前这一轮扫描生命周期”。
+
+每次调用 `startBLEScan()` 或 `stop()` 时，都会刷新 `scanSessionID`：
+
+```swift
+scanSessionID = UUID()
+```
+
+这样可以让旧扫描流程里已经注册出去的异步回调自动失效。
+
+***
+<br/>
+
+## 为什么只改 `.cancelled` 不够
+
+原来的问题是：
+
+```swift
+public func stop() {
+    scanner?.stopScan()
+    currentState = .cancelled
+}
+
+public func startBLEScan() -> Bool {
+    guard case .idle = currentState else {
+        return false
+    }
+    startNextScan(round: 1)
+    return true
+}
+```
+
+`stop()` 后状态变成 `.cancelled`，而 `startBLEScan()` 只允许 `.idle` 启动，所以后续再也无法扫描。
+
+<br/>
+
+一种简单修复是把 `stop()` 改成：
+
+```swift
+currentState = .idle
+```
+
+但这样会丢失“本次扫描是被主动取消”的状态语义。更好的方式是：
+
+```swift
+case .idle, .finished, .cancelled, .failed:
+    return true
+case .scanning, .paused:
+    return false
+```
+
+也就是：终止态可以重新开始，运行态不允许重复开始。
+
+***
+<br/>
+
+## 为什么还需要 UUID session
+
+`BLEScanManager` 里有异步定时器：
+
+```swift
+DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+    scanner?.stopScan()
+    currentState = .paused(nextRound: nextRound)
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+        startNextScan(round: nextRound)
+    }
+}
+```
+
+`asyncAfter` 一旦提交到队列，就不能真正取消。
+
+<br/>
+
+这里要先区分两个“stop”：
+
+```swift
+public func stop() {
+    scanSessionID = UUID()
+    scanner?.stopScan()
+    currentState = .cancelled
+    lastAcceptTimeByMAC.removeAll()
+}
+```
+
+这个 `stop()` 是 `AKBLEScanManager.stop()`，一般由业务层、页面退出、外部调用方主动触发。它表示“整个扫描任务取消”。
+
+而 `startNextScan(round:sessionID:)` 里面的：
+
+```swift
+self.scanner?.stopScan()
+```
+
+不是调用 `BLEScanManager.stop()`，它只是调用底层 scanner 的 `stopScan()`，表示“当前这一轮扫描窗口到时间了，先停一下 CoreBluetooth 扫描，然后进入 pause，后面可能继续下一轮”。
+
+两者区别：
+
+```text
+AKBLEScanManager.stop()
+含义：业务主动取消整个扫描任务
+结果：状态变成 .cancelled，刷新 scanSessionID，让旧回调失效
+
+scanner?.stopScan()
+含义：底层停止一次 CoreBluetooth 扫描
+结果：不代表整个扫描任务取消，可能只是扫描窗口结束后进入 pause
+```
+
+这会产生一个典型问题：
+
+1. 第一次 `startBLEScan()` 开始第 1 轮扫描。
+2. 第一次扫描注册了一个 30 秒后的 `asyncAfter`。
+3. 用户调用 `stop()`，状态变成 `.cancelled`。
+4. 用户马上再次调用 `startBLEScan()`，新的扫描开始。
+5. 第一次扫描遗留的 `asyncAfter` 到时间后仍然会执行。
+6. 旧回调可能会错误地 `stopScan()`、改状态、进入 pause、甚至启动下一轮扫描。
+
+也就是说，旧扫描的延迟回调可能污染新扫描。
+
+***
+<br/>
+
+## 对照代码看旧回调为什么会污染新扫描
+
+当前启动扫描代码是：
+
+```swift
+public func startBLEScan() -> Bool {
+    guard canStartScan else {
+        return false
+    }
+    self.scanSessionID = UUID()
+    self.lastAcceptTimeByMAC.removeAll()
+    self.startNextScan(round: 1, sessionID: scanSessionID)
+    return true
+}
+```
+
+进入第一轮扫描：
+
+```swift
+private func startNextScan(round: Int, sessionID: UUID) {
+    guard sessionID == scanSessionID else {
+        return
+    }
+
+    currentState = .scanning(round: round)
+    self.scanner?.startScan(config: self.scanConfig)
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + self.scanConfig.scanDuration) {
+        guard sessionID == self.scanSessionID else {
+            return
+        }
+        guard case .scanning = self.currentState else {
+            return
+        }
+        self.scanner?.stopScan()
+        let nextRound = round + 1
+        self.currentState = .paused(nextRound: nextRound)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + self.scanConfig.pauseDuration) {
+            guard sessionID == self.scanSessionID else {
+                return
+            }
+            guard case .paused = self.currentState else {
+                return
+            }
+            self.startNextScan(round: nextRound, sessionID: sessionID)
+        }
+    }
+}
+```
+
+假设 `scanDuration = 30`，第一次扫描启动时：
+
+```text
+scanSessionID = A
+currentState = .scanning(round: 1)
+注册一个 30 秒后执行的 asyncAfter，闭包里捕获的 sessionID 也是 A
+```
+<br/>
+
+10 秒后用户主动停止：
+
+```swift
+manager.stop()
+```
+
+执行的是：
+
+```swift
+public func stop() {
+    scanSessionID = UUID()
+    scanner?.stopScan()
+    currentState = .cancelled
+    lastAcceptTimeByMAC.removeAll()
+}
+```
+
+这时：
+
+```text
+scanSessionID = B
+currentState = .cancelled
+旧的 30 秒 asyncAfter 还在队列里，不能取消
+```
+<br/>
+
+然后用户马上重新开始扫描：
+
+```swift
+manager.startBLEScan()
+```
+<br/>
+
+这时：
+
+```text
+scanSessionID = C
+currentState = .scanning(round: 1)
+新的扫描启动
+新的 30 秒 asyncAfter 捕获 sessionID = C
+```
+<br/>
+
+问题点在这里：第一次扫描注册的旧 `asyncAfter` 还会在第 30 秒到达时执行。
+
+如果没有这句校验：
+
+```swift
+guard sessionID == self.scanSessionID else {
+    return
+}
+```
+<br/>
+
+旧回调会继续往下走。此时它看到的可能是：
+
+```text
+旧回调自己的 sessionID = A
+当前 manager.scanSessionID = C
+currentState = .scanning(round: 1)
+```
+<br/>
+
+如果没有 session 校验，旧回调只判断：
+
+```swift
+guard case .scanning = self.currentState else {
+    return
+}
+```
+
+这个判断会通过，因为新扫描确实处于 `.scanning`。
+<br/>
+
+于是旧回调会错误执行：
+
+```swift
+self.scanner?.stopScan()
+let nextRound = round + 1
+self.currentState = .paused(nextRound: nextRound)
+```
+
+注意这里的 `round` 是旧闭包捕获的旧值，不是新扫描的真实轮次。
+
+结果就是：
+
+```text
+新扫描正在扫描中
+旧回调突然执行 scanner?.stopScan()
+新扫描被错误停止
+状态被旧回调改成 .paused(nextRound: 2)
+后续旧 pause 回调还可能继续调用 startNextScan(round: 2)
+```
+
+这就是“旧扫描的延迟回调污染新扫描”。
+<br/>
+
+有 session 校验后，旧回调执行到这里：
+
+```swift
+guard sessionID == self.scanSessionID else {
+    return
+}
+```
+
+会变成：
+
+```text
+A == C ? false
+```
+
+所以旧回调直接 `return`，不会影响新扫描。
+
+*** 
+<br/>
+
+
+## scanSessionID 的核心作用
+
+`scanSessionID` 的本质是“异步回调令牌”。
+
+启动扫描时保存当前 session：
+
+```swift
+scanSessionID = UUID()
+startNextScan(round: 1, sessionID: scanSessionID)
+```
+<br/>
+
+每个异步回调执行前都先校验：
+
+```swift
+guard sessionID == self.scanSessionID else {
+    return
+}
+```
+
+如果两者相等，说明这个回调属于当前扫描流程，可以继续执行。
+
+如果两者不相等，说明这个回调属于旧扫描流程，必须直接丢弃。
+
+***
+<br/>
+
+## stop 时为什么也要刷新 session
+
+`stop()` 中刷新 session：
+
+```swift
+public func stop() {
+    scanSessionID = UUID()
+    scanner?.stopScan()
+    currentState = .cancelled
+    lastAcceptTimeByMAC.removeAll()
+}
+```
+
+**含义是：**当前扫描生命周期已经结束，所有之前发出去的延迟回调都不再有效。
+
+这样即使旧的 `asyncAfter` 之后被系统调度执行，也会因为 session 不一致直接返回。
+
+***
+<br/>
+
+## 为什么用 UUID
+
+这里使用 `UUID` 是因为它满足三个要求：
+
+* 每次生成几乎必然不同。
+* 不需要维护递增计数器。
+* 不关心业务含义，只作为一次扫描生命周期的唯一令牌。
+
+也可以用 `Int` 自增版本号实现，例如：
+
+```swift
+private var scanSessionVersion = 0
+```
+
+每次 start/stop 时 `scanSessionVersion += 1`。
+
+但 `UUID` 更直接表达“这是一个独立 session”，不需要考虑溢出、初始值和并发递增语义。
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "蓝牙入口">蓝牙入口</h1>
+
+
+```swift
+extension AKBleProcessManager {
+
+   /// BLE 设备缓存仓库，作为总调度中心的共享设备索引，避免扫描与连接入口重复维护设备列表。
+    private let repository: AKBLEDeviceRepository
+    /// BLE 原子适配器，必须由总调度中心强持有，避免注入扫描管理器后立即释放。
+    private let bleUtil: AKBleUtil
+    /// BLE 扫描管理器，负责扫描生命周期，总调度中心只协调业务入口。
+    private let scanManager: AKBLEScanManager
+    /// BLE 连接管理器，负责连接状态推进，总调度中心不直接实现 CoreBluetooth 连接原子操作。
+    private let connectManager: AKBLEConnectManager
+    /// 当前连接设备的 GATT 缓存管理器，供连接和消息层逐步迁移到统一 service/characteristic 查询入口。
+    private let serviceManager: AKBLEServiceManager
+    /// BLE 消息管理器，负责消息发送排队，总调度中心只提供业务侧发送入口。
+    private let messageManager: AKBLEMessageManager
+    
+    
+    
+
+    /// 启动 BLE 扫描；总调度中心只触发扫描管理器，真实 CoreBluetooth 扫描由底层适配器执行。
+    public func startScan(config: AKBLEScanConfig = AKBLEScanConfig()) {
+
+        self.scanManager.setupScan(config: config)
+        _ = self.scanManager.startBLEScan()
+    }
+
+    /// 停止 BLE 扫描；用于业务退出或进入连接阶段时终止扫描生命周期。
+    public func stopScan() {
+
+        self.scanManager.stop()
+    }
+
+    /// 按 MAC 发起 BLE 连接；连接前必须先命中设备缓存，避免总调度中心直接构造 CoreBluetooth 连接对象。
+    /// - Parameter mac: 目标 BLE 设备 MAC。
+    public func connect(mac: String) {
+
+        guard let device = self.repository.find(mac: mac) else {
+            return
+        }
+        _ = self.connectManager.connect(device)
+    }
+
+    /// 断开当前 BLE 连接；总调度中心通过连接管理器推进状态，避免业务层直接操作外设断开。
+    public func disconnect() {
+
+        let identifier = self.currentDeviceIdentifier() ?? ""
+        self.connectManager.disconnect(identifier: identifier)
+    }
+
+    /// 发送 BLE 数据；当当前设备和 GATT 写特征均已准备好时，统一交给消息管理器排队发送。
+    /// - Parameter data: 待写入的 BLE 数据。
+    public func send(data: Data) {
+
+        guard let identifier = self.currentDeviceIdentifier(),
+              let characteristic = self.firstWriteCharacteristic(),
+              let serviceUUID = self.serviceManager.serviceUUID(forCharacteristic: characteristic.uuid.uuidString) else {
+            return
+        }
+
+        let request = AKBLESendRequest(identifier: identifier,
+                                       serviceUUID: serviceUUID,
+                                       characteristicUUID: characteristic.uuid.uuidString,
+                                       data: data)
+        self.messageManager.enqueue(request)
+    }
+
+    private func currentDeviceIdentifier() -> String? {
+
+        guard let device = self.currentDevice else {
+            return nil
+        }
+        if !device.uid.isEmpty {
+            return device.uid
+        }
+        if !device.uuid.isEmpty {
+            return device.uuid
+        }
+        if !device.macAddr.isEmpty {
+            return device.macAddr
+        }
+        return nil
+    }
+
+    private func firstWriteCharacteristic() -> CBCharacteristic? {
+
+        self.currentPeripheral?.services?
+            .flatMap { $0.characteristics ?? [] }
+            .first { $0.properties.contains(.write) || $0.properties.contains(.writeWithoutResponse) }
+    }
+}
+```
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "蓝牙权限状态获取">蓝牙权限状态获取</h1>
+
+
+```swift
+private var bleStateCompletions: [(CBManagerState) -> Void] = []
+private var bleState: CBManagerState = .unknown
+private var isReady = false
+
+
+/// 释放 CoreBluetooth 会话资源，避免对象释放后继续收到 delegate 回调。
+public func cleanupBluetoothSession() {
+    bleStateCompletions.removeAll()
+}
+
+extension AKBleTool {
+    
+    /// 获取 BLE 状态；首次状态必须等待 `centralManagerDidUpdateState` 回调后返回，避免同步读取到初始化阶段的 unknown。
+    /// - Parameter completion: 主线程回调当前 BLE 状态。
+    public func getBLEState(completion: @escaping (CBManagerState) -> Void) {
+
+        _ = centralManager
+        self.bleQueue.async { [weak self] in
+            guard let self = self else { return }
+            if self.isReady {
+                let state = self.bleState
+                DispatchQueue.main.async { completion(state) }
+                return
+            }
+            self.bleStateCompletions.append(completion)
+        }
+    }
+}
+
+
+// MARK: -- CBCentralManagerDelegate, CBPeripheralDelegate
+extension AKBleTool: CBCentralManagerDelegate, CBPeripheralDelegate {
+
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+      
+        let state = central.state
+        self.bleState = state
+        self.isReady = true
+        let completions = bleStateCompletions
+        bleStateCompletions.removeAll()
+        
+        DispatchQueue.main.async {
+            completions.forEach { completion in
+                completion(state)
+            }
+        }
+    }
+}
+```
+
+### 为什么需要 `bleStateCompletions`、`bleState`、`isReady`
+
+`CBCentralManager.state` 不是创建 `CBCentralManager` 后立刻就准确可用的同步值。系统会先创建蓝牙管理器，然后异步调用：
+
+```swift
+centralManagerDidUpdateState(_ central: CBCentralManager)
+```
+
+所以如果业务层在 App 打开后马上同步读取：
+
+```swift
+centralManager.state
+```
+
+很容易拿到初始化阶段的 `.unknown`，从而误判成“蓝牙不可用”。
+
+<br/>
+
+这三个字段分别解决下面的问题：
+
+```swift
+private var bleStateCompletions: [(CBManagerState) -> Void] = []
+private var bleState: CBManagerState = .unknown
+private var isReady = false
+```
+
+<br/>
+
+- **1.`bleStateCompletions`**
+
+用于暂存“正在等待蓝牙状态”的业务回调。
+
+当业务层调用 `getBLEState` 时，如果系统还没有触发首次 `centralManagerDidUpdateState`，不能立刻返回 `.unknown`，而是先把 completion 存起来：
+
+```swift
+self.bleStateCompletions.append(completion)
+```
+
+等 `centralManagerDidUpdateState` 回来后，再统一回调这些等待者。
+
+<br/>
+
+- **2.`bleState`**
+
+用于缓存最近一次系统返回的蓝牙状态。
+
+首次 `centralManagerDidUpdateState` 后会赋值：
+
+```swift
+let state = central.state
+self.bleState = state
+```
+
+之后业务层再次调用 `getBLEState`，如果状态已经 ready，就不需要再等待 delegate，直接返回缓存状态。
+
+<br/>
+
+- **3.`isReady`**
+
+用于标记“是否已经收到过首次系统蓝牙状态回调”。
+
+它和 `bleState == .unknown` 不是一回事：
+
+- `isReady == false`：系统还没回调，当前 `.unknown` 只是初始化默认值，不可信。
+- `isReady == true && bleState == .unknown`：系统已经回调过，当前状态确实是系统报告的 `.unknown`。
+
+因此不能只靠 `bleState == .unknown` 判断是否要等待，必须单独使用 `isReady`。
+
+<br/>
+
+完整时序：
+
+```swift
+// 1. 业务层请求蓝牙状态
+getBLEState { state in
+    // 根据 state 决定扫描、连接或提示用户
+}
+
+// 2. 如果还没收到首次系统回调，先缓存 completion
+if !isReady {
+    bleStateCompletions.append(completion)
+    return
+}
+
+// 3. 系统异步返回真实状态
+func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    let state = central.state
+    bleState = state
+    isReady = true
+
+    let completions = bleStateCompletions
+    bleStateCompletions.removeAll()
+
+    DispatchQueue.main.async {
+        completions.forEach { completion in
+            completion(state)
+        }
+    }
+}
+```
+
+- **这样设计的核心目的：**
+	- 避免 App 刚启动时同步读取蓝牙状态导致误判。
+	- 保证首次状态来自 `centralManagerDidUpdateState`。
+	- 多个业务同时等待蓝牙状态时，只等一次系统回调，然后全部通知。
+	- 后续再次获取状态时直接返回缓存值，不重复等待。
+
+<br/>
+
+`prepareBLE` 应该基于 `getBLEState` 做业务语义转换：
+
+```swift
+func prepareBLE(completion: @escaping (Result<Void, AKBLEError>) -> Void) {
+    getBLEState { state in
+        switch state {
+        case .poweredOn:
+            completion(.success(()))
+        case .poweredOff:
+            completion(.failure(.bluetoothOff))
+        case .unauthorized:
+            completion(.failure(.unauthorized))
+        case .unsupported:
+            completion(.failure(.unsupported))
+        default:
+            completion(.failure(.unavailable))
+        }
+    }
+}
+```
+
+注意：这里不是轮询，也不是靠固定延迟猜状态，而是等待 CoreBluetooth 的正式状态回调。
 
 
 

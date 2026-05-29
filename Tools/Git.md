@@ -93,12 +93,169 @@ git checkout master
 
 
 
-<br/>
+<br/><br/><br/>
 
 ***
 <br/>
 
 > <h1 id='指令工作流'>指令工作流</h1>
+
+## Git 基础使用命令
+## 1. 基础操作
+
+```bash
+# 初始化仓库
+git init
+
+# 克隆远程仓库
+git clone <仓库地址>
+
+# 查看状态
+git status
+
+# 添加文件到暂存区
+git add <文件名>    # 添加特定文件
+git add .          # 添加所有文件
+
+# 提交更改
+git commit -m "提交说明"
+
+# 推送到远程仓库
+git push origin main
+
+# 拉取最新代码
+git pull origin main
+
+# 查看提交历史
+git log
+```
+
+---
+<br/>
+
+# 二、分支管理策略
+
+## 3.1 为什么需要分支？
+- 并行开发多个功能
+- 隔离开发环境
+- 便于代码审查
+- 降低主分支风险
+
+## 3.2 常用分支类型
+| 分支类型 | 用途 |
+| :--- | :--- |
+| main/master | 主分支，稳定版本 |
+| develop | 开发分支，集成功能 |
+| feature/* | 功能分支 |
+| hotfix/* | 紧急修复分支 |
+| release/* | 发布分支 |
+
+## 3.3 分支操作命令
+
+```bash
+# 查看分支
+git branch        # 本地分支
+git branch -r     # 远程分支
+git branch -a     # 所有分支
+
+# 创建分支
+git branch feature/user-login
+git checkout -b feature/user-login  # 创建并切换
+
+# 切换分支
+git checkout main
+git switch main       # 新版本推荐
+
+# 合并分支
+git checkout main
+git merge feature/user-login
+
+# 删除分支
+git branch -d feature/user-login               # 本地删除
+git push origin --delete feature/user-login    # 远程删除
+```
+
+---
+<br/>
+
+# 三、团队协作流程（Git Flow）
+## 4.1 标准协作流程
+1. 开发者从主分支拉取最新代码
+2. 创建功能分支开发
+3. 定期同步`main`分支更新
+4. 完成功能后创建 Pull Request
+5. 代码审查
+6. 合并到`main`分支
+
+## 4.3 具体操作步骤
+
+```bash
+# 1. 获取最新代码
+git checkout main
+git pull origin main
+
+# 2. 创建功能分支
+git checkout -b feature/add-user-auth
+
+# 3. 开发功能，定期提交
+git add .
+git commit -m "feat: 添加用户认证功能"
+
+# 4. 推送到远程
+git push origin feature/add-user-auth
+
+# 5. 在GitHub/GitLab创建Pull Request
+# 6. 等待代码审查和合并
+```
+
+---
+<br/>
+
+# 四、项目中的 Git 实践
+
+## 5.1 `.gitignore` 文件配置
+
+```ini
+# Go语言相关
+bin/
+pkg/
+*.exe
+*.test
+
+# 依赖管理
+vendor/
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+```
+
+## 5.2 提交信息规范
+**格式：类型(范围)：描述**
+
+```bash
+# 示例
+git commit -m "feat(auth): 添加JWT认证功能"
+git commit -m "fix(user): 修复用户注册bug"
+git commit -m "docs: 更新API文档"
+git commit -m "test: 添加用户服务测试"
+```
+**常用类型**
+- `feat`：新功能
+- `fix`：bug修复
+- `docs`：文档更新
+- `style`：代码格式调整
+- `refactor`：重构
+- `test`：测试相关
+- `chore`：构建过程或辅助工具变动
+
+
 
 <br/>
 
@@ -110,15 +267,17 @@ git checkout master
 */
 // 创建一个GitTest的文件夹
 $ mkdir GitTest
+
 // 来到GitTest文件夹
 $ cd GitTest
+
 // 初始化仓库(实际上建立一个目录并初始化仓库)
 // 如果初始化成功，执行了git init命令的目录下就会生成．git目录
 // 这个．git目录里存储着管理当前目录内容所需的仓库数据
 $ git init
+
 // 创建一个README.md文件
 $ touch README.md
-
 
 /*
  * 查看一下当前分支的状态

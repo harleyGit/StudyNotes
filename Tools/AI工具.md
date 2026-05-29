@@ -33,6 +33,7 @@
 - [OpenCode](#OpenCode)
 	- [文件配置](#文件配置) 
 	- [Opencode cli和Codex cli共用一套Skill配置](#Opencode_cli和Codex_cli共用一套Skill配置)
+	- [CC Switch配合OpenCode CLI、Codex CLI完整使用步骤](#CC_Switch配合OpenCode_CLI+Codex_CLI完整使用步骤)
 - [快马-inscode](https://inscode.net)
 
 
@@ -1695,3 +1696,172 @@ ln -s "目标真实路径" "要创建的链接路径"
 ```
 
 符号链接的好处是：`Codex` 仍然以为 `skills` 在默认位置 `~/.codex/skills`，但你实际可以在 `AITools/Skills` 里统一管理、提交、备份。
+
+
+
+
+- [CC Switch 配合 OpenCode CLI + Codex CLI 完整使用步骤](#CC_Switch配合OpenCode_CLI+Codex_CLI完整使用步骤)
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id= "CC_Switch配合OpenCode_CLI+Codex_CLI完整使用步骤">CC Switch 配合 OpenCode CLI + Codex CLI 完整使用步骤</h1>
+
+- **核心逻辑：**
+	- **CC Switch 桌面 App 负责：可视化切换项目/环境、管理多套配置、一键同步环境变量**
+	- **OpenCode CLI 负责：代码仓库、分支、登录、代码操作**
+	- **Codex CLI 负责：AI Agent、AGENTS.md、Skill、AI 会话、环境绑定**
+
+三者配合 = **桌面点选切换环境 → 自动同步到终端 CLI → 自动加载对应项目 AGENTS.md / Skill**
+
+下面是 Mac 上**可直接照着做的完整步骤**，适配 macOS（Intel/M 通用）
+
+<br/>
+
+## 一、前置检查（必须全部满足）
+- **1.已安装：**
+	- CC Switch Mac 桌面版 App（已登录）
+	- OpenCode CLI：`opencode --version` 正常
+	- Codex CLI：`codex --version` 正常
+
+- **2.终端已配置：**
+
+```bash
+opencode login
+codex login
+```
+
+- **3.项目目录结构（标准）**
+
+```
+项目根目录/
+├── AGENTS.md          # Codex 全局规则
+├── .codex/skills/    # 自定义 Skill
+└── .ccswitch/         # CC Switch 配置目录
+```
+
+<br/>
+
+## 二、步骤1：CC Switch 桌面版创建「项目环境配置」
+### 1. 打开 CC Switch Mac App
+- 1.新建 Profile（配置文件）→ 命名如：`project-dev`、`project-test`
+
+- 2.**绑定项目路径**：选择你本地项目文件夹
+
+- 3.**绑定 CLI 环境变量（关键）**
+   在 CC Switch 桌面配置里添加自定义环境变量：
+
+```
+# 让 Codex/OpenCode 识别当前项目
+OPencode_PROJECT_ROOT=/Users/xxx/your-project
+CODEX_PROJECT_ROOT=/Users/xxx/your-project
+CODEX_AGENTS_PATH=$CODEX_PROJECT_ROOT/AGENTS.md
+```
+
+- 4.勾选：**切换环境时自动导出到终端 shell**（zsh/bash 都支持）
+- 5.保存配置
+
+> 原理：CC Switch 桌面切换后，自动把项目路径注入终端，Codex/OpenCode CLI 自动读取当前项目 AGENTS.md
+
+<br/>
+
+## 三、步骤2：CC Switch 桌面关联 OpenCode CLI（代码仓库）
+
+- 1.在 CC Switch 对应 Profile 里 → **Shell 脚本/后置命令**
+   添加切换后自动执行：
+
+```bash
+# 自动切 OpenCode 分支
+opencode checkout develop
+opencode pull
+```
+
+- 2.可选：为不同环境绑定不同分支
+	- dev 环境 → develop
+	- test 环境 → test
+	- prod → main
+
+> 以后桌面点一下切换，**自动切分支 + 拉代码**
+
+<br/>
+
+## 四、步骤3：CC Switch 桌面关联 Codex CLI（AGENTS.md + Skill）
+### 核心：切换环境时，Codex 自动加载当前项目 AGENTS.md + 全局 Skill
+- 1.在 CC Switch Profile 的**后置执行脚本**添加：
+
+```bash
+# 让 codex 锁定当前项目，读取 AGENTS.md
+codex config set project.root $CODEX_PROJECT_ROOT
+codex config set agents.path $CODEX_AGENTS_PATH
+# 加载全局 Skill（所有项目通用）
+codex skill load-all
+```
+- 2.把你的自定义 Skill 放到：
+	- 全局：`~/.codex/skills/`（所有环境共享）
+	- 项目私有：`项目/.codex/skills/`（CC Switch 切换自动加载）
+
+> 区分：
+> - **AGENTS.md**：每个项目一份，CC Switch 切换自动换
+> - **Skill**：全局共享，不用每个项目复制
+
+<br/>
+
+## 五、步骤4：终端与 CC Switch 桌面联动（最重要）
+### 1. 让终端跟随 CC Switch 桌面环境
+打开你的终端（iTerm2/系统终端），在 `~/.zshrc` 末尾添加：
+
+```bash
+# 读取 CC Switch 桌面导出的环境
+source ~/.ccswitch/shell/env.sh
+```
+执行生效：
+
+```bash
+source ~/.zshrc
+```
+
+### 2. 现在联动逻辑完全打通：
+1. 你在 **CC Switch 桌面点选切换 dev/test**
+2. 自动导出环境变量到 `~/.ccswitch/shell/env.sh`
+3. 终端自动读取 → 识别当前项目
+4. OpenCode CLI 自动切分支
+5. Codex CLI 自动加载当前项目 **AGENTS.md + Skill**
+
+<br/>
+
+## 六、完整日常使用流程（极简版）
+### 日常操作顺序
+
+1. 打开 CC Switch Mac App → 点击切换到 `dev` 环境
+2. 打开终端，直接用：
+
+```bash
+# 查看当前 OpenCode 状态
+opencode status
+# 查看当前 Codex Agent 规则
+codex agents show
+# 调用 Skill
+codex run code-review
+# 直接对话（自动遵守当前项目 AGENTS.md）
+codex chat
+```
+
+3. 切测试环境：CC Switch 点 `test` → 终端自动切换对应分支+AGENTS.md
+
+<br/>
+
+## 七、AGENTS.md 与 Skill 在这套流程里的定位（你之前问的）
+1. **AGENTS.md = 项目专属规则**
+   CC Switch 切哪个项目，就自动加载哪个项目的 AGENTS.md
+2. **Skill = 全局通用工具**
+   放在 `~/.codex/skills`，所有项目都能用，不用随项目复制
+3. 区别一句话：
+   > AGENTS.md 是**项目规矩**，Skill 是**通用工具**，CC Switch 负责一键切换规矩，工具全程可用
+
+

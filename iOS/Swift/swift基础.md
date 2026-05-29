@@ -35,6 +35,7 @@
 	- [不同位移掩码枚举类型转换](#不同位移掩码枚举类型转换)
 	- [主枚举包含多个子枚举](#主枚举包含多个子枚举)
 	- [字符串转枚举](#字符串转枚举)
+	- [状态机枚举使用](#状态机枚举使用)
 - [**结构体**](#结构体)
 	- [OC对象转换成结构体](#OC对象转换成结构体)
 - [**集合**](#集合)
@@ -2971,6 +2972,350 @@ internal enum LinkWayType: String {
 
 这样你的 `getPairModes` 方法就能直接返回一个去重后的 `[LinkWayType]`，
 而且 nil 和非法字符串都会自动变成 `.none`。
+
+
+ ***
+<br/><br/><br/>
+> <h2 id="状态机枚举使用">状态机枚举使用</h2>
+
+```swift
+public enum AKBLEConnectState: Equatable {
+
+    /// 空闲状态
+    case idle
+
+    /// 正在扫描目标设备
+    case scanningForTarget(mac: String)
+
+    /// 正在连接设备
+    case connecting(identifier: UUID)
+
+    /// 已连接
+    case connected(identifier: UUID)
+
+    /// 连接失败
+    case failed(error: Error?)
+}
+```
+
+然后：
+
+```swift
+public final class AKBLEConnectManager {
+
+    private var currentState: AKBLEConnectState = .idle
+
+    func connect(identifier: UUID) -> Bool {
+
+        // 只有 idle 状态才能继续
+        guard case .idle = currentState else {
+            return false
+        }
+
+        currentState = .connecting(identifier: identifier)
+
+        print("开始连接")
+
+        return true
+    }
+}
+```
+
+这里用了 Swift 的 `enum + guard case pattern matching` 来做“状态机（State Machine）”控制。
+
+---
+<br/>
+
+### `guard case .idle = currentState` 是什么意思
+
+这是：`Swift Pattern Matching`（模式匹配）,等价于：
+
+```swift
+if currentState != .idle {
+    return false
+}
+```
+
+但：
+
+```swift
+guard case .idle = currentState
+```
+
+是`“匹配枚举 case”`,这是 Swift 非常强大的语法。
+
+---
+<br/>
+
+### 当前状态`‌currentState = .idle`,执行：
+
+```swift
+guard case .idle = currentState else {
+    return false
+}
+```
+
+相当于：
+
+```swift
+if case .idle = currentState {
+    // 匹配成功
+} else {
+    return false
+}
+```
+
+因为`‌currentState == .idle`,所以继续执行。
+
+<br/>
+
+**如果当前状态不是 idle**,例如：
+
+```swift
+currentState = .scanningForTarget(mac: "AA:BB")
+```
+
+此时：
+
+```swift
+guard case .idle = currentState
+```
+
+匹配失败。
+
+直接：
+
+```swift
+return false
+```
+
+- **避免：**
+	* 重复连接
+	* 多次扫描
+	* 状态错乱
+	* 并发问题
+
+---
+<br/>
+
+### 为什么 BLE 特别适合用 enum 状态机
+
+因为 BLE 本身就是,**强状态流转系统**.例如：
+
+```text
+idle
+  ↓
+扫描中
+  ↓
+发现设备
+  ↓
+连接中
+  ↓
+发现服务
+  ↓
+发现特征
+  ↓
+订阅通知
+  ↓
+已连接
+```
+
+如果不用状态机,你会出现：
+* 重复 connect
+* 重复 discoverServices
+* 状态错乱
+* callback 地狱
+* 多线程竞争
+
+---
+<br/>
+
+## 真实 BLE 场景举例
+
+- **场景 1：防止重复连接**
+
+```swift
+func connect(identifier: UUID) {
+
+    guard case .idle = currentState else {
+        print("当前已有连接流程")
+        return
+    }
+
+    currentState = .connecting(identifier: identifier)
+
+    centralManager.connect(peripheral)
+}
+```
+
+- **如果已经**
+	* scanning
+	* connecting
+	* connected
+
+就不允许再次 connect。
+
+<br/>
+
+- **场景 2：扫描状态**
+
+```swift
+func startScan(mac: String) {
+
+    guard case .idle = currentState else {
+        return
+    }
+
+    currentState = .scanningForTarget(mac: mac)
+
+    centralManager.scanForPeripherals(...)
+}
+```
+
+---
+<br/>
+
+## Pattern Matching 真正厉害的地方
+
+- **1.匹配关联值**
+
+例如：
+
+```swift
+currentState = .scanningForTarget(mac: "AA:BB")
+```
+
+你可以：
+
+```swift
+if case let .scanningForTarget(mac) = currentState {
+    print(mac)
+}
+```
+
+输出：`‌AA:BB`
+
+
+<br/>
+
+- **2.多状态匹配**
+
+```swift
+switch currentState {
+
+case .idle:
+    print("空闲")
+
+case .scanningForTarget(let mac):
+    print("扫描 \(mac)")
+
+case .connecting(let id):
+    print("连接中 \(id)")
+
+case .connected:
+    print("已连接")
+
+case .failed(let error):
+    print("失败 \(String(describing: error))")
+}
+```
+
+这就是：**Swift enum 状态机核心写法**
+
+---
+<br/>
+
+## 为什么 Equatable 很重要
+
+```swift
+public enum AKBLEConnectState: Equatable
+```
+
+意味着：**Swift 自动帮你生成**`‌==`,于是：
+
+```swift
+if currentState == .idle {
+
+}
+```
+
+可以直接比较。甚至：
+
+```swift
+if currentState == .scanningForTarget(mac: "AA") {
+
+}
+```
+
+也能比较。
+
+---
+<br/>
+
+## 更专业的 BLE 状态机写法（推荐）
+
+实际项目建议：
+
+```swift
+enum BLEState {
+
+    case idle
+
+    case scanning(targetMac: String)
+
+    case connecting(peripheral: CBPeripheral)
+
+    case discoveringServices(peripheral: CBPeripheral)
+
+    case discoveringCharacteristics(
+        peripheral: CBPeripheral,
+        service: CBService
+    )
+
+    case ready(peripheral: CBPeripheral)
+
+    case disconnecting
+
+    case failed(BLEError)
+}
+```
+
+- **整个 BLE 生命周期：**
+	* 非常清晰
+	* 易维护
+	* 易 Debug
+	* 避免并发错乱
+
+这是大型 BLE SDK 常见设计,例如：
+
+* Bluejay
+* RxBluetoothKit
+* CoreBluetooth
+
+都大量使用这种状态流设计。
+
+---
+<br/>
+
+## 这段代码的核心本质
+
+```swift
+guard case .idle = currentState else {
+    return false
+}
+```
+
+本质是：**“只有状态机处于 idle 时，才允许进入下一流程”**,这是：
+
+* 状态锁
+* 流程保护
+* 并发保护
+* BLE 生命周期控制
+
+属于：**iOS BLE 架构里的核心思想。**
+
+
+
 
 
 
