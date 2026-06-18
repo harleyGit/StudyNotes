@@ -34,6 +34,7 @@
 	- [文件配置](#文件配置) 
 	- [Opencode cli和Codex cli共用一套Skill配置](#Opencode_cli和Codex_cli共用一套Skill配置)
 	- [CC Switch配合OpenCode CLI、Codex CLI完整使用步骤](#CC_Switch配合OpenCode_CLI+Codex_CLI完整使用步骤)
+ 	- [配置的skill和插件plugin区别](#配置的skill和插件plugin区别]) 
 - [快马-inscode](https://inscode.net)
 
 
@@ -1865,3 +1866,162 @@ codex chat
    > AGENTS.md 是**项目规矩**，Skill 是**通用工具**，CC Switch 负责一键切换规矩，工具全程可用
 
 
+***
+<br/><br/><br/>
+> <h2 id="配置的skill和插件plugin区别">配置的skill和插件plugin区别</h2>
+
+## `opencode.json`配置
+
+```json
+   {
+      "$schema": "https://opencode.ai/config.json",
+      "autoupdate": true,
+      "plugin": [
+        "/Users/huanggang/HGFiles/Code/GitHub/AISkills/superpowers=="
+      ],
+      "skills": {
+        "paths": [
+          "/Users/huanggang/HGFiles/Code/GitHub/AISkills/superpowers/skills/test-driven-development"
+        ]
+      },
+      "provider": {
+          "CM_AI": {
+              "npm": "@ai-sdk/openai-compatible",
+              "name": "CM_AI",
+              "options": {
+                  "baseURL": "https://open-bigmodel-dev.imilab.com:7799/v1",
+                  "apiKey": "sk-JoG0NH4MY8Nwt9w4R"
+              },
+              "models": {}
+          }
+}
+}
+```
+
+***
+<br/>
+
+
+## opencode 中 plugin 与 skills 配置区别
+
+`plugin` 和 `skills` 不是一类东西，作用完全不同。
+
+## 核心区别
+
+`skills` 是给模型看的“能力说明书”，`plugin` 是给 opencode 运行时加载的“代码扩展”。
+
+| 配置项 | 作用 | 内容形态 | 是否执行代码 | 常见用途 |
+|---|---|---|---|---|
+| `skills` | 注册技能文档 | 包含 `SKILL.md` 的目录 | 否 | TDD 工作流、代码审查规范、某类任务操作指南 |
+| `plugin` | 注册运行时代码插件 | npm 包、`.ts`、`.js` 文件 | 是 | 改工具行为、注入 hooks、改配置、拦截 tool 调用、扩展 auth/provider |
+
+## skills
+
+`skills` 配置的是技能目录：
+
+```json
+{
+  "skills": {
+    "paths": [
+      "/path/to/skills"
+    ]
+  }
+}
+```
+
+opencode 会在这些目录里扫描：
+
+```text
+**/SKILL.md
+```
+
+例如：
+
+```text
+/path/to/skills/test-driven-development/SKILL.md
+```
+
+`SKILL.md` 里通常是：
+
+```markdown
+---
+name: test-driven-development
+description: Use when implementing any feature or bugfix, before writing implementation code
+---
+
+# Test-Driven Development
+
+具体规则和工作流...
+```
+
+它的作用是：当用户任务匹配 `description` 时，模型可以加载这份技能说明，按里面的规则做事。
+
+它不会执行代码，也不会修改 opencode 行为。
+
+## plugin
+
+`plugin` 配置的是可执行插件：
+
+```json
+{
+  "plugin": [
+    "opencode-gemini-auth",
+    "./local-plugin.ts",
+    "file:///abs/path/plugin.js"
+  ]
+}
+```
+
+插件通常是 TypeScript/JavaScript 模块，导出一个函数：
+
+```ts
+export default async function plugin(input) {
+  return {
+    "tool.execute.before": async (input, output) => {
+      // 这里可以改工具调用参数
+    }
+  }
+}
+```
+
+它的作用是：接入 opencode 运行时，监听事件、修改配置、拦截工具调用、扩展认证或 provider 等。
+
+它会执行代码，所以配置错了可能导致 opencode 启动失败或运行异常。
+
+## 为什么 TDD 要放 skills
+
+你的目录是：
+
+```text
+/Users/huanggang/HGFiles/Code/GitHub/AISkills/superpowers/skills/test-driven-development/SKILL.md
+```
+
+这是标准 skill 结构：
+
+```text
+skill-name/SKILL.md
+```
+
+里面是 TDD 工作流说明，不是 JS/TS 插件代码，所以应该配置到：
+
+```json
+"skills": {
+  "paths": [
+    "/Users/huanggang/HGFiles/Code/GitHub/AISkills/superpowers/skills/test-driven-development"
+  ]
+}
+```
+
+不应该放到：
+
+```json
+"plugin": [
+  "/Users/huanggang/HGFiles/Code/GitHub/AISkills/superpowers/skills/test-driven-development"
+]
+```
+
+因为 `plugin` 期望的是可加载执行的插件模块，不是一个 skill 文档目录。
+
+## 一句话总结
+
+`skills` 影响“模型知道怎么做”，`plugin` 影响“opencode 运行时怎么工作”。
