@@ -5,6 +5,9 @@
 	- [洋葱模型图解](#洋葱模型图解)
 	- [运行示例](#运行示例)
 	- [HTTP Query 参数解析](#HTTPQuery参数解析)
+	- [database/sql Rows 与 Cursor](#databaseSQLRows与Cursor)
+	- [scanAdminUserRow 行扫描](#scanAdminUserRow行扫描)
+	- [seen 去重与 map 预分配](#seen去重与map预分配)
 - [工程表](#工程表)
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
@@ -798,6 +801,541 @@ if err != nil || limit <= 0 {
 ```
 
 核心原则：**外部输入都不可信，Query 参数要同时处理缺失、格式错误和范围非法三类情况**。
+
+
+***
+<br/><br/><br/>
+> <h3 id="databaseSQLRows与Cursor">database/sql Rows 与 Cursor</h3>
+
+`*sql.Rows` 不是已经全部加载到内存里的数组，而是 Go 对数据库 `Cursor`（游标）的封装：`rows.Next()` 推进游标，`rows.Scan()` 读取当前行，`rows.Err()` 检查遍历过程中的延迟错误，`rows.Close()` 释放游标占用的连接、网络、内存和数据库资源。
+
+```go
+rows, err := db.Query(query)
+if err != nil {
+    return err
+}
+defer rows.Close()
+
+for rows.Next() {
+    if err := rows.Scan(&id, &name); err != nil {
+        return err
+    }
+}
+
+return rows.Err()
+```
+
+核心链路：
+
+```text
+SQL
+  │
+  ▼
+数据库执行查询
+  │
+  ▼
+数据库创建 Cursor（游标）
+  │
+  ▼
+Go 的 *sql.Rows 持有这个 Cursor
+  │
+  ▼
+rows.Next() → Cursor 向下一行移动
+  │
+  ▼
+rows.Scan() → 读取 Cursor 当前指向的这一行
+  │
+  ▼
+rows.Close() → 关闭 Cursor，释放数据库连接和相关资源
+```
+
+---
+<br/>
+
+## rows.Next()
+
+`rows.Next()` 表示游标向下一行移动，返回 `true` 时才有当前行可供 `rows.Scan()` 读取；返回 `false` 可能是正常读完，也可能是遍历过程中发生了错误，最终要通过 `rows.Err()` 区分。
+
+例如数据库结果：
+
+| id | name |
+| -- | ---- |
+| 1  | Tom  |
+| 2  | Jack |
+| 3  | Lucy |
+
+游标推进过程：
+
+```text
+刚开始：
+      ↓
+未开始
+
+第一次 rows.Next()：
+      ↓
+第一行 Tom
+
+第二次 rows.Next()：
+Tom
+      ↓
+Jack
+
+第三次 rows.Next()：
+Tom
+Jack
+      ↓
+Lucy
+
+第四次 rows.Next()：
+Tom
+Jack
+Lucy
+
+↓
+结束，返回 false
+```
+
+所以 `rows.Scan(...)` 不需要指定第几行，因为 Cursor 已经记录了当前位置，`Scan` 读取的就是当前行。
+
+---
+<br/>
+
+## Cursor 不是错误
+
+`Cursor` 不是异常，而是数据库读取结果集时维护当前位置的对象。所谓 `Cursor 出错`，指的是读取过程中连接、网络或数据库状态异常，错误会被 `database/sql` 记录下来，遍历结束后从 `rows.Err()` 取出。
+
+常见场景：
+
+| 场景 | 表现 | rows.Err() |
+|------|------|------------|
+| 数据库连接断开 | `rows.Next()` 提前结束 | `connection reset` |
+| 网络断开 | Cursor 没读完 | `read tcp ...` |
+| 数据库重启 | Cursor 失效 | 返回对应数据库错误 |
+| 服务器超时 | 连接被关闭 | 返回超时或连接错误 |
+
+Go 官方 API 没有把 `Next()` 设计成 `(bool, error)`，而是使用固定模式：
+
+```go
+for rows.Next() {
+    rows.Scan(...)
+}
+
+if err := rows.Err(); err != nil {
+    return err
+}
+```
+
+项目中直接 `return rows.Err()`，就是遍历结束后统一返回 Cursor 读取过程中的错误。
+
+
+***
+<br/><br/><br/>
+> <h3 id="scanAdminUserRow行扫描">scanAdminUserRow 行扫描</h3>
+
+`scanAdminUserRow(rows, hasEmail)` 的作用是：**把 `rows` 当前指向的一行数据库记录扫描成 `map[string]interface{}`，供后续接口返回或列表组装使用**。
+
+```go
+func scanAdminUserRow(rows *sql.Rows, hasEmail bool) (map[string]interface{}, error) {
+    var id sql.NullString
+    var name string
+    var nickName string
+    var email sql.NullString
+    var mobile string
+    var status int
+
+    var err error
+    if hasEmail {
+        err = rows.Scan(&id, &name, &nickName, &email, &mobile, &status)
+    } else {
+        err = rows.Scan(&id, &name, &nickName, &mobile, &status)
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    item := map[string]interface{}{
+        "id":       id.String,
+        "name":     name,
+        "nickName": nickName,
+        "mobile":   mobile,
+        "status":   status,
+    }
+    if hasEmail {
+        item["email"] = email.String
+    }
+
+    return item, nil
+}
+```
+
+整体流程：
+
+```text
+数据库
+  │
+  │ Query()
+  ▼
+rows (*sql.Rows)
+  │
+  │ rows.Next()
+  ▼
+当前一行
+  │
+  │ rows.Scan(...)
+  ▼
+Go变量
+  │
+  │ 组装
+  ▼
+map[string]interface{}
+  │
+  ▼
+返回
+```
+
+---
+<br/>
+
+## 为什么传入 *sql.Rows
+
+调用方通常是：
+
+```go
+for rows.Next() {
+    item, err := scanAdminUserRow(rows, hasEmail)
+}
+```
+
+`rows.Next()` 已经把游标移动到当前行，`scanAdminUserRow(rows, ...)` 内部执行 `rows.Scan(...)` 时，读取的就是当前这一行。
+
+```text
+rows
+│
+├── 第一行
+├── 第二行
+├── 第三行
+└── ...
+
+rows.Next() 后：
+
+rows
+      ↓
+┌───────────────┐
+│ 第一行        │
+├───────────────┤
+│ 第二行        │
+├───────────────┤
+│ 第三行        │
+└───────────────┘
+```
+
+---
+<br/>
+
+## sql.NullString
+
+数据库字段可能是 `NULL` 时，不能直接扫描到普通 `string`，否则可能报错：
+
+```text
+converting NULL to string is unsupported
+```
+
+`sql.NullString` 用来同时保存字符串值和是否有效：
+
+```go
+type NullString struct {
+    String string
+    Valid  bool
+}
+```
+
+扫描结果示例：
+
+| 数据库值 | String | Valid |
+|----------|--------|-------|
+| `NULL` | `""` | `false` |
+| `10001` | `"10001"` | `true` |
+
+因此 `id`、`email` 使用 `sql.NullString`，是为了兼容数据库 `NULL`；`name`、`nickName`、`mobile` 等字段如果数据库约束为 `NOT NULL`，就可以直接使用普通 `string`。
+
+---
+<br/>
+
+## 为什么根据 hasEmail 分两种 Scan
+
+`rows.Scan()` 的参数数量必须和 `SELECT` 字段数量完全一致。
+
+有邮箱字段时：
+
+```sql
+SELECT
+user_id,
+name,
+nickname,
+email,
+mobile,
+status
+```
+
+对应：
+
+```go
+rows.Scan(&id, &name, &nickName, &email, &mobile, &status)
+```
+
+没有邮箱字段时：
+
+```sql
+SELECT
+user_id,
+name,
+nickname,
+mobile,
+status
+```
+
+对应：
+
+```go
+rows.Scan(&id, &name, &nickName, &mobile, &status)
+```
+
+如果 SQL 返回 2 个字段，却传入 3 个 Scan 目标变量，会报错：
+
+```text
+expected 2 destination arguments in Scan, not 3
+```
+
+---
+<br/>
+
+## 不要扫描 admin_user.id
+
+注释中的提醒：
+
+```go
+// SELECT 的第一个字段固定是 admin_user.user_id
+// 不要扫描 admin_user.id
+```
+
+意思是后台管理员表可能同时存在两个 ID：
+
+| id | user_id |
+| -- | ------- |
+| 1  | 10001   |
+
+`id` 是 `admin_user` 表自身的自增主键，`user_id` 才是业务身份字段。前端管理员选择、角色绑定、权限分配等场景应该使用 `user_id`，不能误用 `admin_user.id`。
+
+---
+<br/>
+
+## 返回 map 与 NULL 风险
+
+返回 `map[string]interface{}` 的好处是字段灵活，适合直接 JSON 序列化，也不需要额外定义结构体：
+
+```go
+json.NewEncoder(w).Encode(item)
+```
+
+但直接返回 `id.String`、`email.String` 会把数据库 `NULL` 和空字符串都变成 `""`，调用方无法区分：
+
+```json
+{
+    "id": ""
+}
+```
+
+如果业务需要区分 `NULL` 和空字符串，建议显式判断 `Valid`：
+
+```go
+result := map[string]interface{}{
+    "name":     name,
+    "nickName": nickName,
+    "mobile":   mobile,
+    "status":   status,
+}
+
+if id.Valid {
+    result["id"] = id.String
+} else {
+    result["id"] = nil
+}
+
+if hasEmail {
+    if email.Valid {
+        result["email"] = email.String
+    } else {
+        result["email"] = nil
+    }
+}
+
+return result, nil
+```
+
+长期维护的项目更推荐定义 `AdminUser` 结构体，能获得类型安全、IDE 自动补全和编译期检查；简单动态接口使用 `map[string]interface{}` 更快，但要明确字段含义和 `NULL` 处理策略。
+
+---
+<br/>
+
+## 函数执行流程
+
+```text
+rows.Next()
+      │
+      ▼
+当前游标指向一行
+      │
+      ▼
+rows.Scan(...)
+      │
+      ▼
+数据库字段
+      │
+      ├──── user_id ─────► sql.NullString(id)
+      ├──── name ────────► string(name)
+      ├──── nickname ────► string(nickName)
+      ├──── email ───────► sql.NullString(email)
+      ├──── mobile ──────► string(mobile)
+      └──── status ──────► int(status)
+      │
+      ▼
+读取变量中的值
+      │
+      ▼
+组装 map[string]interface{}
+      │
+      ▼
+返回给调用者
+      │
+      ▼
+appendAdmins()
+      │
+      ▼
+去重 → append 到 list → 返回接口响应
+```
+
+
+***
+<br/><br/><br/>
+> <h3 id="seen去重与map预分配">seen 去重与 map 预分配</h3>
+
+`seen` 常用于列表组装时按 `id` 去重：第一次遇到某个 `id` 就记录到 map，后面再次遇到同一个 `id` 时直接 `continue` 跳过。
+
+```go
+seen := make(map[string]struct{}, limit)
+
+for rows.Next() {
+    item, err := scanAdminUserRow(rows, hasEmail)
+    if err != nil {
+        return err
+    }
+
+    id := item["id"].(string)
+    if _, ok := seen[id]; ok {
+        continue
+    }
+
+    seen[id] = struct{}{}
+    list = append(list, item)
+
+    if len(list) >= limit {
+        break
+    }
+}
+
+return rows.Err()
+```
+
+执行过程：
+
+```text
+第一次 id=100：
+seen = {}
+_, ok := seen["100"] → ok=false
+seen["100"] = struct{}{}
+
+第二次 id=100：
+_, ok := seen["100"] → ok=true
+continue，跳过重复数据
+```
+
+---
+<br/>
+
+## make(map[string]struct{}, limit)
+
+下面两种写法的类型完全一样，都是 `map[string]struct{}`：
+
+```go
+seen := make(map[string]struct{}, limit)
+seen := map[string]struct{}{}
+```
+
+区别只在初始化方式。`make(map[string]struct{}, limit)` 的第二个参数对 map 来说不是长度，也不能通过 `cap(m)` 读取，而是**初始容量提示（capacity hint）**：告诉 Go 预计后面大约会放 `limit` 个元素，提前准备哈希桶，减少扩容和 rehash。
+
+```go
+seen := make(map[string]struct{}, 100)
+fmt.Println(len(seen)) // 0
+```
+
+`len(seen)` 仍然是 `0`，因为 map 里还没有元素；第二个参数只是预估容量，不是已有数据数量。
+
+---
+<br/>
+
+## map 扩容成本
+
+没有容量提示时，持续插入大量 key 可能触发多次扩容：
+
+```text
+开始
+↓
+很小的 Hash Bucket
+↓
+放满
+↓
+扩容
+↓
+重新计算 Hash
+↓
+搬迁数据
+↓
+继续插入
+↓
+再次扩容
+```
+
+扩容涉及新内存分配、Rehash、Bucket 搬迁和数据复制。项目中最多只会收集 `limit` 个管理员 ID，因此 `make(map[string]struct{}, limit)` 是合理的性能优化。
+
+对比：
+
+| 写法 | 类型 | 是否预分配 | 推荐场景 |
+|------|------|------------|----------|
+| `map[string]struct{}{}` | `map[string]struct{}` | 否 | 数据量未知、小型程序、示例代码 |
+| `make(map[string]struct{})` | `map[string]struct{}` | 否 | 与字面量等价，初始化空 map |
+| `make(map[string]struct{}, limit)` | `map[string]struct{}` | 是（容量提示） | 数据量已知或可预估，项目代码推荐 |
+
+---
+<br/>
+
+## 为什么 value 是 struct{}
+
+`map[string]struct{}` 表示只关心 key 是否存在，不关心 value。`struct{}{}` 是空结构体，占用 `0` 字节：
+
+```go
+unsafe.Sizeof(struct{}{}) // 0
+```
+
+相比 `map[string]bool`，`map[string]struct{}` 更适合表达集合（Set）语义：
+
+```go
+seen[id] = struct{}{}
+if _, ok := seen[id]; ok {
+    continue
+}
+```
+
+结论：**`seen := make(map[string]struct{}, limit)` 同时表达了去重集合和预估容量，是 Go 项目中常见且推荐的写法**。
 
 
 <br/><br/><br/>
