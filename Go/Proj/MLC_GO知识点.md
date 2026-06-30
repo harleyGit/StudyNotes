@@ -4,6 +4,7 @@
 	- [ChainInterceptors 实现原理](#ChainInterceptors实现原理)
 	- [洋葱模型图解](#洋葱模型图解)
 	- [运行示例](#运行示例)
+	- [HTTP Query 参数解析](#HTTPQuery参数解析)
 - [工程表](#工程表)
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
@@ -658,6 +659,145 @@ TestNotes/ungrammar_pt/middleware_pt/middleware_demo.go
 - **响应返回：** 业务 → 内层 → 外层。
 - **异常处理：** `RecoverInterceptor` 放在较外层，用于统一捕获内层 `panic`。
 - **提前终止：** 中间件不调用 `next.ServeHTTP` 时，请求不会继续进入内层或业务处理。
+
+
+***
+<br/><br/><br/>
+> <h3 id="HTTPQuery参数解析">HTTP Query 参数解析</h3>
+
+下面这行代码常用于从 URL 查询参数中读取 `limit` 并转换成 `int`：
+
+```go
+limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+```
+
+例如请求：
+
+```text
+GET /list?limit=20
+```
+
+最终得到：
+
+```go
+limit = 20
+```
+
+<br/>
+
+## 执行流程
+
+```go
+r.URL.Query().Get("limit") // "20"
+strconv.Atoi("20")         // (20, nil)
+limit = 20
+```
+
+整体链路：
+
+```text
+HTTP Query String → string → int → limit
+```
+
+<br/>
+
+## 逐段解析
+
+```go
+r.URL.Query()
+```
+
+获取所有 URL 查询参数。例如：
+
+```text
+/list?limit=20&page=2
+```
+
+会解析成：
+
+```go
+map[string][]string{
+    "limit": {"20"},
+    "page":  {"2"},
+}
+```
+
+<br/>
+
+```go
+r.URL.Query().Get("limit")
+```
+
+取出 `limit` 参数的第一个值，返回类型是 `string`；如果参数不存在，返回空字符串 `""`。
+
+<br/>
+
+```go
+strconv.Atoi("20")
+```
+
+把字符串转成 `int`，返回值是 `(int, error)`：
+
+```go
+n, err := strconv.Atoi("20")
+// n = 20
+// err = nil
+```
+
+如果传入非法数字：
+
+```go
+n, err := strconv.Atoi("abc")
+// n = 0
+// err != nil
+```
+
+<br/>
+
+```go
+limit, _ := strconv.Atoi(...)
+```
+
+这是 Go 多返回值的忽略写法：`limit` 接收转换后的 `int`，`_` 丢弃 `error`。
+
+<br/>
+
+## 风险点
+
+直接忽略 `error` 会把缺失参数和非法参数都转换成 `0`，容易让业务误判：
+
+| 请求 | 解析结果 | 问题 |
+|------|----------|------|
+| `/list` | `Atoi("")` → `limit = 0` | 未传参数被当成 0 |
+| `/list?limit=abc` | `Atoi("abc")` → `limit = 0` | 非法参数被当成 0 |
+
+<br/>
+
+## 推荐写法
+
+如果 `limit` 有默认值，优先显式处理错误和非法范围：
+
+```go
+limitStr := r.URL.Query().Get("limit")
+
+limit := 10 // 默认值
+if v, err := strconv.Atoi(limitStr); err == nil && v > 0 {
+    limit = v
+}
+```
+
+更直接的写法：
+
+```go
+limitStr := r.URL.Query().Get("limit")
+
+limit, err := strconv.Atoi(limitStr)
+if err != nil || limit <= 0 {
+    limit = 10
+}
+```
+
+核心原则：**外部输入都不可信，Query 参数要同时处理缺失、格式错误和范围非法三类情况**。
 
 
 <br/><br/><br/>
