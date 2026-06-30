@@ -15,7 +15,8 @@
 - [**token解析**](#token解析)
 - [SQL](#SQL)
 	- [xx.sql问件加注释](#xx.sql问件加注释)
-	- [创建users表](#创建users表)
+	- [执行xx.sql文件语句](#执行xx.sql文件语句) 
+  	- [创建users表](#创建users表)
 	- [给users表增加字段](#给users表增加字段)
  	- [SQL排它锁-更新用户信息](#SQL排它锁-更新用户信息)
     	- [FOR UPDATE行锁核心](#FOR_UPDATE行锁核心)
@@ -436,6 +437,20 @@ USE HG_MLC_DB;
 <br/><br/><br/>
 > <h2 id="SQL语句解读">SQL语句解读</h2>
 
+
+***
+<br/><br/><br/>
+> <h2 id="执行xx.sql文件语句">执行xx.sql文件语句</h2>
+
+```sh
+mysql --no-defaults -uroot -phh129 HG_MLC_DB < "migrations/000006_ddl_course_platform.up.sql"
+```
+
+- 连接本地 `MySQL root` 账号，密码 `hh129`，直接指定数据库 `HG_MLC_DB`
+- `<` 标准输入重定向：把迁移文件 `000006_ddl_course_platform.up.sql` 里所有 DDL 建表语句全部执行
+- `--no-defaults`：不读取本地 `my.cnf` 配置，保证环境纯净
+
+**作用：初始化课程平台整套原始数据表结构（项目基线表）。**
 
 ***
 <br/><br/>
