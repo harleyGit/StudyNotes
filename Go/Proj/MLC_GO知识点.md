@@ -5,6 +5,7 @@
 	- [洋葱模型图解](#洋葱模型图解)
 	- [运行示例](#运行示例)
 	- [HTTP Query 参数解析](#HTTPQuery参数解析)
+	- [strconv.ParseInt 字符串转 int64](#strconvParseInt字符串转int64)
 	- [database/sql Rows 与 Cursor](#databaseSQLRows与Cursor)
 	- [scanAdminUserRow 行扫描](#scanAdminUserRow行扫描)
 	- [seen 去重与 map 预分配](#seen去重与map预分配)
@@ -801,6 +802,122 @@ if err != nil || limit <= 0 {
 ```
 
 核心原则：**外部输入都不可信，Query 参数要同时处理缺失、格式错误和范围非法三类情况**。
+
+
+***
+<br/><br/><br/>
+> <h3 id="strconvParseInt字符串转int64">strconv.ParseInt 字符串转 int64</h3>
+
+`strconv.ParseInt(keyword, 10, 64)` 的作用是：**把字符串 `keyword` 按十进制解析成 `int64`**。
+
+```go
+n, err := strconv.ParseInt(keyword, 10, 64)
+```
+
+函数原型：
+
+```go
+func ParseInt(s string, base int, bitSize int) (i int64, err error)
+```
+
+参数含义：
+
+| 参数 | 示例 | 说明 |
+|------|------|------|
+| `s` | `keyword`、`"123"` | 要转换的字符串 |
+| `base` | `10` | 按什么进制解析，常用 `10` 表示十进制 |
+| `bitSize` | `64` | 限制结果整数位数，`64` 表示按 `int64` 范围解析 |
+
+常见 `base`：
+
+| base | 含义 |
+|------|------|
+| `10` | 十进制 |
+| `2` | 二进制 |
+| `8` | 八进制 |
+| `16` | 十六进制 |
+
+常见 `bitSize`：
+
+| bitSize | 对应范围 |
+|---------|----------|
+| `8` | `int8` |
+| `16` | `int16` |
+| `32` | `int32` |
+| `64` | `int64` |
+
+---
+<br/>
+
+## 示例
+
+正常数字：
+
+```go
+keyword := "123"
+
+n, err := strconv.ParseInt(keyword, 10, 64)
+// n = 123
+// err = nil
+```
+
+非法数字：
+
+```go
+keyword := "abc"
+
+n, err := strconv.ParseInt(keyword, 10, 64)
+// n = 0
+// err != nil
+```
+
+负数：
+
+```go
+keyword := "-100"
+
+n, err := strconv.ParseInt(keyword, 10, 64)
+// n = -100
+```
+
+二进制解析：
+
+```go
+n, err := strconv.ParseInt("1010", 2, 64)
+// n = 10
+// err = nil
+```
+
+---
+<br/>
+
+## 和 Atoi 的区别
+
+`strconv.Atoi(s)` 等价于 `strconv.ParseInt(s, 10, 0)` 后再转成 `int`，返回类型依赖当前平台的 `int` 大小；`ParseInt` 可以显式指定进制和位数，更适合数据库 ID、Redis key、订单号、用户 ID 等需要明确 `int64` 的场景。
+
+| 方法 | 示例 | 返回类型 | 是否可控 bitSize |
+|------|------|----------|------------------|
+| `Atoi` | `strconv.Atoi("123")` | `int` | 否 |
+| `ParseInt` | `strconv.ParseInt("123", 10, 64)` | `int64` | 是 |
+
+典型用途：
+
+```text
+?keyword=123
+?id=10001
+?page=2
+```
+
+推荐写法是保留 `err` 并显式处理非法输入，不要把错误静默吞掉：
+
+```go
+id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+if err != nil || id <= 0 {
+    // 返回参数错误或使用默认值
+}
+```
+
+结论：**`strconv.ParseInt(keyword, 10, 64)` 就是把字符串 `keyword` 按十进制转换成 `int64`，如果不是合法数字就返回错误**。
 
 
 ***
