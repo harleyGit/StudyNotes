@@ -18,6 +18,7 @@
 	- [查看HTML效果](#查看HTML效果)
 	- [Gitlens: 查看git提交记录](#Gitlens:查看git提交记录)
 	- [插件Deno-安全的JavaScript/TypeScript运行时](#插件Deno-安全的JavaScript/TypeScript运行时)
+	- [GO注释插件GoComment](#GO注释插件GoComment)
 - [**Flutter配置**](#Flutter配置)
 	- [快捷键](#快捷键) 
 	- [环境配置](#环境配置)
@@ -501,20 +502,20 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
 {
   // <===== 基础体验开始 =========
   "editor.accessibilitySupport": "off", // on Accessibility 强制打开声音错误、警告、终端
-  "audioCues.enabled": "off", // 关闭比比声
   "editor.fontSize": 16, // 代码编辑器字体大小
   "terminal.integrated.fontSize": 12,
-  "window.zoomLevel": 0.4, //全局 UI 缩放
+  "window.zoomLevel": 1, //全局 UI 缩放
+  "explorer.autoReveal": true, // 切换文件时自动在左侧定位;每次你切换编辑器 Tab,左侧 Explorer 自动定位当前文件
   "update.mode": "none", //禁止更新
   "workbench.colorTheme": "Default Light+",
   "editor.minimap.enabled": false,
   "terminal.integrated.enableVisualBell": false,
-  "terminal.integrated.scrollback": 50000, // 占用大量内存 
-  // ===== 基础体验结束 =========> 
+  "terminal.integrated.scrollback": 50000, // 占用大量内存
+  // ===== 基础体验结束 =========>
   // <===== 编辑器通用行为开始 =====
   "editor.inlineSuggest.enabled": true,
   "editor.tabCompletion": "on",
-  "debug.inlineValues": true,
+  "debug.inlineValues": "on",
   "editor.suggestSelection": "first",
   "editor.formatOnSave": true, // 保存时自动格式化
   "editor.unicodeHighlight.nonBasicASCII": false,
@@ -536,8 +537,8 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   "eslint.run": "onSave",
   "editor.defaultFormatter": "esbenp.prettier-vscode", // 设置 Prettier 为默认格式化工具,Go 不会用 Prettier, Go 只认：go.formatTool、gopls
   "editor.formatOnType": false, // required
-  "editor.formatOnPaste": true, // optional 
-  // ===== 编辑器通用行为结束 =====> 
+  "editor.formatOnPaste": true, // optional
+  // ===== 编辑器通用行为结束 =====>
   // <===== 文件 & Git =====
   "files.autoSave": "afterDelay",
   "files.autoGuessEncoding": true,
@@ -555,8 +556,8 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "plaintext": false
   },
   "git.autofetch": true,
-  "github.copilot.editor.enableAutoCompletions": true, 
-  // ===== 文件 & Git =====> 
+  "github.copilot.editor.enableAutoCompletions": true,
+  // ===== 文件 & Git =====>
   // ===== Dart / Flutter开始 =====>
   "dart.openDevTools": "flutter",
   "dart.debugExternalLibraries": false,
@@ -571,18 +572,18 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "editor.suggestSelection": "first",
     "editor.tabCompletion": "onlySnippets",
     "editor.wordBasedSuggestions": "off"
-  }, 
-  // <===== Dart / Flutter🔚 ===== 
+  },
+  // <===== Dart / Flutter🔚 =====
   // <===== Java开始 =====
   "java.project.importOnFirstTimeStartup": "automatic",
-  "java.semanticHighlighting.enabled": true, 
-  // ===== Java🔚  =====> 
+  "java.semanticHighlighting.enabled": true,
+  // ===== Java🔚  =====>
   // <===== Web / React 开始===== // 启用 CSS 和 SCSS 支持
   "css.validate": true,
   "scss.validate": true,
   "less.validate": true, // 启用 JavaScript 和 CSS 文件跳转
-  "javascript.implicitProjectConfig.checkJs": true,
-  "css.lint.validProperties": "all",
+  "js/ts.implicitProjectConfig.checkJs": true,
+  "css.lint.validProperties": [],
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   }, // 如果是 JS/React 项目，可以指定格式化的文件类型
@@ -594,8 +595,8 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   },
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }, 
-  // ===== Web / React🔚 =====> 
+  },
+  // ===== Web / React🔚 =====>
   // ===== Go 环境开始 =====>
   "go.useLanguageServer": true,
   "go.toolsManagement.checkForUpdates": "local", // 确保 VS Code 插件在执行构建/运行/调试 Go 代码时，使用你手动指定的工具路径，而不是乱找或用错版本。
@@ -621,15 +622,23 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
-    }
+    },
+    // Go文件强制使用Tab缩进，和gofmt规则对齐
+    "editor.insertSpaces": false,
+    "editor.tabSize": 8
   }, // 代码格式化
   "go.formatTool": "goimports", //会自动整理并移除未使用的import // 代码分析
   "go.lintTool": "golangci-lint", // 自动补全
-  "go.autocompleteUnimportedPackages": true, // 代码导航
   "go.inferGopath": true,
-  "go.docsTool": "gogetdoc", // 构建标签
-  "go.buildTags": "", 
-  // ===== Go 环境结束🔚 =====> 
+  "go.buildTags": "",
+  // 保存时不要自动删除行尾空格（注释末尾空格会被误删）
+  "files.trimTrailingWhitespace": false,
+  // ========== 自定义模板GO注释插件GoComment 配置 ===========
+  "functionTemplate": "// ${func_name} \n//\t@param ${param_name} \n//\t@return ${return_name} ",
+  "typeTemplate": "// ${type_name} ",
+  // GoComment 自定义快捷键（可选，冲突可改）
+  "goComment.shortcut": "cmd+ctrl+/",
+  // ===== Go 环境结束🔚 =====>
   // ===== 其他 =====>
   "docker.extension.enableComposeLanguageServer": false,
   "makefile.configureOnOpen": true,
@@ -644,65 +653,11 @@ go run main.go --tcp-address=127.0.0.1:4150 --http-address=127.0.0.1:4151
   "accessibility.signals.terminalBell": {
     "sound": "off"
   },
-  "settingsSync.ignoredSettings": [],
   "redhat.telemetry.enabled": true,
   "security.workspace.trust.untrustedFiles": "open",
-  "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma"
-}
-```
-
-<br/>
-
-**比如: Deepseek给的建议:**
-
-```json
-{
-  "go.gopath": "/path/to/your/gopath",
-  "go.goroot": "/path/to/your/goroot",
-  "go.useLanguageServer": true,
-  "go.languageServerFlags": ["-remote=auto"],
-  
-  // 模块管理
-  "go.toolsEnvVars": {
-    "GO111MODULE": "auto",
-    "GOPROXY": "https://goproxy.cn,direct"
-  },
-  
-  // 代码格式化
-  "go.formatTool": "gofmt",
-  "editor.formatOnSave": true,
-  
-  // 测试相关
-  "go.testFlags": ["-v", "-count=1"],
-  "go.coverOnSave": false,
-  
-  // 代码分析
-  "go.lintFlags": ["--fast"],
-  "go.lintTool": "staticcheck",
-  
-  // 调试配置
-  "go.delveConfig": {
-    "debugAdapter": "dlv-dap",
-    "showRegisters": false,
-    "showGlobalVariables": false
-  },
-  
-  // 自动补全
-  "go.autocompleteUnimportedPackages": true,
-  
-  // 代码导航
-  "go.inferGopath": true,
-  "go.docsTool": "gogetdoc",
-  
-  // 构建标签
-  "go.buildTags": "",
-  
-  // 自动添加结构体标签
-  "go.addTags": {
-    "tags": "json,xml",
-    "promptForTags": false,
-    "transform": "snakecase"
-  }
+  "Lingma.LocalStoragePath": "/Users/harleyhuang/.lingma",
+  "workbench.editor.enablePreview": false,
+  "git.openRepositoryInParentFolders": "never"
 }
 ```
 
@@ -959,6 +914,41 @@ VS Code 中的 **Deno 插件** 主要用于支持 **Deno**（一个安全的 Jav
 | **Lint** | 发现代码潜在错误 |
 | **运行 Deno 代码** | 直接运行 Deno 而不依赖 Node.js |
 | **调试支持** | VS Code 断点调试 |
+
+
+***
+<br/><br/><br/>
+> <h2 id="GO注释插件GoComment">GO注释插件GoComment</h2>
+
+```json
+// GoComment 注释模板（核心，防止格式化乱注释）
+"goComment.functionTemplate": "// ${func_name}\n//  @receiver ${receiver_name} 接收者实例\n//  @param ${param_name} 入参描述\n//  @return ${return_name} 返回值描述",
+"goComment.typeTemplate": "// ${type_name} 结构体功能说明",
+
+// Go语言缩进强制统一，解决注释格式错乱
+"[go]": {
+    "editor.insertSpaces": false,
+    "editor.tabSize": 8
+},
+"files.trimTrailingWhitespace": false,
+
+// GoComment 自定义快捷键（可选，冲突可改）
+"goComment.shortcut": "cmd+ctrl+/"
+```
+
+**保存 JSON，重启 VSCode 生效。**
+
+<br/>
+
+- **步骤 1：生成注释操作流程**
+	- 打开任意 .go 文件；
+	- 光标放在方法 / 函数上方空行；
+	- Mac 快捷键：Command + Control + /；
+	- 插件自动读取接收器、参数、返回值，生成完整注释；
+	- 手动填充每行后面的描述文字即可。
+
+- **步骤 2：更新函数后同步注释**
+	- 修改方法参数 / 返回值后，再次按相同快捷键，插件会自动同步更新注释，不会重复生成。
 
 
 <br/><br/><br/>
