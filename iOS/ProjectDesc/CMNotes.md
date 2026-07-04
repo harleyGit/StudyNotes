@@ -31,6 +31,7 @@
 	- [label宽度自适应](#label宽度自适应)
 	- [弹窗播放视频](#弹窗播放视频)
 	- [一段代码搞定播放音频，优化内存释放](#一段代码搞定播放音频，优化内存释放)
+	- [WebView 原生广告占位布局](#WebView原生广告占位布局)
 	- [**线程安全**](#线程安全)
 		- [指定队列判断](#指定队列判断)
 - [**系统蓝牙库CoreBluetooth**](#系统蓝牙库CoreBluetooth)
@@ -2258,6 +2259,340 @@ mac:aabbccddeeff
 ***
 <br/><br/><br/>
 ># <h2 id="弹窗播放视频">[弹窗播放视频](./../Swift/UI组件.md#弹窗播放视频)</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="WebView原生广告占位布局">WebView 原生广告占位布局</h2>
+
+这个方案用于解决 **Web 页面中预留一个 `div` 占位，Native 根据 Web 上报的 `y` 坐标把原生广告视图摆到对应位置，同时 Native 再把广告高度回传给 Web 调整占位高度**。
+
+核心链路：
+
+```text
+React 渲染占位 div
+   ↓
+getBoundingClientRect() + window.scrollY 计算文档坐标 y
+   ↓
+Web 通过 postNativeMessage("adPosition", { y }) 上报给 Native
+   ↓
+iOS 调整 adView.frame.origin.y
+   ↓
+Native 通过 evaluateJavaScript 调 window.nativeCallback("nativeAdHeight", { height })
+   ↓
+Web 更新 div 高度，给原生广告留出真实空间
+```
+
+<br/>
+
+## Swift 侧核心代码
+
+```swift
+public class WebViewController: UIViewController, WKScriptMessageHandler {
+
+    private var adView = UIView(frame: CGRect(x: 0, y: 0, width: 414, height: 214))
+    public var webView: WKWebView?
+    private let jsInvoker = JSInvoker()
+
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+
+        self.setupWebView()
+        self.jsInvoker.bind(webView: self.webView)
+    }
+
+    private func setupWebView() {
+        let configuration = WKWebViewConfiguration()
+        let userContentController = WKUserContentController()
+        configuration.userContentController = userContentController
+        configuration.applicationNameForUserAgent = "iPhone"
+
+        let wkWebView = WKWebView(frame: view.bounds, configuration: configuration)
+        wkWebView.scrollView.contentInsetAdjustmentBehavior = .never
+        self.webView = wkWebView
+
+        self.webView?.scrollView.addSubview(adView)
+    }
+
+    public func userContentController(_ userContentController: WKUserContentController,
+                                      didReceive message: WKScriptMessage) {
+        let messageName = message.name
+        let body = message.body as? [String: Any]
+
+        switch messageName {
+        case "adPosition":
+            self.adView.frame.origin.y = CGFloat(body?["y"] as? Int ?? 0)
+        default:
+            break
+        }
+    }
+
+    private func updateAdPosition() {
+        let action = WebAction(action: "nativeCallback",
+                               params: ["action": "nativeAdHeight",
+                                        "height": 350])
+        jsInvoker.invoke(action: action, completion: nil)
+    }
+}
+```
+
+`adView` 加到 `webView.scrollView` 上后，它跟随 WebView 的滚动内容坐标系布局；Web 上报的 `y` 应该是文档坐标，而不是屏幕可视区域坐标，所以前端使用 `rect.top + window.scrollY`。
+
+---
+<br/>
+
+## JSInvoker 负责拼 JavaScript
+
+```swift
+final class JSInvoker: JSInvokingProtocol {
+
+    private weak var webView: WKWebView?
+
+    init(webView: WKWebView? = nil) {
+        self.webView = webView
+    }
+
+    func bind(webView: WKWebView? = nil) {
+        self.webView = webView
+    }
+
+    func invoke(action webAction: WebAction,
+                completion: ((Result<Any?, Error>) -> Void)? = nil) {
+
+        guard
+            let webView = webView,
+            let js = makeJavaScript(action: webAction)
+        else {
+            return
+        }
+
+        webView.evaluateJavaScript(js) { response, error in
+            if let error = error {
+                completion?(.failure(error))
+                return
+            }
+
+            completion?(.success(response))
+        }
+    }
+
+    private func makeJavaScript(action webAction: WebAction) -> String? {
+        switch webAction.action {
+        case "nativeCallback":
+            return makeNativeCallbackJavaScript(params: webAction.params)
+        default:
+            return nil
+        }
+    }
+
+    private func makeNativeCallbackJavaScript(params: [String: Any]) -> String? {
+        var payload = params
+        guard let callbackAction = payload.removeValue(forKey: "action") as? String,
+              let callbackActionJSON = jsonValueString(from: callbackAction),
+              let json = jsonString(from: payload) else {
+            return nil
+        }
+        return "window.nativeCallback && window.nativeCallback(\(callbackActionJSON), \(json))"
+    }
+
+    private func jsonString(from params: [String: Any]) -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: params, options: .prettyPrinted),
+              var json = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        json = json.replacingOccurrences(of: "\n", with: "")
+        return json
+    }
+
+    private func jsonValueString(from value: Any) -> String? {
+        guard JSONSerialization.isValidJSONObject([value]),
+              let data = try? JSONSerialization.data(withJSONObject: [value], options: []),
+              let json = String(data: data, encoding: .utf8),
+              json.hasPrefix("["),
+              json.hasSuffix("]") else {
+            return nil
+        }
+        return String(json.dropFirst().dropLast())
+    }
+}
+```
+
+`WebAction.action` 和 `params["action"]` 含义不同：
+
+| 字段 | 作用 | 示例 |
+|------|------|------|
+| `WebAction.action` | 告诉 `JSInvoker` 要拼哪个 JS 函数 | `nativeCallback` |
+| `params["action"]` | 告诉 Web 这是哪个业务事件 | `nativeAdHeight` |
+
+示例调用：
+
+```swift
+WebAction(
+    action: "nativeCallback",
+    params: [
+        "action": "nativeAdHeight",
+        "height": 314
+    ]
+)
+```
+
+最终会拼成：
+
+```javascript
+window.nativeCallback && window.nativeCallback("nativeAdHeight", {"height":314})
+```
+
+然后由 `webView.evaluateJavaScript(js)` 交给浏览器执行。
+
+---
+<br/>
+
+## removeValue 与 JSON 编码过程
+
+`makeNativeCallbackJavaScript` 先复制一份 `payload`，再把业务 `action` 单独取出来：
+
+```swift
+var payload = params
+let callbackAction = payload.removeValue(forKey: "action")
+```
+
+执行前：
+
+```swift
+[
+    "action": "nativeAdHeight",
+    "height": 314
+]
+```
+
+执行后：
+
+```text
+callbackAction = nativeAdHeight
+payload = ["height": 314]
+```
+
+原因是 Web 需要的函数签名是：
+
+```javascript
+window.nativeCallback("nativeAdHeight", {"height":314})
+```
+
+而不是把 `action` 留在同一个对象里传过去。
+
+`jsonValueString(from:)` 的作用是把 Swift 单值转成合法 JS 字面量，例如 `nativeAdHeight` 变成带引号的 `"nativeAdHeight"`。因为 `JSONSerialization` 不能直接序列化裸字符串，所以先包成数组 `["nativeAdHeight"]`，序列化后再去掉首尾 `[`、`]`。
+
+`jsonString(from:)` 则把剩余参数转成 JSON 对象字符串，例如 `["height":314]` 转成 `{"height":314}`。
+
+完整过程：
+
+```text
+Swift params
+   ↓
+{"action":"nativeAdHeight", "height":314}
+   ↓
+removeValue(forKey: "action")
+   ↓
+callbackAction = nativeAdHeight
+payload = {"height":314}
+   ↓
+jsonValueString() → "nativeAdHeight"
+jsonString()      → {"height":314}
+   ↓
+拼接 JS 字符串
+   ↓
+window.nativeCallback("nativeAdHeight", {"height":314})
+   ↓
+evaluateJavaScript()
+   ↓
+React 收到 nativeAdHeight 事件
+```
+
+---
+<br/>
+
+## React 侧占位和坐标上报
+
+```jsx
+class GuideView extends Component {
+  adPositionFrame = null;
+  nativeAdRef = React.createRef();
+
+  constructor(props) {
+    super(props);
+    this.state = { nativeAdHeight: 0 };
+  }
+
+  componentDidMount() {
+    window.nativeCallback = this.handleNativeCallback;
+    this.reportNativeAdPosition();
+  }
+
+  handleNativeCallback = (action, data) => {
+    if (action !== "nativeAdHeight") {
+      return;
+    }
+    const height = Number(data?.height);
+    if (!Number.isFinite(height) || height < 0) {
+      return;
+    }
+    if (height === this.state.nativeAdHeight) {
+      return;
+    }
+    this.setState({ nativeAdHeight: height }, this.reportNativeAdPosition);
+  };
+
+  reportNativeAdPosition = (visible = true) => {
+    if (this.adPositionFrame !== null) {
+      // 同一帧内只保留最后一次广告位置上报，避免快速切换列表/播放页时原生收到过期坐标。
+      window.cancelAnimationFrame(this.adPositionFrame);
+    }
+    this.adPositionFrame = window.requestAnimationFrame(() => {
+      this.adPositionFrame = null;
+      const nativeAd = this.nativeAdRef.current;
+      if (!nativeAd && visible) {
+        return;
+      }
+      const rect = nativeAd?.getBoundingClientRect();
+
+      // 将y发送给原生
+      SystemInfoUtil.postNativeMessage("adPosition", {
+        elementId: "nativeAd",
+        visible, // visible=false 时将原生 adView 的 top 约束移到页面内容底部之外。
+        // iOS 端 AdHandler 未消费 visible 字段，只消费 y；这个偏移能让广告退出可视播放区。
+        y: visible
+          ? rect.top + window.scrollY
+          : document.body.scrollHeight + window.innerHeight,
+      });
+    });
+  };
+
+  render() {
+    // 原生占据空间位置
+    return (
+      <div
+        id="nativeAd"
+        ref={this.nativeAdRef}
+        className="native-ad"
+        style={{ height: `${this.state.nativeAdHeight}px` }}
+      />
+    );
+  }
+}
+```
+
+`requestAnimationFrame` 用来把多次位置变化合并到同一帧，只保留最后一次上报，避免快速切换页面或列表时 Native 收到过期坐标。`visible=false` 时把 `y` 设置到页面底部之外，让原生广告退出可视播放区。
+
+---
+<br/>
+
+## 关键注意点
+
+- **坐标系要统一：** Native 把 `adView` 放在 `webView.scrollView` 上，Web 就要上报文档坐标 `rect.top + window.scrollY`。
+- **高度由 Native 决定：** Web 的 `div` 只是占位，高度来自 Native 回调的 `nativeAdHeight`。
+- **JS 字符串必须合法：** Swift 传给 JS 的字符串、对象都要经过 JSON 编码，不能手写拼接用户输入。
+- **消息名和业务 action 分层：** `adPosition` 是 Web 发给 Native 的消息名，`nativeAdHeight` 是 Native 回调给 Web 的业务事件。
+- **隐藏广告不能只隐藏 Web div：** 原生广告也要移出可视区或同步隐藏，否则会出现 Web 占位消失但 Native 视图仍悬浮的问题。
 
 
 ***
@@ -4935,8 +5270,6 @@ private func clearWebViewCache(completion: @escaping () -> Void) {
 ```
 
 这样只有在加载失败时才清理缓存，避免每次启动都清空。
-
-
 
 
 

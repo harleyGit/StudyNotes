@@ -14,6 +14,9 @@
 	- [角色列表游标分页 SQL](#角色列表游标分页SQL)
 	- [动态 UPDATE user_security](#动态UPDATEuser_security)
 	- [图片 DataURL 解析](#图片DataURL解析)
+	- [文件真实 MIME 检测](#文件真实MIME检测)
+	- [strings.Builder 字符串清洗](#stringsBuilder字符串清洗)
+	- [os.MkdirAll 递归创建目录](#osMkdirAll递归创建目录)
 - [工程表](#工程表)
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
@@ -1836,6 +1839,188 @@ os.WriteFile("./upload/"+filename, decoded, 0644)
 ```
 
 常见错误：前端传普通 `https://xxx.jpg` 链接会因为没有 `data:` 前缀报错；残缺 Base64 缺少逗号会导致 `commaIdx = -1`；如果传 `data:text/plain`，当前逻辑会默认当成 `jpg`，业务严格时应额外校验 `meta` 必须包含图片 MIME 类型。
+
+
+***
+<br/><br/><br/>
+> <h3 id="文件真实MIME检测">文件真实 MIME 检测</h3>
+
+文件上传不能只相信后缀名，推荐同时校验**后缀对应的预期 MIME**和**二进制内容识别出的真实 MIME**，防止用户把非法文件改后缀伪装成图片上传。
+
+```go
+contentType := http.DetectContentType(data)
+expected := getContentType(ext)
+
+// 截取真实 MIME 前缀，去掉 ; charset=xxx 部分
+realMime, _, _ := strings.Cut(contentType, ";")
+if realMime != expected {
+    return errors.New("文件后缀与实际文件类型不匹配，禁止上传")
+}
+```
+
+`http.DetectContentType(data)` 是 `net/http` 标准库方法，会读取前 `512` 字节，根据文件魔数判断真实类型，而不是根据后缀猜测。
+
+常见文件头：
+
+| 文件类型 | 文件头特征 | MIME |
+|----------|------------|------|
+| JPG | `FFD8FF` | `image/jpeg` |
+| PNG | `89504E47` | `image/png` |
+| WebP | `RIFF` | `image/webp` |
+
+返回值示例：
+
+```text
+image/jpeg; charset=utf-8
+image/png; charset=utf-8
+application/octet-stream
+```
+
+对比前要先用 `strings.Cut(contentType, ";")` 去掉 `; charset=xxx`，否则 `image/png; charset=utf-8` 和 `image/png` 会被误判为不相等。
+
+---
+<br/>
+
+## 后缀映射 MIME
+
+`getContentType(ext)` 是项目自定义工具函数，根据清洗后的小写无点后缀返回预期 MIME：
+
+```go
+func getContentType(ext string) string {
+    switch ext {
+    case "jpg", "jpeg":
+        return "image/jpeg"
+    case "png":
+        return "image/png"
+    case "webp":
+        return "image/webp"
+    default:
+        return "application/octet-stream"
+    }
+}
+```
+
+`jpg` 和 `jpeg` 是同一种图片格式，对应同一个 MIME：
+
+```go
+const (
+    ImageTypeJPG  = "jpg"
+    ImageTypeJPEG = "jpeg"
+    ImageTypePNG  = "png"
+    ImageTypeWebP = "webp"
+)
+
+var mime string
+if ext == ImageTypeJPG || ext == ImageTypeJPEG {
+    mime = "image/jpeg"
+} else if ext == ImageTypePNG {
+    mime = "image/png"
+}
+```
+
+完整业务流程：清洗传入后缀 `ext`，拿到预期 MIME；读取文件二进制，用 `http.DetectContentType` 识别真实 MIME；真实 MIME 和预期 MIME 不一致时拦截上传；最后对 `jpg/jpeg` 这类等价后缀做统一处理。
+
+
+***
+<br/><br/><br/>
+> <h3 id="stringsBuilder字符串清洗">strings.Builder 字符串清洗</h3>
+
+`strings.Builder` 是 Go 官方推荐的高性能字符串拼接工具，适合在循环中逐字符构造新字符串。相比 `s += string(r)`，它复用底层缓冲区，能减少反复分配和拷贝。
+
+```go
+func filterLowerOnly(value string) string {
+    var builder strings.Builder
+    builder.Grow(len(value))
+
+    for _, r := range value {
+        switch {
+        case r >= 'a' && r <= 'z':
+            builder.WriteRune(r)
+        // 其他字符全部忽略，不写入
+        default:
+            continue
+        }
+    }
+
+    return builder.String()
+}
+```
+
+逐段含义：
+
+| 代码 | 作用 |
+|------|------|
+| `var builder strings.Builder` | 创建字符串构造器 |
+| `builder.Grow(len(value))` | 按原始字符串字节长度预分配容量，减少扩容 |
+| `for _, r := range value` | 按 Unicode 字符 `rune` 遍历字符串 |
+| `switch {}` | 无表达式 `switch`，等价于多段 `if/else if` 条件判断 |
+| `builder.WriteRune(r)` | 把当前字符写入 Builder |
+
+示例：输入 `User_Image/123.png`，如果只保留小写英文字母，结果是 `sermagepng`；大写字母、下划线、斜杠、数字、点号都会被过滤。
+
+这个模式常用于 `sanitizePathPart` 之类的路径清洗函数：只保留允许字符，过滤中文、符号、斜杠、空格等非法路径片段，降低路径穿越和非法文件名风险。
+
+注意：`len(value)` 是字节长度，不是字符数量；作为 `Grow` 的容量预估通常没问题，因为最终字符串不会比原始字节更长。
+
+
+***
+<br/><br/><br/>
+> <h3 id="osMkdirAll递归创建目录">os.MkdirAll 递归创建目录</h3>
+
+`os.MkdirAll(dir, 0755)` 用于递归创建多级目录：不存在的父目录会一并创建，目录已存在时不会报错，适合上传文件按模块、日期分目录存储的场景。
+
+```go
+func MkdirAll(path string, perm fs.FileMode) error
+```
+
+示例：
+
+```go
+saveDir := fmt.Sprintf("./upload/%s/%s", moduleName, timeStr)
+if err := os.MkdirAll(saveDir, 0755); err != nil {
+    return nil, fmt.Errorf("创建存储目录失败: %w", err)
+}
+```
+
+如果目标路径是 `./upload/user/20260704`，即使 `upload`、`user` 都不存在，`MkdirAll` 也会一次性创建完整目录链。`os.Mkdir` 只能创建最后一级目录，父目录不存在会直接失败。
+
+---
+<br/>
+
+## 0755 目录权限
+
+`0755` 是八进制权限，拆成三段：所有者、同组用户、其他用户。
+
+| 数字 | 权限 | 含义 |
+|------|------|------|
+| `4` | `r` | 读 |
+| `2` | `w` | 写 |
+| `1` | `x` | 执行；对目录表示可进入 |
+
+`0755` 表示：
+
+| 对象 | 权限 | 说明 |
+|------|------|------|
+| 所有者 | `7 = 4+2+1` | 可读、可写、可进入 |
+| 同组用户 | `5 = 4+1` | 可读、可进入，不可修改 |
+| 其他用户 | `5 = 4+1` | 可读、可进入，不可修改 |
+
+目录的 `x` 权限表示能否进入目录；只有 `r` 没有 `x`，即使能看到目录名，也无法正常访问目录内容。
+
+---
+<br/>
+
+## 和 os.Mkdir 的区别
+
+```go
+// 递归创建多级目录，推荐上传存储场景使用
+err := os.MkdirAll("./upload/avatar", 0755)
+
+// 只能创建最后一级，父目录不存在会报错
+err := os.Mkdir("./upload/avatar", 0755)
+```
+
+注意点：Go 中 `0755` 前面的 `0` 不能省略，`0755` 表示八进制；直接写 `755` 会被当成十进制，权限含义完全不同。Windows 基本忽略 `perm` 参数；如果目录只允许程序自己读写，可用 `0700`。
 
 
 <br/><br/><br/>
