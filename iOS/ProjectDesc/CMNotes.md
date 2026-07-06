@@ -1,5 +1,6 @@
 > <h1 id= ""></h1>
 - [**Swift高级用法**](#Swift高级用法)
+	- [合并两个数组并去重](#合并两个数组并去重) 
 	- [字符串中提取数字](#字符串中提取数字)
 	- [状态机枚举使用](#状态机枚举使用)
 	- [Swift关于OC方法名映射](#Swift关于OC方法名映射)
@@ -76,6 +77,73 @@
 <br/>
 
 > <h1 id= "Swift高级用法">Swift高级用法</h1>
+
+
+<br/><br/>
+># <h3 id="合并两个数组并去重">合并两个数组并去重</h3>
+
+# 代码逐行拆解
+## 函数作用
+接收两个枚举数组 `oldTypes`、`newTypes`，**合并两个数组并去重，保留第一次出现的顺序**，返回新数组。
+
+### 1. 入参
+- `oldTypes: [AKDiscoveryType]`：旧的类型数组
+- `newTypes: [AKDiscoveryType]`：新的类型数组
+
+### 2. 核心逻辑
+```swift
+var result: [AKDiscoveryType] = []
+// 循环遍历 oldTypes + newTypes 拼接后的全部元素
+for type in oldTypes + newTypes where result.contains(type) == false {
+    // 只有result里不存在当前type，才添加进去
+    result.append(type)
+}
+```
+执行流程：
+1. 先遍历 `oldTypes` 里每一项，不存在就加入 result；
+2. 再接着遍历 `newTypes` 每一项；
+3. 如果该项已经在 result（旧数组里存在过），跳过；不存在则追加到末尾。
+
+### 3. 行为举例
+
+```swift
+// 假设枚举值：A、B、C
+let old = [A, B]
+let new = [B, C]
+// old + new = [A,B,B,C]
+// 循环处理：
+A → result无 → 加入 [A]
+B → result无 → 加入 [A,B]
+B → result已有 → 跳过
+C → result无 → 加入 [A,B,C]
+// 返回 [A,B,C]
+```
+
+## 关键特性
+1. **合并顺序优先旧数组在前，新数组在后**；
+2. **自动去重**，重复元素只保留第一次出现的；
+3. `where result.contains(type) == false` 等价简写 `where !result.contains(type)`；
+4. 私有方法 `private func`，仅当前类内部可调用。
+
+## 缺点说明
+`result.contains(type)` 是数组线性查找，数据量大时性能差；
+如果 `AKDiscoveryType` 遵循 `Hashable`，更高效写法：
+
+```swift
+func mergedDiscoveryTypes(_ oldTypes: [AKDiscoveryType], _ newTypes: [AKDiscoveryType]) -> [AKDiscoveryType] {
+    var set = Set<AKDiscoveryType>()
+    var result = [AKDiscoveryType]()
+    for item in oldTypes + newTypes {
+        if set.insert(item).inserted {
+            result.append(item)
+        }
+    }
+    return result
+}
+```
+
+## 一句话总结
+把旧数组和新数组拼在一起，从头遍历，只保留不重复元素，旧数组内容在前、新独有的元素追加在后，返回去重后的完整数组。
 
 
 <br/><br/>
