@@ -20,6 +20,14 @@
 	- [json.RawMessage 延迟解析](#jsonRawMessage延迟解析)
 	- [Mac Go 环境升级与重新配置](#MacGo环境升级与重新配置)
 	- [任务生命周期控制](#任务生命周期控制)
+	- [go-redis 渐进式遍历 Scan](#go-redis渐进式遍历Scan)
+	- [在线高 QPS 业务不要依赖 Redis Scan](#在线高QPS业务不要依赖RedisScan)
+	- [Scan 通过 .Result 获取结果](#Scan通过-Result获取结果)
+	- [Redis ZSET 与 ZREM](#RedisZSET与ZREM)
+	- [视频流式读取 io.LimitReader + ReadAll](#视频流式读取ioLimitReaderReadAll)
+	- [千万级视频业务标准架构](#千万级视频业务标准架构)
+	- [INSERT ... ON DUPLICATE KEY UPDATE](#INSERTONDUPLICATEKEYUPDATE)
+	- [客户端时间统一解析为 UTC](#客户端时间统一解析为UTC)
 - [工程表](#工程表)
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
@@ -2515,6 +2523,956 @@ ctx, cancel := context.WithCancel(parent)
 ## 一句话总结
 
 > 在 Go 中启动一个后台 syncer，通过 `context.WithoutCancel` 将其从请求生命周期中解耦，但仍保留 trace / value 信息——是 Go 1.21+ 在"解耦后台任务 + 保留链路信息"场景下的推荐写法。
+
+<br/><br/><br/>
+
+***
+<br/><br/><br/>
+> <h3 id="go-redis渐进式遍历Scan">go-redis 渐进式遍历 Scan</h3>
+
+`go-redis` 的 `client.Scan(...)` 是 Redis `SCAN` 命令的 Go 封装，**通过游标 + 渐进扫描遍历 Key，避免 `KEYS *` 阻塞 Redis 主线程**，是亿级 Key 数据下唯一推荐的遍历方式。
+
+```go
+func (c cmdable) Scan(
+    ctx context.Context,
+    cursor uint64,
+    match string,
+    count int64,
+) *ScanCmd
+```
+
+> 常见误解：`Scan = 遍历 Redis 所有 Key`。其实它对应的是 `SCAN`，设计目标是**不阻塞 Redis 的情况下渐进式遍历**。
+
+---
+
+## 为什么需要 Scan
+
+`KEYS *` 会扫描全部 Key 并一次性返回，Redis 单线程一直工作，其它命令全部等待——生产环境几乎禁止。`SCAN` 不阻塞、每次扫描一点、可暂停可继续，是大厂标准方案。
+
+---
+
+## cursor 是什么
+
+`cursor` **不是"第几页"**，而是 Redis 内部遍历 Hash Table 的游标位置。每次 `SCAN <cursor>` 由 Redis 自身算出下一次游标，`cursor == 0` 表示扫描结束。
+
+```text
+SCAN 0   → cursor: 18, keys: A C
+SCAN 18  → cursor: 95, keys: D E
+SCAN 95  → cursor: 0   → 结束
+```
+
+---
+
+## match / count 参数
+
+- `match`：模式过滤（`user:*` 只返回匹配 Key），但 Redis 仍需遍历整个哈希表，仅在返回时过滤，不能理解为索引查询。
+- `count`：**Hint（建议值）**，不保证返回固定数量。`count=100` 可能返回 `78`、`132` 甚至 `3`，**千万不要用 `len(keys) == count` 判断结束**。
+
+---
+
+## 返回值与标准写法
+
+`Scan()` 返回的是 `*ScanCmd` 命令对象，真正的数据通过 `.Result()` 取出。结束条件：**`nextCursor == 0`**。
+
+```go
+var cursor uint64
+for {
+    keys, nextCursor, err := client.Scan(
+        ctx, cursor, "user:*", 100,
+    ).Result()
+    if err != nil {
+        return err
+    }
+    for _, key := range keys {
+        // 处理
+    }
+    cursor = nextCursor
+    if cursor == 0 {
+        break
+    }
+}
+```
+
+---
+
+## 为什么不会阻塞 Redis
+
+每次只扫描一小部分 Hash Bucket，执行时间通常几十微秒到几毫秒，其它客户端的 `GET/SET/DEL/INCR` 几乎不受影响：
+
+```text
+Bucket1 → 返回
+Bucket2 → 返回
+Bucket3 → 返回
+```
+
+---
+
+## Scan 的关键特性
+
+1. **可能返回重复 Key**：扫描期间可能发生 rehash 或 Key 被修改，业务要求每个 Key 只处理一次时需客户端去重。
+2. **不保证遍历期间数据一致性**：新增 Key 可能扫到也可能扫不到，已删除 Key 同理。`SCAN` 的目标是**最终遍历**，不是一致性快照。
+3. **大厂用法**：`SCAN` 用于**后台运维、缓存清理、数据迁移、灰度删除**，**不会用于在线业务查询**。
+
+去重示例：
+
+```go
+seen := make(map[string]struct{})
+for _, key := range keys {
+    if _, ok := seen[key]; ok {
+        continue
+    }
+    seen[key] = struct{}{}
+    // process
+}
+```
+
+---
+
+## 一句话总结
+
+> `Scan()` 是 Redis `SCAN` 命令的 Go 封装；`cursor` 是游标不是页码；`count` 是 Hint 不保证数量；结束标志是 `cursor == 0`；结果可能重复，不是一致性快照；只能用于后台任务，不能用于在线高 QPS 业务。
+
+***
+<br/><br/><br/>
+> <h2 id="在线高QPS业务不要依赖RedisScan">在线高 QPS 业务不要依赖 Redis Scan</h2>
+
+**核心原则**：Redis 不是 MySQL，**不应该靠"搜索"找数据**，而应通过 Key 设计 + 数据结构设计让数据可以 `O(1)` 或 `O(logN)` 获取。
+
+```text
+错误：我有什么数据？→ SCAN 找
+正确：我需要什么数据？→ 提前维护索引 Key → 直接 GET/ZSET/HGET
+```
+
+---
+
+## 错误方案：线上请求 Scan
+
+需求是"获取某用户最近上传的视频"，但 Redis 只存 `video:10001`、`video:10002`...，然后：
+
+```go
+keys, _, _ := redis.Scan(ctx, 0, "video:*", 100)
+for _, k := range keys {
+    if video.UserID == uid { /* ... */ }
+}
+```
+
+假设 Redis 有 10 亿 video Key，目标用户 `uid=888` 只有 20 个视频，但需要扫描 10 亿，复杂度 `O(N)`，并发一高 Redis CPU 直接爆炸。
+
+---
+
+## 正确方案：业务索引
+
+设计思路：**数据实体 + 索引结构**，类似 MySQL `video` 表 + `index(user_id)`，Redis 自己维护索引。
+
+### 案例1：用户视频列表
+
+```text
+视频详情：
+  Key：   video:{video_id}
+  Value：Hash { id, user_id, title, status, created_at }
+
+用户视频索引（Sorted Set）：
+  Key：   user:{user_id}:videos
+  Score： 发布时间
+  Member：video_id
+```
+
+查询流程 `GET /users/888/videos`：
+
+```redis
+ZREVRANGE user:888:videos 0 19    # 取最新 20 个 video_id
+MGET video:10001 video:10002 ...  # 批量取详情
+```
+
+复杂度 `O(logN + M)`，没有搜索、没有遍历。
+
+### 案例2：预约发布任务
+
+```text
+Key：   video:scheduled:queue
+Score： 发布时间
+Member：submission:10001
+```
+
+Worker 每秒执行：
+
+```redis
+ZRANGEBYSCORE video:scheduled:queue 0 <当前时间> LIMIT 0 100
+```
+
+发布成功后 `ZREM video:scheduled:queue submission:10001`，避免重复消费。
+
+### 案例3：用户在线状态
+
+```text
+Key： online:users（Set）
+上线：SADD online:users 10001
+下线：SREM online:users 10001
+查询：SCARD online:users
+```
+
+### 案例4：点赞数量
+
+```text
+Key：   video:{id}:likes（String）
+增加：  INCR video:10001:likes
+读取：  GET video:10001:likes
+```
+
+复杂度 `O(1)`。
+
+### 案例5：排行榜
+
+```text
+Key：   video:hot（ZSET，score=热度）
+查询：  ZREVRANGE video:hot 0 99   # Top100
+```
+
+---
+
+## Go 代码示例
+
+添加视频（Pipeline 一次写实体 + 索引）：
+
+```go
+func AddUserVideo(
+    ctx context.Context,
+    uid int64, videoID int64, publishTime int64,
+) error {
+    pipe := redis.TxPipeline(ctx)
+    pipe.HSet(ctx, fmt.Sprintf("video:%d", videoID), map[string]interface{}{
+        "user_id": uid, "status": "published",
+    })
+    pipe.ZAdd(ctx, fmt.Sprintf("user:%d:videos", uid), redis.Z{
+        Score:  float64(publishTime),
+        Member: videoID,
+    })
+    _, err := pipe.Exec(ctx)
+    return err
+}
+```
+
+查询：
+
+```go
+func GetUserVideos(ctx context.Context, uid int64) {
+    ids, _ := redis.ZRevRange(
+        ctx, fmt.Sprintf("user:%d:videos", uid), 0, 19,
+    )
+    // pipeline MGET
+}
+```
+
+---
+
+## Scan 使用场景速查
+
+| 场景 | Scan |
+|------|------|
+| 线上接口查询 | ❌ |
+| 用户列表/视频列表查询 | ❌ |
+| 排行榜 | ❌ |
+| 定时清理缓存 | ✅ |
+| 迁移 Redis 数据 | ✅ |
+| 统计 Key | ✅ |
+| 后台运维 | ✅ |
+
+推荐数据建模：
+
+```text
+MySQL  → 数据真相
+Redis  → Entity Cache
+         + List Index
+         + Rank Index
+         + Delay Queue
+```
+
+***
+<br/><br/><br/>
+> <h2 id="Scan通过-Result获取结果">Scan 通过 .Result 获取结果</h2>
+
+`go-redis` API 风格高度统一：**`Scan()` 返回 `*ScanCmd` 命令对象，真正数据通过 `.Result()` 取出**。`Result()` 只是把 `cmd` 内部的 `page/cursor/err` 返回出来，**不会再访问 Redis**。
+
+```go
+type ScanCmd struct {
+    baseCmd
+    page   []string
+    cursor uint64
+}
+```
+
+```go
+func (cmd *ScanCmd) Result() ([]string, uint64, error) {
+    return cmd.page, cmd.cursor, cmd.err
+}
+```
+
+---
+
+## 调用流程
+
+```text
+client.Scan()
+    → 创建 ScanCmd
+    → 发送 SCAN 0 MATCH user:* COUNT 100
+    → Redis 返回 cursor + keys
+    → 解析 RESP 写入 ScanCmd
+    → 返回 ScanCmd
+Result()
+    → 返回 keys, cursor, err（不再访问 Redis）
+```
+
+---
+
+## 为什么不直接返回三值
+
+为了和 go-redis 整体 API 保持一致——`Get → *StringCmd`、`Set → *StatusCmd`、`Incr → *IntCmd`、`HGetAll → *MapStringStringCmd`，全部都是"先取命令对象，再 `.Result()`"的模式。
+
+**`ScanCmd` 没有 `Val()`** 是因为它有两个主要返回值（`keys` + `cursor`），无法用单个 `Val()` 表示。
+
+---
+
+## 其它取值方法
+
+```go
+cmd := client.Get(ctx, "name")
+if err := cmd.Err(); err != nil { /* 只关心错误 */ }
+name, err := cmd.Result()
+
+cmd := client.Incr(ctx, "count")
+n := cmd.Val()  // IntCmd 提供 Val()，直接拿值
+```
+
+---
+
+## 工程意义
+
+- **统一 API**：所有命令都返回对象 + `.Result()`，调用方式一致。
+- **可扩展**：以后增加耗时、原始响应、重试次数等字段，无需修改函数签名。
+- **便于 Pipeline / 事务**：先收集命令对象，统一 `Exec` 后再分别 `.Result()`。
+
+Pipeline 延迟执行示例：
+
+```go
+pipe := rdb.Pipeline()
+getCmd  := pipe.Get(ctx, "user:1")
+scanCmd := pipe.Scan(ctx, 0, "user:*", 100)
+_, err := pipe.Exec(ctx)        // 统一发送
+name, err  := getCmd.Result()   // 分别取值
+keys, cur, err := scanCmd.Result()
+```
+
+如果 `Scan()` 一开始就返回 `([]string, uint64, error)`，Pipeline 的延迟执行模式无法实现。
+
+***
+<br/><br/><br/>
+> <h2 id="RedisZSET与ZREM">Redis ZSET 与 ZREM</h2>
+
+`ZSET`（Sorted Set）= 有序集合，每个 member 带一个 score 用于排序；`ZREM` = 删除 ZSET 中的指定 member。是排行榜、延迟队列、Feed 流的核心结构。
+
+```redis
+ZADD key score member
+ZREM key member
+```
+
+---
+
+## 与 Set 的区别
+
+| 类型 | 特点 | 典型用途 |
+|------|------|----------|
+| Set | 无序，去重 | 标签、去重、在线状态 |
+| ZSET | 按 score 排序，去重 | 排行榜、延迟队列、时间排序 |
+
+```redis
+SADD users 1001 1002 1003            # Set，无顺序
+ZADD users 100 1001 90 1002 80 1003  # ZSET，按 score 排序
+```
+
+score 可以是任意 double，member 是去重的。
+
+---
+
+## 核心概念
+
+- **member**：排序的对象，如 `video:10001`、`submission:10001`。
+- **score**：排序依据，如发布时间 `1782907200`、热度 `1000`。
+
+```redis
+ZADD video:hot 1000 video:10001
+```
+
+---
+
+## 视频系统典型应用
+
+**热门视频排行**：
+
+```redis
+ZADD video:hot 1200 video:3 999 video:1 800 video:2
+ZREVRANGE video:hot 0 99   # Top100
+```
+
+**预约发布**（按时间排序的任务队列）：
+
+```redis
+ZADD video:scheduled 1783684800 submission:10001
+```
+
+Worker 每秒取到期任务：
+
+```redis
+ZRANGEBYSCORE video:scheduled 0 <now> LIMIT 0 100
+```
+
+发布成功后**必须 `ZREM`**，否则下一秒会再次被消费，导致重复发布 / 重复发通知 / 重复写库。
+
+完整流程：
+
+```text
+Redis ZSET → 到期任务 → 发布服务 → MySQL 更新 status=published → ZREM 删除任务
+```
+
+---
+
+## Go 用法
+
+```go
+// 添加任务
+err := rdb.ZAdd(ctx, "video:scheduled", redis.Z{
+    Score:  float64(publishTime.Unix()),
+    Member: submissionID,
+}).Err()
+
+// 取到期任务
+tasks, err := rdb.ZRangeByScore(ctx, "video:scheduled", &redis.ZRangeBy{
+    Min:   "0",
+    Max:   strconv.FormatInt(time.Now().Unix(), 10),
+    Count: 100,
+}).Result()
+
+// 删除任务
+rdb.ZRem(ctx, "video:scheduled", submissionID)
+```
+
+---
+
+## 底层为什么快
+
+```text
+Hash Table   → member -> score，O(1) 查找
+SkipList     → 按 score 排序，O(logN) 范围查询
+```
+
+| 操作 | 复杂度 |
+|------|--------|
+| `ZADD` | `O(logN)` |
+| `ZREM` | `O(logN)` |
+| 范围查询 | `O(logN + M)` |
+
+---
+
+## 视频系统 Redis 建模推荐
+
+```text
+video:{id}            Hash     视频详情
+user:{uid}:videos     ZSET     用户视频列表（score=create_time）
+video:hot             ZSET     热门视频（score=hot_score）
+video:scheduled       ZSET     预约发布（score=publish_timestamp）
+video:{id}:likes      String   点赞数
+```
+
+**ZSET 是 Redis 的"排序索引"**，ZREM 是删除排序索引中的元素；大厂延迟任务系统最常见的 Redis 建模方式。
+
+***
+<br/><br/><br/>
+> <h1 id="视频流式读取ioLimitReaderReadAll">视频流式读取 io.LimitReader + ReadAll</h1>
+
+```go
+limited := io.LimitReader(part, maxMultipartHeaderBytes+1)
+data, err := io.ReadAll(limited)
+```
+
+这是 Go 标准库中**受限流读取（Limited Stream Read）**的经典模式，目的不是提速，而是**限制内存占用、防止恶意输入导致 OOM，并利用 `+1` 字节检测数据是否超过允许上限**。
+
+---
+
+## 整体执行流程
+
+`part`（`multipart.Part`）本质是 `io.Reader`——不是整个文件，而是**一个可以不断 `Read()` 的数据流**：
+
+```text
+网络 → TCP → HTTP → multipart → part → Read()
+```
+
+`io.LimitReader(part, n)` 返回的 `limited` 本身**不读任何数据**，只是包装了一层 `*LimitedReader{R: part, N: n}`，在每次 `Read()` 时扣减 `N`，达到上限返回 `EOF`。
+
+```go
+type LimitedReader struct {
+    R Reader
+    N int64
+}
+```
+
+`Read()` 行为（简化）：
+
+```go
+func (l *LimitedReader) Read(p []byte) (int, error) {
+    if l.N <= 0 {
+        return 0, EOF
+    }
+    if len(p) > l.N {
+        p = p[:l.N]
+    }
+    n, err := l.R.Read(p)
+    l.N -= int64(n)
+    return n, err
+}
+```
+
+---
+
+## 为什么是 `maxMultipartHeaderBytes + 1`
+
+这是 Go 标准库非常经典的技巧。常见后续判断是：
+
+```go
+if len(data) > maxMultipartHeaderBytes {
+    return ErrTooLarge
+}
+```
+
+- 用户上传 `8191` 字节 → `ReadAll` 读 `8191`，不超限；
+- 用户上传 `8192` 字节 → 读 `8192`，不超限；
+- 用户上传 `9000` 字节 → 读到 `8193`（`LimitReader` 多读 1 字节），`len(data) > 8192` 成立，立即知道"原始数据至少超过限制"。
+
+**`+1` 不是为了多读一个字节，而是为了准确判断是否超限**。
+
+---
+
+## 为什么不能直接 `io.ReadAll(part)`
+
+攻击者上传 5GB Header 时 `ReadAll` 会一直 `malloc`，最终 OOM，服务器挂。生产代码几乎都是 `Reader → LimitReader → ReadAll` 模式。
+
+---
+
+## 执行示例
+
+`part` 内容 `ABCDE12345`，`Limit=6`：
+
+```text
+ReadAll 第1次：ABC     → N 剩 3
+ReadAll 第2次：DE1     → N 剩 0
+ReadAll 第3次：EOF     → 结束
+结果：ABCDE1
+```
+
+---
+
+## 总结
+
+这两行代码采用**受限流读取**模式，限制内存占用、防止恶意输入 OOM，并通过 `+1` 字节检测是否超限，是生产级 Go 服务处理上传数据时最常见、最推荐的写法。
+
+***
+<br/><br/><br/>
+> <h2 id="千万级视频业务标准架构">千万级视频业务标准架构</h2>
+
+视频、图片、GB 级文件**不能 `io.ReadAll`**——100 个用户同时上传 2GB 文件就要求 200GB 内存，服务器直接挂。**核心思想：文件不要进入内存，让它像水流一样从输入流直接写入目标**。
+
+```text
+HTTP Request
+   ↓
+Go Memory   ← 错误：[2GB byte slice] 内存暴涨 / GC 压力 / OOM
+```
+
+**正确方案**：
+
+```text
+客户端
+  | multipart/form-data
+  v
+Go HTTP Server
+  | io.Reader
+  v
+对象存储（S3/OSS/COS）
+
+内存只保存几十 KB buffer，不保存整个文件
+```
+
+---
+
+## 方案1：io.Copy 流式上传（基础版）
+
+```go
+func UploadVideo(w http.ResponseWriter, r *http.Request) {
+    file, header, err := r.FormFile("file")
+    if err != nil { return }
+    defer file.Close()
+
+    dst, err := os.Create("/data/video.mp4")
+    if err != nil { return }
+    defer dst.Close()
+
+    written, err := io.Copy(dst, file)
+    fmt.Println("uploaded bytes:", written)
+}
+```
+
+执行过程：
+
+```text
+file.Reader
+  → 读取 32KB → buffer → disk.Write
+  → 读取 32KB → buffer → disk.Write
+  → ...
+```
+
+必须加大小限制，防止 100GB 攻击：
+
+```go
+const MaxVideoSize = 5 << 30  // 5GB
+reader := io.LimitReader(file, MaxVideoSize+1)
+written, err := io.Copy(dst, reader)
+if written > MaxVideoSize {
+    return errors.New("file too large")
+}
+```
+
+---
+
+## 方案2：预签名上传（大厂标准）
+
+Go 服务**不中转文件**，只负责生成上传凭证，客户端直传对象存储：
+
+```go
+func CreateUploadURL(ctx context.Context, userID int64) (string, error) {
+    key := fmt.Sprintf("videos/%d/%s.mp4", userID, uuid.New())
+    url, err := s3Client.PresignPutObject(ctx, "video-bucket", key, time.Hour)
+    return url, err
+}
+```
+
+完整链路：
+
+```text
+1. App ──请求上传──> Go API
+2. Go  生成 upload token
+3. App <──返回上传地址──
+4. App ──直接上传──> S3
+5. S3 ──回调──> Go
+```
+
+---
+
+## 方案3：分片上传（GB 级视频）
+
+10GB 视频拆 100 个 100MB chunk 分别上传：
+
+```text
+10GB → 100MB × 100 chunk
+chunk1, chunk2, ..., chunk100
+```
+
+分片表设计：
+
+| upload_id | part | status |
+|-----------|------|--------|
+| abc | 1 | done |
+| abc | 2 | done |
+| abc | 3 | uploading |
+
+`part` 本身是 `io.Reader`，直接 `io.Copy()` 即可。
+
+接口设计：
+
+```text
+POST /video/upload/init     → 返回 upload_id
+PUT  /video/upload/part     → 上传单个分片
+POST /video/upload/complete → CompleteMultipartUpload
+```
+
+---
+
+## 表拆分设计
+
+```sql
+video_upload_tasks     -- 上传任务
+  id, user_id, upload_id, file_size, status, created_at
+
+video_upload_parts     -- 分片
+  upload_id, part_number, size, etag, status
+
+videos                 -- 视频
+  video_id, storage_key, duration, size, status
+```
+
+---
+
+## 完整生产链路
+
+```text
+用户
+  ↓
+Go API（控制面：鉴权、生成凭证、状态管理）
+  ↓
+客户端（数据面：分片上传）
+  ↓
+OSS/S3/COS
+  ↓
+Kafka 异步
+  ↓
+视频处理服务（转码 → 审核 → 发布）
+```
+
+---
+
+## 方案选型速查
+
+| 场景 | 方案 |
+|------|------|
+| 头像、小图片 | `io.Copy` |
+| 10MB 以内文件 | Go 代理上传 |
+| 100MB ~ 5GB 视频 | 对象存储直传 |
+| GB 级视频 | Multipart Upload |
+| 千万用户视频平台 | 预签名 URL + 分片上传 + Kafka |
+
+`io.Copy(dst, io.LimitReader(part, maxFileSize))` 属于**服务端接收流式上传的基础方案**；对标字节、阿里视频系统应升级为：**Go 只负责上传控制面，数据面由客户端直接进入 OSS/S3/COS，采用分片上传 + Kafka 异步处理**。
+
+***
+<br/><br/><br/>
+> <h1 id="INSERTONDUPLICATEKEYUPDATE">INSERT ... ON DUPLICATE KEY UPDATE</h1>
+
+MySQL **UPSERT 语法**：数据不存在则插入，存在则更新（依赖唯一键冲突）。在预约发布、用户配置、点赞、收藏、任务状态等场景中大量使用。
+
+```sql
+INSERT INTO video_scheduled_publish (
+    submission_id,
+    user_id,
+    scheduled_time,
+    status
+)
+VALUES (?, ?, ?, 'pending')
+ON DUPLICATE KEY UPDATE
+    scheduled_time = VALUES(scheduled_time),
+    status = 'pending',
+    updated_at = CURRENT_TIMESTAMP;
+```
+
+**必须依赖唯一键或主键**：
+
+```sql
+UNIQUE KEY uk_submission(submission_id)
+```
+
+---
+
+## INSERT 部分
+
+无冲突时正常插入：
+
+```text
+submission_id = 1001
+user_id       = 88
+scheduled_time = 2026-07-05 20:00:00
+status        = pending
+```
+
+---
+
+## ON DUPLICATE KEY UPDATE
+
+INSERT 触发唯一键冲突时**不报错**，转而执行 UPDATE：
+
+```text
+原来：1001 / 20:00
+新值：1001 / 21:00
+结果：1001 / 21:00（更新成功）
+```
+
+### `VALUES(column)` 含义
+
+代表"INSERT 这一行准备插入的值"，**不是数据库里的值**。例如：
+
+```sql
+VALUES(scheduled_time) → '2026-07-05 21:00'
+```
+
+> ⚠️ MySQL 8.0.20 之后 `VALUES(column)` 被标记为 deprecated，新项目推荐别名写法：
+>
+> ```sql
+> INSERT INTO table (...) VALUES (...) AS new
+> ON DUPLICATE KEY UPDATE scheduled_time = new.scheduled_time;
+> ```
+>
+> 目前很多项目仍在用 `VALUES()`，新项目建议关注目标 MySQL 版本。
+
+### `status = 'pending'` 与 `updated_at`
+
+- `status = 'pending'`：无论之前是什么状态，都强制进入等待发布状态。
+- `updated_at = CURRENT_TIMESTAMP`：更新最后修改时间，便于审计、排查、CDC、缓存刷新。
+
+---
+
+## 整体流程
+
+```text
+第一次：submission_id=1001 → 数据库没有 → INSERT 成功
+       → 1001 / pending / 20:00
+
+第二次：submission_id=1001 → 已存在
+       → INSERT 触发唯一键冲突
+       → ON DUPLICATE KEY UPDATE
+       → 1001 / pending / 21:00
+```
+
+---
+
+## 为什么不用先 SELECT 再 UPDATE
+
+`SELECT + INSERT/UPDATE` 两次 SQL，且存在**并发竞争（Race Condition）**——A、B 同一时刻都 `SELECT` 到不存在，都 `INSERT`，B 触发 `Duplicate Key`。
+
+`INSERT ... ON DUPLICATE KEY UPDATE` 由数据库**原子执行**，一次 SQL 完成，无竞争问题。
+
+---
+
+## 大厂为什么喜欢
+
+- **原子性**：插入或更新由数据库一次完成，避免并发数据不一致。
+- **减少数据库往返**：无需 `SELECT` 决定 `INSERT/UPDATE`。
+- **代码简洁**：业务层无需处理重复键异常和重试逻辑。
+- **适合高并发**：数据库唯一索引保证一致性，比业务层判断更可靠。
+
+亿级 / 千万级并发场景下通常会结合**分库分表、消息队列（Kafka）、批量写入**和合理唯一键设计，降低热点竞争和索引维护成本。
+
+***
+<br/><br/><br/>
+> <h1 id="客户端时间统一解析为UTC">客户端时间统一解析为 UTC</h1>
+
+核心作用：**把客户端不同格式的时间统一解析成 `time.Time`，并按规范处理时区**。本质是一个**多协议时间解析器（time parser / normalizer）**。
+
+```go
+type ClientTime struct {
+    Format   string
+    Value    string
+    Timezone string
+}
+
+func ParseClientTime(ct ClientTime) (time.Time, error)
+```
+
+支持 3 种格式：
+
+| Format | 含义 | 示例 |
+|--------|------|------|
+| `rfc3339` | 标准时间字符串 | `2026-01-01T10:00:00Z` |
+| `datetime-local` | 本地时间（无时区） | `2026-01-01T10:00` |
+| `unix` | 时间戳 | `1700000000` |
+
+---
+
+## RFC3339 格式
+
+```go
+case "rfc3339":
+    return time.Parse(time.RFC3339, ct.Value)
+```
+
+输入 `2026-01-01T10:00:00Z` / `2026-01-01T10:00:00+08:00` 都自带时区，Go 标准库直接解析。
+
+---
+
+## datetime-local（无时区）
+
+HTML `<input type="datetime-local">` 常见格式 `2026-01-01T10:00`，**没有时区信息**——无法知道是北京时间、UTC 还是东京时间。
+
+**强制时区**：
+
+```go
+case "datetime-local":
+    if ct.Timezone == "" {
+        return time.Time{}, errors.New("timezone required for datetime-local format")
+    }
+    loc, err := time.LoadLocation(ct.Timezone)
+    if err != nil {
+        return time.Time{}, fmt.Errorf("invalid timezone %q", ct.Timezone)
+    }
+    return time.ParseInLocation("2006-01-02T15:04", ct.Value, loc)
+```
+
+**`ParseInLocation` 意义**：用指定时区解析一个无时区的时间字符串，例如：
+
+```go
+ct.Value = "2026-01-01T10:00"
+ct.Timezone = "Asia/Shanghai"
+// → 2026-01-01 10:00:00 +0800 CST
+// → 2026-01-01 02:00:00 UTC
+```
+
+> ⚠️ 不能用 `time.Parse()`，它默认按 UTC 或系统规则处理，跨时区场景会出错。
+
+---
+
+## Unix 时间戳
+
+```go
+case "unix":
+    ts, err := strconv.ParseInt(ct.Value, 10, 64)
+    if err != nil {
+        return time.Time{}, err
+    }
+    return time.Unix(ts, 0).UTC(), nil
+```
+
+`1700000000 → 2023-11-14 02:13:20 UTC`。**只支持秒级时间戳**，毫秒（13 位）会被解析成错误时间。
+
+---
+
+## default 兜底
+
+```go
+default:
+    return time.Time{}, fmt.Errorf("unsupported time format: %q", ct.Format)
+```
+
+防止未知格式、拼写错误、新协议未适配。
+
+---
+
+## 整体流程
+
+```text
+ClientTime
+   ↓
+Format 判断
+   ├─ rfc3339        → time.Parse
+   ├─ datetime-local → ParseInLocation + timezone
+   └─ unix           → time.Unix + UTC
+   ↓
+time.Time（标准化）
+```
+
+---
+
+## 工程价值
+
+1. **统一时间入口**：所有时间最终变成 `time.Time`，避免 string 混乱、多格式共存、前后端不一致。
+2. **强制时区意识**：`datetime-local + timezone` 是防止"时间错位 bug"的关键防线。
+3. **支持多协议输入**：Web（datetime-local）、API（RFC3339）、SDK/DB（unix）。
+4. **防御式编程**：timezone 必填、unknown format 报错、unix parse 校验。
+
+---
+
+## 潜在优化点
+
+- **支持毫秒时间戳**：`if len(ct.Value) > 10 { /* ms */ }`。
+- **timezone cache**：`time.LoadLocation()` 有 IO + 文件读取，可用 `sync.Map` 缓存常用时区。
+- **format enum 化**：用 `type TimeFormat int` 替代 string，避免拼写错误。
+
+---
+
+## 一句话总结
+
+> 将客户端传入的多种时间表达方式（RFC3339 / 本地时间 / Unix 时间戳）统一解析为 `time.Time`，并通过强制时区处理避免跨区域时间错误——是 API / 跨端系统里非常常见的时间处理模型。
 
 <br/><br/><br/>
 
