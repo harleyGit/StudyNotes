@@ -7,6 +7,8 @@
 - [插入数据](#插入数据)
 - [查询数据](#查询数据)
 	- [查寻一条数据](#查寻一条数据)
+	- [database/sql Rows 与 Cursor](#databaseSQLRows与Cursor)
+	- [scanAdminUserRow 行扫描](#scanAdminUserRow行扫描)
 - [增加一条数据](#增加一条数据)
 - [修改数据](#修改数据)
 - [删除数据](#删除数据)
@@ -26,11 +28,9 @@
 
 ***
 <br/><br/><br/>
-
 > <h1 id="MySQL数据库编程">MySQL数据库编程</h1>
 
 <br/><br/><br/>
-
 > <h2 id="mysql使用前命令和配置"> mysql使用前命令和配置</h2>
 
 
@@ -674,6 +674,421 @@ return &u, nil
 | **适用场景** | 通过主键/唯一索引查单条记录（如用户登录、详情页） |
 
 这种模式是 Go 操作数据库的 **标准且高效** 的方式，既安全（防注入），又简洁（一行搞定查询+赋值）。
+
+***
+<br/><br/><br/>
+> <h2 id="databaseSQLRows与Cursor">database/sql Rows 与 Cursor</h2>
+
+
+`*sql.Rows` 不是已经全部加载到内存里的数组，而是 Go 对数据库 `Cursor`（游标）的封装：`rows.Next()` 推进游标，`rows.Scan()` 读取当前行，`rows.Err()` 检查遍历过程中的延迟错误，`rows.Close()` 释放游标占用的连接、网络、内存和数据库资源。
+
+```go
+rows, err := db.Query(query)
+if err != nil {
+    return err
+}
+defer rows.Close()
+
+for rows.Next() {
+    if err := rows.Scan(&id, &name); err != nil {
+        return err
+    }
+}
+
+return rows.Err()
+```
+
+核心链路：
+
+```text
+SQL
+  │
+  ▼
+数据库执行查询
+  │
+  ▼
+数据库创建 Cursor（游标）
+  │
+  ▼
+Go 的 *sql.Rows 持有这个 Cursor
+  │
+  ▼
+rows.Next() → Cursor 向下一行移动
+  │
+  ▼
+rows.Scan() → 读取 Cursor 当前指向的这一行
+  │
+  ▼
+rows.Close() → 关闭 Cursor，释放数据库连接和相关资源
+```
+
+---
+<br/>
+
+## rows.Next()
+
+`rows.Next()` 表示游标向下一行移动，返回 `true` 时才有当前行可供 `rows.Scan()` 读取；返回 `false` 可能是正常读完，也可能是遍历过程中发生了错误，最终要通过 `rows.Err()` 区分。
+
+例如数据库结果：
+
+| id | name |
+| -- | ---- |
+| 1  | Tom  |
+| 2  | Jack |
+| 3  | Lucy |
+
+游标推进过程：
+
+```text
+刚开始：
+      ↓
+未开始
+
+第一次 rows.Next()：
+      ↓
+第一行 Tom
+
+第二次 rows.Next()：
+Tom
+      ↓
+Jack
+
+第三次 rows.Next()：
+Tom
+Jack
+      ↓
+Lucy
+
+第四次 rows.Next()：
+Tom
+Jack
+Lucy
+
+↓
+结束，返回 false
+```
+
+所以 `rows.Scan(...)` 不需要指定第几行，因为 Cursor 已经记录了当前位置，`Scan` 读取的就是当前行。
+
+---
+<br/>
+
+## Cursor 不是错误
+
+`Cursor` 不是异常，而是数据库读取结果集时维护当前位置的对象。所谓 `Cursor 出错`，指的是读取过程中连接、网络或数据库状态异常，错误会被 `database/sql` 记录下来，遍历结束后从 `rows.Err()` 取出。
+
+常见场景：
+
+| 场景 | 表现 | rows.Err() |
+|------|------|------------|
+| 数据库连接断开 | `rows.Next()` 提前结束 | `connection reset` |
+| 网络断开 | Cursor 没读完 | `read tcp ...` |
+| 数据库重启 | Cursor 失效 | 返回对应数据库错误 |
+| 服务器超时 | 连接被关闭 | 返回超时或连接错误 |
+
+Go 官方 API 没有把 `Next()` 设计成 `(bool, error)`，而是使用固定模式：
+
+```go
+for rows.Next() {
+    rows.Scan(...)
+}
+
+if err := rows.Err(); err != nil {
+    return err
+}
+```
+
+项目中直接 `return rows.Err()`，就是遍历结束后统一返回 Cursor 读取过程中的错误。
+
+
+***
+<br/><br/><br/>
+> <h2 id="scanAdminUserRow行扫描">scanAdminUserRow 行扫描</h2>
+
+
+`scanAdminUserRow(rows, hasEmail)` 的作用是：**把 `rows` 当前指向的一行数据库记录扫描成 `map[string]interface{}`，供后续接口返回或列表组装使用**。
+
+```go
+func scanAdminUserRow(rows *sql.Rows, hasEmail bool) (map[string]interface{}, error) {
+    var id sql.NullString
+    var name string
+    var nickName string
+    var email sql.NullString
+    var mobile string
+    var status int
+
+    var err error
+    if hasEmail {
+        err = rows.Scan(&id, &name, &nickName, &email, &mobile, &status)
+    } else {
+        err = rows.Scan(&id, &name, &nickName, &mobile, &status)
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    item := map[string]interface{}{
+        "id":       id.String,
+        "name":     name,
+        "nickName": nickName,
+        "mobile":   mobile,
+        "status":   status,
+    }
+    if hasEmail {
+        item["email"] = email.String
+    }
+
+    return item, nil
+}
+```
+
+整体流程：
+
+```text
+数据库
+  │
+  │ Query()
+  ▼
+rows (*sql.Rows)
+  │
+  │ rows.Next()
+  ▼
+当前一行
+  │
+  │ rows.Scan(...)
+  ▼
+Go变量
+  │
+  │ 组装
+  ▼
+map[string]interface{}
+  │
+  ▼
+返回
+```
+
+---
+<br/>
+
+## 为什么传入 *sql.Rows
+
+调用方通常是：
+
+```go
+for rows.Next() {
+    item, err := scanAdminUserRow(rows, hasEmail)
+}
+```
+
+`rows.Next()` 已经把游标移动到当前行，`scanAdminUserRow(rows, ...)` 内部执行 `rows.Scan(...)` 时，读取的就是当前这一行。
+
+```text
+rows
+│
+├── 第一行
+├── 第二行
+├── 第三行
+└── ...
+
+rows.Next() 后：
+
+rows
+      ↓
+┌───────────────┐
+│ 第一行        │
+├───────────────┤
+│ 第二行        │
+├───────────────┤
+│ 第三行        │
+└───────────────┘
+```
+
+---
+<br/>
+
+## sql.NullString
+
+数据库字段可能是 `NULL` 时，不能直接扫描到普通 `string`，否则可能报错：
+
+```text
+converting NULL to string is unsupported
+```
+
+`sql.NullString` 用来同时保存字符串值和是否有效：
+
+```go
+type NullString struct {
+    String string
+    Valid  bool
+}
+```
+
+扫描结果示例：
+
+| 数据库值 | String | Valid |
+|----------|--------|-------|
+| `NULL` | `""` | `false` |
+| `10001` | `"10001"` | `true` |
+
+因此 `id`、`email` 使用 `sql.NullString`，是为了兼容数据库 `NULL`；`name`、`nickName`、`mobile` 等字段如果数据库约束为 `NOT NULL`，就可以直接使用普通 `string`。
+
+---
+<br/>
+
+## 为什么根据 hasEmail 分两种 Scan
+
+`rows.Scan()` 的参数数量必须和 `SELECT` 字段数量完全一致。
+
+有邮箱字段时：
+
+```sql
+SELECT
+user_id,
+name,
+nickname,
+email,
+mobile,
+status
+```
+
+对应：
+
+```go
+rows.Scan(&id, &name, &nickName, &email, &mobile, &status)
+```
+
+没有邮箱字段时：
+
+```sql
+SELECT
+user_id,
+name,
+nickname,
+mobile,
+status
+```
+
+对应：
+
+```go
+rows.Scan(&id, &name, &nickName, &mobile, &status)
+```
+
+如果 SQL 返回 2 个字段，却传入 3 个 Scan 目标变量，会报错：
+
+```text
+expected 2 destination arguments in Scan, not 3
+```
+
+---
+<br/>
+
+## 不要扫描 admin_user.id
+
+注释中的提醒：
+
+```go
+// SELECT 的第一个字段固定是 admin_user.user_id
+// 不要扫描 admin_user.id
+```
+
+意思是后台管理员表可能同时存在两个 ID：
+
+| id | user_id |
+| -- | ------- |
+| 1  | 10001   |
+
+`id` 是 `admin_user` 表自身的自增主键，`user_id` 才是业务身份字段。前端管理员选择、角色绑定、权限分配等场景应该使用 `user_id`，不能误用 `admin_user.id`。
+
+---
+<br/>
+
+## 返回 map 与 NULL 风险
+
+返回 `map[string]interface{}` 的好处是字段灵活，适合直接 JSON 序列化，也不需要额外定义结构体：
+
+```go
+json.NewEncoder(w).Encode(item)
+```
+
+但直接返回 `id.String`、`email.String` 会把数据库 `NULL` 和空字符串都变成 `""`，调用方无法区分：
+
+```json
+{
+    "id": ""
+}
+```
+
+如果业务需要区分 `NULL` 和空字符串，建议显式判断 `Valid`：
+
+```go
+result := map[string]interface{}{
+    "name":     name,
+    "nickName": nickName,
+    "mobile":   mobile,
+    "status":   status,
+}
+
+if id.Valid {
+    result["id"] = id.String
+} else {
+    result["id"] = nil
+}
+
+if hasEmail {
+    if email.Valid {
+        result["email"] = email.String
+    } else {
+        result["email"] = nil
+    }
+}
+
+return result, nil
+```
+
+长期维护的项目更推荐定义 `AdminUser` 结构体，能获得类型安全、IDE 自动补全和编译期检查；简单动态接口使用 `map[string]interface{}` 更快，但要明确字段含义和 `NULL` 处理策略。
+
+---
+<br/>
+
+## 函数执行流程
+
+```text
+rows.Next()
+      │
+      ▼
+当前游标指向一行
+      │
+      ▼
+rows.Scan(...)
+      │
+      ▼
+数据库字段
+      │
+      ├──── user_id ─────► sql.NullString(id)
+      ├──── name ────────► string(name)
+      ├──── nickname ────► string(nickName)
+      ├──── email ───────► sql.NullString(email)
+      ├──── mobile ──────► string(mobile)
+      └──── status ──────► int(status)
+      │
+      ▼
+读取变量中的值
+      │
+      ▼
+组装 map[string]interface{}
+      │
+      ▼
+返回给调用者
+      │
+      ▼
+appendAdmins()
+      │
+      ▼
+去重 → append 到 list → 返回接口响应
+```
+
+
 
 
 <br/><br/><br/>
