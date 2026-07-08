@@ -1,5 +1,8 @@
 > # go-redis
 - [go-redis安装](#go-redis安装)
+- [go-redis 渐进式遍历 Scan](#go-redis渐进式遍历Scan)
+- [在线高 QPS 业务不要依赖 Redis Scan](#在线高QPS业务不要依赖RedisScan)
+- [Scan 通过 .Result 获取结果](#Scan通过-Result获取结果)
 - [核心功能](#核心功能)
 	- [单机模式](#单机模式)	
 	- [集群模式](#集群模式)
@@ -13,6 +16,7 @@
 	- [Hash类型](#Hash类型) 
 	- [List类型](#List类型) 
 	- [Set类型](#Set类型) 
+		- [Redis ZSET 与 ZREM](#RedisZSET与ZREM)
 	- [SortedSet类型](#SortedSet类型)
 - [管道-Pipeline](#管道-Pipeline)
 - [事务-Transaction](#事务-Transaction)
@@ -50,6 +54,349 @@ go get github.com/redis/go-redis/v9
 # 或者安装特定版本
 go get github.com/redis/go-redis/v9@v9.0.5
 ```
+
+
+***
+<br/><br/><br/>
+> <h3 id="go-redis渐进式遍历Scan">go-redis 渐进式遍历 Scan</h3>
+
+`go-redis` 的 `client.Scan(...)` 是 Redis `SCAN` 命令的 Go 封装，**通过游标 + 渐进扫描遍历 Key，避免 `KEYS *` 阻塞 Redis 主线程**，是亿级 Key 数据下唯一推荐的遍历方式。
+
+```go
+func (c cmdable) Scan(
+    ctx context.Context,
+    cursor uint64,
+    match string,
+    count int64,
+) *ScanCmd
+```
+
+> 常见误解：`Scan = 遍历 Redis 所有 Key`。其实它对应的是 `SCAN`，设计目标是**不阻塞 Redis 的情况下渐进式遍历**。
+
+---
+
+## 为什么需要 Scan
+
+`KEYS *` 会扫描全部 Key 并一次性返回，Redis 单线程一直工作，其它命令全部等待——生产环境几乎禁止。`SCAN` 不阻塞、每次扫描一点、可暂停可继续，是大厂标准方案。
+
+---
+
+## cursor 是什么
+
+`cursor` **不是"第几页"**，而是 Redis 内部遍历 Hash Table 的游标位置。每次 `SCAN <cursor>` 由 Redis 自身算出下一次游标，`cursor == 0` 表示扫描结束。
+
+```text
+SCAN 0   → cursor: 18, keys: A C
+SCAN 18  → cursor: 95, keys: D E
+SCAN 95  → cursor: 0   → 结束
+```
+
+---
+
+## match / count 参数
+
+- `match`：模式过滤（`user:*` 只返回匹配 Key），但 Redis 仍需遍历整个哈希表，仅在返回时过滤，不能理解为索引查询。
+- `count`：**Hint（建议值）**，不保证返回固定数量。`count=100` 可能返回 `78`、`132` 甚至 `3`，**千万不要用 `len(keys) == count` 判断结束**。
+
+---
+
+## 返回值与标准写法
+
+`Scan()` 返回的是 `*ScanCmd` 命令对象，真正的数据通过 `.Result()` 取出。结束条件：**`nextCursor == 0`**。
+
+```go
+var cursor uint64
+for {
+    keys, nextCursor, err := client.Scan(
+        ctx, cursor, "user:*", 100,
+    ).Result()
+    if err != nil {
+        return err
+    }
+    for _, key := range keys {
+        // 处理
+    }
+    cursor = nextCursor
+    if cursor == 0 {
+        break
+    }
+}
+```
+
+---
+
+## 为什么不会阻塞 Redis
+
+每次只扫描一小部分 Hash Bucket，执行时间通常几十微秒到几毫秒，其它客户端的 `GET/SET/DEL/INCR` 几乎不受影响：
+
+```text
+Bucket1 → 返回
+Bucket2 → 返回
+Bucket3 → 返回
+```
+
+---
+
+## Scan 的关键特性
+
+1. **可能返回重复 Key**：扫描期间可能发生 rehash 或 Key 被修改，业务要求每个 Key 只处理一次时需客户端去重。
+2. **不保证遍历期间数据一致性**：新增 Key 可能扫到也可能扫不到，已删除 Key 同理。`SCAN` 的目标是**最终遍历**，不是一致性快照。
+3. **大厂用法**：`SCAN` 用于**后台运维、缓存清理、数据迁移、灰度删除**，**不会用于在线业务查询**。
+
+去重示例：
+
+```go
+seen := make(map[string]struct{})
+for _, key := range keys {
+    if _, ok := seen[key]; ok {
+        continue
+    }
+    seen[key] = struct{}{}
+    // process
+}
+```
+
+---
+
+## 一句话总结
+
+> `Scan()` 是 Redis `SCAN` 命令的 Go 封装；`cursor` 是游标不是页码；`count` 是 Hint 不保证数量；结束标志是 `cursor == 0`；结果可能重复，不是一致性快照；只能用于后台任务，不能用于在线高 QPS 业务。
+
+
+***
+<br/><br/><br/>
+> <h2 id="在线高QPS业务不要依赖RedisScan">在线高 QPS 业务不要依赖 Redis Scan</h2>
+
+**核心原则**：Redis 不是 MySQL，**不应该靠"搜索"找数据**，而应通过 Key 设计 + 数据结构设计让数据可以 `O(1)` 或 `O(logN)` 获取。
+
+```text
+错误：我有什么数据？→ SCAN 找
+正确：我需要什么数据？→ 提前维护索引 Key → 直接 GET/ZSET/HGET
+```
+
+---
+
+## 错误方案：线上请求 Scan
+
+需求是"获取某用户最近上传的视频"，但 Redis 只存 `video:10001`、`video:10002`...，然后：
+
+```go
+keys, _, _ := redis.Scan(ctx, 0, "video:*", 100)
+for _, k := range keys {
+    if video.UserID == uid { /* ... */ }
+}
+```
+
+假设 Redis 有 10 亿 video Key，目标用户 `uid=888` 只有 20 个视频，但需要扫描 10 亿，复杂度 `O(N)`，并发一高 Redis CPU 直接爆炸。
+
+---
+
+## 正确方案：业务索引
+
+设计思路：**数据实体 + 索引结构**，类似 MySQL `video` 表 + `index(user_id)`，Redis 自己维护索引。
+
+### 案例1：用户视频列表
+
+```text
+视频详情：
+  Key：   video:{video_id}
+  Value：Hash { id, user_id, title, status, created_at }
+
+用户视频索引（Sorted Set）：
+  Key：   user:{user_id}:videos
+  Score： 发布时间
+  Member：video_id
+```
+
+查询流程 `GET /users/888/videos`：
+
+```redis
+ZREVRANGE user:888:videos 0 19    # 取最新 20 个 video_id
+MGET video:10001 video:10002 ...  # 批量取详情
+```
+
+复杂度 `O(logN + M)`，没有搜索、没有遍历。
+
+### 案例2：预约发布任务
+
+```text
+Key：   video:scheduled:queue
+Score： 发布时间
+Member：submission:10001
+```
+
+Worker 每秒执行：
+
+```redis
+ZRANGEBYSCORE video:scheduled:queue 0 <当前时间> LIMIT 0 100
+```
+
+发布成功后 `ZREM video:scheduled:queue submission:10001`，避免重复消费。
+
+### 案例3：用户在线状态
+
+```text
+Key： online:users（Set）
+上线：SADD online:users 10001
+下线：SREM online:users 10001
+查询：SCARD online:users
+```
+
+### 案例4：点赞数量
+
+```text
+Key：   video:{id}:likes（String）
+增加：  INCR video:10001:likes
+读取：  GET video:10001:likes
+```
+
+复杂度 `O(1)`。
+
+### 案例5：排行榜
+
+```text
+Key：   video:hot（ZSET，score=热度）
+查询：  ZREVRANGE video:hot 0 99   # Top100
+```
+
+---
+
+## Go 代码示例
+
+添加视频（Pipeline 一次写实体 + 索引）：
+
+```go
+func AddUserVideo(
+    ctx context.Context,
+    uid int64, videoID int64, publishTime int64,
+) error {
+    pipe := redis.TxPipeline(ctx)
+    pipe.HSet(ctx, fmt.Sprintf("video:%d", videoID), map[string]interface{}{
+        "user_id": uid, "status": "published",
+    })
+    pipe.ZAdd(ctx, fmt.Sprintf("user:%d:videos", uid), redis.Z{
+        Score:  float64(publishTime),
+        Member: videoID,
+    })
+    _, err := pipe.Exec(ctx)
+    return err
+}
+```
+
+查询：
+
+```go
+func GetUserVideos(ctx context.Context, uid int64) {
+    ids, _ := redis.ZRevRange(
+        ctx, fmt.Sprintf("user:%d:videos", uid), 0, 19,
+    )
+    // pipeline MGET
+}
+```
+
+---
+
+## Scan 使用场景速查
+
+| 场景 | Scan |
+|------|------|
+| 线上接口查询 | ❌ |
+| 用户列表/视频列表查询 | ❌ |
+| 排行榜 | ❌ |
+| 定时清理缓存 | ✅ |
+| 迁移 Redis 数据 | ✅ |
+| 统计 Key | ✅ |
+| 后台运维 | ✅ |
+
+推荐数据建模：
+
+```text
+MySQL  → 数据真相
+Redis  → Entity Cache
+         + List Index
+         + Rank Index
+         + Delay Queue
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="Scan通过-Result获取结果">Scan 通过 .Result 获取结果</h2>
+
+`go-redis` API 风格高度统一：**`Scan()` 返回 `*ScanCmd` 命令对象，真正数据通过 `.Result()` 取出**。`Result()` 只是把 `cmd` 内部的 `page/cursor/err` 返回出来，**不会再访问 Redis**。
+
+```go
+type ScanCmd struct {
+    baseCmd
+    page   []string
+    cursor uint64
+}
+```
+
+```go
+func (cmd *ScanCmd) Result() ([]string, uint64, error) {
+    return cmd.page, cmd.cursor, cmd.err
+}
+```
+
+---
+
+## 调用流程
+
+```text
+client.Scan()
+    → 创建 ScanCmd
+    → 发送 SCAN 0 MATCH user:* COUNT 100
+    → Redis 返回 cursor + keys
+    → 解析 RESP 写入 ScanCmd
+    → 返回 ScanCmd
+Result()
+    → 返回 keys, cursor, err（不再访问 Redis）
+```
+
+---
+
+## 为什么不直接返回三值
+
+为了和 go-redis 整体 API 保持一致——`Get → *StringCmd`、`Set → *StatusCmd`、`Incr → *IntCmd`、`HGetAll → *MapStringStringCmd`，全部都是"先取命令对象，再 `.Result()`"的模式。
+
+**`ScanCmd` 没有 `Val()`** 是因为它有两个主要返回值（`keys` + `cursor`），无法用单个 `Val()` 表示。
+
+---
+
+## 其它取值方法
+
+```go
+cmd := client.Get(ctx, "name")
+if err := cmd.Err(); err != nil { /* 只关心错误 */ }
+name, err := cmd.Result()
+
+cmd := client.Incr(ctx, "count")
+n := cmd.Val()  // IntCmd 提供 Val()，直接拿值
+```
+
+---
+
+## 工程意义
+
+- **统一 API**：所有命令都返回对象 + `.Result()`，调用方式一致。
+- **可扩展**：以后增加耗时、原始响应、重试次数等字段，无需修改函数签名。
+- **便于 Pipeline / 事务**：先收集命令对象，统一 `Exec` 后再分别 `.Result()`。
+
+Pipeline 延迟执行示例：
+
+```go
+pipe := rdb.Pipeline()
+getCmd  := pipe.Get(ctx, "user:1")
+scanCmd := pipe.Scan(ctx, 0, "user:*", 100)
+_, err := pipe.Exec(ctx)        // 统一发送
+name, err  := getCmd.Result()   // 分别取值
+keys, cur, err := scanCmd.Result()
+```
+
+如果 `Scan()` 一开始就返回 `([]string, uint64, error)`，Pipeline 的延迟执行模式无法实现。
+
+
 
 <br/><br/><br/>
 
@@ -485,6 +832,128 @@ union := rdb.SUnion(ctx, "set1", "set2").Val()
 // 差集 SDIFF
 diff := rdb.SDiff(ctx, "set1", "set2").Val()
 ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="RedisZSET与ZREM">Redis ZSET 与 ZREM</h2>
+
+`ZSET`（Sorted Set）= 有序集合，每个 member 带一个 score 用于排序；`ZREM` = 删除 ZSET 中的指定 member。是排行榜、延迟队列、Feed 流的核心结构。
+
+```redis
+ZADD key score member
+ZREM key member
+```
+
+---
+
+## 与 Set 的区别
+
+| 类型 | 特点 | 典型用途 |
+|------|------|----------|
+| Set | 无序，去重 | 标签、去重、在线状态 |
+| ZSET | 按 score 排序，去重 | 排行榜、延迟队列、时间排序 |
+
+```redis
+SADD users 1001 1002 1003            # Set，无顺序
+ZADD users 100 1001 90 1002 80 1003  # ZSET，按 score 排序
+```
+
+score 可以是任意 double，member 是去重的。
+
+---
+
+## 核心概念
+
+- **member**：排序的对象，如 `video:10001`、`submission:10001`。
+- **score**：排序依据，如发布时间 `1782907200`、热度 `1000`。
+
+```redis
+ZADD video:hot 1000 video:10001
+```
+
+---
+
+## 视频系统典型应用
+
+**热门视频排行**：
+
+```redis
+ZADD video:hot 1200 video:3 999 video:1 800 video:2
+ZREVRANGE video:hot 0 99   # Top100
+```
+
+**预约发布**（按时间排序的任务队列）：
+
+```redis
+ZADD video:scheduled 1783684800 submission:10001
+```
+
+Worker 每秒取到期任务：
+
+```redis
+ZRANGEBYSCORE video:scheduled 0 <now> LIMIT 0 100
+```
+
+发布成功后**必须 `ZREM`**，否则下一秒会再次被消费，导致重复发布 / 重复发通知 / 重复写库。
+
+完整流程：
+
+```text
+Redis ZSET → 到期任务 → 发布服务 → MySQL 更新 status=published → ZREM 删除任务
+```
+
+---
+
+## Go 用法
+
+```go
+// 添加任务
+err := rdb.ZAdd(ctx, "video:scheduled", redis.Z{
+    Score:  float64(publishTime.Unix()),
+    Member: submissionID,
+}).Err()
+
+// 取到期任务
+tasks, err := rdb.ZRangeByScore(ctx, "video:scheduled", &redis.ZRangeBy{
+    Min:   "0",
+    Max:   strconv.FormatInt(time.Now().Unix(), 10),
+    Count: 100,
+}).Result()
+
+// 删除任务
+rdb.ZRem(ctx, "video:scheduled", submissionID)
+```
+
+---
+
+## 底层为什么快
+
+```text
+Hash Table   → member -> score，O(1) 查找
+SkipList     → 按 score 排序，O(logN) 范围查询
+```
+
+| 操作 | 复杂度 |
+|------|--------|
+| `ZADD` | `O(logN)` |
+| `ZREM` | `O(logN)` |
+| 范围查询 | `O(logN + M)` |
+
+---
+
+## 视频系统 Redis 建模推荐
+
+```text
+video:{id}            Hash     视频详情
+user:{uid}:videos     ZSET     用户视频列表（score=create_time）
+video:hot             ZSET     热门视频（score=hot_score）
+video:scheduled       ZSET     预约发布（score=publish_timestamp）
+video:{id}:likes      String   点赞数
+```
+
+**ZSET 是 Redis 的"排序索引"**，ZREM 是删除排序索引中的元素；大厂延迟任务系统最常见的 Redis 建模方式。
+
 
 ***
 <br/><br/><br/>

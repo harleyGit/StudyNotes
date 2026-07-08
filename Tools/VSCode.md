@@ -35,6 +35,7 @@
 	- [项目创建](#项目创建)
 - [**Go配置**](#Go配置)
 	- [Go环境配置](#Go环境配置)
+		- [Mac Go 环境升级与重新配置【对上述配置进行优化防止把GO环境写死掉】](#MacGo环境升级与重新配置)
 	- [VSCode配置](#VSCode配置)
 
 
@@ -1798,6 +1799,273 @@ source .zshrc
 ```
 
 
+***
+<br/><br/><br/>
+> <h3 id="MacGo环境升级与重新配置">Mac Go 环境升级与重新配置</h3>
+
+**核心问题**：Homebrew 升级 Go 后，旧配置中写死的版本化路径 `/opt/homebrew/Cellar/go/<版本>/libexec` 会失效，终端执行 `go version` 报：
+
+```text
+go: cannot find GOROOT directory: /opt/homebrew/Cellar/go/1.23.5/libexec
+```
+
+**解决思路**：不再手动写 `GOROOT` 与版本化 Cellar 路径，统一使用 Homebrew 稳定入口 `/opt/homebrew/bin/go`，升级后由 Homebrew 自动更新软链接。
+
+**当前推荐配置**（写入 `~/.bash_profile`）：
+
+```bash
+# Homebrew manages GOROOT via /opt/homebrew/bin/go; do not pin it to a versioned Cellar path.
+unset GOROOT
+
+export GOPATH=$HOME/HGFiles/GitHub/GoProject
+export GOBIN=$GOPATH/bin
+
+case ":$PATH:" in
+  *":/opt/homebrew/bin:"*) ;;
+  *) export PATH="/opt/homebrew/bin:$PATH" ;;
+esac
+
+case ":$PATH:" in
+  *":$GOBIN:"*) ;;
+  *) export PATH="$GOBIN:$PATH" ;;
+esac
+
+export GO111MODULE=auto
+export GOPROXY=https://proxy.golang.org,direct
+```
+
+`~/.zshrc` 中加载 `~/.bash_profile`：
+
+```bash
+if [ -f ~/.bash_profile ]; then
+  source ~/.bash_profile
+fi
+```
+
+**验证命令与结果**：
+
+```bash
+which go
+go version
+go env GOVERSION GOROOT GOPROXY
+```
+
+```text
+/opt/homebrew/bin/go
+go version go1.26.4 darwin/arm64
+go1.26.4
+/opt/homebrew/Cellar/go/1.26.4/libexec
+https://proxy.golang.org,direct
+```
+
+> 这里 `go env GOROOT` 显示版本化路径是正常的——这是 Go 自己根据当前安装位置算出来的，不是 shell 里写死的，升级后无需改动配置。
+
+---
+
+## 为什么不要写死 GOROOT
+
+错误做法：
+
+```bash
+export GOROOT=/opt/homebrew/Cellar/go/1.23.5/libexec
+```
+
+路径中带具体版本号，升级后旧目录会被清理，配置立即失效。正确做法是在 shell 里 `unset GOROOT`，让 `go` 命令通过 `/opt/homebrew/bin/go` 自动识别。Homebrew 会自动维护软链接：
+
+```text
+/opt/homebrew/bin/go -> ../Cellar/go/1.26.4/bin/go
+```
+
+升级到新版本后，Homebrew 会自动把软链接指向新版本目录，shell 配置不需要再改。
+
+---
+
+## 从零配置 Go 环境步骤
+
+**第一步：确认架构**
+
+```bash
+uname -m
+```
+
+输出 `arm64` 表示 Apple Silicon（M1/M2/M3/M4）；输出 `x86_64` 表示 Intel Mac。当前设备为 `darwin/arm64`。
+
+**第二步：确认 Homebrew**
+
+```bash
+which brew
+brew --version
+```
+
+正常输出类似 `/opt/homebrew/bin/brew`（Apple Silicon）或 `/usr/local/bin/brew`（Intel）。未安装则到 https://brew.sh/ 安装。
+
+**第三步：让 Homebrew 进入 PATH**
+
+在 `~/.zprofile` 中保留：
+
+```bash
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+没有则追加：
+
+```bash
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+source ~/.zprofile
+```
+
+**第四步：安装 / 升级 Go**
+
+```bash
+brew install go
+brew update && brew upgrade go
+```
+
+代理链路不稳定时降低并发：
+
+```bash
+HOMEBREW_DOWNLOAD_CONCURRENCY=1 brew upgrade go
+```
+
+**第五步：不要写死 GOROOT**
+
+shell 配置中显式 `unset GOROOT`，让 Homebrew 软链接生效。
+
+**第六步：配置 GOPATH / GOBIN**
+
+```bash
+export GOPATH=$HOME/HGFiles/GitHub/GoProject
+export GOBIN=$GOPATH/bin
+```
+
+`go install` 输出的可执行文件会落在 `$GOBIN`。
+
+**第七步：配置 PATH**
+
+保证 `/opt/homebrew/bin` 和 `$GOBIN` 在 `PATH` 中，且 `/opt/homebrew/bin` 排在旧 Go 路径之前。
+
+**第八步：配置 Go 模块代理（官方源）**
+
+```bash
+unset GOPROXY
+go env -w GOPROXY=https://proxy.golang.org,direct
+export GOPROXY=https://proxy.golang.org,direct
+```
+
+`go env -w` 写入持久配置；`export` 写入当前 shell；二者都要做。
+
+**第九步：刷新终端**
+
+```bash
+source ~/.zshrc
+hash -r
+```
+
+或重新打开终端窗口。
+
+**第十步：验证**
+
+```bash
+which go
+go version
+go env GOVERSION GOROOT GOPATH GOBIN GOPROXY
+```
+
+**第十一步：确认 Homebrew 软链接自动升级机制**
+
+```bash
+ls -l /opt/homebrew/bin/go
+ls -l /opt/homebrew/opt/go
+```
+
+输出软链接指向当前 Cellar 版本。后续 `brew upgrade go` 后，软链接会自动迁移到新版本。
+
+---
+
+## 常见问题
+
+**问题 1：cannot find GOROOT directory**
+
+旧 `GOROOT` 仍在环境变量里：
+
+```bash
+unset GOROOT
+source ~/.zshrc
+hash -r
+go version
+```
+
+仍报错则搜索所有 shell 配置：
+
+```bash
+grep -n "GOROOT\|Cellar/go" ~/.bash_profile ~/.zshrc ~/.zprofile ~/.profile
+```
+
+删除写死的 `export GOROOT=/opt/homebrew/Cellar/go/<版本>/libexec`。
+
+**问题 2：which go 不是 /opt/homebrew/bin/go**
+
+PATH 顺序不对：
+
+```bash
+source ~/.zprofile
+source ~/.zshrc
+hash -r
+echo $PATH
+```
+
+确保 `/opt/homebrew/bin` 出现在旧 Go 路径之前。
+
+**问题 3：brew upgrade go 下载失败**
+
+常见为 `curl: (35) LibreSSL SSL_connect: SSL_ERROR_SYSCALL in connection to ghcr.io:443`，多因代理未继承、节点到 GitHub Container Registry 不稳、并发过高。处理：
+
+```bash
+env | grep -i proxy
+curl -Iv https://ghcr.io/v2/
+HOMEBREW_DOWNLOAD_CONCURRENCY=1 brew upgrade go
+```
+
+**问题 4：还在用国内镜像**
+
+```bash
+go env GOPROXY
+# 输出 https://goproxy.cn,direct 表示还在用国内镜像
+
+unset GOPROXY
+go env -w GOPROXY=https://proxy.golang.org,direct
+export GOPROXY=https://proxy.golang.org,direct
+source ~/.zshrc
+```
+
+---
+
+## 日常维护命令速查
+
+```bash
+go version
+go env
+go env GOVERSION GOROOT GOPATH GOBIN GOPROXY GOTOOLCHAIN
+
+brew update
+brew upgrade go
+HOMEBREW_DOWNLOAD_CONCURRENCY=1 brew upgrade go
+
+ls -l /opt/homebrew/bin/go
+ls -l /opt/homebrew/opt/go
+
+grep -n "GOROOT\|Cellar/go" ~/.bash_profile ~/.zshrc ~/.zprofile ~/.profile
+```
+
+---
+
+## 最终判断标准
+
+- `which go` 输出 `/opt/homebrew/bin/go`。
+- `go version` 输出当前 Homebrew 安装的 Go 版本。
+- shell 配置中没有 `export GOROOT=/opt/homebrew/Cellar/go/<版本>/libexec`。
+- `go env GOPROXY` 输出 `https://proxy.golang.org,direct`。
+- 后续 `brew upgrade go` 后，shell 配置无需再手动改版本号。
 
 
 <br/>

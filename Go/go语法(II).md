@@ -1,3 +1,8 @@
+- 🍎
+- [文本](#文本)
+	- [strings.Builder 字符串清洗](#stringsBuilder字符串清洗)
+- [集合](#集合)
+	- [seen 去重与 map 预分配](#seen去重与map预分配)
 - [新类型和别名](#新类型和别名)
 	- [新类型不可以使用原类型的方法](#新类型不可以使用原类型的方法)
 - [范型](#范型)
@@ -6,9 +11,192 @@
 	- [日志格式](#日志格式)
 - [文件](#文件)
 	- [文件锁](#文件锁)
+	- [osMkdirAll递归创建目录](#osMkdirAll递归创建目录)
+- [数据解析](#数据解析)
+	- [json.RawMessage 延迟解析](#jsonRawMessage延迟解析)
 
 
 
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="文本">文本</h1>
+
+
+***
+<br/><br/><br/>
+> <h3 id="stringsBuilder字符串清洗">strings.Builder 字符串清洗</h3>
+
+`strings.Builder` 是 Go 官方推荐的高性能字符串拼接工具，适合在循环中逐字符构造新字符串。相比 `s += string(r)`，它复用底层缓冲区，能减少反复分配和拷贝。
+
+```go
+func filterLowerOnly(value string) string {
+    var builder strings.Builder
+    builder.Grow(len(value))
+
+    for _, r := range value {
+        switch {
+        case r >= 'a' && r <= 'z':
+            builder.WriteRune(r)
+        // 其他字符全部忽略，不写入
+        default:
+            continue
+        }
+    }
+
+    return builder.String()
+}
+```
+
+逐段含义：
+
+| 代码 | 作用 |
+|------|------|
+| `var builder strings.Builder` | 创建字符串构造器 |
+| `builder.Grow(len(value))` | 按原始字符串字节长度预分配容量，减少扩容 |
+| `for _, r := range value` | 按 Unicode 字符 `rune` 遍历字符串 |
+| `switch {}` | 无表达式 `switch`，等价于多段 `if/else if` 条件判断 |
+| `builder.WriteRune(r)` | 把当前字符写入 Builder |
+
+示例：输入 `User_Image/123.png`，如果只保留小写英文字母，结果是 `sermagepng`；大写字母、下划线、斜杠、数字、点号都会被过滤。
+
+这个模式常用于 `sanitizePathPart` 之类的路径清洗函数：只保留允许字符，过滤中文、符号、斜杠、空格等非法路径片段，降低路径穿越和非法文件名风险。
+
+注意：`len(value)` 是字节长度，不是字符数量；作为 `Grow` 的容量预估通常没问题，因为最终字符串不会比原始字节更长。
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="集合">集合</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="seen去重与map预分配">seen 去重与 map 预分配</h2>
+
+
+`seen` 常用于列表组装时按 `id` 去重：第一次遇到某个 `id` 就记录到 map，后面再次遇到同一个 `id` 时直接 `continue` 跳过。
+
+```go
+seen := make(map[string]struct{}, limit)
+
+for rows.Next() {
+    item, err := scanAdminUserRow(rows, hasEmail)
+    if err != nil {
+        return err
+    }
+
+    id := item["id"].(string)
+    if _, ok := seen[id]; ok {
+        continue
+    }
+
+    seen[id] = struct{}{}
+    list = append(list, item)
+
+    if len(list) >= limit {
+        break
+    }
+}
+
+return rows.Err()
+```
+
+执行过程：
+
+```text
+第一次 id=100：
+seen = {}
+_, ok := seen["100"] → ok=false
+seen["100"] = struct{}{}
+
+第二次 id=100：
+_, ok := seen["100"] → ok=true
+continue，跳过重复数据
+```
+
+---
+<br/>
+
+## make(map[string]struct{}, limit)
+
+下面两种写法的类型完全一样，都是 `map[string]struct{}`：
+
+```go
+seen := make(map[string]struct{}, limit)
+seen := map[string]struct{}{}
+```
+
+区别只在初始化方式。`make(map[string]struct{}, limit)` 的第二个参数对 map 来说不是长度，也不能通过 `cap(m)` 读取，而是**初始容量提示（capacity hint）**：告诉 Go 预计后面大约会放 `limit` 个元素，提前准备哈希桶，减少扩容和 rehash。
+
+```go
+seen := make(map[string]struct{}, 100)
+fmt.Println(len(seen)) // 0
+```
+
+`len(seen)` 仍然是 `0`，因为 map 里还没有元素；第二个参数只是预估容量，不是已有数据数量。
+
+---
+<br/>
+
+## map 扩容成本
+
+没有容量提示时，持续插入大量 key 可能触发多次扩容：
+
+```text
+开始
+↓
+很小的 Hash Bucket
+↓
+放满
+↓
+扩容
+↓
+重新计算 Hash
+↓
+搬迁数据
+↓
+继续插入
+↓
+再次扩容
+```
+
+扩容涉及新内存分配、Rehash、Bucket 搬迁和数据复制。项目中最多只会收集 `limit` 个管理员 ID，因此 `make(map[string]struct{}, limit)` 是合理的性能优化。
+
+对比：
+
+| 写法 | 类型 | 是否预分配 | 推荐场景 |
+|------|------|------------|----------|
+| `map[string]struct{}{}` | `map[string]struct{}` | 否 | 数据量未知、小型程序、示例代码 |
+| `make(map[string]struct{})` | `map[string]struct{}` | 否 | 与字面量等价，初始化空 map |
+| `make(map[string]struct{}, limit)` | `map[string]struct{}` | 是（容量提示） | 数据量已知或可预估，项目代码推荐 |
+
+---
+<br/>
+
+## 为什么 value 是 struct{}
+
+`map[string]struct{}` 表示只关心 key 是否存在，不关心 value。`struct{}{}` 是空结构体，占用 `0` 字节：
+
+```go
+unsafe.Sizeof(struct{}{}) // 0
+```
+
+相比 `map[string]bool`，`map[string]struct{}` 更适合表达集合（Set）语义：
+
+```go
+seen[id] = struct{}{}
+if _, ok := seen[id]; ok {
+    continue
+}
+```
+
+结论：**`seen := make(map[string]struct{}, limit)` 同时表达了去重集合和预估容量，是 Go 项目中常见且推荐的写法**。
 
 
 <br/><br/><br/>
@@ -668,3 +856,172 @@ func main() {
 | 启动时先加锁，退出时释放        | 确保目录生命周期是独占的                     |
 
 
+***
+<br/><br/><br/>
+> <h3 id="osMkdirAll递归创建目录">os.MkdirAll 递归创建目录</h3>
+
+`os.MkdirAll(dir, 0755)` 用于递归创建多级目录：不存在的父目录会一并创建，目录已存在时不会报错，适合上传文件按模块、日期分目录存储的场景。
+
+```go
+func MkdirAll(path string, perm fs.FileMode) error
+```
+
+示例：
+
+```go
+saveDir := fmt.Sprintf("./upload/%s/%s", moduleName, timeStr)
+if err := os.MkdirAll(saveDir, 0755); err != nil {
+    return nil, fmt.Errorf("创建存储目录失败: %w", err)
+}
+```
+
+如果目标路径是 `./upload/user/20260704`，即使 `upload`、`user` 都不存在，`MkdirAll` 也会一次性创建完整目录链。`os.Mkdir` 只能创建最后一级目录，父目录不存在会直接失败。
+
+---
+<br/>
+
+## 0755 目录权限
+
+`0755` 是八进制权限，拆成三段：所有者、同组用户、其他用户。
+
+| 数字 | 权限 | 含义 |
+|------|------|------|
+| `4` | `r` | 读 |
+| `2` | `w` | 写 |
+| `1` | `x` | 执行；对目录表示可进入 |
+
+`0755` 表示：
+
+| 对象 | 权限 | 说明 |
+|------|------|------|
+| 所有者 | `7 = 4+2+1` | 可读、可写、可进入 |
+| 同组用户 | `5 = 4+1` | 可读、可进入，不可修改 |
+| 其他用户 | `5 = 4+1` | 可读、可进入，不可修改 |
+
+目录的 `x` 权限表示能否进入目录；只有 `r` 没有 `x`，即使能看到目录名，也无法正常访问目录内容。
+
+---
+<br/>
+
+## 和 os.Mkdir 的区别
+
+```go
+// 递归创建多级目录，推荐上传存储场景使用
+err := os.MkdirAll("./upload/avatar", 0755)
+
+// 只能创建最后一级，父目录不存在会报错
+err := os.Mkdir("./upload/avatar", 0755)
+```
+
+注意点：Go 中 `0755` 前面的 `0` 不能省略，`0755` 表示八进制；直接写 `755` 会被当成十进制，权限含义完全不同。Windows 基本忽略 `perm` 参数；如果目录只允许程序自己读写，可用 `0700`。
+
+
+
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="数据解析">数据解析</h1>
+
+
+***
+<br/><br/><br/>
+> <h3 id="jsonRawMessage延迟解析">json.RawMessage 延迟解析</h3>
+
+`json.RawMessage` 是 `[]byte` 的别名，用来**暂存未解析的原始 JSON 片段**，延迟到具体使用时再二次解析。`map[string]json.RawMessage` 只会拆顶层 key，子内容原样保留字节，适合**只关心部分字段、嵌套结构复杂**的场景。
+
+```go
+var raw map[string]json.RawMessage
+if err := json.Unmarshal(data, &raw); err != nil {
+    return err
+}
+```
+
+直观示例，原始 JSON：
+
+```json
+{
+  "name": "张三",
+  "info": {"age":18, "sex":"男"},
+  "images": ["a.png","b.jpg"]
+}
+```
+
+执行 `Unmarshal` 后：
+
+```text
+raw["name"]   = []byte(`"张三"`)
+raw["info"]   = []byte(`{"age":18, "sex":"男"}`)
+raw["images"] = []byte(`["a.png","b.jpg"]`)
+```
+
+所有 value 都是原始未拆解的 JSON 字节，不会自动转成结构体/切片。
+
+---
+
+## 按需二次解析
+
+取出 `info` 字段后单独反序列化为结构体：
+
+```go
+infoByte := raw["info"]
+var info struct {
+    Age int    `json:"age"`
+    Sex string `json:"sex"`
+}
+if err := json.Unmarshal(infoByte, &info); err != nil {
+    return err
+}
+```
+
+优势是**只对真正用到的字段做二次解析**，避免一次性递归拆解整个 JSON，对大体积或嵌套复杂的请求体能提升性能。
+
+---
+
+## 报错场景
+
+`json.Unmarshal(data, &raw)` 返回 `err != nil` 的常见原因：
+
+1. `data` 不是合法 JSON（如 `[]` 数组、字符串、数字）；
+2. JSON 格式非法（缺逗号、括号不匹配、转义错误）；
+3. 顶层是 JSON 数组而非对象，无法映射到 `map[string]json.RawMessage`——顶层必须是 `{}` 对象。
+
+---
+
+## 解析方案对比
+
+| 方案 | 写法 | 特点 |
+|------|------|------|
+| 普通 map | `map[string]string` | 字段是对象/数组时直接失败，无法承载复杂子结构 |
+| 延迟解析 | `map[string]json.RawMessage` | 不管子字段是字符串、数字、对象还是数组，全部原样存储，按需二次解析 |
+| 完整结构体 | `struct{...}` | 一次性解析所有字段；多余字段直接丢弃，扩展不灵活 |
+
+---
+
+## 业务典型用法
+
+接收前端复杂参数，只想先取顶层部分字段、其它字段按需解析：
+
+```go
+var raw map[string]json.RawMessage
+if err := json.Unmarshal(bodyBytes, &raw); err != nil {
+    return err
+}
+
+var imageStr string
+if err := json.Unmarshal(raw["image"], &imageStr); err != nil {
+    return err
+}
+```
+
+---
+
+## 关键总结
+
+1. `json.RawMessage` = 原始 JSON 字节占位容器，延迟解析。
+2. `map[string]json.RawMessage` 适合**只关心部分字段、嵌套复杂 JSON**的场景，性能更好。
+3. 只会解析顶层键值对，子 JSON 内容保留原始字节。
+4. 顶层必须是 `{}` 对象，顶层为 `[]` 数组会解析报错。

@@ -5,12 +5,17 @@
 	- [查询mysql版本](#查询mysql版本)
 - [新建数据表user](#新建数据表user)
 - [插入数据](#插入数据)
+	- [管理员角色批量绑定](#管理员角色批量绑定)
+	- [INSERT ... ON DUPLICATE KEY UPDATE 【插入数据优化】](#INSERTONDUPLICATEKEYUPDATE)
 - [查询数据](#查询数据)
 	- [查寻一条数据](#查寻一条数据)
 	- [database/sql Rows 与 Cursor](#databaseSQLRows与Cursor)
 	- [scanAdminUserRow 行扫描](#scanAdminUserRow行扫描)
+	- [角色列表游标分页 SQL](#角色列表游标分页SQL)
 - [增加一条数据](#增加一条数据)
 - [修改数据](#修改数据)
+	- [Tx ExecContext事务执行](#TxExecContext事务执行)
+	- [动态 UPDATE user_security](#动态UPDATEuser_security)
 - [删除数据](#删除数据)
 - [结构体中sql.NullString使用](#结构体中sql.NullString使用)
 - [数据库&表执行方式](#数据库&表执行方式)
@@ -454,8 +459,227 @@ mysql> select * from user;
 1 row in set (0.00 sec)
 ```
 
-<br/><br/><br/>
 
+***
+<br/><br/>
+># <h3 id="管理员角色批量绑定">[管理员角色批量绑定](管理员角色批量绑定)</h3>
+
+管理员角色绑定本质是向 `admin_user_role` 中间表写入 `admin_user_id + role_id` 多对多关系。核心要求是：**同一事务内批量写入、校验 roleID、去重、失败统一回滚**。
+
+```sql
+admin_user_role
+-------------------------
+admin_user_id | role_id
+```
+
+<br/>
+
+## 逐条插入写法
+
+```go
+stmt, err := tx.PrepareContext(ctx, SQLQueriesPackage.InsertOpsAdminUserRoleSQL)
+if err != nil {
+    return err
+}
+defer stmt.Close()
+
+seen := make(map[int64]struct{}, len(roleIDs))
+for _, roleIDText := range roleIDs {
+    roleID, err := strconv.ParseInt(roleIDText, 10, 64)
+    if err != nil || roleID <= 0 {
+        return fmt.Errorf("invalid roleID")
+    }
+
+    if _, ok := seen[roleID]; ok {
+        continue
+    }
+    seen[roleID] = struct{}{}
+
+    if _, err := stmt.ExecContext(ctx, adminUserID, roleID); err != nil {
+        return err
+    }
+}
+```
+
+对应 SQL 通常是：
+
+```sql
+INSERT INTO admin_user_role(admin_user_id, role_id)
+VALUES(?, ?)
+```
+
+执行流程：
+
+```text
+Prepare SQL
+   ↓
+创建 seen set
+   ↓
+遍历 roleIDs
+   ↓
+ParseInt 校验
+   ↓
+去重判断
+   ↓
+Exec 插入一行
+   ↓
+成功继续 / 失败返回
+```
+
+`map[int64]struct{}` 是 Go 常见 set 写法，`struct{}{}` 不保存额外值，只表达 key 是否存在，查重平均复杂度为 `O(1)`。
+
+---
+<br/>
+
+## 批量 INSERT 写法
+
+逐条 `ExecContext` 简单、容易控制错误，但 roleIDs 很多时会产生 N 次数据库交互。更高性能的 MySQL 写法是拼接批量 `VALUES`，并用唯一键冲突分支忽略重复绑定：
+
+```go
+querySQL := "INSERT INTO `admin_user_role` (`admin_user_id`, `role_id`, `update_at`, `update_by`) VALUES " + strings.Join(valueParts, ",")
+querySQL += " ON DUPLICATE KEY UPDATE `role_id` = `role_id`"
+
+_, err := tx.ExecContext(ctx, querySQL, args...)
+```
+
+假设插入 2 条数据，最终 SQL 形态是：
+
+```sql
+INSERT INTO `admin_user_role` (`admin_user_id`, `role_id`, `update_at`, `update_by`)
+VALUES (?,?,?,?),(?,?,?,?)
+ON DUPLICATE KEY UPDATE `role_id` = `role_id`
+```
+
+`valueParts` 中每个元素都是 `(?,?,?,?)`，`args` 长度必须等于 `4 * 记录数`，顺序依次对应所有占位符。
+
+---
+<br/>
+
+## ON DUPLICATE KEY UPDATE
+
+必须先有联合唯一索引，否则冲突分支不会按预期生效：
+
+```sql
+UNIQUE KEY uidx_aduid_role_id (admin_user_id, role_id)
+```
+
+```sql
+ON DUPLICATE KEY UPDATE `role_id` = `role_id`
+```
+
+含义是：插入新关系时正常新增；如果同一管理员和角色已存在，则把 `role_id` 更新为自身，等价于不修改原行但不报重复键错误。相比 `INSERT IGNORE`，`ON DUPLICATE KEY` 只处理唯一键冲突，字段长度、参数数量、连接异常等其他错误仍会正常抛出，更适合工程代码。
+
+注意点：批量数据过大要分批，避免 SQL 过长；如果需要统计新增数量，不要丢弃 `sql.Result`，可读取 `RowsAffected()`。
+
+
+***
+<br/><br/><br/>
+> <h1 id="INSERTONDUPLICATEKEYUPDATE">INSERT ... ON DUPLICATE KEY UPDATE</h1>
+
+MySQL **UPSERT 语法**：数据不存在则插入，存在则更新（依赖唯一键冲突）。在预约发布、用户配置、点赞、收藏、任务状态等场景中大量使用。
+
+```sql
+INSERT INTO video_scheduled_publish (
+    submission_id,
+    user_id,
+    scheduled_time,
+    status
+)
+VALUES (?, ?, ?, 'pending')
+ON DUPLICATE KEY UPDATE
+    scheduled_time = VALUES(scheduled_time),
+    status = 'pending',
+    updated_at = CURRENT_TIMESTAMP;
+```
+
+**必须依赖唯一键或主键**：
+
+```sql
+UNIQUE KEY uk_submission(submission_id)
+```
+
+---
+
+## INSERT 部分
+
+无冲突时正常插入：
+
+```text
+submission_id = 1001
+user_id       = 88
+scheduled_time = 2026-07-05 20:00:00
+status        = pending
+```
+
+---
+
+## ON DUPLICATE KEY UPDATE
+
+INSERT 触发唯一键冲突时**不报错**，转而执行 UPDATE：
+
+```text
+原来：1001 / 20:00
+新值：1001 / 21:00
+结果：1001 / 21:00（更新成功）
+```
+
+### `VALUES(column)` 含义
+
+代表"INSERT 这一行准备插入的值"，**不是数据库里的值**。例如：
+
+```sql
+VALUES(scheduled_time) → '2026-07-05 21:00'
+```
+
+> ⚠️ MySQL 8.0.20 之后 `VALUES(column)` 被标记为 deprecated，新项目推荐别名写法：
+>
+> ```sql
+> INSERT INTO table (...) VALUES (...) AS new
+> ON DUPLICATE KEY UPDATE scheduled_time = new.scheduled_time;
+> ```
+>
+> 目前很多项目仍在用 `VALUES()`，新项目建议关注目标 MySQL 版本。
+
+### `status = 'pending'` 与 `updated_at`
+
+- `status = 'pending'`：无论之前是什么状态，都强制进入等待发布状态。
+- `updated_at = CURRENT_TIMESTAMP`：更新最后修改时间，便于审计、排查、CDC、缓存刷新。
+
+---
+
+## 整体流程
+
+```text
+第一次：submission_id=1001 → 数据库没有 → INSERT 成功
+       → 1001 / pending / 20:00
+
+第二次：submission_id=1001 → 已存在
+       → INSERT 触发唯一键冲突
+       → ON DUPLICATE KEY UPDATE
+       → 1001 / pending / 21:00
+```
+
+---
+
+## 为什么不用先 SELECT 再 UPDATE
+
+`SELECT + INSERT/UPDATE` 两次 SQL，且存在**并发竞争（Race Condition）**——A、B 同一时刻都 `SELECT` 到不存在，都 `INSERT`，B 触发 `Duplicate Key`。
+
+`INSERT ... ON DUPLICATE KEY UPDATE` 由数据库**原子执行**，一次 SQL 完成，无竞争问题。
+
+---
+
+## 大厂为什么喜欢
+
+- **原子性**：插入或更新由数据库一次完成，避免并发数据不一致。
+- **减少数据库往返**：无需 `SELECT` 决定 `INSERT/UPDATE`。
+- **代码简洁**：业务层无需处理重复键异常和重试逻辑。
+- **适合高并发**：数据库唯一索引保证一致性，比业务层判断更可靠。
+
+亿级 / 千万级并发场景下通常会结合**分库分表、消息队列（Kafka）、批量写入**和合理唯一键设计，降低热点竞争和索引维护成本。
+
+
+<br/><br/><br/>
 > <h2 id="查询数据">查询数据</h2>
 
 使用SQL语句`(select * from user；)`可以查询数据表user中的所有数据。如果使用Go语言实现，那么除了要使用上述SQL语句，还要通过数据库对象调用Query()函数以执行SQL语句。代码如下。
@@ -1089,6 +1313,70 @@ appendAdmins()
 ```
 
 
+***
+<br/><br/><br/>
+> <h3 id="角色列表游标分页SQL">角色列表游标分页 SQL</h3>
+
+这条 SQL 是典型的 **Cursor Pagination / 游标分页**：从 `role` 表中取出启用状态的数据，按 `id` 倒序，加载 `id < cursor` 的下一页。
+
+```sql
+SELECT `role_id`, `id`, `name`, `description`, `create_at`
+FROM `role`
+WHERE `status` = 1
+  AND `id` < ?
+ORDER BY `id` DESC
+LIMIT ?
+```
+
+执行逻辑：
+
+```text
+status = 1
+AND id < cursor
+   ↓
+按 id DESC 排序
+   ↓
+LIMIT pageSize
+   ↓
+返回下一页数据
+```
+
+例如参数是 `id < 1000`、`LIMIT 10`，返回结果通常是 `999 ~ 990` 这一段。
+
+---
+<br/>
+
+## 为什么不用 OFFSET
+
+OFFSET 分页越往后越慢：
+
+```sql
+SELECT * FROM role
+LIMIT 10 OFFSET 100000
+```
+
+数据库需要扫描并丢弃前 `100000` 行，再返回后面的 10 行。游标分页使用 `WHERE id < ? ORDER BY id DESC LIMIT ?`，能直接从上一次位置继续读，性能更稳定。
+
+| 方式 | 性能特点 |
+|------|----------|
+| `LIMIT ... OFFSET ...` | 页码越大越慢 |
+| `id < ? ORDER BY id DESC LIMIT ?` | 基于索引定位，稳定加载下一页 |
+
+典型请求链路：第一次请求不带 cursor，只按 `status=1 ORDER BY id DESC LIMIT 10` 取最新 10 条；下一页传上一页最后一条的 `id`，例如 `WHERE id < 990 LIMIT 10`。
+
+---
+<br/>
+
+## 索引要求
+
+推荐索引：
+
+```sql
+CREATE INDEX idx_role_status_id ON role(status, id);
+```
+
+没有合适索引时，可能出现全表扫描和 filesort，分页接口在大数据量下会变成性能瓶颈。
+
 
 
 <br/><br/><br/>
@@ -1329,9 +1617,150 @@ id: 1, name: David
 id: 2, name: 张三🍔
 ```
 
+***
 <br/><br/><br/>
+> <h3 id="TxExecContext事务执行">Tx ExecContext 事务执行</h3>
 
-> <h2 id="">删除数据</h2>
+`tx.ExecContext(ctx, query, args...)` 是 Go 标准库 `database/sql` 中 `*sql.Tx` 的事务执行方法：**在事务绑定的连接里执行一条不返回结果集的 SQL，并通过 `context.Context` 控制超时、取消和链路生命周期**。
+
+```go
+func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (Result, error)
+```
+
+适合执行 `INSERT`、`UPDATE`、`DELETE`、`CREATE / ALTER / DROP` 等非查询 SQL；查询多行数据应使用 `QueryContext`。
+
+<br/>
+
+## 基本用法
+
+```go
+tx, err := db.BeginTx(ctx, nil)
+if err != nil {
+    return err
+}
+defer tx.Rollback()
+
+res, err := tx.ExecContext(ctx, "UPDATE user SET name=? WHERE id=?", "Tom", 1)
+if err != nil {
+    return err
+}
+
+n, err := res.RowsAffected()
+if err != nil {
+    return err
+}
+fmt.Println(n)
+
+return tx.Commit()
+```
+
+执行流程：
+
+```text
+Tx.ExecContext
+   ↓
+检查事务是否已提交/回滚
+   ↓
+使用 Tx 绑定的 Conn
+   ↓
+调用 driver.ExecContext
+   ↓
+数据库执行 SQL
+   ↓
+返回 sql.Result / error
+```
+
+`ctx` 用于控制 SQL 生命周期，例如 `context.WithTimeout(context.Background(), 2*time.Second)` 超时后会中断数据库请求；`args...` 对应 SQL 中的 `?` 占位符，由驱动做参数绑定，避免手动拼接造成 SQL 注入。
+
+---
+<br/>
+
+## Result 返回值
+
+```go
+type Result interface {
+    LastInsertId() (int64, error)
+    RowsAffected() (int64, error)
+}
+```
+
+| 方法 | 作用 | 注意点 |
+|------|------|--------|
+| `RowsAffected()` | 返回受影响行数，最常用于 `UPDATE / DELETE` | 可用于判断是否真的更新到数据 |
+| `LastInsertId()` | 返回插入后的自增 ID | MySQL 常用，PostgreSQL 通常使用 `RETURNING` |
+
+如果业务不需要返回值，可以用 `_` 丢弃：
+
+```go
+if _, err := tx.ExecContext(ctx, query, args...); err != nil {
+    return err
+}
+```
+
+---
+<br/>
+
+## 和 db.ExecContext 的区别
+
+| 方法 | 是否事务 | 连接行为 | 提交方式 |
+|------|----------|----------|----------|
+| `db.ExecContext` | 否 | 从连接池拿连接，执行完释放 | 自动提交 |
+| `tx.ExecContext` | 是 | 复用事务独占连接 | 必须 `Commit()`，失败 `Rollback()` |
+
+事务中的多条 `ExecContext` 要么全部成功提交，要么回滚：
+
+```go
+tx, _ := db.BeginTx(ctx, nil)
+
+tx.ExecContext(ctx, "UPDATE account SET balance=balance-100 WHERE id=?", 1)
+tx.ExecContext(ctx, "UPDATE account SET balance=balance+100 WHERE id=?", 2)
+
+tx.Commit()
+```
+
+常见坑：忘记 `Commit()` 数据不会落库；错误路径没有 `Rollback()` 可能导致事务和连接占用；`ctx` 超时后当前 SQL 会被中断，事务对象也可能变为不可继续使用。
+
+
+***
+<br/><br/><br/>
+> <h3 id="动态UPDATEuser_security">动态 UPDATE user_security</h3>
+
+这段代码根据 `setClauses` 动态拼接 `UPDATE user_security` 的 SET 部分，再把 `userID` 追加到参数列表末尾，最后在事务中执行更新。
+
+```go
+query := fmt.Sprintf("UPDATE user_security SET %s WHERE user_id = ?", strings.Join(setClauses, ", "))
+args = append(args, userID)
+if _, err := tx.ExecContext(ctx, query, args...); err != nil {
+    return wrapUserSecurityWriteErr("update user security", err)
+}
+```
+
+假设：
+
+```go
+setClauses := []string{"password = ?", "salt = ?"}
+args := []any{passwordHash, salt}
+```
+
+拼接后得到：
+
+```sql
+UPDATE user_security SET password = ?, salt = ? WHERE user_id = ?
+```
+
+参数顺序是：
+
+```text
+passwordHash → salt → userID
+```
+
+关键点：`strings.Join(setClauses, ", ")` 只负责拼接字段赋值片段，真实值仍通过 `args...` 绑定到占位符，避免把用户输入直接拼进 SQL。`_` 表示忽略 `sql.Result`；如果业务需要判断是否更新到用户，可接收 `res` 并读取 `RowsAffected()`。
+
+`wrapUserSecurityWriteErr("update user security", err)` 用于给底层数据库错误补充业务上下文，上层仍可继续识别唯一键冲突、连接错误或字段约束错误。
+
+
+<br/><br/><br/>
+> <h2 id="删除数据">删除数据</h2>
 
 向数据表user插入第一条数据。其中，id的值为1, name的值为David。如果想删除这条数据，除了要使用根据id删除用户的SQL语句，还要通过数据库对象调用Exec()函数以执行SQL语句。代码如下。
 
