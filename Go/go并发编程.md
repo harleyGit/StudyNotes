@@ -34,7 +34,10 @@
 	- [sync包学习](#sync包学习)
 		- [Once 执行一次](#Once执行一次)
 		- [任务生命周期控制](#任务生命周期控制)
-	
+	- [StatusCounterSyncer 后台同步器](#StatusCounterSyncer-后台同步器)
+		- [run 方法整体逻辑](#run-方法整体逻辑)
+		- [停止信号](#停止信号)
+		- [生产级优化](#生产级优化)
 	
 	
 <br/><br/><br/>
@@ -3109,3 +3112,376 @@ ctx, cancel := context.WithCancel(parent)
 ## 一句话总结
 
 > 在 Go 中启动一个后台 syncer，通过 `context.WithoutCancel` 将其从请求生命周期中解耦，但仍保留 trace / value 信息——是 Go 1.21+ 在"解耦后台任务 + 保留链路信息"场景下的推荐写法。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h2 id="StatusCounterSyncer-后台同步器">StatusCounterSyncer 后台同步器</h2>
+
+核心代码：
+
+```go
+func (s *StatusCounterSyncer) run(ctx context.Context) {
+    s.sync(ctx)
+    ticker := time.NewTicker(s.interval)
+    defer ticker.Stop()
+
+    for {
+        select {
+        case <-ticker.C:
+            s.sync(ctx)
+        case <-ctx.Done():
+            return
+        case <-s.done:
+            return
+        }
+    }
+}
+```
+
+这是典型的**后台定时任务 Worker（后台同步器）**。结合前面的视频状态统计：MySQL `SELECT status, COUNT(*) ... GROUP BY status` 是真实数据，Redis `HIncrBy(videoStatusCounterKey(), status, delta)` 是实时缓存。`StatusCounterSyncer` 很可能用于定期从 MySQL 重新统计视频状态并同步 Redis，修正 Redis 与数据库之间的偏差。
+
+---
+<br/>
+
+> <h3 id="run-方法整体逻辑">run 方法整体逻辑</h3>
+
+假设结构体类似：
+
+```go
+type StatusCounterSyncer struct {
+    interval time.Duration
+    done     chan struct{}
+}
+```
+
+整体流程：
+
+```text
+StatusCounterSyncer
+        |
+        v
+      run(ctx)
+        |
+  ----------------------
+  |         |          |
+  v         v          v
+sync()    ticker   stop signal
+数据同步   定时触发   退出
+```
+
+### 启动立即同步
+
+```go
+s.sync(ctx)
+```
+
+表示启动后立即执行一次同步。例如服务 10:00:00 启动时，Redis 中 `published = 999900`，但 MySQL 真实值是 `published = 1000000`。如果等待 `interval = 5分钟` 的 ticker，Redis 会有 5 分钟都是错误数据，所以启动时先立即修正一次。
+
+```text
+程序启动
+  |
+同步一次
+  |
+等待定时器
+```
+
+### 创建定时器
+
+```go
+ticker := time.NewTicker(s.interval)
+```
+
+例如：
+
+```go
+s.interval = 1 * time.Minute
+```
+
+那么 `ticker.C` 每分钟产生一次事件：
+
+```text
+time.NewTicker
+      |
+      v
+10:00:00
+10:01:00
+10:02:00
+10:03:00
+...
+```
+
+### 退出时关闭定时器
+
+```go
+defer ticker.Stop()
+```
+
+作用是在函数退出时关闭定时器。例如：
+
+```go
+case <-ctx.Done():
+    return
+```
+
+执行 `return` 前会自动执行 `ticker.Stop()`，防止 goroutine 泄漏和 timer 资源泄漏。
+
+### 无限循环与 select
+
+```go
+for {
+    select {
+```
+
+`for` 表示 Worker 一直运行，`select` 是 Go 的多路监听机制，用来同时等待 `ticker.C`、`ctx.Done()`、`s.done`，谁先发生就执行谁。
+
+```text
+启动 -> sync -> 等待 -> sync -> 等待 -> sync -> 等待 -> 直到停止
+```
+
+### 定时同步
+
+```go
+case <-ticker.C:
+    s.sync(ctx)
+```
+
+`ticker.C` 是一个 channel，每到时间会发送一个 `time.Time` 事件，然后触发同步：
+
+```text
+10:01:00
+ticker.C 收到事件
+        |
+        v
+    s.sync(ctx)
+```
+
+`sync` 可能类似：
+
+```go
+func (s *StatusCounterSyncer) sync(ctx context.Context) {
+    rows := db.Query(GetVideoStatusCountsSQL)
+    redis.HSet("video:status:counter", ...)
+}
+```
+
+---
+<br/>
+
+> <h3 id="停止信号">停止信号</h3>
+
+### ctx.Done()
+
+```go
+case <-ctx.Done():
+    return
+```
+
+这是 Go 标准取消机制。服务关闭时调用：
+
+```go
+cancel()
+```
+
+`ctx.Done()` 收到信号后，`run` 返回并退出 Worker。
+
+```go
+ctx, cancel := context.WithCancel(context.Background())
+go syncer.run(ctx)
+
+// 服务关闭
+cancel()
+```
+
+流程：
+
+```text
+cancel()
+   |
+   v
+ctx.Done()
+   |
+   v
+run 退出
+```
+
+### s.done
+
+```go
+case <-s.done:
+    return
+```
+
+这是自定义停止信号。例如：
+
+```go
+type StatusCounterSyncer struct {
+    done chan struct{}
+}
+```
+
+停止时：
+
+```go
+close(s.done)
+```
+
+`case <-s.done` 会立即触发。
+
+为什么同时有 `ctx.Done()` 和 `s.done`？通常：
+
+- `ctx` 用于整个应用生命周期，例如服务器关闭时让所有 goroutine 退出。
+- `done` 用于单独停止这个组件，例如关闭状态同步器，但服务器继续运行。
+
+---
+<br/>
+
+## 完整运行过程
+
+假设：
+
+```go
+interval = 10 * time.Second
+```
+
+启动后：
+
+```text
+run()
+  |
+  v
+sync() 立即同步
+  |
+  v
+创建 ticker
+  |
+  v
+for 循环等待
+
+10 秒后 ticker.C 触发 -> sync()
+20 秒后 ticker.C 触发 -> sync()
+30 秒后 ticker.C 触发 -> sync()
+```
+
+直到 `ctx` 取消或者 `done` 关闭。
+
+---
+<br/>
+
+## 对应大厂架构
+
+这段代码属于：
+
+```text
+MySQL
+  |
+COUNT GROUP BY
+  |
+  v
+StatusCounterSyncer
+  |
+  v
+Redis
+
+video:status:counter
+{
+    reviewing: 1000,
+    published: 900000
+}
+```
+
+为什么需要它？因为 Redis 计数可能丢。例如视频发布成功后 MySQL 已更新：
+
+```text
+published = 100001
+```
+
+但执行 Redis 更新时宕机：
+
+```go
+HIncrBy(published, 1)
+```
+
+Redis 仍然是：
+
+```text
+published = 100000
+```
+
+定时同步：
+
+```go
+s.sync(ctx)
+```
+
+会重新校正 Redis 数据。
+
+---
+<br/>
+
+> <h3 id="生产级优化">生产级优化</h3>
+
+大厂一般不会只写：
+
+```go
+for {
+    ticker.C
+    sync()
+}
+```
+
+还会增加以下能力。
+
+### 防止同步重入
+
+例如同步需要 2 分钟，但 `interval = 1分钟`，会出现上一次 `sync()` 没结束，新的 `sync()` 又启动。通常用 `mutex` 或 `singleflight` 控制。
+
+```text
+sync()
+  |
+还没结束
+
+新的 sync()
+  |
+启动
+```
+
+### 错误重试
+
+```go
+func sync(ctx context.Context) {
+    err := syncDB()
+    if err != nil {
+        retry()
+    }
+}
+```
+
+### 优雅关闭
+
+```go
+func (s *StatusCounterSyncer) Stop() {
+    close(s.done)
+}
+```
+
+---
+<br/>
+
+总结：
+
+```go
+func (s *StatusCounterSyncer) run(ctx context.Context)
+```
+
+本质是一个**后台定时同步 Worker**，作用是：
+
+1. 启动立即同步一次：`s.sync(ctx)`
+2. 按固定间隔同步：`ticker.C`
+3. 支持服务关闭：`ctx.Done()`
+4. 支持单独停止：`s.done`
+
+这是 Go 微服务中非常标准的**后台任务生命周期管理模式**，在字节、阿里、腾讯的定时刷新缓存、数据校准、统计同步任务中大量使用。
+

@@ -1,5 +1,8 @@
 
 - [Go 知识点](#Go知识点)
+- [高级语法](#高级语法)
+- [并发编程](#并发编程)
+	- [StatusCounterSyncer 后台同步器](#StatusCounterSyncer-后台同步器)
 	- [中间件链式调用](#中间件链式调用)
 	- [完整请求流程](#完整请求流程)
 	- [ChainInterceptors 实现原理](#ChainInterceptors实现原理)
@@ -38,6 +41,30 @@
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
 
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="高级语法">高级语法</h1>
+
+
+<br/><br/><br/>
+
+***
+<br/>
+
+> <h1 id="并发编程">并发编程</h1>
+
+***
+<br/><br/><br/>
+># <h2 id="StatusCounterSyncer-后台同步器">[StatusCounterSyncer 后台同步器](../go并发编程.md#StatusCounterSyncer-后台同步器)</h2>
+
+	- 
+
+
 ***
 <br/><br/>
 ># <h3 id="seen去重与map预分配">[seen 去重与 map 预分配](../go语法(II).md#seen去重与map预分配)</h3>
@@ -48,7 +75,6 @@
 ># <h3 id="TxExecContext事务执行">[Tx ExecContext 事务执行](../数据库SQL库.md#TxExecContext事务执行)</h3>
 
 
-
 ***
 <br/><br/>
 ># <h3 id="管理员角色批量绑定">[管理员角色批量绑定](../数据库SQL库.md#管理员角色批量绑定)</h3>
@@ -56,7 +82,7 @@
 
 ***
 <br/><br/>
-> <h3 id="角色列表游标分页SQL">[角色列表游标分页 SQL](../数据库SQL库.md#角色列表游标分页SQL)</h3>
+># <h3 id="角色列表游标分页SQL">[角色列表游标分页 SQL](../数据库SQL库.md#角色列表游标分页SQL)</h3>
 
 
 ***
@@ -66,7 +92,7 @@
 
 ***
 <br/><br/>
-> <h3 id="图片DataURL解析">[图片 DataURL 解析](../资源文件.md#图片DataURL解析)</h3>
+># <h3 id="图片DataURL解析">[图片 DataURL 解析](../资源文件.md#图片DataURL解析)</h3>
 
 
 ***
@@ -76,17 +102,17 @@
 
 ***
 <br/><br/>
-> <h3 id="stringsBuilder字符串清洗">[strings.Builder 字符串清洗](../go语法(II).md#stringsBuilder字符串清洗)</h3>
+># <h3 id="stringsBuilder字符串清洗">[strings.Builder 字符串清洗](../go语法(II).md#stringsBuilder字符串清洗)</h3>
 
 
 ***
 <br/><br/>
-> <h3 id="osMkdirAll递归创建目录">[os.MkdirAll 递归创建目录](../go语法(II).md#osMkdirAll递归创建目录)</h3>
+># <h3 id="osMkdirAll递归创建目录">[os.MkdirAll 递归创建目录](../go语法(II).md#osMkdirAll递归创建目录)</h3>
 
 
 ***
 <br/><br/>
-> <h3 id="jsonRawMessage延迟解析">[json.RawMessage 延迟解析](../go语法(II).md#jsonRawMessage延迟解析)</h3>
+># <h3 id="jsonRawMessage延迟解析">[json.RawMessage 延迟解析](../go语法(II).md#jsonRawMessage延迟解析)</h3>
 
 
 ***
@@ -111,7 +137,7 @@
 
 ***
 <br/><br/><br/>
-> <h2 id="Scan通过-Result获取结果">[Scan 通过 .Result 获取结果](../库go-redis.md#Scan通过-Result获取结果)</h2>
+># <h2 id="Scan通过-Result获取结果">[Scan 通过 .Result 获取结果](../库go-redis.md#Scan通过-Result获取结果)</h2>
 
 
 ***
@@ -135,13 +161,18 @@
 > <h1 id="数据库">数据库</h1>
 
 ***
+<br/><br/><br/>
+># <h2 id="视频状态统计">[视频状态统计](../数据库SQL库2.md#database/sql抽象层接口)</h2>
+
+
+***
 <br/><br/>
 ># <h2 id="database/sql抽象层接口">[database/sql抽象层接口](../数据库SQL库.md#database/sql抽象层接口)</h2>
 
 
 ***
 <br/><br/><br/>
-> <h2 id="大厂底层SQL设计">[大厂底层SQL设计](../MLC_GO知识点.md#大厂底层SQL设计)</h2>
+># <h2 id="大厂底层SQL设计">[大厂底层SQL设计](../MLC_GO知识点.md#大厂底层SQL设计)</h2>
 
 
 ***
@@ -152,7 +183,7 @@
 
 ***
 <br/><br/><br/>
-> <h1 id="客户端时间统一解析为UTC">[客户端时间统一解析为 UTC](../网络.md#客户端时间统一解析为UTC)</h1>
+># <h1 id="客户端时间统一解析为UTC">[客户端时间统一解析为 UTC](../网络.md#客户端时间统一解析为UTC)</h1>
 
 
 
@@ -731,9 +762,8 @@ POST /api/admin/v1/user/lark/unbind
 ```
 
 
-<br/><br/><br/>
-
-***
 <br/>
 
-> <h1 id="分布式限流-Lua脚本">[分布式限流-Lua脚本](../Proj/MLC_GO知识点.md#分布式限流-Lua脚本)</h1>
+***
+<br/><br/><br/>
+># <h1 id="分布式限流-Lua脚本">[分布式限流-Lua脚本](../Proj/MLC_GO知识点.md#分布式限流-Lua脚本)</h1>
