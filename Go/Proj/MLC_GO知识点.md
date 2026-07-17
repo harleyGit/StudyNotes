@@ -27,8 +27,13 @@
 	- [Redis ZSET 与 ZREM](#RedisZSET与ZREM)
 	- [视频流式读取 io.LimitReader + ReadAll](#视频流式读取ioLimitReaderReadAll)
 	- [千万级视频业务标准架构](#千万级视频业务标准架构)
+- [**数据库**](#数据库)
+	- [database/sql抽象层接口](#database/sql抽象层接口)
+	- [大厂底层SQL设计【未做，可以后面优化】](#大厂底层SQL设计)
 	- [INSERT ... ON DUPLICATE KEY UPDATE](#INSERTONDUPLICATEKEYUPDATE)
 	- [客户端时间统一解析为 UTC](#客户端时间统一解析为UTC)
+- [Redis使用](#Redis使用)
+	- [Redis HIncrBy 状态计数](#Redis-HIncrBy-状态计数)
 - [工程表](#工程表)
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
@@ -122,19 +127,52 @@
 <br/><br/><br/>
 ># <h2 id="千万级视频业务标准架构">[千万级视频业务标准架构](../资源文件.md#千万级视频业务标准架构)</h2>
 
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="数据库">数据库</h1>
+
+***
+<br/><br/>
+># <h2 id="database/sql抽象层接口">[database/sql抽象层接口](../数据库SQL库.md#database/sql抽象层接口)</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id="大厂底层SQL设计">[大厂底层SQL设计](../MLC_GO知识点.md#大厂底层SQL设计)</h2>
+
+
 ***
 <br/><br/>
 ># <h3 id="INSERTONDUPLICATEKEYUPDATE">[INSERT ... ON DUPLICATE KEY UPDATE【插入数据优化】](../数据库SQL库.md#INSERTONDUPLICATEKEYUPDATE)</h1>
+
+
 
 ***
 <br/><br/><br/>
 > <h1 id="客户端时间统一解析为UTC">[客户端时间统一解析为 UTC](../网络.md#客户端时间统一解析为UTC)</h1>
 
+
+
+<br/>
+***
+
 <br/><br/><br/>
+> <h1 id="Redis使用">Redis使用</h1>
 
 ***
+<br/><br/><br/>
+># <h2 id="Redis-HIncrBy-状态计数">[Redis HIncrBy 状态计数](../库go-redis.md#Redis-HIncrBy-状态计数)</h2>
+
+
+
+
 <br/>
 
+***
+<br/><br/><br/>
 > <h1 id="工程表">工程表</h1>
 
 ## **‌菜单权限表**

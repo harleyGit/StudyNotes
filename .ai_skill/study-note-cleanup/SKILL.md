@@ -20,6 +20,7 @@ When the user says an old document was整理优化成 a new document and asks to
 - Keep the topic-specific facts, SQL, commands, tables, identifiers, and examples accurate.
 - Preserve the user's intended concept names and public API names. Shorten local/example class names only when the optimized note already does so or when it clearly improves readability without changing technical meaning.
 - Preserve the original content scope and reasoning order unless the user explicitly asks for a rewrite. Cleanup means formatting, compression, heading cleanup, and redundant description removal, not changing the note's argument.
+- When the user asks to keep the original logic, do not rearrange the reasoning sequence. Merge synonymous or repeated wording, move scattered code into proper fenced code blocks, remove unnecessary blank lines, and reduce meaningless line breaks while preserving the source's logic order.
 - Preserve all ASCII diagrams and text diagrams. Do not delete diagrams made from characters such as `┌`, `└`, `│`, `─`, `→`, `←`, arrows, indentation, boxes, or flow lines.
 - Preserve code comments inside code blocks, including `//`, `/* ... */`, `#`, SQL comments, HTML comments, and inline explanatory comments. Do not delete or rewrite them unless they are clearly wrong or the user explicitly asks.
 - Preserve command, script, and API request output blocks, including prompts like `$ curl ...`, server output, client output, logs, JSON responses, error messages, and before/after results. These outputs are used for comparison and must not be deleted.

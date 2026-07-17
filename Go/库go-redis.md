@@ -1,6 +1,10 @@
 > # go-redis
 - [go-redis安装](#go-redis安装)
 - [go-redis 渐进式遍历 Scan](#go-redis渐进式遍历Scan)
+- [Redis HIncrBy 状态计数](#Redis-HIncrBy-状态计数)
+	- [HIncrBy 是什么](#HIncrBy-是什么)
+	- [为什么不用 GET + SET](#为什么不用-GET--SET)
+	- [视频上传系统中的用途](#视频上传系统中的用途)
 - [在线高 QPS 业务不要依赖 Redis Scan](#在线高QPS业务不要依赖RedisScan)
 - [Scan 通过 .Result 获取结果](#Scan通过-Result获取结果)
 - [核心功能](#核心功能)
@@ -54,6 +58,344 @@ go get github.com/redis/go-redis/v9
 # 或者安装特定版本
 go get github.com/redis/go-redis/v9@v9.0.5
 ```
+
+
+***
+<br/><br/><br/>
+
+> <h2 id="Redis-HIncrBy-状态计数">Redis HIncrBy 状态计数</h2>
+
+核心代码：
+
+```go
+err := redisClient.HIncrBy(
+    ctx,
+    videoStatusCounterKey(),
+    status,
+    delta,
+).Err()
+```
+
+这句是 `go-redis` 中对 Redis **Hash 字段做原子自增/自减**的操作。
+
+```go
+HIncrBy(ctx, key, field, increment)
+```
+
+对应 Redis 原生命令：
+
+```redis
+HINCRBY key field increment
+```
+
+---
+<br/>
+
+> <h3 id="HIncrBy-是什么">HIncrBy 是什么</h3>
+
+Redis 常用数据结构有 `String`、`List`、`Set`、`Hash`、`ZSet`。这里使用的是 `Hash`，类似 Go 中的：
+
+```go
+map[string]map[string]int64
+```
+
+例如：
+
+```text
+video_status_counter
+{
+    uploading: 100,
+    completed: 200,
+    failed: 5
+}
+```
+
+Redis 中可以理解为：
+
+```text
+key
+ |
+ +---- field:value
+ +---- field:value
+```
+
+假设：
+
+```go
+videoStatusCounterKey() // "video:status:counter"
+status                  // "completed"
+delta                   // 1
+```
+
+执行：
+
+```go
+HIncrBy(ctx, "video:status:counter", "completed", 1)
+```
+
+等价 Redis：
+
+```redis
+HINCRBY video:status:counter completed 1
+```
+
+执行前后：
+
+```text
+video:status:counter
+completed = 100 -> 101
+```
+
+---
+<br/>
+
+> <h3 id="为什么不用-GET--SET">为什么不用 GET + SET</h3>
+
+很多新人会写：
+
+```go
+count := redis.Get("completed")
+count++
+redis.Set("completed", count)
+```
+
+看似一样，但高并发下会丢数据：
+
+```text
+请求A: GET = 100
+请求B: GET = 100
+
+A: 100 + 1 = 101
+B: 100 + 1 = 101
+
+最终结果: 101
+实际应该: 102
+```
+
+`HIncrBy` 是 Redis 原子操作，Redis 单线程顺序执行，不会丢失递增：
+
+```text
+请求A -> Redis -> +1
+请求B -> Redis -> +1
+
+结果: 102
+```
+
+---
+<br/>
+
+## `.Err()` 是什么
+
+完整代码可以拆成：
+
+```go
+result := redisClient.HIncrBy(ctx, key, field, delta)
+err := result.Err()
+```
+
+`HIncrBy` 返回 `*redis.IntCmd`，类似：
+
+```go
+type IntCmd struct {
+    val int64
+    err error
+}
+```
+
+其中 `val` 保存 Redis 返回值。例如：
+
+```redis
+HINCRBY video:status:counter completed 1
+```
+
+返回：
+
+```text
+101
+```
+
+Go 中通过 `result.Val()` 获取：
+
+```go
+result.Val() // 101
+```
+
+`.Err()` 用来获取执行错误：
+
+```go
+err == nil           // 成功
+redis.Nil            // 空值场景
+connection timeout   // 网络或连接错误
+```
+
+所以：
+
+```go
+err := redisClient.HIncrBy(...).Err()
+```
+
+表示：**只关心 Redis 操作有没有失败，不关心增加后的数字。**
+
+---
+<br/>
+
+## delta 是什么
+
+`delta` 是变化量：
+
+```go
+delta := int64(1)  // +1
+delta := int64(-1) // -1
+```
+
+自减时对应：
+
+```redis
+HINCRBY video:status:counter completed -1
+```
+
+---
+<br/>
+
+> <h3 id="视频上传系统中的用途">视频上传系统中的用途</h3>
+
+结合 `video_files`、`video_submission`、`submission_id`，这里可能用于统计视频状态数量。
+
+Redis 保存：
+
+```text
+video:status:counter
+{
+    uploading: 50000,
+    completed: 900000,
+    failed: 100
+}
+```
+
+用户完成上传时，数据库更新：
+
+```sql
+UPDATE video_submission
+SET status = 'completed'
+WHERE id = 10001;
+```
+
+同时更新 Redis：
+
+```go
+redis.HIncrBy(ctx, "video:status:counter", "completed", 1)
+```
+
+结果：
+
+```text
+completed = 900000 -> 900001
+```
+
+状态迁移时，例如 `uploading -> completed`，不能只增加 `completed`，还要减少 `uploading`：
+
+```text
+uploading
+    |
+    v
+completed
+```
+
+正确做法是同时调整两个状态：
+
+```go
+redis.TxPipeline(ctx, func(pipe redis.Pipeliner) error {
+    pipe.HIncrBy(ctx, "video:status:counter", "uploading", -1)
+    pipe.HIncrBy(ctx, "video:status:counter", "completed", 1)
+    return nil
+})
+```
+
+结果：
+
+```text
+uploading -1
+completed +1
+```
+
+---
+<br/>
+
+## HIncrBy 和 HIncrByFloat 区别
+
+整数计数用：
+
+```go
+HIncrBy()
+```
+
+对应 Redis：
+
+```redis
+HINCRBY
+```
+
+例如 `100 -> 101`。浮点计数用：
+
+```go
+HIncrByFloat()
+```
+
+例如 `1.5 -> 2.7`。
+
+---
+<br/>
+
+## 大厂场景
+
+字节、阿里、腾讯类似系统中，`Redis Hash + HIncrBy` 常用于：
+
+### 实时计数
+
+```text
+video:view_count
+{
+    today: 10000000
+}
+```
+
+### 状态统计
+
+```text
+order:status
+{
+    paid: 100000,
+    unpaid: 200000
+}
+```
+
+### 限流计数
+
+```text
+api:limit
+{
+    user_10001: 50
+}
+```
+
+### 分片上传统计
+
+```text
+upload:counter:{submission_id}
+{
+    uploaded_parts: 100,
+    uploaded_bytes: 52428800
+}
+```
+
+所以：
+
+```go
+HIncrBy(ctx, videoStatusCounterKey(), status, delta).Err()
+```
+
+本质就是：**在 Redis Hash 中，对某个视频状态字段进行原子加减操作，并只检查是否执行成功。**在亿级数据、高并发上传系统里，这是非常常见的实时统计计数方案。
+
 
 
 ***

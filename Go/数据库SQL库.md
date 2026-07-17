@@ -3,6 +3,9 @@
 - [下载go-mysql驱动程序](#下载go-mysql驱动程序) 
 - [操作mysql数据库](#操作mysql数据库)  	
 	- [查询mysql版本](#查询mysql版本)
+- [database/sql抽象层接口](#database/sql抽象层接口)
+- [SQL架构设计](#SQL架构设计)
+	- [大厂底层SQL设计](#大厂底层SQL设计)
 - [新建数据表user](#新建数据表user)
 - [插入数据](#插入数据)
 	- [管理员角色批量绑定](#管理员角色批量绑定)
@@ -253,6 +256,854 @@ func main() {
 ganghuang@GangHuangs-MacBook-Pro TestMySQLV1 % go run test_mysql_v1.go                                
 8.4.0
 ```
+
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="database/sql抽象层接口"> database/sql抽象层接口</h1>
+
+`database/sql`、gRPC、AWS SDK for Go、go-redis 虽然用途完全不同，但都有一个共同设计思想：**Command Object（命令对象）+ Result Object（结果对象）+ 延迟处理（Deferred Execution）**。这是 Go 大型框架最经典的设计模式之一。
+
+***
+<br/>
+
+## 先理解什么叫 Command Object（命令对象）
+
+执行一条 SQL 时，很多人会设计成直接返回结果：
+
+```go
+name, err := db.GetUserName(1001)
+```
+
+而大厂 SDK 更喜欢先返回命令对象：
+
+```go
+cmd := db.GetUserName(1001)
+```
+
+此时得到的是 `GetUserNameCommand`，它可能保存 SQL、参数、`Context`、`Timeout`、`Retry` 等信息：
+
+```text
+GetUserNameCommand
+    ├── SQL
+    │   SELECT name
+    │   FROM user
+    │   WHERE id = 1001
+    ├── 参数: 1001
+    ├── Context: ctx
+    ├── Timeout
+    └── Retry
+```
+
+这时候它不是结果，只是在描述：**我要执行什么**。这就是 Command Object。
+
+***
+<br/>
+
+## 什么叫 Result Object（结果对象）
+
+执行以后得到的值和错误，就是 Result Object：
+
+```text
+Result
+    ├── Name: Tom
+    └── Error: nil
+```
+
+也可以理解成：
+
+```text
+Result
+    ↓
+Value
+    ↓
+Err
+```
+
+***
+<br/>
+
+## go-redis 就是 Command Object
+
+例如：
+
+```go
+cmd := client.Get(ctx, "user:1001")
+```
+
+返回的是 `*StringCmd`，里面包含 key、value、err：
+
+```text
+StringCmd
+    ↓
+key = user:1001
+    ↓
+value
+    ↓
+err
+```
+
+真正取结果时才调用：
+
+```go
+name, err := cmd.Result()
+```
+
+源码大概是：
+
+```go
+type StringCmd struct {
+    baseCmd
+    val string
+}
+
+func (cmd *StringCmd) Result() (string, error) {
+    return cmd.val, cmd.err
+}
+```
+
+***
+<br/>
+
+## database/sql 为什么也是这种思想？
+
+例如：
+
+```go
+row := db.QueryRowContext(
+    ctx,
+    "select name from user where id=?",
+    1001,
+)
+```
+
+这里返回的是 `*sql.Row`，不是 `string`。因为数据库此时还没有解析出 `name`，真正读取结果是在 `Scan()`：
+
+```go
+var name string
+err := row.Scan(&name)
+```
+
+流程是：
+
+```text
+QueryRow
+    ↓
+Row Object
+    ↓
+Scan()
+    ↓
+Result
+```
+
+这也是 Command / Result 思想。
+
+***
+<br/>
+
+## Rows 更明显
+
+例如：
+
+```go
+rows, err := db.QueryContext(...)
+```
+
+返回的是 `*sql.Rows`。`Rows` 不是最终结果，只是一个带游标的 `Result Set`：
+
+```text
+Result Set
+    ↓
+Cursor
+    ↓
+Row1
+    ↓
+Row2
+    ↓
+Row3
+```
+
+真正读取时：
+
+```go
+for rows.Next() {
+    rows.Scan(...)
+}
+```
+
+这和 Redis Scan 很像。
+
+***
+<br/>
+
+## gRPC 是什么？
+
+很多人容易误解为 `gRPC = RPC`，其实这不是重点。gRPC 真正解决的是：**微服务之间调用 HTTP 的各种痛点**。
+
+以前 Service A 调用 Service B，通常是 HTTP：
+
+```text
+POST /user/info
+
+{
+  "id": 1001
+}
+```
+
+问题包括：JSON 解析慢；字段容易写错，例如 `userid`、`userId`、`user_id` 都可能出现；API 只能看文档；前后端容易不一致；HTTP/1 连接利用率低。
+
+于是 Google 推出 gRPC。它基于 HTTP/2，采用 Protocol Buffer，例如：
+
+```protobuf
+service UserService {
+    rpc GetUser(UserRequest) returns (UserReply);
+}
+```
+
+然后自动生成各语言客户端：
+
+```go
+client.GetUser(...)
+```
+
+```java
+client.getUser(...)
+```
+
+```python
+client.get_user(...)
+```
+
+这些代码全部自动生成，不需要自己写 HTTP。
+
+<br/><br/>
+### gRPC 解决什么痛点？
+
+以前：
+
+```text
+JSON
+    ↓
+Marshal
+    ↓
+HTTP
+    ↓
+Unmarshal
+```
+
+现在：
+
+```text
+protobuf
+    ↓
+Binary
+    ↓
+HTTP2
+    ↓
+protobuf
+```
+
+所以 gRPC 速度更快、类型安全、接口自动生成，并支持 Streaming / 双向流。字节、阿里、腾讯内部微服务几乎大量使用 gRPC。
+
+***
+<br/>
+
+## AWS SDK 是什么？
+
+AWS 提供几百个云服务，例如：
+
+```text
+S3
+EC2
+Lambda
+SNS
+SQS
+DynamoDB
+CloudWatch
+```
+
+如果没有 SDK，上传 S3 时要自己处理 HTTP、`Authorization`、`Signature`、`Header`、`Body`，非常复杂。AWS SDK 会自动完成：
+
+```text
+签名
+    ↓
+HTTP
+    ↓
+Retry
+    ↓
+Error
+    ↓
+Response
+```
+
+例如上传 S3：
+
+```go
+resp, err := client.PutObject(
+    ctx,
+    &s3.PutObjectInput{
+        Bucket: aws.String("video"),
+        Key:    aws.String("1.mp4"),
+        Body:   file,
+    },
+)
+```
+
+这里传入的是 `PutObjectInput`，不是十几个参数。因为以后新增 `ACL`、`Metadata`、`Tag`、`Encryption` 等字段时，不用修改函数签名。
+
+返回的是 `PutObjectOutput`，里面可能包含：
+
+```text
+ETag
+VersionID
+Location
+```
+
+这就是 Result Object。
+
+***
+<br/>
+
+## AWS SDK 最经典的 Command + Result
+
+上传对象的链路是：
+
+```text
+PutObject
+    ↓
+PutObjectInput
+    ↓
+SDK
+    ↓
+PutObjectOutput
+```
+
+代码：
+
+```go
+input := &s3.PutObjectInput{
+    Bucket: aws.String("video"),
+    Key:    aws.String("1.mp4"),
+    Body:   file,
+}
+
+output, err := s3Client.PutObject(ctx, input)
+```
+
+这里：
+
+```text
+PutObjectInput
+    ↓
+Command Object
+
+PutObjectOutput
+    ↓
+Result Object
+```
+
+非常典型。
+
+***
+<br/>
+
+## 大厂为什么喜欢这种设计？
+
+假设今天函数是：
+
+```go
+func Upload(
+    bucket string,
+    key string,
+    body io.Reader,
+)
+```
+
+一年以后增加 `Metadata`、`StorageClass`、`ACL`、`Tag`、`CacheControl`、`ContentType`、`Encryption` 等字段，函数可能变成：
+
+```go
+Upload(
+    bucket,
+    key,
+    body,
+    metadata,
+    acl,
+    tag,
+    cache,
+    ...
+)
+```
+
+二十多个参数会造成维护灾难。所以更推荐统一成：
+
+```go
+Upload(
+    ctx,
+    &UploadInput{
+        Bucket:   ...,
+        Key:      ...,
+        ACL:      ...,
+        Metadata: ...,
+    },
+)
+```
+
+以后增加字段，不用修改 API。
+
+***
+<br/>
+
+## 四个库设计思想对比
+
+| 库              | 命令对象（Command）                      | 结果对象（Result）                        | 解决的核心问题                     |
+| -------------- | ---------------------------------- | ----------------------------------- | --------------------------- |
+| go-redis       | `StringCmd`、`ScanCmd`、`IntCmd`     | `Result()` 返回值                      | 统一 Redis 命令、支持 Pipeline 和事务 |
+| `database/sql` | `*sql.Row`、`*sql.Rows`、`*sql.Stmt` | `Scan()` 填充变量                       | 统一数据库访问接口、流式读取结果集           |
+| gRPC           | `XXXRequest`（如 `GetUserRequest`）   | `XXXResponse`（如 `GetUserResponse`）  | 解决微服务之间高性能、类型安全的通信问题        |
+| AWS SDK for Go | `PutObjectInput`、`GetObjectInput`  | `PutObjectOutput`、`GetObjectOutput` | 屏蔽云服务 API 细节，统一认证、重试、序列化等能力 |
+
+***
+<br/>
+
+## 你的视频系统以后也建议采用这种模式
+
+例如，不建议：
+
+```go
+PublishVideo(
+    ctx,
+    submissionID,
+    userID,
+    publishTime,
+    notify,
+    operator,
+)
+```
+
+更推荐：
+
+```go
+type PublishVideoCommand struct {
+    SubmissionID int64
+    UserID       int64
+    PublishTime  time.Time
+    Notify       bool
+    Operator     string
+}
+
+type PublishVideoResult struct {
+    VideoID     int64
+    PublishedAt time.Time
+    Status      string
+}
+
+func (s *VideoService) Publish(
+    ctx context.Context,
+    cmd *PublishVideoCommand,
+) (*PublishVideoResult, error)
+```
+
+这种设计与 `gRPC` 的 `Request/Response`、AWS SDK 的 `Input/Output`、go-redis 的命令对象设计风格一致，扩展性更好，也更符合大型 Go 项目的工程实践。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="SQL架构设计">SQL架构设计</h1>
+
+***
+<br/><br/><br/>
+> <h2 id="大厂底层SQL设计">大厂底层SQL设计</h2>
+
+这是一个非常好的方向，但要先澄清一个容易误解的地方：**阿里、字节、腾讯并不会把 MySQL 查询全部设计成 `GetUserNameCommand` 这种 Command Object。**这是很多文章误导的地方。
+
+真正的大厂核心服务，尤其 Go 服务，一般采用的是：
+
+```text
+HTTP
+    │
+Handler
+    │
+Request DTO
+    │
+Service
+    │
+Repository
+    │
+database/sql
+    │
+MySQL
+```
+
+而 **Command Object 更多用于**：
+
+* CQRS（Command Query Responsibility Segregation）
+* Event Sourcing
+* Saga
+* 工作流
+* DDD Application Service
+* SDK（AWS、gRPC）
+* Pipeline
+* 异步任务
+
+**Repository 里的 SQL 一般不会包装成几十个 Command 类。**
+
+***
+<br/>
+
+## 那大厂 SQL 层到底是什么样？
+
+如果对标字节（抖音）、阿里（淘宝）、腾讯（微信视频号）这种高并发 Go 服务，SQL 层一般长这样：
+
+```text
+internal/
+    repository/
+        mysql/
+            video/
+                command/
+                    create_submission.go
+                    update_publish.go
+                    delete_video.go
+                query/
+                    get_submission.go
+                    list_submission.go
+                    search_video.go
+                sql/
+                    submission.sql.go
+                repository.go
+```
+
+注意：这里的 **Command 不是 SQL 命令对象**，而是**业务 Command**。例如 `CreateSubmissionCommand` 表示“我要创建一个投稿”，而不是 `INSERT Command`。
+
+***
+<br/>
+
+## 真正的大厂 Command Object
+
+例如投稿，不是直接写：
+
+```go
+repo.Insert(...)
+```
+
+而是：
+
+```go
+cmd := &CreateSubmissionCommand{
+    SubmissionID: submissionID,
+    UserID:       uid,
+    Title:        title,
+    Description:  desc,
+    PublishType:  Scheduled,
+    PublishTime:  publishTime,
+}
+```
+
+Command 定义：
+
+```go
+package command
+
+import "time"
+
+type CreateSubmissionCommand struct {
+    SubmissionID string
+    UserID       int64
+
+    Title        string
+    Description  string
+    PublishType  int8
+    PublishTime  time.Time
+    ClientIP     string
+    TraceID      string
+    RequestID    string
+}
+```
+
+这里没有 SQL、没有 `db`、没有 `Exec()`，因为 Command 只是**描述业务**。
+
+***
+<br/>
+
+## Repository
+
+Repository 接收业务 Command：
+
+```go
+type SubmissionRepository interface {
+    Create(
+        ctx context.Context,
+        cmd *command.CreateSubmissionCommand,
+    ) error
+}
+```
+
+实现：
+
+```go
+type submissionRepository struct {
+    db *sql.DB
+}
+
+func (r *submissionRepository) Create(
+    ctx context.Context,
+    cmd *command.CreateSubmissionCommand,
+) error {
+    _, err := r.db.ExecContext(
+        ctx,
+        insertSubmissionSQL,
+        cmd.SubmissionID,
+        cmd.UserID,
+        cmd.Title,
+        cmd.Description,
+        cmd.PublishType,
+        cmd.PublishTime,
+    )
+
+    return err
+}
+```
+
+SQL 仍然非常简单。
+
+***
+<br/>
+
+## SQL 独立
+
+SQL 不会写进 Repository，而是独立放在：
+
+```text
+sql/
+    submission.sql.go
+```
+
+例如：
+
+```go
+package sql
+
+const InsertSubmissionSQL = `
+INSERT INTO video_submission
+(
+    submission_id,
+    user_id,
+    title,
+    description,
+    publish_type,
+    publish_time
+)
+VALUES
+(
+    ?,?,?,?,?,?
+)
+`
+```
+
+Repository 调用：
+
+```go
+db.ExecContext(
+    ctx,
+    sql.InsertSubmissionSQL,
+    ...
+)
+```
+
+***
+<br/>
+
+## Query Object
+
+查询例如 `GET /user/videos`，不是十几个参数，而是：
+
+```go
+type ListSubmissionQuery struct {
+    UserID int64
+    Cursor int64
+    Limit  int
+    Status int8
+}
+```
+
+Repository：
+
+```go
+func (r *Repository) List(
+    ctx context.Context,
+    query *ListSubmissionQuery,
+) ([]*Submission, error)
+```
+
+SQL：
+
+```sql
+SELECT
+    ...
+```
+
+***
+<br/>
+
+## Result Object
+
+查询返回：
+
+```go
+type SubmissionResult struct {
+    SubmissionID string
+    UserID       int64
+    Status       int8
+    PublishTime  time.Time
+}
+```
+
+Repository 返回 `[]SubmissionResult`，而不是几十个参数。
+
+***
+<br/>
+
+## 真正面对千万并发会继续拆
+
+Repository 会继续拆成写库和读库：
+
+```text
+Repository
+      │
+  ┌───┴──────────┐
+  │              │
+WriteRepo     ReadRepo
+  │              │
+Master       Replica
+```
+
+创建投稿走主库：
+
+```text
+CreateSubmission()
+    ↓
+Master
+```
+
+查询走读库：
+
+```text
+ListSubmission()
+    ↓
+Read Replica
+```
+
+***
+<br/>
+
+## 真正的大厂 SQL Executor
+
+Repository 不会总是直接依赖 `db.ExecContext()`，而是封装 `DBExecutor`：
+
+```go
+type Executor interface {
+    ExecContext(
+        ctx context.Context,
+        sql string,
+        args ...any,
+    ) (sql.Result, error)
+
+    QueryContext(...)
+}
+```
+
+Repository 依赖 `Executor`，不是 `sql.DB`，这样方便事务：
+
+```text
+sql.DB
+    ↓
+Executor
+    ↓
+Tx
+    ↓
+Mock
+```
+
+全部统一。
+
+***
+<br/>
+
+## 真正的大厂结构
+
+```text
+cmd/
+
+internal/
+    api/
+    service/
+    application/
+        command/
+            create_submission.go
+            publish_video.go
+        query/
+            list_video.go
+    repository/
+        mysql/
+            submission/
+                repository.go
+                sql.go
+        redis/
+        kafka/
+    domain/
+        entity/
+        aggregate/
+        repository/
+    infrastructure/
+        mysql/
+        redis/
+        kafka/
+
+pkg/
+```
+
+这是目前国内一线互联网公司比较常见的分层思路。
+
+***
+<br/>
+
+## 如果要求完整 SQL Command Framework
+
+如果要求的是“完全按照字节/阿里 P6~P8 核心 Go 服务规范，设计一套可以直接运行、支持亿级数据、千万 QPS 的 SQL Command Framework（包含连接池、读写分离、Sharding、Repository、Command Bus、Query Bus、事务、Pipeline、Metrics、Trace、Retry、熔断等）”，那就不是一两个回答能够讲完的内容，大约需要 **5000~10000 行 Go 代码**，会包含二三十个包，基本相当于一个小型数据库访问框架。
+
+它通常会包括：
+
+* DB Core（连接池封装）
+* Executor（统一执行器）
+* Command Bus
+* Query Bus
+* Repository Framework
+* Transaction Manager
+* Unit of Work
+* Sharding Router
+* Read/Write Router
+* SQL Builder
+* Metrics（Prometheus）
+* Trace（OpenTelemetry）
+* Retry
+* Circuit Breaker
+* Cache Aside（Redis）
+* Kafka Outbox
+* Cursor Pagination
+* Batch Executor
+* Prepared Statement Cache
+* SQL 模板管理
+* Mock/Test Framework
+
+这已经是一个完整的基础设施项目，而不是几个示例文件的规模。对于现在的视频平台项目来说，这样的框架可以设计，但需要按模块逐步搭建，而不是在一次回复中给出全部代码。
+
+
+
+
+
 
 <br/><br/><br/>
 
