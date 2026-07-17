@@ -52,6 +52,7 @@
 		- [Xcode清理垃圾文件](https://www.jianshu.com/p/4540d34431db)
 		- [控制台调试](https://www.jianshu.com/p/75688613c6f4)
 - [**开发必备工具**](#开发必备工具)
+	- [专注iOS签名、砸壳与定制化App服务Web](#专注iOS签名、砸壳与定制化App服务Web)
 	- [MySQL使用](#MySQL使用)
 		- [brew安装mysql](#brew安装mysql) 
 		- [mysql的配置](#mysql的配置) 
@@ -2444,11 +2445,16 @@ ffmpeg -i 'https://video.twimg.com/amplify_video/1689197552615444480/pl/oZLnz_7Q
 |  |  |  |  |   |  |  |  |  |
 |  |  |  |  |   |  |  |  |  |
 
+
+***
+<br/><br/><br/>
+># <h2 id="专注iOS签名、砸壳与定制化App服务Web">[专注iOS签名、砸壳与定制化App服务Web](https://www.dumpapp.com/)</h2>
+
+
 <br/>
 
 ***
 <br/><br/><br/>
-
 ># <h1 id='开发必备工具'>[开发必备工具](https://juejin.cn/post/7088473126996181028)</h1>
 
 
