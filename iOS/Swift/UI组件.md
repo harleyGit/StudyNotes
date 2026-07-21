@@ -28,6 +28,7 @@
 		- [通用公式（动态计算）](#通用公式（动态计算）)
 - [导航栏](#导航栏)
 	- [系统导航栏和自定义导航栏](#系统导航栏和自定义导航栏)
+	- [工程导航结构配置优化](#工程导航结构配置优化)
 
 
 
@@ -1003,6 +1004,169 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
 }
 ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="工程导航结构配置优化">工程导航结构配置优化</h2>
+
+
+## 准确根因
+### 原来的登录后根结构是：
+
+```sh
+UIWindow
+└── BaseNavigationController                 外层导航
+    └── ArgusAppMainVC                       Tab Bar
+        ├── BaseNavigationController         首页内部导航
+        │   └── AKOSImilabHomeVC
+        ├── BaseNavigationController         云存内部导航
+        └── BaseNavigationController         我的内部导航
+```
+<br/>
+形成该结构的代码位于 SceneDelegate.swift：
+
+```swift
+let vc = ArgusAppMainVC()
+let nav = BaseNavigationController(rootViewController: vc)
+window?.rootViewController = nav
+```
+但是` ArgusAppMainVC` 已经在 `setupViewControllers()` 中为每个 Tab 创建了各自的 `BaseNavigationController`：
+
+```swift
+let homeNav = BaseNavigationController(rootViewController: homeVC)
+let cloudNav = BaseNavigationController(rootViewController: cloudVC)
+let mineNav = BaseNavigationController(rootViewController: mineVC)
+
+self.viewControllers = [homeNav, cloudNav, mineNav]
+```
+因此外层 BaseNavigationController 是多余的。
+<br/>
+
+原始 `CTMediator.push` 从 Window 根控制器开始查找：
+
+```swift
+UINavigationController *navigationController =
+    (UINavigationController *)[self topViewController];
+```
+因为根控制器就是外层 **BaseNavigationController**，它会直接在外层导航栈执行 push，而不是进入当前 Tab 的 homeNav。
+<br/>
+
+**扫码页则位于内层 homeNav：**
+
+```swift
+homeNav
+├── AKOSImilabHomeVC
+└── AKQRCodeViewController
+```
+扫码成功后先在内层导航执行：
+
+```swift
+qrCodeVC?.navigationController?.popViewController(animated: false)
+```
+紧接着 `CTMediator.push `却在外层导航执行：
+
+外层导航 `push DevicePairingNetGuideVC`
+内层导航刚完成扫码页 **pop 和 Tab Bar inset** 更新
+
+- 这会同时改变：
+	- 外层导航可见控制器
+	- 内层导航栈
+	- Tab Bar 显隐
+	- safe area
+	- Window overlayInsets
+<br/> 
+
+**`iOS 18.5`** 在提交这些 **Window Scene** 更新时触发：
+
+```swift
+-[UIWindow _noteOverlayInsetsDidChange]
+-[FBSScene _sendUpdate:]
+invalid scene update
+```
+
+使用：`nav.pushViewController(nextController, animated: true)`
+不崩溃，是因为这里的 nav 是 currentVC.navigationController，即当前 Tab 的内层 homeNav。pop 和 push 都发生在同一个导航栈中。
+最终代码
+<br/>
+
+登录后的根页面改为直接使用 ArgusAppMainVC：
+
+```swift
+extension SceneDelegate {
+    /// 构造登录后的根页面；主 Tab 内部已为每个栏目配置独立导航栈，不再额外嵌套导航控制器。
+    static func makeLoggedInRootViewController() -> UIViewController {
+        return ArgusAppMainVC()
+    }
+
+    private func initAlreadyLoginVC() {
+        let rootViewController = Self.makeLoggedInRootViewController()
+        IMIRNVersionManager.sharedManager.initData()
+        window?.rootViewController = rootViewController
+    }
+}
+```
+<br/>
+
+### 修复后的层级为：
+
+```swift
+UIWindow
+└── ArgusAppMainVC
+    ├── BaseNavigationController
+    │   └── AKOSImilabHomeVC
+    ├── BaseNavigationController
+    │   └── CloudVC
+    └── BaseNavigationController
+        └── ArgusAppMineVC
+```
+此时原始 CTMediator.push 的逻辑能够正确执行：
+
+```swift
+if ([navigationController isKindOfClass:[UITabBarController class]]) {
+    UITabBarController *tabbarController =
+        (UITabBarController *)navigationController;
+
+    navigationController = tabbarController.selectedViewController;
+}
+```
+最终得到当前 Tab 的内部 **BaseNavigationController**。
+<br/> 
+
+RouteDecider 保持原始跨模块调用：
+`CTMediator.sharedInstance().push(nextController, animated: true)`
+已撤回的修改
+<br/>
+
+以下文件已完全恢复，没有最终差异：
+- `LocalPods/CTMediator/CTMediator/CTMediator/CTMediator+HandyTools.h`
+- `LocalPods/CTMediator/CTMediator/CTMediator/CTMediator+HandyTools.m`
+- `LocalPods/ArgusAppHome/Classes/Router/RouteDecider.swift`
+<br/>
+
+没有保留：
+
+```swift
+- (void)pushViewController:(UIViewController *)viewController
+                  animated:(BOOL)animated
+        fromViewController:(UIViewController *)sourceViewController;
+```
+
+也没有保留：
+
+```swift
+CTMediator.sharedInstance().push(
+    nextController,
+    animated: true,
+    from: currentVC
+)
+```
+最终修改文件
+
+仅有两个文件：
+- `argus-app-ios/SceneDelegate.swift`
+- `argus-app-iosTests/argus_app_iosTests.swift`
+
 
 
 
