@@ -31,6 +31,7 @@
 		- [如何使用Skills](#如何使用Skills)
 	- [项目实战](#项目实战)
 - [OpenCode](#OpenCode)
+	- [OpenCode关于Xcode MCP 配置说明](#OpenCode关于Xcode-MCP配置说明)
 	- [文件配置](#文件配置) 
 	- [Opencode cli和Codex cli共用一套Skill配置](#Opencode_cli和Codex_cli共用一套Skill配置)
  	- [初始化项目](#初始化项目)
@@ -1246,6 +1247,462 @@ opencode	： 启动
 /share          可以分享你在opencode中的内容
 
 control+P       设置某些东西；比如： show side bar在侧边栏可以看我们token消耗多少了
+```
+***
+<br/><br/><br/>
+> <h2 id="OpenCode关于Xcode-MCP配置说明">OpenCode关于Xcode MCP 配置说明</h2>
+
+
+## 一、当前安装并启用的 MCP
+
+截至 2026-07-13，执行以下命令：
+
+```bash
+opencode mcp list
+```
+
+得到的结果是：
+
+```text
+xcode  connected
+/Users/huanggang/.nvm/versions/node/v22.6.0/bin/xcodebuildmcp mcp
+```
+
+因此，当前 OpenCode 实际配置并连接的 MCP 服务只有 1 个：
+
+| MCP 名称 | 软件 | 版本 | 状态 | 主要用途 |
+| --- | --- | --- | --- | --- |
+| `xcode` | XcodeBuildMCP | `2.6.2` | 已连接 | 管理 Xcode 工程，执行 iOS 构建、测试、安装、启动、日志和 UI 操作 |
+
+说明：OpenCode 的 Plugin、Skill、模型 Provider 不是 MCP。当前配置中的 `superpowers`、`test-driven-development`、`openspec-plus` 属于插件或 Skill，不计入 MCP 服务数量。
+
+## 二、XcodeBuildMCP 的作用
+
+XcodeBuildMCP 是专门面向 Apple 开发环境的 MCP 服务。它将 `xcodebuild`、`xcrun`、模拟器、真机和部分 UI 自动化能力封装成结构化工具，使 AI 可以在明确参数和持续会话上下文下操作 Xcode 工程。
+
+当前项目启用了以下工作流：
+
+```yaml
+enabledWorkflows:
+  - simulator
+  - device
+```
+
+配置文件位于：
+
+```text
+/Users/huanggang/HGFiles/Code/GitLab/argus-app-ios/.xcodebuildmcp/config.yaml
+```
+
+当前默认工程上下文为：
+
+| 配置项 | 当前值 |
+| --- | --- |
+| Workspace | `./argus-app-ios.xcworkspace` |
+| Scheme | `argus-app-ios` |
+| Configuration | `Debug` |
+| 真机 ID | `c5f9bb0bdd19f62c3ef023f83c483bb3c46526de` |
+| 平台 | `iOS` |
+
+### 1. 工程发现与上下文管理
+
+主要能力：
+
+- 查找 `.xcodeproj` 和 `.xcworkspace`。
+- 查询 Scheme。
+- 查询 Build Settings。
+- 设置默认 Workspace、Scheme、Configuration、Simulator 或 Device。
+- 使用不同 profile 保存多套默认配置。
+
+常见 MCP 工具：
+
+```text
+xcode_discover_projs
+xcode_list_schemes
+xcode_show_build_settings
+xcode_session_show_defaults
+xcode_session_set_defaults
+xcode_session_clear_defaults
+xcode_session_use_defaults_profile
+```
+
+适用示例：
+
+```text
+请用 Xcode MCP 查找当前工程的 workspace 和可用 scheme。
+请将 argus-app-ios.xcworkspace、argus-app-ios scheme 和当前连接的 iPhone 设置为默认值。
+请查看当前 Xcode MCP session defaults。
+```
+
+### 2. iOS Simulator 工作流
+
+主要能力：
+
+- 构建 Simulator 版本。
+- 在 Simulator 上运行单元测试或 UI 测试。
+- 安装并启动 App。
+- 截图、录屏和读取 UI 元素。
+- 停止 App、清理构建产物。
+
+常见 MCP 工具：
+
+```text
+xcode_build_sim
+xcode_build_run_sim
+xcode_test_sim
+xcode_clean
+xcode_list_sims
+xcode_boot_sim
+xcode_install_app_sim
+xcode_launch_app_sim
+xcode_stop_app_sim
+xcode_screenshot
+xcode_record_sim_video
+xcode_snapshot_ui
+```
+
+适用示例：
+
+```text
+请用 Xcode MCP 构建并启动 iPhone Simulator 上的 App。
+请运行 argus-app-iosTests 中指定的测试。
+请启动 App，进入登录页并截图。
+```
+
+注意：当前 Argus 项目规则明确说明项目不支持 Simulator，因此本项目通常不应使用 Simulator 工作流进行业务验证。保留该 workflow 是为了工具完整性或其他支持 Simulator 的工程。
+
+### 3. iOS 真机工作流
+
+主要能力：
+
+- 面向已连接真机构建 App。
+- 在真机上执行 XCTest 和 UI Test。
+- 安装并启动 App。
+- 获取真机 App 路径和 Bundle ID。
+- 捕获运行日志。
+
+重启 OpenCode 后，应出现的主要 MCP 工具包括：
+
+```text
+xcode_build_device
+xcode_test_device
+xcode_build_run_device
+xcode_get_device_app_path
+xcode_install_app_device
+xcode_launch_app_device
+xcode_stop_app_device
+```
+
+适用示例：
+
+```text
+请使用 Xcode MCP 在当前连接的 iPhone 上构建 argus-app-ios。
+请使用 xcode_test_device 在真机执行全部单元测试。
+请只运行 argus-app-iosTests 中的 testImagePickerKeepsPickerAliveAndLoadsUIImageFirst。
+请构建、安装并启动 App，然后捕获启动日志。
+```
+
+定向测试通常通过 `extraArgs` 传入 `xcodebuild` 参数，例如：
+
+```text
+-only-testing:argus-app-iosTests/argus_app_iosTests/testImagePickerKeepsPickerAliveAndLoadsUIImageFirst
+```
+
+### 4. 构建与清理
+
+主要能力：
+
+- 按平台编译工程。
+- 清理构建产物。
+- 获取产出的 `.app`。
+- 从 `.app` 中读取 Bundle ID。
+
+常见 MCP 工具：
+
+```text
+xcode_build_sim
+xcode_build_device
+xcode_clean
+xcode_get_sim_app_path
+xcode_get_device_app_path
+xcode_get_app_bundle_id
+```
+
+适用示例：
+
+```text
+请清理 iOS 真机构建产物后重新构建。
+请获取刚构建的 App 路径和 Bundle ID。
+```
+
+### 5. 测试与覆盖率
+
+主要能力：
+
+- 在 Simulator 或真机运行 XCTest。
+- 通过 `-only-testing` 定向执行测试。
+- 查看 `.xcresult` 中的 target 覆盖率。
+- 查看指定 Swift 文件的函数覆盖率和未覆盖行。
+
+常见 MCP 工具：
+
+```text
+xcode_test_sim
+xcode_test_device
+xcode_get_coverage_report
+xcode_get_file_coverage
+```
+
+适用示例：
+
+```text
+请在真机运行 ArgusAppUIKit 相关测试并返回 xcresult 路径。
+请读取该 xcresult 的 target 覆盖率。
+请显示 IMIImagePickerController.swift 的函数覆盖率和未覆盖行。
+```
+
+### 6. UI 检查与自动化
+
+当前 MCP 服务具备 UI 自动化能力，但项目配置尚未启用 `ui-automation` workflow。若启用，可进行：
+
+- 获取语义化 UI 快照。
+- 根据元素引用执行点击。
+- 输入文字、滑动和硬件按键操作。
+- 截图和录屏。
+
+当前会话已经可见的部分工具包括：
+
+```text
+xcode_snapshot_ui
+xcode_screenshot
+xcode_record_sim_video
+```
+
+如果需要完整 UI 自动化，可修改项目配置：
+
+```yaml
+enabledWorkflows:
+  - simulator
+  - device
+  - ui-automation
+```
+
+修改配置后必须重启 OpenCode，使 MCP 工具列表重新注册。
+
+### 7. 日志与诊断
+
+XcodeBuildMCP 在构建、测试和启动过程中会返回：
+
+- 编译错误及源码位置。
+- 编译警告。
+- 测试失败信息。
+- `.xcresult` 路径。
+- App 运行日志文件路径。
+- 构建产物路径。
+
+适用示例：
+
+```text
+请在真机启动 App 并分析运行日志中的崩溃原因。
+请运行测试，并按错误、测试失败、警告分类汇总结果。
+```
+
+## 三、如何在 OpenCode 中使用
+
+### 方式一：直接使用自然语言
+
+通常不需要手写 MCP 工具名，只需明确要求使用 Xcode MCP，并说明平台、目标和验证内容。
+
+例如：
+
+```text
+请使用 Xcode MCP 在当前连接的 iPhone 上构建并运行工程。
+```
+
+```text
+请使用 Xcode MCP 的真机测试接口，只运行 FeedbackDetail 相关测试。
+```
+
+```text
+请先调用 session_show_defaults，再在真机运行测试；不要使用 Simulator。
+```
+
+```text
+请构建 ArgusAppUIKit 真机目标，并汇总所有错误和警告。
+```
+
+### 方式二：明确指定工具
+
+如果希望严格控制执行方式，可以直接写工具名称：
+
+```text
+请调用 xcode_session_show_defaults。
+```
+
+```text
+请调用 xcode_test_device，extraArgs 传入：
+-only-testing:argus-app-iosTests/argus_app_iosTests/testImagePickerKeepsPickerAliveAndLoadsUIImageFirst
+```
+
+```text
+请调用 xcode_build_run_device，在默认真机上构建、安装并启动 App。
+```
+
+推荐顺序：
+
+1. 调用 `xcode_session_show_defaults` 检查当前上下文。
+2. 缺少配置时调用 `xcode_session_set_defaults`。
+3. 调用构建、测试或运行工具。
+4. 根据结果读取日志、覆盖率或 UI 快照。
+
+## 四、如何在终端中直接使用
+
+XcodeBuildMCP 同时提供 CLI。即使不通过 OpenCode，也可以在终端直接执行。
+
+查看版本：
+
+```bash
+xcodebuildmcp --version
+```
+
+查看所有工作流和工具：
+
+```bash
+xcodebuildmcp tools
+```
+
+查看真机测试帮助：
+
+```bash
+xcodebuildmcp device test --help
+```
+
+在项目目录执行真机测试：
+
+```bash
+xcodebuildmcp device test --output text
+```
+
+执行指定测试：
+
+```bash
+xcodebuildmcp device test \
+  --json '{"extraArgs":["-only-testing:argus-app-iosTests/argus_app_iosTests/testImagePickerKeepsPickerAliveAndLoadsUIImageFirst"],"progress":true}' \
+  --output text
+```
+
+查看 OpenCode 中的 MCP 连接状态：
+
+```bash
+opencode mcp list
+```
+
+## 五、配置位置
+
+### OpenCode 全局 MCP 配置
+
+```text
+/Users/huanggang/.config/opencode/opencode.json
+```
+
+当前核心配置：
+
+```json
+{
+  "mcp": {
+    "xcode": {
+      "type": "local",
+      "command": [
+        "/Users/huanggang/.nvm/versions/node/v22.6.0/bin/xcodebuildmcp",
+        "mcp"
+      ],
+      "enabled": true
+    }
+  }
+}
+```
+
+### 当前项目的 XcodeBuildMCP 配置
+
+```text
+/Users/huanggang/HGFiles/Code/GitLab/argus-app-ios/.xcodebuildmcp/config.yaml
+```
+
+该文件控制：
+
+- 启用哪些 workflow。
+- 默认 workspace 或 project。
+- 默认 scheme。
+- 默认 configuration。
+- 默认 Simulator 或真机。
+
+## 六、安装、更新和故障排查
+
+安装固定版本：
+
+```bash
+npm install -g xcodebuildmcp@2.6.2
+```
+
+查看是否有更新：
+
+```bash
+xcodebuildmcp upgrade --check
+```
+
+更新到最新稳定版：
+
+```bash
+npm install -g xcodebuildmcp@latest
+```
+
+检查二进制路径：
+
+```bash
+which xcodebuildmcp
+```
+
+检查 MCP 连接：
+
+```bash
+opencode mcp list
+```
+
+如果修改了以下任一配置，必须完全退出并重新启动 OpenCode：
+
+- `~/.config/opencode/opencode.json`
+- 项目内 `.xcodebuildmcp/config.yaml`
+- MCP 二进制版本。
+- `enabledWorkflows`。
+
+常见问题：
+
+| 现象 | 原因 | 处理方式 |
+| --- | --- | --- |
+| 看不到 `xcode_test_device` | 没有启用 `device` workflow，或 OpenCode 尚未重启 | 检查 `.xcodebuildmcp/config.yaml`，然后重启 OpenCode |
+| MCP 显示未连接 | 二进制路径错误、Node 环境不可用或服务启动失败 | 执行 `which xcodebuildmcp` 和 `opencode mcp list` |
+| 真机测试无法开始 | 真机未连接、未信任、设备锁定或签名失败 | 解锁设备，检查开发者模式、证书和 Provisioning Profile |
+| 测试没有执行 | 工程在编译阶段失败 | 先修复 MCP 返回的编译错误，再重新运行测试 |
+| 修改配置后工具没变化 | MCP 工具列表不会热更新 | 完全退出并重新启动 OpenCode |
+
+## 七、当前结论
+
+当前 OpenCode 只有一个 MCP 服务：`xcode`。
+
+它已经具备并启用了：
+
+- Xcode 工程发现和默认上下文管理。
+- iOS Simulator 构建与测试能力。
+- iOS 真机构建、测试、安装和启动能力。
+- 构建错误、测试结果、日志和覆盖率诊断能力。
+
+对于当前 Argus iOS 项目，应优先使用真机相关接口，特别是：
+
+```text
+xcode_session_show_defaults
+xcode_build_device
+xcode_test_device
+xcode_build_run_device
 ```
 
 
