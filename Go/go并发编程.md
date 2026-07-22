@@ -1880,6 +1880,133 @@ func main {
 		- 两个 case 都阻塞
   		- default 执行
     	- return，程序结束
+ 
+
+  ***
+  <br/>
+
+### 场景：kafka中关于select中的使用
+
+  select类似：**多个 channel 等待。** 例如：
+
+```go
+select {
+
+case msg:=<-ch1:
+
+    handle(msg)
+
+
+case msg:=<-ch2:
+
+    handle(msg)
+
+}
+```
+意思：**哪个 channel 有数据，执行哪个。** 你的：
+
+```go
+select {
+
+case <-ctx.Done():
+
+    return
+
+
+default:
+
+}
+```
+<br/>
+
+### 先理解 ctx。
+
+创建：
+
+```go
+ctx,cancel :=
+context.WithCancel(
+    context.Background(),
+)
+```
+ctx里面有一个：`Done()`,也就是channel可以调用的方法。
+
+正常：ctx的`Done channel`没有数据,处于阻塞状态。调用：
+
+```go
+cancel()
+```
+变成：
+
+```go
+ctx.Done()
+```
+发送关闭信号
+
+
+<br/>
+
+### 只有两个分支：
+
+**情况1：ctx取消**,例如：`cancel()`。那么：`ctx.Done()`有信号。执行：
+
+```go
+return
+```
+退出：consumeLoop结束
+
+<br/>
+
+### 情况2：ctx没有取消
+
+执行：`default`,立即结束 select。继续：
+
+```go
+fetches := b.cli.PollFetches(ctx)
+```
+<br/>
+
+### 为什么需要 default？
+
+这是一个：非阻塞检查。如果没有 default：
+
+```go
+select {
+
+case <-ctx.Done():
+
+    return
+
+}
+```
+
+如果 ctx 没取消,会一直等待。流程：
+
+```sh
+select
+
+ |
+ |
+等待ctx.Done()
+
+ |
+ |
+卡住
+```
+
+后面的 Kafka 消费代码永远不会执行。有 default：
+
+```
+检查一下
+
+ |
+ |
+没有取消
+
+ |
+ |
+继续消费Kafka
+```
 
  <br/>
 
