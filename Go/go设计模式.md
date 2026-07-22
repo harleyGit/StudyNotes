@@ -1,6 +1,7 @@
 > <h1 id=""></h1>
 - [**工厂模式**](#工厂模式)
 - [依赖注入+组合接口模式](#依赖注入+组合接口模式)
+- [单例模式](#单例模式)
 
 
 
@@ -172,9 +173,32 @@ fmt.Println(val) // 输出 hello
 
 
 
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id= "单例模式">单例模式</h1>
+
+### 单例初始化，例如：
+
+```go
+var db *sql.DB
+
+var once sync.Once
 
 
+func GetDB()*sql.DB{
 
+    once.Do(func(){
+
+        db = initDB()
+
+    })
+
+    return db
+}
+```
+保证：**数据库连接只创建一次。**
 
 
 
