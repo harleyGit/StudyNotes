@@ -30,6 +30,9 @@
 	- [Redis ZSET 与 ZREM](#RedisZSET与ZREM)
 	- [视频流式读取 io.LimitReader + ReadAll](#视频流式读取ioLimitReaderReadAll)
 	- [千万级视频业务标准架构](#千万级视频业务标准架构)
+	- [视频上传 Redis 限流改造](#视频上传-Redis-限流改造)
+- [KafKa使用](#KafKa使用)
+	- [Go 微服务中的配置、Kafka 与数据库操作](#微服务中的配置Kafka与数据库操作)
 - [**数据库**](#数据库)
 	- [database/sql抽象层接口](#database/sql抽象层接口)
 	- [大厂底层SQL设计【未做，可以后面优化】](#大厂底层SQL设计)
@@ -37,6 +40,9 @@
 	- [客户端时间统一解析为 UTC](#客户端时间统一解析为UTC)
 - [Redis使用](#Redis使用)
 	- [Redis HIncrBy 状态计数](#Redis-HIncrBy-状态计数)
+- [命令行参数](#命令行参数)
+	- [Go flag 命令行参数解析](#Go-flag-命令行参数解析)
+	- [命令行参数-查看帮助](#命令行参数-查看帮助)
 - [工程表](#工程表)
 - [后台管理接口设计](#后台管理接口设计)
 - [分布式限流-Lua脚本](#分布式限流-Lua脚本)
@@ -62,7 +68,6 @@
 <br/><br/><br/>
 ># <h2 id="StatusCounterSyncer-后台同步器">[StatusCounterSyncer 后台同步器](../go并发编程.md#StatusCounterSyncer-后台同步器)</h2>
 
-	- 
 
 
 ***
@@ -176,6 +181,27 @@
 
 
 ***
+<br/><br/><br/>
+> <h2 id="视频上传-Redis-限流改造">[视频上传 Redis 限流改造](../资源文件.md#视频上传-Redis-限流改造)</h2>
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="KafKa使用">[KafKa使用](../franz-go库.md#Kafka与franz-go工程实践)</h1>
+
+
+
+***
+<br/><br/><br/>
+> <h2 id="Go微服务中的配置Kafka与数据库操作">[Go 微服务中的配置、Kafka 与数据库操作](../franz-go库.md#Go微服务中的配置Kafka与数据库操作)</h2>
+
+
+
+
+
+***
 <br/><br/>
 ># <h3 id="INSERTONDUPLICATEKEYUPDATE">[INSERT ... ON DUPLICATE KEY UPDATE【插入数据优化】](../数据库SQL库.md#INSERTONDUPLICATEKEYUPDATE)</h1>
 
@@ -197,6 +223,31 @@
 <br/><br/><br/>
 ># <h2 id="Redis-HIncrBy-状态计数">[Redis HIncrBy 状态计数](../库go-redis.md#Redis-HIncrBy-状态计数)</h2>
 
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="命令行参数">命令行参数</h1>
+
+
+***
+<br/><br/><br/>
+># <h2 id="Go-flag-命令行参数解析">[Go flag 命令行参数解析](../命令行.md#Go-flag-命令行参数解析)</h2>
+
+```go
+env := flag.String("env", "debug", "运行环境：debug、pre、prod")
+configDir := flag.String("config-dir", "./config", "配置根目录")
+check := flag.String("check", "", "依赖检查：mysql 或 redis；为空时只输出非敏感地址")
+
+// flag.Parse() 和 flag.String() 属于 Go 标准库 flag 包，主要作用是：解析命令行参数，让 Go 程序启动时可以通过命令行传入配置
+flag.Parse()
+```
+
+
+***
+<br/><br/><br/>
+> <h2 id="命令行参数-查看帮助">[命令行参数-查看帮助](../命令行.md#Go-flag-参数说明)</h2>
 
 
 
