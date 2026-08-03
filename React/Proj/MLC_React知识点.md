@@ -3,6 +3,7 @@
 	- [请求超时自动取消](#请求超时自动取消)
 	- [React 组件卸载取消请求](#React组件卸载取消请求)
 	- [AbortError 错误处理](#AbortError错误处理)
+	- [`BILI_VIDEO_CONTENT` 路由跳转分析](#BILI_VIDEO_CONTENT路由跳转分析)
 
 
 ***
@@ -185,3 +186,10 @@ try {
 - 现代浏览器基本都支持 `AbortController`，IE 不支持。
 
 总结：**`AbortController` 是 Fetch 的请求中断控制器；在 React 中最常用于接口超时取消和组件卸载清理请求，避免无限等待、重复请求堆积和无效状态更新**。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="BILI_VIDEO_CONTENT路由跳转分析">[`BILI_VIDEO_CONTENT` 路由跳转分析](../路由.md#BILI_VIDEO_CONTENT路由跳转分析)</h1>
