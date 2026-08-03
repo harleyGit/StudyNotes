@@ -29,7 +29,7 @@
 	- [GO工程的实践使用](#GO工程的实践使用)
     - [CI和PR概念理解](#CI和PR概念理解)
 - [GO工程企业级标准](#GO工程企业级标准)
-
+- [godotenv.Load](#godotenv.Load)
 
 <br/><br/><br/>
 
@@ -3904,6 +3904,94 @@ WHERE id = 1 AND version = 3;
 你只要告诉我下一步选哪个，我就直接写代码给你。
 
 
+
+***
+<br/>
+
+> <h3 id="godotenv.Load">godotenv.Load</h3>
+
+```go
+err := godotenv.Load(envFile)
+```
+
+`github.com/joho/godotenv` 的 `Load` 会读取 `.env` 文件，将其中的 `KEY=VALUE` 加载到**当前进程**的环境变量，之后可通过 `os.Getenv()` 获取。
+
+```env
+MYSQL_USER=root
+MYSQL_PASSWORD=123456
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+REDIS_ADDR=127.0.0.1:6379
+```
+
+```go
+func main() {
+    if err := godotenv.Load(".env"); err != nil {
+        log.Printf("load .env: %v", err)
+    }
+
+    user := os.Getenv("MYSQL_USER")
+    fmt.Println(user)
+}
+```
+
+执行流程：
+
+```text
+.env 文件
+    |
+    v
+解析 KEY=VALUE
+    |
+    v
+写入当前进程环境
+    |
+    v
+os.Getenv()
+    |
+    v
+业务配置初始化
+```
+
+这些变量只影响当前进程及其后续创建的子进程，不会永久修改操作系统的全局环境。
+
+### Load 与 Overload
+
+| 方法 | 已存在同名环境变量时 |
+| --- | --- |
+| `godotenv.Load()` | 保留原环境变量，不覆盖 |
+| `godotenv.Overload()` | 使用 `.env` 中的值强制覆盖 |
+
+环境变量通常应拥有比本地 `.env` 更高的优先级，因此普通项目更常使用 `Load()`。
+
+### 多环境文件
+
+```go
+envFile := ".env.dev"
+if os.Getenv("APP_ENV") == "prod" {
+    envFile = ".env.prod"
+}
+
+if err := godotenv.Load(envFile); err != nil {
+    return fmt.Errorf("load %s: %w", envFile, err)
+}
+```
+
+注意相对路径基于程序启动时的当前工作目录，而不是 `main.go` 所在目录：
+
+```text
+project/
+├── configs/.env
+└── cmd/server/main.go
+```
+
+从 `project/` 启动时，应加载 `configs/.env`。
+
+### 生产安全
+
+开发环境可使用 `.env`，但不应将真实密码提交到 Git。生产环境通常使用 Kubernetes Secret、AWS Secrets Manager、HashiCorp Vault 或云厂商 KMS，并通过容器环境变量注入应用。
+
+`godotenv` 负责加载简单的 `KEY=VALUE`；Viper 更适合 YAML/JSON/TOML、多来源合并和类型化配置。
 
 
 

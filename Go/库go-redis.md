@@ -31,6 +31,8 @@
 - [经典简单案例](#经典简单案例)
 	- [分布式锁实现](#分布式锁实现)  
 	- [缓存封装](#缓存封装)
+- [errors.Is 与 redis.Nil](#errors.Is与redis.Nil)
+- [Redis Get().Bytes()](#Redis-Get-Bytes)
 
 
 
@@ -1683,3 +1685,151 @@ func (c *RedisCache) DeletePattern(ctx context.Context, pattern string) error {
 2. **内存不足**：合理设置 maxmemory 策略
 3. **键冲突**：使用命名空间前缀
 4. **序列化问题**：使用 JSON 或 Protobuf
+
+
+
+
+***
+<br/>
+
+> <h3 id="errors.Is与redis.Nil">errors.Is 与 redis.Nil</h3>
+
+```go
+data, err := client.Get(ctx, "user:10001").Bytes()
+if err != nil {
+    if errors.Is(err, redis.Nil) {
+        // Cache miss：key 不存在，不是 Redis 服务故障
+        return getFromDB(ctx)
+    }
+    return nil, err
+}
+```
+
+`redis.Nil` 表示 Redis 查询没有结果，例如执行 `GET user:10001` 时 key 不存在。它不表示连接失败、超时或 Redis 服务宕机。
+
+### 为什么使用 errors.Is
+
+简单情况下 `err == redis.Nil` 可以工作，但错误被包装后会失败：
+
+```go
+wrapped := fmt.Errorf("get user failed: %w", redis.Nil)
+
+fmt.Println(wrapped == redis.Nil)          // false
+fmt.Println(errors.Is(wrapped, redis.Nil)) // true
+```
+
+`errors.Is` 会沿 `Unwrap()` 错误链查找目标错误：
+
+```text
+get user failed
+      |
+      v
+redis.Nil
+```
+
+### Redis 错误分类
+
+| 情况 | `err` | 处理 |
+| --- | --- | --- |
+| key 存在 | `nil` | 使用缓存数据 |
+| key 不存在 | `redis.Nil` | 查询数据库并回填缓存 |
+| 连接失败 | 网络错误 | 报警、重试或降级 |
+| 超时 | `context.DeadlineExceeded` 等 | 按超时策略处理 |
+
+缓存读取流程：
+
+```text
+请求
+ |
+ v
+Redis GET
+ |
+ +-- 命中 ------> 反序列化并返回
+ |
+ +-- redis.Nil -> 查询 MySQL -> 回填 Redis -> 返回
+ |
+ +-- 其他错误 --> 报警 / 重试 / 降级
+```
+
+***
+<br/>
+
+> <h3 id="Redis-Get-Bytes">Redis Get().Bytes()</h3>
+
+```go
+data, err := c.client.Get(
+    ctx,
+    PersistenceRedisPackage.OpsBilibiliActiveTagListKey,
+).Bytes()
+```
+
+等价于：
+
+```go
+cmd := c.client.Get(ctx, key)
+data, err := cmd.Bytes()
+```
+
+执行链路：
+
+```text
+Go 代码
+   |
+   v
+client.Get(ctx, key)
+   |
+   v
+发送 Redis GET key
+   |
+   v
+*redis.StringCmd
+   |
+   v
+Bytes()
+   |
+   v
+[]byte
+```
+
+- `Get()` 读取 Redis String 类型的 value，并返回 `*redis.StringCmd`。
+- `Bytes()` 返回 `([]byte, error)`，便于直接传给 `json.Unmarshal`、protobuf 等反序列化函数。
+- `Result()` 返回 `(string, error)`；如果后续需要 `[]byte`，使用 `Bytes()` 更直接。
+
+### JSON 缓存示例
+
+```go
+func (c *Cache) getActiveTags(ctx context.Context) ([]Tag, error) {
+    data, err := c.client.Get(ctx, OpsBilibiliActiveTagListKey).Bytes()
+    if err != nil {
+        if errors.Is(err, redis.Nil) {
+            return nil, nil
+        }
+        return nil, fmt.Errorf("get active tags cache: %w", err)
+    }
+
+    var tags []Tag
+    if err := json.Unmarshal(data, &tags); err != nil {
+        return nil, fmt.Errorf("decode active tags cache: %w", err)
+    }
+
+    return tags, nil
+}
+```
+
+```text
+Redis String(JSON)
+        |
+        v
+     Bytes()
+        |
+        v
+      []byte
+        |
+        v
+  json.Unmarshal
+        |
+        v
+    Go struct
+```
+
+`GET` 只能读取 Redis String；List、Set、Hash 应分别使用 `LRange`、`SMembers`、`HGetAll` 等对应命令。

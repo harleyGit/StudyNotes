@@ -31,6 +31,11 @@
 	- [视频流式读取 io.LimitReader + ReadAll](#视频流式读取ioLimitReaderReadAll)
 	- [千万级视频业务标准架构](#千万级视频业务标准架构)
 	- [视频上传 Redis 限流改造](#视频上传-Redis-限流改造)
+	- [yaml 与 mapstructure 标签](#yaml与mapstructure标签)
+- [配置](#配置)
+	- [godotenv.Load](#godotenv.Load)
+- [网络](#网络)
+	- [拼接标准网络地址](#拼接标准网络地址)
 - [KafKa使用](#KafKa使用)
 	- [Go 微服务中的配置、Kafka 与数据库操作](#微服务中的配置Kafka与数据库操作)
 - [**数据库**](#数据库)
@@ -38,8 +43,21 @@
 	- [大厂底层SQL设计【未做，可以后面优化】](#大厂底层SQL设计)
 	- [INSERT ... ON DUPLICATE KEY UPDATE](#INSERTONDUPLICATEKEYUPDATE)
 	- [客户端时间统一解析为 UTC](#客户端时间统一解析为UTC)
+	- [Go + MySQL 数据库迁移与元数据检查](#Go+MySQL数据库迁移与元数据检查)
+	- [启动时执行 MySQL Migration](#启动时执行MySQLMigration)
+	- [检查指定索引是否存在](#检查指定索引是否存在)
+	- [MySQL information_schema](#MySQLinformation_schema)
+	- [Go 后端常用代码与数据库基础](#Go后端常用代码与数据库基础)
+	- [schema_migrations 迁移版本表](#schema_migrations迁移版本表)
+	- [视频标签游标分页 SQL](#视频标签游标分页SQL)
+	- [strings.SplitN](#strings.SplitN)
+	- [ORDER BY 与 LIMIT](#ORDER-BY与LIMIT)
+	- [识别 MySQL Duplicate Key](#识别MySQL-Duplicate-Key)
+	- [mysql.Config.FormatDSN](#mysql.Config.FormatDSN)
 - [Redis使用](#Redis使用)
 	- [Redis HIncrBy 状态计数](#Redis-HIncrBy-状态计数)
+	- [errors.Is 与 redis.Nil](#errors.Is与redis.Nil)
+	- [Redis Get().Bytes()](#Redis-Get-Bytes)
 - [命令行参数](#命令行参数)
 	- [Go flag 命令行参数解析](#Go-flag-命令行参数解析)
 	- [命令行参数-查看帮助](#命令行参数-查看帮助)
@@ -185,6 +203,36 @@
 > <h2 id="视频上传-Redis-限流改造">[视频上传 Redis 限流改造](../资源文件.md#视频上传-Redis-限流改造)</h2>
 
 
+***
+<br/><br/><br/>
+># <h2 id="yaml与mapstructure标签">[yaml 与 mapstructure 标签](../陌生语法.md#yaml与mapstructure标签)</h2>
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="配置">配置</h1>
+
+***
+<br/><br/><br/>
+># <h2 id="godotenv.Load">[godotenv.Load](../Go工程文件配置.md#yaml与mapstructure标签)</h2>
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="网络">网络</h1>
+
+
+***
+<br/><br/><br/>
+># <h2 id="拼接标准网络地址">[拼接标准网络地址](../网络.md#拼接标准网络地址)</h2>
+
+
 <br/>
 
 ***
@@ -195,9 +243,7 @@
 
 ***
 <br/><br/><br/>
-> <h2 id="Go微服务中的配置Kafka与数据库操作">[Go 微服务中的配置、Kafka 与数据库操作](../franz-go库.md#Go微服务中的配置Kafka与数据库操作)</h2>
-
-
+># <h2 id="Go微服务中的配置Kafka与数据库操作">[Go 微服务中的配置、Kafka 与数据库操作](../franz-go库.md#Go微服务中的配置Kafka与数据库操作)</h2>
 
 
 
@@ -213,6 +259,58 @@
 
 
 
+***
+<br/><br/><br/>
+># <h2 id="Go+MySQL数据库迁移与元数据检查">[Go + MySQL 数据库迁移与元数据检查](../数据库SQL库2.md#Go+MySQL数据库迁移与元数据检查)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="启动时执行MySQLMigration">[启动时执行 MySQL Migration](../数据库SQL库2.md#启动时执行MySQLMigration)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="检查指定索引是否存在">[检查指定索引是否存在](../数据库SQL库2.md#检查指定索引是否存在)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="MySQLinformation_schema">[MySQL information_schema](../数据库SQL库2.md#MySQLinformation_schema)</h2>
+
+
+
+
+***
+<br/><br/><br/>
+># <h2 id="Go后端常用代码与数据库基础">[Go 后端常用代码与数据库基础](../数据库SQL库2.md#Go后端常用代码与数据库基础)</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="schema_migrations迁移版本表">[schema_migrations 迁移版本表](../数据库SQL库2.md#schema_migrations迁移版本表)</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="视频标签游标分页SQL">[视频标签游标分页 SQL](../数据库SQL库2.md#视频标签游标分页SQL)</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="视频标签游标分页SQL">[视频标签游标分页SQL](../数据库SQL库2.md#视频标签游标分页SQL)</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="ORDER-BY与LIMIT">[ORDER BY 与 LIMIT](../数据库SQL库2.md#ORDER-BY与LIMIT)</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="识别MySQL-Duplicate-Key">[识别 MySQL Duplicate Key](../数据库SQL库2.md#识别MySQL-Duplicate-Key)</h2>
+
+***
+<br/><br/><br/>
+> <h2 id="mysql.Config.FormatDSN">[mysql.Config.FormatDSN](../数据库SQL库2.md#mysql.Config.FormatDSN)</h2>
+
+
+
 <br/>
 ***
 
@@ -223,6 +321,20 @@
 <br/><br/><br/>
 ># <h2 id="Redis-HIncrBy-状态计数">[Redis HIncrBy 状态计数](../库go-redis.md#Redis-HIncrBy-状态计数)</h2>
 
+
+
+***
+<br/><br/><br/>
+> <h2 id="errors.Is与redis.Nil">[errors.Is 与 redis.Nil](../库go-redis.md#errors.Is与redis.Nil)</h2>
+
+***
+<br/><br/><br/>
+> <h2 id="Redis-Get-Bytes">[Redis Get().Bytes()](../库go-redis.md#errors.Is与redis.Nil)</h2>
+
+
+***
+<br/><br/><br/>
+> <h2 id=""></h2>
 
 <br/>
 
@@ -247,7 +359,7 @@ flag.Parse()
 
 ***
 <br/><br/><br/>
-> <h2 id="命令行参数-查看帮助">[命令行参数-查看帮助](../命令行.md#Go-flag-参数说明)</h2>
+># <h2 id="命令行参数-查看帮助">[命令行参数-查看帮助](../命令行.md#Go-flag-参数说明)</h2>
 
 
 
