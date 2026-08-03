@@ -15,6 +15,17 @@
 	- [PollFetches 拉取与提交消息](#PollFetches拉取与提交消息)
 	- [append 构造批量 INSERT](#append构造批量INSERT)
 	- [RowsAffected 获取影响行数](#RowsAffected获取影响行数)
+- [大厂kafka方案](#大厂kafka方案)
+	- [项目目录布局](#项目目录布局)
+	- [依赖引入](#依赖引入) 
+	- [配置层](#配置层) 
+	- [kafka配置工厂](#kafka配置工厂)  
+	- [全局生产者单例](#全局生产者单例)  
+	- [统一消费基类](#统一消费基类)  
+	- [业务消费任务示例](#业务消费任务示例)  
+	- [HTTP接口调用示例](#HTTP接口调用示例)  
+	- [main入口初始化](#main入口初始化) 
+	- [MLC_GO工程改动](#MLC_GO工程改动)
 
 
 
@@ -2825,3 +2836,600 @@ RowsAffected = 0
 ```
 
 **核心原则：先检查 SQL 执行错误，再结合影响行数和具体数据库语义判断业务操作是否真正达到预期。**
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="大厂kafka方案">大厂kafka方案</h1>
+
+ franz-go 大厂级完整工程方案（适配亿万数据、千万并发）
+ 
+ ***
+<br/><br/><br/>
+> <h2 id="项目目录布局">项目目录布局</h2>
+ 
+## 项目目录布局（对标之前sarama规范，统一分层）
+
+```
+service-log-stream/
+├── cmd/server/main.go          # 初始化全局kgo单例、注册消费任务
+├── internal
+│   ├── conf/config.go          # Nacos配置，多集群隔离（埋点/业务）
+│   ├── kafka                   # franz-go统一封装层（核心）
+│   │   ├── client.go           # 全局生产者单例、发送通用方法
+│   │   ├── consumer.go         # 统一消费基类、自动offset管理、DLQ
+│   │   ├── config_builder.go   # 两套配置：高吞吐埋点 / 高可靠交易
+│   │   ├── metric_hook.go      # prometheus埋点钩子（发送成功/lag/耗时）
+│   │   ├── trace_hook.go       # header注入traceId，全链路追踪
+│   │   └── dlq.go              # 统一死信投递、失败消息缓存补偿
+│   ├── domain/event            # 事件结构体、topic/group常量
+│   ├── service                 # 业务层，调用kafka发送事件
+│   ├── handler                 # HTTP/RPC接口层，透传ctx到kafka
+│   └── consumer_task           # 所有消费任务注册入口
+├── pkg/logger
+└── go.mod
+```
+
+***
+<br/><br/><br/>
+> <h2 id="依赖引入">依赖引入</h2>
+
+```bash
+go get github.com/twmb/franz-go/pkg/kgo
+go get github.com/twmb/franz-go/pkg/kadm # 集群管理API（创建topic/查询offset）
+```
+
+***
+<br/><br/><br/>
+> <h2 id="配置层">配置层</h2>
+
+### 配置层 internal/conf/config.go
+
+```go
+package conf
+
+type AppConf struct {
+	Kafka KafkaClusterConf `yaml:"kafka"`
+}
+
+type KafkaClusterConf struct {
+	Business Cluster `yaml:"business"` // 业务消息集群
+	Log      Cluster `yaml:"log"`      // 埋点日志集群
+}
+
+type Cluster struct {
+	Brokers []string `yaml:"brokers"`
+	Acks    string   `yaml:"acks"` // 1 / all
+	Retry   int      `yaml:"retry"`
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="kafka配置工厂">kafka配置工厂</h2>
+
+### kafka配置工厂 internal/kafka/config_builder.go
+两套生产配置，大厂分级策略（franz-go option模式，无臃肿结构体）
+```go
+package kafka
+
+import (
+	"github.com/twmb/franz-go/pkg/kgo"
+	"service-log-stream/internal/conf"
+	"github.com/twmb/franz-go/pkg/kcompress"
+)
+
+// NewLogProducerOpts 埋点集群：极致吞吐，acks=1，高批量
+func NewLogProducerOpts(cfg conf.Cluster) []kgo.Opt {
+	opts := []kgo.Opt{
+		kgo.SeedBrokers(cfg.Brokers...),
+		kgo.RequiredAcks(kgo.AcksOne),
+		kgo.ProducerBatchCompression(kcompress.Lz4),
+		kgo.ProducerBatchMaxBytes(16 * 1024 * 1024),
+		kgo.ProducerBatchMaxDuration(50), // 50ms强制刷批
+		kgo.ProducerMaxRetries(cfg.Retry),
+		// 开启幂等生产者，防止重试重复
+		kgo.IdempotentProducer(),
+	}
+	// 注入监控、链路钩子
+	opts = append(opts, MetricHookOpt(), TraceHookOpt())
+	return opts
+}
+
+// NewBusinessProducerOpts 业务交易集群：acks=all，可靠不丢消息
+func NewBusinessProducerOpts(cfg conf.Cluster) []kgo.Opt {
+	opts := []kgo.Opt{
+		kgo.SeedBrokers(cfg.Brokers...),
+		kgo.RequiredAcks(kgo.AcksAll),
+		kgo.ProducerBatchCompression(kcompress.Lz4),
+		kgo.ProducerBatchMaxDuration(100),
+		kgo.ProducerMaxRetries(cfg.Retry),
+		kgo.IdempotentProducer(),
+		// 如需事务，开启：kgo.TransactionalID("service-order-v1"),
+	}
+	opts = append(opts, MetricHookOpt(), TraceHookOpt())
+	return opts
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="全局生产者单例">全局生产者单例</h2>
+
+### 全局生产者单例 internal/kafka/client.go（千万并发核心封装）
+franz-go单Client同时支持生产+消费，无需区分producer/consumer两套连接，大幅减少Broker连接数（大厂集群连接管控核心优化）
+```go
+package kafka
+
+import (
+	"context"
+	"encoding/json"
+	"github.com/twmb/franz-go/pkg/kgo"
+	"service-log-stream/internal/conf"
+	"service-log-stream/pkg/logger"
+)
+
+var GlobalKgoClient *kgo.Client
+
+// InitKafka 程序启动初始化全局客户端
+func InitKafka(cfg conf.KafkaClusterConf) error {
+	// 业务客户端（生产+消费共用）
+	bizOpts := NewBusinessProducerOpts(cfg.Business)
+	bizCli, err := kgo.NewClient(bizOpts...)
+	if err != nil {
+		return err
+	}
+	GlobalKgoClient = bizCli
+
+	// 埋点客户端可独立创建，或复用同一client（看流量隔离需求）
+	return nil
+}
+
+// SendBusinessEvent 接口/service层调用发送业务事件
+func SendBusinessEvent(ctx context.Context, topic string, key string, data any) error {
+	val, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	record := &kgo.Record{
+		Topic: topic,
+		Key:   []byte(key),
+		Value: val,
+	}
+	// 注入trace到header
+	InjectTraceToRecord(ctx, record)
+	// 同步发送；超高吞吐用ProduceAsync非阻塞
+	return GlobalKgoClient.ProduceSync(ctx, record).FirstErr()
+}
+
+// SendLogEvent 埋点日志异步发送，不阻塞业务接口
+func SendLogEvent(ctx context.Context, topic string, data any) {
+	val, _ := json.Marshal(data)
+	record := &kgo.Record{Topic: topic, Value: val}
+	InjectTraceToRecord(ctx, record)
+	GlobalKgoClient.ProduceAsync(ctx, record, func(r *kgo.Record, err error) {
+		if err != nil {
+			logger.Error("send log failed", logger.Err(err), logger.String("topic", topic))
+			_ = SendDLQ(ctx, r, "log", err.Error())
+		}
+	})
+}
+
+// Close 优雅关闭，等待缓存消息全部发送完成
+func Close() {
+	if GlobalKgoClient != nil {
+		_ = GlobalKgoClient.Flush(context.Background())
+		GlobalKgoClient.Close()
+	}
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="统一消费基类">统一消费基类</h2>
+
+### 统一消费基类 internal/kafka/consumer.go（大厂标准消费模型）
+franz-go消费者天然支持手动提交offset，自动重平衡、动态感知新增分区，无需像sarama维护复杂ConsumerGroupHandler
+
+```go
+package kafka
+
+import (
+	"context"
+	"github.com/twmb/franz-go/pkg/kgo"
+	"service-log-stream/pkg/logger"
+)
+
+type BaseConsumer struct {
+	dlqTopic string
+	cli      *kgo.Client
+}
+
+func NewBaseConsumer(cli *kgo.Client, dlqTopic string) *BaseConsumer {
+	return &BaseConsumer{cli: cli, dlqTopic: dlqTopic}
+}
+
+// StartConsume 启动消费循环，支持多topic、自动负载均衡
+func (b *BaseConsumer) StartConsume(ctx context.Context, topics []string, handle func(ctx context.Context, r *kgo.Record) error) {
+	// 订阅topic，自动监听分区扩容
+	b.cli.Subscribe(topics...)
+	go func() {
+		for {
+			fetches := b.cli.PollFetches(ctx)
+			if errs := fetches.Errors(); len(errs) > 0 {
+				logger.Error("kafka fetch error", logger.Any("errs", errs))
+				continue
+			}
+			// 遍历所有拉取到的消息
+			fetches.EachRecord(func(r *kgo.Record) {
+				traceCtx := ExtractTraceFromRecord(r)
+				err := handle(traceCtx, r)
+				if err != nil {
+					logger.Error("consume handle fail, send dlq", logger.Err(err), logger.String("topic", r.Topic))
+					_ = SendDLQ(traceCtx, r, "business", err.Error())
+					return // 失败不提交offset，下次重新消费
+				}
+				// 业务处理成功，手动提交offset
+				b.cli.CommitRecords(ctx, r)
+			})
+		}
+	}()
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="业务消费任务示例">业务消费任务示例</h2>
+
+### 业务消费任务示例 internal/consumer_task/order_consumer.go
+
+```go
+package consumer_task
+
+import (
+	"context"
+	"encoding/json"
+	"service-log-stream/internal/kafka"
+	"service-log-stream/internal/domain/event"
+	"service-log-stream/internal/service"
+)
+
+type OrderConsumer struct {
+	base *kafka.BaseConsumer
+	svc  *service.OrderSvc
+}
+
+func NewOrderConsumer(svc *service.OrderSvc) *OrderConsumer {
+	base := kafka.NewBaseConsumer(kafka.GlobalKgoClient, event.TopicDLQBusiness)
+	return &OrderConsumer{base: base, svc: svc}
+}
+
+func (o *OrderConsumer) Register() {
+	topics := []string{event.TopicOrderCreate}
+	o.base.StartConsume(context.Background(), topics, o.handleMsg)
+}
+
+func (o *OrderConsumer) handleMsg(ctx context.Context, r *kgo.Record) error {
+	var evt event.OrderCreateEvent
+	if err := json.Unmarshal(r.Value, &evt); err != nil {
+		return err
+	}
+	return o.svc.ConsumeOrderEvent(ctx, &evt)
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="HTTP接口调用示例">HTTP接口调用示例</h2>
+
+### HTTP接口调用示例 internal/handler/order_handler.go
+和sarama调用逻辑完全对齐，业务层无感知底层库切换
+
+```go
+func (h *OrderHandler) CreateOrder(c *gin.Context) {
+	orderId := "ORD99999"
+	evt := event.OrderCreateEvent{OrderID: orderId, UserID: 10001}
+	// 透传ctx，自动注入traceId到kafka header
+	err := kafka.SendBusinessEvent(c.Request.Context(), event.TopicOrderCreate, orderId, evt)
+	if err != nil {
+		c.JSON(500, gin.H{"code": -1, "msg": "发送事件失败"})
+		return
+	}
+	c.JSON(200, gin.H{"msg": "ok"})
+}
+```
+
+***
+<br/><br/><br/>
+> <h2 id="main入口初始化">main入口初始化</h2>
+
+```go
+func main() {
+	conf := conf.LoadNacosConfig()
+	// 全局一次性初始化franz-go客户端
+	if err := kafka.InitKafka(conf.Kafka); err != nil {
+		log.Fatal(err)
+	}
+	defer kafka.Close()
+
+	// 注册所有消费任务
+	orderConsumer := consumer_task.NewOrderConsumer(service.NewOrderSvc())
+	orderConsumer.Register()
+
+	// 启动http服务
+	r := gin.Default()
+	r.POST("/api/order/create", handler.NewOrderHandler().CreateOrder)
+	r.Run(":8080")
+}
+```
+
+<br/>
+
+## 千万并发、亿万流量franz-go专属优化（sarama做不到）
+1. **单Client复用生产+消费**
+   sarama必须分开创建Producer、ConsumerGroup两套连接，Broker连接数翻倍；franz-go一个Client同时生产消费，大幅降低集群连接压力，适合千实例微服务集群。
+2. **自动动态分区感知**
+   Topic扩容分区后，客户端立刻感知，无需重启服务，大数据平台频繁扩分区场景刚需。
+3. **精细化批量与in-flight控制**
+   franz-go自动合并多分区请求，充分打满网卡，sarama多分区发送时吞吐衰减严重。
+4. **原生事务/幂等**
+   订单+数据库本地事务原子提交，实现EOS Exactly Once，sarama需要大量自研封装，极易丢消息/重复消息。
+5. **钩子扩展无侵入**
+   监控、日志、trace全部通过hook注入，不用修改发送/消费主循环代码，架构更干净。
+6. **内存池化减少GC**
+   高并发7×24小时运行无内存毛刺，日志/埋点服务不会出现半夜OOM。
+
+***
+<br/><br/><br/>
+> <h2 id="MLC_GO工程改动">MLC_GO工程改动</h2>
+
+MLC_GO 工程落地记录（2026-07-04）
+
+### 1. 修改了哪些文件
+
+- `go.mod`
+- `config/config.debug.yaml`
+- `config/config.pre.yaml`
+- `config/config.prod.yaml`
+- `main_mlc_project.go`
+- `hg_kafka_application.go`
+- `hg_kafka_application_test.go`
+- `internal/pkg/config/hg_kafka_config.go`
+- `internal/pkg/config/hg_kafka_config_test.go`
+- `internal/pkg/kafka/hg_config.go`
+- `internal/pkg/kafka/hg_config_builder.go`
+- `internal/pkg/kafka/hg_client.go`
+- `internal/pkg/kafka/hg_consumer.go`
+- `internal/pkg/kafka/hg_dlq.go`
+- `internal/pkg/kafka/hg_metric_hook.go`
+- `internal/pkg/kafka/hg_trace.go`
+- `internal/pkg/kafka/hg_client_test.go`
+- `internal/pkg/kafka/hg_config_builder_test.go`
+- `internal/pkg/kafka/hg_trace_test.go`
+
+### 2. 做了什么改动
+
+- 引入 `franz-go` 核心 Kafka 客户端依赖：
+	- `github.com/twmb/franz-go v1.16.0`
+	- `github.com/twmb/franz-go/pkg/kmsg v1.7.0`
+	- `github.com/pierrec/lz4/v4 v4.1.19`
+- 新增 `internal/pkg/kafka` 统一封装层，对齐本文前面的工程方法：
+	- `HGKafkaClusterConfig` / `HGClusterConfig`：业务集群、日志集群分层配置。
+	- `HGNewBusinessProducerOpts`：业务消息高可靠配置，默认 `acks=all`，使用 franz-go 默认幂等写入。
+	- `HGNewLogProducerOpts`：日志/埋点高吞吐配置，强制 `acks=1`，使用 LZ4 优先压缩。
+	- `HGGlobalKgoClient` / `HGInitKafka` / `HGCloseKafka`：全局长生命周期 `kgo.Client`，支持生产/消费复用。
+	- `HGSendBusinessEvent`：同步发送业务事件，适合必须确认写入 Kafka 的核心链路。
+	- `HGSendLogEvent`：异步发送日志/埋点事件，失败后尝试进入 DLQ。
+	- `HGBaseConsumer`：消费基类，封装 `PollFetches`、手动提交 offset、panic 保护、DLQ 投递。
+	- `HGSendDLQ`：统一死信投递，默认提供 `hg.dlq.business` / `hg.dlq.log`。
+	- `HGInjectTraceToRecord` / `HGExtractTraceFromRecord`：通过 Kafka header 透传项目现有 TID。
+	- `HGMetricHook` / `HGTraceHook`：franz-go hook 扩展点，当前提供轻量计数与 trace 扩展占位。
+- 新增 `internal/pkg/config/hg_kafka_config.go`：从当前 viper 配置读取 Kafka 配置。
+- 在 `config/config.debug.yaml`、`config/config.pre.yaml`、`config/config.prod.yaml` 中新增 Kafka 配置模板。
+- 新增 `hg_kafka_application.go`，并在 `main_mlc_project.go` 中接入 Kafka 生命周期：
+	- 启动时调用 `initKafkaIfConfigured()`。
+	- 未配置 `kafka.business.brokers` 时跳过 Kafka 初始化。
+	- 已配置 broker 但初始化失败时启动失败，避免请求期才暴露 MQ 不可用。
+	- 应用关闭时调用 `HGCloseKafka()`，先 flush 再关闭 client。
+- 补充较详细注释，说明：
+	- `acks=1` 与 `acks=all` 的适用边界。
+	- 高并发下为什么限制 `MaxBufferedRecords` / `MaxBufferedBytes`。
+	- 为什么复用单 `kgo.Client`。
+	- DLQ 在 Kafka 整体不可用时仍可能失败，需要生产兜底。
+	- “千万并发/亿万数据”属于设计适配，不等于已完成真实压测验证。
+
+<br/>
+
+### 3. 为什么这样改
+
+- 文档示例中的 `github.com/twmb/franz-go/pkg/kcompress` 在当前 franz-go 版本不存在；实际压缩 API 在 `kgo` 包内，所以使用 `kgo.Lz4Compression()` / `kgo.SnappyCompression()` / `kgo.NoCompression()`。
+- 文档要求引入 `kadm`，但当前项目 `go.mod` 是 `go 1.23.5`，可用的 `kadm` 版本会要求更高 Go 版本或拉升 `kgo` 到不兼容组合。为避免擅自升级项目 Go 版本，本次先落地核心生产/消费能力，暂未接入 `kadm` 集群管理 API。
+- franz-go `Client` 本身支持生产和消费复用，符合“单 Client 降低 broker 连接数”的目标。
+- 高并发场景不能使用无界缓冲，所以生产者显式配置：
+  - `kgo.MaxBufferedRecords(100000)`
+  - `kgo.MaxBufferedBytes(512 * 1024 * 1024)`
+- 业务消息和日志消息配置分级：
+  - 业务消息优先可靠性。
+  - 日志/埋点优先吞吐和削峰。
+- 消费端采用手动提交 offset，只有 handler 成功后才 `CommitRecords`，避免处理失败后误提交。
+- 工程启动接入采用“可选 Kafka”：本地、单测和暂未接入 MQ 的环境可以保持 `brokers: []`，生产配置 broker 后才真正初始化。
+
+<br/>
+
+### 4. MLC_GO 工程使用说明
+
+#### 4.1 配置 Kafka
+
+在 `config/config.debug.yaml`、`config/config.pre.yaml` 或 `config/config.prod.yaml` 中配置：
+
+```yaml
+kafka:
+  business:
+    brokers:
+      - 127.0.0.1:9092
+    acks: all
+    retry: 3
+    client_id: mlc-go-debug-business
+  log:
+    brokers:
+      - 127.0.0.1:9092
+    acks: "1"
+    retry: 1
+    client_id: mlc-go-debug-log
+```
+
+说明：
+
+- `business.brokers` 为空时，应用启动会跳过 Kafka 初始化。
+- `business.brokers` 非空时，启动阶段会初始化 `HGGlobalKgoClient`；初始化失败会阻止服务启动。
+- `business.acks` 建议生产环境使用 `all`。
+- `log.acks` 建议日志/埋点使用 `"1"`，吞吐更高，但极端故障窗口内存在少量丢失风险。
+- `client_id` 建议包含服务名、环境和用途，方便 broker 侧排查连接来源。
+
+<br/>
+
+#### 4.2 发送业务事件
+
+业务代码中使用上游请求 `ctx`，不要使用 `context.Background()` 替代请求上下文：
+
+```go
+err := HGKafkaPackage.HGSendBusinessEvent(
+    ctx,
+    "mlc.business.user.created",
+    userID,
+    payload,
+)
+if err != nil {
+    return fmt.Errorf("发送用户创建事件失败: %w", err)
+}
+```
+
+建议：
+
+- `topic` 使用领域命名，例如 `mlc.business.user.created`。
+- `key` 使用稳定业务 ID，例如 `user_id` / `order_id`，保证同一实体事件进入同一分区后有序。
+- 上游 `ctx` 应带超时，避免 Kafka 异常时请求无限等待。
+
+<br/>
+
+#### 4.3 发送日志/埋点事件
+
+```go
+HGKafkaPackage.HGSendLogEvent(ctx, "mlc.log.access", payload)
+```
+
+说明：
+
+- 该方法异步发送，不阻塞主业务链路。
+- 发送失败会尝试进入 DLQ。
+- 进程异常退出时，尚未 flush 的异步消息可能丢失，因此服务退出必须走 `MLCApplication.Close()`。
+
+<br/>
+
+#### 4.4 注册消费者
+
+创建消费者时复用全局 Kafka Client，并在 handler 成功后由基类提交 offset：
+
+```go
+consumer := HGKafkaPackage.HGNewBaseConsumer(
+    HGKafkaPackage.HGClient(),
+    HGKafkaPackage.HGTopicDLQBusiness,
+)
+
+err := consumer.HGStartConsume(ctx, func(ctx context.Context, record *kgo.Record) error {
+    var evt UserCreatedEvent
+    if err := json.Unmarshal(record.Value, &evt); err != nil {
+        return err
+    }
+    return userService.ConsumeUserCreated(ctx, evt)
+})
+```
+
+注意：
+
+- handler 返回 `nil` 后才提交 offset。
+- handler 返回 error 时会尝试投递 DLQ，当前 offset 不提交，后续可能被重新消费。
+- 消费者 client 需要在创建时配置 `kgo.ConsumeTopics(...)` 和 `kgo.ConsumerGroup(...)`；当前工程已提供消费基类，具体业务消费者接入时再按 topic/group 创建。
+
+<br/>
+
+#### 4.5 启动与关闭生命周期
+
+- `main_mlc_project.go` 的 `buildMLCApplication()` 会调用 `initKafkaIfConfigured()`。
+- `MLCApplication.Close()` 会调用 `HGCloseKafka()`。
+- `HGCloseKafka()` 会先 `Flush` 再 `Close`，尽量发送完客户端缓冲中的异步消息。
+
+### 5. 准确性检查结果
+
+- TDD RED 阶段已执行：
+	- `go test ./internal/pkg/kafka`
+	- 初次失败原因为缺少 `github.com/twmb/franz-go/pkg/kgo`，符合新增依赖前的预期失败。
+	- `go test ./internal/pkg/config`
+	- 初次失败原因为缺少 `GetKafkaConfig`，符合先写测试再实现。
+	- `go test . -run TestInitKafkaIfConfiguredSkipsEmptyConfig`
+	- 初次失败原因为缺少 `initKafkaIfConfigured`，符合先写测试再实现。
+- 修正 franz-go v1.16.0 API 差异：
+	- `ProduceAsync` 在当前版本使用 `Produce(ctx, record, callback)`。
+	- `ProducerMaxRetries` 在当前版本使用 `RecordRetries`。
+	- `ProducerBatchMaxDuration` 在当前版本使用 `ProducerLinger`。
+	- `AcksOne` / `AcksAll` 在当前版本使用 `LeaderAck()` / `AllISRAcks()`。
+	- hook 签名按 v1.16.0 的 `HookProduceBatchWritten` 接口实现。
+- Kafka 封装测试已通过：
+	- `go test ./internal/pkg/kafka`
+- 配置读取测试已通过：
+	- `go test ./internal/pkg/config`
+- 应用 Kafka 接入测试已通过：
+	- `go test . -run TestInitKafkaIfConfiguredSkipsEmptyConfig`
+- 业务入口编译通过：
+  - `go build -o /tmp/mlc_go_kafka_verify .`
+
+<br/>
+
+### 6. 潜在影响
+
+- 新增 `franz-go` 依赖，`go.mod` 已更新。
+- 新增 Kafka 配置模板，但默认 `brokers: []`，因此不会改变本地和现有环境启动行为。
+- 未修改现有 API、鉴权、数据库、Redis 业务语义。
+- 当前未接入真实 Kafka broker 做集成测试，因此只能确认：
+  - 代码可编译。
+  - 封装逻辑和无 broker 单测通过。
+  - franz-go Client 可按配置创建。
+  - 工程启动逻辑可在未配置 Kafka 时跳过初始化。
+- `kadm` 未接入，原因是当前 Go 版本约束。后续如要做 topic 创建、offset 查询、lag 管理，需要先确认是否允许升级 Go 版本或锁定兼容版本组合。
+- DLQ 仍依赖 Kafka 可用。如果整个 Kafka 集群不可用，DLQ 也会失败，生产环境建议增加本地磁盘 WAL 或补偿任务。
+
+<br/>
+
+### 7. 格式化/编译/测试说明
+
+- 已格式化：
+	- `gofmt` 覆盖本次新增/修改 Go 文件。
+	- 已执行并通过：
+	- `go test ./internal/pkg/kafka`
+	- `go test ./internal/pkg/config`
+	- `go test . -run TestInitKafkaIfConfiguredSkipsEmptyConfig`
+	- `go build -o /tmp/mlc_go_kafka_verify .`
+- 已执行但存在既有失败：
+	- `go test ./internal/...`
+- `go test ./internal/...` 中 Kafka 包通过，但以下既有鉴权测试失败，和 Kafka 改动无关：
+	- `MLC_GO/internal/modules/user/middleware`
+	- `MLC_GO/internal/pkg/middleware`
+- 失败原因是测试期望错误码 `101001`，实际返回 `300001`：
+	- `TestAuthMiddleware_MissingTokenReturnStandardError`
+	- `TestAuthMiddleware_DeviceMismatchHideInternalReason`
+	- `TestTokenAuthMiddleware_MissingTokenReturnStandardError`
+
+<br/>
+
+### 8. 后续生产级优化建议
+
+1. 接入真实 Kafka broker 后，增加集成测试，验证 produce、consume、commit、DLQ。
+2. 为业务领域新增 topic/group 常量包，避免字符串散落。
+3. 为消费者创建独立 client 构造函数，显式配置 `kgo.ConsumeTopics(...)` 和 `kgo.ConsumerGroup(...)`。
+4. 增加压测脚本，验证 TPS、P99、失败率、broker throttle、客户端 buffer、GC、网络吞吐。
+5. 接入 Prometheus/OpenTelemetry，把 `HGMetricHook` / `HGTraceHook` 对接真实监控系统。
+6. 评估 Go 版本升级；如果要接入 `kadm` 集群管理 API，建议先确认是否升级项目 Go 版本到满足 `kadm` 要求的版本。
+
+
