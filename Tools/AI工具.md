@@ -37,8 +37,10 @@
 	- [Opencode cli和Codex cli共用一套Skill配置](#Opencode_cli和Codex_cli共用一套Skill配置)
  	- [初始化项目](#初始化项目)
 	- [CC Switch配合OpenCode CLI、Codex CLI完整使用步骤](#CC_Switch配合OpenCode_CLI+Codex_CLI完整使用步骤)
- 	- [配置的skill和插件plugin区别](#配置的skill和插件plugin区别]) 
-- [快马-inscode](https://inscode.net)
+	- [配置的skill和插件plugin区别](#配置的skill和插件plugin区别)
+	- [Figma 本地MCP 完整部署](#Figma-本地MCP-完整部署)
+- **资料**
+	- [快马-inscode](https://inscode.net)
 
 
 <br/><br/><br/>
@@ -2654,3 +2656,187 @@ skill-name/SKILL.md
 ## 一句话总结
 
 `skills` 影响“模型知道怎么做”，`plugin` 影响“opencode 运行时怎么工作”。
+
+
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id= "Figma-本地MCP-完整部署">Figma 本地MCP 完整部署</h1>
+
+#### OpenCode CLI + Figma 本地MCP 完整部署总结（macOS｜生成iOS/Web UI代码）
+> ⚠️ 重要前置结论
+> **官方远程模式 `opencode mcp auth figma` 彻底废弃！**
+> 执行该命令会出现 `403 Forbidden JSON解析错误`，不要再尝试。
+> 唯一可用方案：**社区 stdio figma-developer-mcp（本地PAT令牌鉴权）**
+
+<br/>
+
+### 一、整体架构
+OpenCode CLI(MCP Client) ↔(stdio) figma-developer-mcp ↔ Figma REST API（Personal Token）
+目标：读取Figma设计稿 → AI一键生成 SwiftUI / Web页面代码
+
+<br/>
+
+### 二、前置依赖（适配macOS 10.15 Intel）
+
+- 检查环境，打开终端，输入以下命令：
+
+```bash
+// ·检查Node.js版本（需要 >= 18.0.0）
+node --version
+
+
+// 检查npm版本（需要 >= 9.0.0）
+
+npm --version
+```
+
+- npx 首次运行会自动下载 `figma-developer-mcp`，网络差会超时，可预先全局安装：
+
+```zsh
+npm install -g figma-developer-mcp
+```
+
+- 若是没有手动执行 `npm install -g figma-developer-mcp`，但是包依旧被自动下载了；
+	- 触发时机：第一次 OpenCode 启动、拉起 figma-local MCP 进程的瞬间。
+原理拆解你的配置
+
+```json
+"command": ["npx","-y","figma-developer-mcp","--stdio"]
+npx：npm 自带执行器；
+
+-y：自动确认下载，不再弹出交互式询问（关键）；
+```
+
+<br/>
+
+### 三、Figma 生成 Personal Access Token（核心鉴权）
+1. Figma网页端 → 头像 → Settings → **Personal access tokens**
+2. 创建Token，名称：`opencode-mcp`
+3. 仅勾选以下最小权限（其余全部取消）
+
+```
+Files
+ ✅ Read the contents of and render images from files
+ ✅ Read metadata of files
+ ✅ Read comments in accessible files（可选）
+
+Design systems
+ ✅ Read data about individual components and styles
+ ✅ Read components and styles published from individual files
+
+Development
+ ✅ Read and list dev resources in accessible files
+```
+4. 复制保存 `figd_xxxx` Token（仅展示一次，丢失需要重建）
+
+<br/>
+
+### 四、OpenCode MCP 配置文件
+路径：`~/.config/opencode/opencode.json`
+**删除原有remote figma配置，写入下面完整内容**
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "figma-local": {
+      "type": "local",
+      "command": ["npx","-y","figma-developer-mcp","--stdio"],
+      "enabled": true
+    }
+  }
+}
+```
+> 如果你已经全局安装figma-developer-mcp，command可简化为：`["figma-developer-mcp","--stdio"]`
+
+<br/>
+
+## 五、配置环境变量 `FIGMA_API_KEY`
+> MCP程序**固定读取该变量名，名称不能写错**
+
+在Mac的**`zsh`**终端，操作如下：
+
+```sh
+open ~/.bash_profile
+
+# Figma的mcp token
+export FIGMA_API_KEY="figd_xxxx"
+
+source ~/.bash_profile
+```
+
+<br/>
+
+### 六、校验MCP加载状态
+新开全新终端窗口（非常关键，旧终端环境变量可能不更新）
+
+```zsh
+# 查看已启用MCP服务
+opencode mcp list
+```
+正常结果：列表出现 `figma-local | enabled`
+
+<br/>
+
+### 七、正式使用 OpenCode 读取Figma生成iOS UI代码
+#### 方式1：交互式终端（推荐日常开发）
+
+```zsh
+opencode
+```
+粘贴提示词，替换你的Figma Frame链接
+
+```
+调用figma-local MCP读取Figma设计稿：【粘贴Frame完整链接】
+生成标准iOS SwiftUI页面代码，规范要求：
+1. 完整解析图层、间距、圆角、阴影、字体、色值；
+2. 输出完整 xxxView.swift，内置 #Preview；
+3. 严格沿用Figma原始尺寸，适配浅色/深色模式；
+4. 图片资源路径指向项目 Assets.xcassets；
+5. 不随意简化布局结构；
+直接将生成文件写入当前工作目录。
+```
+
+<br/>
+
+### 方式2：一键脚本（封装shell，快速调用）
+新建 `figma2ios.sh`
+
+```zsh
+#!/bin/zsh
+if [ -z "$1" ]; then
+  echo "使用方式：./figma2ios.sh Figma链接"
+  exit 1
+fi
+opencode run "调用figma-local MCP读取 $1，生成SwiftUI iOS页面，输出swift源码文件到当前目录，附带预览，视觉严格对齐设计稿。"
+```
+赋予权限并执行
+
+```zsh
+chmod +x figma2ios.sh
+./figma2ios.sh "https://www.figma.com/file/xxx/?node-id=xxx"
+```
+
+
+<br/>
+
+当前用的一个Demo：
+
+```sh
+调用figma-local MCP，精准加载node-id=10651-38772 Frame：
+https://www.figma.com/design/Pa6r1b5XtrDqUoWahTQHBT/【初创自研-V1.3开始需求更新】113海外三款套?node-id=10651-38772&t=b7eqHPKp4IUQSlr9-0
+界面名称：登录/注册首页/三方登录
+
+强制开发规范：
+1. iOS UIKit，禁止SwiftUI，纯代码布局，不使用Xib/Storyboard
+2. 全部约束使用 SnapKit 实现，适配SafeArea、多机型竖屏布局
+3. 精确解析Figma内所有色值、字体、间距、圆角、阴影、输入框、按钮、三方登录控件
+4. 拆分通用UI组件，避免大量重复代码；按钮添加点击闭包回调
+5. 抽取颜色、字号、间距常量统一管理
+6. 图片资源名称标注，存放至 Assets.xcassets
+7. 输出完整 LoginRegisterViewController.swift 文件写入当前目录
+8. 严格还原视觉，不随意删减图层、合并元素
+```
