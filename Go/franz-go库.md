@@ -12,6 +12,11 @@
 	- [Cluster 的作用](#cluster的作用)
 	- [Cluster、Topic 与 Broker 的关系](#cluster-topic与broker的关系)
 	- [直播弹幕场景](#直播弹幕场景)
+- [docker-compose.kafka.yml 文件作用](#docker-compose.kafka.yml文件作用)
+	- [核心配置](#核心配置)
+	- [启动与连接](#启动与连接)
+	- [Kafka 在 MLC_GO 中的作用](#Kafka在MLC_GO中的作用)
+	- [开发环境与生产环境](#开发环境与生产环境)
 - [Go 微服务中的配置、Kafka 与数据库操作](#Go微服务中的配置Kafka与数据库操作)
 	- [服务启动配置初始化](#服务启动配置初始化)
 	- [Kafka Client 的 Functional Options](#KafkaClient的FunctionalOptions)
@@ -2341,6 +2346,467 @@ Message
 **在弹幕、评论、点赞流等大规模事件系统中，Kafka Cluster 通过 Partition 和 Replica 实现消息的分片、存储、复制与横向扩展。**
 
 	
+	
+***
+<br/><br/><br/>
+
+> <h2 id="docker-compose.kafka.yml文件作用">docker-compose.kafka.yml 文件作用</h2>
+
+`deployments/docker-compose.kafka.yml` 是 Kafka 的**基础设施部署配置文件**，用于通过 Docker Compose 一键创建并启动 Kafka 运行环境，使 MLC_GO 项目在本地、测试或 CI 环境中能够使用 Kafka。
+
+它不属于业务代码，可以理解为告诉 Docker：**创建 Kafka 容器，并配置镜像、网络、端口和 Broker，让 Go 服务能够连接 Kafka。**
+
+```text
+gateway-service
+room-service
+comment-service
+```
+
+这些 Go 服务通过 Kafka Client 访问独立运行的 Kafka Broker：
+
+```text
+Go服务
+   |
+   |
+ Kafka Client
+   |
+   |
+ Kafka Broker
+```
+
+没有 Docker Compose 时，需要手动安装 Java、下载 Kafka、配置 `server.properties`、启动 Kafka、配置旧版本依赖的 ZooKeeper、创建 Topic 并配置端口。使用该文件后只需执行：
+
+```bash
+docker compose -f deployments/docker-compose.kafka.yml up -d
+```
+
+Docker 会自动完成：
+
+```text
+拉取 Kafka 镜像
+
+       ↓
+
+创建 Kafka Container
+
+       ↓
+
+配置 Broker
+
+       ↓
+
+启动 Kafka
+
+       ↓
+
+暴露9092端口
+```
+
+***
+<br/>
+
+> <h3 id="核心配置">核心配置</h3>
+
+常见的 `docker-compose.kafka.yml` 配置如下，实际环境变量会因 Kafka 镜像和版本而异：
+
+```yaml
+version: "3"
+
+services:
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+```
+
+### `image`
+
+```yaml
+image: bitnami/kafka
+```
+
+使用已经打包好的 Kafka 镜像，不需要自行下载源码、编译、安装 Java 和完成基础配置。
+
+### `container_name`
+
+```yaml
+container_name: mlc-kafka
+```
+
+指定容器名称，之后可以通过名称查看日志：
+
+```bash
+docker logs mlc-kafka
+```
+
+### `ports`
+
+```yaml
+ports:
+  - "9092:9092"
+```
+
+该配置把宿主机的 `localhost:9092` 映射到容器中的 `Kafka:9092`，因此 Go 程序可以通过 `localhost:9092` 访问 Kafka。
+
+### Broker ID / Node ID
+
+传统 Kafka 配置中可能使用：
+
+```yaml
+KAFKA_BROKER_ID: 1
+```
+
+对应 Kafka 配置：
+
+```text
+broker.id=1
+```
+
+它表示当前 Kafka 节点编号。集群中的每个 Broker 必须使用不同编号：
+
+```text
+Kafka Cluster
+
+broker1 = 1
+broker2 = 2
+broker3 = 3
+```
+
+较新的 KRaft 配置通常使用 `KAFKA_CFG_NODE_ID`，具体名称取决于所用镜像和 Kafka 运行模式。
+
+### `advertised.listeners`
+
+```yaml
+KAFKA_ADVERTISED_LISTENERS=
+PLAINTEXT://localhost:9092
+```
+
+`advertised.listeners` 告诉客户端 Kafka 对外公布的访问地址。Go 客户端先连接种子 Broker：
+
+```go
+SeedBrokers(
+    "localhost:9092",
+)
+```
+
+Kafka 返回给客户端的地址相当于：
+
+```text
+以后访问我：
+
+localhost:9092
+```
+
+如果公布的地址无法被客户端访问，常见错误包括：
+
+```text
+connection refused
+```
+
+```text
+failed to connect broker
+```
+
+***
+<br/>
+
+> <h3 id="启动与连接">启动与连接</h3>
+
+假设 Compose 文件包含：
+
+```yaml
+services:
+  kafka:
+    image: bitnami/kafka
+    ports:
+      - "9092:9092"
+```
+
+执行：
+
+```bash
+docker compose up
+```
+
+通过以下命令检查容器：
+
+```bash
+docker ps
+```
+
+示例输出：
+
+```text
+CONTAINER ID
+
+abc123
+
+bitnami/kafka
+
+PORT:
+
+9092->9092
+```
+
+看到 Kafka 容器及 `9092` 端口映射，说明 Kafka Broker 已运行。Go 服务可以使用 `kgo` 连接：
+
+```go
+kgo.NewClient(
+    kgo.SeedBrokers(
+        "localhost:9092",
+    ),
+)
+```
+
+### 在项目中的位置
+
+```text
+MLC_GO
+
+├── cmd
+│   ├── gateway-service
+│   └── room-service
+│
+├── internal
+│
+├── deployments
+│
+│   ├── docker-compose.kafka.yml
+│   ├── docker-compose.mysql.yml
+│   ├── docker-compose.redis.yml
+│
+├── configs
+│
+└── go.mod
+```
+
+`deployments` 用于保存部署相关文件：
+
+| 文件 | 作用 |
+| --- | --- |
+| `docker-compose.kafka.yml` | 启动 Kafka |
+| `docker-compose.mysql.yml` | 启动 MySQL |
+| `docker-compose.redis.yml` | 启动 Redis |
+| `docker-compose.all.yml` | 启动整个环境 |
+
+***
+<br/>
+
+> <h3 id="Kafka在MLC_GO中的作用">Kafka 在 MLC_GO 中的作用</h3>
+
+在包含 `gateway-service`、`room-service`、WebSocket、弹幕和高并发广播的微服务系统中，Kafka 可以传递用户事件、弹幕、点赞等异步消息。
+
+### 用户事件流
+
+用户进入直播间时，可以通过 `room_event` Topic 将事件从网关传递给房间服务：
+
+```text
+gateway-service
+
+      |
+      |
+      v
+
+Kafka topic:
+
+room_event
+
+      |
+      |
+      v
+
+room-service
+```
+
+### 弹幕消息
+
+用户发送 `hello` 后，消息流转过程如下：
+
+```text
+WebSocket
+
+↓
+
+gateway
+
+↓
+
+Kafka
+
+topic:
+
+danmaku_message
+
+↓
+
+room-service
+
+↓
+
+广播
+```
+
+### 点赞事件
+
+```text
+like-service
+
+↓
+
+Kafka
+
+topic:
+
+video_like
+
+↓
+
+统计服务
+
+↓
+
+数据库
+```
+
+### 为什么不全部直接调用 `room-service`
+
+服务之间可以使用 gRPC 直接调用：
+
+```text
+gateway
+
+   |
+   |
+ gRPC
+
+   |
+   |
+
+room-service
+```
+
+但在高并发直播场景中，消息量可能达到：
+
+```text
+100万消息/s
+```
+
+如果消息全部同步直达单个房间服务：
+
+```text
+gateway
+ |
+ gRPC
+ |
+room-service
+```
+
+`room-service` 会承受较大瞬时压力。Kafka 可以缓冲消息，并让多个消费者共同处理：
+
+```text
+gateway
+
+ |
+ |
+Kafka Cluster
+
+ |
+ |
+多个消费者
+room-service-1
+room-service-2
+room-service-3
+```
+
+这样可以解耦生产者和消费者，并支持消费者水平扩展。但是否使用 Kafka，仍应根据实时性、一致性和系统复杂度决定，并非所有服务调用都应改为消息队列。
+
+***
+<br/>
+
+> <h3 id="开发环境与生产环境">开发环境与生产环境</h3>
+
+`docker-compose.kafka.yml` 主要用于开发环境、测试环境和 CI 环境。
+
+生产环境通常不使用单机 Docker Compose 部署 Kafka，而会使用 Kubernetes、Kafka Operator、托管 Kafka 或专门维护的 Kafka 集群：
+
+```text
+Kubernetes
+
+        |
+        |
+Kafka Operator
+
+        |
+        |
+Kafka Cluster
+10 brokers
+```
+
+常见托管服务包括：
+
+```text
+AWS MSK
+
+Confluent Kafka
+
+阿里云 Kafka
+```
+
+***
+<br/>
+
+## 总结
+
+`deployments/docker-compose.kafka.yml` 本质上是 Kafka 环境启动配置，完整作用链路如下：
+
+```text
+docker-compose.kafka.yml
+
+        |
+        |
+        v
+
+创建 Kafka Broker 容器
+        |
+        |
+        v
+
+开放9092端口
+
+        |
+        |
+        v
+
+Go服务连接Kafka
+
+        |
+        |
+        v
+
+实现消息队列功能
+```
+
+在 MLC_GO 微服务项目中，它属于**本地开发基础设施配置，不属于业务代码**：
+
+```text
+docker-compose.mysql.yml
+    = 启动数据库
+
+docker-compose.redis.yml
+    = 启动缓存
+
+docker-compose.kafka.yml
+    = 启动消息队列
+```
+
+它是后端分布式系统运行环境的一部分。
+
+
 <br/>
 
 ***
