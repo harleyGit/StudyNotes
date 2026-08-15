@@ -3,6 +3,7 @@
 - [OpenAI的CodeX](#OpenAI的CodeX)
 - [CodeX-CLI使用](#CodeX-CLI使用)
 	- [安装Cli](#安装Cli)
+ 	- [config.toml配置](#config.toml配置)
 	- [CLI组合快捷键](#CLI组合快捷键)
 	- [常用命令](#常用命令)
 	- [提示词实例](#提示词实例) 	
@@ -108,6 +109,162 @@ npm i -g @openai/codex
 ```sh
 brew install --cask codex
 ```
+
+
+***
+<br/><br/><br/>
+> <h2 id="config.toml配置">config.toml配置</h2>
+
+```toml
+model = "gpt-5.6-sol"
+model_provider = "cm-ai"
+model_reasoning_effort = "high"
+
+# 定义一个自定义模型提供方，内部 ID 是：cm-ai。它和文件前面的配置对应：model_provider = "cm-ai"。
+# 意思是：Codex 调用模型时使用这组 Provider 配置，而不是默认的 OpenAI Provider。
+# 如果缺少：
+# model_provider = "cm-ai"
+# 仅定义该段配置通常不会让它成为当前使用的 Provider。
+[model_providers.cm-ai]
+# Provider 的显示名称。
+name = "CM_AI"
+# 指定模型服务的 API 基础地址：
+base_url = "https://open-bigmodel-dev.imilab.com:7799/v1"
+wire_api = "responses"
+supports_websockets = false
+experimental_bearer_token = "sk-Jo********9w4R"
+
+[mcp_servers.xcode]
+command = "xcrun"
+args = ["mcpbridge"]
+```
+
+**配置说明：**
+
+```sh
+[model_providers.cm-ai]
+定义一个自定义模型提供方，内部 ID 是：
+cm-ai
+它和文件前面的配置对应：
+model_provider = "cm-ai"
+意思是：Codex 调用模型时使用这组 Provider 配置，而不是默认的 OpenAI Provider。
+如果缺少：
+model_provider = "cm-ai"
+仅定义该段配置通常不会让它成为当前使用的 Provider。
+
+name = "CM_AI"
+Provider 的显示名称。
+name = "CM_AI"
+主要用于日志、界面和诊断输出，例如：
+provider: cm-ai
+它不决定模型名称，也不参与网络认证。修改显示名称通常不会影响调用。
+
+base_url = "https://.../v1"
+指定模型服务的 API 基础地址：
+base_url = "https://open-bigmodel-dev.imilab.com:7799/v1"
+Codex 会在这个地址后拼接具体接口，例如：
+https://open-bigmodel-dev.imilab.com:7799/v1/responses
+原本如果使用默认 OpenAI/ChatGPT Provider，Codex 会请求 OpenAI 或 ChatGPT 的官方地址。配置 base_url 后，请求会发给这个自定义服务。
+
+它的作用是：
+- 指定请求发送到哪个服务器
+- 使用公司内部或第三方的 OpenAI 兼容网关
+- 让 gpt-5.6-sol 这类自定义模型能够被调用
+
+如果地址错误，通常会出现：
+Connection refused
+404 Not Found
+request timed out
+wire_api = "responses"
+指定 Codex 与服务端通信使用 Responses API：
+wire_api = "responses"
+对应的主要接口是：
+POST /v1/responses
+Codex CLI 当前主要按照 OpenAI Responses API 协议传递：
+- 用户提示词
+- 模型名称
+- 推理参数
+- 工具定义
+- 工具调用结果
+- 流式输出
+这个配置要求服务端实现与 OpenAI Responses API 兼容的协议。
+它不是传统的：
+POST /v1/chat/completions
+如果服务端只支持 Chat Completions、不支持 Responses API，Codex CLI 即使能够连接，也可能收到 404、参数不兼容或流式响应解析错误。
+supports_websockets = false
+告诉 Codex 这个 Provider 不使用 Responses WebSocket 通道：
+supports_websockets = false
+Codex 会改用普通 HTTPS 流式请求，一般是 HTTP + SSE。
+之所以设置为 false，是因为此前你的网络代理连接 WebSocket 时出现过：
+tls handshake eof
+设置后可以避免 Codex尝试连接类似：
+wss://.../responses
+转而请求：
+https://.../v1/responses
+它的作用是：
+- 避免代理、防火墙或 VPN 阻断 WebSocket
+- 避免 WebSocket TLS 握手失败
+- 提高当前网络环境下的兼容性
+这通常不会影响模型能力，只是传输方式不同。可能的差别主要在连接延迟和流式传输机制。
+experimental_bearer_token = "..."
+这是访问自定义服务所需的 API Key：
+experimental_bearer_token = "你的 API Key"
+Codex 通常会把它作为 HTTP 请求头发送：
+Authorization: Bearer 你的APIKey
+服务端根据这个 Key 判断：
+- 请求是否经过授权
+- 用户是否有权调用模型
+- 配额和计费归属
+- 是否允许访问 gpt-5.6-sol
+如果没有这个字段，或者 Key 没有通过其他机制提供，服务端就可能返回：
+401 Unauthorized
+{"error":"Missing API key"}
+如果提供了 Key，但 Key 不正确、过期或被撤销，则可能返回：
+401 Unauthorized
+{"error":"Invalid API key"}
+该字段让认证完全包含在 config.toml 中，因此不需要：
+- macOS 钥匙串
+- 环境变量
+- auth.json 中的 ChatGPT Token
+- 执行外部认证命令
+整体工作流程
+这组配置最终表达的是：
+Codex CLI
+  -> 使用 cm-ai Provider
+  -> 选择 gpt-5.6-sol 模型
+  -> 读取 config.toml 里的 API Key
+  -> 通过 HTTPS Responses API
+  -> 请求 https://open-bigmodel-dev.imilab.com:7799/v1/responses
+对应的关键配置关系是：
+model = "gpt-5.6-sol"
+model_provider = "cm-ai"
+
+[model_providers.cm-ai]
+base_url = "https://open-bigmodel-dev.imilab.com:7799/v1"
+wire_api = "responses"
+supports_websockets = false
+experimental_bearer_token = "你的 API Key"
+与 auth.json 的关系
+在这套配置中：
+experimental_bearer_token = "..."
+直接负责 cm-ai 的认证。
+所以桌面可移植配置中的：
+{}
+可以为空。auth.json 通常用于 Codex 官方的 ChatGPT/OpenAI 登录凭据，不是当前自定义 Provider 的认证来源。
+安全提醒
+你消息中展示的是完整 API Key，并且桌面配置中也存在明文 Key。任何能读取 config.toml 的用户或程序都可能使用它。
+建议至少限制权限：
+chmod 600 ~/.codex/config.toml
+chmod 700 ~/.codex
+另外，这个 Key 已经在对话中被完整展示。若该 Key 属于正式环境或有实际额度，建议在服务端将其撤销并重新生成一个新 Key，再更新配置。不要把含 Key 的 config.toml：
+- 提交到 Git
+- 上传到公开网盘
+- 发到群聊
+- 放进截图
+- 作为日志或工单附件公开发送
+experimental_bearer_token 也被 Codex 标记为不推荐的明文认证方式。它适合你要求的“两份文件直接复制即可运行”，但安全性低于钥匙串、环境变量或动态认证命令。
+```
+
 
 ***
 <br/><br/><br/>
