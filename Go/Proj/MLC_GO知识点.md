@@ -37,6 +37,8 @@
 - [网络](#网络)
 	- [拼接标准网络地址](#拼接标准网络地址)
 - [KafKa使用](#KafKa使用)
+	- [Kafka Broker 介绍](#kafka-broker介绍)
+	- [Kafka Cluster 介绍](#kafka-cluster介绍)
 	- [Go 微服务中的配置、Kafka 与数据库操作](#微服务中的配置Kafka与数据库操作)
 - [**数据库**](#数据库)
 	- [database/sql抽象层接口](#database/sql抽象层接口)
@@ -240,7 +242,13 @@
 <br/><br/><br/>
 ># <h1 id="KafKa使用">[KafKa使用](../franz-go库.md#Kafka与franz-go工程实践)</h1>
 
+***
+<br/><br/><br/>
+> <h2 id="kafka-broker介绍">[Kafka Broker 介绍](../franz-go库.md##kafka-broker介绍)</h2>
 
+***
+<br/><br/><br/>
+> <h2 id="kafka-cluster介绍">[Kafka Cluster 介绍](../franz-go库.md##kafka-cluster介绍)</h2>
 
 ***
 <br/><br/><br/>
