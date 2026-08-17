@@ -70,6 +70,8 @@
 	- [析构调用闭包导致crash](#析构调用闭包导致crash)
 	- [线程堆栈分析报告如何查看？](#线程堆栈分析报告如何查看？)
 	- [网址缓存导致无法加载](#网址缓存导致无法加载)
+- **资料**
+	- [向 iOS 应用添加“使用 Google 账号登录”功能](https://codelabs.developers.google.com/codelabs/sign-in-with-google-ios?hl=zh-cn#0)
 
 
 
