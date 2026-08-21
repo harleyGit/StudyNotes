@@ -14,6 +14,9 @@
 	- [osMkdirAll递归创建目录](#osMkdirAll递归创建目录)
 - [数据解析](#数据解析)
 	- [json.RawMessage 延迟解析](#jsonRawMessage延迟解析)
+- [终止型错误](#终止型错误)
+	- [`errors.As` 的匹配条件](#errors.As的匹配条件)
+	- [使用与风险](#终止型错误的使用与风险)
 
 
 
@@ -1025,3 +1028,81 @@ if err := json.Unmarshal(raw["image"], &imageStr); err != nil {
 2. `map[string]json.RawMessage` 适合**只关心部分字段、嵌套复杂 JSON**的场景，性能更好。
 3. 只会解析顶层键值对，子 JSON 内容保留原始字节。
 4. 顶层必须是 `{}` 对象，顶层为 `[]` 数组会解析报错。
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="终止型错误">终止型错误</h1>
+
+核心判断函数：
+
+```go
+type hgTerminalError struct{ cause error }
+
+func hgIsTerminalError(err error) bool {
+	var terminal hgTerminalError
+	return errors.As(err, &terminal)
+}
+```
+
+`hgTerminalError` 用于标记**不应重试、应终止当前处理流程**的错误；`hgIsTerminalError` 检查错误链中是否存在该类型。
+
+***
+<br/><br/>
+> <h2 id="errors.As的匹配条件"><code>errors.As</code> 的匹配条件</h2>
+
+```go
+var terminal hgTerminalError
+return errors.As(err, &terminal)
+```
+
+`errors.As` 会沿错误链逐层检查，并尝试把匹配层赋值给目标变量。目标必须是非 `nil` 指针，且其指向的类型需要实现 `error`，或目标指向接口类型。
+
+仅从当前片段看，`hgTerminalError` 没有展示 `Error() string` 方法。如果项目其他位置也没有为它实现 `error`，则它不能作为 `error` 返回；对非 `nil` 错误调用上述 `errors.As` 也会因目标类型不合法而 panic。完整实现可写为：
+
+```go
+// 必须实现 error
+func (e hgTerminalError) Error() string {
+    return e.cause.Error()
+}
+func (e hgTerminalError) Unwrap() error {
+    return e.cause
+}
+
+// 包装错误向外返回
+func wrapTerminal(err error) error {
+    return hgTerminalError{cause: err}
+}
+```
+
+- `Error()` 使 `hgTerminalError` 实现 `error`。
+- `Unwrap()` 把 `cause` 接入错误链，便于继续使用 `errors.Is`、`errors.As` 检查根因。
+- 使用值接收者时，错误链中的动态类型为 `hgTerminalError`，与 `var terminal hgTerminalError` 对应。
+
+`errors.Is` 与 `errors.As` 的侧重点不同：
+
+- `errors.Is(err, target)`：判断错误链是否匹配目标错误值或目标定义的 `Is` 规则，常用于哨兵错误。
+- `errors.As(err, &target)`：提取错误链中可赋值给目标类型的错误。
+
+***
+<br/><br/>
+> <h2 id="终止型错误的使用与风险">使用与风险</h2>
+
+```go
+err := doKafkaOp()
+if hgIsTerminalError(err) {
+    // 终止错误：不再重试，直接退出consumer/放弃当前任务
+    return err
+}
+// 普通错误，可以sleep后重试
+```
+
+通常可按业务语义区分：
+
+- **终止型错误**：当前处理路径无法通过重试恢复，例如确定的配置非法、认证失败或不支持的消息协议版本。
+- **可重试错误**：可能随时间恢复，例如短暂网络抖动或 broker 暂时繁忙。
+
+是否终止必须依据具体客户端和业务契约判断。例如 topic 不存在有时是永久配置错误，有时也可能由自动创建或稍后部署恢复，不宜只按错误名称固定分类。
+
+**结论：**`hgTerminalError` 是不可重试标记，`hgIsTerminalError` 通过错误链类型识别该标记；前提是该类型已正确实现 `error`。

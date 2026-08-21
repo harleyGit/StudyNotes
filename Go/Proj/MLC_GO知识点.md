@@ -1,6 +1,7 @@
 
 - [Go 知识点](#Go知识点)
 - [高级语法](#高级语法)
+	- [终止型错误](#终止型错误)
 - [并发编程](#并发编程)
 	- [StatusCounterSyncer 后台同步器](#StatusCounterSyncer-后台同步器)
 	- [中间件链式调用](#中间件链式调用)
@@ -36,11 +37,18 @@
 	- [godotenv.Load](#godotenv.Load)
 - [网络](#网络)
 	- [拼接标准网络地址](#拼接标准网络地址)
+	- [清理 Transport 中空闲连接](#清理-Transport-中空闲连接)
+	- [`context.Context` 附加数据](#context.Context附加数据)
+	- [空结构体作为 Context Key](#空结构体作为ContextKey)
+	- [`ctx.Err()` 用法](#ctx.Err用法)
 - [KafKa使用](#KafKa使用)
+	- [`kafka.yaml` consumers 配置](#kafka.yaml-consumers配置)
 	- [Kafka Broker 介绍](#kafka-broker介绍)
 	- [Kafka Cluster 介绍](#kafka-cluster介绍)
 	- [Go 微服务中的配置、Kafka 与数据库操作](#微服务中的配置Kafka与数据库操作)
 	- [docker-compose.kafka.yml 文件作用](#docker-compose.kafka.yml文件作用)
+	- [每轮批量消费结束后的收尾动作](#每轮批量消费结束后的收尾动作)
+	- [解耦业务与 Kafka 底层](#解耦业务与Kafka底层)
 - [**数据库**](#数据库)
 	- [database/sql抽象层接口](#database/sql抽象层接口)
 	- [大厂底层SQL设计【未做，可以后面优化】](#大厂底层SQL设计)
@@ -78,12 +86,15 @@
 <br/><br/><br/>
 > <h1 id="高级语法">高级语法</h1>
 
-
-<br/><br/><br/>
-
 ***
+<br/><br/><br/>
+># <h2 id="终止型错误">[终止型错误](../go语法(II).md#终止型错误)</h2>
+
+
 <br/>
 
+***
+<br/><br/><br/>
 > <h1 id="并发编程">并发编程</h1>
 
 ***
@@ -181,6 +192,17 @@
 ># <h2 id="千万级视频业务标准架构">[千万级视频业务标准架构](../资源文件.md#千万级视频业务标准架构)</h2>
 
 
+***
+<br/><br/><br/>
+># <h2 id="每轮批量消费结束后的收尾动作">[每轮批量消费结束后的收尾动作](../franz-go库2.md#每轮批量消费结束后的收尾动作)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="解耦业务与Kafka底层">[解耦业务与 Kafka 底层](../franz-go库2.md#解耦业务与Kafka底层)</h2>
+
+	
+
 <br/>
 
 ***
@@ -224,7 +246,6 @@
 ># <h2 id="godotenv.Load">[godotenv.Load](../Go工程文件配置.md#yaml与mapstructure标签)</h2>
 
 
-
 <br/>
 
 ***
@@ -237,11 +258,36 @@
 ># <h2 id="拼接标准网络地址">[拼接标准网络地址](../网络.md#拼接标准网络地址)</h2>
 
 
+***
+<br/><br/><br/>
+># <h2 id="清理-Transport-中空闲连接">[清理 Transport 中空闲连接](../网络.md#清理-Transport-中空闲连接)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="context.Context附加数据">[`context.Context` 附加数据](../网络.md#context.Context附加数据)</h2>
+
+
+***
+<br/><br/><br/>
+># <h2 id="空结构体作为ContextKey">[空结构体作为 Context Key](../网络.md#空结构体作为ContextKey)</h2>
+
+***
+<br/><br/><br/>
+># <h2 id="ctx.Err用法">[`ctx.Err()` 用法](../网络.md#ctx.Err用法)</h2>
+
+
 <br/>
 
 ***
 <br/><br/><br/>
 ># <h1 id="KafKa使用">[KafKa使用](../franz-go库.md#Kafka与franz-go工程实践)</h1>
+
+***
+<br/><br/><br/>
+># <h2 id="kafka.yaml-consumers配置">[`kafka.yaml` consumers 配置](../kafka配置.md#kafka.yaml-consumers配置)
+</h2>
+
 
 ***
 <br/><br/><br/>
@@ -290,8 +336,6 @@
 ***
 <br/><br/><br/>
 ># <h2 id="MySQLinformation_schema">[MySQL information_schema](../数据库SQL库2.md#MySQLinformation_schema)</h2>
-
-
 
 
 ***
