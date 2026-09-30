@@ -33,6 +33,7 @@
 	- [缓存封装](#缓存封装)
 - [errors.Is 与 redis.Nil](#errors.Is与redis.Nil)
 - [Redis Get().Bytes()](#Redis-Get-Bytes)
+- [Redis HGetAll 与 go-redis 命令对象](#Redis-HGetAll-与-go-redis-命令对象)
 
 
 
@@ -1833,3 +1834,202 @@ Redis String(JSON)
 ```
 
 `GET` 只能读取 Redis String；List、Set、Hash 应分别使用 `LRange`、`SMembers`、`HGetAll` 等对应命令。
+
+
+***
+<br/><br/><br/>
+
+> <h1 id="Redis-HGetAll-与-go-redis-命令对象">Redis HGetAll 与 go-redis 命令对象</h1>
+
+```go
+items, err := redisService.client.HGetAll(ctx, key).Result()
+```
+
+普通 `go-redis` 客户端调用 `HGetAll` 时，会执行 Redis 的 `HGETALL` 请求并返回一个命令对象；随后 `.Result()` 读取该命令对象中已经得到的 `map[string]string` 和错误。**这不是启动异步任务后再等待任务完成的模型。**
+
+```text
+Redis
+
+key
+  ↓
+┌──────────────────┐
+│ field → value    │
+│ field → value    │
+│ field → value    │
+└──────────────────┘
+         ↓
+      HGetAll
+         ↓
+map[string]string
+         ↓
+       items
+```
+
+### `HGet` 与 `HGetAll`
+
+`HGet(ctx, key, field)` 查询一个 field，例如 `HGet(ctx, "user:10001", "name")` 得到：
+
+```text
+张三
+```
+
+`HGetAll(ctx, "user:10001")` 会把整个 Hash 取出：
+
+```text
+HGet     → 查一个
+HGetAll  → 全部查
+```
+
+`HGetAll` 经常与 `HSet`、`HMGet`、`HIncrBy` 一起出现，它们都在操作 Redis Hash。
+
+---
+<br/>
+
+## `NewMapStringStringCmd` 做了什么
+
+go-redis 中的实现可以抽象为：
+
+```go
+func (c cmdable) HGetAll(ctx context.Context, key string) *MapStringStringCmd {
+
+    cmd := NewMapStringStringCmd(ctx, "hgetall", key)
+
+    _ = c(ctx, cmd)
+
+    return cmd
+}
+```
+
+它创建的是一个 Redis 命令对象，结果类型预期为 `map[string]string`：
+
+```text
+创建一个命令
+      ↓
+"hgetall"
+      ↓
+key
+      ↓
+生成一个 MapStringStringCmd 对象
+```
+
+例如 `NewMapStringStringCmd(ctx, "hgetall", "user:10001")` 表示组装 `HGETALL user:10001` 命令，并按 `map[string]string` 解析结果。
+
+### 名称与结果类型
+
+```text
+Map String String Cmd
+│   │      │     │
+│   │      │     └── Command，命令
+│   │      └──────── value 是 string
+│   └─────────────── key 是 string
+└─────────────────── 返回 Map
+```
+
+Redis 数据：
+
+```text
+user:10001
+    ├── name → "张三"
+    ├── age  → "28"
+    └── city → "上海"
+```
+
+执行 `HGETALL user:10001` 后，用 `result, err := cmd.Result()` 读取结果：
+
+```go
+map[string]string{
+    "name": "张三",
+    "age":  "28",
+    "city": "上海",
+}
+```
+
+***
+<br/>
+
+`c` 是处理命令的函数类型：普通客户端执行请求，Pipeline 则排队。命令对象统一保存参数、结果和错误；`_ = c(ctx, cmd)` 忽略直接返回值，不代表调用方应忽略 `Result()` 返回的错误。
+
+餐厅类比：`NewMapStringStringCmd()` 写菜单：
+
+```text
+命令：HGETALL
+目标：user:10001
+```
+
+`c(ctx, cmd)` 交给服务员执行，`Redis Server` 查询后，`cmd.Result()` 读取结果。普通调用不是等到 `Result()` 才等待后厨。
+
+下面是普通客户端的时序，网络往返在 `HGetAll()` 返回前完成，`.Result()` 只读取对象中的值：
+
+```text
+HGetAll()
+   ↓
+先创建 Command 对象
+   ↓
+发送 Redis 请求
+   ↓
+Redis 返回数据
+   ↓
+Command 对象保存结果
+   ↓
+Result()
+   ↓
+map[string]string
+```
+
+完整调用链：
+
+```text
+HGetAll(ctx, key)
+       │
+       ↓
+NewMapStringStringCmd()
+       │
+       ↓
+创建 MapStringStringCmd
+       │
+       ↓
+c(ctx, cmd)
+       │
+       ↓
+执行/发送 Redis 命令
+       │
+       ↓
+return cmd
+       │
+       ↓
+.Result()
+       │
+       ↓
+map[string]string
+```
+
+### Pipeline 的区别
+
+普通调用可拆成 `cmd := client.HGetAll(ctx, key)` 和 `result, err := cmd.Result()`。Pipeline 中 `pipe.HGetAll(ctx, key)` 先排队，`pipe.Exec(ctx)` 批量执行后再读取命令结果；需检查 Exec 和具体命令的错误。
+
+### 参数对应的 Redis 命令
+
+```text
+ctx
+ ↓
+请求上下文
+
+"hgetall"
+ ↓
+Redis 命令
+
+key
+ ↓
+Redis Key
+```
+
+```go
+NewMapStringStringCmd(
+    ctx,
+    "hgetall",
+    "danmaku:room:10001",
+)
+```
+
+最终 Redis 要执行 `HGETALL danmaku:room:10001`。
+

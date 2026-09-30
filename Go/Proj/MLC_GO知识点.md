@@ -41,6 +41,7 @@
 	- [`context.Context` 附加数据](#context.Context附加数据)
 	- [空结构体作为 Context Key](#空结构体作为ContextKey)
 	- [`ctx.Err()` 用法](#ctx.Err用法)
+	- [registerRootPrefixRoutes 多模块挂载【路由】](#registerRootPrefixRoutes-多模块挂载)
 - [KafKa使用](#KafKa使用)
 	- [`kafka.yaml` consumers 配置](#kafka.yaml-consumers配置)
 	- [Kafka Broker 介绍](#kafka-broker介绍)
@@ -65,10 +66,12 @@
 	- [ORDER BY 与 LIMIT](#ORDER-BY与LIMIT)
 	- [识别 MySQL Duplicate Key](#识别MySQL-Duplicate-Key)
 	- [mysql.Config.FormatDSN](#mysql.Config.FormatDSN)
+	- [ClickHouse 弹幕异步写入](#ClickHouse-弹幕异步写入)
 - [Redis使用](#Redis使用)
 	- [Redis HIncrBy 状态计数](#Redis-HIncrBy-状态计数)
 	- [errors.Is 与 redis.Nil](#errors.Is与redis.Nil)
 	- [Redis Get().Bytes()](#Redis-Get-Bytes)
+	- [Redis HGetAll 与 go-redis 命令对象](#Redis-HGetAll-与-go-redis-命令对象)
 - [命令行参数](#命令行参数)
 	- [Go flag 命令行参数解析](#Go-flag-命令行参数解析)
 	- [命令行参数-查看帮助](#命令行参数-查看帮助)
@@ -202,6 +205,9 @@
 ># <h2 id="解耦业务与Kafka底层">[解耦业务与 Kafka 底层](../franz-go库2.md#解耦业务与Kafka底层)</h2>
 
 	
+***
+<br/><br/><br/>
+># <h2 id="Outbox（发件箱模式）">[Outbox（发件箱模式）](../franz-go库2.md#Outbox（发件箱模式)</h2>
 
 <br/>
 
@@ -276,6 +282,11 @@
 <br/><br/><br/>
 ># <h2 id="ctx.Err用法">[`ctx.Err()` 用法](../网络.md#ctx.Err用法)</h2>
 
+
+***
+<br/><br/><br/>
+># <h2 id="registerRootPrefixRoutes-多模块挂载">[registerRootPrefixRoutes 多模块挂载](../网络.md#registerRootPrefixRoutes-多模块挂载)</h2>
+、
 
 <br/>
 
@@ -366,6 +377,9 @@
 <br/><br/><br/>
 > <h2 id="mysql.Config.FormatDSN">[mysql.Config.FormatDSN](../数据库SQL库2.md#mysql.Config.FormatDSN)</h2>
 
+***
+<br/><br/><br/>
+># <h2 id="ClickHouse-弹幕异步写入">[ClickHouse 弹幕异步写入](../数据库SQL库2.md#ClickHouse-弹幕异步写入)</h2>
 
 
 <br/>
@@ -382,17 +396,16 @@
 
 ***
 <br/><br/><br/>
-> <h2 id="errors.Is与redis.Nil">[errors.Is 与 redis.Nil](../库go-redis.md#errors.Is与redis.Nil)</h2>
+># <h2 id="errors.Is与redis.Nil">[errors.Is 与 redis.Nil](../库go-redis.md#errors.Is与redis.Nil)</h2>
 
 ***
 <br/><br/><br/>
-> <h2 id="Redis-Get-Bytes">[Redis Get().Bytes()](../库go-redis.md#errors.Is与redis.Nil)</h2>
+># <h2 id="Redis-Get-Bytes">[Redis Get().Bytes()](../库go-redis.md#errors.Is与redis.Nil)</h2>
 
 
 ***
 <br/><br/><br/>
-> <h2 id=""></h2>
-
+># <h2 "Redis-HGetAll-与-go-redis-命令对象">[Redis HGetAll 与 go-redis 命令对象](../库go-redis.md#Redis-HGetAll-与-go-redis-命令对象)</h2>
 <br/>
 
 ***
@@ -400,8 +413,7 @@
 > <h1 id="命令行参数">命令行参数</h1>
 
 
-***
-<br/><br/><br/>
+<br/><br/>
 ># <h2 id="Go-flag-命令行参数解析">[Go flag 命令行参数解析](../命令行.md#Go-flag-命令行参数解析)</h2>
 
 ```go
@@ -412,6 +424,11 @@ check := flag.String("check", "", "依赖检查：mysql 或 redis；为空时只
 // flag.Parse() 和 flag.String() 属于 Go 标准库 flag 包，主要作用是：解析命令行参数，让 Go 程序启动时可以通过命令行传入配置
 flag.Parse()
 ```
+
+
+
+
+
 
 
 ***

@@ -14,6 +14,14 @@
 	- [osMkdirAll递归创建目录](#osMkdirAll递归创建目录)
 - [数据解析](#数据解析)
 	- [json.RawMessage 延迟解析](#jsonRawMessage延迟解析)
+	- [`json.RawMessage` 详解](#json.RawMessage详解)
+		- [核心原理](#核心原理)
+		- [延迟解析](#延迟解析)
+		- [与其他类型的区别](#与其他类型的区别)
+		- [Kafka 事件消息](#Kafka事件消息)
+		- [HTTP API 与原样透传](#HTTPAPI与原样透传)
+		- [按字段延迟解析](#按字段延迟解析)
+		- [注意事项](#注意事项)
 - [终止型错误](#终止型错误)
 	- [`errors.As` 的匹配条件](#errors.As的匹配条件)
 	- [使用与风险](#终止型错误的使用与风险)
@@ -1028,6 +1036,565 @@ if err := json.Unmarshal(raw["image"], &imageStr); err != nil {
 2. `map[string]json.RawMessage` 适合**只关心部分字段、嵌套复杂 JSON**的场景，性能更好。
 3. 只会解析顶层键值对，子 JSON 内容保留原始字节。
 4. 顶层必须是 `{}` 对象，顶层为 `[]` 数组会解析报错。
+
+
+<br/>
+
+***
+<br/><br/><br/>
+> <h1 id="json.RawMessage详解"><code>json.RawMessage</code> 详解</h1>
+
+`json.RawMessage` 用于保存一段合法 JSON 的原始字节，并把这部分内容留到确定具体类型后再解析。它常用于动态 JSON、Kafka 事件消息、HTTP 多态请求和网关透传。
+
+核心写法：
+
+```go
+type Event struct {
+	EventType string          `json:"event_type"`
+	Data      json.RawMessage `json:"data"`
+}
+
+var event Event
+if err := json.Unmarshal(body, &event); err != nil {
+	return err
+}
+
+switch event.EventType {
+case "video_created":
+	var data VideoCreated
+	if err := json.Unmarshal(event.Data, &data); err != nil {
+		return err
+	}
+case "user_created":
+	var data UserCreated
+	if err := json.Unmarshal(event.Data, &data); err != nil {
+		return err
+	}
+}
+```
+
+```text
+第一次 Unmarshal
+        ↓
+解析公共字段
+        ↓
+Data 保留为 json.RawMessage
+        ↓
+根据 event_type 判断具体类型
+        ↓
+第二次 Unmarshal
+        ↓
+得到具体结构体
+```
+
+这种方式称为**延迟解析（deferred decoding）**，更准确地说是**局部延迟解析**：外层 JSON 已经解析，只是不继续解析 `Data` 字段。
+
+***
+<br/><br/><br/>
+
+> <h2 id="核心原理">核心原理</h2>
+
+源码定义：
+
+```go
+type RawMessage []byte
+```
+
+`json.RawMessage` 的底层类型是 `[]byte`，但它实现了 `json.Marshaler` 和 `json.Unmarshaler`。因此，`encoding/json` 会把它作为 JSON 原文处理，而不是普通字节切片。
+
+```go
+raw := json.RawMessage(`{"name":"Harley","age":30}`)
+fmt.Println(string(raw))
+```
+
+输出：
+
+```json
+{"name":"Harley","age":30}
+```
+
+反序列化到 `RawMessage` 时，其 `UnmarshalJSON` 会复制输入数据，因此结果不会直接引用解码器传入的临时字节。
+
+### 为什么不直接使用 `[]byte`
+
+```go
+type Event struct {
+	Type string `json:"type"`
+	Data []byte `json:"data"`
+}
+```
+
+普通 `[]byte` 在 `encoding/json` 中按 Base64 字符串处理，不能直接接收 JSON 对象作为原始内容；`json.RawMessage` 则明确表示“这里保存的是 JSON 本身”。
+
+例如，普通 `[]byte` 的 JSON 形式通常是：
+
+```json
+{"data":"aGVsbG8="}
+```
+
+而 `RawMessage` 可以直接保存对象：
+
+```json
+{"data":{"id":1}}
+```
+
+***
+<br/><br/><br/>
+
+> <h2 id="延迟解析">延迟解析</h2>
+
+假设同一消息入口可能接收两种事件：
+
+```json
+{
+    "event_type": "video_created",
+    "data": {
+        "video_id": 10001,
+        "title": "Go Kafka"
+    }
+}
+```
+
+```json
+{
+    "event_type": "user_created",
+    "data": {
+        "user_id": 20001,
+        "name": "Harley"
+    }
+}
+```
+
+先定义公共信封和具体载荷：
+
+```go
+type Event struct {
+	EventType string          `json:"event_type"`
+	Data      json.RawMessage `json:"data"`
+}
+
+type VideoCreated struct {
+	VideoID int64  `json:"video_id"`
+	Title   string `json:"title"`
+}
+
+type UserCreated struct {
+	UserID int64  `json:"user_id"`
+	Name   string `json:"name"`
+}
+```
+
+第一次反序列化只解析公共字段：
+
+```go
+var event Event
+if err := json.Unmarshal(body, &event); err != nil {
+	return err
+}
+```
+
+此时 `event.EventType` 是 `video_created`，`event.Data` 仍保存以下 JSON：
+
+```json
+{
+    "video_id": 10001,
+    "title": "Go Kafka"
+}
+```
+
+再根据事件类型反序列化载荷：
+
+```go
+switch event.EventType {
+case "video_created":
+	var data VideoCreated
+	if err := json.Unmarshal(event.Data, &data); err != nil {
+		return err
+	}
+
+case "user_created":
+	var data UserCreated
+	if err := json.Unmarshal(event.Data, &data); err != nil {
+		return err
+	}
+}
+```
+
+```text
+                    JSON
+                     |
+                     v
+              ┌──────────────┐
+              │ Event        │
+              │              │
+              │ event_type   │
+              │ data RawMsg  │
+              └──────┬───────┘
+                     |
+            根据 event_type
+                     |
+          ┌──────────┴──────────┐
+          ↓                     ↓
+   video_created          user_created
+          ↓                     ↓
+  VideoCreated             UserCreated
+```
+
+### 完整示例
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Event struct {
+	EventType string          `json:"event_type"`
+	Data      json.RawMessage `json:"data"`
+}
+
+type VideoCreated struct {
+	VideoID int64  `json:"video_id"`
+	Title   string `json:"title"`
+}
+
+type UserCreated struct {
+	UserID int64  `json:"user_id"`
+	Name   string `json:"name"`
+}
+
+func main() {
+	body := []byte(`{
+        "event_type": "video_created",
+        "data": {
+            "video_id": 10001,
+            "title": "Go Kafka"
+        }
+    }`)
+
+	var event Event
+	if err := json.Unmarshal(body, &event); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(event.EventType)
+	fmt.Println(string(event.Data))
+
+	switch event.EventType {
+	case "video_created":
+		var data VideoCreated
+		if err := json.Unmarshal(event.Data, &data); err != nil {
+			panic(err)
+		}
+
+		fmt.Println(data.VideoID)
+		fmt.Println(data.Title)
+
+	case "user_created":
+		var data UserCreated
+		if err := json.Unmarshal(event.Data, &data); err != nil {
+			panic(err)
+		}
+
+		fmt.Println(data.UserID)
+		fmt.Println(data.Name)
+	}
+}
+```
+
+输出：
+
+```text
+video_created
+{"video_id":10001,"title":"Go Kafka"}
+10001
+Go Kafka
+```
+
+***
+<br/><br/><br/>
+
+> <h2 id="与其他类型的区别">与其他类型的区别</h2>
+
+| 字段类型 | 解码结果 | 适用场景 |
+| --- | --- | --- |
+| `any` / `interface{}` | 通常为 `map[string]any`、`[]any` 等通用类型 | 需要立即操作未知结构 |
+| `json.RawMessage` | 保存 JSON 原始字节 | 需要延迟解析或原样透传 |
+| 具体结构体 | 直接得到强类型值 | JSON 结构固定且已知 |
+| `[]byte` | 按 Base64 JSON 字符串处理 | JSON 字段本身表示二进制数据 |
+
+使用 `any`：
+
+```go
+type Event struct {
+	Type string `json:"type"`
+	Data any    `json:"data"`
+}
+```
+
+对象类型的 `Data` 通常会解码为 `map[string]any`，其中 JSON 数字默认成为 `float64`。如果只想先判断事件类型，再按具体结构解析，`RawMessage` 能避免先解码成通用结构后再转换。
+
+```text
+any
+  ↓
+立即解析为通用 Go 值
+
+json.RawMessage
+  ↓
+保留 JSON 字节，稍后按目标类型解析
+```
+
+***
+<br/><br/><br/>
+
+> <h2 id="Kafka事件消息">Kafka 事件消息</h2>
+
+同一 Kafka Topic 中可能包含 `video_created`、`video_deleted`、`user_created`、`comment_created` 等不同事件。将所有业务字段平铺到一个结构体会产生大量无关字段，更适合使用“公共信封 + RawMessage 载荷”：
+
+```go
+type Event struct {
+	ID        string          `json:"id"`
+	EventType string          `json:"event_type"`
+	Timestamp int64           `json:"timestamp"`
+	Data      json.RawMessage `json:"data"`
+}
+```
+
+消息示例：
+
+```json
+{
+    "id": "evt_10001",
+    "event_type": "video_created",
+    "timestamp": 1750000000,
+    "data": {
+        "video_id": 10001,
+        "title": "Kafka"
+    }
+}
+```
+
+Consumer 先解析信封，再分发给对应处理器：
+
+```go
+func handleMessage(data []byte) error {
+	var event Event
+	if err := json.Unmarshal(data, &event); err != nil {
+		return err
+	}
+
+	switch event.EventType {
+	case "video_created":
+		return handleVideoCreated(event.Data)
+	case "user_created":
+		return handleUserCreated(event.Data)
+	default:
+		return fmt.Errorf("unknown event type: %s", event.EventType)
+	}
+}
+
+func handleVideoCreated(data json.RawMessage) error {
+	var event VideoCreated
+	if err := json.Unmarshal(data, &event); err != nil {
+		return err
+	}
+
+	// 业务处理
+	return nil
+}
+```
+
+该模式将公共路由信息与业务载荷解耦，适合事件驱动系统；生产环境还应校验事件版本、未知类型策略和载荷字段。
+
+***
+<br/><br/><br/>
+
+> <h2 id="HTTPAPI与原样透传">HTTP API 与原样透传</h2>
+
+同一个 HTTP 接口接收多种请求类型时，也可以先解析公共字段：
+
+```json
+{
+    "type": "purchase",
+    "data": {
+        "product_id": 10001,
+        "quantity": 2
+    }
+}
+```
+
+```go
+type Request struct {
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	switch req.Type {
+	case "login":
+		var data LoginRequest
+		if err := json.Unmarshal(req.Data, &data); err != nil {
+			http.Error(w, "invalid login data", http.StatusBadRequest)
+			return
+		}
+
+		// login
+
+	case "purchase":
+		var data PurchaseRequest
+		if err := json.Unmarshal(req.Data, &data); err != nil {
+			http.Error(w, "invalid purchase data", http.StatusBadRequest)
+			return
+		}
+
+		// purchase
+	}
+}
+```
+
+如果中间层不需要理解 `Data`，可以直接重新编码整个结构：
+
+```go
+data := json.RawMessage(`{
+    "id": 10001,
+    "title": "hello"
+}`)
+
+event := Event{
+	EventType: "video",
+	Data:      data,
+}
+
+result, err := json.Marshal(event)
+if err != nil {
+	return err
+}
+
+fmt.Println(string(result))
+```
+
+输出：
+
+```json
+{"event_type":"video","data":{"id":10001,"title":"hello"}}
+```
+
+```text
+Gateway
+   ↓
+接收 JSON
+   ↓
+解析公共字段
+   ↓
+RawMessage 保存业务 payload
+   ↓
+Kafka
+   ↓
+Service
+   ↓
+业务 Service 再解析
+```
+
+这里的“原样透传”是指保持 JSON 的结构和值，不保证重新 `Marshal` 后仍保留原始空白、缩进等文本格式。
+
+***
+<br/><br/><br/>
+
+> <h2 id="按字段延迟解析">按字段延迟解析</h2>
+
+`map[string]json.RawMessage` 适合只关心部分字段、但又不想把所有内容立即解码为 `any` 的场景：
+
+```go
+var fields map[string]json.RawMessage
+if err := json.Unmarshal(data, &fields); err != nil {
+	return err
+}
+```
+
+输入：
+
+```json
+{
+    "name": "Harley",
+    "age": 30,
+    "profile": {
+        "city": "Shanghai"
+    }
+}
+```
+
+解析结果可理解为：
+
+```text
+name    → "Harley"
+age     → 30
+profile → {"city":"Shanghai"}
+```
+
+只解析需要的字段：
+
+```go
+var name string
+if err := json.Unmarshal(fields["name"], &name); err != nil {
+	return err
+}
+
+var profile Profile
+if err := json.Unmarshal(fields["profile"], &profile); err != nil {
+	return err
+}
+```
+
+读取前应判断 key 是否存在，否则缺失字段得到的 `nil` RawMessage 会导致 `json.Unmarshal` 返回 `unexpected end of JSON input`。
+
+***
+<br/><br/><br/>
+
+> <h2 id="注意事项">注意事项</h2>
+
+### 内容必须是合法 JSON
+
+`RawMessage` 可以保存 JSON 对象、数组、数字、布尔值、`null` 和 JSON 字符串，但不能把普通文本直接当作 JSON。
+
+```go
+json.RawMessage(`hello`)     // 非法：字符串缺少双引号
+json.RawMessage(`"hello"`) // 合法 JSON 字符串
+json.RawMessage(`123`)       // 合法 JSON 数字
+json.RawMessage(`true`)      // 合法 JSON 布尔值
+json.RawMessage(`null`)      // 合法 JSON null
+json.RawMessage(`[1,2,3]`)   // 合法 JSON 数组
+json.RawMessage(`{"id":1}`) // 合法 JSON 对象
+```
+
+手动构造 `RawMessage` 时不会立即校验；在 `json.Marshal`、显式校验或后续解析时才会暴露非法 JSON。需要提前判断时可使用：
+
+```go
+if !json.Valid(raw) {
+	return errors.New("invalid json payload")
+}
+```
+
+### 仍然需要校验具体载荷
+
+延迟解析不等于跳过验证。完成第二次 `Unmarshal` 后，仍需检查必填字段、取值范围、事件版本和业务约束。
+
+### 适用边界
+
+- JSON 结构固定且明确时，优先直接解析为具体结构体。
+- 需要根据判别字段选择具体类型时，使用 `json.RawMessage`。
+- 需要直接操作完全未知的 JSON 树时，可使用 `any`、`map[string]any` 或专门的动态 JSON 工具。
+- 需要保存二进制数据时，使用 `[]byte`，由 `encoding/json` 按 Base64 字符串编码。
+
+**结论：**`json.RawMessage` 的核心价值是保留某个 JSON 子树，在确定目标类型后再解析，或在不理解载荷的中间层中继续传递。
+
 
 <br/>
 

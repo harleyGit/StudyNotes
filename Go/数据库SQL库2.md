@@ -13,6 +13,8 @@
 - [ORDER BY 与 LIMIT](#ORDER-BY与LIMIT)
 - [识别 MySQL Duplicate Key](#识别MySQL-Duplicate-Key)
 - [mysql.Config.FormatDSN](mysql.Config.FormatDSN)
+- [ClickHouse 弹幕异步写入](#ClickHouse-弹幕异步写入)
+	- [异步插入与等待结果](#异步插入与等待结果)
 
 
 
@@ -1718,3 +1720,433 @@ MySQL 可用
 ```
 
 **核心结论：`FormatDSN()` 负责规范生成连接字符串，`sql.Open()` 创建连接池句柄，`PingContext()` 才用于验证实际连接。**
+
+
+
+***
+<br/><br/><br/>
+
+> <h1 id="ClickHouse-弹幕异步写入">ClickHouse 弹幕异步写入</h1>
+
+## 核心代码
+
+```go
+query := fmt.Sprintf(
+    "INSERT INTO %s.%s SETTINGS async_insert=1, wait_for_async_insert=1 FORMAT JSONEachRow",
+    c.config.Database,
+    c.config.DanmakuHistoryTable,
+)
+
+return c.execute(
+    ctx,
+    c.config.WriteTimeout,
+    query,
+    body.Bytes(),
+    nil,
+)
+```
+
+这段代码构造 ClickHouse 的 `INSERT` 查询，将 `body.Bytes()` 中按 `JSONEachRow` 组织的弹幕数据发送到指定表，并启用服务端异步插入。`wait_for_async_insert=1` 要求等待异步插入的 flush/处理结果后再返回，但不能泛化为所有副本都已完成耐久化。
+
+假设配置为：
+
+```yaml
+clickhouse:
+  database: mlc
+  danmaku_history_table: video_danmaku_history
+```
+
+最终查询：
+
+```sql
+INSERT INTO mlc.video_danmaku_history
+SETTINGS async_insert=1, wait_for_async_insert=1
+FORMAT JSONEachRow
+```
+
+---
+<br/>
+
+## `INSERT INTO` 与 `JSONEachRow`
+
+`INSERT INTO mlc.video_danmaku_history` 指定目标表。对比普通 `VALUES` 插入：
+
+```sql
+INSERT INTO user
+    (id, name)
+VALUES
+    (1, '张三');
+```
+
+本文不使用 `VALUES`，而由 `FORMAT JSONEachRow` 指定输入格式。
+
+典型数据：
+
+```json
+{"video_id":"1001","user_id":"2001","content":"哈哈哈","timestamp":1720000000}
+{"video_id":"1001","user_id":"2002","content":"666","timestamp":1720000001}
+{"video_id":"1001","user_id":"2003","content":"来了来了","timestamp":1720000002}
+```
+
+**一行一个 JSON 对象，每行对应一条记录。**
+
+```text
+一行 JSON
+↓
+一条数据库记录
+```
+
+普通 JSON 可能是数组：
+
+```json
+[
+    {
+        "video_id": "1001",
+        "user_id": "2001",
+        "content": "哈哈哈"
+    },
+    {
+        "video_id": "1001",
+        "user_id": "2002",
+        "content": "666"
+    }
+]
+```
+
+而 `JSONEachRow` 是多行 JSON：
+
+```json
+{"video_id":"1001","user_id":"2001","content":"哈哈哈"}
+{"video_id":"1001","user_id":"2002","content":"666"}
+```
+
+需要注意：`JSONEachRow` 只规定输入数据格式；本文封装中，`query` 与 HTTP body 分离，SQL/query 通过 `query` 传递，实际行数据通过 `body.Bytes()` 传递。不能把“格式要求”概括成 ClickHouse 在所有客户端中都强制某个 HTTP body 位置。
+
+---
+<br/>
+
+> <h2 id="异步插入与等待结果">异步插入与等待结果</h2>
+
+### `async_insert=1`
+
+它开启 ClickHouse 的服务端异步插入机制：服务端可以先把数据放入异步缓冲区，之后再批量写入目标存储。
+
+普通插入：
+
+```text
+Go服务
+   ↓
+INSERT
+   ↓
+ClickHouse
+   ↓
+处理数据
+   ↓
+返回
+```
+
+开启服务端缓冲后：
+
+```text
+Go服务
+   ↓
+INSERT
+   ↓
+ClickHouse
+   ↓
+异步 INSERT Buffer
+   ↓
+后面批量写入 MergeTree
+```
+
+目的主要是减少大量小批量 `INSERT` 对 ClickHouse 的压力。
+
+如果弹幕服务每秒产生 `1000条弹幕`，每条都单独写入会产生大量请求：
+
+```text
+INSERT
+INSERT
+INSERT
+INSERT
+INSERT
+INSERT
+...
+```
+
+更合理的路径是：
+
+```text
+1000条
+ ↓
+Go程序攒一批
+ ↓
+一次 INSERT
+ ↓
+ClickHouse
+ ↓
+批量处理
+```
+
+### `wait_for_async_insert=0`
+
+大致流程：
+
+```text
+Go
+ ↓
+发送数据
+ ↓
+ClickHouse 收到
+ ↓
+进入异步缓冲
+ ↓
+马上告诉 Go：OK
+ ↓
+Go继续执行
+```
+
+此时 **ClickHouse 收到不等于数据已经完成后续 flush 或最终存储落盘**。
+
+### `wait_for_async_insert=1`
+
+大致流程：
+
+```text
+Go
+ ↓
+发送数据
+ ↓
+ClickHouse
+ ↓
+异步 INSERT Buffer
+ ↓
+ClickHouse处理
+ ↓
+成功
+ ↓
+返回 Go：OK
+```
+
+`async_insert=1, wait_for_async_insert=1` 使用服务端缓冲并等待 flush 结果；不是 Go 启动后台任务后不等待。上图表示成功分支，flush 失败也应返回错误，成功不等于所有副本或下游都已持久化。
+
+### 批量写入效果
+
+ClickHouse 擅长批量写入。例如 10000 条弹幕：
+
+```text
+INSERT
+ ├── 弹幕1
+ ├── 弹幕2
+ ├── 弹幕3
+ ├── ...
+ └── 弹幕10000
+```
+
+通常优于：
+
+```text
+INSERT 1
+INSERT 2
+INSERT 3
+...
+INSERT 10000
+```
+
+整体写入链路：
+
+```text
+弹幕服务
+   │
+   │ 批量JSON
+   ▼
+ClickHouse
+   │
+   │ async_insert
+   ▼
+异步缓冲区
+   │
+   ▼
+批量写入
+   │
+   ▼
+video_danmaku_history
+```
+
+---
+<br/>
+
+## `query`、`body.Bytes()` 与 `execute`
+
+`fmt.Sprintf` 用配置替换两个 `%s`。当 `database := "mlc"`、`table := "video_danmaku_history"` 时，得到：
+
+```sql
+INSERT INTO mlc.video_danmaku_history SETTINGS async_insert=1, wait_for_async_insert=1 FORMAT JSONEachRow
+```
+
+### `body.Bytes()`
+
+`body` 可以理解为 `bytes.Buffer`：
+
+```go
+var body bytes.Buffer
+
+body.WriteString(`{"video_id":"1001","content":"666"}`)
+body.WriteByte('\n')
+
+body.WriteString(`{"video_id":"1002","content":"哈哈"}`)
+body.WriteByte('\n')
+```
+
+`body.Bytes()` 取出其中的 `[]byte`，即要发送给 ClickHouse 的实际数据：
+
+```text
+{"video_id":"1001","content":"666"}
+{"video_id":"1002","content":"哈哈"}
+```
+
+所以请求可视化为：
+
+```text
+┌──────────────────────────────────────────┐
+│ ClickHouse INSERT 请求                   │
+│                                          │
+│ SQL：                                    │
+│ INSERT INTO mlc.video_danmaku_history    │
+│ SETTINGS async_insert=1                  │
+│          wait_for_async_insert=1          │
+│ FORMAT JSONEachRow                       │
+│                                          │
+│ Body：                                   │
+│ {"video_id":"1001","content":"哈哈哈"}   │
+│ {"video_id":"1001","content":"666"}      │
+│ {"video_id":"1001","content":"666666"}   │
+└──────────────────────────────────────────┘
+```
+
+### `c.execute(...)` 的已知与未知
+
+从调用点只能推断参数大致代表：
+
+```text
+execute(
+    ctx,                    // 上下文
+    WriteTimeout,           // 写入超时时间
+    query,                  // SQL
+    body.Bytes(),           // SQL对应的数据
+    nil                     // 其他可选参数
+)
+```
+
+但 `execute` 的实现没有提供，因而不能确定：
+
+- `nil` 的具体含义；它可能是请求选项、额外参数或其他可选值；
+- `WriteTimeout` 是如何实现的，是否通过 `context.WithTimeout`、HTTP client timeout 或其他机制；
+- query/body 是通过 URL 参数、请求体拼装还是客户端库的其他接口发送。
+
+常见职责可能包括：
+
+```text
+创建 HTTP 请求
+       ↓
+连接 ClickHouse
+       ↓
+发送 query
+       ↓
+发送 body
+       ↓
+等待 ClickHouse 返回
+       ↓
+判断成功/失败
+```
+
+### `ctx` 与取消边界
+
+`ctx` 是 `context.Context`。下图保留原文，表示取消意图，并非服务端未落库的保证；实际效果还取决于 `execute` 是否传递上下文。
+
+```text
+用户请求
+   ↓
+HTTP Handler
+   ↓
+写 ClickHouse
+   ↓
+用户断开连接
+   ↓
+ctx取消
+   ↓
+ClickHouse写入操作可以被取消
+```
+
+但 `ctx` 取消**不保证 ClickHouse 服务端一定没有接收或落库**：取消可能发生在请求已发送、服务端已入缓冲或已处理之后。因此重试策略仍需考虑重复写入、业务幂等和 ClickHouse 的实际确认边界。
+
+`c.config.WriteTimeout` 例如可能配置为：
+
+```yaml
+write_timeout: 5s
+```
+
+至于它是否真的限制为 `5秒`，必须查看 `execute` 实现和 HTTP 客户端配置，不能仅由字段名断言。
+
+---
+<br/>
+
+## 完整数据流
+
+下面的 `Statistic Consumer` 架构是原文根据上下文做出的假设；仅凭当前代码片段无法确认真实 consumer 名称、消息链路或完整架构。
+
+```text
+                 弹幕
+                  │
+                  ▼
+             Go 弹幕服务
+                  │
+                  ▼
+               Kafka
+                  │
+                  ▼
+          Statistic Consumer
+                  │
+                  ▼
+       组装/批量构造弹幕数据
+                  │
+                  ▼
+             body.Buffer
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+        │ body.Bytes()      │
+        ▼                   │
+  {"video_id":"1001"...}    │
+  {"video_id":"1002"...}    │
+  {"video_id":"1003"...}    │
+        │                   │
+        └─────────┬─────────┘
+                  ▼
+             c.execute()
+                  │
+                  ▼
+        ┌───────────────────┐
+        │    ClickHouse     │
+        │                   │
+        │ INSERT INTO       │
+        │ mlc.video_        │
+        │ danmaku_history   │
+        │                   │
+        │ async_insert=1    │
+        │ wait_for_async... │
+        │ JSONEachRow       │
+        └─────────┬─────────┘
+                  │
+                  ▼
+             异步写入
+                  │
+                  ▼
+      video_danmaku_history
+```
+
+| 代码 | 含义 |
+| --- | --- |
+| `INSERT INTO mlc.video_danmaku_history` | 写入哪个表 |
+| `FORMAT JSONEachRow` | body 中数据的格式 |
+| `async_insert=1` | ClickHouse 使用异步插入缓冲 |
+| `wait_for_async_insert=1` | 等待异步插入处理结果后返回 |
