@@ -46,6 +46,7 @@
 	- [一段代码检测蓝牙状态，优化内存泄露](#一段代码检测蓝牙状态，优化内存泄露)
 	- [蓝牙入口](#蓝牙入口)
 		- [蓝牙权限状态获取](#蓝牙权限状态获取)
+- [蓝牙设备、App、Server密钥协商](蓝牙设备、App、Server密钥协商)
 - [Wi-Fi连接](#Wi-Fi连接)
 	- [App内添加Wi-Fi配置](#App内添加Wi-Fi配置)
 - [**依赖注入库Swinject**](#依赖注入库Swinject)
@@ -3140,13 +3141,17 @@ PopupViewUntil.showOpenBlePopupView { [weak self] isAuth in
 ># <h3 id="蓝牙权限状态获取">[蓝牙权限状态获取](../Swift/蓝牙库CoreBluetooth.md#蓝牙权限状态获取)</h3>
 
 
+<br/><br/>
+># <<br/>
 
+***
+<br/><br/><br/>
+># <h1 id="蓝牙设备、App、Server密钥协商">[蓝牙设备、App、Server密钥协商](../Swift/蓝牙库CoreBluetooth.md#蓝牙设备、App、Server密钥协商)</h1>
 
 <br/><br/><br/>
 
 ***
 <br/>
-
 > <h1 id="Wi-Fi连接">Wi-Fi连接</h1>
 
 ***
