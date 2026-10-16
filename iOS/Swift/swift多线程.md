@@ -17,6 +17,11 @@
 - [**全局隔离机制@globalActor**](#全局隔离机制@globalActor)
 - [**‌ 核心安全协议Sendable**](#核心安全协议Sendable)
 	- [@unchecked作用和意义](#@unchecked作用和意义)
+- [同步清理死锁问题](#同步清理死锁问题)
+	- [死锁产生及识别](#死锁产生及识别) 
+	- [队列识别如何解决 ](#队列识别如何解决)
+	- [deinit中调用异步闭包安全](#deinit中调用异步闭包安全)
+	- [对像在deinit中再调用引起crash](#对像在deinit中再调用引起crash)
 
 
 
@@ -1939,3 +1944,362 @@ final class Counter: @unchecked Sendable {
 
 这种写法是危险的，你应该改成 `actor` 或加锁机制。
 
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id= "同步清理死锁问题">同步清理死锁问题</h1>
+
+```swift
+private let bleQueueKey = DispatchSpecificKey<Void>()
+bleQueue.setSpecific(key: bleQueueKey, value: ())
+
+public func cleanupBluetoothSession() {
+    // 状态监听集合只允许在 bleQueue 上访问，避免释放流程与异步移除监听并发修改字典。
+    if DispatchQueue.getSpecific(key: bleQueueKey) != nil {
+        cleanupBluetoothSessionOnBLEQueue()
+    } else {
+        // 同步完成清理，避免 deinit 将 self 捕获进逃逸闭包；队列内直接执行以避免自锁。
+        bleQueue.sync {
+            self.cleanupBluetoothSessionOnBLEQueue()
+        }
+    }
+}
+
+private func cleanupBluetoothSessionOnBLEQueue() {
+    centralManager.delegate = nil
+    bleStateObservers.removeAll()
+    centralManager.stopScan()
+    bleStateCompletions.removeAll()
+}
+```
+
+**疑问：** 清理操作同步到 bleQueue，并加入队列识别，如何避免该队列调用清理或析构时发生同步死锁？
+
+***
+<br/>
+
+这段代码的核心是：**清理操作统一在 `bleQueue` 上执行；如果当前已经在这个队列，就直接清理，避免自己等待自己。**
+
+### 1. 给队列设置一个“身份标记”
+
+```swift
+private let bleQueueKey = DispatchSpecificKey<Void>()
+
+bleQueue.setSpecific(key: bleQueueKey, value: ())
+```
+
+可以把它理解成给 `bleQueue` 挂了一块身份牌：
+
+- `bleQueueKey`：身份牌的查询凭证。
+- `()`：标记值，类型是 `Void`，只表示“设置过标记”，不存业务数据。
+
+执行下面的代码，就能判断**当前执行环境是否带有这个标记**：
+
+```swift
+DispatchQueue.getSpecific(key: bleQueueKey) != nil
+```
+
+在通常不涉及目标队列层级的用法中，可以理解为：**当前是否正在 `bleQueue` 上执行。**
+
+### 2. 清理方法分两种情况
+
+```swift
+public func cleanupBluetoothSession() {
+    if DispatchQueue.getSpecific(key: bleQueueKey) != nil {
+        cleanupBluetoothSessionOnBLEQueue()
+    } else {
+        bleQueue.sync {
+            self.cleanupBluetoothSessionOnBLEQueue()
+        }
+    }
+}
+```
+
+| 调用位置 | 执行方式 | 原因 |
+|---|---|---|
+| 已经在 `bleQueue` 上 | 直接调用清理方法 | 当前就在指定队列，无须再次派发 |
+| 在主队列或其他队列上 | `bleQueue.sync` | 让清理在 `bleQueue` 上完成，调用者等待清理结束 |
+
+**`sync` 的意思是：提交任务，并等待任务执行完，再继续往下走。** 它不表示一定切换到另一条线程。
+
+例如，从主线程调用：
+
+```swift
+cleanupBluetoothSession()
+print("清理完成")
+```
+
+只有清理结束后，才会打印“清理完成”。
+
+### 3. 具体清理什么？
+
+```swift
+private func cleanupBluetoothSessionOnBLEQueue() {
+    centralManager.delegate = nil
+    bleStateObservers.removeAll()
+    centralManager.stopScan()
+    bleStateCompletions.removeAll()
+}
+```
+
+分别表示：
+
+1. 解除蓝牙管理器的代理。
+2. 移除保存的状态监听者。
+3. 停止蓝牙扫描。
+4. 移除保存的状态回调闭包。
+
+将这些操作统一放到同一条**串行队列**上，可以让它们与该队列中的其他任务依次执行。
+
+**前提是：这些集合的新增、删除、遍历等访问也都在 `bleQueue` 上进行。** 只把清理放进队列，其他地方仍随意访问，依然可能发生竞争。
+
+另外，这段代码没有主动断开已连接的外设。
+
+### 4. 为什么直接 `sync` 可能死锁？
+
+假设 `bleQueue` 是串行队列：
+
+```swift
+let bleQueue = DispatchQueue(label: "com.example.ble")
+```
+
+下面是错误示例：
+
+```swift
+bleQueue.async {                  // 任务 A
+    bleQueue.sync {               // 任务 B
+        print("清理")
+    }
+}
+```
+
+执行过程如下：
+
+1. `bleQueue` 正在执行任务 A。
+2. A 提交任务 B，并通过 `sync` 等待 B 完成。
+3. 串行队列一次只能执行一个任务，B 必须等 A 结束。
+4. **A 等 B，B 又等 A，双方都无法继续。**
+
+就像只有一个工作人员：他正在处理 A，A 却要求“先处理完 B，我才能结束”，而 B 必须排在 A 后面。
+
+***
+<br/><br/><br/>
+> <h2 id="死锁产生及识别">死锁产生及识别</h2>
+
+你理解的“先执行 `async`，再执行里面的 `sync`”是对的。关键是：**`sync` 里面的代码，不是普通的函数调用，而是要求指定队列执行一个任务，并等待它完成。**
+
+看这个例子，假设 `bleQueue` 是**串行队列**：
+
+```swift
+bleQueue.async {
+    print("1：A 开始")
+
+    bleQueue.sync {
+        print("2：B 执行")
+    }
+
+    print("3：A 结束")
+}
+```
+
+这里有两个任务：
+
+- **任务 A**：`async` 后面整个大括号里的代码。
+- **任务 B**：`sync` 后面小括号对应的大括号里的代码。
+
+**执行到 `sync` 时，A 还没有结束。** A 必须等 `sync` 返回，才能继续执行 `print("3：A 结束")`。
+
+但 `sync` 又要求：
+
+> 让 `bleQueue` 执行 B，执行完成后，我才返回。
+
+问题来了：**`bleQueue` 是串行队列，现在仍被任务 A 占着，无法执行另一个任务 B。**
+
+| 谁在等待 | 等待什么 | 原因 |
+|---|---|---|
+| A | B 执行完成 | `sync` 不等 B 完成就不返回 |
+| B | A 执行结束 | 同一串行队列不能同时执行 A、B |
+
+**B 没有主动写“等待 A”，但串行队列的规则让它必须等 A，这就是另一半的等待。**
+
+可以想象成：只有一个窗口，你正在办理业务 A。办理到一半，你说：
+
+> “先帮我办完业务 B，我才离开窗口。”
+
+窗口的规则却是：
+
+> “你必须先办完 A、离开窗口，才能开始下一项业务 B。”
+
+于是卡住了。实际运行时，GCD 也可能直接检测到这种错误并触发崩溃。
+
+如果改成**直接调用函数**，就没有这个问题：
+
+```swift
+bleQueue.async {
+    print("1：A 开始")
+
+    self.cleanupBluetoothSessionOnBLEQueue()
+
+    print("3：A 结束")
+}
+```
+
+这里清理函数是 **A 自己执行的一部分**，无须再要求队列安排任务 B，所以可以正常完成。
+
+***
+<br/><br/><br/>
+> <h2 id="队列识别如何解决">队列识别如何解决</h2>
+
+### 5. 队列识别如何解决？
+
+你的代码会先判断当前位置：
+
+```swift
+bleQueue.async {
+    self.cleanupBluetoothSession()
+}
+```
+
+此时已经在 `bleQueue` 中，因此进入：
+
+```swift
+cleanupBluetoothSessionOnBLEQueue()
+```
+
+直接在当前任务里完成清理，**不会创建一个需要等待的新队列任务**，所以没有“自己等待自己”的问题。
+
+### 6. 在 `deinit` 中也是同样的道理
+
+```swift
+deinit {
+    cleanupBluetoothSession()
+}
+```
+
+`deinit` 通常发生在最后一个强引用被释放的位置，因此可能在不同队列上执行：
+
+| `deinit` 执行位置 | 清理行为 |
+|---|---|
+| `bleQueue` 内 | 直接清理，避免对自身队列调用 `sync` |
+| 其他队列 | 同步提交到 `bleQueue`，清理完成后继续析构 |
+
+这里使用 `sync` 的闭包是**非逃逸闭包**，执行结束后才返回，不会把清理留到析构结束以后执行。不要简单改成：
+
+```swift
+deinit {
+    bleQueue.async {
+        self.cleanupBluetoothSessionOnBLEQueue()
+    }
+}
+```
+
+因为异步闭包会捕获正在析构的 `self`，可能逃逸到析构结束之后执行。
+
+**注意：队列识别解决的是“同一串行队列对自身 `sync`”的死锁。如果 `bleQueue` 同时还在同步等待调用方所在的队列，仍可能形成跨队列死锁。**
+
+***
+<br/><br/><br/>
+> <h2 id="deinit中调用异步闭包安全">deinit中调用异步闭包安全</h2>
+
+**不是 `deinit` 中一律不能写 `async`，而是不能让异步闭包捕获正在析构的 `self`。**
+
+你的场景可以这样写，沿用前面的清理方法：
+
+```swift
+deinit {
+    cleanupBluetoothSession()
+}
+
+public func cleanupBluetoothSession() {
+    if DispatchQueue.getSpecific(key: bleQueueKey) != nil {
+        // 已经在 bleQueue，直接清理，避免同步死锁。
+        cleanupBluetoothSessionOnBLEQueue()
+    } else {
+        // 不在 bleQueue，等待清理完成后再继续析构。
+        bleQueue.sync {
+            self.cleanupBluetoothSessionOnBLEQueue()
+        }
+    }
+}
+
+private func cleanupBluetoothSessionOnBLEQueue() {
+    centralManager.delegate = nil
+    bleStateObservers.removeAll()
+    centralManager.stopScan()
+    bleStateCompletions.removeAll()
+}
+```
+
+区别是：
+
+| 写法 | 执行方式 | 是否适合这里 |
+|---|---|---|
+| `async { self.xxx() }` | 安排以后执行，`deinit` 继续结束 | ❌ 闭包捕获正在析构的 `self` |
+| 判断队列后直接调用或 `sync` | 清理完成后，`deinit` 才结束 | ✅ |
+
+例如错误写法：
+
+```swift
+deinit {
+    bleQueue.async {
+        self.cleanupBluetoothSessionOnBLEQueue()
+    }
+    // 不等清理执行，deinit 就可能结束。
+}
+```
+
+而正确写法：
+
+```swift
+deinit {
+    cleanupBluetoothSession()
+    // 到这里时，清理已经完成。
+}
+```
+
+**记住：你这里需要的是“析构结束前完成清理”，所以采用“队列内直接执行，队列外同步执行”。** 前提是 `bleQueue` 为串行队列，并已设置前面的队列标记。
+
+***
+<br/><br/><br/>
+> <h2 id="对像在deinit中再调用引起crash">对像在deinit中再调用引起crash</h2>
+
+**可能直接导致 App 崩溃。** 原因是：对象已经进入 `deinit`，异步闭包却又要强引用它，让它以后还能被访问。
+
+```swift
+deinit {
+    bleQueue.async {
+        self.cleanupBluetoothSessionOnBLEQueue()
+        // ↑ 默认强引用 self
+    }
+}
+```
+
+具体过程：
+
+1. 对象的最后一个强引用被释放，开始执行 `deinit`。
+2. 创建异步闭包时，闭包又**强引用 `self`**。
+3. `async` 不等待闭包执行，`deinit` 继续结束。
+4. 此时出现矛盾：**对象正在销毁，却又被闭包保留，准备以后使用。**
+
+Swift 运行时可能检测到这种情况并终止程序，日志类似：
+
+```text
+Object ... deallocated with non-zero retain count ...
+```
+
+意思是：**对象销毁时，发现仍然存在强引用。**
+
+如果没有及时检测到，后续访问也可能产生无效内存访问等问题。因此，不能依赖它“偶尔能运行”。
+
+你这里应使用：
+
+```swift
+deinit {
+    cleanupBluetoothSession()
+}
+```
+
+让前面带队列判断的清理方法**在 `deinit` 结束前完成清理**。
+
+另外，改成 `[weak self]` 也不能保证完成清理：等异步闭包执行时，`self` 可能已经是 `nil`，清理就不会执行。
