@@ -40,6 +40,7 @@
 	- [键盘收起](#键盘收起)
 - [**线程安全**](#线程安全)
 	- [指定队列判断](#指定队列判断)
+	- [Task异步执行案例](#Task异步执行案例)
 - [**系统蓝牙库CoreBluetooth**](#系统蓝牙库CoreBluetooth)
 	- [精确获取当前蓝牙开启状态](#精确获取当前蓝牙开启状态)
 	- [轮询连接蓝牙设备](#轮询连接蓝牙设备)
@@ -3011,7 +3012,9 @@ private let workQueueKey = DispatchSpecificKey<Void>()
 [若是不太理解，看这里吧](./../Swift/swift多线程.md#判断当前线程在哪条队列执行)
 
 
-
+***
+<br/><br/><br/>
+># <h2 id="Task异步执行案例">[Task异步执行案例](./../Swift/swift多线程.md#Task异步执行案例)</h2>
 
 <br/><br/><br/>
 
