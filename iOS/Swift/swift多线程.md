@@ -805,7 +805,29 @@ func test01() {
 <br/><br/><br/>
 ># <h2 id="Task异步执行案例">Task异步执行案例</h2>
 
-你这段 Swift 代码涉及 4 个重要知识点：
+```Swift
+let flow = draft.bindingFlow
+        let productID = draft.common.productId
+        let mode = draft.linkWay.rawValue
+        Task { [weak flow] in
+            let (models, _) = await DevicePairingNetGuideApi.getDevicePairingNetGuideConfig(productId: productID, mode: mode)
+            // 扫描入口可能跳过引导页，使用相同配置的最后一步待配网图。
+            let url = models?.first?.stepList?.last?.contentList?.first?.copywriting?.diagramUrl
+            await MainActor.run {
+                if flow?.guideImageURL == nil { flow?.guideImageURL = url.flatMap(URL.init(string:)) }
+            }
+        }
+
+
+Task { [weak flow] …… } 中的flow怎么来的？不懂
+
+Task内部为啥用 await不懂？还有MainActor.run { …… }不懂
+```
+
+*** 
+<br/>
+
+这段 Swift 代码涉及 4 个重要知识点：
 
 1. `Task {}`：创建一个异步任务。
 2. `[weak flow]`：弱引用捕获变量，避免任务强制持有对象。
