@@ -29,6 +29,7 @@
 - [导航栏](#导航栏)
 	- [系统导航栏和自定义导航栏](#系统导航栏和自定义导航栏)
 	- [工程导航结构配置优化](#工程导航结构配置优化)
+ 	- [返回页面导航状态](#返回页面导航状态) 
 
 
 
@@ -1168,7 +1169,229 @@ CTMediator.sharedInstance().push(
 - `argus-app-iosTests/argus_app_iosTests.swift`
 
 
+***
+<br/><br/><br/>
+># <h2 id="返回页面导航状态">返回页面导航状态</h2>
 
+```swift
+func pageWillDisappear(_ page: UIViewController) {
+        guard !isRetryNavigation,
+              page.isMovingFromParent ||
+		      page.isBeingDismissed ||
+			  page.navigationController?.isBeingDismissed == true else { return }
+
+ 		if let transition = page.transitionCoordinator {
+            transition.animate(alongsideTransition: nil) { [weak self] context in
+                if !context.isCancelled { self?.resetForManualNavigation() }
+            }
+        }
+    }
+}
+```
+
+这段代码的核心作用是：
+
+当用户手动返回上一页或关闭页面时，重置设备绑定重试状态；如果是程序内部的重试跳转，或者用户取消了返回操作，就不重置。
+
+## 一、逐行解读
+
+### 1. 判断是否需要重置
+
+```
+guard !isRetryNavigation,
+      page.isMovingFromParent ||
+      page.isBeingDismissed ||
+      page.navigationController?.isBeingDismissed == true
+else {
+    return
+}
+```
+
+这里有两个判断条件：
+
+条件一：`!isRetryNavigation`
+
+假设：
+
+```
+isRetryNavigation = true
+```
+
+表示当前正在执行程序内部的重试跳转，不应该清理绑定状态。
+
+`!` 表示取反，因此只有 `isRetryNavigation == false` 才继续执行。
+
+条件二：判断页面是否正在退出
+
+| 属性                                       | 含义           | 示例                                          |
+| ---------------------------------------- | ------------ | ------------------------------------------- |
+| `isMovingFromParent`                     | 页面正在从父控制器移除  | `navigationController?.popViewController()` |
+| `isBeingDismissed`                       | 当前页面正在被关闭    | `dismiss(animated: true)`                   |
+| `navigationController?.isBeingDismissed` | 整个导航控制器正在被关闭 | 关闭模态展示的 NavigationController                |
+
+注意：这三个条件使用 `||`，表示任意一个成立即可。
+
+所以整体判断相当于：
+
+```
+if isRetryNavigation {
+    return
+}
+
+if !page.isMovingFromParent &&
+   !page.isBeingDismissed &&
+   page.navigationController?.isBeingDismissed != true {
+    return
+}
+```
+
+### 2. `transitionCoordinator` 是什么？
+
+```
+if let transition = page.transitionCoordinator {
+```
+
+`transitionCoordinator` 是 UIKit 提供的页面转场协调器，可以获取页面跳转动画的执行状态。
+
+例如用户从页面 D 返回页面 C：
+
+```
+页面 D
+   |
+   | 用户点击返回
+   v
+开始 Pop 转场动画
+   |
+   +---- 动画完成 ------> 真正返回 C
+   |
+   +---- 动画取消 ------> 仍停留 D
+```
+
+它特别适合处理 iOS 侧滑返回，因为用户可能滑到一半又取消。
+
+### 3. 为什么要使用 `transition.animate`？
+
+```
+transition.animate(alongsideTransition: nil) { [weak self] context in
+    if !context.isCancelled {
+        self?.resetForManualNavigation()
+    }
+}
+```
+
+这里：
+
+- `alongsideTransition: nil`：不需要额外执行与转场同步的动画。
+- 后面的闭包：在转场结束时执行。
+- `[weak self]`：弱引用当前对象，避免闭包不必要地强持有它。
+- `context.isCancelled`：判断转场是否取消。
+
+例如：
+
+```
+用户侧滑返回
+    |
+    v
+开始转场
+    |
+    +---- 松手并完成返回
+    |          |
+    |          v
+    |    isCancelled = false
+    |          |
+    |          v
+    |    resetForManualNavigation()
+    |
+    +---- 滑到一半又滑回去
+               |
+               v
+         isCancelled = true
+               |
+               v
+          不重置状态
+```
+
+为什么不直接在 `viewWillDisappear` 中重置？
+
+因为 `viewWillDisappear` 可能在侧滑返回刚开始时就调用，而此时用户还可以取消返回。
+
+如果立即清理，就可能出现：用户仍然停留在绑定页面，但绑定重试次数已经被清零。
+
+### 4. `else` 是什么意思？
+
+```
+else {
+    resetForManualNavigation()
+}
+```
+
+表示当前没有可用的转场协调器。
+
+此时直接执行重置操作，而不是等待动画完成。
+
+注意：这是代码采用的兜底策略，并不意味着没有 `transitionCoordinator` 就一定代表页面已经退出成功。
+
+## 二、结合你的设备绑定业务举例
+
+假设导航流程：
+
+```
+A（首页）
+   |
+   v
+B（选择设备）
+   |
+   v
+C（配网引导）
+   |
+   v
+D（设备激活）
+   |
+   v
+E（绑定结果）
+```
+
+当前绑定失败次数 `retryCount = 2`。
+
+| 操作                                        | 是否重置 |
+| ----------------------------------------- | ---- |
+| E → C，程序内部执行重试，`isRetryNavigation = true` | 否    |
+| E → D，用户手动返回                              | 是    |
+| E 侧滑返回，但中途取消                              | 否    |
+| E → F，正常 Push 新页面                         | 否    |
+| E 所在导航控制器被关闭                              | 是    |
+| E 只是被其他页面覆盖                               | 否    |
+
+以上假设 `pageWillDisappear` 在对应页面的 `viewWillDisappear` 中调用，并且退出状态能够被正确识别。
+
+## 三、一个需要注意的问题
+
+你的代码：
+
+```
+page.isMovingFromParent
+```
+
+通常能识别当前页面被 Pop，但如果用户直接执行：
+
+```
+navigationController?.popToViewController(
+    targetVC,
+    animated: true
+)
+```
+
+从 E 一次返回 C，不能保证所有被移除的中间控制器都通过这段方法得到预期的重置处理。
+
+因此，如果 `resetForManualNavigation()` 是整个绑定流程的统一清理逻辑，建议由绑定流程 Coordinator 统一管理退出事件，而不是完全依赖每个页面的 `viewWillDisappear`。
+
+总结： 这段代码就是一个带有转场完成判断的退出清理方法，核心是区分：
+
+- 程序内部重试：保留状态。
+- 用户真正退出：清理状态。
+- 用户取消返回：保留状态。
+
+其中最重要的是 `transitionCoordinator` 和 `context.isCancelled`，它们能避免 iOS 侧滑返回取消时错误清理绑定状态。
 
 
 
