@@ -8,6 +8,7 @@
 - [**多个任务处理**](#多个任务处理)
 	- [多个图片下载简单版](#多个图片下载简单版)
 	- [简单任务组](#简单任务组)
+ 	- [Task异步执行案例](#Task异步执行案例)
 - [**逃逸闭包转换为支持async/await的现代异步方法**](#逃逸闭包转换为支持async/await的现代异步方法)
 - [**线程安全类Actor**](#线程安全类Actor)
 	- [actor初步认识](#actor初步认识)
@@ -798,6 +799,277 @@ func test01() {
 ```
 
 ![swift0.0.0.0.png](./../../Pictures/swift0.0.0.0.png)
+
+
+***
+<br/><br/><br/>
+># <h2 id="Task异步执行案例">Task异步执行案例</h2>
+
+你这段 Swift 代码涉及 4 个重要知识点：
+
+1. `Task {}`：创建一个异步任务。
+2. `[weak flow]`：弱引用捕获变量，避免任务强制持有对象。
+3. `await`：等待异步操作完成。
+4. `MainActor.run {}`：切换到主 Actor 执行代码，通常用于更新 UI 相关状态。
+
+下面结合你的设备配网业务解释。
+
+## 一、`Task { [weak flow] in` 中的 flow 从哪里来？
+
+先看：
+
+```
+let flow = draft.bindingFlow
+
+Task { [weak flow] in
+    print(flow?.guideImageURL)
+}
+```
+
+这里的 `flow` 就来自：
+
+```
+let flow = draft.bindingFlow
+```
+
+`[weak flow]` 并不是创建一个新对象，而是让 Task 闭包以弱引用方式捕获外部的 flow 对象。
+
+假设：
+
+```
+final class BindingFlow {
+    var guideImageURL: URL?
+}
+
+let flow = BindingFlow()
+
+Task { [weak flow] in
+    print(flow?.guideImageURL)
+}
+```
+
+为什么要使用 `weak`？
+
+因为 `Task` 是异步执行的，执行期间，外部的 `flow` 对象可能已经被释放。
+
+```
+创建 flow 对象
+    |
+    v
+创建 Task 异步任务
+    |
+    v
+Task 请求网络（耗时 3 秒）
+    |
+    +---- 用户退出配网页面
+    |         |
+    |         v
+    |     flow 可能被释放
+    |
+    v
+网络请求完成
+    |
+    v
+flow?.guideImageURL = url
+    |
+    +---- flow 存在：更新属性
+    |
+    +---- flow 已释放：不执行赋值
+```
+
+注意： `[weak flow]` 只适用于类实例（引用类型），不适用于普通 `struct`。
+
+另外，弱引用并不等于自动取消网络请求。
+
+## 二、Task 内部为什么使用 `await`？
+
+你的代码：
+
+```
+Task {
+    let (models, _) = await DevicePairingNetGuideApi
+        .getDevicePairingNetGuideConfig(
+            productId: productID,
+            mode: mode
+        )
+}
+```
+
+这里 `await` 表示：
+
+等待异步网络请求返回结果，在等待期间挂起当前任务，而不是阻塞线程。
+
+举一个简单例子：
+
+```
+func getDeviceInfo() async -> String {
+    try? await Task.sleep(for: .seconds(3))
+    return "摄像头设备"
+}
+
+Task {
+    print("1. 开始请求")
+
+    let name = await getDeviceInfo()
+
+    print("2. 请求完成：\(name)")
+}
+```
+
+执行结果：
+
+```
+第 0 秒：1. 开始请求
+
+等待约 3 秒（任务挂起，不阻塞线程）
+
+第 3 秒：2. 请求完成：摄像头设备
+```
+
+这里要区分：
+
+| 关键字       | 作用           |
+| --------- | ------------ |
+| `async`   | 声明函数支持异步执行   |
+| `await`   | 调用异步函数，并等待结果 |
+| `Task {}` | 创建一个异步任务     |
+
+`await` 不是创建新线程，也不意味着一定在后台线程执行。
+
+## 三、`MainActor.run {}` 是什么？
+
+你的代码：
+
+```
+await MainActor.run {
+    if flow?.guideImageURL == nil {
+        flow?.guideImageURL = url.flatMap(URL.init(string:))
+    }
+}
+```
+
+`MainActor` 可以简单理解为 Swift 并发体系中负责隔离主线程相关操作的执行环境。
+
+iOS 开发中，UI 更新通常必须在主线程进行。
+
+例如：
+
+```
+Task {
+    let name = await getDeviceInfo()
+
+    await MainActor.run {
+        self.titleLabel.text = name
+    }
+}
+```
+
+执行流程：
+
+```
+Task 开始
+    |
+    v
+await getDeviceInfo()
+    |
+    | 等待网络请求
+    v
+得到设备名称
+    |
+    v
+await MainActor.run
+    |
+    | 切换到 MainActor
+    v
+更新 UILabel
+    |
+    v
+完成
+```
+
+为什么 `MainActor.run` 前面也需要 `await`？
+
+因为当前任务可能不在 MainActor 上，需要异步切换到 MainActor 执行。
+
+但如果当前代码本身已经运行在 MainActor 上，就不一定需要再调用 `MainActor.run`。
+
+## 四、结合你的完整代码理解
+
+```
+// 1. 从 draft 获取绑定流程对象
+let flow = draft.bindingFlow
+
+// 2. 保存请求参数
+let productID = draft.common.productId
+let mode = draft.linkWay.rawValue
+
+// 3. 创建异步任务，弱引用 flow
+Task { [weak flow] in
+
+    // 4. 异步请求设备配网引导配置
+    let (models, _) = await DevicePairingNetGuideApi
+        .getDevicePairingNetGuideConfig(
+            productId: productID,
+            mode: mode
+        )
+
+    // 5. 获取最后一步的引导图片地址
+    let url = models?
+        .first?
+        .stepList?
+        .last?
+        .contentList?
+        .first?
+        .copywriting?
+        .diagramUrl
+
+    // 6. 在 MainActor 上更新 flow 的属性
+    await MainActor.run {
+
+        // 7. 只有原来的图片 URL 为空时才赋值
+        if flow?.guideImageURL == nil {
+            flow?.guideImageURL = url.flatMap(URL.init(string:))
+        }
+    }
+}
+```
+
+这里还有一个容易忽略的细节：
+
+```
+url.flatMap(URL.init(string:))
+```
+
+假设：
+
+```
+url = "https://example.com/device.png"
+```
+
+那么转换结果为：
+
+```
+URL(string: "https://example.com/device.png")
+```
+
+如果 `url` 是 `nil`，转换结果也是 `nil`；如果字符串不能构成有效 URL，也会得到 `nil`。
+
+## 五、最后总结
+
+| 代码                                          | 通俗理解             |
+| ------------------------------------------- | ---------------- |
+| `let flow = draft.bindingFlow`              | 获取配网流程对象         |
+| `Task {}`                                   | 开始执行一个异步任务       |
+| `[weak flow]`                               | 不让任务强制持有 flow 对象 |
+| `await getDevicePairingNetGuideConfig(...)` | 等待服务器返回配网配置      |
+| `await MainActor.run {}`                    | 在主 Actor 上执行状态更新 |
+| `flow?.guideImageURL = ...`                 | 对象还存在时，保存图片 URL  |
+
+在你的 iOS 设备配网工程中，可以简单记住：
+
+`Task` 负责启动异步工作，`await` 负责等待异步结果，`MainActor` 负责安全地更新主线程相关状态，`weak` 负责避免异步闭包不必要地延长对象生命周期。
+
+另外，`[weak flow]` 只能保证不强持有 `flow`，不能保证用户退出配网页面后网络任务自动停止。对于生产工程中的配网流程，通常还需要考虑 `Task.cancel()` 和请求结果是否仍属于当前配网会话。
 
 
 <br/><br/><br/>
