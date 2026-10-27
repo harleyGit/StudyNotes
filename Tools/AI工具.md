@@ -289,6 +289,13 @@ experimental_bearer_token 也被 Codex 标记为不推荐的明文认证方式�
 # 非交互TUI模式，进入聊天模式
 codex
 
+npm install -g @openai/codex@latest： 更新，Intel Mac【10.15.7系统】本电脑更新不能用brew，因为系统版本太老
+shift+tab：编码/执行模式与计划模式互相切换
+
+/plan：进入计划模式
+
+/model：它会打开当前账号可用的模型列表。若新模型仍未出现，退出并重新启动 Codex 后再执行 /model；仍没有则说明旧版 CLI 不支持该模型目录，需要升级 CLI
+
 # 带初始提示启动
 codex "fix lint errors"
 
@@ -306,6 +313,7 @@ codex --dangerously-bypass-approvals-and-sanbox "crate the faaciest todo-list ap
 
 # 引用图片，codex -i [文件路径或者拷贝的图片] ["提问的内容用引号引起来，否则会cli认为是多个参数"]
 codex -i /Users/harleyhuang/Desktop/CodeX_Test/2.png "分析这张图片"
+
 
 ```
 
