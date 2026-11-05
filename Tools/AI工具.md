@@ -35,6 +35,7 @@
 	- [OpenCode关于Xcode MCP 配置说明](#OpenCode关于Xcode-MCP配置说明)
 	- [文件配置](#文件配置) 
 	- [Opencode cli和Codex cli共用一套Skill配置](#Opencode_cli和Codex_cli共用一套Skill配置)
+	- [Opencode组合快捷键](#Opencode组合快捷键)
  	- [初始化项目](#初始化项目)
 	- [CC Switch配合OpenCode CLI、Codex CLI完整使用步骤](#CC_Switch配合OpenCode_CLI+Codex_CLI完整使用步骤)
 	- [配置的skill和插件plugin区别](#配置的skill和插件plugin区别)
@@ -2325,6 +2326,22 @@ ln -s "目标真实路径" "要创建的链接路径"
 
 ***
 <br/><br/><br/>
+># <h2 id="Opencode组合快捷键">Opencode组合快捷键</h2>
+
+| 组合快捷键      | 中文说明                    |
+|------------|-------------------------------|
+| Cmd + Option + O     | 选择工作树            |
+| Cmd + Option +  B    | 选择它的基础分支       |
+| Cmd + Shift + X | 在输入面板（composer）里切换 Shell 模式 |
+| **从引用弹窗直接发送引用内容**， 引用弹窗里按住 **`⌘`** | 勾选按钮就会变成【发送】 |
+| **从引用弹窗直接发送引用内容**，也可以按 `⌘Enter` | 仅发送这条引用 + 备注，输入面板里其他内容保持不变 |
+|  |  |
+
+
+
+
+***
+<br/><br/><br/>
 ># <h2 id="初始化项目">[初始化项目]([url](https://juejin.cn/post/7628442107121958927))</h2>
 
 在项目根目录运行：
@@ -2339,11 +2356,6 @@ opencode
 /init
 ```
 这会分析你的项目结构并创建 AGENTS.md 文件（建议将此文件提交到 Git）。
-
-
-
-
-
 
 
 <br/><br/><br/>
@@ -2523,6 +2535,7 @@ codex chat
           "/Users/huanggang/HGFiles/Code/GitHub/AISkills/superpowers/skills/test-driven-development"
         ]
       },
+      "compaction": { "buffer": "20%" },
       "provider": {
           "CM_AI": {
               "npm": "@ai-sdk/openai-compatible",
@@ -2533,9 +2546,12 @@ codex chat
               },
               "models": {}
           }
-}
+		}
 }
 ```
+
+### - 说明：
+- `"compaction": { "buffer": "20%" }`: **百分比式压缩预留缓冲区**,为每个模型的上下文窗口预留一部分空闲空间。同一个配置值，同时适配小上下文窗口和大上下文窗口的模型。Token 计数功能不受影响
 
 ***
 <br/>
