@@ -1,5 +1,6 @@
 
 - [AI集合模型ollama](#AI集合模型ollama)
+- [软连接可以共用一套Skill](#软连接可以共用一套Skill)
 - [OpenAI的CodeX](#OpenAI的CodeX)
 - [CodeX-CLI使用](#CodeX-CLI使用)
 	- [安装Cli](#安装Cli)
@@ -54,6 +55,64 @@
 
 [**安装页面**](https://ollama.com/search) 
 
+
+<br/>
+
+***
+<br/><br/><br/>
+># <h1 id="软连接可以共用一套Skill">软连接可以共用一套Skill</h1>
+### 自己维护了一套**Skill**存在github上，但是**workbuddy**想使用这套skill，但是 workbuddy 的skill必须放在它自己的文件目录下，如何做？
+***
+
+这个时候就可以用到**软连接**了，像指针一样，将真实目录应用到其所在目录下，下面详细介绍下。
+<br/>
+
+### 软链接指令解读：
+
+```sh
+ln -sfn  <源目录（真实位置）>              <链接名（放 ~/.workbuddy/skills/ 下）>
+   │       │                                │
+   │       技能文件夹，里面必须有 SKILL.md     建议和源目录同名，清晰好认
+   └ -s 软链接  -n 目标是目录时不跟随  -f 已存在则覆盖
+
+```
+
+***
+<br/>
+
+若是想让其他工程也可以使用一套共同的skill，可以将其软连接到用户级别。其**workbuddy**用户级的skill路径在` ~/.workbuddy/skills/·`
+
+在 AITools 仓库里新建了 my-note-skill，结构是：
+
+```sh
+/Users/ganghuang/HGFiles/GitHub/AITools/Skills/my-note-skill/
+└── SKILL.md
+```
+
+**关键点：** 链接的必须直接指向含有 SKILL.md 的那一层目录（WorkBuddy 只扫描 ~/.workbuddy/skills/ 的第一层）。子技能之间的 ../common 相对引用不用管，软链接会自动解析到原位置。
+
+比如：
+
+
+```sh
+ln -sfn /Users/ganghuang/HGFiles/GitHub/AITools/Skills/mlc-engineering/python ~/.workbuddy/skills/python
+```
+
+***
+<br/>
+
+
+### 验证是否接好
+
+```sh
+# 1. 链接存在且指向正确
+ls -l ~/.workbuddy/skills/my-note-skill
+
+# 2. 通过链接路径能读到 SKILL.md（能输出 frontmatter 就 OK）
+head -5 ~/.workbuddy/skills/my-note-skill/SKILL.md
+```
+
+两条都有输出 → 在 WorkBuddy 里**` /reload-skills`**（或重开会话）即可使用
 
 <br/><br/><br/>
 
